@@ -10,6 +10,8 @@ Extends [5. Lan-Party Remoting Protocol](0005-lan-party-remoting-protocol.md)
 
 Uses [3. Lan-Party Common Events](0003-lan-party-common-events.md)
 
+Superceded by [9. Atomic/Composite Grapth Operations](0009-atomic-composite-grapth-operations.md)
+
 ## Context
 
 In Lan-Party context we'll need a way to execute [3. Lan-Party Common Events](0003-lan-party-common-events.md) on Lan-Party server.

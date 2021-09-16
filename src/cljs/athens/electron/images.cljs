@@ -1,7 +1,7 @@
 (ns athens.electron.images
   (:require
+    [athens.common.utils :as common.utils]
     [athens.db :as db]
-    [athens.util :as util]
     [re-frame.core :as rf]))
 
 
@@ -17,7 +17,7 @@
    (let [{:keys [images-dir name]}          @(rf/subscribe [:db-picker/selected-db])
          _                (prn head tail images-dir name item extension)
          file             (.getAsFile item)
-         img-filename     (.resolve path images-dir (str "img-" name "-" (util/gen-block-uid) "." extension))
+         img-filename     (.resolve path images-dir (str "img-" name "-" (common.utils/gen-block-uid) "." extension))
          reader           (js/FileReader.)
          new-str          (str head "![](" "file://" img-filename ")" tail)
          cb               (fn [e]
@@ -39,7 +39,7 @@
         {:block/keys [order]} (db/get-block [:block/uid target-uid])
         parent    (db/get-parent [:block/uid target-uid])
         block     (db/get-block [:block/uid target-uid])
-        new-block {:block/uid (athens.util/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
+        new-block {:block/uid (common.utils/gen-block-uid) :block/order 0 :block/string new-str :block/open true}
         tx-data   (if (= drag-target :child)
                     (let [reindex          (db/inc-after (:db/id block) -1)
                           new-children     (conj reindex new-block)

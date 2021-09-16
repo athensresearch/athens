@@ -3,11 +3,12 @@
     ["@material-ui/icons/ArrowForward" :default ArrowForward]
     ["@material-ui/icons/Close" :default Close]
     ["@material-ui/icons/Create" :default Create]
+    [athens.common.utils :as utils]
     [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
     [athens.router :refer [navigate-uid]]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
-    [athens.util :refer [gen-block-uid scroll-into-view]]
+    [athens.util :refer [scroll-into-view]]
     [clojure.string :as str]
     [garden.selectors :as selectors]
     [goog.dom :refer [getElement]]
@@ -187,8 +188,8 @@
       (= KeyCodes.ENTER key) (cond
                                ;; if page doesn't exist, create and open
                                (and (zero? index) (nil? item))
-                               (let [page-uid  (gen-block-uid)
-                                     block-uid (gen-block-uid)]
+                               (let [page-uid  (utils/gen-block-uid)
+                                     block-uid (utils/gen-block-uid)]
                                  (dispatch [:athena/toggle])
                                  (js/console.debug "athena key down" (pr-str {:page-uid  page-uid
                                                                               :block-uid block-uid
@@ -307,8 +308,8 @@
                                                 (if (nil? x)
                                                   ^{:key i}
                                                   [:div (use-style result-style {:on-click (fn [_]
-                                                                                             (let [page-uid  (gen-block-uid)
-                                                                                                   block-uid (gen-block-uid)]
+                                                                                             (let [page-uid  (utils/gen-block-uid)
+                                                                                                   block-uid (utils/gen-block-uid)]
                                                                                                (dispatch [:athena/toggle])
                                                                                                (dispatch [:page/create {:title     query
                                                                                                                         :page-uid  page-uid

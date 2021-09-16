@@ -1,23 +1,7 @@
 (ns athens.common-events
   "Event as Verbs executed on Knowledge Graph"
-  #?(:clj
-     (:import
-       (java.util
-         UUID))))
-
-
-;; helpers
-
-#?(:clj
-   (defn random-uuid
-     "CLJ shim for CLJS `random-uuid`."
-     []
-     (UUID/randomUUID)))
-
-
-(defn- gen-event-id
-  []
-  (random-uuid))
+  (:require
+    [athens.common.utils :as utils]))
 
 
 ;; building events
@@ -47,7 +31,7 @@
 (defn build-db-dump-event
   "Builds `:datascript/db-dump` events with `datoms`."
   [last-tx datoms]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/db-dump
@@ -59,7 +43,7 @@
 (defn build-undo-redo-event
   "Builds `:datascript/undo-redo`"
   [last-tx redo?]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/undo-redo
@@ -71,7 +55,7 @@
 (defn build-page-create-event
   "Builds `:datascript/create-page` event with `page-uid`, `block-uid` and `title` of page."
   [last-tx page-uid block-uid title]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/create-page
@@ -86,7 +70,7 @@
   - `old-name`: Old page name
   - `new-name`: New page name"
   [last-tx uid old-name new-name]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/rename-page
@@ -101,7 +85,7 @@
   - `old-name`: old page name
   - `new-name`: new page name"
   [last-tx uid old-name new-name]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/merge-page
@@ -114,7 +98,7 @@
   "Builds `:datascript/page-delete` event with:
   - `uid`: of page to be deleted."
   [last-tx uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/delete-page
@@ -129,7 +113,7 @@
   - `start`: cursor position in block,
   - `value`: previous value (?) of block"
   [last-tx uid text start value]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/paste-verbatim
@@ -148,7 +132,7 @@
   - `new-string`: new value for `:block/string`
   - `add-time?` : Should `:edit/time` for this block be transacted"
   [last-tx uid new-string add-time?]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/block-save
@@ -163,7 +147,7 @@
   - `block-order`: order of current block
   - `new-uid`: `:block/uid` for new block"
   [last-tx parent-uid block-order new-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/new-block
@@ -177,14 +161,14 @@
   - `parent-uid`: `:block/uid` of parent block
   - `new-uid`  : new child's block uid
   - `add-time?`: Should `:edit/time` for this block be transacted"
-  ([last-tx parent-uid new-uid] (let [event-id (gen-event-id)]
+  ([last-tx parent-uid new-uid] (let [event-id (utils/gen-event-id)]
                                   {:event/id      event-id
                                    :event/last-tx last-tx
                                    :event/type    :datascript/add-child
                                    :event/args    {:parent-uid parent-uid
                                                    :new-uid    new-uid
                                                    :add-time?  false}}))
-  ([last-tx parent-uid new-uid add-time?] (let [event-id (gen-event-id)]
+  ([last-tx parent-uid new-uid add-time?] (let [event-id (utils/gen-event-id)]
                                             {:event/id      event-id
                                              :event/last-tx last-tx
                                              :event/type    :datascript/add-child
@@ -198,7 +182,7 @@
   - `parent-uid`: `:block/uid` of parent block
   - `new-uid`: `:block/uid` for new block"
   [last-tx parent-uid new-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/open-block-add-child
@@ -213,7 +197,7 @@
   - `index`: index of the split
   - `new-uid`: `:block/uid` of new block"
   [last-tx uid value index new-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/split-block
@@ -230,7 +214,7 @@
   - `index`: index of the split
   - `new-uid`: `:block/uid` of new block"
   [last-tx uid value index new-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/split-block-to-children
@@ -245,7 +229,7 @@
   - `uid`: `:block/uid` of triggering block
   - `value`: `:block/string` of triggering block"
   [last-tx uid value]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/unindent
@@ -257,7 +241,7 @@
   "Builds `:datascript/unindent-multi` event with:
   - `uids` : `:block/uid` of selected blocks"
   [last-tx uids]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/unindent-multi
@@ -268,7 +252,7 @@
   "Builds `:datascript/page-add-shortcut` event with:
   - `uid`: `:block/uid` of triggering block"
   [last-tx uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/page-add-shortcut
@@ -279,7 +263,7 @@
   "Builds `:datascript/page-remove-shortcut` event with:
   - `uid`: `:block/uid` of triggering block"
   [last-tx uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/page-remove-shortcut
@@ -291,7 +275,7 @@
   - `source-order`: original position on the left sidebar
   - `target-order`: new position on the left sidebar"
   [last-tx source-order target-order]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/left-sidebar-drop-above
@@ -304,7 +288,7 @@
   - `source-order`: original position on the left sidebar
   - `target-order`: new position on the left sidebar"
   [last-tx source-order target-order]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/left-sidebar-drop-below
@@ -317,7 +301,7 @@
   - `uid`  : `:block/uid` of triggering block
   - `value`: `:block/string` of triggering block"
   [last-tx uid value]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/indent
@@ -329,7 +313,7 @@
   "Builds `: `:datascript/indent-multi` event with:
   - `uids`  : `:block/uid` of selected blocks"
   [last-tx uids]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/indent-multi
@@ -341,7 +325,7 @@
   - `uid`: `:block/uid` of trigerring block
   - `new-uid`: new `:block/uid`"
   [last-tx uid new-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/bump-up
@@ -355,7 +339,7 @@
   - `string `: content of the block
   - `title  `: title of the page"
   [last-tx uid string title]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/unlinked-references-link
@@ -369,7 +353,7 @@
   - `unlinked-refs`: list of maps that contains the :block/string and :block/uid of unlinked refs
   - `title        `: title of the page in which the unlinked refs will be linked"
   [last-tx unlinked-refs title]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/unlinked-references-link-all
@@ -382,7 +366,7 @@
   - `source-uid` : uid of the source block
   - `target-uid` : uid of the target block"
   [last-tx source-uid target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-child
@@ -395,7 +379,7 @@
   - `source-uids` : Vector of uids of the selected source blocks
   - `target-uid`  : uid of the target block"
   [last-tx source-uids target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-multi-child
@@ -408,7 +392,7 @@
   - `source-uid` : uid of the source block
   - `target-uid` : uid of the target block"
   [last-tx source-uid target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-link-child
@@ -422,7 +406,7 @@
   - `target-uid` : uid of the target block
   - `drag-target`: defines where is the block dragged it can be :above or :below the target block"
   [last-tx drag-target source-uid target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-diff-parent
@@ -437,7 +421,7 @@
   - `target-uid`  : uid of the target block
   - `drag-target`: defines where is the block dragged it can be :above or :below the target block"
   [last-tx drag-target source-uids target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-multi-diff-source-same-parents
@@ -452,7 +436,7 @@
   - `target-uid`  : uid of the target block
   - `drag-target`: defines where is the block dragged it can be :above or :below the target block"
   [last-tx drag-target source-uids target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-multi-diff-source-diff-parents
@@ -467,7 +451,7 @@
   - `target-uid` : uid of the target block
   - `drag-target`: defines where is the block dragged it can be :above or :below the target block"
   [last-tx drag-target source-uid target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-link-diff-parent
@@ -482,7 +466,7 @@
   - `target-uid` : uid of the target block
   - `drag-target`: defines where is the block dragged it can be :above or :below the target block"
   [last-tx drag-target source-uid target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-same
@@ -497,7 +481,7 @@
   - `target-uid` : uid of the target block
   - `drag-target`: defines where is the block dragged it can be :above or :below the target block"
   [last-tx drag-target source-uids target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-multi-same-source
@@ -512,7 +496,7 @@
   - `target-uid` : uid of the target block
   - `drag-target`: defines where is the block dragged it can be :above or :below the target block"
   [last-tx drag-target source-uids target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-multi-same-all
@@ -527,7 +511,7 @@
   - `target-uid` : uid of the target block
   - `drag-target`: defines where is the block dragged it can be :above or :below the target block"
   [last-tx drag-target source-uid target-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/drop-link-same-parent
@@ -540,7 +524,7 @@
   "Builds `:datascript/selected-delete` event with:
   - uids : The uids of blocks to be deleted "
   [last-tx uids]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/selected-delete
@@ -552,7 +536,7 @@
   - block-uid : The uid of block to be opened
   - open?     : Bool to set the block state to open or close"
   [last-tx block-uid open?]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/block-open
@@ -567,7 +551,7 @@
   - start: cursor position in block
   - value: current `:block/string` value"
   [last-tx uid text start value]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/paste
@@ -581,7 +565,7 @@
   "Builds `:datascript/delete-only-child` event with:
   - uid  : The uid of block to delete"
   [last-tx uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/delete-only-child
@@ -593,7 +577,7 @@
   - uid  : The uid of block to delete
   - value: The text content of the block"
   [last-tx uid value]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :datascript/delete-merge-block
@@ -606,7 +590,7 @@
 (defn build-presence-hello-event
   "Builds `:presence/hello` event with `username`"
   [last-tx username]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/hello
@@ -616,7 +600,7 @@
 (defn build-presence-online-event
   "Builds `:presence/online` event with `username` that went online."
   [last-tx username]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/online
@@ -626,7 +610,7 @@
 (defn build-presence-all-online-event
   "Builds `:presence/all-online` event with all active users, excluding origin client."
   [last-tx clients]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/all-online
@@ -644,7 +628,7 @@
 (defn build-presence-editing-event
   "Sent by client."
   [last-tx username uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/editing
@@ -655,7 +639,7 @@
 (defn build-presence-broadcast-editing-event
   "Sent by server."
   [last-tx username block-uid]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/broadcast-editing
@@ -666,7 +650,7 @@
 (defn build-presence-rename-event
   "Sent by client when username is updated"
   [last-tx current-username new-username]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/rename
@@ -677,9 +661,20 @@
 (defn build-presence-broadcast-rename-event
   "Sent by server when the updated username is broadcasted"
   [last-tx current-username new-username]
-  (let [event-id (gen-event-id)]
+  (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/broadcast-rename
      :event/args    {:current-username current-username
                      :new-username new-username}}))
+
+
+(defn build-atomic-event
+  "Builds atomic graph operation"
+  [last-tx atomic-op]
+  (let [event-id (utils/gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :op/atomic
+     :event/op      atomic-op}))
+

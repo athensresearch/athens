@@ -11,11 +11,12 @@
     ["@material-ui/icons/Link" :default Link]
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
     [athens.common-db :as common-db]
+    [athens.common.utils :as utils]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color DEPTH-SHADOWS]]
-    [athens.util :refer [gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
+    [athens.util :refer [escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
     [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks.bullet :as bullet]
     [athens.views.blocks.core :as blocks]
@@ -164,7 +165,7 @@
 
 (defn handle-new-first-child-block-click
   [parent-uid]
-  (let [new-uid               (gen-block-uid)
+  (let [new-uid               (utils/gen-block-uid)
         [parent-uid embed-id] (db/uid-and-embed-id parent-uid)
         parent-block          (db/get-block [:block/uid parent-uid])]
     (dispatch [:enter/add-child {:block     parent-block
