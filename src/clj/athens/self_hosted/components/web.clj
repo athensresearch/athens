@@ -62,8 +62,8 @@
 
 (def ^:private forwardable-events
   (set/union
-   datascript/supported-event-types
-   #{:op/atomic}))
+    datascript/supported-event-types
+    #{:op/atomic}))
 
 
 (defn- make-receive-handler

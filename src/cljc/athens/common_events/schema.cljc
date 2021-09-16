@@ -1,8 +1,8 @@
 (ns athens.common-events.schema
   (:require
+    [athens.common-events.graph.schema :as graph-schema]
     #?(:clj
        [datahike.datom                 :as datom])
-    [athens.common-events.graph.schema :as graph-schema]
     [malli.core                        :as m]
     [malli.error                       :as me]
     [malli.util                        :as mu]))

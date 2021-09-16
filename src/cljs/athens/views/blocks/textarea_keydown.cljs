@@ -6,6 +6,7 @@
     ["@material-ui/icons/Today" :default Today]
     ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
     ["@material-ui/icons/YouTube" :default YouTube]
+    [athens.common.utils :as common.utils]
     [athens.db :as db]
     [athens.events.selection :as select-events]
     [athens.router :as router]
@@ -536,8 +537,8 @@
                                         uid (db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
-                                      (let [page-uid  (athens.util/gen-block-uid)
-                                            block-uid (athens.util/gen-block-uid)]
+                                      (let [page-uid  (common.utils/gen-block-uid)
+                                            block-uid (common.utils/gen-block-uid)]
                                         (.blur target)
                                         (dispatch [:page/create {:title     link
                                                                  :page-uid  page-uid
@@ -551,8 +552,8 @@
                                         uid (db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
-                                      (let [page-uid  (athens.util/gen-block-uid)
-                                            block-uid (athens.util/gen-block-uid)]
+                                      (let [page-uid  (common.utils/gen-block-uid)
+                                            block-uid (common.utils/gen-block-uid)]
                                         (.blur target)
                                         (dispatch [:page/create {:title     link
                                                                  :page-uid  page-uid

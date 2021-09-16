@@ -1,18 +1,9 @@
 (ns athens.common-events.resolver.atomic
   (:require
     [athens.common-db :as common-db]
-   #?(:clj  [datahike.api :as d]
-      :cljs [datascript.core :as d]))
-  #?(:clj
-     (:import
-      (java.util
-       Date))))
-
-
-(defn- now-ts
-  []
-  #?(:clj  (.getTime (Date.))
-     :cljs (.getTime (js/Date.))))
+    [athens.common.utils :as utils]
+    #?(:clj  [datahike.api :as d]
+       :cljs [datascript.core :as d])))
 
 
 (defmulti resolve-atomic-op-to-tx
@@ -25,7 +16,7 @@
   (let [{:keys [parent-uid
                 block-uid
                 block-order]} args
-        now                   (now-ts)
+        now                   (utils/now-ts)
         new-block             {:db/id        -1
                                :block/uid    block-uid
                                :block/string ""
@@ -47,24 +38,23 @@
   (let [{:keys [block-uid new-string old-string]} args
         {stored-old-string :block/string}         (d/pull db [:block/string] [:block/uid block-uid])]
     (if (= stored-old-string old-string)
-      (let [now           (now-ts)
+      (let [now           (utils/now-ts)
             updated-block {:db/id        [:block/uid block-uid]
                            :block/string new-string
                            :edit/time    now}]
         [updated-block])
       (throw
-       (ex-info ":block/save operation started from a stale state."
-                {:op/args           args
-                 :actual-old-string stored-old-string})))))
+        (ex-info ":block/save operation started from a stale state."
+                 {:op/args           args
+                  :actual-old-string stored-old-string})))))
 
 
 (defmethod resolve-atomic-op-to-tx :page/new
   [_db {:op/keys [args]}]
-  (println "atomic resolver :page/new")
   (let [{:keys [page-uid
                 block-uid
                 title]} args
-        now             (now-ts)
+        now             (utils/now-ts)
         child           {:block/string ""
                          :block/uid    block-uid
                          :block/order  0
@@ -81,11 +71,10 @@
 
 (defmethod resolve-atomic-op-to-tx :composite/consequence
   [db {:op/keys [consequences] :as composite}]
-  (println "composite:" (pr-str composite))
   (into []
         (for [{:op/keys [atomic?] :as consequence} consequences]
           (if atomic?
             (first (resolve-atomic-op-to-tx db consequence))
             (throw
-             (ex-info "Composite in composite graph ops not supported, yet."
-                      {:composite composite}))))))
+              (ex-info "Composite in composite graph ops not supported, yet."
+                       {:composite composite}))))))

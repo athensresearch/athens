@@ -1,18 +1,18 @@
 (ns athens.common-events.graph.schema
   (:require
-   [malli.core  :as m]
-   [malli.error :as me]
-   [malli.util  :as mu]))
+    [malli.core  :as m]
+    [malli.error :as me]
+    [malli.util  :as mu]))
 
 
 (def atomic-op-types
   [:enum
-   :block/new ;; ✓
+   :block/new ; ✓
    :block/save
    :block/open
    :block/remove
    :block/move
-   :page/new ;; ✓
+   :page/new ; ✓
    :page/rename
    :page/merge
    :page/remove
@@ -65,16 +65,16 @@
 (def atomic-op
   [:multi {:dispatch :op/type}
    [:block/new (mu/merge
-                op-type-atomic-common
-                op-block-new)]
+                 op-type-atomic-common
+                 op-block-new)]
 
    [:page/new (mu/merge
-               op-type-atomic-common
-               op-page-new)]
+                op-type-atomic-common
+                op-page-new)]
 
    [:block/save (mu/merge
-                 op-type-atomic-common
-                 op-block-save)]
+                  op-type-atomic-common
+                  op-block-save)]
 
    [:composite/consequence op-composite-consequence]])
 

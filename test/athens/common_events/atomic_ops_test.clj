@@ -1,11 +1,11 @@
 (ns athens.common-events.atomic-ops-test
   (:require
-   [athens.common-db                     :as common-db]
-   [athens.common-events.fixture         :as fixture]
-   [athens.common-events.graph.atomic    :as atomic-graph-ops]
-   [athens.common-events.resolver.atomic :as atomic-resolver]
-   [clojure.test                         :as t]
-   [datahike.api                         :as d]))
+    [athens.common-db                     :as common-db]
+    [athens.common-events.fixture         :as fixture]
+    [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
+    [clojure.test                         :as t]
+    [datahike.api                         :as d]))
 
 
 (t/use-fixtures :each fixture/integration-test-fixture)

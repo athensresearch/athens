@@ -2,30 +2,12 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
+    [athens.common.utils :as utils]
     [athens.patterns :as patterns]
     [clojure.set :as set]
     [clojure.string :as string]
     #?(:clj  [datahike.api :as d]
-       :cljs [datascript.core :as d]))
-  #?(:clj
-     (:import
-       (java.util
-         Date
-         UUID))))
-
-
-;; helpers
-
-(defn- now-ts
-  []
-  #?(:clj  (.getTime (Date.))
-     :cljs (.getTime (js/Date.))))
-
-
-(defn gen-block-uid
-  []
-  #?(:clj (subs (.toString (UUID/randomUUID)) 27)
-     :cljs (subs (str (random-uuid)) 27)))
+       :cljs [datascript.core :as d])))
 
 
 (defn between
@@ -67,7 +49,7 @@
   (let [{:keys [page-uid
                 block-uid
                 title]} args
-        now             (now-ts)
+        now             (utils/now-ts)
         child           {:db/id        -2
                          :block/string ""
                          :block/uid    block-uid
@@ -154,7 +136,7 @@
         new-block-string     {:db/id        [:block/uid uid]
                               :block/string new-string}
         block-with-time      (if add-time?
-                               (assoc new-block-string :edit/time (now-ts))
+                               (assoc new-block-string :edit/time (utils/now-ts))
                                new-block-string)
         tx-data              [block-with-time]]
     (println ":datascript/block-save" (pr-str args)
@@ -191,7 +173,7 @@
                            :block/order  0
                            :block/open   true}
         child-with-time   (if add-time?
-                            (assoc new-child :edit/time (now-ts))
+                            (assoc new-child :edit/time (utils/now-ts))
                             new-child)
         reindex           (concat [child-with-time]
                                   (common-db/inc-after db [:block/uid parent-uid] -1))
@@ -270,7 +252,7 @@
         tx-data           [{:db/id          id
                             :block/string   head
                             :block/children reindex
-                            :edit/time      (now-ts)}]]
+                            :edit/time      (utils/now-ts)}]]
     (println "resolver :datascript/split-block-to-children tx-data" (pr-str tx-data))
     tx-data))
 
@@ -547,7 +529,7 @@
   (let [{:keys [source-uid
                 target-uid]}               args
         {target-eid :db/id}                (common-db/get-block  db [:block/uid target-uid])
-        new-uid                            (gen-block-uid)
+        new-uid                            (utils/gen-block-uid) ; TODO(BUG): UID generation during resolution
         new-string                         (str "((" source-uid "))")
         new-source-block                   {:block/uid    new-uid
                                             :block/string new-string
@@ -831,7 +813,7 @@
                 target-uid]}                args
         {target-block-order :block/order}   (common-db/get-block  db [:block/uid target-uid])
         {target-parent-eid  :db/id}         (common-db/get-parent db [:block/uid target-uid])
-        new-uid                             (gen-block-uid)
+        new-uid                             (utils/gen-block-uid) ; TODO(BUG): UID generation during resolution
         new-string                          (str "((" source-uid "))")
         new-block                           {:block/uid        new-uid
                                              :block/string     new-string
@@ -1026,7 +1008,7 @@
   (let [{:keys [drag-target
                 source-uid
                 target-uid]}               args
-        new-uid                           (gen-block-uid)
+        new-uid                           (utils/gen-block-uid) ; TODO(BUG): UID generation during resolution
         new-string                        (str "((" source-uid "))")
         {target-block-order :block/order} (common-db/get-block db [:block/uid target-uid])
         {source-parent-eid :db/id}        (common-db/get-parent db [:block/uid source-uid])
@@ -1252,7 +1234,7 @@
                                    {:db/id        (dec (* -1 idx))
                                     :block/string x
                                     :block/open   true
-                                    :block/uid    (gen-block-uid)})
+                                    :block/uid    (utils/gen-block-uid)}) ; TODO(BUG): UID generation during resolution
                                  sanitize)
         ;; Count blocks
         n           (count blocks)

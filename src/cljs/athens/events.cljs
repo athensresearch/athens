@@ -3,17 +3,16 @@
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
-    [athens.common-events.graph.composite :as composite-graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common.utils                  :as common.utils]
     [athens.db                            :as db]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
     [athens.style                         :as style]
-    [athens.util                          :refer [gen-block-uid] :as util]
+    [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [clojure.set                          :as set]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
@@ -71,7 +70,7 @@
         page-roam                (db/get-roam-node-document shared-page roam-db)
         athens-child-count       (-> page-athens :block/children count)
         roam-child-count         (-> page-roam :block/children count)
-        new-uid                  (gen-block-uid)
+        new-uid                  (common.utils/gen-block-uid)
         today-date-page          (:title (athens.util/get-day))
         new-children             (conj (:block/children page-athens)
                                        {:block/string   (str "[[Roam Import]] "
@@ -466,7 +465,7 @@
   (fn [{:keys [db]} [_ {:keys [uid title]}]]
     (let [new-db    (update db :daily-notes/items (fn [items]
                                                     (into [uid] items)))
-          block-uid (gen-block-uid)]
+          block-uid (common.utils/gen-block-uid)]
       (if (db/e-by-av :block/uid uid)
         {:db new-db}
         {:db       new-db
@@ -482,7 +481,7 @@
             [:dispatch [:daily-note/add uid]]
             [:dispatch [:page/create {:title     title
                                       :page-uid  uid
-                                      :block-uid (gen-block-uid)}]])]}))
+                                      :block-uid (common.utils/gen-block-uid)}]])]}))
 
 
 (reg-event-fx
@@ -915,13 +914,6 @@
                                              :embed-id embed-id}]]]}))))
 
 
-(defn- find-page-links [s]
-  (->> (common-db/string->lookup-refs s)
-       (filter #(= :node/title (first %)))
-       (map second)
-       (into #{})))
-
-
 (reg-event-fx
   :block/save
   (fn [_ [_ {:keys [uid old-string new-string callback]
@@ -931,22 +923,7 @@
           block-eid     (common-db/e-by-av @db/dsdb :block/uid uid)
           do-nothing?   (or (not block-eid)
                             (= old-string new-string))
-          links-in-old  (find-page-links old-string)
-          links-in-new  (find-page-links new-string)
-          link-diff     (set/difference links-in-new links-in-old)
-          ;; TODO: does page already exists
-          atomic-pages  (when-not (empty? link-diff)
-                          (into []
-                                (for [title link-diff]
-                                  (atomic-graph-ops/make-page-new-op title
-                                                                     (gen-block-uid)
-                                                                     (gen-block-uid)))))
-          atomic-save   (atomic-graph-ops/make-block-save-op uid old-string new-string)
-          block-save-op (if (empty? atomic-pages)
-                          atomic-save
-                          (composite-graph-ops/make-consequence-op {:op/type :block/save}
-                                                                   (conj atomic-pages
-                                                                         atomic-save)))]
+          block-save-op (atomic-graph-ops/build-block-save-op @db/dsdb uid old-string new-string)]
       (js/console.debug ":block/save local?" local?
                         ", do-nothing?" do-nothing?)
       (when-not do-nothing?
@@ -1088,7 +1065,7 @@
                                  (str (:block/uid parent) "-embed-" embed-id))
         root-block?           (boolean (:node/title parent))
         context-root-uid      (get-in rfdb [:current-route :path-params :id])
-        new-uid               (gen-block-uid)
+        new-uid               (common.utils/gen-block-uid)
         {:keys [value start]} d-key-down
         event                 (cond
                                 (and (:block/open block)
