@@ -21,8 +21,7 @@
     [goog.dom :refer [getElement]]
     [goog.object :as gobj]
     [re-frame.core :as rf]
-    [reagent.dom :as r-dom]
-    [stylefy.core :as stylefy]))
+    [reagent.dom :as r-dom]))
 
 
 (goog-define SENTRY_DSN "")
