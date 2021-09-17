@@ -98,7 +98,6 @@
           ")"))))
 
 
-
 (reg-sub
   :zoom-level
   (fn [db _]

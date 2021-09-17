@@ -49,8 +49,8 @@
                       [:&.is-theme-light [:button:hover {:filter "brightness(92%)"}]]
                       [:&.is-theme-dark [:button:hover {:filter "brightness(150%)"}]]
                       [:&.is-theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ; Windows close button background color
-                                                                          :filter "none"
-                                                                          :color "#fff"}]]]
+                                                                             :filter "none"
+                                                                             :color "#fff"}]]]
                      ;; Styles for linux (Ubuntu)
                      [:&.os-linux {:display "grid"
                                    :padding "4px"

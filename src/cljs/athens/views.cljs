@@ -75,7 +75,7 @@
                                          :theme-dark? @theme-dark})}
                    {:style {:display "contents"}}
                    (zoom))
-        [:> GlobalStyles]
+       [:> GlobalStyles]
        [alert]
        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
          [m-snackbar
