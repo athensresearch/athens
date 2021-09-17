@@ -70,10 +70,10 @@
         modal      (rf/subscribe [:modal])
         theme-dark (rf/subscribe [:theme/dark])]
     (fn []
-      [:div {:class (app-classes {:os os
-                                  :electron? electron?
-                                  :theme-dark? @theme-dark})}
-            (merge {:style {:display "contents"}}
+      [:div (merge {:class (app-classes {:os os
+                                         :electron? electron?
+                                         :theme-dark? @theme-dark})}
+                   {:style {:display "contents"}}
                    (zoom))
         [:> GlobalStyles]
        [alert]
