@@ -2,7 +2,6 @@
   (:require
     [athens.config :as config]
     [athens.util :as util]
-    [garden.color :refer [opacify hex->hsl]]
     [re-frame.core :refer [reg-sub subscribe]]
     [stylefy.core :as stylefy]
     [stylefy.reagent :as stylefy-reagent]))
