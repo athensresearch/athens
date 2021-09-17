@@ -56,7 +56,7 @@
                             :integrations     [(new (.. tracing -Integrations -BrowserTracing))
                                                (new (.. integrations -CaptureConsole)
                                                     (clj->js {:levels ["error" "assert"]}))
-                                               (new (.. integrations -ReportingObserverIntegration)
+                                               (new (.. integrations -ReportingObserver)
                                                     (clj->js {:types ["crash"]}))]
                             :environment      (if config/debug? "development" "production")
                             :beforeSend       #(when (sentry-on?) %)
