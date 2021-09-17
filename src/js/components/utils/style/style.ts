@@ -127,19 +127,102 @@ export const GlobalStyles = createGlobalStyle`
     }
   }
 
-  body {
-    min-height: 100vh;
-    background: var(--background-color);
-    font-family: var(--font-family-default);
-    color: var(--body-text-color);
-    font-size: 16px;
-    line-height: 1.5;
+  * {
+    box-sizing: border-box;
   }
 
   html {
     padding: 0;
     margin: 0;
     height: 100vh;
+    background: var(--background-color);
+    font-family: var(--font-family-default);
+    color: var(--body-text-color);
+    font-size: 16px;
+    line-height: 1.5;
+
+    a {
+      color: var(--link-color);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin: 0.2em 0;
+      line-height: 1.3;
+      color: var(--header-text-color);
+    }
+
+    h1 {
+      font-size: 3.123em;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      font-size: 2.375em;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+    }
+
+    h3 {
+      font-size: 1.75em;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    h4 {
+      font-size: 1.3125em;
+    }
+
+    h5 {
+      font-size: 0.75em;
+      font-weight: 500;
+      line-height: 1em;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .MuiSvgIcon-root {
+      font-size: 1.5rem;
+    }
+
+    input {
+      font-family: inherit;
+    }
+
+    mark {
+      background-color: var(--highlight-color);
+      border-radius: 0.25rem;
+      color: #000;
+    }
+
+    kbd {
+      text-transform: uppercase;
+      font-family: inherit;
+      font-size: 0.85em;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      display: inline-flex;
+      background: var(--body-text-color---opacity-lower);
+      border-radius: 0.25rem;
+      padding: 0.25rem 0.5rem;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    :focus {
+      outline-width: none;
+    }
+    :focus-visible {
+      outline-width: 1px;
+    }
+  }
+
+  body {
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
   }
 
   * {

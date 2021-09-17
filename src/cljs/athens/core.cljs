@@ -114,7 +114,6 @@
   (init-sentry)
   (init-ipcRenderer)
   (style/init)
-  (stylefy/tag "body" style/app-styles)
   (listeners/init)
   (init-datalog-console)
   (rf/dispatch-sync (boot-evts))
