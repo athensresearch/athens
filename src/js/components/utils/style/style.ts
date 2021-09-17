@@ -111,7 +111,6 @@ export const GlobalStyles = createGlobalStyle`
     --font-size--text-2xl: 1.5rem;
 
     ${opacityStyles}
-    ${lightThemeColors}
 
     .is-theme-light {
       ${lightThemeColors}
