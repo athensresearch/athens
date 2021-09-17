@@ -548,8 +548,7 @@
 (reg-event-fx
   :theme/set
   (fn [{:keys [db]} _]
-    (let [theme (if (-> db :athens/persist :theme/dark) style/THEME-DARK style/THEME-LIGHT)]
-      {:stylefy/tag [":root" (style/permute-color-opacities theme)]})))
+    (if (-> db :athens/persist :theme/dark) style/THEME-DARK style/THEME-LIGHT)))
 
 
 (reg-event-fx
