@@ -230,11 +230,6 @@
   (stylefy/tag "html" base-styles)
   (stylefy/tag "*" {:box-sizing "border-box"})
   (stylefy/class "CodeMirror" codemirror-styles)
-  (let [permute-light (permute-color-opacities THEME-LIGHT)
-        permute-dark  (permute-color-opacities THEME-DARK)]
-    (stylefy/tag ":root" (merge permute-light
-                                {:font-size "16px"
-                                 ::stylefy/media {{:prefers-color-scheme "dark"} permute-dark}})))
   ;; hide re-frame-10x by default
   (when config/debug?
     (util/hide-10x)))

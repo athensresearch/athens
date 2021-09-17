@@ -6,7 +6,7 @@
     [athens.electron.db-modal :as db-modal]
     [athens.style :refer [zoom]]
     [athens.subs]
-    [athens.util :refer [get-os electron?]]
+    [athens.util :refer [get-os electron? app-classes]]
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.devtool :refer [devtool-component]]
@@ -67,9 +67,13 @@
   (let [loading    (rf/subscribe [:loading?])
         os         (get-os)
         electron?  (electron?)
-        modal      (rf/subscribe [:modal])]
+        modal      (rf/subscribe [:modal])
+        theme-dark (rf/subscribe [:theme/dark])]
     (fn []
-      [:div (merge {:style {:display "contents"}}
+      [:div {:class (app-classes {:os os
+                                  :electron? electron?
+                                  :theme-dark? @theme-dark})}
+            (merge {:style {:display "contents"}}
                    (zoom))
         [:> GlobalStyles]
        [alert]
