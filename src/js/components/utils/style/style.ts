@@ -179,10 +179,6 @@ export const GlobalStyles = createGlobalStyle`
       text-transform: uppercase;
     }
 
-    .MuiSvgIcon-root {
-      font-size: 1.5rem;
-    }
-
     input {
       font-family: inherit;
     }
@@ -226,5 +222,9 @@ export const GlobalStyles = createGlobalStyle`
 
   * {
     box-sizing: border-box;
+  }
+
+  .MuiSvgIcon-root {
+    font-size: 1.5rem;
   }
 `;
