@@ -269,7 +269,7 @@
       :mac "os-mac"
       :linux "os-linux")
     (if electron? "is-electron" "is-web")
-    (if theme-dark? "theme-dark" "theme-light")
+    (if theme-dark? "is-theme-dark" "is-theme-light")
     (when win-focused? "is-focused")
     (when win-fullscreen? "is-fullscreen")
     (when win-maximized? "is-maximized")]))

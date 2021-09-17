@@ -33,7 +33,7 @@ const Wrapper = styled.div`
       &:hover {
         backdrop-filter: brightness(92%);
 
-        .theme-dark & {
+        .is-theme-dark & {
           backdrop-filter: brightness(150%);
         }
       }
@@ -109,12 +109,12 @@ const Wrapper = styled.div`
         font-size: 12px;
       }
 
-      .theme-light & {
+      .is-theme-light & {
         button:hover:before {
           backdrop-filter: brightness(92%);
         }
       }
-      .theme-dark & {
+      .is-theme-dark & {
         button:hover:before {
           backdrop-filter: brightness(150%);
         }

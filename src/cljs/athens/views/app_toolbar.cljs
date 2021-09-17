@@ -46,9 +46,9 @@
                                               :justify-content "center"
                                               :border 0}
                                      [:svg {:font-size "16px"}]]
-                      [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
-                      [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
-                      [:&.theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ; Windows close button background color
+                      [:&.is-theme-light [:button:hover {:filter "brightness(92%)"}]]
+                      [:&.is-theme-dark [:button:hover {:filter "brightness(150%)"}]]
+                      [:&.is-theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ; Windows close button background color
                                                                           :filter "none"
                                                                           :color "#fff"}]]]
                      ;; Styles for linux (Ubuntu)
@@ -79,8 +79,8 @@
                        [:&.minimize [:svg {:position "relative"
                                            :top "5px"}]]
                        [:svg {:font-size "12px"}]]
-                      [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
-                      [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
+                      [:&.is-theme-light [:button:hover {:filter "brightness(92%)"}]]
+                      [:&.is-theme-dark [:button:hover {:filter "brightness(150%)"}]]
                       [:&.is-focused ["button.close::before" {:background "#E9541F"}]]]]})
 
 
