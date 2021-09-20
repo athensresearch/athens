@@ -369,7 +369,7 @@
              [context-menu/context-menu-el uid-sanitized-block state])
            [bullet/bullet-el block state linked-ref]
            [tooltip/tooltip-el uid-sanitized-block state]
-           [content/block-content-el block state is-presence]
+           [content/block-content-el block state]
 
            [presence/inline-presence-el uid]
 
