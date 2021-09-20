@@ -593,8 +593,8 @@
   [blocks]
   (group-by (fn [x]
               (let [parent (-> x
-                              :block/parents
-                              first)]
+                               :block/parents
+                               first)]
                 [(:node/title parent) (:edit/time parent 0)]))
             blocks))
 
