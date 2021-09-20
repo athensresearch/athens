@@ -3,6 +3,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.graph.composite :as composite-graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.utils                  :as common.utils]
@@ -982,23 +983,33 @@
 
 (reg-event-fx
   :enter/split-block
-  (fn [_ [_ {:keys [uid value index new-uid embed-id] :as args}]]
+  (fn [_ [_ {:keys [parent-uid uid new-uid new-order old-string value index embed-id] :as args}]]
     (js/console.debug ":enter/split-block" (pr-str args))
-    (let [local? (not (client/open?))]
-      (js/console.debug ":enter/split-block local?" local?)
+    (let [local?            (not (client/open?))
+          save-block-op     (atomic-graph-ops/build-block-save-op @db/dsdb
+                                                                  uid
+                                                                  old-string
+                                                                  (subs value 0 index))
+          new-block-op      (atomic-graph-ops/make-block-new-op parent-uid new-uid new-order)
+          new-block-save-op (atomic-graph-ops/build-block-save-op @db/dsdb
+                                                                  new-uid
+                                                                  ""
+                                                                  (subs value index))
+          split-block-op    (composite-graph-ops/make-consequence-op {:op/type :block/split}
+                                                                     [save-block-op
+                                                                      new-block-op
+                                                                      new-block-save-op])]
+      (js/console.debug ":enter/split-block local?" local? "split-block-op" (pr-str split-block-op))
       (if local?
-        (let [split-block-event (common-events/build-split-block-event -1
-                                                                       uid
-                                                                       value
-                                                                       index
-                                                                       new-uid)
-              tx                (resolver/resolve-event-to-tx @db/dsdb split-block-event)]
+        (let [tx (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb split-block-op)]
           (js/console.debug ":enter/split-block tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
 
-        {:fx [[:dispatch [:remote/split-block args]]]}))))
+        {:fx [[:dispatch [:remote/split-block {:op       split-block-op
+                                               :new-uid  new-uid
+                                               :embed-id embed-id}]]]}))))
 
 
 (reg-event-fx
@@ -1056,13 +1067,15 @@
                                          (.getAttribute "data-uid"))
                                  uid)
         [uid embed-id]        (db/uid-and-embed-id uid)
-        block                 (db/get-block [:block/uid uid])
-        parent                (db/get-parent [:block/uid uid])
+        {:block/keys [string order]
+         :as         block}   (db/get-block [:block/uid uid])
+        {parent-uid :block/uid
+         :as        parent}   (db/get-parent [:block/uid uid])
         is-parent-root-embed? (= (some-> d-key-down :target
                                          (.. (closest ".block-embed"))
                                          (. -firstChild)
                                          (.getAttribute "data-uid"))
-                                 (str (:block/uid parent) "-embed-" embed-id))
+                                 (str parent-uid "-embed-" embed-id))
         root-block?           (boolean (:node/title parent))
         context-root-uid      (get-in rfdb [:current-route :path-params :id])
         new-uid               (common.utils/gen-block-uid)
@@ -1118,11 +1131,14 @@
                                                    :embed-id embed-id}]
 
                                 (not (zero? start))
-                                [:enter/split-block {:uid      uid
-                                                     :value    value
-                                                     :index    start
-                                                     :new-uid  new-uid
-                                                     :embed-id embed-id}]
+                                [:enter/split-block {:uid        uid
+                                                     :old-string string
+                                                     :parent-uid parent-uid
+                                                     :value      value
+                                                     :index      start
+                                                     :new-uid    new-uid
+                                                     :new-order  (inc order)
+                                                     :embed-id   embed-id}]
 
                                 (empty? value)
                                 [:unindent {:uid              uid

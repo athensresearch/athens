@@ -524,29 +524,22 @@
 
 (rf/reg-event-fx
   :remote/followup-split-block
-  (fn [{db :db} [_ {:keys [event-id embed-id] :as args}]]
-    (js/console.debug ":remote/followup-split-block args" (pr-str args))
-    (let [{:keys [event]} (get-event-acceptance-info db event-id)
-          {:keys [new-uid]} (:event/args event)]
-      (js/console.debug ":remote/followup-split-block new-uid:" new-uid
-                        ", embed-id" embed-id)
-      {:fx [[:dispatch [:editing/uid (str new-uid (when embed-id
-                                                    (str "-embed-" embed-id)))]]]})))
+  (fn [_ [_ {:keys [embed-id new-uid]}]]
+    (js/console.debug ":remote/followup-split-block new-uid:" new-uid
+                      ", embed-id:" embed-id)
+    {:fx [[:dispatch [:editing/uid (str new-uid (when embed-id
+                                                  (str "-embed-" embed-id)))]]]}))
 
 
 (rf/reg-event-fx
   :remote/split-block
-  (fn [{db :db} [_ {:keys [uid value index new-uid embed-id] :as args}]]
+  (fn [{db :db} [_ {:keys [op new-uid embed-id] :as args}]]
     (js/console.debug ":remote/split-block args" (pr-str args))
     (let [last-seen-tx                 (:remote/last-seen-tx db)
           {event-id :event/id
-           :as      split-block-event} (common-events/build-split-block-event last-seen-tx
-                                                                              uid
-                                                                              value
-                                                                              index
-                                                                              new-uid)
-          followup-fx                  [[:dispatch [:remote/followup-split-block {:event-id event-id
-                                                                                  :embed-id embed-id}]]]]
+           :as      split-block-event} (common-events/build-atomic-event last-seen-tx op)
+          followup-fx                  [[:dispatch [:remote/followup-split-block {:embed-id embed-id
+                                                                                  :new-uid  new-uid}]]]]
       (js/console.debug ":remote/split-block event" (pr-str split-block-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! split-block-event]]]]})))
