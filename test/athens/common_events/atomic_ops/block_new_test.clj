@@ -1,4 +1,4 @@
-(ns athens.common-events.atomic-ops-test
+(ns athens.common-events.atomic-ops.block-new-test
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events.fixture         :as fixture]
@@ -40,7 +40,7 @@
         (t/is (= #{[child-1-eid]} (d/q query-children @@fixture/connection page-1-eid)))
         (let [child-2-eid (common-db/e-by-av @@fixture/connection
                                              :block/uid child-2-uid)
-              children (d/q query-children @@fixture/connection child-1-eid)]
+              children    (d/q query-children @@fixture/connection child-1-eid)]
           (t/is (seq children))
           (t/is (= #{[child-2-eid]} children))))))
 
@@ -72,29 +72,9 @@
         (d/transact @fixture/connection new-block-txs)
         (let [child-2-eid (common-db/e-by-av @@fixture/connection
                                              :block/uid child-2-uid)
-              children (d/q query-children @@fixture/connection page-1-eid)]
+              children    (d/q query-children @@fixture/connection page-1-eid)
+              block       (common-db/get-block @@fixture/connection
+                                               [:block/uid child-2-uid])]
+          (t/is (= 1 (:block/order block)))
           (t/is (seq children))
           (t/is (= #{[child-1-eid] [child-2-eid]} children)))))))
-
-
-(t/deftest page-new-test
-  (t/testing "Page new test"
-    (let [test-title        "test page title"
-          test-page-uid     "test-page-uid-1"
-          test-block-uid    "test-block-uid-1"
-          page-new-event   (atomic-graph-ops/make-page-new-op test-title
-                                                              test-page-uid
-                                                              test-block-uid)
-          page-new-txs     (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                    page-new-event)]
-      (d/transact @fixture/connection page-new-txs)
-      (let [e-by-title (d/q '[:find ?e
-                              :where [?e :node/title ?title]
-                              :in $ ?title]
-                            @@fixture/connection test-title)
-            e-by-uid (d/q '[:find ?e
-                            :where [?e :block/uid ?uid]
-                            :in $ ?uid]
-                          @@fixture/connection test-page-uid)]
-        (t/is (seq e-by-title))
-        (t/is (= e-by-title e-by-uid))))))
