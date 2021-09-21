@@ -11,7 +11,6 @@
     [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
-    [athens.style                         :as style]
     [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
@@ -549,7 +548,10 @@
 (reg-event-fx
   :theme/set
   (fn [{:keys [db]} _]
-    (if (-> db :athens/persist :theme/dark) style/THEME-DARK style/THEME-LIGHT)))
+    (util/switch-body-classes (if (-> db :athens/persist :theme/dark)
+                                ["is-theme-light" "is-theme-dark"]
+                                ["is-theme-dark" "is-theme-light"]))
+    {}))
 
 
 (reg-event-fx

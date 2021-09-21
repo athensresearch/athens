@@ -275,6 +275,20 @@
     (when win-maximized? "is-maximized")]))
 
 
+(defn add-body-classes
+  [classes]
+  (let [cl js/document.body.classList]
+    (doseq [class (remove nil? classes)]
+      (.add cl class))))
+
+
+(defn switch-body-classes
+  [[from to]]
+  (let [cl js/document.body.classList]
+    (.add cl to)
+    (.remove cl from)))
+
+
 (defn shortcut-key?
   "Use meta for mac, ctrl for others."
   [meta ctrl]

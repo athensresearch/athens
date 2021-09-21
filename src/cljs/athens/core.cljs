@@ -94,6 +94,12 @@
                                nil)))))))
 
 
+(defn init-styles
+  []
+  (util/add-body-classes (util/app-classes {:os        (util/get-os)
+                                            :electron? (util/electron?)})))
+
+
 (defn boot-evts
   []
   (if (util/electron?)
@@ -113,6 +119,7 @@
   (init-sentry)
   (init-ipcRenderer)
   (style/init)
+  (init-styles)
   (listeners/init)
   (init-datalog-console)
   (rf/dispatch-sync (boot-evts))
