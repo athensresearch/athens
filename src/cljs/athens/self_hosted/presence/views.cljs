@@ -1,56 +1,16 @@
 (ns athens.self-hosted.presence.views
   (:require
+    ["/components/Avatar/Avatar" :refer [Avatar]]
     ["/components/PresenceDetails/PresenceDetails" :refer [PresenceDetails]]
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
     [athens.self-hosted.presence.subs]
     [re-frame.core :as rf]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [reagent.core :as r]))
 
 
 ;; Avatar
 
-
-(defn- avatar-svg
-  [props & children]
-  [:svg (merge (use-style {:height          "1.5em"
-                           :width           "1.5em"
-                           :overflow        "hidden"
-                           :border-radius   "1000em"}
-                          {:class "user-avatar"})
-               props)
-   children])
-
-
-(defn- avatar-el
-  "Takes a member map for the user data.
-  Optionally takes some props for things like fill."
-  ([member]
-   [avatar-el member {:filled true}])
-  ([{:keys [username color]} {:keys [filled]}]
-   (let [initials (if (string? username)
-                    (subs username 0 2)
-                    "")]
-     [avatar-svg {:viewBox "0 0 24 24"
-                  :vectorEffect "non-scaling-stroke"}
-      [:circle {:cx          12
-                :cy          12
-                :r           12
-                :fill        color
-                :stroke      color
-                :fillOpacity (when-not filled 0.1)
-                :strokeWidth (if filled 0 "3px")
-                :key "circle"}]
-      [:text {:width      24
-              :x          12
-              :y          16.5
-              :font-size  14
-              :font-weight 600
-              :fill       (if filled "#fff" color)
-              :textAnchor "middle"
-              :key "text"}
-       initials]])))
 
 
 (defn user->person
@@ -133,4 +93,13 @@
   [uid]
   (let [inline-present? (rf/subscribe [:presence/has-presence uid])]
     (when @inline-present?
-      [avatar-el @inline-present?])))
+    [:> (.-Stack Avatar)
+     {:size "1.25rem"
+      :maskSize "1px"
+      :stackOrder "from-left"
+      :limit 3
+      :style {:transform "translateX(calc(-100% + 1rem)) translateY(0.35rem)"
+              :padding "0.125rem"
+              :background "var(--background-color)"}}
+     [:> Avatar (merge {:showTooltip false} @inline-present?)]])))
+

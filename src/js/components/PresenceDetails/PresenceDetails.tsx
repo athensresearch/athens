@@ -192,7 +192,7 @@ export const PresenceDetails = ({
             <Avatar.Stack
               size="1em"
               maskSize="1.5px"
-              overlap="0.2"
+              overlap={0.2}
             >
               {showablePersons && showablePersons.slice(0, maxToDisplay).map((member, index) => {
                 if (index < maxToDisplay) {
