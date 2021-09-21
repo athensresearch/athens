@@ -157,7 +157,7 @@ export const Avatar = ({
  * Wraps a horizontal series of avatars and causes them to overlap each other.
  */
 interface AvatarStackProps {
-  children: React.ReactChild[];
+  children: JSX.Element[];
   /**
    * The width of the mask added to overlapping Avatars.
    */
@@ -249,7 +249,7 @@ Avatar.Stack = React.forwardRef((props: AvatarStackProps, ref) => {
       }}
       {...rest}
     >
-      {Children.map((avatar) => React.cloneElement(avatar, { size }))}
+      {Children.map((avatar: JSX.Element) => React.cloneElement(avatar, { size }))}
       {overflow > 0 && (
         <Avatar
           personId="overflow"
