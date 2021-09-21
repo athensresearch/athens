@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.7](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.6...v1.0.0-alpha.rtc.7) (2021-09-21)
+
+
+### Bug Fixes
+
+* Catchup with wrong RTC releases. ([9e48f65](https://github.com/athensresearch/athens/commit/9e48f657a7531aeb72ae43936753ac17070a90e2))
+* set body classes ([4a7d3ac](https://github.com/athensresearch/athens/commit/4a7d3aca71be253e0af2d62a84fa6a68128ae6f4)), closes [#1654](https://github.com/athensresearch/athens/issues/1654)
+
 ## [1.0.0-alpha.rtc.4](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.3...v1.0.0-alpha.rtc.4) (2021-09-16)
 
 
