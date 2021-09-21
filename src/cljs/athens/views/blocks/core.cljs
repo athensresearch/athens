@@ -328,7 +328,7 @@
              is-editing            @(rf/subscribe [:editing/is-editing uid])
              is-selected           @(rf/subscribe [::select-subs/selected? uid])
              present-user          @(rf/subscribe [:presence/has-presence uid])
-             is-presence           (not (nil? present-user))]
+             is-presence           (seq present-user)]
 
          ;; (prn uid is-selected)
 
