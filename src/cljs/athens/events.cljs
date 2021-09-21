@@ -743,39 +743,17 @@
         {:fx [[:dispatch [:alert/js "Redo not supported in Lan-Party, yet."]]]}))))
 
 
-(defn prev-block-uid-without-presence-recursively
-  "base case: prev block
-  recursive case: keep going until no longer present"
-  [uid]
-  (let [prev-block-uid (db/prev-block-uid uid)
-        has-presence?  @(subscribe [:presence/has-presence prev-block-uid])]
-    (if (and prev-block-uid
-             has-presence?)
-      (prev-block-uid-without-presence-recursively prev-block-uid)
-      prev-block-uid)))
-
-
 (reg-event-fx
   :up
   (fn [_ [_ uid]]
-    (let [prev-block-uid (prev-block-uid-without-presence-recursively uid)]
+    (let [prev-block-uid (db/prev-block-uid uid)]
       {:dispatch [:editing/uid (or prev-block-uid uid)]})))
-
-
-(defn next-block-uid-without-presence-recursively
-  [uid]
-  (let [next-block-uid (db/next-block-uid uid)
-        has-presence?  @(subscribe [:presence/has-presence next-block-uid])]
-    (if (and next-block-uid
-             has-presence?)
-      (next-block-uid-without-presence-recursively next-block-uid)
-      next-block-uid)))
 
 
 (reg-event-fx
   :down
   (fn [_ [_ uid]]
-    (let [next-block-uid (next-block-uid-without-presence-recursively uid)]
+    (let [next-block-uid (db/next-block-uid uid)]
       {:dispatch [:editing/uid (or next-block-uid uid)]})))
 
 
