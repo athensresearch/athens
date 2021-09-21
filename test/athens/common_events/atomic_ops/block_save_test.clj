@@ -2,7 +2,7 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events.fixture         :as fixture]
-    [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [clojure.test                         :as t]
     [datahike.api                         :as d]))
@@ -17,10 +17,10 @@
     (let [block-uid     "block-uid-1"
           empty-str     ""
           new-str       "new-string"
-          block-save-op (atomic-graph-ops/build-block-save-op @@fixture/connection
-                                                              block-uid
-                                                              empty-str
-                                                              new-str)]
+          block-save-op (graph-ops/build-block-save-op @@fixture/connection
+                                                       block-uid
+                                                       empty-str
+                                                       new-str)]
       (t/is (= #:op{:type    :block/save,
                     :atomic? true,
                     :args    {:block-uid  block-uid
@@ -35,10 +35,10 @@
           {:op/keys [consequences
                      atomic?
                      trigger
-                     type]} (atomic-graph-ops/build-block-save-op @@fixture/connection
-                                                                  block-uid
-                                                                  empty-str
-                                                                  new-str)]
+                     type]} (graph-ops/build-block-save-op @@fixture/connection
+                                                           block-uid
+                                                           empty-str
+                                                           new-str)]
       (t/is (= :composite/consequence type))
       (t/is (false? atomic?))
       (t/is (= :block/save (:op/type trigger)))
@@ -69,10 +69,10 @@
       (d/transact @fixture/connection setup-txs)
       (let [child-1-eid    (common-db/e-by-av @@fixture/connection
                                               :block/uid child-1-uid)
-            block-save-op  (atomic-graph-ops/build-block-save-op @@fixture/connection
-                                                                 child-1-uid
-                                                                 empty-str
-                                                                 new-str)
+            block-save-op  (graph-ops/build-block-save-op @@fixture/connection
+                                                          child-1-uid
+                                                          empty-str
+                                                          new-str)
             block-save-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                     block-save-op)]
         (t/is (= empty-str (common-db/v-by-ea @@fixture/connection
@@ -96,10 +96,10 @@
       (d/transact @fixture/connection setup-txs)
       (let [child-1-eid    (common-db/e-by-av @@fixture/connection
                                               :block/uid child-1-uid)
-            block-save-op  (atomic-graph-ops/build-block-save-op @@fixture/connection
-                                                                 child-1-uid
-                                                                 empty-str
-                                                                 new-str)
+            block-save-op  (graph-ops/build-block-save-op @@fixture/connection
+                                                          child-1-uid
+                                                          empty-str
+                                                          new-str)
             block-save-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                     block-save-op)]
         (t/is (nil? (common-db/e-by-av @@fixture/connection

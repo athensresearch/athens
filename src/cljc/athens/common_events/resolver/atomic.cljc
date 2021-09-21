@@ -5,7 +5,8 @@
     #?(:clj  [datahike.api :as d]
        :cljs [datascript.core :as d]))
   #?(:clj
-     (:import clojure.lang.ExceptionInfo)))
+     (:import
+       clojure.lang.ExceptionInfo)))
 
 
 (defmulti resolve-atomic-op-to-tx
@@ -27,7 +28,7 @@
                                :create/time  now
                                :edit/time    now}
         reindex               (concat [new-block]
-                                      (common-db/inc-after db [:block/uid parent-uid] block-order))
+                                      (common-db/inc-after db [:block/uid parent-uid] (dec block-order)))
         tx-data               {:block/uid      parent-uid
                                :block/children reindex
                                :edit/time      now}]

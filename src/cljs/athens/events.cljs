@@ -4,6 +4,7 @@
     [athens.common-events                 :as common-events]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.composite :as composite-graph-ops]
+    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.utils                  :as common.utils]
@@ -924,7 +925,7 @@
           block-eid     (common-db/e-by-av @db/dsdb :block/uid uid)
           do-nothing?   (or (not block-eid)
                             (= old-string new-string))
-          block-save-op (atomic-graph-ops/build-block-save-op @db/dsdb uid old-string new-string)]
+          block-save-op (graph-ops/build-block-save-op @db/dsdb uid old-string new-string)]
       (js/console.debug ":block/save local?" local?
                         ", do-nothing?" do-nothing?)
       (when-not do-nothing?
@@ -985,20 +986,15 @@
   :enter/split-block
   (fn [_ [_ {:keys [parent-uid uid new-uid new-order old-string value index embed-id] :as args}]]
     (js/console.debug ":enter/split-block" (pr-str args))
-    (let [local?            (not (client/open?))
-          save-block-op     (atomic-graph-ops/build-block-save-op @db/dsdb
-                                                                  uid
-                                                                  old-string
-                                                                  (subs value 0 index))
-          new-block-op      (atomic-graph-ops/make-block-new-op parent-uid new-uid new-order)
-          new-block-save-op (atomic-graph-ops/build-block-save-op @db/dsdb
-                                                                  new-uid
-                                                                  ""
-                                                                  (subs value index))
-          split-block-op    (composite-graph-ops/make-consequence-op {:op/type :block/split}
-                                                                     [save-block-op
-                                                                      new-block-op
-                                                                      new-block-save-op])]
+    (let [local?         (not (client/open?))
+          split-block-op (graph-ops/build-block-split-op @db/dsdb
+                                                         {:parent-uid      parent-uid
+                                                          :old-block-uid   uid
+                                                          :new-block-uid   new-uid
+                                                          :new-block-order new-order
+                                                          :old-string      old-string
+                                                          :new-string      value
+                                                          :index           index})]
       (js/console.debug ":enter/split-block local?" local? "split-block-op" (pr-str split-block-op))
       (if local?
         (let [tx (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb split-block-op)]
