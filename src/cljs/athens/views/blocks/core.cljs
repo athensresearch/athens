@@ -1,6 +1,5 @@
 (ns athens.views.blocks.core
   (:require
-    ["/components/Avatar/Avatar" :refer [Avatar]]
     ["/components/Button/Button" :refer [Button]]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]

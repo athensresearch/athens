@@ -93,13 +93,13 @@
   [uid]
   (let [inline-present? (rf/subscribe [:presence/has-presence uid])]
     (when @inline-present?
-    [:> (.-Stack Avatar)
-     {:size "1.25rem"
-      :maskSize "1px"
-      :stackOrder "from-left"
-      :limit 3
-      :style {:transform "translateX(calc(-100% + 1rem)) translateY(0.35rem)"
-              :padding "0.125rem"
-              :background "var(--background-color)"}}
-     [:> Avatar (merge {:showTooltip false} @inline-present?)]])))
+      [:> (.-Stack Avatar)
+       {:size "1.25rem"
+        :maskSize "1px"
+        :stackOrder "from-left"
+        :limit 3
+        :style {:transform "translateX(calc(-100% + 1rem)) translateY(0.35rem)"
+                :padding "0.125rem"
+                :background "var(--background-color)"}}
+       [:> Avatar (merge {:showTooltip false} @inline-present?)]])))
 
