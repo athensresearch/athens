@@ -1,11 +1,12 @@
 (ns athens.views
   (:require
+    ["/components/utils/style/style" :refer [GlobalStyles]]
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
     [athens.electron.db-modal :as db-modal]
     [athens.style :refer [zoom]]
     [athens.subs]
-    [athens.util :refer [get-os electron?]]
+    [athens.util :refer [get-os electron? app-classes]]
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.devtool :refer [devtool-component]]
@@ -66,10 +67,15 @@
   (let [loading    (rf/subscribe [:loading?])
         os         (get-os)
         electron?  (electron?)
-        modal      (rf/subscribe [:modal])]
+        modal      (rf/subscribe [:modal])
+        theme-dark (rf/subscribe [:theme/dark])]
     (fn []
-      [:div (merge {:style {:display "contents"}}
+      [:div (merge {:class (app-classes {:os os
+                                         :electron? electron?
+                                         :theme-dark? @theme-dark})}
+                   {:style {:display "contents"}}
                    (zoom))
+       [:> GlobalStyles]
        [alert]
        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
          [m-snackbar

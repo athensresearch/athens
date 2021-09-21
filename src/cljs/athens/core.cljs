@@ -21,8 +21,7 @@
     [goog.dom :refer [getElement]]
     [goog.object :as gobj]
     [re-frame.core :as rf]
-    [reagent.dom :as r-dom]
-    [stylefy.core :as stylefy]))
+    [reagent.dom :as r-dom]))
 
 
 (goog-define SENTRY_DSN "")
@@ -114,7 +113,6 @@
   (init-sentry)
   (init-ipcRenderer)
   (style/init)
-  (stylefy/tag "body" style/app-styles)
   (listeners/init)
   (init-datalog-console)
   (rf/dispatch-sync (boot-evts))
