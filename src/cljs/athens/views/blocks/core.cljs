@@ -347,7 +347,6 @@
                                (when (and (seq children) open) "show-tree-indicator")
                                (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
                                (when is-presence "is-presence")]
-           :style             {"--user-color" (if is-presence (:color present-user) nil)}
            :data-uid          uid
            ;; need to know children for selection resolution
            :data-childrenuids children-uids
