@@ -3,7 +3,10 @@
     [athens.common-db :as common-db]
     [athens.common.utils :as utils]
     #?(:clj  [datahike.api :as d]
-       :cljs [datascript.core :as d])))
+       :cljs [datascript.core :as d]))
+  #?(:clj
+     (:import
+       clojure.lang.ExceptionInfo)))
 
 
 (defmulti resolve-atomic-op-to-tx
@@ -20,12 +23,12 @@
         new-block             {:db/id        -1
                                :block/uid    block-uid
                                :block/string ""
-                               :block/order  (inc block-order)
+                               :block/order  block-order
                                :block/open   true
                                :create/time  now
                                :edit/time    now}
         reindex               (concat [new-block]
-                                      (common-db/inc-after db [:block/uid parent-uid] block-order))
+                                      (common-db/inc-after db [:block/uid parent-uid] (dec block-order)))
         tx-data               {:block/uid      parent-uid
                                :block/children reindex
                                :edit/time      now}]
@@ -36,7 +39,11 @@
 (defmethod resolve-atomic-op-to-tx :block/save
   [db {:op/keys [args]}]
   (let [{:keys [block-uid new-string old-string]} args
-        {stored-old-string :block/string}         (d/pull db [:block/string] [:block/uid block-uid])]
+        {stored-old-string :block/string}         (try
+                                                    (d/pull db [:block/string] [:block/uid block-uid])
+                                                    (catch #?(:clj ExceptionInfo
+                                                              :cljs js/Error) _ex
+                                                      {:block/string ""}))]
     (if (= stored-old-string old-string)
       (let [now           (utils/now-ts)
             updated-block {:db/id        [:block/uid block-uid]
@@ -70,11 +77,8 @@
 
 
 (defmethod resolve-atomic-op-to-tx :composite/consequence
-  [db {:op/keys [consequences] :as composite}]
+  [db {:op/keys [consequences] :as _composite}]
   (into []
-        (for [{:op/keys [atomic?] :as consequence} consequences]
-          (if atomic?
-            (first (resolve-atomic-op-to-tx db consequence))
-            (throw
-              (ex-info "Composite in composite graph ops not supported, yet."
-                       {:composite composite}))))))
+        (mapcat (fn [consequence]
+                  (resolve-atomic-op-to-tx db consequence))
+                consequences)))
