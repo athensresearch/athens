@@ -1,5 +1,6 @@
 (ns athens.views.blocks.core
   (:require
+    ["/components/Avatar/Avatar" :refer [Avatar]]
     ["/components/Button/Button" :refer [Button]]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -45,7 +46,6 @@
                                                      :transform  "translateX(50%)"
                                                      :transition "background-color 0.2s ease-in-out"
                                                      :background (style/color :border-color)}]
-                     ["&.is-presence.show-tree-indicator:before" {:background [["var(--user-color)"]]}]
                      [:&:after {:content        "''"
                                 :z-index        -1
                                 :position       "absolute"
@@ -60,7 +60,6 @@
                                 :background     (style/color :link-color :opacity-lower)}]
                      [:&.is-selected:after {:opacity 1}]
                      [:.user-avatar {:position "absolute"
-                                     :transition "transform 0.3s ease"
                                      :left "4px"
                                      :top "4px"}]
                      [:.block-body {:display               "grid"
@@ -85,8 +84,7 @@
                                                   :bottom     0
                                                   :left       0}]]
                      [:.block-content {:grid-area  "content"
-                                       :min-height "1.5em"}
-                      [:&:hover [:+ [:.user-avatar {:transform "translateX(-2em)"}]]]]
+                                       :min-height "1.5em"}]
                      [:&.is-linked-ref {:background-color (style/color :background-plus-2)}]
                      ;; Inset child blocks
                      [:.block-container {:margin-left "2rem"
