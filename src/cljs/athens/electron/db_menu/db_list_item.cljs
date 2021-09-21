@@ -18,7 +18,12 @@
                               :padding "0.5rem 0.25rem 0.5rem 0.5rem"
                               :border-radius "0.25rem"
                               :font-weight "normal"
-                              :line-height "1.1"}]
+                              :background "inherit"
+                              :color "inherit"
+                              :appearance "none"
+                              :border "none"
+                              :line-height "1.1"}
+                      ["&:hover" {:filter "brightness(110%)"}]]
                      [:.is-current]
                      [:.label {:display "block"
                                :overflow "hidden"
