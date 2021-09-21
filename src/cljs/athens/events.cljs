@@ -3,7 +3,6 @@
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
-    [athens.common-events.graph.composite :as composite-graph-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
