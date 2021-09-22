@@ -33,3 +33,14 @@ athens.self-hosted.presence.views/toolbar-presence-el
 athens.self-hosted.client/retract-args
 athens.events/select-down
 athens.common-events.stress-test/transact-without-linkmaker
+athens.common-events.graph.atomic/make-block-open-op
+athens.common-events.graph.atomic/make-block-remove-op
+athens.common-events.graph.atomic/make-block-move-op
+athens.common-events.graph.atomic/make-page-rename-op
+athens.common-events.graph.atomic/make-page-merge-op
+athens.common-events.graph.atomic/make-page-remove-op
+athens.common-events.graph.atomic/make-shortcut-new-op
+athens.common-events.graph.atomic/make-shortcut-remove-op
+athens.common-events.graph.atomic/make-shortcut-move-op
+athens.common-events.graph.schema/valid-atomic-op?
+athens.common-events.graph.schema/explain-atomic-op

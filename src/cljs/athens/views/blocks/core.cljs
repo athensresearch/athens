@@ -45,7 +45,6 @@
                                                      :transform  "translateX(50%)"
                                                      :transition "background-color 0.2s ease-in-out"
                                                      :background (style/color :border-color)}]
-                     ["&.is-presence.show-tree-indicator:before" {:background [["var(--user-color)"]]}]
                      [:&:after {:content        "''"
                                 :z-index        -1
                                 :position       "absolute"
@@ -60,7 +59,6 @@
                                 :background     (style/color :link-color :opacity-lower)}]
                      [:&.is-selected:after {:opacity 1}]
                      [:.user-avatar {:position "absolute"
-                                     :transition "transform 0.3s ease"
                                      :left "4px"
                                      :top "4px"}]
                      [:.block-body {:display               "grid"
@@ -85,8 +83,7 @@
                                                   :bottom     0
                                                   :left       0}]]
                      [:.block-content {:grid-area  "content"
-                                       :min-height "1.5em"}
-                      [:&:hover [:+ [:.user-avatar {:transform "translateX(-2em)"}]]]]
+                                       :min-height "1.5em"}]
                      [:&.is-linked-ref {:background-color (style/color :background-plus-2)}]
                      ;; Inset child blocks
                      [:.block-container {:margin-left "2rem"
@@ -331,7 +328,7 @@
              is-editing            @(rf/subscribe [:editing/is-editing uid])
              is-selected           @(rf/subscribe [::select-subs/selected? uid])
              present-user          @(rf/subscribe [:presence/has-presence uid])
-             is-presence           (not (nil? present-user))]
+             is-presence           (seq present-user)]
 
          ;; (prn uid is-selected)
 
@@ -349,7 +346,6 @@
                                (when (and (seq children) open) "show-tree-indicator")
                                (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
                                (when is-presence "is-presence")]
-           :style             {"--user-color" (if is-presence (:color present-user) nil)}
            :data-uid          uid
            ;; need to know children for selection resolution
            :data-childrenuids children-uids
@@ -373,7 +369,7 @@
              [context-menu/context-menu-el uid-sanitized-block state])
            [bullet/bullet-el block state linked-ref]
            [tooltip/tooltip-el uid-sanitized-block state]
-           [content/block-content-el block state is-presence]
+           [content/block-content-el block state]
 
            [presence/inline-presence-el uid]
 

@@ -13,11 +13,6 @@
     [com.rpl.specter :refer [recursive-path]]))
 
 
-(defn gen-block-uid
-  []
-  (subs (str (random-uuid)) 27))
-
-
 ;; Electron ipcMain Channels
 
 (def ipcMainChannels
@@ -274,10 +269,24 @@
       :mac "os-mac"
       :linux "os-linux")
     (if electron? "is-electron" "is-web")
-    (if theme-dark? "theme-dark" "theme-light")
+    (if theme-dark? "is-theme-dark" "is-theme-light")
     (when win-focused? "is-focused")
     (when win-fullscreen? "is-fullscreen")
     (when win-maximized? "is-maximized")]))
+
+
+(defn add-body-classes
+  [classes]
+  (let [cl js/document.body.classList]
+    (doseq [class (remove nil? classes)]
+      (.add cl class))))
+
+
+(defn switch-body-classes
+  [[from to]]
+  (let [cl js/document.body.classList]
+    (.add cl to)
+    (.remove cl from)))
 
 
 (defn shortcut-key?

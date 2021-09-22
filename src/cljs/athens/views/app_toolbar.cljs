@@ -16,7 +16,9 @@
     ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
     [athens.electron.db-menu.core :refer [db-menu]]
     [athens.electron.db-modal :as db-modal]
+    [athens.electron.utils :as electron.utils]
     [athens.router :as router]
+    [athens.self-hosted.presence.views :refer [toolbar-presence-el]]
     [athens.style :refer [color unzoom]]
     [athens.subs]
     [athens.util :as util :refer [app-classes]]
@@ -44,11 +46,11 @@
                                               :justify-content "center"
                                               :border 0}
                                      [:svg {:font-size "16px"}]]
-                      [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
-                      [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
-                      [:&.theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ; Windows close button background color
-                                                                          :filter "none"
-                                                                          :color "#fff"}]]]
+                      [:&.is-theme-light [:button:hover {:filter "brightness(92%)"}]]
+                      [:&.is-theme-dark [:button:hover {:filter "brightness(150%)"}]]
+                      [:&.is-theme-dark :&.theme-light [:button.close:hover {:background "#E81123" ; Windows close button background color
+                                                                             :filter "none"
+                                                                             :color "#fff"}]]]
                      ;; Styles for linux (Ubuntu)
                      [:&.os-linux {:display "grid"
                                    :padding "4px"
@@ -77,8 +79,8 @@
                        [:&.minimize [:svg {:position "relative"
                                            :top "5px"}]]
                        [:svg {:font-size "12px"}]]
-                      [:&.theme-light [:button:hover {:filter "brightness(92%)"}]]
-                      [:&.theme-dark [:button:hover {:filter "brightness(150%)"}]]
+                      [:&.is-theme-light [:button:hover {:filter "brightness(92%)"}]]
+                      [:&.is-theme-dark [:button:hover {:filter "brightness(150%)"}]]
                       [:&.is-focused ["button.close::before" {:background "#E9541F"}]]]]})
 
 
@@ -181,7 +183,8 @@
         win-fullscreen?   (if electron?
                             (subscribe [:win-fullscreen?])
                             (r/atom false))
-        merge-open?       (reagent.core/atom false)]
+        merge-open?       (reagent.core/atom false)
+        selected-db       (subscribe [:db-picker/selected-db])]
     (fn []
       [:<>
        (when @merge-open?
@@ -228,6 +231,8 @@
         [:div (use-style app-header-secondary-controls-style)
          (if electron?
            [:<>
+            (when (electron.utils/remote-db? @selected-db)
+              [toolbar-presence-el])
             [:> Button {:on-click #(swap! merge-open? not)
                         :title "Merge Roam Database"}
              [:> MergeType]]

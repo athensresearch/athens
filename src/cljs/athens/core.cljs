@@ -21,8 +21,7 @@
     [goog.dom :refer [getElement]]
     [goog.object :as gobj]
     [re-frame.core :as rf]
-    [reagent.dom :as r-dom]
-    [stylefy.core :as stylefy]))
+    [reagent.dom :as r-dom]))
 
 
 (goog-define SENTRY_DSN "")
@@ -95,6 +94,12 @@
                                nil)))))))
 
 
+(defn init-styles
+  []
+  (util/add-body-classes (util/app-classes {:os        (util/get-os)
+                                            :electron? (util/electron?)})))
+
+
 (defn boot-evts
   []
   (if (util/electron?)
@@ -114,7 +119,7 @@
   (init-sentry)
   (init-ipcRenderer)
   (style/init)
-  (stylefy/tag "body" style/app-styles)
+  (init-styles)
   (listeners/init)
   (init-datalog-console)
   (rf/dispatch-sync (boot-evts))

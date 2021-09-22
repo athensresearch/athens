@@ -22,6 +22,18 @@
 
 
 (rf/reg-sub
+  :presence/current-user
+  :<- [:presence/users-with-page-data]
+  :<- [:settings]
+  (fn [[users settings] [_]]
+    (-> (filter (fn [[_ user]]
+                  (= (:username settings) (:username user)))
+                users)
+        first
+        second)))
+
+
+(rf/reg-sub
   :presence/same-page
   :<- [:presence/users-with-page-data]
   :<- [:current-route/name]
@@ -34,7 +46,7 @@
                           (= current-route-uid (:page/uid user)))
                         users))
 
-      [])))
+      {})))
 
 
 (rf/reg-sub
@@ -57,8 +69,7 @@
   :presence/has-presence
   :<- [:presence/users-with-page-data]
   (fn [users [_ uid]]
-    (-> (filter (fn [[_username user]]
-                  (= uid (:block/uid user)))
-                users)
-        first
-        second)))
+    (keep (fn [[_username user]]
+            (when (= uid (:block/uid user))
+              user))
+          users)))
