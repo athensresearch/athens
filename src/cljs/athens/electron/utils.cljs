@@ -61,12 +61,13 @@
 (defn self-hosted-db
   "Returns a map representing a self-hosted db.
    Self-hosted dbs are uniquely identified by the url."
-  [name url]
-  {:type   :self-hosted
-   :name   name
-   :id     url
-   :url    url
-   :ws-url (str "ws://" url "/ws")})
+  [name url password]
+  {:type     :self-hosted
+   :name     name
+   :id       url
+   :url      url
+   :password password
+   :ws-url   (str "ws://" url "/ws")})
 
 
 (defn local-db?

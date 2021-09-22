@@ -133,20 +133,54 @@
         :reason :invalid-event-schema}))))
 
 
+(def ^:private await-open-event-id (atom nil))
+
+
 (defn- open-handler
   [event]
   (js/console.log "WSClient Connected:" event)
-  (let [connection (.-target event)
-        last-tx    @(rf/subscribe [:remote/last-seen-tx])]
+  (let [connection             (.-target event)
+        last-tx                @(rf/subscribe [:remote/last-seen-tx])
+        username               @(rf/subscribe [:username])
+        password               @(rf/subscribe [:password])
+        {event-id :event/id
+         :as      hello-event} (common-events/build-presence-hello-event last-tx
+                                                                         username
+                                                                         password)]
     (reset! ws-connection connection)
     (reset! reconnect-timer nil)
     (reset! reconnect-counter -1)
-    (send! connection (common-events/build-presence-hello-event last-tx @(rf/subscribe [:username])))
-    (when (seq @send-queue)
-      (js/console.log "WSClient sending queued packets #" (count @send-queue))
-      (doseq [data @send-queue]
-        (send! connection data))
-      (reset! send-queue []))))
+    (reset! await-open-event-id event-id)
+    (send! connection hello-event)))
+
+
+(declare remove-listeners!)
+
+
+(defn- finished-open-handler
+  [{:event/keys [status] :as event}]
+  (if (= :accepted status)
+    (do
+      (js/console.log "Successfully connected to Lan-Party.")
+      (reset! await-open-event-id nil)
+      (when (seq @send-queue)
+        (js/console.log "WSClient sending queued packets #" (count @send-queue))
+        (doseq [data @send-queue]
+          (send! @ws-connection data))
+        (reset! send-queue [])))
+
+    (do
+      (js/console.warn "Server rejected login attempt, oh shoot!")
+
+      (remove-listeners! @ws-connection)
+      (close-reconnect-timer!)
+      (.close @ws-connection)
+      (reset! ws-connection nil)
+
+      (rf/dispatch [:remote/connection-failed])
+      (rf/dispatch [:alert/js (str "Server rejected your login attempt.\n"
+                                   "Your password simply ain't right.\n"
+                                   (pr-str event))]))))
 
 
 (defn- awaited-response-handler
@@ -155,26 +189,29 @@
     (js/console.log "WSClient: response " (pr-str packet)
                     "to awaited event" (pr-str req-event))
     (swap! awaiting-response dissoc id)
-    ;; is valid response?
-    (if (schema/valid-event-response? packet)
-      (do
-        (js/console.debug "Received valid response.")
-        (condp = status
-          :accepted
-          (let [{:accepted/keys [tx-id]} packet]
-            (js/console.log "Event" id "accepted in tx" tx-id)
-            (rf/dispatch [:remote/accept-event {:event-id id
-                                                :tx-id    tx-id}]))
-          :rejected
-          (let [{:reject/keys [reason data]} packet]
-            (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data))
-            (rf/dispatch [:remote/reject-event {:event-id id
-                                                :reason   reason
-                                                :data     data}]))))
-      (let [explanation (schema/explain-event-response packet)]
-        (js/console.warn "Received invalid response:" (pr-str explanation))
-        (rf/dispatch [:remote/fail-event {:event-id id
-                                          :reason   explanation}])))))
+    ;; is it hello confirmation?
+    (if (= @await-open-event-id id)
+      (finished-open-handler packet)
+      ;; is valid response?
+      (if (schema/valid-event-response? packet)
+        (do
+          (js/console.debug "Received valid response.")
+          (condp = status
+            :accepted
+            (let [{:accepted/keys [tx-id]} packet]
+              (js/console.log "Event" id "accepted in tx" tx-id)
+              (rf/dispatch [:remote/accept-event {:event-id id
+                                                  :tx-id    tx-id}]))
+            :rejected
+            (let [{:reject/keys [reason data]} packet]
+              (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data))
+              (rf/dispatch [:remote/reject-event {:event-id id
+                                                  :reason   reason
+                                                  :data     data}]))))
+        (let [explanation (schema/explain-event-response packet)]
+          (js/console.warn "Received invalid response:" (pr-str explanation))
+          (rf/dispatch [:remote/fail-event {:event-id id
+                                            :reason   explanation}]))))))
 
 
 (defn- local-eid
@@ -469,7 +506,6 @@
       component)))
 
 
-;; TODO: password protection
 (defn new-ws-client
   [url]
   (map->WSClient {:url url}))

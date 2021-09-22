@@ -31,8 +31,8 @@
 
 (defn- valid-event-handler
   "Processes valid event received from the client."
-  [datahike channel username {:event/keys [id type] :as data}]
-  (if (and (nil? username)
+  [datahike server-password channel username {:event/keys [id type] :as data}]
+  (if (and (false? username)
            (not= :presence/hello type))
     (do
       (log/warn channel "Message out of order, didn't say :presence/hello.")
@@ -41,7 +41,7 @@
                                                                  {:protocol-error :client-not-introduced})))
     (if-let [result (cond
                       (contains? presence/supported-event-types type)
-                      (presence/presence-handler (:conn datahike) channel data)
+                      (presence/presence-handler (:conn datahike) server-password channel data)
 
                       (contains? datascript/supported-event-types type)
                       (datascript/datascript-handler (:conn datahike) channel data)
@@ -67,23 +67,22 @@
 
 
 (defn- make-receive-handler
-  [datahike]
+  [datahike server-password]
   (fn receive-handler
     [channel msg]
-    (log/debug (clients/get-client-username channel) "->" msg)
     (let [username (clients/get-client-username channel)
           data     (clients/<-transit msg)]
       (if-not (schema/valid-event? data)
         (let [explanation (schema/explain-event data)]
-          (log/warn (clients/get-client-username channel) "-> invalid event received:" explanation)
+          (log/warn username "-> invalid event received:" explanation)
           (clients/send! channel (common-events/build-event-rejected (:event/id data)
                                                                      (str "Invalid event: " (pr-str data))
                                                                      explanation)))
         (let [{:event/keys [_id type]} data]
-          (log/debug (clients/get-client-username channel) "-> decoded valid event" (pr-str data))
+          (log/debug username "-> decoded valid event" (pr-str data))
           (let [{:event/keys [status]
-                 :as         result} (valid-event-handler datahike channel username data)]
-            (log/debug (clients/get-client-username channel) "-> event processed, result:" (pr-str result))
+                 :as         result} (valid-event-handler datahike server-password channel username data)]
+            (log/debug username "-> event processed, result:" (pr-str result))
             ;; forward to everyone if accepted
             (when (and (= :accepted status)
                        (contains? forwardable-events type))
@@ -94,20 +93,20 @@
 
 
 (defn- make-websocket-handler
-  [datahike]
+  [datahike server-password]
   (fn websocket-handler
     [request]
     (http/as-channel request
                      {:on-open    #'open-handler
                       :on-close   #'close-handler
-                      :on-receive (make-receive-handler datahike)})))
+                      :on-receive (make-receive-handler datahike server-password)})))
 
 
 (defn- make-ws-route
-  [datahike]
+  [datahike server-password]
   (compojure/routes
     (compojure/GET "/ws" []
-                   (make-websocket-handler datahike))))
+                   (make-websocket-handler datahike server-password))))
 
 
 (compojure/defroutes health-check-route
@@ -115,9 +114,9 @@
 
 
 (defn make-handler
-  [datahike]
+  [datahike server-password]
   (compojure/routes health-check-route
-                    (make-ws-route datahike)))
+                    (make-ws-route datahike server-password)))
 
 
 (defrecord WebServer
@@ -131,10 +130,11 @@
       (do
         (log/warn "Server already started, it's ok. Though it means we're not managing it properly.")
         component)
-      (let [http-conf (get-in config [:config :http])]
+      (let [http-conf       (get-in config [:config :http])
+            server-password (get-in config [:config :password])]
         (log/info "Starting WebServer with config: " http-conf)
         (assoc component :httpkit
-               (http/run-server (make-handler datahike) http-conf)))))
+               (http/run-server (make-handler datahike server-password) http-conf)))))
 
 
   (stop

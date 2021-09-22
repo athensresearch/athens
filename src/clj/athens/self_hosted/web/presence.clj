@@ -2,6 +2,7 @@
   (:require
     [athens.common-events       :as common-events]
     [athens.self-hosted.clients :as clients]
+    [clojure.string             :as str]
     [clojure.tools.logging      :as log]
     [datahike.api               :as d]))
 
@@ -22,10 +23,9 @@
     :presence/goodbye})
 
 
-(defn hello-handler
-  [datahike channel {:event/keys [id args _last-tx]}]
-  (let [username (:username args)
-        max-tx   (:max-tx @datahike)]
+(defn- valid-password
+  [datahike channel id {:keys [username]}]
+  (let [max-tx (:max-tx @datahike)]
     (log/info channel "New Client Intro:" username)
     (clients/add-client! channel username)
 
@@ -47,6 +47,23 @@
 
     ;; confirm
     (common-events/build-event-accepted id max-tx)))
+
+
+(defn- invalid-password
+  [channel id {:keys [username]}]
+  (log/warn channel "Invalid password in hello for username:" username)
+  (common-events/build-event-rejected id
+                                      "You shall not pass"
+                                      {:password-error :invalid-password}))
+
+
+(defn hello-handler
+  [datahike server-password channel {:event/keys [id args _last-tx]}]
+  (let [{:keys [password]} args]
+    (if (or (str/blank? server-password)
+            (= server-password password))
+      (valid-password datahike channel id args)
+      (invalid-password channel id args))))
 
 
 (defn editing-handler
@@ -82,9 +99,9 @@
 
 
 (defn presence-handler
-  [datahike channel {:event/keys [type] :as event}]
+  [datahike server-password channel {:event/keys [type] :as event}]
   (condp = type
-    :presence/hello   (hello-handler datahike channel event)
+    :presence/hello   (hello-handler datahike server-password channel event)
     :presence/editing (editing-handler datahike channel event)
     :presence/rename (rename-handler datahike channel event)
     #_#_:presence/goodbye (goodbye-handler channel event)))
