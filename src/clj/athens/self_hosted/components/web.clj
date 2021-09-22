@@ -20,13 +20,10 @@
 
 (defn close-handler
   [channel status]
-  (let [username (clients/get-client-username channel)
-        ;; TODO: max-tx shouldn't be 42
-        presence-offline-event (athens.common-events/build-presence-offline-event 42 username)]
+  (let [username (clients/get-client-username channel)]
+    (presence/goodbye-handler channel)
     (clients/remove-client! channel)
-    (log/debug username "!! closed, status" status)
-    (when username
-      (clients/broadcast! presence-offline-event))))
+    (log/debug username "!! closed, status" status)))
 
 
 (defn- valid-event-handler

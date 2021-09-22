@@ -2,6 +2,7 @@
   (:require
     [athens.common-events       :as common-events]
     [athens.self-hosted.clients :as clients]
+    [clojure.set                :as set]
     [clojure.string             :as str]
     [clojure.tools.logging      :as log]
     [datahike.api               :as d]))
@@ -13,7 +14,7 @@
     (swap! max-id inc)))
 
 
-(defonce all-presence (ref []))
+(defonce all-presence (atom {}))
 
 
 (def supported-event-types
@@ -37,6 +38,10 @@
       (clients/send! channel
                      (common-events/build-presence-all-online-event max-tx
                                                                     (clients/get-clients-usernames)))
+      (doseq [{:keys [username block-uid]} (vals @all-presence)]
+        (let [broadcast-presence-editing-event
+              (common-events/build-presence-broadcast-editing-event max-tx username block-uid)]
+          (clients/broadcast! broadcast-presence-editing-event)))
       (clients/broadcast! (common-events/build-presence-online-event max-tx
                                                                      username)))
 
@@ -73,6 +78,8 @@
         max-tx              (:max-tx @datahike)]
     (when block-uid
       (let [broadcast-presence-editing-event (common-events/build-presence-broadcast-editing-event max-tx username block-uid)]
+        (swap! all-presence assoc username {:username username
+                                            :block/uid block-uid})
         (clients/broadcast! broadcast-presence-editing-event)
         (common-events/build-event-accepted id max-tx)))))
 
@@ -87,15 +94,23 @@
                                                                                     current-username
                                                                                     new-username)]
 
+    (swap! all-presence (fn [all]
+                          (-> all
+                              (update-in [:presence :users] set/rename-keys {current-username new-username})
+                              (update-in [:presence :users new-username] assoc :username new-username))))
     (clients/add-client! channel new-username)
     (clients/broadcast! broadcast-rename-event)
     (common-events/build-event-accepted id max-tx)))
 
 
 (defn goodbye-handler
-  [channel _event]
-  (let [_username (clients/get-client-username channel)]
-    (prn _event)))
+  [channel]
+  (let [username (clients/get-client-username channel)
+        ;; TODO: max-tx shouldn't be 42
+        presence-offline-event (athens.common-events/build-presence-offline-event 42 username)]
+    (when username
+      (swap! all-presence dissoc username)
+      (clients/broadcast! presence-offline-event))))
 
 
 (defn presence-handler
