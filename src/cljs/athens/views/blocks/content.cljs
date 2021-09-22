@@ -216,7 +216,7 @@
                                  (filter (fn [[_idx uid]]
                                            (= target-uid uid)))
                                  ffirst)
-        selected-uids       @(rf/subscribe [::select-subs/items])
+        selected-uids       (set @(rf/subscribe [::select-subs/items]))
         candidate-uids      (->> indexed-uids
                                  (filter (fn [[idx _uid]]
                                            (<= (min start-index end-index)
