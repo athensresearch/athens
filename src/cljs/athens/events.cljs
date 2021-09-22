@@ -883,8 +883,9 @@
       (if local?
         (let [block-new-op (atomic-graph-ops/make-block-new-op (:block/uid parent)
                                                                new-uid
-                                                               (:block/order block))
-              tx           [(atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-new-op)]]
+                                                               (inc (:block/order block)))
+              tx           (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-new-op)]
+          (js/console.debug ":enter/new-block op:" (pr-str block-new-op) ", tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
@@ -926,7 +927,7 @@
         (let [page-new-op (atomic-graph-ops/make-page-new-op title
                                                              page-uid
                                                              block-uid)
-              tx          [(atomic-resolver/resolve-atomic-op-to-tx @db/dsdb page-new-op)]]
+              tx          (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb page-new-op)]
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid block-uid]]]]})
         {:fx [[:dispatch [:remote/page-new {:title     title
