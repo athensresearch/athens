@@ -207,7 +207,7 @@
     (fn []
       [:<>
        (->>
-         [:div {:style {:width  "100%" :margin-top "10px"}}
+         [:div {:style {:width "100%" :margin-top "10px"}}
           [:h5 "Database Name"]
           [:div {:style {:margin          "5px 0"
                          :display         "flex"
@@ -236,15 +236,15 @@
                                                :padding   "5px"}
                                  :type        "text"
                                  :value       @password
-                                 :placeholder "Password (not supported yet)"
-                                 :disabled    true ; TODO: not supported yet
+                                 :placeholder "Password (now supported)"
+                                 :disabled    false
                                  :on-change   #(reset! password (js-event->val %))}]]]
          doall)
-       [:> Button {:is-primary  true
-                   :style    {:margin-top "0.5rem"}
-                   :disabled (or (clojure.string/blank? @name)
-                                 (clojure.string/blank? @address))
-                   :on-click #(rf/dispatch [:db-picker/add-and-select-db (utils/self-hosted-db @name @address)])}
+       [:> Button {:is-primary true
+                   :style      {:margin-top "0.5rem"}
+                   :disabled   (or (clojure.string/blank? @name)
+                                   (clojure.string/blank? @address))
+                   :on-click   #(rf/dispatch [:db-picker/add-and-select-db (utils/self-hosted-db @name @address @password)])}
         "Join"]])))
 
 

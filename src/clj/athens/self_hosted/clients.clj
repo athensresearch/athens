@@ -69,7 +69,7 @@
 ;; Client management API
 (defn add-client!
   ([channel]
-   (add-client! channel true))
+   (add-client! channel false))
   ([channel username]
    (log/debug channel "add-client!" username)
    (swap! clients assoc channel username)))

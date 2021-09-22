@@ -20,9 +20,10 @@ This will create `target/athens-lan-party-standalone.jar`.
 The default configuration can be found in `config.edn`.
 You can customize it through the `config_edn` environment variable.
 
-Here's an example on how to overwrite the default Datahike store using `config_edn`.
+Here's an example on how to overwrite the default Datahike store using `config_edn`,
+and configure Server password.
 ```
-config_edn: "{:datahike {:store {:path \"/srv/athens/db\"}}}"
+config_edn: "{:password "YourServerPassword" :datahike {:store {:path \"/srv/athens/db\"}}}"
 ```
 The `config_edn` will be merged to other configs via deep merging.
 

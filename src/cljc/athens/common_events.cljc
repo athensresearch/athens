@@ -589,12 +589,15 @@
 
 (defn build-presence-hello-event
   "Builds `:presence/hello` event with `username`"
-  [last-tx username]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :presence/hello
-     :event/args    {:username username}}))
+  ([last-tx username]
+   (build-presence-hello-event last-tx username nil))
+  ([last-tx username password]
+   (let [event-id (utils/gen-event-id)]
+     {:event/id      event-id
+      :event/last-tx last-tx
+      :event/type    :presence/hello
+      :event/args    (cond-> {:username username}
+                       password (merge {:password password}))})))
 
 
 (defn build-presence-online-event

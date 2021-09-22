@@ -11,6 +11,13 @@
 
 
 (rf/reg-sub
+  :password
+  :<- [:db-picker/selected-db]
+  (fn [selected-db _]
+    (:password selected-db)))
+
+
+(rf/reg-sub
   :db/synced
   (fn [db _]
     (:db/synced db)))
