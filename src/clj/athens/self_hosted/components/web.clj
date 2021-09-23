@@ -19,10 +19,11 @@
 
 
 (defn close-handler
-  [channel status]
+  [datahike channel status]
   (let [username (clients/get-client-username channel)]
-    (presence/goodbye-handler channel)
     (clients/remove-client! channel)
+    ;; Notify clients after removing the one that left.
+    (presence/goodbye-handler datahike channel)
     (log/debug username "!! closed, status" status)))
 
 
@@ -95,7 +96,7 @@
     [request]
     (http/as-channel request
                      {:on-open    #'open-handler
-                      :on-close   #'close-handler
+                      :on-close   (partial close-handler (:conn datahike))
                       :on-receive (make-receive-handler datahike server-password)})))
 
 

@@ -41,7 +41,7 @@
       (doseq [{:keys [username block-uid]} (vals @all-presence)]
         (let [broadcast-presence-editing-event
               (common-events/build-presence-broadcast-editing-event max-tx username block-uid)]
-          (clients/broadcast! broadcast-presence-editing-event)))
+          (clients/send! channel broadcast-presence-editing-event)))
       (clients/broadcast! (common-events/build-presence-online-event max-tx
                                                                      username)))
 
@@ -104,13 +104,10 @@
 
 
 (defn goodbye-handler
-  [channel]
-  (let [username (clients/get-client-username channel)
-        ;; TODO: max-tx shouldn't be 42
-        presence-offline-event (athens.common-events/build-presence-offline-event 42 username)]
-    (when username
-      (swap! all-presence dissoc username)
-      (clients/broadcast! presence-offline-event))))
+  [datahike username]
+  (let [presence-offline-event (athens.common-events/build-presence-offline-event (:max-tx @datahike) username)]
+    (swap! all-presence dissoc username)
+    (clients/broadcast! presence-offline-event)))
 
 
 (defn presence-handler
@@ -119,4 +116,5 @@
     :presence/hello   (hello-handler datahike server-password channel event)
     :presence/editing (editing-handler datahike channel event)
     :presence/rename (rename-handler datahike channel event)
-    #_#_:presence/goodbye (goodbye-handler channel event)))
+    ;; presence/goodbye is called on client close.
+    ))
