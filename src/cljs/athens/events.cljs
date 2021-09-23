@@ -303,6 +303,13 @@
       {:db (assoc db :editing/uid uid)})))
 
 
+(reg-event-fx
+  :editing/first-child
+  (fn [_ [_ uid]]
+    (when-let [first-block-uid (db/get-first-child-uid uid @db/dsdb)]
+      {:dispatch [:editing/uid first-block-uid]})))
+
+
 (defn select-up
   [selected-items]
   (let [first-item       (first selected-items)
@@ -461,27 +468,28 @@
 
 
 (reg-event-fx
+  :daily-note/ensure-day
+  (fn [_ [_ {:keys [uid title]}]]
+    (when-not (db/e-by-av :block/uid uid)
+      {:dispatch [:page/create {:title     title
+                                :page-uid  uid
+                                :block-uid (common.utils/gen-block-uid)}]})))
+
+
+(reg-event-fx
   :daily-note/prev
-  (fn [{:keys [db]} [_ {:keys [uid title]}]]
-    (let [new-db    (update db :daily-notes/items (fn [items]
-                                                    (into [uid] items)))
-          block-uid (common.utils/gen-block-uid)]
-      (if (db/e-by-av :block/uid uid)
-        {:db new-db}
-        {:db       new-db
-         :dispatch [:page/create {:title     title
-                                  :page-uid  uid
-                                  :block-uid block-uid}]}))))
+  (fn [{:keys [db]} [_ {:keys [uid] :as day}]]
+    (let [new-db (update db :daily-notes/items (fn [items]
+                                                 (into [uid] items)))]
+      {:db       new-db
+       :dispatch [:daily-note/ensure-day day]})))
 
 
 (reg-event-fx
   :daily-note/next
-  (fn [_ [_ {:keys [uid title]}]]
-    {:fx [(if (db/e-by-av :block/uid uid)
-            [:dispatch [:daily-note/add uid]]
-            [:dispatch [:page/create {:title     title
-                                      :page-uid  uid
-                                      :block-uid (common.utils/gen-block-uid)}]])]}))
+  (fn [_ [_ {:keys [uid] :as day}]]
+    {:dispatch-n [[:daily-note/ensure-day day]
+                  [:daily-note/add uid]]}))
 
 
 (reg-event-fx

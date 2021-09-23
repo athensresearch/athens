@@ -53,28 +53,25 @@
           node (pull db/dsdb '[*] [:block/uid uid]) ; TODO make the page title query work when zoomed in on a block
           node-title (:node/title @node)
           route-name (-> new-match :data :name)
+          home? (= route-name :home)
           html-title-prefix (cond
                               node-title node-title
                               (= route-name :pages) "All Pages"
-                              (= route-name :home) "Daily Notes")
+                              home? "Daily Notes")
           html-title (if html-title-prefix
                        (str html-title-prefix " | Athens")
                        "Athens")
-          presence-block (when node
-                           (db/get-first-child-uid
-                             (if node-title
-                               (-> (db/get-root-parent-page uid)
-                                   :block/uid)
-                               uid)
-                             @db/dsdb))]
+          today (util/get-day)]
       (set! (.-title js/document) html-title)
       {:db (-> db
                (assoc :current-route (assoc new-match :controllers controllers))
                (dissoc :merge-prompt))
        :timeout {:action :clear
                  :id :merge-prompt}
-       :fx      [(when presence-block
-                   [:presence/send-editing presence-block])]})))
+       :dispatch-n [(when home?
+                      [:daily-note/ensure-day today])
+                    (when-let [parent-uid (or uid (and home? (:uid today)))]
+                      [:editing/first-child parent-uid])]})))
 
 
 (reg-event-fx
