@@ -360,6 +360,16 @@
        sort-block-children))
 
 
+(def block-document-pull-vector-for-copy
+  '[:block/uid :block/string :block/open :block/order {:block/children ...}])
+
+
+(defn get-block-document-for-copy
+  [db eid]
+  (->> (d/pull db block-document-pull-vector-for-copy eid)
+       sort-block-children))
+
+
 (defn get-parents-recursively
   [db eid]
   (->> (d/pull db '[:db/id :node/title :block/uid :block/string {:block/_children ...}] eid)

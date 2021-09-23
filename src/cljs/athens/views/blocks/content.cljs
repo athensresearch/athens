@@ -275,15 +275,22 @@
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
   [e uid state]
-  (let [data        (.. e -clipboardData)
-        text-data   (.getData data "text/plain")
-        _app-clip   (some-> (.getData data "application/athens")
-                            edn/read-string)
-        line-breaks (re-find #"\r?\n" text-data)
-        no-shift    (-> @state :last-keydown :shift not)
-        items       (array-seq (.. e -clipboardData -items))
+  (let [data                (.. e -clipboardData)
+        text-data           (.getData data "text/plain")
+        _app-clip           (some-> (.getData data "application/athens")
+                                    edn/read-string)
+        app-representation  (some-> (.getData data "application/athens-representation")
+                                  edn/read-string)
+        line-breaks         (re-find #"\r?\n" text-data)
+        no-shift            (-> @state :last-keydown :shift not)
+        items               (array-seq (.. e -clipboardData -items))
         {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
-        img-regex   #"(?i)^image/(p?jpeg|gif|png)$"]
+        img-regex           #"(?i)^image/(p?jpeg|gif|png)$"]
+
+    ;; TODO Remove the logs
+    (println "copied data is:")
+    (cljs.pprint/pprint  app-representation)
+
     (cond
       (seq (filter (fn [item]
                      (let [datatype (.. item -type)]
