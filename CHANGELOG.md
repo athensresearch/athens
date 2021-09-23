@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.8](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.7...v1.0.0-alpha.rtc.8) (2021-09-23)
+
+
+### Features
+
+* Password protection ([c4027eb](https://github.com/athensresearch/athens/commit/c4027eb9c93c19b75a177b7706a60b1a8205592a))
+* send full presence state on connect ([710cefb](https://github.com/athensresearch/athens/commit/710cefb244c4df6b476bf0e9410dc0ea73df6854))
+* set user presence on first child block when navigating ([8001ba5](https://github.com/athensresearch/athens/commit/8001ba50082238c2e25b08858d33863f3de3dc61))
+
+
+### Bug Fixes
+
+* all pages is slow when a page has 100+ blocks ([e2e3204](https://github.com/athensresearch/athens/commit/e2e3204fc2d5746cd55420ae5bb3bc91ce186663))
+* **db menu:** less broken style for db picker menu ([e82825a](https://github.com/athensresearch/athens/commit/e82825a9ccc262f35dd364b9fb07f9ee0567968c))
+* review items ([f820cef](https://github.com/athensresearch/athens/commit/f820cef2cbeda1a6f6b500bcdcc6c0389602039e))
+* selection issues. ([297df4a](https://github.com/athensresearch/athens/commit/297df4a7d4f66ce2c984748bacc4552ca5ecd7a1))
+
 ## [1.0.0-alpha.rtc.7](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.6...v1.0.0-alpha.rtc.7) (2021-09-21)
 
 
