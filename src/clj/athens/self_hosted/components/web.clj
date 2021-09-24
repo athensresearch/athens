@@ -23,7 +23,7 @@
   (let [username (clients/get-client-username channel)]
     (clients/remove-client! channel)
     ;; Notify clients after removing the one that left.
-    (presence/goodbye-handler datahike channel)
+    (presence/goodbye-handler datahike username)
     (log/debug username "!! closed, status" status)))
 
 
