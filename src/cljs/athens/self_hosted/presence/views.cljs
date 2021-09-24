@@ -96,7 +96,7 @@
       (into
         [:> (.-Stack Avatar)
          {:size "1.25rem"
-          :maskSize "1px"
+          :maskSize "1.5px"
           :stackOrder "from-left"
           :limit 3
           :style {:zIndex 100
