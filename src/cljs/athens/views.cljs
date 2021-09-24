@@ -1,6 +1,7 @@
 (ns athens.views
   (:require
     ["/components/utils/style/style" :refer [GlobalStyles]]
+    ["/components/Spinner/Spinner" :refer [Spinner]]
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
     [athens.electron.db-modal :as db-modal]
@@ -13,7 +14,6 @@
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
-    [athens.views.spinner :refer [initial-spinner-component]]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -88,7 +88,7 @@
        (cond
          (and @loading @modal) [db-modal/window]
 
-         @loading [initial-spinner-component]
+         @loading [:> Spinner]
 
          :else [:<>
                 (when @modal [db-modal/window])
