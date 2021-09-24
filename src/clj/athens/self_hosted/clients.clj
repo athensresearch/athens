@@ -93,5 +93,5 @@
 (defn remove-client!
   [channel]
   (let [username (get @clients channel)]
-    (log/debug channel "remeove-client!" username)
+    (log/debug "remove-client!" username)
     (swap! clients dissoc channel)))
