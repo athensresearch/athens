@@ -156,7 +156,7 @@ export const Avatar = ({
 /*
  * Wraps a horizontal series of avatars and causes them to overlap each other.
  */
-interface AvatarStackProps {
+interface AvatarStackProps extends React.HTMLAttributes<HTMLDivElement> {
   children: JSX.Element[];
   /**
    * The width of the mask added to overlapping Avatars.
@@ -232,6 +232,7 @@ Avatar.Stack = React.forwardRef((props: AvatarStackProps, ref) => {
     maskSize = "3px",
     overlap = 0.5,
     stackOrder = "from-right",
+    style,
     ...rest
   } = props;
 
@@ -243,6 +244,7 @@ Avatar.Stack = React.forwardRef((props: AvatarStackProps, ref) => {
       ref={ref}
       stackOrder={stackOrder}
       style={{
+        ...style,
         "--size": size,
         "--mask-size": maskSize,
         "--stack-overlap": overlap,
