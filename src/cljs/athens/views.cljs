@@ -1,7 +1,7 @@
 (ns athens.views
   (:require
-    ["/components/utils/style/style" :refer [GlobalStyles]]
     ["/components/Spinner/Spinner" :refer [Spinner]]
+    ["/components/utils/style/style" :refer [GlobalStyles]]
     ["@material-ui/core/Snackbar" :as Snackbar]
     [athens.config]
     [athens.electron.db-modal :as db-modal]
