@@ -166,7 +166,7 @@
     [:main
      [:> Toggle {:defaultSelected monitoring
                  :on-change #(handle-monitoring-click monitoring update-fn)}
-     "Send usage data and diagnostics to Athens"]
+      "Send usage data and diagnostics to Athens"]
      [:aside
       [:p "Athens has never and will never look at the contents of your database."]
       [:p "Athens will never ever sell your data."]]]]])
