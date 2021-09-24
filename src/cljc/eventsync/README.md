@@ -467,6 +467,10 @@ Additionally, for offline-first applications, you also need to ensure a local ca
 This cache will need to store the all events in that stage that are not known to have been removed, and be able to retrieve on subscription.
 Without it you will not be able restart the application and get back to the same EventSync state.
 
+You can use extra stages to sync to these caches.
+In the example above, you could cache the server events by adding `Stage 4 - Server local cache`.
+This would give you the same sync semantics as before.
+
 
 ## FAQ
 
@@ -479,6 +483,8 @@ This allows you to query any log to see if the previous log is there as well.
 It's still possible to lose data whenever data deleted from any given stage's log if there's a live subscription that hasn't seen it yet.
 This is a strong argument for immutability of stored data, but impractical for caches.
 If you delete data from any log or cache make sure it's not pending a subscription read.
+
+maybe error on promoting non-tip?
 
 
 ### How can I handle conflicts?
@@ -533,6 +539,17 @@ drain then restart?
 maybe no restart at all, just backed up stuff?
 - then you just have the reload problem
 
+maybe do nothing, just infinite lag?
+
+cache on further stages also ensures on load you see everything right
+- if caches are busted, then maybe you have a problem
+- but that's actually the real problem, that losing any data is bad, and the answer is not to duplicate it further
+
+failover can just mean that stage auto-promotes to next stage via the subs itself
+- e.g. any write to it just shows up on its sub, thus moving it to the next stage
+
+need to figure out better model of thinking about subs to prevent complicated problems on intermediate stages not having some events
+
 
 ### Is it possible for an event to be in multiple stages at once?
 
@@ -549,3 +566,16 @@ TODO: API denied save in a non-recoverable manner, tricky case
 
 TODO: generative tests, previous event tracking
 
+
+### What things to I have to look out for when setting up subscriptions?
+
+intermediate stage subs needs to start at the first event that's not on subsequent stages
+- otherwise you can run into cases where you're waiting for subsequent subs to tell you something is there, but that will never happen
+- principle is sub needs to start at last unseen event from further stages
+- also some considerations here of when to clear the local caches for non-local stages (i.e. when SOT gives you a new starting point)
+
+
+### Can I batch event saving and subscriptions?
+
+The specific semantics of how events are saved and retrieved are up to your code.
+You can batch operations as long as you end up calling the EventSync API.
