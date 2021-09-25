@@ -1,79 +1,183 @@
+import React from 'react';
 import styled from 'styled-components';
-import { DOMRoot } from '@/utils/config';
 
-import { Modal, ModalProps } from '@material-ui/core'
-import { Close } from '@material-ui/icons'
+import { useOverlayTriggerState } from '@react-stately/overlays';
+import {
+  useOverlay,
+  usePreventScroll,
+  useModal,
+  OverlayProps,
+  OverlayContainer
+} from '@react-aria/overlays';
+import { useDialog } from '@react-aria/dialog';
+import { AriaDialogProps } from '@react-types/dialog';
+import { FocusScope } from '@react-aria/focus';
+import { mergeProps } from '@react-aria/utils';
 
 import { Button } from '@/Button';
 import { Overlay } from '@/Overlay';
-import React from 'react';
 
-const DialogWrap = styled(Overlay)`
-  --edge-spacing: 1rem;
-
-  width: min(30em, calc(100% - 2rem));
-  flex-direction: column;
+const Content = styled(Overlay)`
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: max-content;
+  padding: 1rem;
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  min-width: 20rem;
 `;
 
-interface DialogProps extends React.HTMLAttributes<HTMLDivElement> {
-  isDialogOpen?: boolean;
-  modalProps?: ModalProps;
-  handleClose?: () => void;
-  handlePressOk?: () => void;
-  handlePressCancel?: () => void;
-}
+const Image = styled.div``;
 
-export const Dialog = ({
-  children,
-  isDialogOpen = true,
-  handleClose,
-  modalProps,
-}: DialogProps) => {
-  return (
-    <Modal
-      container={DOMRoot}
-      open={isDialogOpen}
-      onClose={handleClose}
-      {...modalProps}
-    >
-      <DialogWrap>
-        {children}
-      </DialogWrap>
-    </Modal>);
-};
+const Title = styled.h1`
+  font-size: 1em;
+  margin: 0;
+`;
 
-Dialog.Header = styled.header`
+const Message = styled.p`
+  margin: 0;
+`;
+
+const Body = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 15rem;
+  flex: 1 1 100%;
+`;
+
+const Actions = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.25rem;
+  width: max-content;
+  margin-top: auto;
+  margin-left: auto;
+  padding-top: 1rem;
+  align-self: flex-end;
+`;
+
+const Backdrop = styled.div`
+  position: fixed;
+  z-index: var(--zindex-modal);
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  padding-left: var(--edge-spacing);
-  padding-right: var(--edge-spacing);
+  justify-content: center;
 `;
 
-Dialog.CloseButton = styled(Button).attrs({
-  children: <Close />
-})`
-  margin-left: auto;
-  margin-right: calc(var(--edge-spacing) * -1);
+const DismissButton = styled(Button)`
+  font-weight: normal;
+`;
+const ConfirmButton = styled(Button)`
+  font-weight: normal;
 `;
 
-Dialog.Body = styled.main`
-  padding-left: var(--edge-spacing);
-  padding-right: var(--edge-spacing);
-`;
+interface DialogProps extends OverlayProps, AriaDialogProps {
+  isOpen: boolean,
+  title: string,
+  children?: React.ReactNode,
+  image?: JSX.Element;
+  defaultAction?: 'confirm' | 'dismiss';
+  dismiss?: {
+    label?: string;
+    variant?: 'filled' | 'tinted' | 'gray' | 'plain';
+  },
+  confirm?: {
+    label?: string;
+    variant?: 'filled' | 'tinted' | 'gray' | 'plain';
+  }
+  onDismiss?: () => void;
+  onConfirm?: () => void;
+}
 
-Dialog.Title = styled.h1`
-  margin: 0;
-  font-size: var(--font-size--text-lg);
-`;
+export const Dialog = (props: DialogProps): JSX.Element | null => {
+  const {
+    isOpen,
+    title,
+    children,
+    image,
+    onConfirm,
+    onDismiss,
+    defaultAction,
+    dismiss,
+    confirm
+  } = props;
 
-Dialog.Actions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  padding-left: var(--edge-spacing);
-  padding-right: var(--edge-spacing);
-`;
+  let ref = React.useRef();
+  let { overlayProps, underlayProps } = useOverlay(props, ref);
+  let { modalProps } = useModal();
+  let { dialogProps, titleProps } = useDialog(props, ref);
+  usePreventScroll();
 
+  const dismissProps = {
+    ...mergeProps({
+      onClick: onDismiss,
+      label: 'Cancel',
+      variant: 'plain',
+      autoFocus: defaultAction === 'dismiss',
+      ...dismiss,
+    })
+  }
+
+  const confirmProps = {
+    ...mergeProps({
+      onClick: onConfirm,
+      label: 'Cancel',
+      variant: 'filled',
+      autoFocus: defaultAction === 'confirm',
+      ...confirm,
+    })
+  }
+
+  return (
+    isOpen ?
+      <OverlayContainer>
+        <Backdrop {...underlayProps}>
+          <FocusScope
+            contain
+            restoreFocus
+            autoFocus
+          >
+            <Content
+              {...overlayProps}
+              {...dialogProps}
+              {...modalProps}
+              ref={ref}
+            >
+              {image && <Image>{image}</Image>}
+              <Body>
+                <Title {...titleProps}>{title}</Title>
+                {children && children}
+                <Actions>
+                  <DismissButton {...dismissProps}>Cancel</DismissButton>
+                  <ConfirmButton {...confirmProps}>Confirm</ConfirmButton>
+                </Actions>
+              </Body>
+            </Content>
+          </FocusScope>
+        </Backdrop>
+      </OverlayContainer>
+      : null
+  );
+};
+
+Dialog.defaultProps = {
+  defaultAction: 'confirm',
+}
+
+Dialog.Image = Image;
+Dialog.Title = Title;
+Dialog.Message = Message;
+Dialog.Body = Body;
+Dialog.Actions = Actions;
+Dialog.DismissButton = DismissButton;
+Dialog.ConfirmButton = ConfirmButton;

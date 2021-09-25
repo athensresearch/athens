@@ -1,39 +1,36 @@
-import React from 'react';
+import { Dialog } from './Dialog';
 import { BADGE, Storybook } from '@/utils/storybook';
 
-import { Button } from '@/Button';
-import { Dialog } from './Dialog';
-
 export default {
-  title: 'components/Dialog',
+  title: 'Components/Dialog',
   component: Dialog,
   argTypes: {},
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
     badges: [BADGE.DEV, BADGE.IN_USE]
   },
   decorators: [(Story) => <Storybook.Wrapper><Story /></Storybook.Wrapper>]
 };
 
-export const DialogWithState = () => {
-  const [isDialogOpen, setIsDialogOpen] = React.useState(true);
+const Template = (args) => <Dialog {...args} />;
 
-  return (
-    <>
-      <Button shape="round" isPrimary onClick={() => setIsDialogOpen(true)}>Open Dialog</Button>
-      <Dialog
-        isDialogOpen={isDialogOpen}
-        handleClose={() => setIsDialogOpen(false)}
-      >
-        <Dialog.Header>
-          <Dialog.Title>Dialog Title</Dialog.Title>
-          <Dialog.CloseButton onClick={() => setIsDialogOpen(false)} />
-        </Dialog.Header>
-        <Dialog.Body>dialog content</Dialog.Body>
-        <Dialog.Actions>
-          <Button variant="gray">Cancel</Button>
-          <Button variant="filled">Save</Button>
-        </Dialog.Actions>
-      </Dialog>
-    </>);
-}
+export const Default = Template.bind({});
+Default.args = {
+  title: 'Lorem ipsum dolor sit amet.',
+  children: 'Lorem ipsum dolor sit amet',
+  isOpen: true,
+};
+
+export const Image = Template.bind({});
+Image.args = {
+  image: <img src="https://via.placeholder.com/150" />,
+  title: 'Lorem ipsum dolor sit amet.',
+  children: 'Lorem ipsum dolor sit amet',
+  isOpen: true,
+};
+
+export const Minimal = Template.bind({});
+Minimal.args = {
+  title: 'Lorem ipsum dolor sit amet.',
+  isOpen: true,
+};
