@@ -97,7 +97,7 @@
    :padding-left "10px"
    :grid-template-columns "auto 1fr auto"
    :transition "border-color 1s ease"
-   :z-index "1070"
+   :z-index "var(--zindex-sticky)"
    :grid-auto-flow "column"
    :-webkit-app-region "drag"
    ::stylefy/manual [["&.is-fullscreen" {:height "44px"}]
