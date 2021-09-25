@@ -25,16 +25,3 @@
 
 
 ;; Components
-
-
-(defn alert-component
-  "A pop-up, only used for merging pages right now. Can abstract to generic alerts and messages as needed."
-  [message confirm-fn close-fn]
-  [:div (use-style alert-container-style)
-   [:> Button {:style {:color (color :highlight-color)}}
-    [(r/adapt-react-class Announcement)]]
-   [:span message]
-   [:> Button {:on-click confirm-fn :style {:color (color :header-text-color)}}
-    [(r/adapt-react-class Check)]]
-   [:> Button {:on-click close-fn :style {:color (color :header-text-color)}}
-    [(r/adapt-react-class Close)]]])
