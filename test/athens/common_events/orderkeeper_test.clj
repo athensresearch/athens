@@ -5,13 +5,13 @@
     [athens.common-events.fixture  :as fixture]
     #_[athens.common-events.resolver :as resolver]
     [clojure.test                  :as t]
-    [datahike.api                  :as d]))
+    #_[datahike.api                  :as d]))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
 
 
-(defn transact-with-orderkeeper
+#_(defn transact-with-orderkeeper
   [tx-data]
   (d/transact @fixture/connection (common-db/orderkeeper @@fixture/connection tx-data)))
 
