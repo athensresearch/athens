@@ -20,8 +20,7 @@
                 block-uid
                 block-order]} args
         now                   (utils/now-ts)
-        new-block             {:db/id        -1
-                               :block/uid    block-uid
+        new-block             {:block/uid    block-uid
                                :block/string ""
                                :block/order  block-order
                                :block/open   true
@@ -46,7 +45,7 @@
                                                       {:block/string ""}))]
     (if (= stored-old-string old-string)
       (let [now           (utils/now-ts)
-            updated-block {:db/id        [:block/uid block-uid]
+            updated-block {:block/uid    block-uid
                            :block/string new-string
                            :edit/time    now}]
         [updated-block])
