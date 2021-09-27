@@ -1,9 +1,11 @@
 (ns athens.self-hosted.web.datascript
   (:require
+    [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.self-hosted.clients           :as clients]
+    [clojure.pprint                       :as pprint]
     [clojure.tools.logging                :as log]
     [datahike.api                         :as d])
   (:import
@@ -65,13 +67,26 @@
   Returns event accepte/rejected response.
   
   Log errors."
-  [connection event-id tx]
+  [connection event-id txs]
   (try
-    (log/debug "Transacting event-id:" event-id ", tx:" (pr-str tx))
-    (let [{:keys [tempids]}       (d/transact connection tx) ; TODO this is a place to hook walk-transact thing
-          {:db/keys [current-tx]} tempids]
-      (log/info "Transacted event-id:" event-id ", tx-id:" current-tx)
-      (common-events/build-event-accepted event-id current-tx))
+    (log/debug "Transacting event-id:" event-id ", txs:" (with-out-str
+                                                           (pprint/pprint txs)))
+    (let [last-tx (atom nil)
+          ;; normalize txs
+          txs     (if (map? txs)
+                    [txs]
+                    txs)]
+      (log/debug "event-id:" event-id ", normalized-txs:" (with-out-str
+                                                            (pprint/pprint txs)))
+      (let [processed-tx            (->> txs
+                                         (common-db/linkmaker @connection)
+                                         (common-db/orderkeeper @connection))
+            {:keys [tempids]}       (d/transact connection processed-tx)
+            {:db/keys [current-tx]} tempids]
+        (reset! last-tx current-tx)
+        (log/debug "Transacted event-id:" event-id ", tx-id:" current-tx))
+      (common-events/build-event-accepted event-id @last-tx))
+
     (catch ExceptionInfo ex
       (let [err-msg   (ex-message ex)
             err-data  (ex-data ex)

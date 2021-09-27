@@ -54,29 +54,26 @@
      [:block-uid string?]]]])
 
 
-(def op-composite-consequence
-  [:map
-   [:op/type [:enum :composite/consequence]]
-   [:op/atomic? false?]
-   [:op/trigger map?]
-   [:op/consequences [:vector map?]]])
-
-
 (def atomic-op
-  [:multi {:dispatch :op/type}
-   [:block/new (mu/merge
-                 op-type-atomic-common
-                 op-block-new)]
-
-   [:page/new (mu/merge
-                op-type-atomic-common
-                op-page-new)]
-
-   [:block/save (mu/merge
-                  op-type-atomic-common
-                  op-block-save)]
-
-   [:composite/consequence op-composite-consequence]])
+  [:schema
+   {:registry
+    {::atomic-op    [:multi {:dispatch :op/type}
+                     [:block/new (mu/merge
+                                   op-type-atomic-common
+                                   op-block-new)]
+                     [:page/new (mu/merge
+                                  op-type-atomic-common
+                                  op-page-new)]
+                     [:block/save (mu/merge
+                                    op-type-atomic-common
+                                    op-block-save)]
+                     [:composite/consequence [:ref ::composite-op]]]
+     ::composite-op [:map
+                     [:op/type [:enum :composite/consequence]]
+                     [:op/atomic? false?]
+                     [:op/trigger map?]
+                     [:op/consequences [:vector [:ref ::atomic-op]]]]}}
+   ::atomic-op])
 
 
 (def valid-atomic-op?
