@@ -1,11 +1,11 @@
 (ns athens.views.pages.settings
   (:require
     ["/components/Button/Button" :refer [Button]]
+    ["/components/Toggle/Toggle" :refer [Toggle]]
     ["@material-ui/icons/Check" :default Check]
     ["@material-ui/icons/NotInterested" :default NotInterested]
     [athens.db :refer [default-athens-persist]]
     [athens.views.textinput :as textinput]
-    [athens.views.toggle-switch :as toggle-switch]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [subscribe dispatch reg-event-fx]]
@@ -164,9 +164,8 @@
                       [:> NotInterested]
                       [:span "Not sending usage data"]])]]
     [:main
-     [:label {:style {:cursor "pointer"}}
-      [toggle-switch/toggle-switch {:checked   monitoring
-                                    :on-change #(handle-monitoring-click monitoring update-fn)}]
+     [:> Toggle {:defaultSelected monitoring
+                 :on-change #(handle-monitoring-click monitoring update-fn)}
       "Send usage data and diagnostics to Athens"]
      [:aside
       [:p "Athens has never and will never look at the contents of your database."]
