@@ -58,6 +58,7 @@
                                 :transition     "opacity 0.075s ease"
                                 :background     (style/color :link-color :opacity-lower)}]
                      [:&.is-selected:after {:opacity 1}]
+                     [:&.is-presence [:.block-content {:padding-right "1rem"}]]
                      [:.user-avatar {:position "absolute"
                                      :left "4px"
                                      :top "4px"}]
