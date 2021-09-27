@@ -19,7 +19,11 @@ jobs:
    test:
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
+       # Make the standard checkout an anchor and user it everythere.
+       # https://en.wikipedia.org/wiki/YAML#Advanced_components
+       # Can't make this one an in-repo action because they need to be checked out too.
+       - &github-checkout
+         name: Git checkout
          uses: actions/checkout@v1
          with:
            fetch-depth: 1
@@ -41,11 +45,7 @@ jobs:
    lint:
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
+       - *github-checkout
 
        - uses: DeLaGuardo/setup-clj-kondo@master
          with:
@@ -72,12 +72,7 @@ jobs:
    style:
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - *github-checkout
        - uses: ./.github/custom-actions/clojure-env
 
        - name: Style
@@ -86,12 +81,7 @@ jobs:
    carve:
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - *github-checkout 
        - uses: ./.github/custom-actions/clojure-env
 
        - name: Carve unused vars
@@ -104,12 +94,7 @@ jobs:
      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/main'
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - *github-checkout
        - uses: ./.github/custom-actions/clojure-env
        - uses: ./.github/custom-actions/node-env
 
@@ -141,12 +126,7 @@ jobs:
          os: [ubuntu-latest, macos-latest, windows-latest]
 
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - *github-checkout
        - uses: ./.github/custom-actions/clojure-env
        - uses: ./.github/custom-actions/node-env
 
@@ -225,6 +205,8 @@ jobs:
      needs: [test, lint, style, carve]
      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
      steps:
+       - *github-checkout
+
        - name: Login to Github Container registry
          uses: docker/login-action@v1
          # You may need to manage write and read access of (GitHub Actions for repositories) [https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions#upgrading-a-workflow-that-accesses-ghcrio]
