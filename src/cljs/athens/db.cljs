@@ -625,6 +625,8 @@
        (mapv :db/id)
        merge-parents-and-block
        group-by-parent
+       (sort-by #(-> % first second))
+       (map #(vector (ffirst %) (second %)))
        vec))
 
 
