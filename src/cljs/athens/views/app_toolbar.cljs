@@ -30,9 +30,8 @@
                             (subscribe [:win-fullscreen?])
                             (r/atom false))
         merge-open?       (reagent.core/atom false)
-        selected-db       (subscribe [:db-picker/selected-db])
-        presence-el       (if (electron.utils/remote-db? @selected-db) [toolbar-presence-el] [:div "test"])
-        db-menu           db-menu]
+
+        selected-db       (subscribe [:db-picker/selected-db])]
     (fn []
       [:<>
        (when @merge-open?
@@ -58,40 +57,7 @@
                        :onPressSettings #(router/navigate :settings)
                        :onPressMerge #(swap! merge-open? not)
                        :onPressRightSidebarToggle #(dispatch [:right-sidebar/toggle])
-                       :DatabaseMenu db-menu
-                       :Presence presence-el}]
-      ])))
-      #_ [:div (use-style app-header-secondary-controls-style)
-         (if electron?
-           [:<>
-            (when (electron.utils/remote-db? @selected-db)
-              [toolbar-presence-el])
-            [:> Button {:on-click #(swap! merge-open? not)
-                        :title "Merge Roam Database"}
-             [:> MergeType]]
-            [:> Button {:on-click #(router/navigate :settings)
-                        :title "Open Settings"
-                        :is-pressed   (= @route-name :settings)}
-             [:> Settings]]
-            [separator]]
-           [:> Button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :is-primary true} "Load Test DB"])
-         [:> Button {:on-click #(dispatch [:theme/toggle])
-                     :title "Toggle Color Scheme"}
-          (if @theme-dark
-            [:> ToggleOff]
-            [:> ToggleOn])]
-         [separator]
-         [:> Button {:is-pressed   @right-open?
-                     :title "Toggle Sidebar"
-                     :on-click #(dispatch [:right-sidebar/toggle])}
-          [:> VerticalSplit {:style {:transform "scaleX(-1)"}}]]]
-
-     #_   (when (and (contains? #{:windows :linux} os) electron?)
-        #_ [:div (use-style window-toolbar-buttons-style
-                          {:class (app-classes {:os os
-                                                :electron? electron?
-                                                :theme-dark? @theme-dark
-                                                :win-focused? @win-focused?
-                                                :win-fullscreen? @win-fullscreen?
-                                                :win-maximized? @win-maximized?})})])
-
+                       :databaseMenu (r/as-element [db-menu])
+                       :presenceDetails (if (electron.utils/remote-db? @selected-db)
+                                          (r/as-element [toolbar-presence-el]) 
+                                          nil)}]])))

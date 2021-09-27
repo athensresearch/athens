@@ -3,10 +3,7 @@ import styled from 'styled-components';
 import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Menu as MenuIcon, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
 
 import { Button } from '@/Button';
-
-import { DatabaseMenu, DatabaseMenuProps } from '@/concept/DatabaseMenu';
 import { WindowButtons } from './components/WindowButtons';
-import { PresenceDetails, PresenceDetailsProps } from '@/PresenceDetails';
 
 const AppToolbarWrapper = styled.header`
   background: var(--color-background);
@@ -137,6 +134,8 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   handlePressHistoryForward(): void;
   handlePressLeftSidebarToggle(): void;
   handlePressRightSidebarToggle(): void;
+  DatabaseMenu: any;
+  PresenceDetails: React.FC;
 }
 
 export const AppToolbar = ({
@@ -151,20 +150,6 @@ export const AppToolbar = ({
   isRightSidebarOpen,
   isCommandBarOpen,
   isMergeDialogOpen,
-  isDatabaseDialogOpen,
-  hostAddress,
-  currentUser,
-  currentPageMembers,
-  differentPageMembers,
-  activeDatabase,
-  inactiveDatabases,
-  isSynced,
-  handleChooseDatabase,
-  handlePressAddDatabase,
-  handlePressRemoveDatabase,
-  handlePressImportDatabase,
-  handlePressMoveDatabase,
-  handlePressMember,
   handlePressCommandBar,
   handlePressDailyNotes,
   handlePressAllPages,
@@ -179,23 +164,13 @@ export const AppToolbar = ({
   handlePressMinimize,
   handlePressMaximizeRestore,
   handlePressClose,
-  handlePressHostAddress,
-  handleUpdateProfile,
-  connectionStatus
+  DatabaseMenu,
+  PresenceDetails,
 }: AppToolbarProps): React.ReactElement => {
 
   return (<AppToolbarWrapper>
     <AppToolbar.MainControls>
-      <DatabaseMenu
-        activeDatabase={activeDatabase}
-        inactiveDatabases={inactiveDatabases}
-        isSynced={isSynced}
-        handleChooseDatabase={handleChooseDatabase}
-        handlePressAddDatabase={handlePressAddDatabase}
-        handlePressRemoveDatabase={handlePressRemoveDatabase}
-        handlePressImportDatabase={handlePressImportDatabase}
-        handlePressMoveDatabase={handlePressMoveDatabase}
-      />
+      {DatabaseMenu}
       <Button
         onClick={handlePressLeftSidebarToggle}
         isPressed={isLeftSidebarOpen}
@@ -215,18 +190,8 @@ export const AppToolbar = ({
       <Button isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></Button>
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
-      <PresenceDetails
-        currentUser={currentUser}
-        currentPageMembers={currentPageMembers}
-        differentPageMembers={differentPageMembers}
-        hostAddress={hostAddress}
-        placement="bottom-end"
-        connectionStatus={connectionStatus}
-        handlePressHostAddress={handlePressHostAddress}
-        handlePressMember={handlePressMember}
-        handleUpdateProfile={handleUpdateProfile}
-      />
-      {/* <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button> */}
+      {PresenceDetails}
+      <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button>
       <Button isPressed={route === '/settings'} onClick={handlePressSettings}><Settings /></Button>
       <Button
         onClick={handlePressThemeToggle}>
