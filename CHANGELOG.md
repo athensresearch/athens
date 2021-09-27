@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.10](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.9...v1.0.0-alpha.rtc.10) (2021-09-27)
+
+
+### Features
+
+* Orderkeeper to keep all your `:block/order` ordered. ([7ac1844](https://github.com/athensresearch/athens/commit/7ac18448b02a600f7dd1ada16277c58209d0cfca))
+
+
+### Bug Fixes
+
+* Don't log TXs and typo. ([915a818](https://github.com/athensresearch/athens/commit/915a818dd70f0fbf52a4212501af36313348320a))
+
+
+* carve happy. ([0dba4d4](https://github.com/athensresearch/athens/commit/0dba4d4f12923ee308af2d4a6e90b710cc5bf314))
+
 ## [1.0.0-alpha.rtc.9](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.8...v1.0.0-alpha.rtc.9) (2021-09-27)
 
 
