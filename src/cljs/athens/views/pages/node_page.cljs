@@ -1,6 +1,7 @@
 (ns athens.views.pages.node-page
   (:require
     ["/components/Button/Button" :refer [Button]]
+    ["/components/Dialog/Dialog" :refer [Dialog]]
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
@@ -17,7 +18,6 @@
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.util :refer [escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
-    [athens.views.alerts :refer [alert-component]]
     [athens.views.blocks.bullet :as bullet]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
@@ -515,10 +515,10 @@
                                      :data-uid uid})
 
          (when alert-show
-           [:div (use-style {:position "absolute"
-                             :top      "50px"
-                             :left     "35%"})
-            [alert-component message confirm-fn cancel-fn]])
+           [:> Dialog {:isOpen true
+                       :title message
+                       :onConfirm confirm-fn
+                       :onDismiss cancel-fn}])
 
 
          ;; Header

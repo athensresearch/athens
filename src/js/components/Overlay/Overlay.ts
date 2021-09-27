@@ -1,4 +1,4 @@
-import styled, { keyframes } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 
 const overlayAppear = keyframes`
   from {
@@ -24,8 +24,27 @@ export const Overlay = styled.div`
   animation-fill-mode: both;
   box-shadow: var(--depth-shadow-16), 0 0 0 1px rgb(0 0 0 / 0.05);
   background: var(--background-plus-1);
+  position: relative;
+  
+  ${props => !!props.hasOutline && css`
+    .is-theme-dark & {
+      &:after {
+        content: '';
+        inset: 0;
+        position: absolute;
+        box-shadow: inset 0 0 0 1px var(--body-text-color---opacity-lower);
+        z-index: 99999;
+        pointer-events: none;
+        border-radius: inherit;
+      }
+    }
+  `}
   
   &.animate-in {
     animation: ${overlayAppear} 0.125s;
   }
 `;
+
+Overlay.defaultProps = {
+  hasOutline: true,
+}
