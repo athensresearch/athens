@@ -681,7 +681,7 @@
   - `db`: Current Datascript/Datahike DB value
   - `input-tx`: (optional): Graph structure modifying TX, analyzed for `:block/order` mistakes
 
-  If `inptu-tx` is provided, orderkeeper will only update `:block/order` related to that TX.
+  If `input-tx` is provided, orderkeeper will only update `:block/order` related to that TX.
   If `input-tx` is not provided, all `:block/order` will be checked."
   ([db]
    (try

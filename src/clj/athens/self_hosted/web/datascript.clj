@@ -81,8 +81,6 @@
       (let [processed-tx            (->> txs
                                          (common-db/linkmaker @connection)
                                          (common-db/orderkeeper @connection))
-            _                       (log/debug event-id "after tx-middleware:" (with-out-str
-                                                                                 (pprint/pprint processed-tx)))
             {:keys [tempids]}       (d/transact connection processed-tx)
             {:db/keys [current-tx]} tempids]
         (reset! last-tx current-tx)
