@@ -71,37 +71,37 @@
         modal      (rf/subscribe [:modal])]
     (fn []
       [:> OverlayProvider
-      [:div (merge {:style {:display "contents"}}
-                   (zoom))
-       [:> GlobalStyles]
-       [alert]
-       (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
-         [m-snackbar
-          {:message msg
-           :open (boolean msg)}
-          [:span
-           {:style {:background-color (case type
-                                        :success "green"
-                                        "red")
-                    :padding "10px 20px"
-                    :color "white"}}
-           msg]])
-       [athena-component]
-       (cond
-         (and @loading @modal) [db-modal/window]
+       [:div (merge {:style {:display "contents"}}
+                    (zoom))
+        [:> GlobalStyles]
+        [alert]
+        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
+          [m-snackbar
+           {:message msg
+            :open (boolean msg)}
+           [:span
+            {:style {:background-color (case type
+                                         :success "green"
+                                         "red")
+                     :padding "10px 20px"
+                     :color "white"}}
+            msg]])
+        [athena-component]
+        (cond
+          (and @loading @modal) [db-modal/window]
 
-         @loading [:> Spinner]
+          @loading [:> Spinner]
 
-         :else [:<>
-                (when @modal [db-modal/window])
-                [:div (use-style app-wrapper-style
-                                 {:class [(case os
-                                            :windows "os-windows"
-                                            :mac "os-mac"
-                                            :linux "os-linux")
-                                          (when electron? "is-electron")]})
-                 [app-toolbar/app-toolbar]
-                 [left-sidebar/left-sidebar]
-                 [pages/view]
-                 [right-sidebar/right-sidebar]
-                 [devtool-component]]])]])))
+          :else [:<>
+                 (when @modal [db-modal/window])
+                 [:div (use-style app-wrapper-style
+                                  {:class [(case os
+                                             :windows "os-windows"
+                                             :mac "os-mac"
+                                             :linux "os-linux")
+                                           (when electron? "is-electron")]})
+                  [app-toolbar/app-toolbar]
+                  [left-sidebar/left-sidebar]
+                  [pages/view]
+                  [right-sidebar/right-sidebar]
+                  [devtool-component]]])]])))
