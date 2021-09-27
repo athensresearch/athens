@@ -98,7 +98,7 @@ jobs:
          run: script/carve
 
 
-   deploy-gh-pages:
+   release-web:
      needs: [test, lint, style, carve]
      # Only deploy on tag pushes to the default branch (main). GH pages is effectively a singleton deploy env for main.
      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/main'
@@ -128,7 +128,7 @@ jobs:
            publish_dir: ./resources/public
            force_orphan: true
 
-   dist-electron:
+   release-electron:
      needs: [test, lint, style, carve]
      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
      runs-on: ${{ matrix.os }}
@@ -220,7 +220,7 @@ jobs:
            draft: true
 
 
-   push-to-registry:
+   release-server:
      runs-on: ubuntu-latest
      needs: [test, lint, style, carve]
      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
