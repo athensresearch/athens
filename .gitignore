@@ -35,3 +35,6 @@ dist
 # design system static build
 /storybook-static
 /src/gen
+
+# docker compose templating backup
+docker-compose.yml.bk
