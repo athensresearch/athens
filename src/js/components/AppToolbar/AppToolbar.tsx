@@ -116,61 +116,66 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   */
   isThemeDark: boolean;
   // Electron only
-  handlePressMinimize?(): void;
-  handlePressClose?(): void;
-  handlePressMaximizeRestore?(): void;
-  handlePressFullscreen?(): void;
-  handlePressHistoryBack(): void;
-  handlePressHistoryForward(): void;
+  onPressMinimize?(): void;
+  onPressClose?(): void;
+  onPressMaximizeRestore?(): void;
+  onPressFullscreen?(): void;
+  onPressHistoryBack(): void;
+  onPressHistoryForward(): void;
   // Main toolbar
-  handlePressCommandBar(): void;
-  handlePressDailyNotes(): void;
-  handlePressAllPages(): void;
-  handlePressGraph(): void;
-  handlePressThemeToggle(): void;
-  handlePressMerge(): void;
-  handlePressSettings(): void;
-  handlePressHistoryBack(): void;
-  handlePressHistoryForward(): void;
-  handlePressLeftSidebarToggle(): void;
-  handlePressRightSidebarToggle(): void;
-  DatabaseMenu: any;
-  PresenceDetails: React.FC;
+  onPressCommandBar(): void;
+  onPressDailyNotes(): void;
+  onPressAllPages(): void;
+  onPressGraph(): void;
+  onPressThemeToggle(): void;
+  onPressMerge(): void;
+  onPressSettings(): void;
+  onPressHistoryBack(): void;
+  onPressHistoryForward(): void;
+  onPressLeftSidebarToggle(): void;
+  onPressRightSidebarToggle(): void;
+  databaseMenu?: React.FC;
+  presenceDetails?: React.FC;
 }
 
-export const AppToolbar = ({
-  os,
-  route,
-  isElectron,
-  isWinFullscreen,
-  isWinFocused,
-  isWinMaximized,
-  isThemeDark,
-  isLeftSidebarOpen,
-  isRightSidebarOpen,
-  isCommandBarOpen,
-  isMergeDialogOpen,
-  handlePressCommandBar,
-  handlePressDailyNotes,
-  handlePressAllPages,
-  handlePressGraph,
-  handlePressThemeToggle,
-  handlePressMerge,
-  handlePressSettings,
-  handlePressHistoryBack,
-  handlePressHistoryForward,
-  handlePressLeftSidebarToggle,
-  handlePressRightSidebarToggle,
-  handlePressMinimize,
-  handlePressMaximizeRestore,
-  handlePressClose,
-  DatabaseMenu,
-  PresenceDetails,
-}: AppToolbarProps): React.ReactElement => {
+export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
+  const {
+    os,
+    route,
+    isElectron,
+    isWinFullscreen,
+    isWinFocused,
+    isWinMaximized,
+    isThemeDark,
+    isLeftSidebarOpen,
+    isRightSidebarOpen,
+    isCommandBarOpen,
+    isMergeDialogOpen,
+    onPressCommandBar: handlePressCommandBar,
+    onPressDailyNotes: handlePressDailyNotes,
+    onPressAllPages: handlePressAllPages,
+    onPressGraph: handlePressGraph,
+    onPressThemeToggle: handlePressThemeToggle,
+    onPressMerge: handlePressMerge,
+    onPressSettings: handlePressSettings,
+    onPressHistoryBack: handlePressHistoryBack,
+    onPressHistoryForward: handlePressHistoryForward,
+    onPressLeftSidebarToggle: handlePressLeftSidebarToggle,
+    onPressRightSidebarToggle: handlePressRightSidebarToggle,
+    onPressMinimize: handlePressMinimize,
+    onPressMaximizeRestore: handlePressMaximizeRestore,
+    onPressClose: handlePressClose,
+    databaseMenu,
+    presenceDetails,
+  } = props;
+
+  console.log("props");
+  console.log(props);
+  console.log(isElectron, databaseMenu, presenceDetails)
 
   return (<AppToolbarWrapper>
     <AppToolbar.MainControls>
-      {DatabaseMenu}
+      {databaseMenu}
       <Button
         onClick={handlePressLeftSidebarToggle}
         isPressed={isLeftSidebarOpen}
@@ -190,7 +195,7 @@ export const AppToolbar = ({
       <Button isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></Button>
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
-      {PresenceDetails}
+      {presenceDetails}
       <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button>
       <Button isPressed={route === '/settings'} onClick={handlePressSettings}><Settings /></Button>
       <Button

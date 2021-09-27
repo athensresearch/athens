@@ -58,6 +58,5 @@
                        :onPressMerge #(swap! merge-open? not)
                        :onPressRightSidebarToggle #(dispatch [:right-sidebar/toggle])
                        :databaseMenu (r/as-element [db-menu])
-                       :presenceDetails (if (electron.utils/remote-db? @selected-db)
-                                          (r/as-element [toolbar-presence-el]) 
-                                          nil)}]])))
+                       :presenceDetails (when (electron.utils/remote-db? @selected-db)
+                                          (r/as-element [toolbar-presence-el]))}]])))
