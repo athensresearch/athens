@@ -1,5 +1,9 @@
 import React from 'react';
+
 import { themes } from '@storybook/theming';
+import {
+  OverlayProvider
+} from '@react-aria/overlays';
 
 import { classnames } from '../src/js/components/utils/classnames';
 import { GlobalStyles } from '../src/js/components/utils/style/style';
@@ -61,14 +65,16 @@ export const decorators = [
     return (
       <>
         <GlobalStyles />
-        <Storybook.App
-          id="app"
-          className={classnames(
-            context.globals.hostType === 'electron' ? 'is-electron' : 'is-browser',
-            context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-storybook-canvas'
-          )}>
-          <Story />
-        </Storybook.App>
+        <OverlayProvider>
+          <Storybook.App
+            id="app"
+            className={classnames(
+              context.globals.hostType === 'electron' ? 'is-electron' : 'is-browser',
+              context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-storybook-canvas'
+            )}>
+            <Story />
+          </Storybook.App>
+        </OverlayProvider>
       </>
     )
   },
