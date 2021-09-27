@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.9](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.8...v1.0.0-alpha.rtc.9) (2021-09-27)
+
+
+### Features
+
+* **dialog:** add new dialog component ([15ced38](https://github.com/athensresearch/athens/commit/15ced387e9047568793464131c2c61c9925b108c))
+
+
+### Bug Fixes
+
+* always focus first child, even on daily notes ([c7b1a90](https://github.com/athensresearch/athens/commit/c7b1a90ad5028b592c2f8c091249c2235b6bc639)), closes [#1669](https://github.com/athensresearch/athens/issues/1669)
+* **avatar:** stack accepts style props ([969eb22](https://github.com/athensresearch/athens/commit/969eb22a5880b5fbca3aab114f1b65914764972c))
+* pass username, not channel, to goodbye-handler ([a70489c](https://github.com/athensresearch/athens/commit/a70489c91cae41a2d3c11f909d99afa0cde4f47d))
+* **presence:** use consistent avatar spacing ([0ad1b16](https://github.com/athensresearch/athens/commit/0ad1b16d80bb86a2e8ccd59f4c8dbc569ba964cc))
+* remove unused component ([2a9c489](https://github.com/athensresearch/athens/commit/2a9c48945e8b2b6eabd9b3d506712f8e55e7681d))
+
+
+### Refactors
+
+* **dialog:** replace page merge alert with dialog ([5fd1951](https://github.com/athensresearch/athens/commit/5fd1951bedd83f48316d91eb24ec74c478ef7b3d))
+
+
+* remove old alert component ([ac9cc4f](https://github.com/athensresearch/athens/commit/ac9cc4f2bb26d69f205820a520b104799875c597))
+
 ## [1.0.0-alpha.rtc.8](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.7...v1.0.0-alpha.rtc.8) (2021-09-23)
 
 
