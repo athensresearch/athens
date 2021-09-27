@@ -3,6 +3,7 @@
     ["/components/Spinner/Spinner" :refer [Spinner]]
     ["/components/utils/style/style" :refer [GlobalStyles]]
     ["@material-ui/core/Snackbar" :as Snackbar]
+    ["@react-aria/overlays" :refer [OverlayProvider]]
     [athens.config]
     [athens.electron.db-modal :as db-modal]
     [athens.style :refer [zoom]]
@@ -69,6 +70,7 @@
         electron?  (electron?)
         modal      (rf/subscribe [:modal])]
     (fn []
+      [:> OverlayProvider
       [:div (merge {:style {:display "contents"}}
                    (zoom))
        [:> GlobalStyles]
@@ -102,4 +104,4 @@
                  [left-sidebar/left-sidebar]
                  [pages/view]
                  [right-sidebar/right-sidebar]
-                 [devtool-component]]])])))
+                 [devtool-component]]])]])))

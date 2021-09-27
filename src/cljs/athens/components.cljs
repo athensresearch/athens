@@ -55,7 +55,8 @@
   [content _uid]
   [span-click-stop
    [:div.media-16-9
-    [:iframe {:src   (str "https://www.youtube.com/embed/" (get (re-find #".*v=([a-zA-Z0-9_\-]+)" content) 1))
+    [:iframe {:src   (str "https://www.youtube.com/
+                          /" (get (re-find #".*v=([a-zA-Z0-9_\-]+)" content) 1))
               :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"}]]])
 
 
@@ -78,6 +79,7 @@
   {:background (color :background-minus-2 :opacity-med)
    :position   "relative"
    ::stylefy/manual [[:>.block-container {:margin-left "0"
+                                          :padding-right "1.3rem"
                                           ::stylefy/manual [[:textarea {:background "transparent"}]]}]
                      [:>svg              {:position   "absolute"
                                           :right      "5px"

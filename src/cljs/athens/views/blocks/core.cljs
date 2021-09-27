@@ -42,9 +42,12 @@
                                                      :left       "calc(1.375em + 1px)"
                                                      :top        "2em"
                                                      :bottom     "0"
+                                                     :opacity    "0"
                                                      :transform  "translateX(50%)"
-                                                     :transition "background-color 0.2s ease-in-out"
+                                                     :transition "background-color 0.2s ease-in-out, opacity 0.2s ease-in-out"
                                                      :background (style/color :border-color)}]
+                     [:&:hover
+                      :&:focus-within [:&.show-tree-indicator:before {:opacity "1"}]]
                      [:&:after {:content        "''"
                                 :z-index        -1
                                 :position       "absolute"
@@ -58,6 +61,7 @@
                                 :transition     "opacity 0.075s ease"
                                 :background     (style/color :link-color :opacity-lower)}]
                      [:&.is-selected:after {:opacity 1}]
+                     [:&.is-presence [:.block-content {:padding-right "1rem"}]]
                      [:.user-avatar {:position "absolute"
                                      :left "4px"
                                      :top "4px"}]
@@ -70,6 +74,8 @@
                                       'below below below below'"
                                     :border-radius         "0.5rem"
                                     :position              "relative"}
+                      [:&:hover
+                       :&:focus-within ["> .block-toggle" {:opacity "1"}]]
                       [:button.block-edit-toggle {:position   "absolute"
                                                   :appearance "none"
                                                   :width      "100%"
@@ -108,8 +114,7 @@
                             :grid-area "refs"
                             :z-index (:zindex-dropdown style/ZINDICES)
                             :visibility (when-not (pos? count) "hidden")})
-   [:> Button {:is-primary true
-               :on-click (fn [e]
+   [:> Button {:on-click (fn [e]
                            (.. e stopPropagation)
                            (rf/dispatch [:right-sidebar/open-item uid]))}
     count]])

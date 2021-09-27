@@ -96,10 +96,13 @@
       (into
         [:> (.-Stack Avatar)
          {:size "1.25rem"
-          :maskSize "1px"
+          :maskSize "1.5px"
           :stackOrder "from-left"
           :limit 3
-          :style {:transform "translateX(calc(-100% + 1rem)) translateY(0.35rem)"
+          :style {:zIndex 100
+                  :position "absolute"
+                  :right "1.5rem"
+                  :top "0.25rem"
                   :padding "0.125rem"
                   :background "var(--background-color)"}}]
         (map (fn [x] [:> Avatar (merge {:showTooltip false :key (:username x)} x)]) @users)))))
