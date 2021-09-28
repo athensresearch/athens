@@ -1,20 +1,22 @@
 (ns athens.views.blocks.core
   (:require
+    ["/components/Block/components/Anchor" :refer [Anchor]]
+    ["/components/Block/components/Toggle" :refer [Toggle]]
     ["/components/Button/Button" :refer [Button]]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
     [athens.events.selection                 :as select-events]
+    [athens.router :as router]
     [athens.self-hosted.presence.views       :as presence]
     [athens.style                            :as style]
     [athens.subs.selection                   :as select-subs]
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
     [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
-    [athens.views.blocks.bullet              :as bullet]
+    [athens.views.blocks.bullet              :refer [bullet-mouse-out bullet-mouse-over bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content             :as content]
     [athens.views.blocks.context-menu        :as context-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    [athens.views.blocks.toggle              :as toggle]
     [athens.views.blocks.tooltip             :as tooltip]
     [com.rpl.specter                         :as s]
     [re-frame.core                           :as rf]
@@ -292,6 +294,12 @@
       (swap! state assoc :drag-target nil))))
 
 
+(defn toggle
+  [block-uid open]
+  (rf/dispatch [:block/open {:block-uid block-uid
+                             :open?     open}]))
+
+
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([block]
@@ -369,10 +377,27 @@
 
           [:div.block-body
            (when (seq children)
-             [toggle/toggle-el uid-sanitized-block state linked-ref])
+             [:> Toggle {:isOpen (if (or (and (true? linked-ref) (:linked-ref/open @state))
+                                         (and (false? linked-ref) open))
+                                   true
+                                   false)
+                         :onToggle (fn [e]
+                                     (.. e stopPropagation)
+                                     (if (true? linked-ref)
+                                       (swap! state update :linked-ref/open not)
+                                       (toggle uid (not open))))}])
            (when (:context-menu/show @state)
              [context-menu/context-menu-el uid-sanitized-block state])
-           [bullet/bullet-el block state linked-ref]
+           [:> Anchor {:isClosedWithChildren (when (and (seq children)
+                                                        (or (and (true? linked-ref) (not (:linked-ref/open @state)))
+                                                            (and (false? linked-ref) (not open))))
+                                               "closed-with-children")
+                       :on-click        (fn [e] (router/navigate-uid uid e))
+                       :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
+                       :on-mouse-over   (fn [e] (bullet-mouse-over e uid state)) ; useful during development to check block meta-data
+                       :on-mouse-out    (fn [e] (bullet-mouse-out e uid state))
+                       :on-drag-start   (fn [e] (bullet-drag-start e uid state))
+                       :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
            [tooltip/tooltip-el uid-sanitized-block state]
            [content/block-content-el block state]
 

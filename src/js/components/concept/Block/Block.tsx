@@ -9,7 +9,7 @@ import { Avatar } from '@/Avatar';
 import { Anchor } from '@/Block/components/Anchor';
 import { Body } from './components/Body';
 import { Content, ContentProps } from './components/Content';
-import { Toggle } from './components/Toggle';
+import { Toggle } from '../../Block/components/Toggle';
 import { Refs } from './components/Refs';
 import { Container } from './components/Container';
 
