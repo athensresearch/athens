@@ -204,6 +204,14 @@ jobs:
            API_KEY_ID: ${{ secrets.api_key_id }}
            API_KEY_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
 
+      #  - name: Notify Alpha Testers of new release
+      #    run: |
+      #       curl \
+      #       -H "Content-Type: application/json" \
+      #       # how to ping roles manually: https://support.discord.com/hc/en-us/community/posts/360057835772-Role-Pinging-for-Bots
+      #       -d '{"username": "athens", "content": "Hey <@&${{ secrets.discord_alpha_role }}> a new release has been published \n\n[Go check it out!](https://github.com/athensresearch/athens/releases)"}' \
+      #       ${{ secrets.discord_webhook }}
+
 
    release-server:
      runs-on: ubuntu-latest
