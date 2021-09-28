@@ -1,8 +1,10 @@
 version: "3"
 services:
-  athens-server:
-    build: .
-    image: athens-server:1.0.0-alpha.rtc.2
+  athens:
+    image: ghcr.io/athensresearch/athens:latest
+    build:
+      context: .
+      dockerfile: athens.dockerfile
     restart: always
     expose:
       - 3010 # Change this according to config.edn
@@ -11,16 +13,18 @@ services:
       - crash-logs:/srv/athens/logs
     environment:   # set environment variables
       # config_edn is deep merged with the whole config file
-      config_edn: "{:datahike {:store {:path \"/srv/athens/db\"}}}"
+      - config_edn=${config_edn:-{:datahike {:store {:path "/srv/athens/db"}}}}
 
 
-  nginx:
-    image: nginx
-    depends_on:
-      - athens-server
+  athens-nginx:
+    image: ghcr.io/athensresearch/athens-nginx:latest
+    build:
+      context: .
+      dockerfile: nginx.dockerfile
     restart: always
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - athens
+    restart: always
     ports:
       - 80:80
 
