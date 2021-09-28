@@ -6,7 +6,7 @@ import { DOMRoot } from '@/utils/config';
 import { classnames } from '@/utils/classnames';
 
 import { Avatar } from '@/Avatar';
-import { Anchor } from './components/Anchor';
+import { Anchor } from '@/Block/components/Anchor';
 import { Body } from './components/Body';
 import { Content, ContentProps } from './components/Content';
 import { Toggle } from './components/Toggle';

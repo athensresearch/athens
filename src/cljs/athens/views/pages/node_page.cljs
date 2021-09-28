@@ -1,5 +1,6 @@
 (ns athens.views.pages.node-page
   (:require
+    ["/components/Block/components/Anchor" :refer [Anchor]]
     ["/components/Button/Button" :refer [Button]]
     ["/components/Dialog/Dialog" :refer [Dialog]]
     ["@material-ui/core/Popover" :as Popover]
@@ -293,7 +294,7 @@
   [parent-uid]
   [:div {:class "block-container"}
    [:div {:style {:display "flex"}}
-    [:span (use-style bullet/bullet-style)]
+    [:> Anchor]
     [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
 
