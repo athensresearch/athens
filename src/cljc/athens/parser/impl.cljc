@@ -466,8 +466,9 @@ newline = #'\\n'
        (let [t-0 (.getNano (LocalDateTime/now))
              result (fn-to-time arg)
              t-1 (.getNano (LocalDateTime/now))]
-         (println name ", time:" (/ (- t-1 t-0)
-                                    1000000) "milliseconds")
+         (when false
+           (println name ", time:" (/ (- t-1 t-0)
+                                      1000000) "milliseconds"))
          result))))
 
 
