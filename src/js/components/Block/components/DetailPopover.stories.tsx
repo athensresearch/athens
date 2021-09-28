@@ -13,9 +13,11 @@ export default {
 };
 
 export const Typical = () => <DetailPopover
-// dbid="dbid"
-// uid="uid"
-// order={4}
-// open={true}
-// refs={10}
+  block={{
+    uid: '1a415560',
+    id: 145,
+    order: 12,
+    open: true,
+    _refs: [{ id: 123 }, { id: 123 }]
+  }}
 />;
