@@ -1,7 +1,6 @@
 (ns athens.self-hosted.presence.subs
   (:require
     [athens.db :as db]
-    [athens.self-hosted.presence.utils :as utils]
     [re-frame.core :as rf]))
 
 
@@ -33,9 +32,7 @@
                                first
                                second)]
       (or user-in-presence
-          {:username (:username settings)
-           :color    (or (:color settings)
-                         (first utils/PALETTE))}))))
+          (select-keys settings [:username :color])))))
 
 
 (rf/reg-sub

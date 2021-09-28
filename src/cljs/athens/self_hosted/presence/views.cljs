@@ -5,6 +5,7 @@
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
     [athens.self-hosted.presence.subs]
+    [athens.self-hosted.presence.utils :as utils]
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
@@ -14,11 +15,13 @@
 
 
 (defn user->person
-  [{:keys [username color]}]
+  [{:keys [username color]
+    :or {username "Unknown"
+         color    (first utils/PALETTE)}}]
   ;; TODO: have a real notion of user-id, not just username.
   {:personId username
-   :username  username
-   :color     color})
+   :username username
+   :color    color})
 
 
 (defn copy-host-address-to-clipboard
