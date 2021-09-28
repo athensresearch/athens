@@ -1,6 +1,7 @@
 (ns athens.self-hosted.presence.subs
   (:require
     [athens.db :as db]
+    [athens.self-hosted.presence.utils :as utils]
     [re-frame.core :as rf]))
 
 
@@ -26,11 +27,15 @@
   :<- [:presence/users-with-page-data]
   :<- [:settings]
   (fn [[users settings] [_]]
-    (-> (filter (fn [[_ user]]
-                  (= (:username settings) (:username user)))
-                users)
-        first
-        second)))
+    (let [user-in-presence (-> (filter (fn [[_ user]]
+                                         (= (:username settings) (:username user)))
+                                       users)
+                               first
+                               second)]
+      (or user-in-presence
+          {:username (:username settings)
+           :color    (or (:color settings)
+                         (first utils/PALETTE))}))))
 
 
 (rf/reg-sub

@@ -62,18 +62,11 @@
                all-users              (rf/subscribe [:presence/users-with-page-data])
                same-page              (rf/subscribe [:presence/same-page])
                diff-page              (rf/subscribe [:presence/diff-page])
-               settings               (rf/subscribe [:settings])
                others-seq             #(->> (dissoc % (:username @current-user))
                                             vals
                                             (map user->person))]
               (fn []
-                (let [current-user'          (user->person (or @current-user
-                                                               ;; TODO: this is only needed because we don't
-                                                               ;; have real ids, so it's possible while changing
-                                                               ;; name that the current-user does not match the
-                                                               ;; user in settings for a while since there's
-                                                               ;; no way to track it.
-                                                               (select-keys @settings [:username :color])))
+                (let [current-user'          (user->person @current-user)
                       current-page-members   (others-seq @same-page)
                       different-page-members (others-seq @diff-page)]
                   [:> PresenceDetails {:current-user              current-user'
