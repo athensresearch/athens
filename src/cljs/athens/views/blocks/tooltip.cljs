@@ -1,5 +1,6 @@
 (ns athens.views.blocks.tooltip
   (:require
+    ["/components/Block/components/DetailPopover" :refer [DetailPopover]]
     [athens.style :as style]
     [athens.util :as util]
     [stylefy.core :as stylefy]))
@@ -64,12 +65,11 @@
         {:keys [dragging tooltip]} @state]
     ;; if re-frame-10x is hidden, don't show tooltip. see style.cljs
     (when (and tooltip (not dragging) (util/re-frame-10x-open?))
-      [:div (stylefy/use-style tooltip-style
-                               {:class          "tooltip"
-                                :on-click       (fn [e] (.. e stopPropagation))
-                                :on-mouse-leave #(swap! state assoc :tooltip false)})
-       [:div [:b "db/id"] [:span dbid]]
-       [:div [:b "uid"] [:span uid]]
-       [:div [:b "order"] [:span order]]
-       [:div [:b "open"] [:span (str open)]]
-       [:div [:b "refs"] [:span (str refs)]]])))
+      [:> DetailPopover  {:class          "tooltip"
+                          :on-click       (fn [e] (.. e stopPropagation))
+                          :dbid dbid
+                          :uid uid
+                          :order order
+                          :open open
+                          :refs refs
+                          :onDismiss #(swap! state assoc :tooltip false)}])))

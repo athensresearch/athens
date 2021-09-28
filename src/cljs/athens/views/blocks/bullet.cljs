@@ -32,4 +32,5 @@
 (defn bullet-drag-end
   "End drag event."
   [_e _uid state]
+  (js/console.log _e)
   (swap! state assoc :dragging false))

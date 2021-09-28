@@ -1,6 +1,11 @@
 import React from 'react'
 import styled from 'styled-components';
 import { useFocusRing } from '@react-aria/focus';
+import { useTooltipTrigger, useTooltip } from '@react-aria/tooltip'
+import { useTooltipTriggerState } from '@react-stately/tooltip';
+import { TooltipTriggerProps } from '@react-types/tooltip';
+import { mergeProps } from '@react-aria/utils';
+import { DetailPopover } from '@/Block/components/DetailPopover';
 
 export const AnchorButton = styled.button`
   flex-shrink: 0;
@@ -103,7 +108,7 @@ const FocusRing = styled.div`
   border-radius: 0.25rem;
 `;
 
-export interface AnchorProps {
+export interface AnchorProps extends TooltipTriggerProps {
   /**
    * What style of anchor to display
    */
@@ -120,25 +125,33 @@ export interface AnchorProps {
    * When the anchor button is right-clicked
    */
   handleAnchorContextMenu?: () => void;
+  block: any;
+  shouldShowDebugDetails: boolean;
 }
 
 /**
  * A handle and indicator of a block's position in the document
 */
-export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
-  const { isClosedWithChildren, anchorElement } = props;
+export const Anchor = (props: AnchorProps) => {
+  const { isClosedWithChildren, anchorElement, shouldShowDebugDetails, block } = props;
+  const ref = React.useRef();
+  let state = useTooltipTriggerState(props);
+  let { triggerProps, tooltipProps } = useTooltipTrigger({ delay: 500 }, state, ref);
   const { isFocusVisible, focusProps } = useFocusRing();
 
-  return (<AnchorButton
-    className={['anchor', isClosedWithChildren && 'closed-with-children'].join(' ')}
-    ref={ref}
-    draggable={true}
-    {...props}
-    {...focusProps}
-  >
-    {anchorElements[anchorElement] || anchorElements['circle']}
-    {isFocusVisible && <FocusRing />}
-  </AnchorButton>
-
+  return (
+    <>
+      <AnchorButton
+        className={['anchor', isClosedWithChildren && 'closed-with-children'].join(' ')}
+        ref={ref}
+        draggable={true}
+        {...props}
+        {...mergeProps(focusProps, triggerProps)}
+      >
+        {anchorElements[anchorElement] || anchorElements['circle']}
+        {isFocusVisible && <FocusRing />}
+      </AnchorButton>
+      {shouldShowDebugDetails && state.isOpen && <DetailPopover block={block} {...tooltipProps} state={state} />}
+    </>
   )
-});
+};
