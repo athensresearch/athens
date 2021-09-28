@@ -117,8 +117,8 @@
                         {:block/uid   block-uid-1
                          :block/order 1}}
                       (set
-                       (drop (count setup-tx)
-                             txs)))
+                        (drop (count setup-tx)
+                              txs)))
         orderkeeper-txs
         orderkeeper-diff-txs))))
 
