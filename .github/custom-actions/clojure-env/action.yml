@@ -34,7 +34,7 @@ runs:
         then
           echo "Cache hit - skipping dependency installation"
         else
-          lein deps
+          ${{ runner.os != 'Windows' && 'lein deps' || 'pwsh -c "lein deps"' }}
         fi
 
      
