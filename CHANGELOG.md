@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.11](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.10...v1.0.0-alpha.rtc.11) (2021-09-28)
+
+
+### Bug Fixes
+
+* always provide a color for current user ([f49c24d](https://github.com/athensresearch/athens/commit/f49c24d6e77ab6269459389fda3c21a164d2fb61))
+* less logging on backend and more testing. ([84a3de5](https://github.com/athensresearch/athens/commit/84a3de59959c29b1114dca6eabdad2a5e4ec8942))
+
+
+### Refactors
+
+* **spinner:** use ts spinner ([80b8a87](https://github.com/athensresearch/athens/commit/80b8a872de6501358c151e18a92314c4f76cfc5d))
+* **toggle:** use ts toggle ([794b004](https://github.com/athensresearch/athens/commit/794b004e8c8f8d37a0a9d5a216bcb7037cd8c119))
+
+
+* cljstyle happy ([efbe155](https://github.com/athensresearch/athens/commit/efbe1559ff074353666eb4114fb765e50d7dc701))
+* don't limit docker release to main ([086b9a4](https://github.com/athensresearch/athens/commit/086b9a491c1f3de48aa73045da33c54ed326d8ba))
+* factor out env setup ([1c2b009](https://github.com/athensresearch/athens/commit/1c2b0097a4db2b494fd46735fb091794dffd9e8c))
+* fix style issues ([d763bde](https://github.com/athensresearch/athens/commit/d763bdeff10676359ad0f44a683a29e7e44c65c0))
+* fix style issues ([ead68b3](https://github.com/athensresearch/athens/commit/ead68b370e2ab134c1149ad4e9a17fafa5bbccc6))
+* fix style issues ([60e2ccd](https://github.com/athensresearch/athens/commit/60e2ccdae45ec09552a4615a076b411ce7471f78))
+* release athens,nginx docker image and docker compose ([2ed4f71](https://github.com/athensresearch/athens/commit/2ed4f71fe391b2dd7d62bac61a9e12f3db90ac5f))
+* rename release jobs ([8c13d2a](https://github.com/athensresearch/athens/commit/8c13d2ab097741ba0069074110b2e2c87092f76e))
+* reuse checkout via anchor ([040836f](https://github.com/athensresearch/athens/commit/040836f230a86e0e7de791f4d0c4613c1ed1cf11))
+* use ubuntu-latest throughout ([4c070f7](https://github.com/athensresearch/athens/commit/4c070f7ffe4669470d982e0191f6a4ce77d55f7c))
+
 ## [1.0.0-alpha.rtc.10](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.9...v1.0.0-alpha.rtc.10) (2021-09-27)
 
 
