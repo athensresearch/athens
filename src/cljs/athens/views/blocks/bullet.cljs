@@ -1,18 +1,9 @@
 (ns athens.views.blocks.bullet
   (:require
-    [athens.db :as db]
-    [goog.dom.classlist :as classList]))
+    [athens.db :as db]))
 
 
 ;; Helpers
-
-(defn bullet-mouse-out
-  "Hide tooltip."
-  [e _uid state]
-  (let [related (.. e -relatedTarget)]
-    (when-not (and related (classList/contains related "tooltip"))
-      (swap! state assoc :tooltip false))))
-
 
 (defn bullet-mouse-over
   "Show tooltip."
@@ -32,5 +23,4 @@
 (defn bullet-drag-end
   "End drag event."
   [_e _uid state]
-  (js/console.log _e)
   (swap! state assoc :dragging false))
