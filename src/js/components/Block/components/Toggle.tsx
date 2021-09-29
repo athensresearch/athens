@@ -1,6 +1,7 @@
 import React from 'react'
 import styled from 'styled-components';
 import { useFocusRing } from '@react-aria/focus';
+import { mergeProps } from '@react-aria/utils';
 
 export const ToggleButton = styled.button`
   width: 1em;
@@ -70,28 +71,24 @@ const FocusRing = styled.div`
   border-radius: 0.25rem;
 `;
 
-interface ToggleProps {
+interface ToggleProps extends React.HTMLAttributes<HTMLButtonElement> {
   isOpen: boolean;
-  onToggle: (e) => void;
 }
 
 /**
  * Button to toggle the visibility of a block's child blocks.
  */
 export const Toggle = React.forwardRef((props: ToggleProps, ref) => {
+  const { isFocusVisible, focusProps } = useFocusRing();
   const {
     isOpen,
-    onToggle,
   } = props;
-  const { isFocusVisible, focusProps } = useFocusRing();
 
   return (
     <ToggleButton
       className={isOpen ? 'open' : 'closed'}
       ref={ref}
-      onClick={(e) => onToggle(e)}
-      {...props}
-      {...focusProps}
+      {...mergeProps(focusProps, props)}
     >
       <svg
         width="24"

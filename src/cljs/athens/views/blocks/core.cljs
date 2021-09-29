@@ -380,7 +380,7 @@
                                          (and (false? linked-ref) open))
                                    true
                                    false)
-                         :onToggle (fn [e]
+                         :on-click (fn [e]
                                      (.. e stopPropagation)
                                      (if (true? linked-ref)
                                        (swap! state update :linked-ref/open not)
