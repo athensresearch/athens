@@ -13,7 +13,7 @@
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
     [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
-    [athens.views.blocks.bullet              :refer [bullet-mouse-over bullet-drag-start bullet-drag-end]]
+    [athens.views.blocks.bullet              :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content             :as content]
     [athens.views.blocks.context-menu        :as context-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]

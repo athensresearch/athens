@@ -19,7 +19,6 @@
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.util :refer [escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
-    [athens.views.blocks.bullet :as bullet]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
