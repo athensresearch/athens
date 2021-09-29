@@ -63,7 +63,8 @@
    :datascript/paste-verbatim
    :datascript/delete-only-child
    :datascript/delete-merge-block
-   :datascript/bump-up])
+   :datascript/bump-up
+   :datascript/paste-internal])
 
 
 (def event-type-graph-server
@@ -231,6 +232,13 @@
    [:event/args
     [:map
      [:uids [:vector string?]]]]])
+
+(def datascript-paste-internal
+  [:map
+   [:event/args
+    [:map
+     [:uid string?]
+     [:internal-representation [:vector map?]]]]])
 
 
 (def datascript-paste-verbatim
@@ -491,6 +499,7 @@
    (dispatch :datascript/unindent datascript-unindent)
    (dispatch :datascript/unindent-multi datascript-unindent-multi)
    (dispatch :datascript/paste-verbatim datascript-paste-verbatim)
+   (dispatch :datascript/paste-internal datascript-paste-internal)
    (dispatch :datascript/paste datascript-paste)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
@@ -660,6 +669,7 @@
    (dispatch :datascript/unindent datascript-unindent true)
    (dispatch :datascript/unindent-multi datascript-unindent-multi true)
    (dispatch :datascript/paste-verbatim datascript-paste-verbatim true)
+   (dispatch :datascript/paste-internal datascript-paste-internal true)
    (dispatch :datascript/paste datascript-paste true)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)

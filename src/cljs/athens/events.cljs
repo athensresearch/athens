@@ -1459,8 +1459,9 @@
 
 (reg-event-fx
   :paste-internal
-  (fn [_ [_ uid internal-representation :as args]]
-    (js/console.debug ":paste-internal args" args)
+  (fn [_ [_ uid internal-representation]]
+    (println "uid is" uid)
+    (println "internal representation is " internal-representation)
     (let [local?          (not (client/open?))
           [uid embed-id]  (db/uid-and-embed-id uid)]
       (if local?
@@ -1471,12 +1472,8 @@
           (js/console.debug ":paste-internal tx" tx)
           
           {:fx [[:dispatch [:transact tx]]]})
-        {:fx [[:dispatch
-               [:alert/js "Sorry, Paste event isn't ported to remote setup, yet."]
-               #_[:remote/paste {:uid   uid
-                                 :text  text
-                                 :start start
-                                 :value value}]]]}))))
+        {:fx [[:dispatch [:remote/paste-internal {:uid                     uid
+                                                  :internal-representation internal-representation}]]]}))))
 
 
 (reg-event-fx

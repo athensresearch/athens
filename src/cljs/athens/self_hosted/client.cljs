@@ -417,6 +417,7 @@
         :datascript/delete-only-child
         :datascript/delete-merge-block
         :datascript/bump-up
+        :datascript/paste-internal
 
         :op/atomic} (forwarded-event-handler packet))
 

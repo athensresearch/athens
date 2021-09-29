@@ -1342,7 +1342,7 @@
                            updated-order)]
 
     (println "prepare-data-for-paste tx-data is :")
-    (pp/pprint tx-data)
+    ;(pp/pprint tx-data)
     tx-data))
 
 
@@ -1406,9 +1406,9 @@
     ;; (println "blocks count to copy is " blocks-count)
     ;; (println "new block order is " new-block-order)
     (println "paste-internal reindexed blocks are:")
-    (pp/pprint reindexed-blocks)
+    ;(pp/pprint reindexed-blocks)
     (println "resolver :datascript/paste-internal tx-data is")
-    (pp/pprint tx-data)
+    ;(pp/pprint tx-data)
     tx-data))
 
 
