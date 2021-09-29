@@ -2,25 +2,27 @@ version: "3"
 services:
   athens:
     image: ghcr.io/athensresearch/athens:latest
-    build:
-      context: .
-      dockerfile: athens.dockerfile
+    # Uncomment the build sections if you want docker compose to build them locally.
+    # build:
+    #  context: .
+    #  dockerfile: athens.dockerfile
     restart: always
     expose:
       - 3010 # Change this according to config.edn
     volumes:
       - datahike-db:/srv/athens/db
       - crash-logs:/srv/athens/logs
-    environment:   # set environment variables
+    environment:
+      # Use system env vars for settings if available.
       # config_edn is deep merged with the whole config file
       - config_edn=${config_edn:-{:datahike {:store {:path "/srv/athens/db"}}}}
 
 
   athens-nginx:
     image: ghcr.io/athensresearch/athens-nginx:latest
-    build:
-      context: .
-      dockerfile: nginx.dockerfile
+    # build:
+    #  context: .
+    #  dockerfile: nginx.dockerfile
     restart: always
     depends_on:
       - athens
