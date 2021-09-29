@@ -91,7 +91,7 @@ For example, for `v1.0.0-alpha.rtc.11`:
 
 ```sh
 curl https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.11/docker-compose.yml --output docker-compose.yml
-docker compose up --no-build
+docker compose up
 ```
 
 The server will be acessible at `localhost:80`.
@@ -99,7 +99,7 @@ The server will be acessible at `localhost:80`.
 You can override the configuration via an environment variable:
 
 ```sh
-config_edn="{:password \"YourServerPassword\" :datahike {:store {:path \"/srv/athens/db\"}}}" docker compose up --no-build
+config_edn="{:password \"YourServerPassword\" :datahike {:store {:path \"/srv/athens/db\"}}}" docker compose up
 ```
 
 or via an `.env` file located in the same directory as the downloaded `docker-compose.yml`:
