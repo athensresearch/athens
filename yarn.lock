@@ -2164,6 +2164,19 @@
     "@react-types/shared" "^3.8.0"
     "@react-types/switch" "^3.1.2"
 
+"@react-aria/tooltip@^3.1.3":
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/@react-aria/tooltip/-/tooltip-3.1.3.tgz#cf967d9306170ed2ec0ed589fe1cb4cc081ddbe6"
+  integrity sha512-l2/BS1XBKrLpg+dovI3xy6NdCgJ5n82TS4p8vQJa7GcynI1I64R0IjOUFv0lc6ZZsr1G8Wg71SNYfmlgTrPr2w==
+  dependencies:
+    "@babel/runtime" "^7.6.2"
+    "@react-aria/focus" "^3.4.1"
+    "@react-aria/interactions" "^3.5.1"
+    "@react-aria/utils" "^3.8.2"
+    "@react-stately/tooltip" "^3.0.5"
+    "@react-types/shared" "^3.8.0"
+    "@react-types/tooltip" "^3.1.2"
+
 "@react-aria/utils@^3.8.2":
   version "3.8.2"
   resolved "https://registry.yarnpkg.com/@react-aria/utils/-/utils-3.8.2.tgz#7bad03b16d44d0d1fa3f9324478e4aee292160b6"
@@ -2224,6 +2237,16 @@
     "@react-stately/utils" "^3.2.2"
     "@react-types/checkbox" "^3.2.3"
     "@react-types/shared" "^3.8.0"
+
+"@react-stately/tooltip@^3.0.5":
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/@react-stately/tooltip/-/tooltip-3.0.5.tgz#0cb716791ef3242acd810794162d651b1c47a328"
+  integrity sha512-rHqPSfkxbx0T0B/j+WDl4G2CfLjFeBfyaifGiIUJWHO/0Kwvh5am88VeHtuTVzC2DPEGTdtXqYns21EuJOrDlQ==
+  dependencies:
+    "@babel/runtime" "^7.6.2"
+    "@react-stately/overlays" "^3.1.3"
+    "@react-stately/utils" "^3.2.2"
+    "@react-types/tooltip" "^3.1.2"
 
 "@react-stately/utils@^3.2.2":
   version "3.2.2"
@@ -2299,6 +2322,14 @@
   integrity sha512-EaYWoLvUCpOnt//Ov8VBxOjbs4hBpYE/rBAzzIknXaFvKOu867iZBFL7FJbcemOgC8/dwyaj6GUZ1Gw3Z1g59w==
   dependencies:
     "@react-types/checkbox" "^3.2.3"
+    "@react-types/shared" "^3.8.0"
+
+"@react-types/tooltip@^3.1.2":
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/@react-types/tooltip/-/tooltip-3.1.2.tgz#a80d1ab5a37337156881a032cdaa136a9e028e32"
+  integrity sha512-puyiRi3IaEeKH25AErZzQKthnxk1McU+7S+Qo2kFLy3F3PyXV0cmSqvKKOhH6kU5Cw4ZnuAlNjCI0tV8PYdlYA==
+  dependencies:
+    "@react-types/overlays" "^3.5.1"
     "@react-types/shared" "^3.8.0"
 
 "@sentry/browser@5.30.0":

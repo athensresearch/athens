@@ -117,14 +117,6 @@ export interface AnchorProps extends TooltipTriggerProps {
    * Whether block is closed and has children
    */
   isClosedWithChildren: boolean;
-  /**
-   * When the anchor button is pressed
-   */
-  handlePressAnchor: () => void;
-  /**
-   * When the anchor button is right-clicked
-   */
-  handleAnchorContextMenu?: () => void;
   block: any;
   shouldShowDebugDetails: boolean;
 }
@@ -145,8 +137,7 @@ export const Anchor = (props: AnchorProps) => {
         className={['anchor', isClosedWithChildren && 'closed-with-children'].join(' ')}
         ref={ref}
         draggable={true}
-        {...props}
-        {...mergeProps(focusProps, triggerProps)}
+        {...mergeProps(props, focusProps, triggerProps)}
       >
         {anchorElements[anchorElement] || anchorElements['circle']}
         {isFocusVisible && <FocusRing />}
