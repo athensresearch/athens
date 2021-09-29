@@ -10,9 +10,8 @@ services:
     expose:
       - 3010 # Change this according to config.edn
     volumes:
-      # Use bindings for volumes if provided.
-      - ${DATA_PATH:-datahike-db}:/srv/athens/db
-      - ${CRASH_LOGS_PATH:-crash-logs}:/srv/athens/logs
+      - ./athens-data/db:/srv/athens/db
+      - ./athens-data/logs:/srv/athens/logs
     environment:
       # Use system env vars for settings if available.
       # config_edn is deep merged with the whole config file
@@ -31,6 +30,3 @@ services:
     ports:
       - 80:80
 
-volumes:
-  datahike-db:
-  crash-logs:

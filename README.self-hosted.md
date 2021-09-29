@@ -94,7 +94,7 @@ curl https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc
 docker compose up
 ```
 
-The server will be acessible at `localhost:80`.
+The server will be acessible at `localhost:80`, and all data will be saved at `./athens-data`.
 
 You can override the app configuration via an environment variable:
 
@@ -108,13 +108,4 @@ or via an `.env` file located in the same directory as the downloaded `docker-co
 # .env
 CONFIG_EDN="{:password \"YourServerPassword\" :datahike {:store {:path \"/srv/athens/db\"}}}"
 ```
-
-You can also configure the data path and crash log path via environment variables, either in the CLI or on an `.env` file.
-
-```
-# .env
-DATA_PATH="/my/athens/data"
-CRASH_LOGs_PATH="/my/athens/logs/"
-```
-
 
