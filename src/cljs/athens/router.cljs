@@ -49,22 +49,29 @@
   (fn [{:keys [db]} [_ new-match]]
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
-          node (pull db/dsdb '[*] [:block/uid (-> new-match :path-params :id)]) ; TODO make the page title query work when zoomed in on a block
+          uid (-> new-match :path-params :id)
+          node (pull db/dsdb '[*] [:block/uid uid]) ; TODO make the page title query work when zoomed in on a block
           node-title (:node/title @node)
           route-name (-> new-match :data :name)
+          home? (= route-name :home)
           html-title-prefix (cond
                               node-title node-title
                               (= route-name :pages) "All Pages"
-                              (= route-name :home) "Daily Notes")
+                              home? "Daily Notes")
           html-title (if html-title-prefix
                        (str html-title-prefix " | Athens")
-                       "Athens")]
+                       "Athens")
+          today (util/get-day)]
       (set! (.-title js/document) html-title)
       {:db (-> db
                (assoc :current-route (assoc new-match :controllers controllers))
                (dissoc :merge-prompt))
        :timeout {:action :clear
-                 :id :merge-prompt}})))
+                 :id :merge-prompt}
+       :dispatch-n [(when home?
+                      [:daily-note/ensure-day today])
+                    (when-let [parent-uid (or uid (and home? (:uid today)))]
+                      [:editing/first-child parent-uid])]})))
 
 
 (reg-event-fx

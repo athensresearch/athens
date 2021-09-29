@@ -559,6 +559,18 @@
      (next-block-uid uid))))
 
 
+(defn get-first-child-uid
+  [uid db]
+  (when uid
+    (try
+      (->> (d/pull db [{:block/children [:block/uid :block/order]}] [:block/uid uid])
+           sort-block-children
+           :block/children
+           first
+           :block/uid)
+      (catch :default _))))
+
+
 ;; history
 
 (defonce history (atom '()))

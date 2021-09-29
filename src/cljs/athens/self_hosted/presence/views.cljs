@@ -5,6 +5,7 @@
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
     [athens.self-hosted.presence.subs]
+    [athens.self-hosted.presence.utils :as utils]
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
@@ -14,11 +15,13 @@
 
 
 (defn user->person
-  [{:keys [username color]}]
+  [{:keys [username color]
+    :or {username "Unknown"
+         color    (first utils/PALETTE)}}]
   ;; TODO: have a real notion of user-id, not just username.
   {:personId username
-   :username  username
-   :color     color})
+   :username username
+   :color    color})
 
 
 (defn copy-host-address-to-clipboard
@@ -62,18 +65,11 @@
                all-users              (rf/subscribe [:presence/users-with-page-data])
                same-page              (rf/subscribe [:presence/same-page])
                diff-page              (rf/subscribe [:presence/diff-page])
-               settings               (rf/subscribe [:settings])
                others-seq             #(->> (dissoc % (:username @current-user))
                                             vals
                                             (map user->person))]
               (fn []
-                (let [current-user'          (user->person (or @current-user
-                                                               ;; TODO: this is only needed because we don't
-                                                               ;; have real ids, so it's possible while changing
-                                                               ;; name that the current-user does not match the
-                                                               ;; user in settings for a while since there's
-                                                               ;; no way to track it.
-                                                               (select-keys @settings [:username :color])))
+                (let [current-user'          (user->person @current-user)
                       current-page-members   (others-seq @same-page)
                       different-page-members (others-seq @diff-page)]
                   [:> PresenceDetails {:current-user              current-user'
@@ -96,10 +92,13 @@
       (into
         [:> (.-Stack Avatar)
          {:size "1.25rem"
-          :maskSize "1px"
+          :maskSize "1.5px"
           :stackOrder "from-left"
           :limit 3
-          :style {:transform "translateX(calc(-100% + 1rem)) translateY(0.35rem)"
+          :style {:zIndex 100
+                  :position "absolute"
+                  :right "1.5rem"
+                  :top "0.25rem"
                   :padding "0.125rem"
                   :background "var(--background-color)"}}]
         (map (fn [x] [:> Avatar (merge {:showTooltip false :key (:username x)} x)]) @users)))))

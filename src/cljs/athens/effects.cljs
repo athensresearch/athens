@@ -22,7 +22,9 @@
   :transact!
   (fn [tx-data]
     ;; 🎶 Sia "Cheap Thrills"
-    (d/transact! db/dsdb (common-db/linkmaker @db/dsdb tx-data))))
+    (d/transact! db/dsdb (->> tx-data
+                              (common-db/linkmaker @db/dsdb)
+                              (common-db/orderkeeper @db/dsdb)))))
 
 
 (rf/reg-fx

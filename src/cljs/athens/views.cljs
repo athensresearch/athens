@@ -1,7 +1,9 @@
 (ns athens.views
   (:require
+    ["/components/Spinner/Spinner" :refer [Spinner]]
     ["/components/utils/style/style" :refer [GlobalStyles]]
     ["@material-ui/core/Snackbar" :as Snackbar]
+    ["@react-aria/overlays" :refer [OverlayProvider]]
     [athens.config]
     [athens.electron.db-modal :as db-modal]
     [athens.style :refer [zoom]]
@@ -13,7 +15,6 @@
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
-    [athens.views.spinner :refer [initial-spinner-component]]
     [re-frame.core :as rf]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -69,37 +70,38 @@
         electron?  (electron?)
         modal      (rf/subscribe [:modal])]
     (fn []
-      [:div (merge {:style {:display "contents"}}
-                   (zoom))
-       [:> GlobalStyles]
-       [alert]
-       (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
-         [m-snackbar
-          {:message msg
-           :open (boolean msg)}
-          [:span
-           {:style {:background-color (case type
-                                        :success "green"
-                                        "red")
-                    :padding "10px 20px"
-                    :color "white"}}
-           msg]])
-       [athena-component]
-       (cond
-         (and @loading @modal) [db-modal/window]
+      [:> OverlayProvider
+       [:div (merge {:style {:display "contents"}}
+                    (zoom))
+        [:> GlobalStyles]
+        [alert]
+        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
+          [m-snackbar
+           {:message msg
+            :open (boolean msg)}
+           [:span
+            {:style {:background-color (case type
+                                         :success "green"
+                                         "red")
+                     :padding "10px 20px"
+                     :color "white"}}
+            msg]])
+        [athena-component]
+        (cond
+          (and @loading @modal) [db-modal/window]
 
-         @loading [initial-spinner-component]
+          @loading [:> Spinner]
 
-         :else [:<>
-                (when @modal [db-modal/window])
-                [:div (use-style app-wrapper-style
-                                 {:class [(case os
-                                            :windows "os-windows"
-                                            :mac "os-mac"
-                                            :linux "os-linux")
-                                          (when electron? "is-electron")]})
-                 [app-toolbar/app-toolbar]
-                 [left-sidebar/left-sidebar]
-                 [pages/view]
-                 [right-sidebar/right-sidebar]
-                 [devtool-component]]])])))
+          :else [:<>
+                 (when @modal [db-modal/window])
+                 [:div (use-style app-wrapper-style
+                                  {:class [(case os
+                                             :windows "os-windows"
+                                             :mac "os-mac"
+                                             :linux "os-linux")
+                                           (when electron? "is-electron")]})
+                  [app-toolbar/app-toolbar]
+                  [left-sidebar/left-sidebar]
+                  [pages/view]
+                  [right-sidebar/right-sidebar]
+                  [devtool-component]]])]])))

@@ -19,14 +19,12 @@
 
 
 (defn close-handler
-  [channel status]
-  (let [username (clients/get-client-username channel)
-        ;; TODO: max-tx shouldn't be 42
-        presence-offline-event (athens.common-events/build-presence-offline-event 42 username)]
+  [datahike channel status]
+  (let [username (clients/get-client-username channel)]
     (clients/remove-client! channel)
-    (log/debug username "!! closed, status" status)
-    (when username
-      (clients/broadcast! presence-offline-event))))
+    ;; Notify clients after removing the one that left.
+    (presence/goodbye-handler datahike username)
+    (log/debug username "!! closed, status" status)))
 
 
 (defn- valid-event-handler
@@ -98,7 +96,7 @@
     [request]
     (http/as-channel request
                      {:on-open    #'open-handler
-                      :on-close   #'close-handler
+                      :on-close   (partial close-handler (:conn datahike))
                       :on-receive (make-receive-handler datahike server-password)})))
 
 

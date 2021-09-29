@@ -5,6 +5,7 @@
     [athens.parser                 :as parser]
     [athens.patterns               :as patterns]
     [clojure.data                  :as data]
+    [clojure.pprint                :as pprint]
     [clojure.set                   :as set]
     [clojure.string                :as string]
     #?(:clj [clojure.tools.logging :as log])
@@ -124,14 +125,19 @@
           eid))
 
 
-(defn get-parent
-  "Given `:db/id` find it's parent."
+(defn get-parent-eid
+  "Find parent's `:db/id` of given `eid`."
   [db eid]
   (->> (d/entity db eid)
        :block/_children
        first
-       :db/id
-       (get-block db)))
+       :db/id))
+
+
+(defn get-parent
+  "Given `:db/id` find it's parent."
+  [db eid]
+  (get-block db (get-parent-eid db eid)))
 
 
 (defn prev-sib
@@ -247,7 +253,7 @@
 
 (defn reindex-blocks-between-bounds
   [db inc-or-dec parent-eid lower-bound upper-bound n]
-  (println "reindex block")
+  #_(println "reindex block")
   (d/q '[:find ?ch ?new-order
          :keys db/id block/order
          :in $ % ?+or- ?parent ?lower-bound ?upper-bound ?n
@@ -328,7 +334,7 @@
 (defn same-parent?
   "Given a coll of uids, determine if uids are all direct children of the same parent."
   [db uids]
-  (println "same parent")
+  #_(println "same parent")
   (let [parents (->> uids
                      (mapv (comp first uid-and-embed-id))
                      (d/q '[:find ?parents
@@ -421,6 +427,15 @@
   (->> title
        patterns/unlinked
        (get-data db)))
+
+
+(defn get-all-pages
+  [db]
+  (->> (d/q '[:find [?e ...]
+              :where
+              [?e :node/title ?t]]
+            db)
+       (d/pull-many db '[* :block/_refs])))
 
 
 (defn not-contains?
@@ -592,12 +607,112 @@
                                     tx-data)
            with-linkmaker-txs (into (vec input-tx) linkmaker-txs)]
        #_(println "linkmaker:"
-                 "\ninput-tx:" (with-out-str (clojure.pprint/pprint input-tx))
-                 "\ntx-data:" (with-out-str (clojure.pprint/pprint tx-data))
-                 "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs))
-                 "\nwith-linkmaker-txs:" (with-out-str (clojure.pprint/pprint with-linkmaker-txs)))
+                "\ninput-tx:" (with-out-str (pprint/pprint input-tx))
+                "\ntx-data:" (with-out-str (pprint/pprint tx-data))
+                "\nlinkmaker-txs:" (with-out-str (pprint/pprint linkmaker-txs))
+                "\nwith-linkmaker-txs:" (with-out-str (pprint/pprint with-linkmaker-txs)))
        with-linkmaker-txs)
      (catch #?(:cljs :default
                :clj Exception) e
        (linkmaker-error-handler e [])))))
 
+
+(defn fix-block-order
+  [{:block/keys [children]}]
+  (let [sorted-kids  (->> children
+                          (sort-by #(vector (:block/order %)
+                                            (:block/uid %))))
+        indexed-kids (map-indexed vector sorted-kids)
+        block-fixes  (keep (fn [[idx {:block/keys [uid order]}]]
+                             (when-not (= idx order)
+                               {:block/uid   uid
+                                :block/order idx}))
+                           indexed-kids)]
+    #_(println "indexed-kids:" (with-out-str
+                               (pprint/pprint indexed-kids))
+             "\nblock-fixes:" (with-out-str
+                                (pprint/pprint block-fixes)))
+    (when-not (empty? block-fixes)
+      #?(:cljs (js/console.error "Needed to fix block-order" (with-out-str
+                                                               (pprint/pprint block-fixes)))
+         :clj (log/error "Needed to fix block-order" (with-out-str
+                                                       (pprint/pprint block-fixes)))))
+    block-fixes))
+
+
+(defn keep-block-order
+  "Checks for `:block/order` violations and generates fixing TXs.
+
+  Arguments: whatever it takes"
+  [{:keys [db-before db-after tx-data]}]
+  (let [mod-eids       (->> tx-data
+                            (keep (fn [[eid attr]]
+                                    (when (= :block/order attr)
+                                      eid)))
+                            set)
+        old-parents    (->> mod-eids
+                            (map #(get-parent-eid db-before %))
+                            set)
+        new-parents    (->> mod-eids
+                            (map #(get-parent-eid db-after %))
+                            set)
+        both-parents   (set/union old-parents new-parents)
+        parents-blocks (->> both-parents
+                            (remove nil?)
+                            (map #(get-block db-after %)))
+        new-violations (doall
+                         (remove empty?
+                                 (mapcat fix-block-order parents-blocks)))]
+    #_(println "keep-block-order:"
+             "\ntx-data:" (with-out-str
+                            (pprint/pprint tx-data))
+             "\nmod-eids:" (pr-str mod-eids)
+             "\nold-parents:" (pr-str old-parents)
+             "\nnew-parents:" (pr-str new-parents)
+             "\nparents-blocks:\n" (with-out-str
+                                     (pprint/pprint parents-blocks))
+             "\nnew-violations:" (pr-str new-violations))
+    new-violations))
+
+
+(defn orderkeeper-error
+  [ex input-tx]
+  (println "orderkeeper, error" (pr-str ex)
+           "\ninput-tx:" (with-out-str
+                           (pprint/pprint input-tx))))
+
+
+(defn orderkeeper
+  "Maintains the order in Knowledge Graph.
+
+  Returns Datascript transactions to be transacted in order to maintain order.
+
+  Arguments:
+  - `db`: Current Datascript/Datahike DB value
+  - `input-tx`: (optional): Graph structure modifying TX, analyzed for `:block/order` mistakes
+
+  If `input-tx` is provided, orderkeeper will only update `:block/order` related to that TX.
+  If `input-tx` is not provided, all `:block/order` will be checked."
+  ([db]
+   (try
+     (let [orderkeeper-txs (into []
+                                 (keep-block-order {:db-before []
+                                                    :db-after  db
+                                                    :tx-data   (d/datoms db :eavd)}))]
+       orderkeeper-txs)
+     (catch #?(:cljs :default
+               :clj Exception) e
+       (orderkeeper-error e [])
+       [])))
+
+  ([db input-tx]
+   (try
+     (let [tx-report            (d/with db input-tx)
+           orderkeeper-txs      (into []
+                                      (keep-block-order tx-report))
+           with-orderkeeper-txs (into (vec input-tx) orderkeeper-txs)]
+       with-orderkeeper-txs)
+     (catch #?(:cljs :default
+               :clj Exception) e
+       (orderkeeper-error e input-tx)
+       input-tx))))

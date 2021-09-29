@@ -26,11 +26,13 @@
   :<- [:presence/users-with-page-data]
   :<- [:settings]
   (fn [[users settings] [_]]
-    (-> (filter (fn [[_ user]]
-                  (= (:username settings) (:username user)))
-                users)
-        first
-        second)))
+    (let [user-in-presence (-> (filter (fn [[_ user]]
+                                         (= (:username settings) (:username user)))
+                                       users)
+                               first
+                               second)]
+      (or user-in-presence
+          (select-keys settings [:username :color])))))
 
 
 (rf/reg-sub

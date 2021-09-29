@@ -2,6 +2,96 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.11](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.10...v1.0.0-alpha.rtc.11) (2021-09-28)
+
+
+### Bug Fixes
+
+* always provide a color for current user ([f49c24d](https://github.com/athensresearch/athens/commit/f49c24d6e77ab6269459389fda3c21a164d2fb61))
+* less logging on backend and more testing. ([84a3de5](https://github.com/athensresearch/athens/commit/84a3de59959c29b1114dca6eabdad2a5e4ec8942))
+
+
+### Refactors
+
+* **spinner:** use ts spinner ([80b8a87](https://github.com/athensresearch/athens/commit/80b8a872de6501358c151e18a92314c4f76cfc5d))
+* **toggle:** use ts toggle ([794b004](https://github.com/athensresearch/athens/commit/794b004e8c8f8d37a0a9d5a216bcb7037cd8c119))
+
+
+* cljstyle happy ([efbe155](https://github.com/athensresearch/athens/commit/efbe1559ff074353666eb4114fb765e50d7dc701))
+* don't limit docker release to main ([086b9a4](https://github.com/athensresearch/athens/commit/086b9a491c1f3de48aa73045da33c54ed326d8ba))
+* factor out env setup ([1c2b009](https://github.com/athensresearch/athens/commit/1c2b0097a4db2b494fd46735fb091794dffd9e8c))
+* fix style issues ([d763bde](https://github.com/athensresearch/athens/commit/d763bdeff10676359ad0f44a683a29e7e44c65c0))
+* fix style issues ([ead68b3](https://github.com/athensresearch/athens/commit/ead68b370e2ab134c1149ad4e9a17fafa5bbccc6))
+* fix style issues ([60e2ccd](https://github.com/athensresearch/athens/commit/60e2ccdae45ec09552a4615a076b411ce7471f78))
+* release athens,nginx docker image and docker compose ([2ed4f71](https://github.com/athensresearch/athens/commit/2ed4f71fe391b2dd7d62bac61a9e12f3db90ac5f))
+* rename release jobs ([8c13d2a](https://github.com/athensresearch/athens/commit/8c13d2ab097741ba0069074110b2e2c87092f76e))
+* reuse checkout via anchor ([040836f](https://github.com/athensresearch/athens/commit/040836f230a86e0e7de791f4d0c4613c1ed1cf11))
+* use ubuntu-latest throughout ([4c070f7](https://github.com/athensresearch/athens/commit/4c070f7ffe4669470d982e0191f6a4ce77d55f7c))
+
+## [1.0.0-alpha.rtc.10](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.9...v1.0.0-alpha.rtc.10) (2021-09-27)
+
+
+### Features
+
+* Orderkeeper to keep all your `:block/order` ordered. ([7ac1844](https://github.com/athensresearch/athens/commit/7ac18448b02a600f7dd1ada16277c58209d0cfca))
+
+
+### Bug Fixes
+
+* Don't log TXs and typo. ([915a818](https://github.com/athensresearch/athens/commit/915a818dd70f0fbf52a4212501af36313348320a))
+
+
+* carve happy. ([0dba4d4](https://github.com/athensresearch/athens/commit/0dba4d4f12923ee308af2d4a6e90b710cc5bf314))
+
+## [1.0.0-alpha.rtc.9](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.8...v1.0.0-alpha.rtc.9) (2021-09-27)
+
+
+### Features
+
+* **dialog:** add new dialog component ([15ced38](https://github.com/athensresearch/athens/commit/15ced387e9047568793464131c2c61c9925b108c))
+
+
+### Bug Fixes
+
+* always focus first child, even on daily notes ([c7b1a90](https://github.com/athensresearch/athens/commit/c7b1a90ad5028b592c2f8c091249c2235b6bc639)), closes [#1669](https://github.com/athensresearch/athens/issues/1669)
+* **avatar:** stack accepts style props ([969eb22](https://github.com/athensresearch/athens/commit/969eb22a5880b5fbca3aab114f1b65914764972c))
+* pass username, not channel, to goodbye-handler ([a70489c](https://github.com/athensresearch/athens/commit/a70489c91cae41a2d3c11f909d99afa0cde4f47d))
+* **presence:** use consistent avatar spacing ([0ad1b16](https://github.com/athensresearch/athens/commit/0ad1b16d80bb86a2e8ccd59f4c8dbc569ba964cc))
+* remove unused component ([2a9c489](https://github.com/athensresearch/athens/commit/2a9c48945e8b2b6eabd9b3d506712f8e55e7681d))
+
+
+### Refactors
+
+* **dialog:** replace page merge alert with dialog ([5fd1951](https://github.com/athensresearch/athens/commit/5fd1951bedd83f48316d91eb24ec74c478ef7b3d))
+
+
+* remove old alert component ([ac9cc4f](https://github.com/athensresearch/athens/commit/ac9cc4f2bb26d69f205820a520b104799875c597))
+
+## [1.0.0-alpha.rtc.8](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.7...v1.0.0-alpha.rtc.8) (2021-09-23)
+
+
+### Features
+
+* Password protection ([c4027eb](https://github.com/athensresearch/athens/commit/c4027eb9c93c19b75a177b7706a60b1a8205592a))
+* send full presence state on connect ([710cefb](https://github.com/athensresearch/athens/commit/710cefb244c4df6b476bf0e9410dc0ea73df6854))
+* set user presence on first child block when navigating ([8001ba5](https://github.com/athensresearch/athens/commit/8001ba50082238c2e25b08858d33863f3de3dc61))
+
+
+### Bug Fixes
+
+* all pages is slow when a page has 100+ blocks ([e2e3204](https://github.com/athensresearch/athens/commit/e2e3204fc2d5746cd55420ae5bb3bc91ce186663))
+* **db menu:** less broken style for db picker menu ([e82825a](https://github.com/athensresearch/athens/commit/e82825a9ccc262f35dd364b9fb07f9ee0567968c))
+* review items ([f820cef](https://github.com/athensresearch/athens/commit/f820cef2cbeda1a6f6b500bcdcc6c0389602039e))
+* selection issues. ([297df4a](https://github.com/athensresearch/athens/commit/297df4a7d4f66ce2c984748bacc4552ca5ecd7a1))
+
+## [1.0.0-alpha.rtc.7](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.6...v1.0.0-alpha.rtc.7) (2021-09-21)
+
+
+### Bug Fixes
+
+* Catchup with wrong RTC releases. ([9e48f65](https://github.com/athensresearch/athens/commit/9e48f657a7531aeb72ae43936753ac17070a90e2))
+* set body classes ([4a7d3ac](https://github.com/athensresearch/athens/commit/4a7d3aca71be253e0af2d62a84fa6a68128ae6f4)), closes [#1654](https://github.com/athensresearch/athens/issues/1654)
+
 ## [1.0.0-alpha.rtc.4](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.3...v1.0.0-alpha.rtc.4) (2021-09-16)
 
 

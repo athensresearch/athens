@@ -16,13 +16,14 @@
    :display "flex"
    :background "none"
    :border "none"
-   :transition "color 0.05s ease"
+   :transition "color 0.05s ease, opacity 0.2s ease-in-out"
    :align-items "center"
    :justify-content "center"
    :cursor "pointer"
    :padding "0"
    :-webkit-appearance "none"
    :color (style/color :body-text-color :opacity-med)
+   :opacity "0"
    ::stylefy/manual [[:&:hover {:color (style/color :link-color)}]
                      [:&:before {:content "''"
                                  :inset "0.25rem -0.125rem"
@@ -50,8 +51,8 @@
   [:button (stylefy/use-style block-disclosure-toggle-style
                               {:class    (if (or (and (true? linked-ref) (:linked-ref/open @state))
                                                  (and (false? linked-ref) open))
-                                           "open"
-                                           "closed")
+                                           "block-toggle open"
+                                           "block-toggle closed")
                                :tab-index 0
                                :on-click (fn [e]
                                            (.. e stopPropagation)
