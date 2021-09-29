@@ -13,6 +13,7 @@
   (.. e -dataTransfer (setData "text/plain" (-> uid db/uid-and-embed-id first)))
   (swap! state assoc :dragging true))
 
+
 (defn bullet-drag-end
   "End drag event."
   [_e _uid state]
