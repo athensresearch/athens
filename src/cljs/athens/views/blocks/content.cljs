@@ -1,21 +1,26 @@
 (ns athens.views.blocks.content
   (:require
-    [athens.config                        :as config]
-    [athens.db                            :as db]
-    [athens.electron.images               :as images]
-    [athens.events.selection              :as select-events]
-    [athens.parse-renderer                :refer [parse-and-render]]
-    [athens.style                         :as style]
-    [athens.subs.selection                :as select-subs]
-    [athens.util                          :as util]
+    [athens.config :as config]
+    [athens.db :as db]
+    [athens.electron.images :as images]
+    [athens.events.selection :as select-events]
+    [athens.patterns :as patterns]
+    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.style :as style]
+    [athens.subs.selection :as select-subs]
+    [athens.util :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [clojure.edn                          :as edn]
-    [clojure.set                          :as set]
-    [garden.selectors                     :as selectors]
-    [goog.events                          :as goog-events]
-    [komponentit.autosize                 :as autosize]
-    [re-frame.core                        :as rf]
-    [stylefy.core                         :as stylefy])
+    [cljs.pprint :as pp]
+    [clojure.edn :as edn]
+    [clojure.set :as set]
+    [clojure.walk :as walk]
+    [garden.selectors :as selectors]
+    [goog.events :as goog-events]
+    [komponentit.autosize :as autosize]
+    [re-frame.core :as rf]
+    [stylefy.core :as stylefy]
+    [athens.common.utils :as utils]
+    [athens.common-events.resolver :as resolver])
   (:import
     (goog.events
       EventType)))
@@ -257,6 +262,87 @@
 
 ;; Event Handlers
 
+;; TODO Move the following to correct location
+
+(defn new-uids-map
+  "From Athens representation, extract the uids and create a mapping to new uids."
+  [tree]
+  (let [all-old-uids (mapcat #(->> %
+                                   (tree-seq :block/children :block/children)
+                                   (mapv :block/uid))
+                           tree)
+        mapped-uids (reduce #(assoc %1 %2 (utils/gen-block-uid)) {} all-old-uids)] ;; Replace with zipmap
+    mapped-uids))
+
+
+(defn parse-string-for-blocks
+  "Takes a string of text and parses it for block refs, block embeds using Regx
+   Time complexity analsis: O(W) --> W is the no. of words in the string
+
+   Pattern: Strings should not have a space before, after or in between the block uid
+            In the following example no pattern is valid:
+            (()) (( uid)) ((uid )) (( uid )) ((Uid with space))
+
+            To understand the regex pattern like lookback etc. checkout this link: https://stackoverflow.com/questions/2973436/regex-lookahead-lookbehind-and-atomic-groups
+
+            block-pattern is a string used to pass a variable to re-pattern
+
+   "
+  [block-string]
+  (println "block-string is " block-string)
+  (let [block-pattern "\\(\\((?!\\s)\\S+?(?=\\)\\))(?<!\\s)\\)\\)"
+        pattern (re-pattern (str block-pattern "|"
+                                 "\\{\\{\\[\\[embed\\]\\]: " block-pattern "\\}\\}"))
+        matched-strings (re-matches pattern block-string)]
+    (println "pattern" pattern)
+
+    (println "matched pattern is " matched-strings)
+    matched-strings))
+
+
+
+(defn update-uids
+  "Check `map-new-refs`, athens.patterns, `update-links-in-blocks`,
+   Implementation :
+     - Traverse the tree in any order
+     - Replace the :block/uid with new one
+     - Get string for each block
+     - Check for refs in the block
+       - If the ref is there in the mapped-uids then replace with the correct one
+       - Else
+         - Fetch the block content for the uid
+         - Replace the uid with the content
+     - Return the new tree
+   "
+  [tree mapped-uids]
+  ;; Postwalk has bug if the block content is same as the uid then both of them will change
+  (let [block-uids-replaced (map #(walk/postwalk-replace mapped-uids %)
+                                  tree)
+
+        ;; Parse the string find all the uids in that string and then replace those
+        ;; uids in the string.
+        ;; Parsing outputs the uids matched
+        ;; For each uid in the string replace the string or if not found then get the
+        ;; block data for it and replace it.
+
+        ;; Walk the tree
+        ;; For every node replace its :block/string with a new block string that is updated by new uids.
+        ;; Need to make this readable, options coming to mind are not. First make this work and then wil make it readable.
+
+        #_string-replaced     #_(->> (first tree)
+                                     ;; Get the string
+                                     (tree-seq :block/children :block/children)
+                                     (map :block/string) ;; Returns the string of children also
+                                     ;; Parse it for:
+                                     ;; Block refs, block embeds
+                                     (last)
+                                     (parse-string-for-blocks))]
+
+     ;(println "replaced uids")))
+     ;(pp/pprint block-uids-replaced)
+      block-uids-replaced))
+
+
 (defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
   Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
@@ -279,8 +365,13 @@
         text-data           (.getData data "text/plain")
         _app-clip           (some-> (.getData data "application/athens")
                                     edn/read-string)
-        app-representation  (some-> (.getData data "application/athens-representation")
-                                  edn/read-string)
+        ;; With internal representation
+        internal-representation  (some-> (.getData data "application/athens-representation")
+                                       edn/read-string)
+        internal?           (not (empty? internal-representation))
+        new-uids            (new-uids-map internal-representation)
+        repr-with-new-uids  (into [] (update-uids internal-representation new-uids))
+
         line-breaks         (re-find #"\r?\n" text-data)
         no-shift            (-> @state :last-keydown :shift not)
         items               (array-seq (.. e -clipboardData -items))
@@ -289,9 +380,22 @@
 
     ;; TODO Remove the logs
     (println "copied data is:")
-    (cljs.pprint/pprint  app-representation)
+    (pp/pprint  internal-representation)
+
+    (println "Uid mappings")
+    (pp/pprint new-uids)
+
+    (println " Representation with updated uids")
+    (pp/pprint repr-with-new-uids)
 
     (cond
+      ;; For internal representation
+      internal?
+      (do
+        (.. e preventDefault)
+        (rf/dispatch [:paste-internal uid repr-with-new-uids]))
+
+      ;; For images
       (seq (filter (fn [item]
                      (let [datatype (.. item -type)]
                        (re-find img-regex datatype))) items))

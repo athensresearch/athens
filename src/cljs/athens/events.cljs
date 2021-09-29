@@ -14,6 +14,7 @@
     [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
+    [cljs.pprint                          :as pp]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing                :refer-macros [fn-traced]]
@@ -1446,6 +1447,28 @@
           (js/console.log ":drop-multi-diff-source-diff-parents tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-multi-diff-source-diff-parents args]]]}))))
+
+
+(reg-event-fx
+  :paste-internal
+  (fn [_ [_ uid internal-representation :as args]]
+    (js/console.debug ":paste-internal args" args)
+    (let [local?          (not (client/open?))
+          [uid embed-id]  (db/uid-and-embed-id uid)]
+      (if local?
+        (let [paste-internal-event (common-events/build-paste-internal-event -1
+                                                                             uid
+                                                                             internal-representation)
+              tx                  (resolver/resolve-event-to-tx @db/dsdb paste-internal-event)]
+          (js/console.debug ":paste-internal tx" tx)
+          
+          {:fx [[:dispatch [:transact tx]]]})
+        {:fx [[:dispatch
+               [:alert/js "Sorry, Paste event isn't ported to remote setup, yet."]
+               #_[:remote/paste {:uid   uid
+                                 :text  text
+                                 :start start
+                                 :value value}]]]}))))
 
 
 (reg-event-fx

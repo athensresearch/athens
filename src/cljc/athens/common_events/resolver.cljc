@@ -4,6 +4,7 @@
     [athens.common-events :as common-events]
     [athens.common.utils :as utils]
     [athens.patterns :as patterns]
+    [cljs.pprint :as pp]
     [clojure.set :as set]
     [clojure.string :as string]
     #?(:clj  [datahike.api :as d]
@@ -1327,6 +1328,87 @@
                                      paste-tx-data
                                      (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
     (println "resolver :datascript/paste tx-data is" (pr-str tx-data))
+    tx-data))
+
+(defn prepare-data-for-paste
+  [data start-index parent-uid]
+  ;; Given internal representation modify it so it can be pasted.
+  ;; We need to modify the block order of the level 1 blocks
+  
+  (let [updated-order (map-indexed (fn [idx itm] (assoc itm :block/order (+ idx start-index)))
+                              data)
+        tx-data       (map (fn [x] {:block/uid parent-uid
+                                    :block/children x})
+                           updated-order)]
+
+    (println "prepare-data-for-paste tx-data is :")
+    (pp/pprint tx-data)
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/paste-internal
+  [db {:event/keys [args]}]
+
+  (println "resolver :datascript/paste-internal args" (pr-str args))
+  (let [{:keys [uid
+                internal-representation]} args
+        current-block                     (common-db/get-block db [:block/uid uid])
+        {:block/keys [order
+                      children
+                      open
+                      string]}            current-block
+        ;; The parent of block depends on:
+        ;; - if the current block is open and has chidren : if this is the case then we want the blocks to be pasted
+        ;;    under the current block as its first children
+        ;; - else the parent is the current block's parent
+        current-block-parent?             (and children
+                                               open)
+        parent                            (if current-block-parent?
+                                            current-block
+                                            (common-db/get-parent db [:block/uid uid]))
+
+        {parent-uid :block/uid
+         parent-eid :db/id}               parent
+        empty-block?                      (and (string/blank? string)
+                                               (empty?        children))
+        ;; - If the block is empty then we delete the empty block and add new blocks. So in this case
+        ;;   the block order for the new blocks is the same as deleted blocks order.
+        ;; - If the block is parent then we want the blocks to be pasted as this blocks first children
+        ;; - If the block is not empty then add the new blocks after the current one.
+        new-block-order                   (cond
+                                            empty-block?          order
+                                            current-block-parent? 0
+                                            :else                 (inc order))
+        paste-tx-data                     (prepare-data-for-paste internal-representation
+                                                                  new-block-order
+                                                                  parent-uid)
+        ;; Reindex the blocks
+        reindex-from                      (cond
+                                            current-block-parent? -1
+                                            :else                 order)
+        blocks-count                      (count internal-representation)
+        n                                 (if empty-block?
+                                            (dec blocks-count)
+                                            blocks-count)
+        reindexed-blocks                  (common-db/plus-after db
+                                                                parent-eid
+                                                                reindex-from
+                                                                n)
+        ;; Retract the block
+        retract                           (when empty-block? [[:db/retractEntity [:block/uid uid]]])
+        ;; Put it all together
+        tx-data                                   (concat reindexed-blocks
+                                                          paste-tx-data
+                                                          retract)]
+    ;; TODO : Clean this up
+    ;; (println "is block empty?" empty-block?)
+    ;; (println "current block order " order)
+    ;; (println "blocks count to copy is " blocks-count)
+    ;; (println "new block order is " new-block-order)
+    (println "paste-internal reindexed blocks are:")
+    (pp/pprint reindexed-blocks)
+    (println "resolver :datascript/paste-internal tx-data is")
+    (pp/pprint tx-data)
     tx-data))
 
 

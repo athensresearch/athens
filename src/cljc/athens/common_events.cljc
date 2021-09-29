@@ -544,6 +544,20 @@
                      :open?     open?}}))
 
 
+(defn build-paste-internal-event
+  "Builds `:datascript/paste-internal` event with:
+  - uid  : The uid of block to which text is to be pasted
+  - internal-representation : Data to be pasted from another Athens
+  - start: cursor position in block"
+  [last-tx uid internal-representation]
+  (let [event-id (utils/gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :datascript/paste-internal
+     :event/args    {:uid                     uid
+                     :internal-representation internal-representation}}))
+
+
 (defn build-paste-event
   "Builds `:datascript/paste` event with:
   - uid  : The uid of block to which text is to be pasted
