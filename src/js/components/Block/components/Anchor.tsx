@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components';
 import { useFocusRing } from '@react-aria/focus';
-import { useTooltipTrigger, useTooltip } from '@react-aria/tooltip'
+import { useTooltipTrigger } from '@react-aria/tooltip'
 import { useTooltipTriggerState } from '@react-stately/tooltip';
 import { TooltipTriggerProps } from '@react-types/tooltip';
 import { mergeProps } from '@react-aria/utils';
