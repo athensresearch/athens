@@ -139,6 +139,7 @@ export const GlobalStyles = createGlobalStyle`
     color: var(--body-text-color);
     font-size: 16px;
     line-height: 1.5;
+    position: relative;
 
     a {
       color: var(--link-color);
