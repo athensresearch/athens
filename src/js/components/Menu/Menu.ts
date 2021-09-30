@@ -47,7 +47,7 @@ Menu.Button = styled(Button).attrs({
  */
 Menu.Heading = styled.h3`
   margin: 0;
-  font-weight: 600;
+  font-weight: 500;
   flex: 1 1 100%;
   padding: 0.25rem 0.5rem;
   font-size: var(--font-size--text-sm);

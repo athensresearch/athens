@@ -29,6 +29,7 @@ const ConnectionButton = styled(Button)`
   gap: 0.125rem;
   transition: all 0s;
   min-height: 2rem;
+  padding: 0.125em 0.5rem;
   font-size: var(--font-size--text-xs);
   border: 1px solid var(--border-color);
 
@@ -118,11 +119,15 @@ const ActivityIcon = styled(RefreshDouble)`
   vector-effect: non-scaling-stroke;
 `;
 
+const ConnectedGraphIconWrap = styled(Icon)`
+  --size: 1.5rem;
+`;
+
 const connectionStatusIndicator = {
   connected: (
-    <Icon style={{ "--size": "1.5rem" }}>
+    <ConnectedGraphIconWrap>
       <ConnectedGraphConnection />
-    </Icon>
+    </ConnectedGraphIconWrap>
   ),
   connecting: (
     <>
@@ -258,7 +263,7 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
       >
         {connectionStatusIndicator[connectionStatus]}
 
-        {connectionStatus === "connected" && showablePersons.length > 0 && (
+        {connectionStatus === "connected" && (
           <>
             <Avatar
               key={currentUser.personId}
@@ -269,16 +274,18 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
               isOutlined={true}
               size="1.25rem"
             />
-            <Avatar.Stack
-              size="1.25rem"
-              maskSize="1.5px"
-              overlap={0.2}
-              limit={5}
-            >
-              {showablePersons.map((member) => (
-                <Avatar key={member.personId} {...member} showTooltip={false} />
-              ))}
-            </Avatar.Stack>
+            {showablePersons.length > 0 && (
+              <Avatar.Stack
+                size="1.25rem"
+                maskSize="1.5px"
+                overlap={0.2}
+                limit={5}
+              >
+                {showablePersons.map((member) => (
+                  <Avatar key={member.personId} {...member} showTooltip={false} />
+                ))}
+              </Avatar.Stack>
+            )}
           </>
         )}
       </ConnectionButton>
