@@ -8294,6 +8294,11 @@ hyphenate-style-name@^1.0.3:
   resolved "https://registry.yarnpkg.com/hyphenate-style-name/-/hyphenate-style-name-1.0.4.tgz#691879af8e220aea5750e8827db4ef62a54e361d"
   integrity sha512-ygGZLjmXfPHj+ZWh6LwbC37l43MhfztxetbFCoYTM2VjkIUpeHgSNn7QIyVFj7YQ1Wl9Cbw5sholVJPzWvC2MQ==
 
+iconoir-react@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/iconoir-react/-/iconoir-react-2.1.0.tgz#decfafbdc19851e9e6cc09203ad8550ff6963b86"
+  integrity sha512-PMrSTrTI4iksFrZvPnlQraQdDOE5yEe/Z4O0+v5O7mNbwLFDqCVgtDp6fyR9EDVeIyiPY9/YDfq++eII+DH4rw==
+
 iconoir@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/iconoir/-/iconoir-1.0.0.tgz#8c9ade1c12044872dda1fdef5b0f5fc643cd4bc8"
