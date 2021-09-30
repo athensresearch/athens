@@ -7,7 +7,7 @@ const mockData = {
   currentUser: {
     personId: '1',
     username: 'John Doe',
-    color: '#0071fe',
+    color: '#007e51',
   },
   hostAddress: '192.169.0.1',
   activeDatabase: databaseMenuData[0],

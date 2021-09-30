@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { useOverlayTriggerState } from '@react-stately/overlays';
 import {
   useOverlay,
   usePreventScroll,
@@ -17,7 +16,7 @@ import { mergeProps } from '@react-aria/utils';
 import { Button } from '@/Button';
 import { Overlay } from '@/Overlay';
 
-const Content = styled(Overlay)`
+const Container = styled(Overlay)`
   display: flex;
   flex-direction: row;
   gap: 1rem;
@@ -95,7 +94,7 @@ interface DialogProps extends OverlayProps, AriaDialogProps {
     label?: string;
     variant?: 'filled' | 'tinted' | 'gray' | 'plain';
   }
-  onDismiss?: () => void;
+  // onClose?: () => void;
   onConfirm?: () => void;
 }
 
@@ -105,8 +104,8 @@ export const Dialog = (props: DialogProps): JSX.Element | null => {
     title,
     children,
     image,
-    onConfirm,
-    onDismiss,
+    onConfirm: handleConfirm,
+    onClose: handleClose,
     defaultAction,
     dismiss,
     confirm
@@ -120,7 +119,7 @@ export const Dialog = (props: DialogProps): JSX.Element | null => {
 
   const dismissProps = {
     ...mergeProps({
-      onClick: onDismiss,
+      onClick: handleClose,
       label: 'Cancel',
       variant: 'plain',
       autoFocus: defaultAction === 'dismiss',
@@ -130,7 +129,7 @@ export const Dialog = (props: DialogProps): JSX.Element | null => {
 
   const confirmProps = {
     ...mergeProps({
-      onClick: onConfirm,
+      onClick: handleConfirm,
       label: 'Cancel',
       variant: 'filled',
       autoFocus: defaultAction === 'confirm',
@@ -147,22 +146,28 @@ export const Dialog = (props: DialogProps): JSX.Element | null => {
             restoreFocus
             autoFocus
           >
-            <Content
+            <Container
               {...overlayProps}
               {...dialogProps}
               {...modalProps}
               ref={ref}
             >
-              {image && <Image>{image}</Image>}
-              <Body>
-                <Title {...titleProps}>{title}</Title>
-                {children && children}
-                <Actions>
-                  <DismissButton {...dismissProps}>Cancel</DismissButton>
-                  <ConfirmButton {...confirmProps}>Confirm</ConfirmButton>
-                </Actions>
-              </Body>
-            </Content>
+              {children
+                ? children
+                : (
+                  <>
+                    {image && <Image>{image}</Image>}
+                    (<Body>
+                      <Title {...titleProps}>{title}</Title>
+                      {children}
+                      <Actions>
+                        <DismissButton {...dismissProps}>Cancel</DismissButton>
+                        <ConfirmButton {...confirmProps}>Confirm</ConfirmButton>
+                      </Actions>
+                    </Body>)
+                  </>
+                )}
+            </Container>
           </FocusScope>
         </Backdrop>
       </OverlayContainer>
@@ -174,6 +179,7 @@ Dialog.defaultProps = {
   defaultAction: 'confirm',
 }
 
+Dialog.Container = Container;
 Dialog.Image = Image;
 Dialog.Title = Title;
 Dialog.Message = Message;
