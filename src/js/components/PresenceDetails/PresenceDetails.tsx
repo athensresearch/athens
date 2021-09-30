@@ -78,13 +78,22 @@ const Profile = styled.div`
   align-items: center;
   flex-wrap: wrap;
 
-  ${Avatar.Wrapper} {
+  svg {
     margin-right: 0.5rem;
   }
 
   button {
     margin-left: auto;
     font-size: var(--font-size--text-xs);
+  }
+`;
+
+const Host = styled(Profile)`
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+
+  svg {
+    margin-left: 0.25rem;
   }
 `;
 
@@ -111,7 +120,7 @@ const ActivityIcon = styled(RefreshDouble)`
 
 const connectionStatusIndicator = {
   connected: (
-    <Icon>
+    <Icon style={{ "--size": "1.5rem" }}>
       <ConnectedGraphConnection />
     </Icon>
   ),
@@ -148,7 +157,7 @@ export interface PresenceDetailsProps {
   currentPageMembers: Person[];
   differentPageMembers: Person[];
   handleUpdateProfile(person: Person): void;
-  handlePressHostAddress(hostAddress: HostAddress): void;
+  handleCopyHostAddress(hostAddress: HostAddress): void;
   handlePressMember(person: Person): void;
   connectionStatus: ConnectionStatus;
   defaultOpen?: boolean;
@@ -202,7 +211,7 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
     currentUser,
     currentPageMembers,
     differentPageMembers,
-    handlePressHostAddress,
+    handleCopyHostAddress,
     handlePressMember,
     handleUpdateProfile,
     connectionStatus,
@@ -286,10 +295,14 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
             <>
               {hostAddress && (
                 <>
-                  <Button onClick={() => handlePressHostAddress(hostAddress)}>
+                  <Host>
                     <HostIcon />
                     <span>{hostAddress}</span>
-                  </Button>
+                    <Button
+                      onClick={() => handleCopyHostAddress(hostAddress)}
+                    >Copy
+                    </Button>
+                  </Host>
                   <Menu.Separator />
                 </>
               )}
@@ -359,7 +372,8 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
             </>
           </PresenceDetailsPopover>
         </OverlayContainer>
-      )}
+      )
+      }
 
       <ProfileSettingsDialog
         person={{ ...currentUser }}

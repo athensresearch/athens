@@ -76,7 +76,7 @@
                                        :current-page-members      current-page-members
                                        :different-page-members    different-page-members
                                        :host-address              (:url @selected-db)
-                                       :handle-press-host-address copy-host-address-to-clipboard
+                                       :handle-copy-host-address copy-host-address-to-clipboard
                                        :handle-press-member       #(go-to-user-block @all-users %)
                                        :handle-update-profile     #(edit-current-user (:username @current-user) %)
                                        ;; TODO: show other states when we support them.

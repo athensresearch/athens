@@ -25,6 +25,16 @@ export const Overlay = styled.div`
   box-shadow: var(--depth-shadow-16), 0 0 0 1px rgb(0 0 0 / 0.05);
   background: var(--background-plus-1);
   position: relative;
+
+  &:focus-visible,
+  &:focus {
+    box-shadow: var(--depth-shadow-16), 0 0 0 2px rgb(0 0 0 / 0.1);
+    outline: none;
+  }
+
+  &.animate-in {
+    animation: ${overlayAppear} 0.125s;
+  }
   
   ${props => !!props.hasOutline && css`
     .is-theme-dark & {
@@ -39,15 +49,6 @@ export const Overlay = styled.div`
       }
     }
   `}
-
-  &:focus-visible {
-    box-shadow: var(--depth-shadow-16), 0 0 0 2px rgb(0 0 0 / 0.1);
-    outline: none;
-  }
-  
-  &.animate-in {
-    animation: ${overlayAppear} 0.125s;
-  }
 `;
 
 Overlay.defaultProps = {
