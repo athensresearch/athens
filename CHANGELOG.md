@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.15](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.14...v1.0.0-alpha.rtc.15) (2021-09-30)
+
+
+### Features
+
+* **blocks:** use ts block anchor ([a9733f2](https://github.com/athensresearch/athens/commit/a9733f21aac700b6f64a3d3215bdc3de76d4dd66))
+* **button:** buttons have styled focus ring ([6f07ad3](https://github.com/athensresearch/athens/commit/6f07ad3905a53783e13d5ad27df76b66ad39d69d))
+
+
+### Bug Fixes
+
+* **anchor:** can drag blocks again ([19106a9](https://github.com/athensresearch/athens/commit/19106a94bcb5d2b36582390ef13d7b3fa5804718))
+* don't send editing nil events ([49259cf](https://github.com/athensresearch/athens/commit/49259cf6206a43d0f50c7442b5c5867c1c731b63))
+* presence for home page should show all users on daily notes ([811eba2](https://github.com/athensresearch/athens/commit/811eba207cf1c0f9770201e1e89196b402e5cd2a))
+* **toolbar:** rendering database menu ([b54c470](https://github.com/athensresearch/athens/commit/b54c47078ea384c54e854b7329daefb2d92391b8))
+
+
+### Refactors
+
+* **blocks:** use ts toggle and bullet ([82b617e](https://github.com/athensresearch/athens/commit/82b617ed49734963f119b43f4218dd444dd0455b))
+* **block:** use ts debug details ([ca0eb2a](https://github.com/athensresearch/athens/commit/ca0eb2a8bb535ad4f6daaeaf930caafd15fd8fd0))
+* **block:** use ts debug details ([531f096](https://github.com/athensresearch/athens/commit/531f0962ab587930c6a45be757e3848f0ad7d668))
+* **toolbar:** use ts toolbar ([b81f765](https://github.com/athensresearch/athens/commit/b81f765869619f607c1f012e9d69861056e84b46))
+
+
+* add newline ([0d7475b](https://github.com/athensresearch/athens/commit/0d7475b01b66f4f36ac17ce30b26692042856139))
+* ignore temp unused fn ([abd84e4](https://github.com/athensresearch/athens/commit/abd84e48e71dce3810249cdfa3552f5a6fbecd7a))
+* lint ([349415c](https://github.com/athensresearch/athens/commit/349415c98c236c7fa4eda4f2f28fb00235e796b1))
+* lint ([a0048e2](https://github.com/athensresearch/athens/commit/a0048e2bad3e5cce82ad2bffa450a21404534416))
+* minor fixes and cleanup ([d58e960](https://github.com/athensresearch/athens/commit/d58e9606b73add52ddd0f89c3c5cd5e0ab0f4191))
+* minor fixes and cleanup ([c089e72](https://github.com/athensresearch/athens/commit/c089e7222140b040af8abd11c3cb76f5b53334c3))
+* remove unused import ([f5ee071](https://github.com/athensresearch/athens/commit/f5ee07125899dcf0b3ded2a95205c262553c5ea5))
+
 ## [1.0.0-alpha.rtc.14](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.13...v1.0.0-alpha.rtc.14) (2021-09-30)
 
 
