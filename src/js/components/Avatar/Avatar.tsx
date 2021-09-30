@@ -4,7 +4,6 @@ import { Fade, Popper, PopperPlacementType } from "@material-ui/core";
 import { readableColor } from "polished";
 
 import { DOMRoot } from "@/utils/config";
-import { Stack } from "./Avatar.stories";
 
 const Wrapper = styled.svg`
   overflow: visible;
@@ -58,6 +57,10 @@ export interface AvatarProps extends React.SVGProps<SVGSVGElement>, Person {
    * Where the tooltip should appear relative to the icon.
    */
   tooltipPlacement?: PopperPlacementType;
+  /**
+   * Whether to draw a colored circle around the icon.
+   */
+  isOutlined?: boolean
 }
 
 /**
@@ -70,6 +73,7 @@ export const Avatar = ({
   tooltipPlacement = "right",
   isMuted = false,
   size,
+  isOutlined,
   ...props
 }: AvatarProps) => {
   const [avatarEl, setAvatarEl] = React.useState();
@@ -121,14 +125,20 @@ export const Avatar = ({
           y="18"
           fill="var(--avatar-text-color"
           vectorEffect="non-scaling-stroke"
-          stroke={readableColor(readableColor(color))}
-          strokeWidth="2px"
-          strokeOpacity="0.25"
-          paintOrder="stroke fill"
           fontSize="18"
         >
           {initials || username}
         </Name>
+        {isOutlined && (
+          <circle
+            cx="12"
+            cy="12"
+            r="14"
+            fill="none"
+            stroke="var(--avatar-background-color)"
+            strokeWidth="2px"
+          />
+        )}
       </Wrapper>
       <Popper
         open={showTooltip === true || isShowingTooltip}
@@ -251,7 +261,7 @@ Avatar.Stack = React.forwardRef((props: AvatarStackProps, ref) => {
       }}
       {...rest}
     >
-      {Children.map((avatar: JSX.Element) => React.cloneElement(avatar, { size }))}
+      {Children.slice(0, limit).map((avatar: JSX.Element) => React.cloneElement(avatar, { size }))}
       {overflow > 0 && (
         <Avatar
           personId="overflow"
