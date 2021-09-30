@@ -186,13 +186,13 @@
                                  :align-items     "center"}]]
                      [:.MuiSvgIcon-root {:font-size "1.2rem"}]
                      [:.MuiExpansionPanelSummary-content {:justify-content "space-between"}
-                      [:&.Mui-expanded {:margin     "5px 0"
+                      [:&.Mui-expanded {:margin     "24px 0"
                                         :min-height "unset"}]]
                      [:.MuiExpansionPanelSummary-root
                       [:&.Mui-expanded {:min-height "unset"}]]
                      [:.MuiPaper-root {:background (:graph-control-bg theme)
                                        :color      (:graph-control-color theme)
-                                       :margin     "0 0 2px 0"}
+                                       :margin     "10px 0 2px 0"}
                       [:&.Mui-expanded {:margin "0 0 5px 0"}]]]})
 
 

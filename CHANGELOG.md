@@ -96,9 +96,6 @@ All notable changes to this project will be documented in this file. See [standa
 
 * Orderkeeper to keep all your `:block/order` ordered. ([7ac1844](https://github.com/athensresearch/athens/commit/7ac18448b02a600f7dd1ada16277c58209d0cfca))
 
-
-### Bug Fixes
-
 * Don't log TXs and typo. ([915a818](https://github.com/athensresearch/athens/commit/915a818dd70f0fbf52a4212501af36313348320a))
 
 
@@ -110,6 +107,7 @@ All notable changes to this project will be documented in this file. See [standa
 ### Features
 
 * **dialog:** add new dialog component ([15ced38](https://github.com/athensresearch/athens/commit/15ced387e9047568793464131c2c61c9925b108c))
+
 
 
 ### Bug Fixes
@@ -127,6 +125,21 @@ All notable changes to this project will be documented in this file. See [standa
 
 
 * remove old alert component ([ac9cc4f](https://github.com/athensresearch/athens/commit/ac9cc4f2bb26d69f205820a520b104799875c597))
+
+
+## [1.0.0-beta.98](https://github.com/athensresearch/athens/compare/v1.0.0-beta.97...v1.0.0-beta.98) (2021-09-27)
+
+## [1.0.0-beta.97](https://github.com/athensresearch/athens/compare/v1.0.0-beta.96...v1.0.0-beta.97) (2021-09-21)
+
+
+### Bug Fixes
+
+* Correct JS constructor name. ([bfbc940](https://github.com/athensresearch/athens/commit/bfbc94020a16793be7cd6f65ae78a08ab2f2abe3))
+* Just errors and crashes sent to Sentry. ([7c48179](https://github.com/athensresearch/athens/commit/7c48179ec67d59104f3823a7f1d4f1df36845c78))
+* Sort linked references by date descending. ([95dbd60](https://github.com/athensresearch/athens/commit/95dbd60dac93ce524c5fe64ee6b2336ef8ce2940))
+
+## [1.0.0-beta.96](https://github.com/athensresearch/athens/compare/v1.0.0-beta.94...v1.0.0-beta.96) (2021-09-02)
+
 
 ## [1.0.0-alpha.rtc.8](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.7...v1.0.0-alpha.rtc.8) (2021-09-23)
 
@@ -426,6 +439,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 
 * only release jar on ubuntu build ([03b869c](https://github.com/athensresearch/athens/commit/03b869cc44cbef6e32cd33c7eea879426c1f906a))
+
 
 ## [1.0.0-beta.94](https://github.com/athensresearch/athens/compare/v1.0.0-beta.93...v1.0.0-beta.94) (2021-08-04)
 
