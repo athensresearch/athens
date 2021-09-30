@@ -18,11 +18,11 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   /**
    * Button shape. Set to 'unset' to manually style padding and radius.
    */
-  shape: 'rect' | 'round' | 'unset';
+  shape?: 'rect' | 'round' | 'unset';
   /**
    * Button shape style. Set to 'unset' to manually style color and interaction styles.
    */
-  variant: 'plain' | 'gray' | 'tinted' | 'filled' | 'unset';
+  variant?: 'plain' | 'gray' | 'tinted' | 'filled' | 'unset';
   /**
    * Styles provided to the button's focus ring.
    */
