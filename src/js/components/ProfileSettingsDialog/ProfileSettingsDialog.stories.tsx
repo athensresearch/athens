@@ -1,8 +1,9 @@
 import React from 'react';
 
+import { useOverlayTriggerState } from "@react-stately/overlays";
+
 import { BADGE, Storybook } from '@/utils/storybook';
 import { ProfileSettingsDialog } from './ProfileSettingsDialog';
-
 
 import { Avatar } from '../Avatar';
 import { Button } from '@/Button';
@@ -20,12 +21,16 @@ export default {
 const testPerson = { personId: '123', username: 'John Doe', color: '#0071ed' };
 
 const Template = (args, context) => {
-  const [isDialogOpen, setIsDialogOpen] = React.useState(args.isOpen);
+  let profileSettingsState = useOverlayTriggerState({
+    onOpenChange: (open) => {
+      console.log('ProfileSettingsDialog open state changed to: ', open);
+    },
+  });
   const [person, setPerson] = React.useState(testPerson);
 
   const handleUpdatePerson = React.useCallback((person) => {
     setPerson(person);
-    setIsDialogOpen(false);
+    profileSettingsState.close();
   }, []);
 
   return (
@@ -40,16 +45,16 @@ const Template = (args, context) => {
         <Button
           shape="round"
           variant="gray"
-          onClick={() => setIsDialogOpen(true)}>
+          onClick={profileSettingsState.open}>
           Edit
         </Button>
       </div>
       <Storybook.Wrapper>
         <ProfileSettingsDialog
           person={testPerson}
-          isOpen={isDialogOpen}
-          handleUpdatePerson={handleUpdatePerson}
-          handleClose={() => setIsDialogOpen(false)}
+          isOpen={profileSettingsState.isOpen}
+          onClose={profileSettingsState.close}
+          onUpdatePerson={handleUpdatePerson}
         />
       </Storybook.Wrapper>
     </>)

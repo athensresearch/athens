@@ -39,6 +39,11 @@ export const Overlay = styled.div`
       }
     }
   `}
+
+  &:focus-visible {
+    box-shadow: var(--depth-shadow-64), 0 0 0 1px rgb(0 0 0 / 0.1);
+    outline: none;
+  }
   
   &.animate-in {
     animation: ${overlayAppear} 0.125s;

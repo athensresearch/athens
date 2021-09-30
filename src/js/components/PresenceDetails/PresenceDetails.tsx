@@ -1,79 +1,36 @@
-import styled from 'styled-components'
-import React from 'react';
+import styled, { keyframes } from "styled-components";
+import React from "react";
 
-import { DOMRoot } from '@/utils/config';
+import { RefreshDouble, Lock } from "iconoir-react";
+
+import { mergeProps } from "@react-aria/utils";
 import {
-  Wifi, SettingsEthernet, SyncProblem, Lock,
-} from '@material-ui/icons'
-import { Popper, Modal, Fade, PopperPlacementType } from '@material-ui/core'
+  useOverlay,
+  useOverlayTrigger,
+  useOverlayPosition,
+  useModal,
+  OverlayContainer,
+} from "@react-aria/overlays";
+import { useOverlayTriggerState } from "@react-stately/overlays";
+import { FocusScope } from "@react-aria/focus";
+import { useDialog } from "@react-aria/dialog";
 
-import { Button } from '@/Button';
-import { Menu } from '@/Menu';
-import { Overlay } from '@/Overlay';
-import { Avatar } from '@/Avatar';
-import { ProfileSettingsDialog } from '@/ProfileSettingsDialog';
-
+import { Button } from "@/Button";
+import { Menu } from "@/Menu";
+import { Overlay } from "@/Overlay";
+import { Backdrop } from "@/Overlay/Backdrop";
+import { Avatar } from "@/Avatar";
+import { ProfileSettingsDialog } from "@/ProfileSettingsDialog";
+import { ConnectedGraphConnection } from "@/Icons/ConnectedGraphConnection";
+import { ConnectedGraphHost } from "@/Icons/ConnectedGraphHost";
+import { Icon } from "@/Icons/Icon";
 
 const ConnectionButton = styled(Button)`
   gap: 0.125rem;
-`;
-
-const MemberCount = styled.span`
-  margin-left: 0.125rem;
-`;
-
-const Heading = styled.h3`
-  margin: 0;
-  font-weight: normal;
-  padding: 0.25rem 0.5rem;
+  transition: all 0s;
+  min-height: 2rem;
   font-size: var(--font-size--text-xs);
-  color: var(--body-text-color---opacity-med);
-`;
-
-const PresenceOverlay = styled(Overlay)`
-  min-width: 14em;
-  flex-direction: column;
-`;
-
-const HostIcon = styled(Wifi)`
-  padding: 0.25rem;
-  background: var(--background-minus-2);
-  border-radius: 100em;
-`;
-
-const PersonWrap = styled.div`
-  padding: 0.375rem 0.5rem;
-  display: flex;
-  align-items: center;
-`;
-
-const Profile = styled.div`
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-
-  ${Heading} {
-    flex: 1 1 100%;
-    font-size: var(--font-size--text-sm);
-  }
-
-  ${Avatar.Wrapper} {
-    margin-right: 0.5rem;
-  }
-
-  button {
-    margin-left: auto;
-    font-size: var(--font-size--text-xs);
-  }
-`;
-
-const ConnectionArea = styled.div`
-  display: grid;
-  grid-template-areas: 'icon status' 'icon detail';
-  align-items: center;
-  gap: 0 0.25rem;
-  line-height: 1.2;
-  width: max-content;
+  border: 1px solid var(--border-color);
 
   &.connecting {
     color: var(--link-color);
@@ -88,98 +45,211 @@ const ConnectionArea = styled.div`
       color: var(--body-text-color);
     }
   }
+`;
 
-  svg {
-    font-size: 1em;
-    grid-area: icon;
+const PresenceOverlay = styled(Overlay)`
+  min-width: 8rem;
+  flex-direction: column;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+`;
+
+const HostIconWrap = styled(Icon)`
+  --size: 2rem;
+  border-radius: 18%;
+  background: var(--background-minus-2);
+  padding: 0.25rem;
+`;
+
+const HostIcon = () => (
+  <HostIconWrap>
+    <ConnectedGraphHost />
+  </HostIconWrap>
+);
+
+const PersonWrap = styled.div`
+  padding: 0.375rem 0.5rem;
+  display: flex;
+  align-items: center;
+`;
+
+const Profile = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  ${Avatar.Wrapper} {
+    margin-right: 0.5rem;
   }
 
-  span {
-    grid-area: status;
-    font-size: var(--font-size--text-sm);
-  }
-
-  span + span {
+  button {
+    margin-left: auto;
     font-size: var(--font-size--text-xs);
-    grid-area: detail;
   }
 `;
 
-interface ConnectionStatusIndicatorProps {
-  status: ConnectionStatus;
-}
-
-const ConnectionStatusIndicator = ({
-  status
-}: ConnectionStatusIndicatorProps) => {
-  switch (status) {
-    case 'connecting':
-      return <><SettingsEthernet /><span>Connecting...</span></>;
-    case 'reconnecting':
-      return <><SyncProblem /><span>Reconnecting...</span></>;
-    case 'offline':
-      return <><Lock /><span>View Only</span></>;
-    case 'connected':
-    default:
-      return null
+const rotate = keyframes`
+  from {
+    transform: rotate(0deg);
+  } to {
+    transform: rotate(360deg);
   }
-}
+`;
+
+const OfflineIcon = styled(Lock)`
+  width: 1.25rem;
+  height: 1.25rem;
+`;
+
+const ActivityIcon = styled(RefreshDouble)`
+  width: 1.25rem;
+  height: 1.25rem;
+  animation: ${rotate} 2s linear infinite;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+`;
+
+const connectionStatusIndicator = {
+  connected: (
+    <Icon>
+      <ConnectedGraphConnection />
+    </Icon>
+  ),
+  connecting: (
+    <>
+      <ActivityIcon />
+      <span>Connecting...</span>
+    </>
+  ),
+  reconnecting: (
+    <>
+      <ActivityIcon />
+      <span>Reconnecting...</span>
+    </>
+  ),
+  offline: (
+    <>
+      <OfflineIcon />
+      <span>View Only</span>
+    </>
+  ),
+};
+
+const connectionStatusHelpText = {
+  connecting: "Athens is connecting to the host.",
+  connected: "View connection details.",
+  reconnecting: "Athens is attempting to reconnect to the host.",
+  offline: "Athens is not connected.",
+};
 
 export interface PresenceDetailsProps {
-  hostAddress: HostAddress
-  currentUser: Person
-  placement?: PopperPlacementType
-  currentPageMembers: Person[]
-  differentPageMembers: Person[]
-  handleUpdateProfile(person: Person): void
-  handlePressHostAddress(hostAddress: HostAddress): void
-  handlePressMember(person: Person): void,
-  connectionStatus: ConnectionStatus
+  hostAddress: HostAddress;
+  currentUser: Person;
+  currentPageMembers: Person[];
+  differentPageMembers: Person[];
+  handleUpdateProfile(person: Person): void;
+  handlePressHostAddress(hostAddress: HostAddress): void;
+  handlePressMember(person: Person): void;
+  connectionStatus: ConnectionStatus;
+  defaultOpen?: boolean;
 }
 
-export const PresenceDetails = ({
-  hostAddress,
-  currentUser,
-  placement,
-  currentPageMembers,
-  differentPageMembers,
-  handlePressHostAddress,
-  handlePressMember,
-  handleUpdateProfile,
-  connectionStatus,
-}: PresenceDetailsProps) => {
-  const maxToDisplay = 5;
-  const [isPresenceDetailsOpen, setIsPresenceDetailsOpen] = React.useState<boolean>(false);
-  const [presenceDetailsAnchor, setPresenceDetailsAnchor] = React.useState<HTMLButtonElement | null>(null);
-  const [isUserSettingsDialogOpen, setIsUserSettingsDialogOpen] = React.useState<boolean>(false);
-  const [timeLastOnline, setTimeLastOnline] = React.useState<string | null>(null);
+interface PresenceDetailsPopoverProps {
+  children: React.ReactNode;
+  isOpen: boolean;
+  onClose: () => void;
+}
 
+const PresenceDetailsPopover = React.forwardRef(
+  (
+    { isOpen, onClose, children, ...otherProps }: PresenceDetailsPopoverProps,
+    ref: RefObject<HTMLElement>
+  ) => {
+    let { overlayProps, underlayProps } = useOverlay(
+      {
+        onClose,
+        isOpen,
+        isDismissable: true,
+      },
+      ref
+    );
+
+    let { modalProps } = useModal();
+    let { dialogProps, titleProps } = useDialog({}, ref);
+
+    return (
+      <OverlayContainer>
+        <Backdrop hidden={true} {...underlayProps}>
+          <FocusScope contain restoreFocus autoFocus>
+            <PresenceOverlay
+              {...mergeProps(overlayProps, dialogProps, otherProps, modalProps)}
+              ref={ref}
+              className="animate-in"
+            >
+              <Menu.Heading {...titleProps}>Connection & Presence</Menu.Heading>
+              {children}
+            </PresenceOverlay>
+          </FocusScope>
+        </Backdrop>
+      </OverlayContainer>
+    );
+  }
+);
+
+export const PresenceDetails = (props: PresenceDetailsProps) => {
+  const {
+    hostAddress,
+    currentUser,
+    currentPageMembers,
+    differentPageMembers,
+    handlePressHostAddress,
+    handlePressMember,
+    handleUpdateProfile,
+    connectionStatus,
+    defaultOpen,
+  } = props;
   const showablePersons = [...currentPageMembers, ...differentPageMembers];
 
-  React.useEffect(() => {
-    if (connectionStatus === 'offline') {
-      const currentTime = new Date().toLocaleTimeString();
-      setTimeLastOnline(currentTime);
-    } else {
-      setTimeLastOnline(null);
-    }
-  }, [connectionStatus]);
+  // State and controllers for the menu
+  let menuState = useOverlayTriggerState({ defaultOpen: defaultOpen });
 
-  return (
+  let triggerRef = React.useRef();
+  let overlayRef = React.useRef();
+
+  let { triggerProps: presenceMenuTriggerProps, overlayProps: presenceMenuOverlayProps } = useOverlayTrigger(
+    { type: "listbox" },
+    menuState,
+    triggerRef,
+  );
+
+  let { overlayProps: positionProps } = useOverlayPosition({
+    targetRef: triggerRef,
+    overlayRef,
+    placement: "bottom end",
+    offset: 2,
+    isOpen: menuState.isOpen,
+  });
+
+  // State and controllers for the profile settings dialog
+  let profileSettingsState = useOverlayTriggerState({});
+
+  return connectionStatus === "local" ? (
+    <></>
+  ) : (
     <>
-      <ConnectionArea className={connectionStatus}>
-        <ConnectionStatusIndicator status={connectionStatus} />
-        <span>{timeLastOnline && timeLastOnline}</span>
-      </ConnectionArea>
-
       <ConnectionButton
-        ref={setPresenceDetailsAnchor}
-        onClick={() => setIsPresenceDetailsOpen(!isPresenceDetailsOpen)}
+        ref={triggerRef}
+        disabled={connectionStatus !== "connected"}
+        onClick={menuState.open}
         shape="round"
-        isPressed={isPresenceDetailsOpen}>
+        className={connectionStatus}
+        title={connectionStatusHelpText[connectionStatus]}
+        isPressed={menuState.isOpen}
+        {...presenceMenuTriggerProps}
+      >
+        {connectionStatusIndicator[connectionStatus]}
 
-        {connectionStatus === 'connected' && (
-
+        {connectionStatus === "connected" && showablePersons.length > 0 && (
           <>
             <Avatar
               key={currentUser.personId}
@@ -187,129 +257,123 @@ export const PresenceDetails = ({
               color={currentUser.color}
               personId={currentUser.personId}
               showTooltip={false}
-              size="1em"
+              isOutlined={true}
+              size="1.25rem"
             />
             <Avatar.Stack
-              size="1em"
+              size="1.25rem"
               maskSize="1.5px"
               overlap={0.2}
+              limit={5}
             >
-              {showablePersons && showablePersons.slice(0, maxToDisplay).map((member, index) => {
-                if (index < maxToDisplay) {
-                  return (
-                    <Avatar
-                      key={member.personId}
-                      username={member.username}
-                      color={member.color}
-                      personId={member.personId}
-                      showTooltip={false}
-                    />
-                  );
-                }
-                return null;
-              })}
+              {showablePersons.map((member) => (
+                <Avatar key={member.personId} {...member} showTooltip={false} />
+              ))}
             </Avatar.Stack>
-            {showablePersons.length > maxToDisplay && <MemberCount>+{showablePersons.length - maxToDisplay}</MemberCount>}
           </>
         )}
       </ConnectionButton>
 
-      {connectionStatus === 'connected' && (
-        <Modal
-          container={DOMRoot}
-          open={isPresenceDetailsOpen}
-          BackdropProps={{ invisible: true }}
-          onClose={() => setIsPresenceDetailsOpen(false)}
-        >
-          <Popper
-            open={isPresenceDetailsOpen}
-            placement={placement ? placement : 'bottom-end'}
-            disablePortal={true}
-            anchorEl={presenceDetailsAnchor}
-            transition>
-            {({ TransitionProps }) => (
-              <Fade {...TransitionProps} timeout={250}>
-                <PresenceOverlay className="animate-in">
-                  {hostAddress && (<>
-                    <Button onClick={() => handlePressHostAddress(hostAddress)}>
-                      <HostIcon />
-                      <span>{hostAddress}</span>
-                    </Button>
-                    <Menu.Separator />
-                  </>)}
-                  <Profile>
-                    <Heading>You appear as</Heading>
-                    <PersonWrap>
-                      <Avatar
-                        username={currentUser.username}
-                        personId={currentUser.personId}
-                        color={currentUser.color}
-                        showTooltip={false}
-                      />
-                      <span>{currentUser.username}</span>
-                    </PersonWrap>
-                    <Button
-                      onClick={() => setIsUserSettingsDialogOpen(true)}
-                      key={currentUser.personId}
-                    >
-                      Edit
-                    </Button>
-                  </Profile>
+      {menuState.isOpen && (
+        <OverlayContainer>
+          <PresenceDetailsPopover
+            {...presenceMenuOverlayProps}
+            {...positionProps}
+            ref={overlayRef}
+            isOpen={menuState.isOpen}
+            onClose={menuState.close}
+          >
+            <>
+              {hostAddress && (
+                <>
+                  <Button onClick={() => handlePressHostAddress(hostAddress)}>
+                    <HostIcon />
+                    <span>{hostAddress}</span>
+                  </Button>
                   <Menu.Separator />
+                </>
+              )}
+              <Profile>
+                <Menu.Heading>You appear as</Menu.Heading>
+                <PersonWrap>
+                  <Avatar
+                    username={currentUser.username}
+                    personId={currentUser.personId}
+                    color={currentUser.color}
+                    showTooltip={false}
+                  />
+                  <span>{currentUser.username}</span>
+                </PersonWrap>
+                <Button
+                  onClick={profileSettingsState.open}
+                  key={currentUser.personId}
+                >
+                  Edit
+                </Button>
+              </Profile>
 
-                  {currentPageMembers.length > 0 && (
-                    <>
-                      <Heading>On this page</Heading>
-                      <Menu>
-                        {currentPageMembers.map(member =>
-                          <Button onClick={() => handlePressMember(member)} key={member.personId}>
-                            <Avatar
-                              username={member.username}
-                              personId={member.personId}
-                              color={member.color}
-                              showTooltip={false}
-                            />
-                            <span>{member.username}</span>
-                          </Button>
-                        )}
-                      </Menu>
-                      <Menu.Separator />
-                    </>
-                  )}
-
+              {currentPageMembers.length > 0 && (
+                <>
+                  <Menu.Separator />
+                  <Menu.Heading>On this page</Menu.Heading>
                   <Menu>
-                    {differentPageMembers.length > 0 && differentPageMembers.map(member =>
-                      <Button onClick={() => handlePressMember(member)} key={member.personId}>
+                    {currentPageMembers.map((member) => (
+                      <Button
+                        onClick={() => handlePressMember(member)}
+                        key={member.personId}
+                      >
                         <Avatar
                           username={member.username}
                           personId={member.personId}
                           color={member.color}
                           showTooltip={false}
-                          isMuted={true}
                         />
                         <span>{member.username}</span>
                       </Button>
-                    )}
+                    ))}
                   </Menu>
-                </PresenceOverlay>
-              </Fade>
-            )}
-          </Popper>
-        </Modal>
+                </>
+              )}
+
+              {differentPageMembers.length > 0 && (
+                <>
+                  <Menu.Separator />
+                  <Menu.Heading>On this page</Menu.Heading>
+                  {differentPageMembers.map((member) => (
+                    <Button
+                      onClick={() => handlePressMember(member)}
+                      key={member.personId}
+                    >
+                      <Avatar
+                        username={member.username}
+                        personId={member.personId}
+                        color={member.color}
+                        showTooltip={false}
+                        isMuted={true}
+                      />
+                      <span>{member.username}</span>
+                    </Button>
+                  ))}
+                </>
+              )}
+            </>
+          </PresenceDetailsPopover>
+        </OverlayContainer>
       )}
 
-      {isUserSettingsDialogOpen &&
-        <ProfileSettingsDialog
-          person={{ ...currentUser }}
-          isOpen={isUserSettingsDialogOpen}
-          handleClose={() => setIsUserSettingsDialogOpen(false)}
-          handleUpdatePerson={(person) => {
-            handleUpdateProfile(person)
-            setIsUserSettingsDialogOpen(false)
-          }}
-        />}
+      <ProfileSettingsDialog
+        person={{ ...currentUser }}
+        isOpen={profileSettingsState.isOpen}
+        onClose={profileSettingsState.close}
+        onUpdatePerson={(person) => {
+          handleUpdateProfile(person);
+          profileSettingsState.close();
+        }}
+      />
     </>
   );
 };
 
-
+PresenceDetails.defaultProps = {
+  defaultOpen: false,
+};

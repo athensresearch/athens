@@ -2,7 +2,8 @@ import React from 'react';
 import styled, { keyframes } from 'styled-components';
 import { readableColor } from 'polished';
 import { HexColorPicker } from "react-colorful";
-import { Fade, Grow } from '@material-ui/core';
+import { AriaDialogProps } from '@react-types/dialog';
+import { OverlayProps } from '@react-aria/overlays';
 
 import { Button } from '@/Button';
 import { Avatar } from '../Avatar';
@@ -10,6 +11,8 @@ import { Input } from '../Input';
 import { Dialog } from '../Dialog';
 
 const ProfileWrap = styled(Dialog.Body)`
+  width: 26rem;
+
   h3 {
     text-align: center;
     margin: 0;
@@ -25,8 +28,9 @@ const ProfileWrap = styled(Dialog.Body)`
 
 const Actions = styled(Dialog.Actions)`
   padding-Bottom: 1rem;
-  justify-content: center;
+  align-self: center;
   gap: 1rem;
+  margin: 0;
 
   button {
     width: 5em;
@@ -94,20 +98,18 @@ const LabelWrapper = styled(Input.LabelWrapper)`
 `;
 
 
-interface ProfileSettingsDialogProps {
+interface ProfileSettingsDialogProps extends OverlayProps, AriaDialogProps {
   person: Person;
-  isOpen: boolean;
-  handleClose: () => void;
-  handleUpdatePerson: (person: Person) => void;
+  onUpdatePerson: (person: Person) => void;
 }
 /**
  * Dialog for modifying the current user's username and color
  */
 export const ProfileSettingsDialog = ({
   person,
-  handleClose,
-  handleUpdatePerson,
-  isOpen
+  onClose: handleClose,
+  onUpdatePerson: handleUpdatePerson,
+  isOpen,
 }: ProfileSettingsDialogProps) => {
   const [editingUsername, setEditingUsername] = React.useState<string>(person.username || '');
   const [editingColor, setEditingColor] = React.useState<string>(person.color || '#0071DB');
@@ -120,12 +122,11 @@ export const ProfileSettingsDialog = ({
   }
 
   return (
-    <Fade>
     <Dialog
-      isDialogOpen={isOpen}
-      handleClose={handleClose}
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Change how you appear to others"
     >
-      <Dialog.Header><Dialog.CloseButton onClick={handleClose} /></Dialog.Header>
       <ProfileWrap>
         <h3>How you appear to others</h3>
         <AvatarWrap className={isValidUsername ? "is-valid" : 'is-invalid'}>
@@ -169,7 +170,6 @@ export const ProfileSettingsDialog = ({
           </Button>
         </Actions>
       </ProfileWrap>
-      </Dialog>
-    </Fade>
+    </Dialog>
   )
 }
