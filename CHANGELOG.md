@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.13](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.12...v1.0.0-alpha.rtc.13) (2021-09-30)
+
+
+### Bug Fixes
+
+* **presence:** clean up misc styling issues ([80121a3](https://github.com/athensresearch/athens/commit/80121a3a567a71c7cb2dfd15c267e87681a1426d))
+
+
+* add missing iconoir-dep ([918ab53](https://github.com/athensresearch/athens/commit/918ab53893847bf96e1b972974d9906850c77ab3))
+
 ## [1.0.0-alpha.rtc.12](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.11...v1.0.0-alpha.rtc.12) (2021-09-30)
 
 
