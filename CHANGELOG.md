@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.14](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.13...v1.0.0-alpha.rtc.14) (2021-09-30)
+
+
+* increase yarn timeout ([1878c50](https://github.com/athensresearch/athens/commit/1878c50a05aa17e785dd768ef61033423dd7316f))
+
 ## [1.0.0-alpha.rtc.13](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.12...v1.0.0-alpha.rtc.13) (2021-09-30)
 
 
