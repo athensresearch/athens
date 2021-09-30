@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.12](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.11...v1.0.0-alpha.rtc.12) (2021-09-30)
+
+
+### Bug Fixes
+
+* always have username and color for people ([a97d003](https://github.com/athensresearch/athens/commit/a97d0035402061f10e3a7a90d86370844be016b8))
+* don't release docker-compose that attempts to build images ([1a313e2](https://github.com/athensresearch/athens/commit/1a313e219f1da8f8c3f544b33aa9c7e92269b6e4))
+
+
+* always store athens data by the compose file ([420a7c7](https://github.com/athensresearch/athens/commit/420a7c79024d40140b667c344d17620efbe04dc8))
+* don't build server jar on release-electron ([d3daf2a](https://github.com/athensresearch/athens/commit/d3daf2a8cd53be0c53bcf21ad20dba7010ac42d9))
+* use data env var for data, logs path ([13a0165](https://github.com/athensresearch/athens/commit/13a016519144295963be2dc41f317e923a3b8b38))
+
 ## [1.0.0-alpha.rtc.11](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.10...v1.0.0-alpha.rtc.11) (2021-09-28)
 
 
