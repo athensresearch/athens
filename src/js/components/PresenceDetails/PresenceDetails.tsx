@@ -358,7 +358,7 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
               {differentPageMembers.length > 0 && (
                 <>
                   <Menu.Separator />
-                  <Menu.Heading>On this page</Menu.Heading>
+                  <Menu.Heading>On other pages</Menu.Heading>
                   {differentPageMembers.map((member) => (
                     <Button
                       onClick={() => handlePressMember(member)}
