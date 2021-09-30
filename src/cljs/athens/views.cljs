@@ -25,6 +25,8 @@
 
 (def app-wrapper-style
   {:display "grid"
+   :position "relative"
+   :z-index "1"
    :grid-template-areas
    "'app-header app-header app-header'
     'left-sidebar main-content secondary-content'
