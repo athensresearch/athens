@@ -6,9 +6,11 @@
     [athens.electron.utils :as electron.utils]
     [athens.router :as router]
     [athens.self-hosted.presence.views :refer [toolbar-presence-el]]
+    [athens.style :refer [unzoom]]
     [athens.subs]
     [athens.util :as util]
     [re-frame.core :refer [subscribe dispatch]]
+    
     [reagent.core :as r]))
 
 
@@ -36,7 +38,8 @@
       [:<>
        (when @merge-open?
          [db-modal/merge-modal merge-open?])
-       [:> AppToolbar {:os os
+       [:> AppToolbar {:style (unzoom)
+                       :os os
                        :isElectron electron?
                        :route @route-name
                        :isWinFullscreen @win-fullscreen?

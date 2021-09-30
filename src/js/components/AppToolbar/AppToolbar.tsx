@@ -167,13 +167,10 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressClose: handlePressClose,
     databaseMenu,
     presenceDetails,
+    ...rest
   } = props;
 
-  console.log("props");
-  console.log(props);
-  console.log(isElectron, databaseMenu, presenceDetails)
-
-  return (<AppToolbarWrapper>
+  return (<AppToolbarWrapper {...rest}>
     <AppToolbar.MainControls>
       {databaseMenu}
       <Button
