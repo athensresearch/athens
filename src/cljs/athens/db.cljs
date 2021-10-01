@@ -52,8 +52,7 @@
                :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
-               :selection           {:items #{}
-                                     :order []}
+               :selection           {:items []}
                :theme/dark          false
                :zoom-level          1
                :graph-conf          default-graph-conf})
@@ -312,7 +311,7 @@
 
 (defn get-parents-recursively
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
+  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
        shape-parent-query))
 
 
@@ -593,10 +592,10 @@
 (defn group-by-parent
   [blocks]
   (group-by (fn [x]
-              (-> x
-                  :block/parents
-                  first
-                  :node/title))
+              (let [parent (-> x
+                               :block/parents
+                               first)]
+                [(:node/title parent) (:edit/time parent 0)]))
             blocks))
 
 
@@ -613,7 +612,8 @@
        (mapv :db/id)
        merge-parents-and-block
        group-by-parent
-       (sort-by :db/id)
+       (sort-by #(-> % first second))
+       (map #(vector (ffirst %) (second %)))
        vec
        rseq))
 
@@ -625,6 +625,8 @@
        (mapv :db/id)
        merge-parents-and-block
        group-by-parent
+       (sort-by #(-> % first second))
+       (map #(vector (ffirst %) (second %)))
        vec))
 
 
