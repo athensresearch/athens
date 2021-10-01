@@ -10,7 +10,6 @@
     [athens.subs]
     [athens.util :as util]
     [re-frame.core :refer [subscribe dispatch]]
-    
     [reagent.core :as r]))
 
 
