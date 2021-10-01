@@ -1,6 +1,7 @@
 (ns athens.events.remote
   "`re-frame` events related to `:remote/*`."
   (:require
+    [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.resolver        :as resolver]
@@ -9,6 +10,8 @@
     [athens.db                            :as db]
     [athens.events.selection              :as select-events]
     [athens.util                          :as util]
+    [datascript.core                      :as d]
+    [event-sync.core                      :as event-sync]
     [malli.core                           :as m]
     [malli.error                          :as me]
     [re-frame.core                        :as rf]))
@@ -48,7 +51,9 @@
 (rf/reg-event-fx
   :remote/disconnect!
   (fn [_ _]
-    {:remote/client-disconnect! nil}))
+    {:remote/client-disconnect!   nil
+     :remote/clear-dsdb-snapshop! nil
+     :dispatch                    [:remote/stop-event-sync]}))
 
 
 ;; Remote protocol management (awaiting txs & events, accepting/rejecting events)
@@ -192,16 +197,117 @@
 
 ;; Remote graph related events
 
+
+(rf/reg-fx
+  :remote/clear-dsdb-snapshot!
+  (fn []
+    (reset! db/dsdb-snapshot nil)))
+
+
+(rf/reg-event-fx
+  :remote/snapshot-dsdb
+  (fn [_ _]
+    {:remote/snapshot-dsdb! nil}))
+
+
+(rf/reg-fx
+  :remote/snapshot-dsdb!
+  (fn []
+    (js/console.debug ":remote/snapshot-dsdb! event at time" (:max_tx @db/dsdb))
+    (reset! db/dsdb-snapshot @db/dsdb)))
+
+
+(rf/reg-event-fx
+  :remote/rollback-dsdb
+  (fn [_ _]
+    (js/console.debug ":remote/rollback-dsdb event from time" (:max_tx @db/dsdb-snapshot))
+    {:reset-conn! @db/dsdb-snapshot}))
+
+
+(rf/reg-event-db
+  :remote/start-event-sync
+  (fn [db _]
+    (assoc db :event-sync (event-sync/create-state :athens [:memory :server]))))
+
+
+(rf/reg-event-db
+  :remote/stop-event-sync
+  (fn [db _]
+    (dissoc db :event-sync)))
+
+
+(rf/reg-event-fx
+  :remote/clear-server-event
+  (fn [{db :db} [_ event]]
+    {:db (update db :event-sync (partial event-sync/remove :server (:event/id event) event))}))
+
+
+(defn- resolve-op
+  ([event]
+   (resolve-op @db/dsdb event))
+  ([db {:event/keys [type op] :as event}]
+   (if (contains? #{:op/atomic} type)
+     (atomic-resolver/resolve-atomic-op-to-tx db op)
+     (resolver/resolve-event-to-tx db event))))
+
+
+(defn- changed-order?
+  [[type _ _ _ noop?]]
+  (and (= type :add) (not noop?)))
+
+
+(rf/reg-event-fx
+  :remote/snapshot-transact
+  (fn [_ [_ tx-data]]
+    {:remote/snapshot-transact! tx-data}))
+
+
+(rf/reg-fx
+  :remote/snapshot-transact!
+  (fn [tx-data]
+    (swap! db/dsdb-snapshot
+           (fn [db]
+             (d/db-with db (->> tx-data
+                                (common-db/linkmaker db)
+                                (common-db/linkmaker db)))))))
+
+
 (rf/reg-event-fx
   :remote/apply-forwarded-event
-  (fn [{_db :db} [_ event]]
+  (fn [{db :db} [_ {:event/keys [id] :as event}]]
     (js/console.debug ":remote/apply-forwarded-event event:" (pr-str event))
-    (let [type (:event/type event)
-          txs (if (contains? #{:op/atomic} type)
-                (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb (:event/op event))
-                (resolver/resolve-event-to-tx @db/dsdb event))]
+    (let [db'            (update db :event-sync (partial event-sync/add :server id event))
+          changed-order? (changed-order? (-> db' :event-sync :last-op))
+          txs            (resolve-op @db/dsdb-snapshot event)]
+      (js/console.debug ":remote/apply-forwarded-event event changed order?:" changed-order?)
       (js/console.debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
-      {:fx [[:dispatch [:transact txs]]]})))
+      {:db db'
+       :fx [[:dispatch-n (cond-> []
+                           ;; If order does not change, just update the snapshot with tx.
+                           (not changed-order?) (into [[:remote/snapshot-transact txs]])
+                           ;; If order changes, apply the tx over the last dsdb snapshot from,
+                           ;; the server, then use that as the new snapshot, then reapply
+                           ;; all events in the memory stage.
+                           changed-order?       (into [[:remote/rollback-dsdb]
+                                                       [:transact txs]
+                                                       [:remote/snapshot-dsdb]])
+                           changed-order?       (into (map (fn [e] [:transact (-> e second resolve-op)])
+                                                           (-> db' :event-sync :stages :memory)))
+                           ;; Remove the server event after everything is done.
+                           true                  (into [[:remote/clear-server-event event]]))]]})))
+
+
+(rf/reg-event-fx
+  :remote/optimistic-apply-forwarded-event
+  (fn [{db :db} [_ {:event/keys [id] :as event}]]
+    (js/console.debug ":remote/optimistic-apply-forwarded-event event:" (pr-str event))
+    (let [txs (resolve-op event)]
+      (js/console.debug ":remote/optimistic-apply-forwarded-event resolved txs:" (pr-str txs))
+      ;; Add to event-sync and transact optimisitically.
+      {:db (update db :event-sync (partial event-sync/add :memory id event))
+       :fx [[:dispatch-n [[:transact txs]
+                          ;; TODO: very hacky, there must be a better way.
+                          [:remote/accepted-event {:event-id id}]]]]})))
 
 
 ;; - Page related

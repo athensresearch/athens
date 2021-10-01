@@ -29,7 +29,8 @@
                  [tick/tick "0.4.26-alpha"]
                  [com.rpl/specter "1.1.3"]
                  [com.taoensso/sente "1.16.2"]
-                 [org.flatland/ordered "1.5.9"]
+                 ;; TODO: use instead of local files after >1.5.9 release.
+                 ;; [org.flatland/ordered "1.5.9"]
                  ;; backend
                  ;;   logging hell
                  [org.clojure/tools.logging "1.1.0"]

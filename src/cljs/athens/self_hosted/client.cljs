@@ -22,6 +22,7 @@
 (declare open-handler)
 (declare message-handler)
 (declare close-handler)
+(declare forwarded-events)
 
 
 (defn- connect-to-self-hosted!
@@ -112,6 +113,8 @@
          (js/console.debug "WSClient sending to server:" (pr-str data))
          (await-response! data)
          (.send connection (transit/write (transit/writer :json) data))
+         (when (forwarded-events (:event/type data))
+           (rf/dispatch [:remote/optimistic-apply-forwarded-event data]))
          {:result :sent})
        (do
          (js/console.warn "WSClient not open")
@@ -322,6 +325,8 @@
     (js/console.debug "Reconstructed" (count entities) "entities")
     (rf/dispatch [:reset-conn (d/empty-db db/schema)])
     (rf/dispatch [:transact entities])
+    (rf/dispatch [:remote/snapshot-dsdb])
+    (rf/dispatch [:remote/start-event-sync])
     (rf/dispatch [:remote/last-seen-tx! last-tx])
     (rf/dispatch [:db/sync])
     (rf/dispatch [:remote/connected])
@@ -366,6 +371,49 @@
   (rf/dispatch [:remote/apply-forwarded-event args]))
 
 
+(def forwarded-events
+  #{:datascript/create-page
+    :datascript/rename-page
+    :datascript/merge-page
+    :datascript/delete-page
+    :datascript/block-save
+    :datascript/new-block
+    :datascript/add-child
+    :datascript/open-block-add-child
+    :datascript/split-block
+    :datascript/split-block-to-children
+    :datascript/unindent
+    :datascript/indent
+    :datascript/indent-multi
+    :datascript/unindent-multi
+    :datascript/page-add-shortcut
+    :datascript/page-remove-shortcut
+    :datascript/drop-child
+    :datascript/drop-multi-child
+    :datascript/drop-link-child
+    :datascript/drop-diff-parent
+    :datascript/drop-multi-diff-source-same-parents
+    :datascript/drop-multi-diff-source-diff-parents
+    :datascript/drop-link-diff-parent
+    :datascript/drop-same
+    :datascript/drop-multi-same-source
+    :datascript/drop-multi-same-all
+    :datascript/drop-link-same-parent
+    :datascript/left-sidebar-drop-above
+    :datascript/left-sidebar-drop-below
+    :datascript/unlinked-references-link
+    :datascript/unlinked-references-link-all
+    :datascript/selected-delete
+    :datascript/block-open
+    :datascript/paste
+    :datascript/paste-verbatim
+    :datascript/delete-only-child
+    :datascript/delete-merge-block
+    :datascript/bump-up
+
+    :op/atomic})
+
+
 (defn- server-event-handler
   [{:event/keys [_id last-tx type args] :as packet}]
   (js/console.debug "WSClient: server event:" (pr-str packet))
@@ -379,46 +427,7 @@
       #{:presence/offline} (presence-offline-handler args)
       #{:presence/broadcast-editing} (presence-receive-editing args)
       #{:presence/broadcast-rename} (presence-receive-rename args)
-      #{:datascript/create-page
-        :datascript/rename-page
-        :datascript/merge-page
-        :datascript/delete-page
-        :datascript/block-save
-        :datascript/new-block
-        :datascript/add-child
-        :datascript/open-block-add-child
-        :datascript/split-block
-        :datascript/split-block-to-children
-        :datascript/unindent
-        :datascript/indent
-        :datascript/indent-multi
-        :datascript/unindent-multi
-        :datascript/page-add-shortcut
-        :datascript/page-remove-shortcut
-        :datascript/drop-child
-        :datascript/drop-multi-child
-        :datascript/drop-link-child
-        :datascript/drop-diff-parent
-        :datascript/drop-multi-diff-source-same-parents
-        :datascript/drop-multi-diff-source-diff-parents
-        :datascript/drop-link-diff-parent
-        :datascript/drop-same
-        :datascript/drop-multi-same-source
-        :datascript/drop-multi-same-all
-        :datascript/drop-link-same-parent
-        :datascript/left-sidebar-drop-above
-        :datascript/left-sidebar-drop-below
-        :datascript/unlinked-references-link
-        :datascript/unlinked-references-link-all
-        :datascript/selected-delete
-        :datascript/block-open
-        :datascript/paste
-        :datascript/paste-verbatim
-        :datascript/delete-only-child
-        :datascript/delete-merge-block
-        :datascript/bump-up
-
-        :op/atomic} (forwarded-event-handler packet))
+      forwarded-events (forwarded-event-handler packet))
 
     (do
       (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))

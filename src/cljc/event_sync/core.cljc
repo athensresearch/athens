@@ -1,4 +1,4 @@
-(ns eventsync.core
+(ns event-sync.core
   (:refer-clojure :exclude [print remove type add-watch remove-watch])
   (:require
     [clojure.pprint :as pprint]
@@ -72,7 +72,7 @@
   "Add event to stage-id and remove it from previous stages.
    If this addition would be a promotion, the resulting operation will be :promote instead of :add.
    If the event is already in a further stage last-op will be marked as a noop (last element is true)."
-  [state stage-id event-id event]
+  [stage-id event-id event state]
   (let [current (event-stage state event-id)
         noop?   (boolean (and current
                               (or (= stage-id current)
@@ -94,7 +94,7 @@
 (defn remove
   "Remove event from stage-id.
    If the event is not there last-op will be marked as a noop (last element is true)."
-  [state stage-id event-id event]
+  [stage-id event-id event state]
   (let [current (event-stage state event-id)]
     (cond-> state
       ;; remove from current stage
@@ -132,13 +132,13 @@
 (defn add!
   "Mutate state-atom via add."
   [state-atom stage-id event-id event]
-  (swap! state-atom #(add % stage-id event-id event)))
+  (swap! state-atom (partial add stage-id event-id event)))
 
 
 (defn remove!
   "Mutate state-atom via remove."
   [state-atom stage-id event-id event]
-  (swap! state-atom #(remove % stage-id event-id event)))
+  (swap! state-atom (partial remove stage-id event-id event)))
 
 
 (defn add-watch

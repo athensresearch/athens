@@ -221,6 +221,7 @@
 
 
 (defonce dsdb (d/create-conn schema))
+(defonce dsdb-snapshot (atom nil))
 
 
 ;; todo: turn into an effect
