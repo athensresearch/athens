@@ -128,7 +128,7 @@
                :daily-notes/items   []
                :selection           {:items []}
                :theme/dark          false
-               :zoom-level          1
+               :zoom-level          0
                :fs/watcher          nil
                :presence            {}
                :connection-status   :disconnected})

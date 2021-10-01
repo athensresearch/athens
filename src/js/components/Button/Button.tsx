@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import { classnames } from '@/utils/classnames';
 import { useFocusRing } from '@react-aria/focus'
+import { useFocusRingEl } from '@/utils/useFocusRingEl';
 import { mergeProps } from '@react-aria/utils';
 import { DOMRoot } from '@/utils/config';
 
@@ -18,11 +19,11 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   /**
    * Button shape. Set to 'unset' to manually style padding and radius.
    */
-  shape: 'rect' | 'round' | 'unset';
+  shape?: 'rect' | 'round' | 'unset';
   /**
    * Button shape style. Set to 'unset' to manually style color and interaction styles.
    */
-  variant: 'plain' | 'gray' | 'tinted' | 'filled' | 'unset';
+  variant?: 'plain' | 'gray' | 'tinted' | 'filled' | 'unset';
   /**
    * Styles provided to the button's focus ring.
    */
@@ -161,40 +162,13 @@ const ButtonWrap = styled.button.attrs<ButtonProps>(props => {
   }
 `;
 
-const FocusRing = styled.div`
-  --inset: -3px;
-  position: absolute;
-  inset: -3px;
-  border: 2px solid var(--link-color);
-  top: calc(var(--top) + var(--inset));
-  left: calc(var(--left) + var(--inset));
-  width: calc(var(--width) - var(--inset) * 2);
-  height: calc(var(--height) - var(--inset) * 2);
-  z-index: 99999;
-
-  &.shape-round {
-    border-radius: 1000em;
-  }
-
-  &.shape-rect {
-    border-radius: calc(0.25rem - var(--inset));
-  }
-`;
-
-const focusRingRectStyle = (rectProps: DOMRect, otherProps) => {
-  return {
-    "--left": rectProps.left + 'px',
-    "--top": rectProps.top + 'px',
-    "--width": rectProps.width + 'px',
-    "--height": rectProps.height + 'px',
-    ...otherProps
-  };
+interface Result extends React.ForwardRefExoticComponent<ButtonProps> {
+  Wrap?: typeof ButtonWrap;
 }
 
-const _Button = React.forwardRef((props: ButtonProps, ref): any => {
-  let { isFocusVisible, focusProps } = useFocusRing();
+const _Button: Result = React.forwardRef((props: ButtonProps, ref): any => {
   ref = ref || React.useRef();
-  let focusRingRect = ref.current?.getBoundingClientRect();
+  let { FocusRing, focusProps } = useFocusRingEl(ref);
 
   return <>
     <ButtonWrap
@@ -205,16 +179,7 @@ const _Button = React.forwardRef((props: ButtonProps, ref): any => {
       )}>
       {props.children}
     </ButtonWrap>
-    {isFocusVisible &&
-      ReactDOM.createPortal(
-        <FocusRing className={classnames(
-          props.shape && 'shape-' + props.shape,
-          props.variant && 'variant-' + props.variant,
-        )}
-          style={focusRingRectStyle(focusRingRect, props.focusRingStyle)}
-        />, DOMRoot()
-      )
-    }
+    {FocusRing}
   </>;
 });
 

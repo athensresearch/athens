@@ -144,7 +144,7 @@
 (defn unzoom
   []
   (let [zoom-level (subscribe [:zoom-level])]
-    {:style {:font-size (str "calc(1 / " (get-zoom-pct @zoom-level) " * 100 * 100%)")}}))
+    {:font-size (str "calc(1 / " (get-zoom-pct @zoom-level) " * 100 * 100%)")}))
 
 
 (defn init
