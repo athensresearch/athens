@@ -66,6 +66,16 @@ const AppToolbarWrapper = styled.header`
   }
 `;
 
+const AthenaButton = styled(Button)`
+  ${Button.Wrap} {
+    gap: 0;
+    
+    svg {
+      margin-right: 0;
+    }
+  }
+`;
+
 export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, DatabaseMenuProps, PresenceDetailsProps {
   /**
   * The application's current route
@@ -189,7 +199,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       <Button isPressed={route === '/daily-notes'} onClick={handlePressDailyNotes}><Today /></Button>
       <Button isPressed={route === '/all-pages'} onClick={handlePressAllPages}><FileCopy /></Button>
       <Button isPressed={route === '/graph'} onClick={handlePressGraph}><BubbleChart /></Button>
-      <Button isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></Button>
+      <AthenaButton isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></AthenaButton>
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
       {presenceDetails}
