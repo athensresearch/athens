@@ -43,7 +43,7 @@
 
 (defn on-daily-page?
   [[_username user]]
-  (util/is-daily-note (:page-uid user)))
+  (util/is-daily-note (:page/uid user)))
 
 
 (rf/reg-sub
