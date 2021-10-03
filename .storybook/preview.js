@@ -4,6 +4,7 @@ import { themes } from '@storybook/theming';
 import {
   OverlayProvider
 } from '@react-aria/overlays';
+import { Toaster } from 'react-hot-toast';
 
 import { classnames } from '../src/js/components/utils/classnames';
 import { GlobalStyles } from '../src/js/components/utils/style/style';
@@ -73,6 +74,7 @@ export const decorators = [
               context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-storybook-canvas'
             )}>
             <Story />
+            <Toaster />
           </Storybook.App>
         </OverlayProvider>
       </>
