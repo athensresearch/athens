@@ -74,7 +74,11 @@ export const decorators = [
               context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-storybook-canvas'
             )}>
             <Story />
-            <Toaster />
+            <Toaster
+              containerStyle={{
+                filter: 'drop-shadow(0 0 1rem rgba(0,0,0,0.2))',
+              }}
+            />
           </Storybook.App>
         </OverlayProvider>
       </>
