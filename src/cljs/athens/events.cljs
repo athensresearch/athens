@@ -13,8 +13,8 @@
     [athens.self-hosted.client            :as client]
     [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [clojure.string                       :as string]
     [cljs.pprint                          :as pp]
+    [clojure.string                       :as string]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing                :refer-macros [fn-traced]]
@@ -1470,7 +1470,7 @@
                                                                              internal-representation)
               tx                  (resolver/resolve-event-to-tx @db/dsdb paste-internal-event)]
           (js/console.debug ":paste-internal tx" tx)
-          
+
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/paste-internal {:uid                     uid
                                                   :internal-representation internal-representation}]]]}))))

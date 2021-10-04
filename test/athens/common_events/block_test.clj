@@ -1399,6 +1399,7 @@
       (let [block-1 (common-db/get-block @@fixture/connection [:block/uid block-1-uid])]
         (t/is (= 1 (-> block-1 :block/children count)))))))
 
+
 (t/deftest paste-internal-event
   (let [block-1-uid "test-block-1-uid"
         block-2-uid "test-block-2-uid"
@@ -1410,9 +1411,9 @@
                                         :block/order    0
                                         :block/children []}
                                        {:block/uid      block-2-uid
-                                         :block/string   ""
-                                         :block/order    1
-                                         :block/children []}]}]]
+                                        :block/string   ""
+                                        :block/order    1
+                                        :block/children []}]}]]
     (d/transact @fixture/connection setup-tx)
     (let [internal-representation  [{:block/uid test-block-uid,
                                      :block/string "Copy-Paste test block",

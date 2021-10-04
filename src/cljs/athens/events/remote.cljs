@@ -892,8 +892,8 @@
   :remote/paste-internal
   (fn [{db :db} [_ {:keys [uid internal-representation] :as args}]]
     (let [last-seen-tx          (:remote/last-seen-tx db)
-           paste-internal-event (common-events/build-paste-internal-event last-seen-tx
-                                                                          uid
-                                                                          internal-representation)]
+          paste-internal-event (common-events/build-paste-internal-event last-seen-tx
+                                                                         uid
+                                                                         internal-representation)]
       (js/console.debug ":remote/paste-internal" (pr-str paste-internal-event))
       {:fx [[:dispatch [:remote/send-event!  paste-internal-event]]]})))

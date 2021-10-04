@@ -1,5 +1,6 @@
 (ns athens.listeners
   (:require
+    [athens.common-db :as common-db]
     [athens.db :as db]
     [athens.electron.utils :as electron-utils]
     [athens.events.selection :as select-events]
@@ -9,8 +10,7 @@
     [clojure.pprint :as pp]
     [clojure.string :as string]
     [goog.events :as events]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [athens.common-db :as common-db])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       EventType

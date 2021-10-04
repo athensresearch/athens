@@ -18,8 +18,8 @@
 
 
 (deftest test-walk-tree-and-update-string-with-new-uids
-  (is (=[#:block{:uid "df27e0c38", :string "((111))", :open true, :order 0}
-         #:block{:uid "b6c3d65a7", :string "((222))", :open true, :order 1}])
+  (is (= [#:block{:uid "df27e0c38", :string "((111))", :open true, :order 0}
+          #:block{:uid "b6c3d65a7", :string "((222))", :open true, :order 1}])
       (content/walk-tree-to-replace [{:block/uid "df27e0c38",
                                       :block/string "((df27e0c38))"
                                       :block/open true,
@@ -49,8 +49,8 @@
 
 
 (deftest test-walk-tree-and-update-uids-with-new-uids
-  (is (=[#:block{:uid "111", :string "((111))", :open true, :order 0}
-         #:block{:uid "222", :string "((222))", :open true, :order 1}])
+  (is (= [#:block{:uid "111", :string "((111))", :open true, :order 0}
+          #:block{:uid "222", :string "((222))", :open true, :order 1}])
       (content/update-uids [{:block/uid "df27e0c38",
                              :block/string "((df27e0c38))"
                              :block/open true,

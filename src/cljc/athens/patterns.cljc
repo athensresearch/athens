@@ -11,17 +11,17 @@
                    "|" "(#\\[{2})" string "(\\]{2})"
                    "|" "(\\({2})" string "(\\){2})")))
 
+
 (def block-pattern
   (re-pattern "\\(\\((?!\\s)\\S+?(?=\\)\\))(?<!\\s)\\)\\)"))
 
 
 (def block-embed-pattern
-    (re-pattern (str "\\{\\{\\[\\[embed\\]\\]: " block-pattern "\\}\\}")))
+  (re-pattern (str "\\{\\{\\[\\[embed\\]\\]: " block-pattern "\\}\\}")))
 
 
 (def block-refs-pattern
-    (re-pattern (str block-pattern "|" block-embed-pattern)))
-
+  (re-pattern (str block-pattern "|" block-embed-pattern)))
 
 
 (defn unlinked

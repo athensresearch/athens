@@ -233,6 +233,7 @@
     [:map
      [:uids [:vector string?]]]]])
 
+
 (def datascript-paste-internal
   [:map
    [:event/args

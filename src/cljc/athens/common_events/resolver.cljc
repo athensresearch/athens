@@ -1330,15 +1330,17 @@
     (println "resolver :datascript/paste tx-data is" (pr-str tx-data))
     tx-data))
 
+
 (defn prepare-data-for-paste
   "Given an internal representation we need to modify the block order of level 1 blocks
    in the internal representation."
   [data start-index parent-uid]
 
   (let [updated-order (map-indexed (fn [idx itm] (assoc itm :block/order (+ idx start-index)))
-                              data)
-        tx-data       (map (fn [x] {:block/uid parent-uid
-                                    :block/children x})
+                                   data)
+        tx-data       (map (fn [x]
+                             {:block/uid parent-uid
+                              :block/children x})
                            updated-order)]
     tx-data))
 

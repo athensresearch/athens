@@ -1,11 +1,13 @@
 (ns athens.views.blocks.content
   (:require
+    [athens.common-db :as common-db]
+    [athens.common.utils :as utils]
     [athens.config :as config]
     [athens.db :as db]
     [athens.electron.images :as images]
     [athens.events.selection :as select-events]
-    [athens.patterns :as patterns]
     [athens.parse-renderer :refer [parse-and-render]]
+    [athens.patterns :as patterns]
     [athens.style :as style]
     [athens.subs.selection :as select-subs]
     [athens.util :as util]
@@ -13,15 +15,13 @@
     [cljs.pprint :as pp]
     [clojure.edn :as edn]
     [clojure.set :as set]
+    [clojure.string :as str]
     [clojure.walk :as walk]
     [garden.selectors :as selectors]
     [goog.events :as goog-events]
     [komponentit.autosize :as autosize]
     [re-frame.core :as rf]
-    [stylefy.core :as stylefy]
-    [athens.common.utils :as utils]
-    [athens.common-db :as common-db]
-    [clojure.string :as str])
+    [stylefy.core :as stylefy])
   (:import
     (goog.events
       EventType)))
@@ -271,8 +271,8 @@
   (let [all-old-uids (mapcat #(->> %
                                    (tree-seq :block/children :block/children)
                                    (mapv :block/uid))
-                           tree)
-        mapped-uids (reduce #(assoc %1 %2 (utils/gen-block-uid)) {} all-old-uids)] ;; Replace with zipmap
+                             tree)
+        mapped-uids (reduce #(assoc %1 %2 (utils/gen-block-uid)) {} all-old-uids)] ; Replace with zipmap
     mapped-uids))
 
 
@@ -300,11 +300,11 @@
                                                        (and embed? new-uid)       (str "{{[[embed]]: ((" new-uid "))}}")
                                                        (and (not embed?) new-uid) (str "((" new-uid "))")
                                                        :else                      ref)]
-                                       (if new-uid
-                                         (str/replace block-string
-                                                         ref
-                                                         replace-with)
-                                         block-string)))
+                                    (if new-uid
+                                      (str/replace block-string
+                                                   ref
+                                                   replace-with)
+                                      block-string)))
                                 block-string
                                 parsed-uids)]
     replaced-string))
@@ -322,7 +322,7 @@
                        (= replace-keyword :block/string) [:block/string (update-strings-with-new-uids (last x)
                                                                                                       mapped-uids)])
                      x))
-       tree))
+                 tree))
 
 
 (defn update-uids
@@ -334,7 +334,7 @@
         blocks-with-replaced-strings (walk-tree-to-replace block-uids-replaced
                                                            mapped-uids
                                                            :block/string)]
-     blocks-with-replaced-strings))
+    blocks-with-replaced-strings))
 
 
 (defn textarea-paste
@@ -361,7 +361,7 @@
                                     edn/read-string)
         ;; With internal representation
         internal-representation  (some-> (.getData data "application/athens-representation")
-                                       edn/read-string)
+                                         edn/read-string)
         internal?           (not (empty? internal-representation))
         new-uids            (new-uids-map internal-representation)
         repr-with-new-uids  (into [] (update-uids internal-representation new-uids))
