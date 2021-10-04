@@ -16,9 +16,7 @@ const ToasterProps = {
 export const NotificationContainer = () => {
   return (
     <Toaster {...ToasterProps}>
-      {(t) => (
-        <NotificationItem {...t}>{resolveValue(t.message, t)}</NotificationItem>
-      )}
+      {(t) => <NotificationItem {...t}>{resolveValue(t.message, t)}</NotificationItem>}
     </Toaster>
   );
 };

@@ -77,10 +77,6 @@ const Wrap = styled.div`
   }
 `;
 
-const DismissButton = styled(Button)``;
-
-const UndoButton = styled(Button)``;
-
 export const NotificationItem = (t: Notification) => {
   const { isDismissable, onUndo, undoMessage, ...rest } = t;
   const ref = React.useRef<HTMLDivElement>(null);
@@ -121,19 +117,19 @@ export const NotificationItem = (t: Notification) => {
     >
       {t.children}
       {t.onUndo && (
-        <UndoButton
+        <Button
           shape="round"
           onClick={handleUndo}
         >
           Undo
-        </UndoButton>
+        </Button>
       )}
       {t.isDismissable && (
-        <DismissButton shape="round" onClick={() => notify.dismiss(t.id)}>
+        <Button shape="round" onClick={() => notify.dismiss(t.id)}>
           <Icon style={{ padding: "0.125rem", "--size": "1.25rem" }}>
             <X />
           </Icon>
-        </DismissButton>
+        </Button>
       )}
     </Wrap>
   );
