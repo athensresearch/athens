@@ -27,19 +27,9 @@
                                      {:block/uid "b6c3d65a7",
                                       :block/string "((b6c3d65a7))",,
                                       :block/open true,}]
-                           (update-uids [{:block/uid "df27e0c38",}])
-                         :block/string "((df27e0c38))"
-                         :block/open true,
-                         :block/order 0
-              {:block/uid "b6c3d65a7",
-               :block/string "((b6c3d65a7))",,
-               :block/open true,
-               :block/order 1
-                              {"df27e0c38" "111"
-                               "b6c3d65a7" "222"}           :block/order 1
-                            {"df27e0c38" "111"
-                             "b6c3d65a7" "222"}
-                            :block/string})))
+                                    {"df27e0c38" "111"
+                                     "b6c3d65a7" "222"}
+                                    :block/string)))
 
 
 (deftest test-walk-tree-and-update-uids-with-new-uids

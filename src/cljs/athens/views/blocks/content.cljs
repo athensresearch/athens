@@ -372,12 +372,6 @@
         {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
         img-regex           #"(?i)^image/(p?jpeg|gif|png)$"]
 
-    ;; TODO Remove the logs
-    (println "copied data is:")
-    (pp/pprint  internal-representation)
-
-    (println "Uid mappings")
-    (pp/pprint new-uids)
 
     (println " Representation with updated uids")
     (pp/pprint repr-with-new-uids)

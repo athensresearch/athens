@@ -891,10 +891,6 @@
 (rf/reg-event-fx
   :remote/paste-internal
   (fn [{db :db} [_ {:keys [uid internal-representation] :as args}]]
-    (println ":remote/paste-internal args is ")
-    (println "uid is" uid)
-    (println "internal representation is " internal-representation)
-    (cljs.pprint/pprint args)
     (let [last-seen-tx          (:remote/last-seen-tx db)
            paste-internal-event (common-events/build-paste-internal-event last-seen-tx
                                                                           uid

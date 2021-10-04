@@ -191,15 +191,11 @@
                              #(common-db/get-block-document-for-copy  @db/dsdb [:block/uid %])
                              uids)]
 
-        ;; TODO Remove the prints afterwards
         (println "Copied blocks representation")
         (pp/pprint copied-blocks)
 
         (doto clipboard-data
           (.setData "text/plain" copy-data)
-          ;; TODO: internal Athens representation of copied data,
-          ;; so it can be Pasted even if source was deleted
-          ;; {:block/keys [uid string children order open]}
           (.setData "application/athens-representation" (pr-str copied-blocks))
           (.setData "application/athens" (pr-str {:uids uids})))
         (.preventDefault e)))))

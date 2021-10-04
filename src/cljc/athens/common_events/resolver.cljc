@@ -1331,25 +1331,21 @@
     tx-data))
 
 (defn prepare-data-for-paste
+  "Given an internal representation we need to modify the block order of level 1 blocks
+   in the internal representation."
   [data start-index parent-uid]
-  ;; Given internal representation modify it so it can be pasted.
-  ;; We need to modify the block order of the level 1 blocks
-  
+
   (let [updated-order (map-indexed (fn [idx itm] (assoc itm :block/order (+ idx start-index)))
                               data)
         tx-data       (map (fn [x] {:block/uid parent-uid
                                     :block/children x})
                            updated-order)]
-
-    (println "prepare-data-for-paste tx-data is :")
-    ;(pp/pprint tx-data)
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/paste-internal
   [db {:event/keys [args]}]
 
-  (println "resolver :datascript/paste-internal args" (pr-str args))
   (let [{:keys [uid
                 internal-representation]} args
         current-block                     (common-db/get-block db [:block/uid uid])
@@ -1397,18 +1393,11 @@
         ;; Retract the block
         retract                           (when empty-block? [[:db/retractEntity [:block/uid uid]]])
         ;; Put it all together
-        tx-data                                   (concat reindexed-blocks
-                                                          paste-tx-data
-                                                          retract)]
-    ;; TODO : Clean this up
-    ;; (println "is block empty?" empty-block?)
-    ;; (println "current block order " order)
-    ;; (println "blocks count to copy is " blocks-count)
-    ;; (println "new block order is " new-block-order)
-    (println "paste-internal reindexed blocks are:")
-    ;(pp/pprint reindexed-blocks)
+        tx-data                           (concat reindexed-blocks
+                                                  paste-tx-data
+                                                  retract)]
     (println "resolver :datascript/paste-internal tx-data is")
-    ;(pp/pprint tx-data)
+    (pp/pprint tx-data)
     tx-data))
 
 
