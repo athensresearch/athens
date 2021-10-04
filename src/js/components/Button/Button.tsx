@@ -73,8 +73,24 @@ const ButtonWrap = styled.button.attrs<ButtonProps>(props => {
     flex: 1 0 auto;
   }
 
-  > svg {
-    margin: -0.0835em -0.325rem;
+  /* Shapes */
+  &.shape-rect {
+    --padding-v: 0.375rem;
+    --padding-h: 0.625rem;
+    border-radius: 0.25rem;
+    padding: var(--padding-v) var(--padding-h);
+  }
+
+  &.shape-round {
+    --padding-v: 0.375rem;
+    --padding-h: 0.625rem;
+    border-radius: 2rem;
+    padding: var(--padding-v) var(--padding-h);
+  }
+
+  svg:not(& * svg) {
+    --icon-padding: 0.25rem;
+    margin: calc((var(--padding-v) * -1) + var(--icon-padding)) calc((var(--padding-h) * -1) + var(--icon-padding));
 
     &:not(:first-child) {
       margin-left: 0.251em;
@@ -82,17 +98,6 @@ const ButtonWrap = styled.button.attrs<ButtonProps>(props => {
     &:not(:last-child) {
       margin-right: 0.251em;
     }
-  }
-
-  /* Shapes */
-  &.shape-rect {
-    border-radius: 0.25rem;
-    padding: 0.375rem 0.625rem;
-  }
-
-  &.shape-round {
-    border-radius: 2rem;
-    padding: 0.375em 0.8rem;
   }
 
   /* Variants */
