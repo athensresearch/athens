@@ -28,11 +28,11 @@ const Wrap = styled.div`
   opacity: 0;
   transition: all 0.25s ease-out;
   animation: ${appear} 0.25s ease-out;
-  backdrop-filter: blur(20px);
   z-index: 1;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  position: relative;
 
   button:not(& * button):last-child {
     margin-right: -0.5rem;
@@ -46,11 +46,15 @@ const Wrap = styled.div`
   &:before {
     content: "";
     position: absolute;
-    background: var(--background-color—-opacity-med);
-    opacity: 0.5;
     z-index: -1;
     inset: 0;
     border-radius: inherit;
+    background: var(--background-color—-opacity-med);
+
+    @supports (backdrop-filter: blur(10px)) {
+      background: var(--background-color—-opacity-low);
+      backdrop-filter: blur(10px);
+    }
   }
 
   &.visible {
@@ -100,6 +104,8 @@ export const NotificationItem = (t: Notification) => {
     updateNotification()
   }
 
+  const handleDismiss = () => notify.dismiss(t.id);
+
   return (
     <Wrap
       {...mergeProps(
@@ -125,7 +131,7 @@ export const NotificationItem = (t: Notification) => {
         </Button>
       )}
       {t.isDismissable && (
-        <Button shape="round" onClick={() => notify.dismiss(t.id)}>
+        <Button shape="round" onClick={handleDismiss}>
           <Icon style={{ padding: "0.125rem", "--size": "1.25rem" }}>
             <X />
           </Icon>

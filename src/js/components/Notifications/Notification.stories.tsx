@@ -1,6 +1,6 @@
 import { Storybook } from "@/utils/storybook";
 
-import { notify } from "@/Notifications/Notifications";
+import { notify, Notification } from "@/Notifications/Notifications";
 import { Button } from "@/Button";
 import { Indeterminate } from "@/Spinner/components/Indeterminate";
 
@@ -29,7 +29,7 @@ export const Active = () => {
           notify("You did something you might not have meant to", {
             id: "undoable-0",
             onUndo: () => console.log('undid action')
-          })
+          } as Notification)
         }
       >
         Undoable Action
@@ -43,7 +43,7 @@ export const Active = () => {
             isDismissable: true,
             undoMessage: 'Undid the thing',
             onUndo: () => console.log('undid action')
-          })
+          } as Notification)
         }
       >
         Undoable Success Action
@@ -58,7 +58,7 @@ export const Active = () => {
             {
               id: "loading",
               position: "bottom-center",
-            }
+            } as Notification
           )
         }
       >
@@ -67,7 +67,7 @@ export const Active = () => {
       <Button
         variant="tinted"
         onClick={() =>
-          notify.error("Error! Something went wrong", { isDismissable: true })
+          notify.error("Error! Something went wrong", { isDismissable: true } as Notification)
         }
       >
         Dismissable Error
@@ -79,7 +79,7 @@ export const Active = () => {
             duration: Infinity,
             isDismissable: true,
             position: "top-left",
-          })
+          } as Notification)
         }
       >
         Custom Position
