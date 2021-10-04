@@ -2,14 +2,10 @@
   "`re-frame` events related to `:remote/*`."
   (:require
     [athens.common-db                     :as common-db]
-    [athens.common-events                 :as common-events]
-    [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common-events.schema          :as schema]
     [athens.db                            :as db]
-    [athens.events.selection              :as select-events]
-    [athens.util                          :as util]
     [datascript.core                      :as d]
     [event-sync.core                      :as event-sync]
     [malli.core                           :as m]

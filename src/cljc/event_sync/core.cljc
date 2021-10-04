@@ -110,6 +110,7 @@
     ;; Reverse the order of each event list before concatenating to show newest to oldest.
     (-> events reverse vec)))
 
+
 (defn log
   "Returns a vector of all events in state, as [event-id event] pairs, from newest to oldest."
   [state]
@@ -165,7 +166,7 @@
     (clojure.core/add-watch state-atom key f)))
 
 
-(defn un-watch!
+(defn remove-watch
   "Remove watcher under key added via add-watch."
   [state-atom key]
   (clojure.core/remove-watch state-atom key))

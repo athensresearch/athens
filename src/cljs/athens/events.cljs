@@ -606,7 +606,7 @@
 
 (reg-event-fx
   :page/rename
-  (fn [{:keys [db]} db [_ {:keys [page-uid old-name new-name callback] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [page-uid old-name new-name callback] :as args}]]
     (js/console.debug ":page/rename args:" (pr-str (select-keys args [:page-uid
                                                                       :old-name
                                                                       :new-name])))
