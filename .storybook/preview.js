@@ -4,7 +4,7 @@ import { themes } from '@storybook/theming';
 import {
   OverlayProvider
 } from '@react-aria/overlays';
-import { Toaster } from 'react-hot-toast';
+import { NotificationContainer } from '@/Notifications/Notifications';
 
 import { classnames } from '../src/js/components/utils/classnames';
 import { GlobalStyles } from '../src/js/components/utils/style/style';
@@ -74,11 +74,7 @@ export const decorators = [
               context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-storybook-canvas'
             )}>
             <Story />
-            <Toaster
-              containerStyle={{
-                filter: 'drop-shadow(0 0 1rem rgba(0,0,0,0.2))',
-              }}
-            />
+            <NotificationContainer />
           </Storybook.App>
         </OverlayProvider>
       </>
