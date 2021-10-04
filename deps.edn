@@ -1,3 +1,53 @@
-{:aliases {:carve {:extra-deps {borkdude/carve {:git/url "https://github.com/borkdude/carve"
-                                     :sha "4b5010a09e030dbd998faff718d12400748ab3b9"}}
-           :main-opts ["-m" "carve.main"]}}}
+{:aliases
+ {:carve
+  {:extra-deps
+   #:borkdude{carve
+              {:git/url "https://github.com/borkdude/carve",
+               :sha     "4b5010a09e030dbd998faff718d12400748ab3b9"}},
+   :main-opts ["-m" "carve.main"]}},
+
+ :paths ["src" "target/classes"],
+
+ :deps
+ {org.clojure/clojure                   #:mvn{:version "1.10.3"},
+  org.clojure/clojurescript             #:mvn{:version "1.10.879"},
+  thheller/shadow-cljs                  #:mvn{:version "2.15.3"},
+  reagent/reagent                       #:mvn{:version "1.0.0"},
+  re-frame/re-frame                     #:mvn{:version "1.2.0"},
+  day8.re-frame/async-flow-fx           #:mvn{:version "0.2.0"},
+  datascript/datascript                 #:mvn{:version "1.1.0"},
+  datascript-transit/datascript-transit #:mvn{:version "0.3.0"},
+  denistakeda/posh                      #:mvn{:version "0.5.8"},
+  cljs-http/cljs-http                   #:mvn{:version "0.1.46"},
+  metosin/reitit                        #:mvn{:version "0.5.13"},
+  metosin/komponentit                   #:mvn{:version "0.3.10"},
+  instaparse/instaparse                 #:mvn{:version "1.4.10"},
+  borkdude/sci                          #:mvn{:version "0.2.5"},
+  garden/garden                         #:mvn{:version "1.3.10"},
+  stylefy/stylefy                       #:mvn{:version "3.0.0"},
+  stylefy/reagent                       #:mvn{:version "3.0.0"},
+  tick/tick                             #:mvn{:version "0.4.26-alpha"},
+  com.rpl/specter                       #:mvn{:version "1.1.3"},
+  com.taoensso/sente                    #:mvn{:version "1.16.2"},
+  ;; TODO: use instead of local files after >1.5.9 release.
+  ;; [org.flatland/ordered "1.5.9"]
+  ;; backend
+  ;;   logging hell
+  org.clojure/tools.logging             #:mvn{:version "1.1.0"},
+  ch.qos.logback/logback-classic        #:mvn{:version "1.2.3"},
+  ;;   IoC
+  com.stuartsierra/component            #:mvn{:version "1.0.0"},
+  ;;   configuration mgmt
+  yogthos/config                        #:mvn{:version "1.1.7"},
+  ;;   Datahike
+  ;;   TODO: monitor https://github.com/replikativ/datahike/issues/364 and
+  ;;   and uncomment tests that refer to this issue when it is fixed.
+  io.replikativ/datahike                #:mvn{:version "0.3.7-SNAPSHOT"},
+  ;; web server
+  http-kit/http-kit                     #:mvn{:version "2.5.3"}
+  compojure/compojure                   #:mvn{:version "1.6.2"},
+  ;; data validation
+  metosin/malli                         #:mvn{:version "0.5.1"},
+  ;; networked repl
+  com.stuartsierra/component.repl       #:mvn{:version "0.2.0"},
+  nrepl/nrepl                           #:mvn{:version "0.8.3"},}}
