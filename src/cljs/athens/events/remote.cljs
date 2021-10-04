@@ -170,11 +170,14 @@
     (js/console.debug ":remote/apply-forwarded-event event:" (pr-str event))
     (let [db'            (update db :event-sync (partial event-sync/add :server id event))
           changed-order? (changed-order? (-> db' :event-sync :last-op))
+          memory-log     (event-sync/stage-log (:event-sync db) :memory)
           txs            (resolve-op @db/dsdb-snapshot event)]
       (js/console.debug ":remote/apply-forwarded-event event changed order?:" changed-order?)
       (js/console.debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
       {:db db'
        :fx [[:dispatch-n (cond-> []
+                           ;; Mark as synced if there's no events left in memory.
+                           (empty? memory-log)  (into [[:db/sync]])
                            ;; If order does not change, just update the snapshot with tx.
                            (not changed-order?) (into [[:remote/snapshot-transact txs]])
                            ;; If order changes, apply the tx over the last dsdb snapshot from,
@@ -194,4 +197,5 @@
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
     (js/console.debug ":remote/forward-event event:" (pr-str event))
     {:db (update db :event-sync (partial event-sync/add :memory id event))
-     :fx [[:dispatch [:remote/send-event! event]]]}))
+     :fx [[:dispatch-n [[:remote/send-event! event]
+                        [:db/not-synced]]]]}))

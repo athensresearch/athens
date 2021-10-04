@@ -103,11 +103,17 @@
       true    (update-op (op :remove stage-id event-id event (not current))))))
 
 
+(defn stage-log
+  "Returns a vector of all events in a stage, as [event-id event] pairs, from newest to oldest."
+  [state stage]
+  (when-let [events (-> state :stages (get stage))]
+    ;; Reverse the order of each event list before concatenating to show newest to oldest.
+    (-> events reverse vec)))
+
 (defn log
-  "Returns a vector of all events in state, from newest to oldest."
+  "Returns a vector of all events in state, as [event-id event] pairs, from newest to oldest."
   [state]
-  ;; Reverse the order of each event list before concatenating to show newest to oldest.
-  (vec (mapcat (comp reverse second) (:stages state))))
+  (vec (mapcat (comp (partial stage-log state) first) (:stages state))))
 
 
 (defn print
