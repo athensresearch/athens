@@ -20,7 +20,8 @@
     [re-frame.core :as rf]
     [stylefy.core :as stylefy]
     [athens.common.utils :as utils]
-    [athens.common-events.resolver :as resolver])
+    [athens.common-db :as common-db]
+    [clojure.string :as str])
   (:import
     (goog.events
       EventType)))
@@ -275,72 +276,65 @@
     mapped-uids))
 
 
-(defn parse-string-for-blocks
-  "Takes a string of text and parses it for block refs, block embeds using Regx
-   Time complexity analsis: O(W) --> W is the no. of words in the string
+(defn update-strings-with-new-uids
+  "Takes a string of text and parses it for block refs, block embeds using regex. Then replace the matched pattern
+   with new refs.
 
    Pattern: Strings should not have a space before, after or in between the block uid
             In the following example no pattern is valid:
             (()) (( uid)) ((uid )) (( uid )) ((Uid with space))
 
             To understand the regex pattern like lookback etc. checkout this link: https://stackoverflow.com/questions/2973436/regex-lookahead-lookbehind-and-atomic-groups
-
-            block-pattern is a string used to pass a variable to re-pattern
-
    "
-  [block-string]
-  (println "block-string is " block-string)
-  (let [block-pattern "\\(\\((?!\\s)\\S+?(?=\\)\\))(?<!\\s)\\)\\)"
-        pattern (re-pattern (str block-pattern "|"
-                                 "\\{\\{\\[\\[embed\\]\\]: " block-pattern "\\}\\}"))
-        matched-strings (re-matches pattern block-string)]
-    (println "pattern" pattern)
+  [block-string mapped-uids]
+  (let [parsed-uids     (into #{} (re-seq patterns/block-refs-pattern
+                                          block-string))
+        replaced-string (reduce (fn [block-string ref]
+                                  (let [embed?       (not (empty? (re-find patterns/block-embed-pattern
+                                                                           ref)))
+                                        uid          (if embed?
+                                                       (common-db/strip-markup ref "{{[[embed]]: ((" "))}}")
+                                                       (common-db/strip-markup ref "((" "))"))
+                                        new-uid      (get mapped-uids uid nil)
+                                        replace-with (cond
+                                                       (and embed? new-uid)       (str "{{[[embed]]: ((" new-uid "))}}")
+                                                       (and (not embed?) new-uid) (str "((" new-uid "))")
+                                                       :else                      ref)]
+                                       (if new-uid
+                                         (str/replace block-string
+                                                         ref
+                                                         replace-with)
+                                         block-string)))
+                                block-string
+                                parsed-uids)]
+    replaced-string))
 
-    (println "matched pattern is " matched-strings)
-    matched-strings))
 
+(defn walk-tree-to-replace
+  "Walk the internal representation and replace specific key-value pairs. This is inspired from the
+  `walk/postwalk-replace` implementation."
+  [tree mapped-uids replace-keyword]
+  (walk/postwalk (fn [x]
+                   (if (and (vector? x)
+                            (= (first x) replace-keyword))
+                     (cond
+                       (= replace-keyword :block/uid)    [:block/uid    (mapped-uids (last x))]
+                       (= replace-keyword :block/string) [:block/string (update-strings-with-new-uids (last x)
+                                                                                                      mapped-uids)])
+                     x))
+       tree))
 
 
 (defn update-uids
-  "Check `map-new-refs`, athens.patterns, `update-links-in-blocks`,
-   Implementation :
-     - Traverse the tree in any order
-     - Replace the :block/uid with new one
-     - Get string for each block
-     - Check for refs in the block
-       - If the ref is there in the mapped-uids then replace with the correct one
-       - Else
-         - Fetch the block content for the uid
-         - Replace the uid with the content
-     - Return the new tree
-   "
+  "In the internal representation replace the uids and block-strings with new uids."
   [tree mapped-uids]
-  ;; Postwalk has bug if the block content is same as the uid then both of them will change
-  (let [block-uids-replaced (map #(walk/postwalk-replace mapped-uids %)
-                                  tree)
-
-        ;; Parse the string find all the uids in that string and then replace those
-        ;; uids in the string.
-        ;; Parsing outputs the uids matched
-        ;; For each uid in the string replace the string or if not found then get the
-        ;; block data for it and replace it.
-
-        ;; Walk the tree
-        ;; For every node replace its :block/string with a new block string that is updated by new uids.
-        ;; Need to make this readable, options coming to mind are not. First make this work and then wil make it readable.
-
-        #_string-replaced     #_(->> (first tree)
-                                     ;; Get the string
-                                     (tree-seq :block/children :block/children)
-                                     (map :block/string) ;; Returns the string of children also
-                                     ;; Parse it for:
-                                     ;; Block refs, block embeds
-                                     (last)
-                                     (parse-string-for-blocks))]
-
-     ;(println "replaced uids")))
-     ;(pp/pprint block-uids-replaced)
-      block-uids-replaced))
+  (let [block-uids-replaced          (walk-tree-to-replace tree
+                                                           mapped-uids
+                                                           :block/uid)
+        blocks-with-replaced-strings (walk-tree-to-replace block-uids-replaced
+                                                           mapped-uids
+                                                           :block/string)]
+     blocks-with-replaced-strings))
 
 
 (defn textarea-paste

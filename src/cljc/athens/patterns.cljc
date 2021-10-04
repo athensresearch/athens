@@ -11,6 +11,17 @@
                    "|" "(#\\[{2})" string "(\\]{2})"
                    "|" "(\\({2})" string "(\\){2})")))
 
+(def block-embed-pattern
+  (let [block-pattern   "\\(\\((?!\\s)\\S+?(?=\\)\\))(?<!\\s)\\)\\)"]
+    (re-pattern (str "\\{\\{\\[\\[embed\\]\\]: " block-pattern "\\}\\}"))))
+
+
+(def block-refs-pattern
+  (let [block-pattern   "\\(\\((?!\\s)\\S+?(?=\\)\\))(?<!\\s)\\)\\)"
+        embed-pattern   (re-pattern (str "\\{\\{\\[\\[embed\\]\\]: " block-pattern "\\}\\}"))]
+    (re-pattern (str block-pattern "|" embed-pattern))))
+
+
 
 (defn unlinked
   "Exclude #title or [[title]].
