@@ -36,7 +36,6 @@
 
 
 (def ^:private send-queue (atom []))
-(def ^:private awaiting-response (atom {}))
 
 
 (def ^:private reconnect-timer (atom nil))
@@ -48,8 +47,7 @@
   [{:event/keys [id] :as data}]
   (js/console.log "WSClient awaiting response:" (str id) (str data))
   ;; message-handler will set the app as synced once a response has arrived.
-  (rf/dispatch [:db/not-synced])
-  (swap! awaiting-response assoc id data))
+  (rf/dispatch [:db/not-synced]))
 
 
 (defn- reconnecting?
@@ -113,8 +111,6 @@
          (js/console.debug "WSClient sending to server:" (pr-str data))
          (await-response! data)
          (.send connection (transit/write (transit/writer :json) data))
-         (when (forwarded-events (:event/type data))
-           (rf/dispatch [:remote/optimistic-apply-forwarded-event data]))
          {:result :sent})
        (do
          (js/console.warn "WSClient not open")
@@ -188,33 +184,23 @@
 
 (defn- awaited-response-handler
   [{:event/keys [id status] :as packet}]
-  (let [req-event (get @awaiting-response id)]
-    (js/console.log "WSClient: response " (pr-str packet)
-                    "to awaited event" (pr-str req-event))
-    (swap! awaiting-response dissoc id)
-    ;; is it hello confirmation?
-    (if (= @await-open-event-id id)
-      (finished-open-handler packet)
-      ;; is valid response?
-      (if (schema/valid-event-response? packet)
-        (do
-          (js/console.debug "Received valid response.")
-          (condp = status
-            :accepted
-            (let [{:accepted/keys [tx-id]} packet]
-              (js/console.log "Event" id "accepted in tx" tx-id)
-              (rf/dispatch [:remote/accept-event {:event-id id
-                                                  :tx-id    tx-id}]))
-            :rejected
-            (let [{:reject/keys [reason data]} packet]
-              (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data))
-              (rf/dispatch [:remote/reject-event {:event-id id
-                                                  :reason   reason
-                                                  :data     data}]))))
-        (let [explanation (schema/explain-event-response packet)]
-          (js/console.warn "Received invalid response:" (pr-str explanation))
-          (rf/dispatch [:remote/fail-event {:event-id id
-                                            :reason   explanation}]))))))
+  (js/console.log "WSClient: response " (pr-str packet))
+  ;; is it hello confirmation?
+  (if (= @await-open-event-id id)
+    (finished-open-handler packet)
+    ;; is valid response?
+    (if (schema/valid-event-response? packet)
+      (do
+        (js/console.debug "Received valid response.")
+        (condp = status
+          :accepted
+          (let [{:accepted/keys [tx-id]} packet]
+            (js/console.log "Event" id "accepted in tx" tx-id))
+          :rejected
+          (let [{:reject/keys [reason data]} packet]
+            (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data)))))
+      (let [explanation (schema/explain-event-response packet)]
+        (js/console.warn "Received invalid response:" id (pr-str explanation))))))
 
 
 (defn- local-eid

@@ -170,19 +170,6 @@
 
 
 (rf/reg-sub
-  :remote/followup
-  (fn [db _]
-    (:remote/followup db {})))
-
-
-(rf/reg-sub
-  :remote/followup-for
-  :<- [:remote/followup]
-  (fn [followups [_ event-id]]
-    (get followups event-id)))
-
-
-(rf/reg-sub
   :connection-status
   (fn [db _]
     (:connection-status db)))

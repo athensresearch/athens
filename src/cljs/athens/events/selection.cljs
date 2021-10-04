@@ -1,9 +1,7 @@
 (ns athens.events.selection
   (:require
     [athens.common-events          :as common-events]
-    [athens.common-events.resolver :as resolver]
     [athens.db                     :as db]
-    [athens.self-hosted.client     :as client]
     [re-frame.core                 :as rf]))
 
 
@@ -44,21 +42,15 @@
 
 (rf/reg-event-fx
   ::delete
-  (fn [{rf-db :db} _]
-    (let [local?         (not (client/open?))
-          selected-uids  (get-in rf-db [:selection :items])
+  (fn [{:keys [db]} _]
+    (let [selected-uids  (get-in db [:selection :items])
           sanitized-uids (map (comp first db/uid-and-embed-id) selected-uids)]
       (js/console.debug ::delete "args" selected-uids)
-      (js/console.log ::delete "local?" local?)
-      (if local?
-        (let [selected-delete-event (common-events/build-selected-delete-event -1
-                                                                               sanitized-uids)
-              tx                    (resolver/resolve-event-to-tx @db/dsdb selected-delete-event)]
-          (js/console.debug ::delete "tx" tx)
-          {:fx [[:dispatch-n [[:transact    tx]
-                              [:editing/uid nil]]]]
-           :db (assoc-in rf-db [:selection :items] [])})
-        {:fx [[:dispatch [:remote/selected-delete selected-uids]]]}))))
+      (let [event (common-events/build-selected-delete-event (:remote/last-seen-tx db)
+                                                             sanitized-uids)]
+        {:fx [[:dispatch-n [[:transact-and-forward event]
+                            [:editing/uid          nil]]]]
+         :db (assoc-in db [:selection :items] [])}))))
 
 
 (rf/reg-event-db

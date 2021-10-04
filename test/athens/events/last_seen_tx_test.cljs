@@ -56,23 +56,3 @@
           (rf-test/wait-for
             [:remote/updated-last-seen-tx]
             (is (= new-2 @last-seen-tx))))))))
-
-
-(deftest last-seen-not-updated-when-accepted-event
-  (rf-test/run-test-async
-    (fixture/test-fixtures)
-    (rf/dispatch-sync [:boot/web])
-    (let [last-seen-tx (rf/subscribe [:remote/last-seen-tx])
-          awaited-tx   (rf/subscribe [:remote/awaited-tx])
-          new-tx-id    10
-          accept-event {:event-id (:event/id fixture/test-event)
-                        :tx-id    new-tx-id}]
-      (is (= -1 @last-seen-tx))
-
-      (rf/dispatch [:remote/await-event fixture/test-event])
-      (rf/dispatch [:remote/accept-event accept-event])
-      (rf-test/wait-for
-        [:remote/accepted-event]
-
-        (is (= -1 @last-seen-tx))
-        (is (= #{10} @awaited-tx))))))
