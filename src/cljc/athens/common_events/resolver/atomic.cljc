@@ -43,16 +43,15 @@
                                                     (catch #?(:clj ExceptionInfo
                                                               :cljs js/Error) _ex
                                                       {:block/string ""}))]
-    (if (= stored-old-string old-string)
-      (let [now           (utils/now-ts)
-            updated-block {:block/uid    block-uid
-                           :block/string new-string
-                           :edit/time    now}]
-        [updated-block])
-      (throw
-        (ex-info ":block/save operation started from a stale state."
-                 {:op/args           args
-                  :actual-old-string stored-old-string})))))
+    (when-not (= stored-old-string old-string)
+      (print (ex-info ":block/save operation started from a stale state."
+                      {:op/args           args
+                       :actual-old-string stored-old-string})))
+    (let [now           (utils/now-ts)
+          updated-block {:block/uid    block-uid
+                         :block/string new-string
+                         :edit/time    now}]
+      [updated-block])))
 
 
 (defmethod resolve-atomic-op-to-tx :page/new
