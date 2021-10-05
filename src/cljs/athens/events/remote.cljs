@@ -166,7 +166,7 @@
     (js/console.debug ":remote/apply-forwarded-event event:" (pr-str event))
     (let [db'            (update db :event-sync (partial event-sync/add :server id event))
           changed-order? (changed-order? (-> db' :event-sync :last-op))
-          memory-log     (event-sync/stage-log (:event-sync db) :memory)
+          memory-log     (event-sync/stage-log (:event-sync db') :memory)
           txs            (resolve-op @db/dsdb-snapshot event)]
       (js/console.debug ":remote/apply-forwarded-event event changed order?:" changed-order?)
       (js/console.debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
