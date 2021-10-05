@@ -8,6 +8,8 @@
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.utils                  :as common.utils]
     [athens.db                            :as db]
+    [athens.electron.db-picker            :as db-picker]
+    [athens.electron.utils                :as electron.utils]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.self-hosted.client            :as client]
@@ -572,14 +574,24 @@
 
 
 (reg-event-fx
-  :transact-and-forward
-  (fn [_ [_ {:event/keys [type op] :as event}]]
-    (let [txs (if (= type :op/atomic)
-                (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb op)
-                (resolver/resolve-event-to-tx @db/dsdb event))]
-      (js/console.debug ":transact-and-forward resolved" (:event/type event) "to txs:" txs)
-      {:fx [[:dispatch-n [[:transact txs]
-                          (when (client/open?) [:remote/forward-event event])]]]})))
+  :resolve-transact
+  (fn [_ [_ event]]
+    (let [txs (atomic-resolver/resolve-to-tx @db/dsdb event)]
+      (js/console.debug ":resolve-transact resolved" (:event/type event) "to txs:" txs)
+      {:fx [[:dispatch [:transact txs]]]})))
+
+
+(reg-event-fx
+  :resolve-transact-forward
+  (fn [{:keys [db]} [_ event]]
+    (let [selected-db (db-picker/selected-db db)
+          forward? (electron.utils/remote-db? selected-db)]
+      (js/console.debug ":resolve-transact-forward forward?" forward?)
+      {:fx [[:dispatch-n [[:resolve-transact event]
+                          ;; TODO: this isn't right, we want to know if we're in RTC
+                          ;; and not if the RTC conn is open right now.
+                          ;; e.g. can be temporarily offline, but still want to queue up events.
+                          (when forward? [:remote/forward-event event])]]]})))
 
 
 (reg-event-fx
@@ -590,7 +602,7 @@
                                                        page-uid
                                                        block-uid
                                                        title)]
-      {:fx [[:dispatch-n [[:transact-and-forward event]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           (cond
                             shift?
                             [:right-sidebar/open-item page-uid]
@@ -614,7 +626,7 @@
                                                        page-uid
                                                        old-name
                                                        new-name)]
-      {:fx [[:dispatch [:transact-and-forward event]]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
             [:invoke-callback callback]]})))
 
 
@@ -628,7 +640,7 @@
                                                       page-uid
                                                       old-name
                                                       new-name)]
-      {:fx [[:dispatch [:transact-and-forward event]]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
             [:invoke-callback callback]]})))
 
 
@@ -638,7 +650,7 @@
     (js/console.debug ":page/delete:" uid)
     (let [event (common-events/build-page-delete-event (:remote/last-seen-tx db)
                                                        uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -646,7 +658,7 @@
   (fn [{:keys [db]} [_ uid]]
     (js/console.debug ":page/add-shortcut:" uid)
     (let [event (common-events/build-page-add-shortcut (:remote/last-seen-tx db) uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -654,7 +666,7 @@
   (fn [{:keys [db]} [_ uid]]
     (js/console.debug ":page/remove-shortcut:" uid)
     (let [event (common-events/build-page-remove-shortcut (:remote/last-seen-tx db) uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -662,7 +674,7 @@
   (fn [{:keys [db]} [_ source-order target-order]]
     (js/console.debug ":left-sidebar/drop-above")
     (let [event (common-events/build-left-sidebar-drop-above (:remote/last-seen-tx db) source-order target-order)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -670,7 +682,7 @@
   (fn [{:keys [db]} [_ source-order target-order]]
     (js/console.debug ":left-sidebar/drop-below")
     (let [event (common-events/build-left-sidebar-drop-below (:remote/last-seen-tx db) source-order target-order)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -778,7 +790,7 @@
   (fn [{:keys [db]} [_ uid]]
     (js/console.debug ":backspace/delete-only-child:" (pr-str uid))
     (let [event (common-events/build-delete-only-child-event (:remote/last-seen-tx db) uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
             [:dispatch [:editing/uid nil]]]})))
 
 
@@ -787,7 +799,7 @@
   (fn [{:keys [db]} [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
     (js/console.debug ":backspace/delete-merge-block args:" (pr-str args))
     (let [event (common-events/build-delete-merge-block-event (:remote/last-seen-tx db) uid value)]
-      {:fx [[:dispatch [:transact-and-forward event]]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
             [:dispatch [:editing/uid
                         (cond-> prev-block-uid
                           embed-id (str "-embed-" embed-id))
@@ -803,7 +815,7 @@
                                                                    value
                                                                    index
                                                                    new-uid)]
-      {:fx [[:dispatch-n [[:transact-and-forward event]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
 
@@ -818,7 +830,7 @@
                                                     new-uid
                                                     (inc (:block/order block)))
           event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
-      {:fx [[:dispatch-n [[:transact-and-forward event]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
 
@@ -836,7 +848,7 @@
       (js/console.debug ":block/save local?" local?
                         ", do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [[:dispatch [:transact-and-forward event]]
+        {:fx [[:dispatch [:resolve-transact-forward event]]
               [:invoke-callback callback]]}))))
 
 
@@ -848,7 +860,7 @@
                                                    page-uid
                                                    block-uid)
           event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
-      {:fx [[:dispatch-n [[:transact-and-forward event]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid block-uid]]]]})))
 
 
@@ -865,7 +877,7 @@
                                                      (:block/uid block)
                                                      new-uid
                                                      add-time?)]
-      {:fx [[:dispatch-n [[:transact-and-forward event]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
 
@@ -883,7 +895,7 @@
                                                  :new-string      value
                                                  :index           index})
           event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
-      {:fx [[:dispatch-n [[:transact-and-forward event]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
 
@@ -895,7 +907,7 @@
     (let [event (common-events/build-bump-up-event (:remote/last-seen-tx db)
                                                    uid
                                                    new-uid)]
-      {:fx [[:dispatch-n [[:transact-and-forward event]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
 
@@ -908,7 +920,7 @@
           event (common-events/build-open-block-add-child-event (:remote/last-seen-tx db)
                                                                 block-uid
                                                                 new-uid)]
-      {:fx [[:dispatch-n [[:transact-and-forward event]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
 
@@ -1040,7 +1052,7 @@
         (let [event (common-events/build-indent-event (:remote/last-seen-tx db)
                                                       uid
                                                       value)]
-          {:fx [[:dispatch            [:transact-and-forward event]]
+          {:fx [[:dispatch            [:resolve-transact-forward event]]
                 [:set-cursor-position [uid start end]]]})))))
 
 
@@ -1058,7 +1070,7 @@
       (when (and same-parent? (not block-zero?))
         (let [event  (common-events/build-indent-multi-event (:remote/last-seen-tx db)
                                                              sanitized-selected-uids)]
-          {:fx [[:dispatch [:transact-and-forward event]]]})))))
+          {:fx [[:dispatch [:resolve-transact-forward event]]]})))))
 
 
 (reg-event-fx
@@ -1082,7 +1094,7 @@
         (let [event (common-events/build-unindent-event (:remote/last-seen-tx db)
                                                         uid
                                                         value)]
-          {:fx [[:dispatch-n [[:transact-and-forward event]
+          {:fx [[:dispatch-n [[:resolve-transact-forward event]
                               [:editing/uid (str uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]
                 [:set-cursor-position [uid start end]]]})))))
@@ -1116,7 +1128,7 @@
       (when-not do-nothing?
         (let [event (common-events/build-unindent-multi-event (:remote/last-seen-tx db)
                                                               sanitized-selected-uids)]
-          {:fx [[:dispatch [:transact-and-forward event]]]})))))
+          {:fx [[:dispatch [:resolve-transact-forward event]]]})))))
 
 
 (reg-event-fx
@@ -1126,7 +1138,7 @@
     (let [event (common-events/build-drop-child-event (:remote/last-seen-tx db)
                                                       source-uid
                                                       target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1136,7 +1148,7 @@
     (let [event (common-events/build-drop-multi-child-event (:remote/last-seen-tx db)
                                                             source-uids
                                                             target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1146,7 +1158,7 @@
     (let [event (common-events/build-drop-link-child-event (:remote/last-seen-tx db)
                                                            source-uid
                                                            target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1157,7 +1169,7 @@
                                                             drag-target
                                                             source-uid
                                                             target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1168,7 +1180,7 @@
                                                                  drag-target
                                                                  source-uid
                                                                  target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1179,7 +1191,7 @@
                                                      drag-target
                                                      source-uid
                                                      target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1191,7 +1203,7 @@
                                                                   drag-target
                                                                   source-uids
                                                                   target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1204,7 +1216,7 @@
                                                                drag-target
                                                                source-uids
                                                                target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1215,7 +1227,7 @@
                                                                  drag-target
                                                                  source-uid
                                                                  target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1226,7 +1238,7 @@
                                                                                drag-target
                                                                                source-uids
                                                                                target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1237,7 +1249,7 @@
                                                                                drag-target
                                                                                source-uids
                                                                                target-uid)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1282,7 +1294,7 @@
     ;; but what users sees should taken from DB. How would `value` behave with multiple editors?
     (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
           event                 (common-events/build-paste-verbatim-event (:remote/last-seen-tx db) uid text start value)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1290,7 +1302,7 @@
   (fn [{:keys [db]} [_ {:block/keys [string uid]} title]]
     (js/console.debug ":unlinked-references/link:" uid)
     (let [event (common-events/build-unlinked-references-link (:remote/last-seen-tx db) uid string title)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1298,7 +1310,7 @@
   (fn [{:keys [db]} [_ unlinked-refs title]]
     (js/console.debug ":unlinked-references/link:" title)
     (let [event (common-events/build-unlinked-references-link-all (:remote/last-seen-tx db) unlinked-refs title)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
@@ -1308,5 +1320,5 @@
     (let [event (common-events/build-block-open-event (:remote/last-seen-tx db)
                                                       block-uid
                                                       open?)]
-      {:fx [[:dispatch [:transact-and-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 

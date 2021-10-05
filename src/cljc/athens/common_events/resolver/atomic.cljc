@@ -1,6 +1,7 @@
 (ns athens.common-events.resolver.atomic
   (:require
     [athens.common-db :as common-db]
+    [athens.common-events.resolver :as resolver]
     [athens.common.utils :as utils]
     #?(:clj  [datahike.api :as d]
        :cljs [datascript.core :as d]))
@@ -80,3 +81,10 @@
         (mapcat (fn [consequence]
                   (resolve-atomic-op-to-tx db consequence))
                 consequences)))
+
+
+(defn resolve-to-tx
+  [db {:event/keys [type op] :as event}]
+  (if (contains? #{:op/atomic} type)
+    (resolve-atomic-op-to-tx db op)
+    (resolver/resolve-event-to-tx db event)))

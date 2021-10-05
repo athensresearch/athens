@@ -2,7 +2,6 @@
   "`re-frame` events related to `:remote/*`."
   (:require
     [athens.common-db                     :as common-db]
-    [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common-events.schema          :as schema]
     [athens.db                            :as db]
@@ -130,15 +129,6 @@
     {:db (update db :event-sync (partial event-sync/remove :server (:event/id event) event))}))
 
 
-(defn- resolve-op
-  ([event]
-   (resolve-op @db/dsdb event))
-  ([db {:event/keys [type op] :as event}]
-   (if (contains? #{:op/atomic} type)
-     (atomic-resolver/resolve-atomic-op-to-tx db op)
-     (resolver/resolve-event-to-tx db event))))
-
-
 (defn- changed-order?
   [[type _ _ _ noop?]]
   (and (= type :add) (not noop?)))
@@ -167,7 +157,7 @@
     (let [db'            (update db :event-sync (partial event-sync/add :server id event))
           changed-order? (changed-order? (-> db' :event-sync :last-op))
           memory-log     (event-sync/stage-log (:event-sync db') :memory)
-          txs            (resolve-op @db/dsdb-snapshot event)]
+          txs            (atomic-resolver/resolve-to-tx @db/dsdb-snapshot event)]
       (js/console.debug ":remote/apply-forwarded-event event changed order?:" changed-order?)
       (js/console.debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
       {:db db'
@@ -182,10 +172,10 @@
                            changed-order?       (into [[:remote/rollback-dsdb]
                                                        [:transact txs]
                                                        [:remote/snapshot-dsdb]])
-                           changed-order?       (into (map (fn [e] [:transact (-> e second resolve-op)])
+                           changed-order?       (into (map (fn [e] [:resolve-transact (second e)])
                                                            (-> db' :event-sync :stages :memory)))
                            ;; Remove the server event after everything is done.
-                           true                  (into [[:remote/clear-server-event event]]))]]})))
+                           true                 (into [[:remote/clear-server-event event]]))]]})))
 
 
 (rf/reg-event-fx
