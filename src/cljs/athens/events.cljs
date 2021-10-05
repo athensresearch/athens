@@ -397,14 +397,6 @@
     (update db :modal not)))
 
 
-;; Window Size
-
-(reg-event-fx
-  :window/set-size
-  (fn [{:keys [db]} [_ [x y]]]
-    {:db (assoc-in db [:athens/persist :window/size] [x y])}))
-
-
 ;; Loading
 
 (reg-event-db

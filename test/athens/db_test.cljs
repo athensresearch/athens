@@ -45,7 +45,6 @@
   (let [graph-conf {:hlt-link-levels 4}
         expected   (assoc db/default-athens-persist
                           :theme/dark true
-                          :window/size [1024 800]
                           :graph-conf graph-conf
                           :settings {:email       "id@example.com"
                                      :username    "foo"
@@ -56,6 +55,5 @@
     (js/localStorage.setItem "debounce-save-time" "30")
     (js/localStorage.setItem "monitoring" "false")
     (js/localStorage.setItem "theme/dark" "true")
-    (js/localStorage.setItem "ws/window-size" "1024,800")
     (js/localStorage.setItem "graph-conf" "{:hlt-link-levels 4}")
     (is (= (db/update-legacy-to-latest db/default-athens-persist) expected))))

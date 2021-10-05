@@ -59,7 +59,6 @@
 (def default-athens-persist
   {:persist/version 1
    :theme/dark      false
-   :window/size     [800 600]
    :graph-conf      default-graph-conf
    :settings        default-settings})
 
@@ -84,7 +83,6 @@
         (update-when-found [:settings :backup-time] "debounce-save-time" js/Number)
         (update-when-found [:settings :monitoring] "monitoring" str->boolean)
         (update-when-found [:theme/dark] "theme/dark" str->boolean)
-        (update-when-found [:window/size] "ws/window-size" #(map js/parseInt (string/split % ",")))
         (update-when-found [:graph-conf] "graph-conf" edn/read-string))))
 
 
