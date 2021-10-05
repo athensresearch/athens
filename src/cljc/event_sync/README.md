@@ -1,4 +1,4 @@
-# EventSync (working title)
+# event-sync
 
 EventSync is a multi-writer event log synchronizer model.
 This is useful for event-based distributed system architectures that want to apply events optimistically while synchronizing them in the background.
@@ -6,6 +6,11 @@ This is useful for event-based distributed system architectures that want to app
 It gives you a way to reason about event synchronization, inspect the current synchronization state, and reactively perform synchronization actions that ensure each writer's events remain ordered.
 
 It does not give you a way to represent any state besides the event logs being synchronized, a way to save events, or to handle semantic conflicts.
+
+
+## The problem, and the approach
+
+TODO: event archs, sync, local state, offline first
 
 
 ## Model
@@ -579,3 +584,4 @@ intermediate stage subs needs to start at the first event that's not on subseque
 
 The specific semantics of how events are saved and retrieved are up to your code.
 You can batch operations as long as you end up calling the EventSync API.
+
