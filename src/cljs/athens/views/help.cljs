@@ -1,24 +1,23 @@
 (ns athens.views.help
   (:require
-    [clojure.string :as str]
     ["@material-ui/core/Modal" :default Modal]
-    ["@material-ui/icons/Error" :default Error]
-    ["@material-ui/icons/AddToPhotos" :default AddToPhotos]
-    ["@material-ui/icons/LiveHelp" :default LiveHelp]
-    [reagent.core :as r]
-    [athens.util :as util]
     [athens.style :refer [color]]
-    [stylefy.core :as stylefy :refer [use-style]]
-    [re-frame.core :refer [dispatch subscribe]])
+    [athens.util :as util]
+    [clojure.string :as str]
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]])
   (:import
     (goog.events
       KeyCodes)))
+
 
 ;; Helpers to create the help content
 ;; ==========================
 (defn opaque-text
   [text]
   [:span (use-style {:color (color :body-text-color :opacity-med) :font-weight "normal"}) text])
+
 
 (defn space
   []
@@ -28,6 +27,7 @@
                   :height        "0.125em"
                   :border        (str "1px solid " (color :body-text-color :opacity-low))
                   :border-top    0})])
+
 
 (defn example
   [template & args]
@@ -48,6 +48,7 @@
            (str/split t #"\$text")
            (interleave t (concat opaque-texts [nil]))
            (map insert-spaces t))]))
+
 
 ;; Help content
 ;; The examples use a small template language to insert the text (opaque) in the examples.
@@ -108,6 +109,7 @@
             {:description "Heading level 6"
              :example     [example "######$space$text" "Athens"]}]}])
 
+
 (def shortcut-groups
   [{:name  "App"
     :items [{:description "Toggle Athena"
@@ -156,7 +158,7 @@
              :example     [:i "Athens"]
              :shortcut    "mod+i"}
             ;; Underline is currently not working. Uncomment when it does.
-            ;;{:description "Underline"
+            ;; {:description "Underline"
             ;; :example     [:span (use-style {:text-decoration "underline"}) "Athens"]
             ;; :shortcut    "mod+u"}
             {:description "Strikethrough"
@@ -176,19 +178,23 @@
             {:description "Zoom in/out"
              :shortcut    "scroll up/down"}]}])
 
+
 (def content
   [{:name   "Syntax",
     :groups syntax-groups}
    {:name   "Keyboard Shortcuts"
     :groups shortcut-groups}])
 
+
 ;; Components to render content
 ;; =============================
 (def mod-key
   (if (util/is-mac?) "⌘" "CTRL"))
 
+
 (def alt-key
   (if (util/is-mac?) "⌥" "Alt"))
+
 
 (defn shortcut
   [shortcut-str]
@@ -219,6 +225,7 @@
                                       :font-weight    600})
                     key]))])
 
+
 (def modal-body-styles
   {:width         "max-content"
    :margin        "2rem auto"
@@ -228,12 +235,14 @@
    :box-shadow    (str "0 0.25rem 0.5rem -0.25rem " (color :shadow-color))
    :display       "flex"})
 
+
 (def help-styles
   {:background-color (color :background-color)
    :border-radius    "1rem"
    :display          "flex"
    :flex-direction   "column"
    :min-width        "500px"})
+
 
 (def help-header-styles
   {:display         "flex"
@@ -242,11 +251,13 @@
    :align-items     "center"
    :border-bottom   [["1px solid" (color :border-color)]]})
 
+
 (def help-title
   {:padding   "1rem 1.5rem"
    :margin    "0"
    :font-size "2rem"
    :color     (color :header-text-color)})
+
 
 (defn help-section
   [title & children]
@@ -262,6 +273,7 @@
     title]
    children])
 
+
 (defn help-section-group
   [title & children]
   [:section (use-style
@@ -275,6 +287,7 @@
                     :font-weight "bold"})
     title]
    [:div children]])
+
 
 (defn help-item
   [item]
@@ -301,23 +314,11 @@
    (when (contains? item :shortcut)
      [shortcut (:shortcut item)])])
 
+
 (defn modal-body
   [& children]
   [:div (use-style modal-body-styles) children])
 
-(defn help-link
-  [& children]
-  [:a (use-style
-        {:color           (color :body-text-color)
-         :padding         "0.25rem 0.5rem"
-         :text-decoration "underline"
-         :font-size       "80%"
-         :display         "flex"
-         :align-items     "center"
-         :gap             "0.25rem"
-         ::stylefy/manual [["svg" {:font-size "1.5em"}]]}
-        {:target "_blank" :rel "noopener noreferrer"})
-   children])
 
 ;; Help popup UI
 ;; Why the escape handler?
@@ -325,7 +326,8 @@
 ;; opened and causes other issues like moving into the top the modal when clicking outside
 ;; of it from the top), the escape handler from the modal itself doesn't work.
 ;; Because of that, our own escape handler is added.
-(defn help-popup []
+(defn help-popup
+  []
   (r/with-let
     [open? (subscribe [:help/open?])
      close #(dispatch [:help/toggle])
@@ -349,13 +351,13 @@
             :gap     "1rem"
             :padding "1rem"})]]
        ;; Links at the top of the help. Uncomment when the correct links are obtained.
-       ;;[help-link
+       ;; [help-link
        ;; [:> LiveHelp]
        ;; "Get Help on Discord"]
-       ;;[help-link
+       ;; [help-link
        ;; [:> Error]
        ;; "Get Help on Discord"]
-       ;;[help-link
+       ;; [help-link
        ;; [:> AddToPhotos]
        ;; "Get Help on Discord"]]]
        [:div (use-style {:overflow-y "auto"})

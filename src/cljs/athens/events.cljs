@@ -193,6 +193,7 @@
   (fn [db _]
     (update db :help/open? not)))
 
+
 (reg-event-db
   :left-sidebar/toggle
   (fn [db _]
