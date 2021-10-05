@@ -1,6 +1,6 @@
 (ns athens.self-hosted.components.nrepl
   (:require
-    [clojure.tools.logging      :as log]
+    [athens.common.logging      :as log]
     [com.stuartsierra.component :as component]
     [nrepl.server               :as nrepl]))
 

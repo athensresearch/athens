@@ -2,13 +2,13 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
+    [athens.common.logging         :as log]
     [athens.parser                 :as parser]
     [athens.patterns               :as patterns]
     [clojure.data                  :as data]
     [clojure.pprint                :as pprint]
     [clojure.set                   :as set]
     [clojure.string                :as string]
-    #?(:clj [clojure.tools.logging :as log])
     #?(:clj  [datahike.api         :as d]
        :cljs [datascript.core      :as d])))
 

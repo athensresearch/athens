@@ -2,11 +2,11 @@
   (:require
     [athens.common-events              :as common-events]
     [athens.common-events.schema       :as schema]
+    [athens.common.logging             :as log]
     [athens.self-hosted.clients        :as clients]
     [athens.self-hosted.web.datascript :as datascript]
     [athens.self-hosted.web.presence   :as presence]
     [clojure.set                       :as set]
-    [clojure.tools.logging             :as log]
     [com.stuartsierra.component        :as component]
     [compojure.core                    :as compojure]
     [org.httpkit.server                :as http]))

@@ -2,6 +2,7 @@
   (:require
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
+    [athens.common.log           :as log]
     [athens.db                   :as db]
     [athens.self-hosted.client   :as client]
     [cljs-http.client            :as http]
@@ -144,11 +145,11 @@
 (rf/reg-fx
   :remote/client-connect!
   (fn [{:keys [ws-url] :as remote-db}]
-    (js/console.debug ":remote/client-connect!" (pr-str remote-db))
+    (log/debug ":remote/client-connect!" (pr-str remote-db))
     (when @self-hosted-client
-      (js/console.log ":remote/client-connect! already connected, restarting")
+      (log/info ":remote/client-connect! already connected, restarting")
       (component/stop @self-hosted-client))
-    (js/console.log ":remote/client-connect! connecting")
+    (log/info ":remote/client-connect! connecting")
     (reset! self-hosted-client (-> ws-url
                                    client/new-ws-client
                                    component/start))))
@@ -157,7 +158,7 @@
 (rf/reg-fx
   :remote/client-disconnect!
   (fn []
-    (js/console.debug ":remote/client-disconnect!")
+    (log/debug ":remote/client-disconnect!")
     (when @self-hosted-client
       (component/stop @self-hosted-client)
       (reset! self-hosted-client nil))))
@@ -169,12 +170,12 @@
     (if (schema/valid-event? event)
       ;; valid event let's send it
       (do
-        (js/console.log "Sending event:" (pr-str event))
+        (log/info "Sending event:" (pr-str event))
         (client/send! event))
       (let [explanation (-> schema/event
                             (m/explain event)
                             (me/humanize))]
-        (js/console.warn "Tried to send invalid event. Error:" (pr-str explanation))))))
+        (log/warn "Tried to send invalid event. Error:" (pr-str explanation))))))
 
 
 (rf/reg-fx

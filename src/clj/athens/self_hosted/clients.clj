@@ -2,7 +2,7 @@
   "Client comms"
   (:require
     [athens.common-events.schema :as schema]
-    [clojure.tools.logging       :as log]
+    [athens.common.logging       :as log]
     [cognitect.transit           :as transit]
     [org.httpkit.server          :as http])
   (:import

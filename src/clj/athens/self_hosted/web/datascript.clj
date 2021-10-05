@@ -4,9 +4,9 @@
     [athens.common-events                 :as common-events]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common.logging                :as log]
     [athens.self-hosted.clients           :as clients]
     [clojure.pprint                       :as pprint]
-    [clojure.tools.logging                :as log]
     [datahike.api                         :as d])
   (:import
     (clojure.lang

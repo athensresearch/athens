@@ -4,6 +4,7 @@
     ["@sentry/react" :as Sentry]
     ["@sentry/tracing" :as tracing]
     [athens.coeffects]
+    [athens.common.logging :as log]
     [athens.components]
     [athens.config :as config]
     [athens.db :refer [dsdb]]
@@ -30,7 +31,7 @@
 (defn dev-setup
   []
   (when config/debug?
-    (println "dev mode")))
+    (log/info "dev mode")))
 
 
 (defn ^:dev/after-load mount-root

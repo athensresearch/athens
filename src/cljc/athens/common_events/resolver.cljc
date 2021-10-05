@@ -2,6 +2,7 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
+    [athens.common.logging :as log]
     [athens.common.utils :as utils]
     [athens.patterns :as patterns]
     [clojure.set :as set]
@@ -67,7 +68,7 @@
 
 
 (defmethod resolve-event-to-tx :datascript/rename-page
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid
                 old-name
                 new-name]} args
@@ -76,13 +77,13 @@
         new-page           {:db/id      [:block/uid uid]
                             :node/title new-name}
         new-datoms         (concat [new-page] new-linked-refs)]
-    (println ":datascript/rename-page args:" (pr-str args)
-             "=>" (pr-str new-datoms))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str new-datoms))
     new-datoms))
 
 
 (defmethod resolve-event-to-tx :datascript/merge-page
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid
                 old-name
                 new-name]}              args
@@ -100,13 +101,13 @@
         new-datoms                      (concat [delete-page]
                                                 new-linked-refs
                                                 reindex)]
-    (println ":datascript/merge-page args:" (pr-str args)
-             "=>" (pr-str new-datoms))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str new-datoms))
     new-datoms))
 
 
 (defmethod resolve-event-to-tx :datascript/delete-page
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{uid :uid}         args
         ;; NOTE: common DB query? find page title by page uid?
         title              (ffirst
@@ -124,12 +125,13 @@
                                 (replace-linked-refs-tx db))
         tx-data            (concat retract-blocks
                                    delete-linked-refs)]
-    (println ":datascript/delete-page" uid title)
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/block-save
-  [_db {:event/keys [args]}]
+  [_db {:event/keys [id type args]}]
   (let [{:keys [uid
                 new-string
                 add-time?]} args
@@ -139,13 +141,13 @@
                                (assoc new-block-string :edit/time (utils/now-ts))
                                new-block-string)
         tx-data              [block-with-time]]
-    (println ":datascript/block-save" (pr-str args)
-             "=>" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/new-block
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [parent-uid
                 block-order
                 new-uid]} args
@@ -158,12 +160,13 @@
                                   (common-db/inc-after db [:block/uid parent-uid] block-order))
         tx-data           [{:block/uid      parent-uid
                             :block/children reindex}]]
-    (println ":datascript/new-block" parent-uid new-uid)
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/add-child
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [parent-uid
                 new-uid
                 add-time?]} args
@@ -180,12 +183,13 @@
         new-block         {:block/uid      parent-uid
                            :block/children reindex}
         tx-data           [new-block]]
-    (println "resolver :datascript/add-child" parent-uid new-uid "=>" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/open-block-add-child
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [parent-uid
                 new-uid]} args
         open-block-tx     [:db/add [:block/uid parent-uid] :block/open true]
@@ -195,13 +199,13 @@
                                                                                     parent-uid
                                                                                     new-uid))
         tx-data           (into [open-block-tx] add-child-tx)]
-    (println ":datascript/open-block-add-child" parent-uid new-uid)
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/split-block
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/split-block" (pr-str args))
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid
                 value
                 index
@@ -229,12 +233,13 @@
         new-block                     {:db/id (:db/id block) :block/string head}
         new-parent                    {:db/id (:db/id parent) :block/children reindex}
         tx-data                       (conj retracts new-block new-parent)]
+    (log/warn "DEPRECATED!" "event-id:" id ", type:" type ", args:" (pr-str args)
+              ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/split-block-to-children
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/split-block-to-children" (pr-str args))
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid
                 value
                 index
@@ -310,13 +315,13 @@
         tx-data              (conj retracts
                                    new-older-sib
                                    new-parent)]
-    (println "resolver :datascript/indent tx-data" (pr-str args))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/unindent
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/unindent args" (pr-str args))
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid
                 value]}             args
         {block-order :block/order}  (common-db/get-block db [:block/uid uid])
@@ -336,13 +341,13 @@
         new-grandpa                 {:db/id          grandpa-eid
                                      :block/children reindex-grandpa}
         tx-data                     [retract new-parent new-grandpa]]
-    (println "resolver :datascript/unindent tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/unindent-multi
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/unindent-multi args" args)
+  [db {:event/keys [id type args]}]
   (let [{:keys [uids]}              args
         {parent-order :block/order
          parent-eid   :db/id}        (common-db/get-parent db [:block/uid (first uids)])
@@ -367,13 +372,13 @@
         new-grandpa                    {:db/id          grandpa-eid
                                         :block/children reindex-grandpa}
         tx-data                        (conj retracts new-parent new-grandpa)]
-    (println "resolver :datascript/unindent-multi tx-data" tx-data)
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/bump-up
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/bump-up args" (pr-str args))
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid
                 new-uid]}          args
         {block-order :block/order} (common-db/get-block db [:block/uid uid])
@@ -389,12 +394,13 @@
                                                                 (dec block-order)))
         tx-data                    [{:db/id          parent-eid
                                      :block/children reindex}]]
-    (println "resolver :datascript/bump-up tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/paste-verbatim
-  [_db {:event/keys [args]}]
+  [_db {:event/keys [id type args]}]
   (let [{:keys [uid
                 text
                 start
@@ -410,11 +416,13 @@
                                                (subs value start)))
         tx-data      [{:db/id        [:block/uid uid]
                        :block/string new-string}]]
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/page-add-shortcut
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid]}        args
         reindex-shortcut-txs (->> (d/q '[:find [(pull ?e [*]) ...]
                                          :where
@@ -425,11 +433,13 @@
                                   vec)
         add-shortcut-tx      {:block/uid uid :page/sidebar (or (count reindex-shortcut-txs) 1)}
         tx-data              (conj reindex-shortcut-txs add-shortcut-tx)]
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/page-remove-shortcut
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid]}        args
         reindex-shortcut-txs (->> (d/q '[:find [(pull ?e [*]) ...]
                                          :where
@@ -441,12 +451,13 @@
                                   vec)
         remove-shortcut-tx    [:db/retract [:block/uid uid] :page/sidebar]
         tx-data               (conj reindex-shortcut-txs remove-shortcut-tx)]
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/drop-child
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/drop-child args" (pr-str args))
+  [db {:event/keys [id type args]}]
   (let [{:keys [source-uid
                 target-uid]}               args
         {target-eid :db/id}                (common-db/get-block  db [:block/uid target-uid])
@@ -470,12 +481,13 @@
         tx-data                            [retract
                                             new-source-parent
                                             new-target-parent]]
-    (println "resolver :datascript/drop-child tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/drop-multi-child
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   ;; Drop multiple selected blocks as child to some other block
   ;; - source-parent: The block from which all the blocks are selected and removed
   ;; - target-parent: The block under which all the blocks are dropped
@@ -483,7 +495,6 @@
   ;; After the selected blocks are DnD we need to reindex the remaining children of source-parent
   ;; and target-parent as a result all the children of source-parent have their order decreased
   ;; and the previous children under target-parent have their block order increased
-  (println "resolver :datascript/drop-multi-child args" (pr-str args))
   (let [{:keys [source-uids
                 target-uid]}                args
         {target-eid :db/id}                 (common-db/get-block  db [:block/uid target-uid])
@@ -519,13 +530,13 @@
         tx-data                             (conj retracts
                                                   new-source-parent
                                                   new-target-parent)]
-    (println "resolver :datascript/drop-multi-child tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/drop-link-child
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/drop-link-child args" (pr-str args))
+  [db {:event/keys [id type args]}]
   (let [{:keys [source-uid
                 target-uid]}               args
         {target-eid :db/id}                (common-db/get-block  db [:block/uid target-uid])
@@ -540,12 +551,13 @@
                                             :block/children (conj reindex-target-parent
                                                                   new-source-block)}
         tx-data                            [new-target-parent]]
-    (println "resolver :datascript/drop-link-child tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/drop-diff-parent
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   ;; Drop selected block under some other block not as a child
   ;; - source-parent: The block from which the block is selected and removed
   ;; - target-parent: The block under which all the blocks are dropped
@@ -555,7 +567,6 @@
   ;; and the previous children under target-parent have their block order increased
   ;; drag-target affects the calculation of till which block all the blocks under source-parent or
   ;; target-parent need to be re-indexed.
-  (println "resolver :datascript/drop-diff-parent args" (pr-str args))
   (let [{:keys [drag-target
                 source-uid
                 target-uid]}                args
@@ -587,7 +598,8 @@
         tx-data                             [retract
                                              new-source-parent
                                              new-target-parent]]
-    (println "resolver :datascript/drop-diff-parent tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
@@ -654,7 +666,7 @@
 
 
 (defmethod resolve-event-to-tx :datascript/drop-multi-diff-source-diff-parents
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
 
   ;; Used for the selected blocks that have different parents and get dragged and dropped under some other parent
   ;; Terminology :
@@ -675,7 +687,6 @@
   ;;             the last-block was removed.
   ;; Retract all the selected blocks
 
-  (println "resolver :datascript/drop-multi-diff-source-diff-parents args" (pr-str args))
   (let [{:keys [drag-target
                 source-uids
                 target-uid]}                   args
@@ -717,12 +728,13 @@
         tx-data                                (conj retracts
                                                      new-target-parent
                                                      new-source-parent)]
-    (println "resolver :datascript/drop-multi-diff-source-diff-parents tx-data" tx-data)
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/drop-multi-diff-source-same-parents
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
 
   ;; This event is used when multiple blocks are selected with atleast 2 blocks having differnt parents
   ;; are moved under the same parent as the last-selected-block's parent
@@ -747,7 +759,6 @@
   ;; - Add blocks (whose count can be greater or less than the blocks removed)
   ;; - Reindex the seq of blocks after the index where new blocks were added
 
-  (println "resolver :datascript/drop-multi-diff-source-same-parents args" (pr-str args))
   (let [{:keys [drag-target
                 source-uids
                 target-uid]}                    args
@@ -801,13 +812,13 @@
                                                   :block/children reindexed-blocks}
         tx-data                                  (conj retracted-blocks
                                                        new-parent)]
-    (println "resolver :datascript/drop-multi-diff-source-same-parents tx-data" tx-data)
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/drop-link-diff-parent
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/drop-link-diff-parent args" (pr-str args))
+  [db {:event/keys [id type args]}]
   (let [{:keys [drag-target
                 source-uid
                 target-uid]}                args
@@ -830,12 +841,13 @@
         new-target-parent                   {:db/id          target-parent-eid
                                              :block/children reindex-target-parent}
         tx-data                             [new-target-parent]]
-    (println "resolver :datascript/drop-link-diff-parent tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/drop-same
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   ;; When a selected block is DnD under the same parent this event is triggered
   ;; - source-parent: The block from which the block is selected and removed
   ;; - DnD          : Short for dragged and dropped
@@ -855,7 +867,6 @@
   ;;    for e.g If we take block 3 and move it below block 5 we will have to reindex
   ;;    blocks 4 and 5 in the current setup by decreasing their current block order after DnD.
 
-  (println "resolver :datascript/drop-same args" (pr-str args))
   (let [{:keys [drag-target
                 source-uid
                 target-uid]}              args
@@ -892,15 +903,15 @@
         new-parent                        {:db/id          source-parent-eid
                                            :block/children new-parent-children}
         tx-data                           [new-parent]]
-    (println "resolver :datascript/drop-same tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/drop-multi-same-all
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   ;; When multiple blocks are selected under some block and then they are dragged and dropeed under the
   ;; same parent this event is triggered. Working mechanism is the same as `drop-same` event above
-  (println "resolver :datascript/drop-multi-same-all args" (pr-str args))
   (let [{:keys [drag-target
                 source-uids
                 target-uid]}              args
@@ -948,17 +959,17 @@
         new-parent                        {:db/id          first-source-parent-eid
                                            :block/children new-parent-children}
         tx-data                           [new-parent]]
-    (println "resolver :datascript/drop-multi-same-all tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/drop-multi-same-source
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   ;; When multiple blocks under the same parent are dragged and dropped under differnt parent
   ;; this event is triggered. Mechanism for this is :
   ;; - Blocks under the source-block's parent are all reindexed in increasing order
   ;; - Blocks under the target-blocks's parent are all reindexed after the target-block in increasing order.
-  (println "resolver :datascript/drop-multi-same-source args" (pr-str args))
   (let [{:keys [drag-target
                 source-uids
                 target-uid]}              args
@@ -998,13 +1009,13 @@
         tx-data                           (conj retracts
                                                 new-source-parent
                                                 new-target-parent)]
-    (println "resolver :datascript/drop-multi-same-source tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/drop-link-same-parent
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/drop-link-same-parent args" (pr-str args))
+  [db {:event/keys [id type args]}]
   (let [{:keys [drag-target
                 source-uid
                 target-uid]}               args
@@ -1044,12 +1055,13 @@
         new-parent                        {:db/id          source-parent-eid
                                            :block/children new-parent-children}
         tx-data                           [new-parent]]
-    (println "resolver :datascript/drop-link-same-parent tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [source-order target-order]}  args
         source-eid  (d/q '[:find ?e .
                            :in $ ?source-order
@@ -1071,11 +1083,13 @@
                                                 (dec target-order))
                               between inc-or-dec)
                          (concat [new-source]))]
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-below
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [source-order target-order]}  args
         source-eid (d/q '[:find ?e .
                           :in $ ?source-order
@@ -1091,16 +1105,17 @@
                             [(dec ?order) ?new-order]]
                           db source-order (inc target-order) between)
                      (concat [new-source]))]
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/selected-delete
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   ;; We know that we only need to dec indices after the last block. The former blocks
   ;; are necessarily going to remove all tail children, meaning we only need to be
   ;; concerned with the last N blocks that are selected, adjacent siblings, to
   ;; determine the minus-after value.
-  (println "resolver :datascript/selected-delete args" (pr-str args))
   (let [{:keys [uids]}                    args
         selected-sibs-of-last             (->> uids
                                                (d/q '[:find ?sib-uid ?o
@@ -1132,7 +1147,8 @@
         tx-data                           (concat retracted-vec
                                                   reindex
                                                   block-refs-replace)]
-    (println "resolver :datascript/selected-delete tx-data is " (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
@@ -1185,16 +1201,18 @@
 
 
 (defmethod resolve-event-to-tx :datascript/unlinked-references-link
-  [_ {:event/keys [args]}]
+  [_ {:event/keys [id type args]}]
   (let [{:keys [uid string title]} args
         ignore-case-title          (re-pattern (str "(?i)" title))
         new-str                    (string/replace string ignore-case-title (str "[[" title "]]"))
         tx-data                    [{:db/id [:block/uid uid] :block/string new-str}]]
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/unlinked-references-link-all
-  [_ {:event/keys [args]}]
+  [_ {:event/keys [id type args]}]
   (let [{:keys [unlinked-refs title]} args
         tx-data (mapv
                   (fn [{:block/keys [string uid]}]
@@ -1202,18 +1220,20 @@
                           new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
                       {:db/id [:block/uid uid] :block/string new-str}))
                   unlinked-refs)]
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/block-open
-  [_db {:event/keys [args]}]
-  (println "resolver :datascript/block-open args:" (pr-str args))
+  [_db {:event/keys [id type args]}]
   (let [{:keys [block-uid
                 open?]}      args
         new-block-state      [:db/add     [:block/uid block-uid]
                               :block/open open?]
         tx-data              [new-block-state]]
-    (println "resolver :datascript/block-open tx-data:" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
@@ -1283,13 +1303,12 @@
 
 
 (defmethod resolve-event-to-tx :datascript/paste
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   ;; Paste based on conditions of block where paste originated from.
   ;; - If from an empty block, delete block in place and make that location the root
   ;; - If at text start of non-empty block, prepend block and focus first new root
   ;; - If anywhere else beyond text start of an OPEN parent block, prepend children
   ;; - Otherwise append after current block.
-  (println "resolver :datascript/paste args" (pr-str args))
   (let [{:keys [uid
                 text
                 start
@@ -1326,12 +1345,13 @@
         tx-data              (concat reindex
                                      paste-tx-data
                                      (when empty-block? [[:db/retractEntity [:block/uid uid]]]))]
-    (println "resolver :datascript/paste tx-data is" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/delete-only-child
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid]} args
         block       (common-db/get-block db [:block/uid uid])
         parent      (common-db/get-parent db [:block/uid uid])
@@ -1339,11 +1359,13 @@
         new-parent  {:db/id (:db/id parent) :block/children reindex}
         retract     [:db/retractEntity (:db/id block)]
         tx-data     [retract new-parent]]
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/delete-merge-block
-  [db {:event/keys [args]}]
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid value]} args
         block               (common-db/get-block db [:block/uid uid])
         {:block/keys
@@ -1351,7 +1373,7 @@
          :or {children []}} block
         parent              (common-db/get-parent db [:block/uid uid])
         prev-block-uid      (common-db/prev-block-uid db uid)
-        prev-block          (common-db/get-block db [:block/uid prev-block-uid])
+        prev-block          (common-db/get-block db [:block/uid prev-block-uid]) ; TODO prev-block-uid can be nil
         new-prev-block      {:db/id          [:block/uid prev-block-uid]
                              :block/string   (str (:block/string prev-block) value)
                              :block/children children}
@@ -1364,4 +1386,6 @@
         new-parent          {:db/id (:db/id parent) :block/children reindex}
         tx-data             (into (conj retracts retract-block new-prev-block new-parent)
                                   block-refs-replace)]
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))

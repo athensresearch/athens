@@ -1,7 +1,7 @@
 (ns athens.self-hosted.components.config
   "Athens Self-Hosted Configuration management"
   (:require
-    [clojure.tools.logging      :as log]
+    [athens.common.logging      :as log]
     [com.stuartsierra.component :as component]
     [config.core                :as cfg]))
 

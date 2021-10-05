@@ -1,10 +1,10 @@
 (ns athens.self-hosted.web.presence
   (:require
     [athens.common-events       :as common-events]
+    [athens.common.logging      :as log]
     [athens.self-hosted.clients :as clients]
     [clojure.set                :as set]
     [clojure.string             :as str]
-    [clojure.tools.logging      :as log]
     [datahike.api               :as d]))
 
 

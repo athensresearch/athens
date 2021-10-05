@@ -6,6 +6,7 @@
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common.logging                :as log]
     [athens.common.utils                  :as common.utils]
     [athens.db                            :as db]
     [athens.events.remote]
@@ -231,7 +232,7 @@
 (reg-event-fx
   :no-op
   (fn [_ _]
-    (js/console.warn "Called :no-op re-frame event, this shouldn't be happening.")
+    (log/warn "Called :no-op re-frame event, this shouldn't be happening.")
     {}))
 
 
@@ -363,7 +364,7 @@
           next-block-uid    (db/next-block-uid last-item true)
           ordered-selection (-> (into [] selected-items)
                                 (into [next-block-uid]))]
-      (js/console.debug ":selected/down, new-selection:" (pr-str ordered-selection))
+      (log/debug ":selected/down, new-selection:" (pr-str ordered-selection))
       (assoc-in db [:selection :items] ordered-selection))))
 
 
@@ -574,9 +575,9 @@
 (reg-event-fx
   :page/create
   (fn [_ [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
-    (js/console.debug ":page/create args" (pr-str args))
+    (log/debug ":page/create args" (pr-str args))
     (let [local? (not (client/open?))]
-      (js/console.debug ":page/create local?" local?)
+      (log/debug ":page/create local?" local?)
       (if local?
         (let [create-page-event (common-events/build-page-create-event -1
                                                                        page-uid
@@ -603,16 +604,16 @@
   :page/rename
   (fn [_db [_ {:keys [page-uid old-name new-name callback] :as args}]]
     (let [local? (not (client/open?))]
-      (js/console.debug ":page/rename local?" local? ", args:" (pr-str (select-keys args [:page-uid
-                                                                                          :old-name
-                                                                                          :new-name])))
+      (log/debug ":page/rename local?" local? ", args:" (pr-str (select-keys args [:page-uid
+                                                                                   :old-name
+                                                                                   :new-name])))
       (if local?
         (let [page-rename-event (common-events/build-page-rename-event -1
                                                                        page-uid
                                                                        old-name
                                                                        new-name)
               page-rename-tx    (resolver/resolve-event-to-tx @db/dsdb page-rename-event)]
-          (js/console.debug ":page/rename txs:" (pr-str page-rename-tx))
+          (log/debug ":page/rename txs:" (pr-str page-rename-tx))
           {:fx [[:dispatch [:transact page-rename-tx]]
                 [:invoke-callback callback]]})
         {:fx [[:dispatch
@@ -623,16 +624,16 @@
   :page/merge
   (fn [_db [_ {:keys [page-uid old-name new-name callback] :as args}]]
     (let [local? (not (client/open?))]
-      (js/console.debug ":page/merge local?" local? ", args:" (pr-str (select-keys args [:page-uid
-                                                                                         :old-name
-                                                                                         :new-name])))
+      (log/debug ":page/merge local?" local? ", args:" (pr-str (select-keys args [:page-uid
+                                                                                  :old-name
+                                                                                  :new-name])))
       (if local?
         (let [page-merge-event (common-events/build-page-merge-event -1
                                                                      page-uid
                                                                      old-name
                                                                      new-name)
               page-merge-tx    (resolver/resolve-event-to-tx @db/dsdb page-merge-event)]
-          (js/console.debug ":page/merge txs:" (pr-str page-merge-tx))
+          (log/debug ":page/merge txs:" (pr-str page-merge-tx))
           {:fx [[:dispatch [:transact page-merge-tx]]
                 [:invoke-callback callback]]})
         {:fx [[:dispatch
@@ -642,9 +643,9 @@
 (reg-event-fx
   :page/delete
   (fn [_ [_ uid _title]]
-    (js/console.debug ":page/delete:" uid)
+    (log/debug ":page/delete:" uid)
     (let [local? (not (client/open?))]
-      (js/console.debug ":page/delete local?" local?)
+      (log/debug ":page/delete local?" local?)
       (if local?
         (let [delete-page-event (common-events/build-page-delete-event -1
                                                                        uid)
@@ -657,11 +658,11 @@
 (reg-event-fx
   :page/add-shortcut
   (fn [_ [_ uid]]
-    (js/console.debug ":page/add-shortcut:" uid)
+    (log/debug ":page/add-shortcut:" uid)
     (if-let [local? (not (client/open?))]
       (let [add-shortcut-event (common-events/build-page-add-shortcut -1 uid)
             tx-data            (resolver/resolve-event-to-tx @db/dsdb add-shortcut-event)]
-        (js/console.debug ":page/add-shortcut: local?" local?)
+        (log/debug ":page/add-shortcut: local?" local?)
         {:fx [[:dispatch [:transact tx-data]]]})
       {:fx [[:dispatch [:remote/page-add-shortcut uid]]]})))
 
@@ -669,11 +670,11 @@
 (reg-event-fx
   :page/remove-shortcut
   (fn [_ [_ uid]]
-    (js/console.debug ":page/remove-shortcut:" uid)
+    (log/debug ":page/remove-shortcut:" uid)
     (if-let [local? (not (client/open?))]
       (let [remove-shortcut-event (common-events/build-page-remove-shortcut -1 uid)
             tx-data               (resolver/resolve-event-to-tx @db/dsdb remove-shortcut-event)]
-        (js/console.debug ":page/remove-shortcut:" local?)
+        (log/debug ":page/remove-shortcut:" local?)
         {:fx [[:dispatch [:transact tx-data]]]})
       {:fx [[:dispatch [:remote/page-remove-shortcut uid]]]})))
 
@@ -681,11 +682,11 @@
 (reg-event-fx
   :left-sidebar/drop-above
   (fn [_ [_ source-order target-order]]
-    (js/console.debug ":left-sidebar/drop-above")
+    (log/debug ":left-sidebar/drop-above")
     (if-let [local? (not (client/open?))]
       (let [left-sidebar-drop-above-event (common-events/build-left-sidebar-drop-above -1 source-order target-order)
             tx-data                       (resolver/resolve-event-to-tx @db/dsdb left-sidebar-drop-above-event)]
-        (js/console.debug ":left-sidebar/drop-above local?" local?)
+        (log/debug ":left-sidebar/drop-above local?" local?)
         {:fx [[:dispatch [:transact tx-data]]]})
       {:fx [[:dispatch [:remote/left-sidebar-drop-above source-order target-order]]]})))
 
@@ -693,11 +694,11 @@
 (reg-event-fx
   :left-sidebar/drop-below
   (fn [_ [_ source-order target-order]]
-    (js/console.debug ":left-sidebar/drop-below")
+    (log/debug ":left-sidebar/drop-below")
     (if-let [local? (not (client/open?))]
       (let [left-sidebar-drop-below-event (common-events/build-left-sidebar-drop-below -1 source-order target-order)
             tx-data                       (resolver/resolve-event-to-tx @db/dsdb left-sidebar-drop-below-event)]
-        (js/console.debug ":left-sidebar/drop-below local?" local?)
+        (log/debug ":left-sidebar/drop-below local?" local?)
         {:fx [[:dispatch [:transact tx-data]]]})
       {:fx [[:dispatch [:remote/left-sidebar-drop-below source-order target-order]]]})))
 
@@ -711,9 +712,9 @@
 (reg-event-fx
   :undo
   (fn [_ _]
-    (js/console.debug ":undo")
+    (log/debug ":undo")
     (let [local? (not (client/open?))]
-      (js/console.debug ":undo: local?" local?)
+      (log/debug ":undo: local?" local?)
       (if local?
         (let [undo-event (common-events/build-undo-redo-event -1 false)
               tx-data    (resolver/resolve-event-to-tx db/history undo-event)]
@@ -724,9 +725,9 @@
 (reg-event-fx
   :redo
   (fn [_ _]
-    (js/console.debug ":redo")
+    (log/debug ":redo")
     (let [local? (not (client/open?))]
-      (js/console.debug ":redo: local?" local?)
+      (log/debug ":redo: local?" local?)
       (if local?
         (let [redo-event (common-events/build-undo-redo-event -1 true)
               tx-data    (resolver/resolve-event-to-tx db/history redo-event)]
@@ -788,7 +789,7 @@
                                                           :prev-block-uid prev-block-uid
                                                           :embed-id embed-id
                                                           :prev-block prev-block}])]
-    (js/console.debug "[Backspace] ->" (pr-str event))
+    (log/debug "[Backspace] ->" (pr-str event))
     (when event
       {:fx [[:dispatch event]]})))
 
@@ -805,9 +806,9 @@
 (reg-event-fx
   :backspace/delete-only-child
   (fn [_ [_ uid]]
-    (js/console.debug ":backspace/delete-only-child:" (pr-str uid))
+    (log/debug ":backspace/delete-only-child:" (pr-str uid))
     (let [local? (not (client/open?))]
-      (js/console.debug ":backspace/delete-only-child: local?" local?)
+      (log/debug ":backspace/delete-only-child: local?" local?)
       (if local?
         (let [delete-only-child-event (common-events/build-delete-only-child-event -1 uid)
               tx (resolver/resolve-event-to-tx @db/dsdb delete-only-child-event)]
@@ -819,9 +820,9 @@
 (reg-event-fx
   :backspace/delete-merge-block
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
-    (js/console.debug ":backspace/delete-merge-block args:" (pr-str args))
+    (log/debug ":backspace/delete-merge-block args:" (pr-str args))
     (let [local? (not (client/open?))]
-      (js/console.debug ":backspace/delete-merge-block: local?" local?)
+      (log/debug ":backspace/delete-merge-block: local?" local?)
       (if local?
         (let [delete-merge-block-event (common-events/build-delete-merge-block-event -1 uid value)
               tx (resolver/resolve-event-to-tx @db/dsdb delete-merge-block-event)]
@@ -840,9 +841,9 @@
 (reg-event-fx
   :split-block-to-children
   (fn [_ [_ {:keys [uid value index new-uid embed-id] :as args}]]
-    (js/console.debug ":split-block-to-children" (pr-str args))
+    (log/debug ":split-block-to-children" (pr-str args))
     (let [local? (not (client/open?))]
-      (js/console.debug ":split-block-to-children local?" local?)
+      (log/debug ":split-block-to-children local?" local?)
       (if local?
         (let [split-block-to-children-event (common-events/build-split-block-to-children-event -1
                                                                                                uid
@@ -865,15 +866,15 @@
 (reg-event-fx
   :enter/new-block
   (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
-    (js/console.debug ":enter/new-block" (pr-str block) parent new-uid)
+    (log/debug ":enter/new-block" (pr-str block) parent new-uid)
     (let [local? (not (client/open?))]
-      (js/console.debug ":enter/new-block local?" local?)
+      (log/debug ":enter/new-block local?" local?)
       (if local?
         (let [block-new-op (atomic-graph-ops/make-block-new-op (:block/uid parent)
                                                                new-uid
                                                                (inc (:block/order block)))
               tx           (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-new-op)]
-          (js/console.debug ":enter/new-block op:" (pr-str block-new-op) ", tx:" (pr-str tx))
+          (log/debug ":enter/new-block op:" (pr-str block-new-op) ", tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
@@ -887,18 +888,18 @@
   :block/save
   (fn [_ [_ {:keys [uid old-string new-string callback]
              :as   args}]]
-    (js/console.debug ":block/save args" (pr-str args))
+    (log/debug ":block/save args" (pr-str args))
     (let [local?        (not (client/open?))
           block-eid     (common-db/e-by-av @db/dsdb :block/uid uid)
           do-nothing?   (or (not block-eid)
                             (= old-string new-string))
           block-save-op (graph-ops/build-block-save-op @db/dsdb uid old-string new-string)]
-      (js/console.debug ":block/save local?" local?
-                        ", do-nothing?" do-nothing?)
+      (log/debug ":block/save local?" local?
+                 ", do-nothing?" do-nothing?)
       (when-not do-nothing?
         (if local?
           (let [block-save-tx (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb block-save-op)]
-            (println "block-save-tx:" (pr-str block-save-tx))
+            (log/debug "block-save-tx:" (pr-str block-save-tx))
             {:fx [[:dispatch [:transact block-save-tx]]
                   [:invoke-callback callback]]})
           {:fx [[:dispatch [:remote/block-save {:op       block-save-op
@@ -908,9 +909,9 @@
 (reg-event-fx
   :page/new
   (fn [_ [_ {:keys [title page-uid block-uid] :as args}]]
-    (js/console.debug ":page/new args" (pr-str args))
+    (log/debug ":page/new args" (pr-str args))
     (let [local? (not (client/open?))]
-      (js/console.debug ":page/new local?" local?)
+      (log/debug ":page/new local?" local?)
       (if local?
         (let [page-new-op (atomic-graph-ops/make-page-new-op title
                                                              page-uid
@@ -931,9 +932,9 @@
   (fn [_ [_ {:keys [block new-uid embed-id add-time?]
              :or {add-time? false}
              :as args}]]
-    (js/console.debug ":enter/add-child args:" (pr-str args))
+    (log/debug ":enter/add-child args:" (pr-str args))
     (let [local? (not (client/open?))]
-      (js/console.debug ":enter/add-child local?" local?)
+      (log/debug ":enter/add-child local?" local?)
       (if local?
         (let [add-child-event (common-events/build-add-child-event -1
                                                                    (:block/uid block)
@@ -952,7 +953,7 @@
 (reg-event-fx
   :enter/split-block
   (fn [_ [_ {:keys [parent-uid uid new-uid new-order old-string value index embed-id] :as args}]]
-    (js/console.debug ":enter/split-block" (pr-str args))
+    (log/debug ":enter/split-block" (pr-str args))
     (let [local?         (not (client/open?))
           split-block-op (graph-ops/build-block-split-op @db/dsdb
                                                          {:parent-uid      parent-uid
@@ -962,10 +963,10 @@
                                                           :old-string      old-string
                                                           :new-string      value
                                                           :index           index})]
-      (js/console.debug ":enter/split-block local?" local? "split-block-op" (pr-str split-block-op))
+      (log/debug ":enter/split-block local?" local? "split-block-op" (pr-str split-block-op))
       (if local?
         (let [tx (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb split-block-op)]
-          (js/console.debug ":enter/split-block tx:" (pr-str tx))
+          (log/debug ":enter/split-block tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
@@ -978,15 +979,15 @@
 (reg-event-fx
   :enter/bump-up
   (fn [_ [_ {:keys [uid new-uid embed-id] :as args}]]
-    (js/console.debug ":enter/bump-up args" (pr-str args))
+    (log/debug ":enter/bump-up args" (pr-str args))
     (let [local? (not (client/open?))]
-      (js/console.debug ":enter/bump-up local?" local?)
+      (log/debug ":enter/bump-up local?" local?)
       (if local?
         (let [bump-up-event (common-events/build-bump-up-event -1
                                                                uid
                                                                new-uid)
               tx            (resolver/resolve-event-to-tx @db/dsdb bump-up-event)]
-          (js/console.debug ":enter/bump-up tx:" (pr-str tx))
+          (log/debug ":enter/bump-up tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
@@ -996,16 +997,16 @@
 (reg-event-fx
   :enter/open-block-add-child
   (fn [_ [_ {:keys [block new-uid embed-id]}]]
-    (js/console.debug ":enter/open-block-add-child" (pr-str block) new-uid)
+    (log/debug ":enter/open-block-add-child" (pr-str block) new-uid)
     (let [local? (not (client/open?))]
-      (js/console.debug ":enter/open-block-add-child local?" local?)
+      (log/debug ":enter/open-block-add-child local?" local?)
       (if local?
         (let [block-uid                  (:block/uid block)
               open-block-add-child-event (common-events/build-open-block-add-child-event -1
                                                                                          block-uid
                                                                                          new-uid)
               tx                         (resolver/resolve-event-to-tx @db/dsdb open-block-add-child-event)]
-          (js/console.debug ":enter/open-block-add-child tx:" (pr-str tx))
+          (log/debug ":enter/open-block-add-child tx:" (pr-str tx))
           {:fx [[:dispatch-n [[:transact tx]
                               [:editing/uid (str new-uid (when embed-id
                                                            (str "-embed-" embed-id)))]]]]})
@@ -1113,7 +1114,8 @@
                                 [:enter/bump-up {:uid      uid
                                                  :new-uid  new-uid
                                                  :embed-id embed-id}])]
-    (js/console.debug "[Enter] ->" (pr-str event))
+    (log/debug "[Enter] ->" (pr-str event))
+    (assert parent-uid (str "[Enter] no parent for block-uid: " uid))
     {:fx [[:dispatch event]]}))
 
 
@@ -1130,20 +1132,20 @@
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-    (js/console.debug ":indent" args)
+    (log/debug ":indent" args)
     (let [local?                    (not (client/open?))
           block                     (common-db/get-block @db/dsdb [:block/uid uid])
           block-zero?               (zero? (:block/order block))
           {:keys [value start end]} d-key-down]
-      (js/console.debug ":indent local?" local?
-                        ", block-zero?" block-zero?)
+      (log/debug ":indent local?" local?
+                 ", block-zero?" block-zero?)
       (when-not block-zero?
         (if local?
           (let [indent-event (common-events/build-indent-event -1
                                                                uid
                                                                value)
                 tx           (resolver/resolve-event-to-tx @db/dsdb indent-event)]
-            (js/console.debug ":indent tx:" (pr-str tx))
+            (log/debug ":indent tx:" (pr-str tx))
             {:fx [[:dispatch            [:transact tx]]
                   [:set-cursor-position [uid start end]]]})
           {:fx [[:dispatch [:remote/indent (merge (select-keys args [:uid])
@@ -1155,22 +1157,22 @@
 (reg-event-fx
   :indent/multi
   (fn [_ [_ {:keys [uids]}]]
-    (js/console.debug ":indent/multi" uids)
+    (log/debug ":indent/multi" uids)
     (let [local?                   (not (client/open?))
           sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
           dsdb                     @db/dsdb
           same-parent?             (common-db/same-parent? dsdb sanitized-selected-uids)
           first-block-order        (:block/order (common-db/get-block dsdb [:block/uid (first sanitized-selected-uids)]))
           block-zero?              (zero? first-block-order)]
-      (js/console.debug ":indent/multi local?"       local?
-                        ", same-parent?"       same-parent?
-                        ", not block-zero?"    (not  block-zero?))
+      (log/debug ":indent/multi local?"       local?
+                 ", same-parent?"       same-parent?
+                 ", not block-zero?"    (not  block-zero?))
       (when (and same-parent? (not block-zero?))
         (if local?
           (let [indent-multi-event  (common-events/build-indent-multi-event -1
                                                                             sanitized-selected-uids)
                 tx                  (resolver/resolve-event-to-tx dsdb indent-multi-event)]
-            (js/console.debug ":indent/multi tx" (pr-str tx))
+            (log/debug ":indent/multi tx" (pr-str tx))
             {:fx [[:dispatch [:transact tx]]]})
           {:fx [[:dispatch [:remote/indent-multi {:uids sanitized-selected-uids}]]]})))))
 
@@ -1178,7 +1180,7 @@
 (reg-event-fx
   :unindent
   (fn [{_rfdb :db} [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
-    (js/console.debug ":unindent args" (pr-str args))
+    (log/debug ":unindent args" (pr-str args))
     (let [local?                    (not (client/open?))
           parent                    (common-db/get-parent @db/dsdb
                                                           (common-db/e-by-av @db/dsdb :block/uid uid))
@@ -1192,15 +1194,15 @@
                                         (:node/title parent)
                                         (= context-root-uid (:block/uid parent)))
           {:keys [value start end]} d-key-down]
-      (js/console.debug ":unindent local?" local?
-                        ", do-nothing?" do-nothing?)
+      (log/debug ":unindent local?" local?
+                 ", do-nothing?" do-nothing?)
       (when-not do-nothing?
         (if local?
           (let [unindent-event (common-events/build-unindent-event -1
                                                                    uid
                                                                    value)
                 tx             (resolver/resolve-event-to-tx @db/dsdb unindent-event)]
-            (js/console.debug ":unindent tx:" (pr-str tx))
+            (log/debug ":unindent tx:" (pr-str tx))
             {:fx [[:dispatch-n [[:transact tx]
                                 [:editing/uid (str uid (when embed-id
                                                          (str "-embed-" embed-id)))]]]
@@ -1214,7 +1216,7 @@
 (reg-event-fx
   :unindent/multi
   (fn [{rfdb :db} [_ {:keys [uids]}]]
-    (js/console.debug ":unindent/multi" uids)
+    (log/debug ":unindent/multi" uids)
     (let [local?                      (not (client/open?))
           [f-uid f-embed-id]          (common-db/uid-and-embed-id (first uids))
           sanitized-selected-uids     (mapv (comp
@@ -1236,15 +1238,15 @@
                                           (not same-parent?)
                                           (and same-parent? is-parent-root-embed?)
                                           (= parent-uid context-root-uid))]
-      (js/console.debug ":unindent/multi local?" local?
-                        ", do-nothing?"          do-nothing?)
+      (log/debug ":unindent/multi local?" local?
+                 ", do-nothing?"          do-nothing?)
       (when-not do-nothing?
         (if local?
           (let [unindent-multi-event  (common-events/build-unindent-multi-event -1
                                                                                 sanitized-selected-uids)
 
                 tx                  (resolver/resolve-event-to-tx @db/dsdb unindent-multi-event)]
-            (js/console.debug ":unindent/multi tx" (pr-str tx))
+            (log/debug ":unindent/multi tx" (pr-str tx))
             {:fx [[:dispatch [:transact tx]]]})
           {:fx [[:dispatch [:remote/unindent-multi {:uids sanitized-selected-uids}]]]})))))
 
@@ -1252,15 +1254,15 @@
 (reg-event-fx
   :drop/child
   (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
-    (js/console.debug ":drop/child args" (pr-str args))
+    (log/debug ":drop/child args" (pr-str args))
     (let [local? (not (client/open?))]
-      (js/console.debug ":drop/child local?" local?)
+      (log/debug ":drop/child local?" local?)
       (if local?
         (let [drop-child-event (common-events/build-drop-child-event -1
                                                                      source-uid
                                                                      target-uid)
               tx               (resolver/resolve-event-to-tx @db/dsdb drop-child-event)]
-          (js/console.debug ":drop/child tx" tx)
+          (log/debug ":drop/child tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-child args]]]}))))
 
@@ -1268,15 +1270,15 @@
 (reg-event-fx
   :drop-multi/child
   (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
-    (js/console.debug ":drop-multi/child args" (pr-str args))
+    (log/debug ":drop-multi/child args" (pr-str args))
     (let [local? (not (client/open?))]
-      (js/console.debug ":drop-multi/child local?" local?)
+      (log/debug ":drop-multi/child local?" local?)
       (if local?
         (let [drop-multi-child-event (common-events/build-drop-multi-child-event -1
                                                                                  source-uids
                                                                                  target-uid)
               tx                     (resolver/resolve-event-to-tx @db/dsdb drop-multi-child-event)]
-          (js/console.debug ":drop-multi/child tx" tx)
+          (log/debug ":drop-multi/child tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-multi-child args]]]}))))
 
@@ -1284,15 +1286,15 @@
 (reg-event-fx
   :drop-link/child
   (fn [_ [_ {:keys [source-uid target-uid] :as args}]]
-    (js/console.debug ":drop-link/child args" (pr-str args))
+    (log/debug ":drop-link/child args" (pr-str args))
     (let [local? (not (client/open?))]
-      (js/console.debug ":drop-link/child local?" local?)
+      (log/debug ":drop-link/child local?" local?)
       (if local?
         (let [drop-link-child-event (common-events/build-drop-link-child-event -1
                                                                                source-uid
                                                                                target-uid)
               tx                    (resolver/resolve-event-to-tx @db/dsdb drop-link-child-event)]
-          (js/console.debug ":drop-link/child tx" tx)
+          (log/debug ":drop-link/child tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-link-child args]]]}))))
 
@@ -1300,16 +1302,16 @@
 (reg-event-fx
   :drop/diff-parent
   (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (js/console.debug ":drop/diff-parent args" args)
+    (log/debug ":drop/diff-parent args" args)
     (let [local? (not (client/open?))]
-      (js/console.debug ":drop/diff-parent local?" local?)
+      (log/debug ":drop/diff-parent local?" local?)
       (if local?
         (let [drop-diff-parent-event (common-events/build-drop-diff-parent-event -1
                                                                                  drag-target
                                                                                  source-uid
                                                                                  target-uid)
               tx                     (resolver/resolve-event-to-tx @db/dsdb drop-diff-parent-event)]
-          (js/console.debug ":drop/diff-parent tx" tx)
+          (log/debug ":drop/diff-parent tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-diff-parent args]]]}))))
 
@@ -1317,16 +1319,16 @@
 (reg-event-fx
   :drop-link/diff-parent
   (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (js/console.debug ":drop-link/diff-parent args" args)
+    (log/debug ":drop-link/diff-parent args" args)
     (let [local? (not (client/open?))]
-      (js/console.debug ":drop-link/diff-parent local?" local?)
+      (log/debug ":drop-link/diff-parent local?" local?)
       (if local?
         (let [drop-link-diff-parent-event (common-events/build-drop-link-diff-parent-event -1
                                                                                            drag-target
                                                                                            source-uid
                                                                                            target-uid)
               tx                          (resolver/resolve-event-to-tx @db/dsdb drop-link-diff-parent-event)]
-          (js/console.debug ":drop-link/diff-parent tx" tx)
+          (log/debug ":drop-link/diff-parent tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-link-diff-parent args]]]}))))
 
@@ -1334,16 +1336,16 @@
 (reg-event-fx
   :drop/same
   (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (js/console.debug ":drop/same args" args)
+    (log/debug ":drop/same args" args)
     (let [local? (not (client/open?))]
-      (js/console.debug ":drop/same local?" local?)
+      (log/debug ":drop/same local?" local?)
       (if local?
         (let [drop-same-event   (common-events/build-drop-same-event -1
                                                                      drag-target
                                                                      source-uid
                                                                      target-uid)
               tx                (resolver/resolve-event-to-tx @db/dsdb drop-same-event)]
-          (js/console.debug ":drop/same tx" tx)
+          (log/debug ":drop/same tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-same args]]]}))))
 
@@ -1352,16 +1354,16 @@
   :drop-multi/same-source
   (fn [_ [_ {:keys [drag-target source-uids target-uid] :as args}]]
     ;; When the selected blocks have same parent and are DnD under some other block this event is fired.
-    (js/console.debug ":drop-multi/same-source args" args)
+    (log/debug ":drop-multi/same-source args" args)
     (let [local? (not (client/open?))]
-      (js/console.debug ":drop-multi/same-source local?" local?)
+      (log/debug ":drop-multi/same-source local?" local?)
       (if local?
         (let [drop-multi-same-source-event   (common-events/build-drop-multi-same-source-event -1
                                                                                                drag-target
                                                                                                source-uids
                                                                                                target-uid)
               tx                (resolver/resolve-event-to-tx @db/dsdb drop-multi-same-source-event)]
-          (js/console.debug ":drop-multi/same-source tx" tx)
+          (log/debug ":drop-multi/same-source tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-multi-same-source args]]]}))))
 
@@ -1371,16 +1373,16 @@
   (fn [_ [_ {:keys [drag-target source-uids target-uid] :as args}]]
     ;; When the selected blocks have same parent and are DnD under the same parent this event is fired.
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
-    (js/console.debug ":drop-multi/same-all args" args)
+    (log/debug ":drop-multi/same-all args" args)
     (let [local? (not (client/open?))]
-      (js/console.debug ":drop-multi/same-all local?" local?)
+      (log/debug ":drop-multi/same-all local?" local?)
       (if local?
         (let [drop-multi-same-all-event   (common-events/build-drop-multi-same-all-event -1
                                                                                          drag-target
                                                                                          source-uids
                                                                                          target-uid)
               tx                (resolver/resolve-event-to-tx @db/dsdb drop-multi-same-all-event)]
-          (js/console.debug ":drop-multi/same-all tx" tx)
+          (log/debug ":drop-multi/same-all tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-multi-same-all args]]]}))))
 
@@ -1388,16 +1390,16 @@
 (reg-event-fx
   :drop-link/same-parent
   (fn [_ [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (js/console.debug ":drop-link/same-parent args" args)
+    (log/debug ":drop-link/same-parent args" args)
     (let [local? (not (client/open?))]
-      (js/console.debug ":drop-link/same-parent local?" local?)
+      (log/debug ":drop-link/same-parent local?" local?)
       (if local?
         (let [drop-link-same-parent-event   (common-events/build-drop-link-same-parent-event -1
                                                                                              drag-target
                                                                                              source-uid
                                                                                              target-uid)
               tx                (resolver/resolve-event-to-tx @db/dsdb drop-link-same-parent-event)]
-          (js/console.debug ":drop-link/same-parent tx" tx)
+          (log/debug ":drop-link/same-parent tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-link-same args]]]}))))
 
@@ -1405,16 +1407,16 @@
 (reg-event-fx
   :drop-multi/diff-source-same-parents
   (fn [_ [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    (js/console.debug ":drop-multi/diff-source-same-parents args" args)
+    (log/debug ":drop-multi/diff-source-same-parents args" args)
     (let [local? (not (client/open?))]
-      (js/console.log "local?" local?)
+      (log/info "local?" local?)
       (if local?
         (let [drop-multi-diff-source-same-parents-event (common-events/build-drop-multi-diff-source-same-parents-event -1
                                                                                                                        drag-target
                                                                                                                        source-uids
                                                                                                                        target-uid)
               tx                                        (resolver/resolve-event-to-tx @db/dsdb drop-multi-diff-source-same-parents-event)]
-          (js/console.log ":drop-multi-diff-source-same-parents tx" tx)
+          (log/info ":drop-multi-diff-source-same-parents tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-multi-diff-source-same-parents args]]]}))))
 
@@ -1422,16 +1424,16 @@
 (reg-event-fx
   :drop-multi/diff-source-diff-parents
   (fn [_ [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    (js/console.debug ":drop-multi/diff-source-diff-parents args" args)
+    (log/debug ":drop-multi/diff-source-diff-parents args" args)
     (let [local? (not (client/open?))]
-      (js/console.log "local?" local?)
+      (log/info "local?" local?)
       (if local?
         (let [drop-multi-diff-source-diff-parents-event (common-events/build-drop-multi-diff-source-diff-parents-event -1
                                                                                                                        drag-target
                                                                                                                        source-uids
                                                                                                                        target-uid)
               tx                                        (resolver/resolve-event-to-tx @db/dsdb drop-multi-diff-source-diff-parents-event)]
-          (js/console.log ":drop-multi-diff-source-diff-parents tx" tx)
+          (log/info ":drop-multi-diff-source-diff-parents tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/drop-multi-diff-source-diff-parents args]]]}))))
 
@@ -1439,7 +1441,7 @@
 (reg-event-fx
   :paste
   (fn [_ [_ uid text :as args]]
-    (js/console.debug ":paste args" args)
+    (log/debug ":paste args" args)
     (let [local?          (not (client/open?))
           [uid embed-id]  (db/uid-and-embed-id uid)
           {:keys [start
@@ -1452,7 +1454,7 @@
                                                            start
                                                            value)
               tx          (resolver/resolve-event-to-tx @db/dsdb paste-event)]
-          (js/console.debug ":paste tx" tx)
+          (log/debug ":paste tx" tx)
           {:fx [[:dispatch [:transact tx]]
                 (when block-start?
                   (let [block                  (-> tx first :block/children)
@@ -1490,9 +1492,9 @@
 (reg-event-fx
   :unlinked-references/link
   (fn [_ [_ {:block/keys [string uid]} title]]
-    (js/console.debug ":unlinked-references/link:" uid)
+    (log/debug ":unlinked-references/link:" uid)
     (let [local? (not (client/open?))]
-      (js/console.debug ":unlinked-references/link: local?" local?)
+      (log/debug ":unlinked-references/link: local?" local?)
       (if local?
         (let [unlinked-references-link-event (common-events/build-unlinked-references-link -1 uid string title)
               tx-data                        (resolver/resolve-event-to-tx @db/dsdb unlinked-references-link-event)]
@@ -1503,9 +1505,9 @@
 (reg-event-fx
   :unlinked-references/link-all
   (fn [_ [_ unlinked-refs title]]
-    (js/console.debug ":unlinked-references/link:" title)
+    (log/debug ":unlinked-references/link:" title)
     (let [local? (not (client/open?))]
-      (js/console.debug ":unlinked-references/link: local?" local?)
+      (log/debug ":unlinked-references/link: local?" local?)
       (if local?
         (let [unlinked-references-link-all-event (common-events/build-unlinked-references-link-all -1 unlinked-refs title)
               tx-data                            (resolver/resolve-event-to-tx @db/dsdb unlinked-references-link-all-event)]
@@ -1516,15 +1518,15 @@
 (reg-event-fx
   :block/open
   (fn [_ [_ {:keys [block-uid open?] :as args}]]
-    (js/console.debug ":block/open args" args)
+    (log/debug ":block/open args" args)
     (let [local? (not (client/open?))]
-      (js/console.debug ":block/open local?" local?)
+      (log/debug ":block/open local?" local?)
       (if local?
         (let [block-open-event   (common-events/build-block-open-event -1
                                                                        block-uid
                                                                        open?)
               tx                (resolver/resolve-event-to-tx @db/dsdb block-open-event)]
-          (js/console.debug ":block/open tx" tx)
+          (log/debug ":block/open tx" tx)
           {:fx [[:dispatch [:transact tx]]]})
         {:fx [[:dispatch [:remote/block-open args]]]}))))
 
