@@ -285,9 +285,8 @@
           (if @theme-dark
             [:> ToggleOff]
             [:> ToggleOn])]
-         [:> Tooltip {:title "Help", :arrow true}
-          [:span [button {:on-click #(dispatch [:help/toggle])}
-                  [:> Help]]]]
+         [button {:title "Help" :on-click #(dispatch [:help/toggle])}
+          [:> Help]]
          [separator]
          [button {:active   @right-open?
                   :title "Toggle Sidebar"
