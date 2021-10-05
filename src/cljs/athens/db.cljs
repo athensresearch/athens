@@ -216,8 +216,8 @@
                          :db/valueType   :db.type/ref}
    :block/refs          {:db/cardinality :db.cardinality/many
                          :db/valueType   :db.type/ref}
-   :block/remote-id     {:db/unique :db.unique/identity}
-   :remote/db-id        {:db/unique :db.unique/identity}})
+   ;; TODO: do we really still use it?
+   :block/remote-id     {:db/unique :db.unique/identity}})
 
 
 (defonce dsdb (d/create-conn schema))
@@ -362,7 +362,7 @@
 
 (defn get-block
   [id]
-  @(pull dsdb '[:db/id :remote/db-id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
+  @(pull dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
 
 
 (defn get-parent

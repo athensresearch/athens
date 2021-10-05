@@ -111,8 +111,6 @@
   "Fetches whole block based on `:db/id`."
   [db eid]
   (d/pull db '[:db/id
-               #?(:cljs
-                  :remote/db-id)
                :node/title
                :block/uid
                :block/order

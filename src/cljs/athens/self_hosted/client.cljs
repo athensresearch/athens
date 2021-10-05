@@ -214,75 +214,6 @@
                                             :reason   explanation}]))))))
 
 
-(defn- local-eid
-  [remote-eid]
-  (db/e-by-av :remote/db-id remote-eid))
-
-
-(defn- build-addition-tx
-  [tempids e-id additions]
-  (when (seq additions)
-    (let [e->tmp (set/map-invert tempids)]
-      (reduce (fn [acc {:keys [_e a v _tx _added]}]
-                (assoc acc a (if (= :block/children a)
-                               (get e->tmp v (local-eid v))
-                               v)))
-              {:db/id        (get e->tmp e-id (local-eid e-id))
-               :remote/db-id e-id}
-              additions))))
-
-
-(defn- build-retraction-tx
-  [e-id retractions]
-  (when (seq retractions)
-    (reduce (fn [acc {:keys [_e a v _tx _added]}]
-              (conj acc [:db/retract
-                         (local-eid e-id)
-                         a
-                         (if (= :block/children a)
-                           (local-eid v)
-                           v)]))
-            []
-            retractions)))
-
-
-(defn- tx-log->tx
-  [tempids [entity-id tx-log]]
-  (js/console.debug ::tx-log->tx entity-id (pr-str tx-log))
-  (let [additions      (filter :added tx-log)
-        retractions    (remove :added tx-log)
-        additions-tx   (build-addition-tx tempids entity-id additions)
-        retractions-tx (build-retraction-tx entity-id retractions)]
-    (js/console.debug ::tx-log->tx
-                      :+ (count additions)
-                      :- (count retractions)
-                      :additions-tx (pr-str additions-tx)
-                      :retractions-tx (pr-str retractions-tx))
-    (into [additions-tx] retractions-tx)))
-
-
-(defn- reconstruct-tx-from-log
-  [{:keys [tx-data tempids] :as args}]
-  (js/console.debug "Reconstructing tx from" (pr-str args))
-  (->> tx-data
-       (remove #(= :db/txInstant (:a %)))
-       (group-by :e)
-       (mapcat (partial tx-log->tx tempids))
-       (remove #(nil? (second %)))
-       (sort-by :tx)))
-
-
-(defn- ds-tx-log-handler
-  [{:keys [tx-data tempids] :as args}]
-  (js/console.debug "Received TX Log with" (count tx-data) "datoms.")
-  (let [txs          (reconstruct-tx-from-log args)
-        remote-tx-id (:db/current-tx tempids)]
-    (js/console.debug "Reconstructed" (count txs) "DB changes")
-    (d/transact! db/dsdb txs)
-    (rf/dispatch [:remote/last-seen-tx! remote-tx-id])
-    (js/console.log "✅ Transacted locally. last-seen-tx" remote-tx-id)))
-
-
 (defn- reconstruct-entities-from-db-dump
   [datoms]
   (js/console.debug "Reconstructing tx from db dump of" (count datoms) "datoms")
@@ -307,8 +238,7 @@
                                              (conj (:block/children entity #{})
                                                    (insert-id v))
                                              v)))
-                                  {:db/id        (insert-id entity-id)
-                                   :remote/db-id entity-id}
+                                  {:db/id (insert-id entity-id)}
                                   datoms)))
                  {})
          ;; only entities
@@ -372,7 +302,6 @@
   (if (schema/valid-server-event? packet)
 
     (condp contains? type
-      #{:datascript/tx-log} (ds-tx-log-handler args)
       #{:datascript/db-dump} (db-dump-handler last-tx args)
       #{:presence/online} (presence-online-handler args)
       #{:presence/all-online} (presence-all-online-handler args)
@@ -565,41 +494,5 @@
           (atomic-graph-ops/make-page-new-op "test title"
                                              "abc123"
                                              "abc1234"))))
-
-
-(comment
-  ;; testing tx reconstruction
-  
-
-  ;; Sample data from tx-log
-  (def args
-    {:tx-data [{:e 536870941, :a :db/txInstant, :v #inst "2021-06-07T10:19:58.568-00:00", :tx 536870941, :added true}
-               {:e 42, :a :node/title, :v "Test Page Title 2", :tx 536870941, :added true}
-               {:e 42, :a :block/uid, :v "test-uid-2", :tx 536870941, :added true}
-               {:e 43, :a :block/string, :v "", :tx 536870941, :added true}
-               {:e 43, :a :block/uid, :v "ba7acf5f3", :tx 536870941, :added true}
-               {:e 43, :a :block/order, :v 0, :tx 536870941, :added true}
-               {:e 43, :a :block/open, :v true, :tx 536870941, :added true}
-               {:e 43, :a :create/time, :v 1623061198507, :tx 536870941, :added true}
-               {:e 43, :a :edit/time, :v 1623061198507, :tx 536870941, :added true}
-               {:e 42, :a :block/children, :v 43, :tx 536870941, :added true}
-               {:e 42, :a :create/time, :v 1623061198507, :tx 536870941, :added true}
-               {:e 42, :a :edit/time, :v 1623061198507, :tx 536870941, :added true}]
-     :tempids {-1             42
-               -2             43
-               :db/current-tx 536870941}})
-
-  (def retract-args
-    {:tx-data [{:e 536870942, :a :db/txInstant, :v #inst "2021-06-07T15:03:29.349-00:00", :tx 536870942, :added true}
-               {:e 43, :a :block/open, :v true, :tx 536870942, :added false}
-               {:e 43, :a :block/order, :v 0, :tx 536870942, :added false}
-               {:e 43, :a :block/string, :v "", :tx 536870942, :added false}
-               {:e 43, :a :block/uid, :v "ba7acf5f3", :tx 536870942, :added false}
-               {:e 43, :a :create/time, :v 1623061198507, :tx 536870942, :added false}
-               {:e 43, :a :edit/time, :v 1623061198507, :tx 536870942, :added false}
-               {:e 42, :a :block/children, :v 43, :tx 536870942, :added false}]
-     :tempids {:db/current-tx 536870942}})
-  
-  (reconstruct-tx-from-log args))
 
 
