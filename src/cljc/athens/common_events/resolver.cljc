@@ -244,7 +244,6 @@
                 value
                 index
                 new-uid]} args
-        {:db/keys [id]}   (common-db/get-block db [:block/uid uid])
         head              (subs value 0 index)
         tail              (subs value index)
         new-block         {:db/id        -1
@@ -253,8 +252,8 @@
                            :block/open   true
                            :block/string tail}
         reindex           (concat [new-block]
-                                  (common-db/inc-after db id -1))
-        tx-data           [{:db/id          id
+                                  (common-db/inc-after db [:block/uid uid] -1))
+        tx-data           [{:block/uid      uid
                             :block/string   head
                             :block/children reindex
                             :edit/time      (utils/now-ts)}]]
