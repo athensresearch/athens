@@ -16,7 +16,7 @@
 (repl/set-init local-new-system)
 
 
-(defn- datahike-conn
+(defn datahike-conn
   "Gets you Datahike connection from system."
   []
   (get-in system [:datahike :conn]))
