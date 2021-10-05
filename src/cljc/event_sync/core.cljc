@@ -5,6 +5,9 @@
     [flatland.ordered.map :refer [ordered-map]]))
 
 
+;; TODO: obey seq last arg, map first arg convention
+
+
 (defn op
   "Create an operation in the format of [type stage-id event-id event noop?].
    type can be one of :add, :promote, :remove. noop? is true if the operation did nothing."
@@ -95,12 +98,13 @@
   "Remove event from stage-id.
    If the event is not there last-op will be marked as a noop (last element is true)."
   [stage-id event-id event state]
-  (let [current (event-stage state event-id)]
+  (let [current (event-stage state event-id)
+        remove? (= stage-id current)]
     (cond-> state
       ;; remove from current stage
-      current (update-in [:stages current] dissoc event-id)
+      remove? (update-in [:stages current] dissoc event-id)
       ;; update last operation
-      true    (update-op (op :remove stage-id event-id event (not current))))))
+      true    (update-op (op :remove stage-id event-id event (not remove?))))))
 
 
 (defn stage-log
@@ -137,32 +141,27 @@
 
 
 (defn add!
-  "Mutate state-atom via add."
+  "Mutate state-atom via add. "
   [state-atom stage-id event-id event]
   (swap! state-atom (partial add stage-id event-id event)))
 
 
 (defn remove!
-  "Mutate state-atom via remove."
+  "Mutate state-atom via remove. "
   [state-atom stage-id event-id event]
   (swap! state-atom (partial remove stage-id event-id event)))
 
 
 (defn add-watch
   "Add a watch fn to state-atom under key.
-   on-init, on-add, on-promote, on-remove are fns that receive op and state.
-   on-init the first time the watcher is triggered instead of the callback matching the operation."
-  [state-atom key on-init on-add on-promote on-remove]
-  (let [init? (atom true)
-        f     (fn state-atom-watcher
-                [_ _ _ {:keys [last-op] :as new-state}]
-                (if @init?
-                  (do (on-init last-op new-state)
-                      (reset! init? false))
-                  (condp = (first last-op)
-                    :add     (on-add last-op new-state)
-                    :promote (on-promote last-op new-state)
-                    :remove  (on-remove last-op new-state))))]
+   on-add, on-promote, on-remove are fns that receive last-op and state."
+  [state-atom key on-add on-promote on-remove]
+  (let [f (fn state-atom-watcher
+            [_ _ _ {:keys [last-op] :as new-state}]
+            (condp = (first last-op)
+              :add     (on-add last-op new-state)
+              :promote (on-promote last-op new-state)
+              :remove  (on-remove last-op new-state)))]
     (clojure.core/add-watch state-atom key f)))
 
 
