@@ -54,7 +54,10 @@
     (.init Sentry (clj->js {:dsn SENTRY_DSN
                             :release          (str "athens@" (util/athens-version))
                             :integrations     [(new (.. tracing -Integrations -BrowserTracing))
-                                               (new (.. integrations -CaptureConsole) (clj->js {:levels ["warn" "error" "debug" "assert"]}))]
+                                               (new (.. integrations -CaptureConsole)
+                                                    (clj->js {:levels ["error" "assert"]}))
+                                               (new (.. integrations -ReportingObserver)
+                                                    (clj->js {:types ["crash"]}))]
                             :environment      (if config/debug? "development" "production")
                             :beforeSend       #(when (sentry-on?) %)
                             :tracesSampleRate 1.0}))))
