@@ -12,13 +12,7 @@
       TimeUnit)))
 
 
-(defn random-tmp-folder-config
-  []
-  {:store {:backend :file
-           :path    (str "/tmp/example-" (common.utils/gen-block-uid))}})
-
-
-(t/use-fixtures :each (partial fixture/integration-test-fixture [] (random-tmp-folder-config)))
+(t/use-fixtures :each (partial fixture/integration-test-fixture [] (fixture/random-tmp-folder-config)))
 
 
 (defn transact-with-linkmaker

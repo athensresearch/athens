@@ -1,9 +1,11 @@
 (ns athens.self-hosted.components.datahike
   (:require
-    [athens.athens-datoms       :as athens-datoms]
-    [clojure.tools.logging      :as log]
-    [com.stuartsierra.component :as component]
-    [datahike.api               :as d]))
+    [athens.athens-datoms              :as athens-datoms]
+    [athens.common-db                  :as common-db]
+    [athens.common.logging             :as log]
+    [athens.self-hosted.web.datascript :as ds]
+    [com.stuartsierra.component        :as component]
+    [datahike.api                      :as d]))
 
 
 (def schema
@@ -80,9 +82,24 @@
       (log/info "Starting Datahike connection: " dh-conf)
       (let [connection (d/connect conf-with-schema)]
         (log/debug "Datahike connected")
-        (when @new-db?
-          (log/debug "Populating fresh db with datoms.")
-          (d/transact connection athens-datoms/lan-datoms))
+        (if @new-db?
+          (do
+            (log/info "Populating fresh Knowledge graph with initial data...")
+            (ds/transact! connection "init-lan-datoms" athens-datoms/lan-datoms)
+            (log/info "✅ Populated fresh Knowledge graph."))
+          (do
+            (log/info "Knowledge graph health check...")
+            (let [linkmaker-txs   (common-db/linkmaker @connection)
+                  orderkeeper-txs (common-db/orderkeeper @connection)]
+              (when-not (empty? linkmaker-txs)
+                (log/warn "linkmaker fixes#:" (count linkmaker-txs))
+                (log/info "linkmaker fixes:" (pr-str linkmaker-txs))
+                (d/transact connection linkmaker-txs))
+              (when-not (empty? orderkeeper-txs)
+                (log/warn "orderkeeper fixes#:" (count orderkeeper-txs))
+                (log/info "orderkeeper fixes:" (pr-str orderkeeper-txs))
+                (d/transact connection orderkeeper-txs))
+              (log/info "✅ Knowledge graph health check."))))
         (assoc component :conn connection))))
 
 

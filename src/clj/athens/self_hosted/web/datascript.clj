@@ -71,11 +71,9 @@
   (try
     (log/debug "Transacting event-id:" event-id ", txs:" (with-out-str
                                                            (pprint/pprint txs)))
-    (let [last-tx (atom nil)
-          ;; normalize txs
-          txs     (if (map? txs)
-                    [txs]
-                    txs)]
+    (let [txs (if (map? txs)
+                [txs]
+                txs)]
       (log/debug "event-id:" event-id ", normalized-txs:" (with-out-str
                                                             (pprint/pprint txs)))
       (let [processed-tx            (->> txs
@@ -83,18 +81,18 @@
                                          (common-db/orderkeeper @connection))
             {:keys [tempids]}       (d/transact connection processed-tx)
             {:db/keys [current-tx]} tempids]
-        (reset! last-tx current-tx)
-        (log/debug "Transacted event-id:" event-id ", tx-id:" current-tx))
-      (common-events/build-event-accepted event-id @last-tx))
+        (log/debug "event-id:" event-id ", transacted in tx-id:" current-tx)
+        (common-events/build-event-accepted event-id current-tx)))
 
     (catch ExceptionInfo ex
       (let [err-msg   (ex-message ex)
             err-data  (ex-data ex)
             err-cause (ex-cause ex)]
-        (log/error ex (str "Transacting event-id: " event-id
-                           " FAIL: " (pr-str {:msg   err-msg
-                                              :data  err-data
-                                              :cause err-cause})))
+        (log/error ex (str "event-id: " event-id
+                           "Processing transaction FAIL: "
+                           (pr-str {:msg   err-msg
+                                    :data  err-data
+                                    :cause err-cause})))
         (common-events/build-event-rejected event-id err-msg err-data)))))
 
 
@@ -110,18 +108,26 @@
 
 (defn datascript-handler
   [datahike channel {:event/keys [id type args] :as event}]
-  (log/debug (clients/get-client-username channel) "-> Received:" type "with args:" args)
-  ;; TODO Check if potentially conflicting event?
-  ;; if so compare tx-id from client with HEAD master DB
-  ;; current -> continue
-  ;; stale -> reject
-  (if (contains? supported-event-types type)
-    (default-handler datahike channel event)
-    (do
-      (log/error "datascript-handler, unsupported event:" (pr-str event))
-      (common-events/build-event-rejected id
-                                          (str "Unsupported event: " type)
-                                          {:unsupported-type type}))))
+  (let [username (clients/get-client-username channel)]
+    (log/debug (str "u: " username ", event-id: " id ", type: " (pr-str type) ", args:" (pr-str args)))
+    ;; TODO Check if potentially conflicting event?
+    ;; if so compare tx-id from client with HEAD master DB
+    ;; current -> continue
+    ;; stale -> reject
+    (if (contains? supported-event-types type)
+      (try
+        (default-handler datahike channel event)
+        (catch ExceptionInfo ex
+          (let [msg (str "u: " username ", event-id: " id ", Exception during resolving or transacting.")]
+            (log/error ex msg)
+            (common-events/build-event-rejected id
+                                                msg
+                                                (ex-data ex)))))
+      (do
+        (log/error "datascript-handler, unsupported event:" (pr-str event))
+        (common-events/build-event-rejected id
+                                            (str "Unsupported event: " type)
+                                            {:unsupported-type type})))))
 
 
 (defn atomic-op-exec
