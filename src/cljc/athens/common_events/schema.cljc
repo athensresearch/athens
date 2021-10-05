@@ -68,7 +68,6 @@
 
 (def event-type-graph-server
   [:enum
-   :datascript/tx-log
    :datascript/db-dump])
 
 
@@ -685,7 +684,6 @@
    (dispatch :datascript/selected-delete datascript-selected-delete true)
 
    ;; server specific graph events
-   (dispatch :datascript/tx-log tx-log true)
    (dispatch :datascript/db-dump db-dump true)
    ;; server specific presence events
    (dispatch :presence/online presence-online true)

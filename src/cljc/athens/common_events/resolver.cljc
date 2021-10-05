@@ -258,37 +258,37 @@
                             :block/string   head
                             :block/children reindex
                             :edit/time      (utils/now-ts)}]]
-    (println "resolver :datascript/split-block-to-children tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/indent
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/indent args" (pr-str args))
+  [db {:event/keys [id type args]}]
   (let [{:keys [uid
                 value]}            args
-        {block-eid :db/id
-         block-order :block/order} (common-db/get-block db [:block/uid uid])
-        {parent-eid :db/id}        (common-db/get-parent db [:block/uid uid])
-        older-sib                  (common-db/get-older-sib db uid)
-        new-block                  {:db/id block-eid
-                                    :block/order (count (:block/children older-sib))
+        {block-order :block/order} (common-db/get-block db [:block/uid uid])
+        {parent-uid :block/uid}    (common-db/get-parent db [:block/uid uid])
+        older-sib                  (common-db/get-older-sib db uid) ; TODO this lookup fails often
+        new-block                  {:block/uid    uid
+                                    :block/order  (count (:block/children older-sib))
                                     :block/string value}
-        reindex                    (common-db/dec-after db parent-eid block-order)
-        retract                    [:db/retract parent-eid
-                                    :block/children block-eid]
-        new-older-sib              {:db/id (:db/id older-sib)
+        reindex                    (common-db/dec-after db [:block/uid parent-uid] block-order)
+        retract                    [:db/retract [:block/uid parent-uid]
+                                    :block/children [:block/uid uid]]
+        new-older-sib              {:block/uid      (:block/uid older-sib)
                                     :block/children [new-block]
-                                    :block/open true}
-        new-parent                 {:db/id parent-eid :block/children reindex}
+                                    :block/open     true}
+        new-parent                 {:block/uid      parent-uid
+                                    :block/children reindex}
         tx-data                    [retract new-older-sib new-parent]]
-    (println "resolver :datascript/indent tx-data" (pr-str tx-data))
+    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
+               "tx-data:" (pr-str tx-data))
     tx-data))
 
 
 (defmethod resolve-event-to-tx :datascript/indent-multi
-  [db {:event/keys [args]}]
-  (println "resolver :datascript/indent-multi args" (pr-str args))
+  [db {:event/keys [id type args]}]
   (let [{:keys [uids]}      args
         blocks              (map #(common-db/get-block db [:block/uid %]) uids)
         first-uid           (first uids)
