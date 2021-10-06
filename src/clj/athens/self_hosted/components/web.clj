@@ -24,7 +24,7 @@
     (clients/remove-client! channel)
     ;; Notify clients after removing the one that left.
     (presence/goodbye-handler datahike username)
-    (log/debug username "!! closed, status" status)))
+    (log/info "username:" username "!! closed connection, status:" status)))
 
 
 (defn- valid-event-handler
@@ -33,7 +33,7 @@
   (if (and (false? username)
            (not= :presence/hello type))
     (do
-      (log/warn channel "Message out of order, didn't say :presence/hello.")
+      (log/warn "Message out of order, didn't say :presence/hello.")
       (clients/send! channel (common-events/build-event-rejected id
                                                                  :introduce-yourself
                                                                  {:protocol-error :client-not-introduced})))
@@ -55,7 +55,7 @@
                                                             {:unsupported-type type})))]
       (merge {:event/id id}
              result)
-      (log/error "No result for `valid-event-handler`, input data:" (pr-str data)))))
+      (log/error "username:" username ", event-id:" id ", type:" type "No result for `valid-event-handler`"))))
 
 
 (def ^:private forwardable-events
@@ -72,19 +72,19 @@
           data     (clients/<-transit msg)]
       (if-not (schema/valid-event? data)
         (let [explanation (schema/explain-event data)]
-          (log/warn username "-> invalid event received:" explanation)
+          (log/warn "username:" username "Invalid event received, explanation:" explanation)
           (clients/send! channel (common-events/build-event-rejected (:event/id data)
                                                                      (str "Invalid event: " (pr-str data))
                                                                      explanation)))
-        (let [{:event/keys [_id type]} data]
-          (log/debug username "-> decoded valid event" (pr-str data))
+        (let [{:event/keys [id type]} data]
+          (log/debug "username:" username ", event-id:" id ", type:" type "received valid event")
           (let [{:event/keys [status]
                  :as         result} (valid-event-handler datahike server-password channel username data)]
-            (log/debug username "-> event processed, result:" (pr-str result))
+            (log/debug "username:" username ", event-id:" id ", processed with status:" status)
             ;; forward to everyone if accepted
             (when (and (= :accepted status)
                        (contains? forwardable-events type))
-              (log/debug "Forwarding to everyone accepted event:" (pr-str data))
+              (log/debug "Forwarding accepted event, event-id:" id)
               (clients/broadcast! data))
             ;; acknowledge
             (clients/send! channel result)))))))

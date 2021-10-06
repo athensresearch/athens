@@ -44,15 +44,21 @@
 (defn send!
   "Send data to a client via `channel`"
   [channel data]
-  (log/debug "->" (get @clients channel) ", data:" (pr-str data))
-  (let [valid-event-response? (schema/valid-event-response? data)
+  (let [username              (get @clients channel)
+        valid-event-response? (schema/valid-event-response? data)
         valid-server-event?   (schema/valid-server-event? data)]
     (if (or valid-event-response?
             valid-server-event?)
-      (http/send! channel (->transit data))
+      (do
+        (log/debug "Sending to username:" username
+                   ", event-id:" (:event/id data)
+                   ", type:" (:event/type data)
+                   ", status:" (:event/status data))
+        (http/send! channel (->transit data)))
       ;; TODO internal failure mode, collect in reporting
-      (log/error "->" (get @clients channel)
-                 ", event:" (pr-str data)
+      (log/error "Not sending invalid event to username:" username
+                 ", event-id:" (:event/id data)
+                 ", type:" (:event/type data)
                  ", invalid schema:"
                  "event-response take:" (str (schema/explain-event-response data))
                  ", server-event take:" (str (schema/explain-server-event data))))))
@@ -60,8 +66,8 @@
 
 (defn broadcast!
   "Broadcasts event to all connected clients"
-  [event]
-  (log/debug "Broadcasting:" (pr-str event))
+  [{:event/keys [id type] :as event}]
+  (log/debug "Broadcasting event-id:" id "type:" type)
   (doseq [client (keys @clients)]
     (send! client event)))
 
@@ -71,7 +77,7 @@
   ([channel]
    (add-client! channel false))
   ([channel username]
-   (log/debug channel "add-client!" username)
+   (log/debug "add-client! username:" username)
    (swap! clients assoc channel username)))
 
 
@@ -93,5 +99,5 @@
 (defn remove-client!
   [channel]
   (let [username (get @clients channel)]
-    (log/debug "remove-client!" username)
+    (log/debug "remove-client! username:" username)
     (swap! clients dissoc channel)))

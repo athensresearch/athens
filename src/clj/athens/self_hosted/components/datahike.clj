@@ -4,6 +4,7 @@
     [athens.common-db                  :as common-db]
     [athens.common.logging             :as log]
     [athens.self-hosted.web.datascript :as ds]
+    [clojure.pprint                    :as pp]
     [com.stuartsierra.component        :as component]
     [datahike.api                      :as d]))
 
@@ -75,13 +76,16 @@
           (log/info "Creating new Datahike database")
           (d/create-database conf-with-schema)
           (reset! new-db? true)))
-      (log/info "Starting Datahike connection: " dh-conf)
+      (log/info "Starting Datahike connection: " (with-out-str
+                                                   (pp/pprint dh-conf)))
       (let [connection (d/connect conf-with-schema)]
-        (log/debug "Datahike connected")
+        (log/info "Datahike connected")
         (if @new-db?
           (do
             (log/info "Populating fresh Knowledge graph with initial data...")
-            (ds/transact! connection "init-lan-datoms" athens-datoms/lan-datoms)
+            (ds/transact! connection "init-lan-datoms" (->> athens-datoms/lan-datoms
+                                                            (common-db/linkmaker @connection)
+                                                            (common-db/orderkeeper @connection)))
             (log/info "✅ Populated fresh Knowledge graph."))
           (do
             (log/info "Knowledge graph health check...")

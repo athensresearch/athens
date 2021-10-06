@@ -2,6 +2,7 @@
   "Athens Self-Hosted Configuration management"
   (:require
     [athens.common.logging      :as log]
+    [clojure.pprint             :as pp]
     [com.stuartsierra.component :as component]
     [config.core                :as cfg]))
 
@@ -16,7 +17,8 @@
     (let [config        (cfg/reload-env)
           merged-config (cfg/merge-maps config (:config-edn config))]
       (log/info "Starting configuration component")
-      (log/info merged-config)
+      (log/debug "Merged configuration:" (with-out-str
+                                           (pp/pprint merged-config)))
       (assoc component :config merged-config)))
 
 

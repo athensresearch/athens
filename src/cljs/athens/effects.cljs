@@ -2,7 +2,7 @@
   (:require
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
-    [athens.common.log           :as log]
+    [athens.common.logging       :as log]
     [athens.db                   :as db]
     [athens.self-hosted.client   :as client]
     [cljs-http.client            :as http]

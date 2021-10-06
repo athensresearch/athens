@@ -4,8 +4,8 @@
     [athens.common-events              :as common-events]
     [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events.schema       :as schema]
+    [athens.common.logging             :as log]
     [athens.db                         :as db]
-    [clojure.set                       :as set]
     [cognitect.transit                 :as transit]
     [com.cognitect.transit.types       :as ty]
     [com.stuartsierra.component        :as component]
@@ -26,7 +26,7 @@
 
 (defn- connect-to-self-hosted!
   [url]
-  (js/console.log "WSClient Connecting to:" url)
+  (log/info "WSClient Connecting to:" url)
   (when url
     (doto (js/WebSocket. url)
       (.addEventListener "open" open-handler)
@@ -45,7 +45,7 @@
 
 (defn- await-response!
   [{:event/keys [id] :as data}]
-  (js/console.log "WSClient awaiting response:" (str id) (str data))
+  (log/debug "event-id:" (pr-str id) "WSClient awaiting response:")
   ;; message-handler will set the app as synced once a response has arrived.
   (rf/dispatch [:db/not-synced])
   (swap! awaiting-response assoc id data))
@@ -62,7 +62,7 @@
    (delayed-reconnect! url 3000))
   ([url delay-ms]
    (swap! reconnect-counter inc)
-   (js/console.log "WSClient scheduling reconnect in" delay-ms "ms to" url)
+   (log/info "WSClient scheduling reconnect in" delay-ms "ms to" url)
    (if (< @reconnect-counter MAX_RECONNECT_TRY)
      (let [timer-id (js/setTimeout (fn []
                                      (reset! reconnect-timer nil)
@@ -70,7 +70,7 @@
                                    delay-ms)]
        (reset! reconnect-timer timer-id))
      (do
-       (js/console.warn "Reconnect max tries" @reconnect-counter)
+       (log/warn "Reconnect max tries" @reconnect-counter)
        (rf/dispatch [:remote/connection-failed])))))
 
 
@@ -109,26 +109,36 @@
    (if (schema/valid-event? data)
      (if (open? connection)
        (do
-         (js/console.debug "WSClient sending to server:" (pr-str data))
+         (log/debug "event-id:" (pr-str (:event/id data))
+                    ", type:" (pr-str (:event/type data))
+                    "WSClient sending to server")
          (await-response! data)
          (.send connection (transit/write (transit/writer :json) data))
          {:result :sent})
        (do
-         (js/console.warn "WSClient not open")
+         (log/warn "event-id:" (pr-str (:event/id data))
+                   ", type:" (pr-str (:event/type data))
+                   "Can't send: WSClient not open")
          (if (reconnecting?)
            (do
-             (js/console.info "WSClient already reconnecting, queued.")
+             (log/info "event-id:" (pr-str (:event/id data))
+                       ", type:" (pr-str (:event/type data))
+                       "WSClient already reconnecting, queued.")
              (swap! send-queue (fnil conj []) data)
              {:result :queued
               :reason :client-already-reconnecting})
            (do
-             (js/console.warn "WSClient closed & not reconnecting. Reconnecting & queued.")
+             (log/warn "event-id:" (pr-str (:event/id data))
+                       ", type:" (pr-str (:event/type data))
+                       "WSClient closed & not reconnecting. Reconnecting & queued.")
              (delayed-reconnect! (.-url connection) 0)
              (swap! send-queue (fnil conj []) data)
              {:result :queued
               :reason :client-started-reconnecting}))))
      (let [explanation (schema/explain-event data)]
-       (js/console.warn "Client tried to send invalid event. Explanation: " (pr-str explanation data))
+       (log/warn "event-id:" (pr-str (:event/id data))
+                 ", type:" (pr-str (:event/type data))
+                 "Client tried to send invalid event. Explanation: " (pr-str explanation))
        {:result :rejected
         :reason :invalid-event-schema}))))
 
@@ -138,7 +148,7 @@
 
 (defn- open-handler
   [event]
-  (js/console.log "WSClient Connected:" event)
+  (log/info "WSClient Connected:" event)
   (let [connection             (.-target event)
         last-tx                @(rf/subscribe [:remote/last-seen-tx])
         username               @(rf/subscribe [:username])
@@ -161,16 +171,17 @@
   [{:event/keys [status] :as event}]
   (if (= :accepted status)
     (do
-      (js/console.log "Successfully connected to Lan-Party.")
+      (log/info "Successfully connected to Lan-Party.")
       (reset! await-open-event-id nil)
       (when (seq @send-queue)
-        (js/console.log "WSClient sending queued packets #" (count @send-queue))
+        (log/info "WSClient sending queued packets #" (count @send-queue))
         (doseq [data @send-queue]
           (send! @ws-connection data))
+        (log/info "WSClient sent queued packets.")
         (reset! send-queue [])))
 
     (do
-      (js/console.warn "Server rejected login attempt, oh shoot!")
+      (log/warn "Server rejected login attempt!")
 
       (remove-listeners! @ws-connection)
       (close-reconnect-timer!)
@@ -185,38 +196,40 @@
 
 (defn- awaited-response-handler
   [{:event/keys [id status] :as packet}]
-  (let [req-event (get @awaiting-response id)]
-    (js/console.log "WSClient: response " (pr-str packet)
-                    "to awaited event" (pr-str req-event))
-    (swap! awaiting-response dissoc id)
-    ;; is it hello confirmation?
-    (if (= @await-open-event-id id)
-      (finished-open-handler packet)
-      ;; is valid response?
-      (if (schema/valid-event-response? packet)
-        (do
-          (js/console.debug "Received valid response.")
-          (condp = status
-            :accepted
-            (let [{:accepted/keys [tx-id]} packet]
-              (js/console.log "Event" id "accepted in tx" tx-id)
-              (rf/dispatch [:remote/accept-event {:event-id id
-                                                  :tx-id    tx-id}]))
-            :rejected
-            (let [{:reject/keys [reason data]} packet]
-              (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data))
-              (rf/dispatch [:remote/reject-event {:event-id id
-                                                  :reason   reason
-                                                  :data     data}]))))
-        (let [explanation (schema/explain-event-response packet)]
-          (js/console.warn "Received invalid response:" (pr-str explanation))
-          (rf/dispatch [:remote/fail-event {:event-id id
-                                            :reason   explanation}]))))))
+  (log/info "event-id:" (pr-str id)
+            "WSClient: response status:" (pr-str status))
+  (swap! awaiting-response dissoc id)
+  ;; is it hello confirmation?
+  (if (= @await-open-event-id id)
+    (finished-open-handler packet)
+    ;; is valid response?
+    (if (schema/valid-event-response? packet)
+      (do
+        (log/debug "event-id:" (pr-str id)
+                   "Received valid response.")
+        (condp = status
+          :accepted
+          (let [{:accepted/keys [tx-id]} packet]
+            (log/info "event-id:" id "accepted in tx" tx-id)
+            (rf/dispatch [:remote/accept-event {:event-id id
+                                                :tx-id    tx-id}]))
+          :rejected
+          (let [{:reject/keys [reason data]} packet]
+            (log/warn "event-id:" (pr-str id)
+                      "rejected, reason:" reason
+                      ", rejection-data:" (pr-str data))
+            (rf/dispatch [:remote/reject-event {:event-id id
+                                                :reason   reason
+                                                :data     data}]))))
+      (let [explanation (schema/explain-event-response packet)]
+        (log/warn "Received invalid response:" (pr-str explanation))
+        (rf/dispatch [:remote/fail-event {:event-id id
+                                          :reason   explanation}])))))
 
 
 (defn- reconstruct-entities-from-db-dump
   [datoms]
-  (js/console.debug "Reconstructing tx from db dump of" (count datoms) "datoms")
+  (log/debug "Reconstructing tx from db dump of" (count datoms) "datoms")
   (let [insert-id (comp - inc)]
     (->> datoms
          ;; NOTE: removing schema, should re apply Datahike schema to Datascript?
@@ -247,21 +260,21 @@
 
 (defn- db-dump-handler
   [last-tx {:keys [datoms]}]
-  (js/console.debug "Received DB Dump")
+  (log/debug "Received DB Dump")
   (let [entities (reconstruct-entities-from-db-dump datoms)]
-    (js/console.debug "Reconstructed" (count entities) "entities")
+    (log/debug "Reconstructed" (count entities) "entities")
     (rf/dispatch [:reset-conn (d/empty-db db/schema)])
     (rf/dispatch [:transact entities])
     (rf/dispatch [:remote/last-seen-tx! last-tx])
     (rf/dispatch [:db/sync])
     (rf/dispatch [:remote/connected])
-    (js/console.log "✅ Transacted DB dump. last-seen-tx" last-tx)))
+    (log/info "✅ Transacted DB dump. last-seen-tx" last-tx)))
 
 
 (defn- presence-online-handler
   [args]
   (let [username (:username args)]
-    (js/console.log "User online:" username)
+    (log/info "User online:" username)
     (rf/dispatch [:presence/add-user args])))
 
 
@@ -274,31 +287,33 @@
 (defn- presence-offline-handler
   [args]
   (let [username (:username args)]
-    (js/console.log "User offine:" username)
+    (log/info "User offine:" username)
     (rf/dispatch [:presence/remove-user args])))
 
 
 (defn- presence-receive-editing
   [args]
-  (js/console.log "User editing:" (pr-str args))
+  (log/info "User editing:" (pr-str args))
   (rf/dispatch [:presence/update-editing args]))
 
 
 (defn- presence-receive-rename
   [args]
-  (js/console.log "User rename:" (pr-str args))
+  (log/info "User rename:" (pr-str args))
   (rf/dispatch [:presence/update-rename args]))
 
 
 (defn- forwarded-event-handler
   [args]
-  (js/console.log "Forwarded event:" (pr-str args))
+  (log/info "Forwarded event:" (pr-str args))
   (rf/dispatch [:remote/apply-forwarded-event args]))
 
 
 (defn- server-event-handler
-  [{:event/keys [_id last-tx type args] :as packet}]
-  (js/console.debug "WSClient: server event:" (pr-str packet))
+  [{:event/keys [id last-tx type args] :as packet}]
+  (log/debug "event-id:" (pr-str id)
+             ", type:" type
+             "WSClient received from server")
   (if (schema/valid-server-event? packet)
 
     (condp contains? type
@@ -349,9 +364,9 @@
 
         :op/atomic} (forwarded-event-handler packet))
 
-    (do
-      (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))
-      (js/console.warn "Received " (pr-str packet)))))
+    (log/warn "event-id:" (pr-str id)
+              ", type:" type
+              "WSClient Received invalid server event, explanation:" (pr-str (schema/explain-server-event packet)))))
 
 
 (def ^:private datom-reader
@@ -373,7 +388,6 @@
                         :json
                         {:handlers
                          {:datom datom-reader}})))]
-    (js/console.log "message-handler" (pr-str packet))
 
     ;; await-response! sets the app as waiting for sync.
     ;; Since there is no optimistic event handling, the app is synced as soon as the
@@ -400,7 +414,7 @@
 
 (defn- close-handler
   [event]
-  (js/console.log "WSClient Disconnected:" event)
+  (log/info "WSClient Disconnected:" event)
   (let [connection (.-target event)
         url        (.-url connection)]
     (rf/dispatch [:conn-status :reconnecting])
@@ -415,21 +429,21 @@
 
   (start
     [component]
-    (js/console.log "WSClient starting with url:" url)
+    (log/info "WSClient starting with url:" url)
     (let [connection (connect-to-self-hosted! url)]
-      (js/console.debug "WSClient connection started...")
+      (log/debug "WSClient connection started...")
       (reset! ws-connection connection)
       component))
 
 
   (stop
     [component]
-    (js/console.log "WSClient stopping for url:" url)
+    (log/info "WSClient stopping for url:" url)
     (when-let [connection @ws-connection]
       (close-reconnect-timer!)
       (remove-listeners! connection)
       (.close connection)
-      (js/console.debug "WSClient closed connection")
+      (log/info "WSClient closed connection")
       (reset! ws-connection nil)
       (rf/dispatch [:conn-status :disconnected])
       component)))

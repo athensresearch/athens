@@ -10,6 +10,7 @@
 
   <logger name="io.undertow" level="info"/>
   <logger name="org.xnio.nio" level="info"/>
+  <logger name="athens.self-hosted.components.config" level="info"/>
 
   <root level="debug">
     <appender-ref ref="STDOUT" />
