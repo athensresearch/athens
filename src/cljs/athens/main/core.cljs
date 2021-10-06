@@ -3,6 +3,7 @@
   (:require
     ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
     ["electron-updater" :refer [autoUpdater]]
+    ["electron-window-state" :as electron-window-state]
     [athens.menu :refer [menu-template]]
     [athens.util :refer [ipcMainChannels]]))
 
@@ -66,33 +67,38 @@
 
 (defn init-browser
   []
-  (reset! main-window (BrowserWindow.
-                        (clj->js {:width 800
-                                  :height 600
-                                  :minWidth 800 ; Minimum width before clipping in toolbar
-                                  :minHeight 300
-                                  :backgroundColor "#1A1A1A"
-                                  :autoHideMenuBar true
-                                  :frame false
-                                  :titleBarStyle "hidden"
-                                  :trafficLightPosition {:x 19, :y 36}
-                                  :webPreferences {:contextIsolation false
-                                                   :nodeIntegration true
-                                                   :worldSafeExecuteJavaScript true
-                                                   ;; Using the remote module is slow can can lead to suble race conditions.
-                                                   ;; https://nornagon.medium.com/electrons-remote-module-considered-harmful-70d69500f31
-                                                   ;; If we're seeing weird race conditions on node modules, check this article.
-                                                   :enableRemoteModule true
-                                                   ;; Remove OverlayScrollbars and instances of `overflow-y: overlay`
-                                                   ;; after `scollbar-gutter` is implemented in browsers.
-                                                   :enableBlinkFeatures 'OverlayScrollbars'
-                                                   :nodeIntegrationWorker true}})))
-  ;; Path is relative to the compiled js file (main.js in our case)
-  (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
-  (.on ^js @main-window "closed" #(reset! main-window nil))
-  (.. ^js @main-window -webContents (on "new-window" (fn [e url]
-                                                       (.. e preventDefault)
-                                                       (.. shell (openExternal url))))))
+  (let [main-window-state (electron-window-state #js {:defaultWidth 800
+                                                      :defaultHeight 600})]
+    (reset! main-window (BrowserWindow.
+                          (clj->js {:x (.-x main-window-state)
+                                    :y (.-y main-window-state)
+                                    :width (.-width main-window-state)
+                                    :height (.-height main-window-state)
+                                    :minWidth 800 ; Minimum width before clipping in toolbar
+                                    :minHeight 300
+                                    :backgroundColor "#1A1A1A"
+                                    :autoHideMenuBar true
+                                    :frame false
+                                    :titleBarStyle "hidden"
+                                    :trafficLightPosition {:x 19, :y 36}
+                                    :webPreferences {:contextIsolation false
+                                                     :nodeIntegration true
+                                                     :worldSafeExecuteJavaScript true
+                                                     ;; Using the remote module is slow can can lead to suble race conditions.
+                                                     ;; https://nornagon.medium.com/electrons-remote-module-considered-harmful-70d69500f31
+                                                     ;; If we're seeing weird race conditions on node modules, check this article.
+                                                     :enableRemoteModule true
+                                                     ;; Remove OverlayScrollbars and instances of `overflow-y: overlay`
+                                                     ;; after `scollbar-gutter` is implemented in browsers.
+                                                     :enableBlinkFeatures 'OverlayScrollbars'
+                                                     :nodeIntegrationWorker true}})))
+    (.manage main-window-state @main-window)
+    ;; Path is relative to the compiled js file (main.js in our case)
+    (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
+    (.on ^js @main-window "closed" #(reset! main-window nil))
+    (.. ^js @main-window -webContents (on "new-window" (fn [e url]
+                                                         (.. e preventDefault)
+                                                         (.. shell (openExternal url)))))))
 
 
 (defn init-updater

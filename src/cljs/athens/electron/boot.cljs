@@ -9,21 +9,6 @@
 
 
 (rf/reg-event-fx
-  :electron/window
-  (fn [{:keys [db]} _]
-    ;; When the app is initialized, check if we should use the last window size and if so, set the current window size to that value
-    (let [curWindow     (.getCurrentWindow utils/remote)
-          [lastx lasty] (-> db :athens/persist :window/size)]
-      (.setSize curWindow lastx lasty)
-      (.center curWindow)
-      (.on ^js curWindow "close" (fn [e]
-                                   (let [sender (.-sender e)
-                                         [x y] (.getSize ^js sender)]
-                                     (rf/dispatch-sync [:window/set-size [x y]])))))
-    {}))
-
-
-(rf/reg-event-fx
   :boot/desktop
   [(rf/inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
