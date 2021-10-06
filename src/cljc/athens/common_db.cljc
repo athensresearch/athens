@@ -6,7 +6,7 @@
     [athens.parser                 :as parser]
     [athens.patterns               :as patterns]
     [clojure.data                  :as data]
-    [clojure.pprint                :as pprint]
+    [clojure.pprint                :as pp]
     [clojure.set                   :as set]
     [clojure.string                :as string]
     #?(:clj  [datahike.api         :as d]
@@ -120,7 +120,8 @@
                :block/open
                :block/refs
                :block/_refs
-               {:block/children [:block/uid
+               {:block/children [:db/id
+                                 :block/uid
                                  :block/order]}]
           eid))
 
@@ -543,6 +544,8 @@
 (defn linkmaker-error-handler
   [e input-tx]
   (log/error e "❌ Linkmaker failure.")
+  (log/debug "Linkmaker original TX:\n" (with-out-str
+                                          (pp/pprint input-tx)))
   ;; Return the original, un-modified, input tx so that transactions can still move forward.
   ;; We can always run linkmaker again later over all strings if we think the db is not correctly linked.
   ;; TODO(reporting): report the error type, without any identifiable information.
@@ -581,8 +584,8 @@
                                      (mapcat (partial update-refs db)))
                                datoms)]
        #_(log/debug "linkmaker:"
-                    "\nall:" (with-out-str (clojure.pprint/pprint datoms))
-                    "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs)))
+                    "\nall:" (with-out-str (pp/pprint datoms))
+                    "\nlinkmaker-txs:" (with-out-str (pp/pprint linkmaker-txs)))
        linkmaker-txs)
      (catch #?(:cljs :default
                :clj Exception) e
@@ -602,14 +605,14 @@
                                     tx-data)
            with-linkmaker-txs (into (vec input-tx) linkmaker-txs)]
        #_(log/debug "linkmaker:"
-                    "\ninput-tx:" (with-out-str (pprint/pprint input-tx))
-                    "\ntx-data:" (with-out-str (pprint/pprint tx-data))
-                    "\nlinkmaker-txs:" (with-out-str (pprint/pprint linkmaker-txs))
-                    "\nwith-linkmaker-txs:" (with-out-str (pprint/pprint with-linkmaker-txs)))
+                    "\ninput-tx:" (with-out-str (pp/pprint input-tx))
+                    "\ntx-data:" (with-out-str (pp/pprint tx-data))
+                    "\nlinkmaker-txs:" (with-out-str (pp/pprint linkmaker-txs))
+                    "\nwith-linkmaker-txs:" (with-out-str (pp/pprint with-linkmaker-txs)))
        with-linkmaker-txs)
      (catch #?(:cljs :default
                :clj Exception) e
-       (linkmaker-error-handler e [])))))
+       (linkmaker-error-handler e input-tx)))))
 
 
 (defn fix-block-order
@@ -624,14 +627,14 @@
                                 :block/order idx}))
                            indexed-kids)]
     #_(log/debug "indexed-kids:" (with-out-str
-                                   (pprint/pprint indexed-kids))
+                                   (pp/pprint indexed-kids))
                  "\nblock-fixes:" (with-out-str
-                                    (pprint/pprint block-fixes)))
+                                    (pp/pprint block-fixes)))
     (when-not (empty? block-fixes)
       (log/error "\nNeeded to fix block-order:\n" (with-out-str
-                                                    (pprint/pprint block-fixes))
+                                                    (pp/pprint block-fixes))
                  "\nOf parent:\n" (with-out-str
-                                    (pprint/pprint parent-block))))
+                                    (pp/pprint parent-block))))
     block-fixes))
 
 
@@ -661,19 +664,21 @@
                                  (mapcat fix-block-order parents-blocks)))]
     #_(log/debug "keep-block-order:"
                  "\ntx-data:" (with-out-str
-                                (pprint/pprint tx-data))
+                                (pp/pprint tx-data))
                  "\nmod-eids:" (pr-str mod-eids)
                  "\nold-parents:" (pr-str old-parents)
                  "\nnew-parents:" (pr-str new-parents)
                  "\nparents-blocks:\n" (with-out-str
-                                         (pprint/pprint parents-blocks))
+                                         (pp/pprint parents-blocks))
                  "\nnew-violations:" (pr-str new-violations))
     new-violations))
 
 
 (defn orderkeeper-error
   [ex input-tx]
-  (log/error  "❌ Orderkeeper failure." ex)
+  (log/error ex "❌ Orderkeeper failure.")
+  (log/debug "Orderkeeper original TX:\n" (with-out-str
+                                            (pp/pprint input-tx)))
   input-tx)
 
 
