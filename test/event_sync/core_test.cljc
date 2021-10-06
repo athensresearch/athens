@@ -27,7 +27,7 @@
       (are
         ;; Is the added event the newest in the log, last-op :add and not noop?
         [stage-id event-id event]
-        (let [state' (es/add stage-id event-id event state)]
+        (let [state' (es/add state stage-id event-id event)]
           (is (= (-> state' (es/stage-log stage-id) first) [event-id event]))
           (is (= :add (-> state' :last-op first)))
           (is (= false (-> state' :last-op (nth 4)))))
@@ -39,16 +39,16 @@
         "four" :one 3))
 
     (testing "promotes"
-      (let [state' (->> state
-                        (es/add :one :first 1)
-                        (es/add :one :second 1)
-                        (es/add :two :third 1)
-                        (es/add 3 33 1)
-                        (es/add "four" "fourth" 1))]
+      (let [state' (-> state
+                       (es/add :one :first 1)
+                       (es/add :one :second 1)
+                       (es/add :two :third 1)
+                       (es/add 3 33 1)
+                       (es/add "four" "fourth" 1))]
         (are
           ;; Is the added event the newest in the log, last-op :promote and not noop?
           [stage-id event-id event]
-          (let [state'' (es/add stage-id event-id event state')]
+          (let [state'' (es/add state' stage-id event-id event)]
             (is (= (-> state'' (es/stage-log stage-id) first) [event-id event]))
             (is (= :promote (-> state'' :last-op first)))
             (is (= false (-> state'' :last-op (nth 4)))))
@@ -58,14 +58,14 @@
           "four" 33 1)))
 
     (testing "noop"
-      (let [state' (->> state
-                        (es/add :one :first 1)
-                        (es/add :one :second 1)
-                        (es/add :one :third 1))]
+      (let [state' (-> state
+                       (es/add :one :first 1)
+                       (es/add :one :second 1)
+                       (es/add :one :third 1))]
         (are
           ;; Is the stage log unchanged, last-op :add and noop?
           [stage-id event-id event]
-          (let [state'' (es/add stage-id event-id event state')]
+          (let [state'' (es/add state' stage-id event-id event)]
             (is (= (es/stage-log state'' stage-id)
                    (es/stage-log state' stage-id)))
             (is (= :add (-> state' :last-op first)))
@@ -77,16 +77,16 @@
 
 
 (deftest remove
-  (let [state (->> (es/create-state :test [:one :two 3 "four"])
-                   (es/add :one :first 1)
-                   (es/add :one :second 1)
-                   (es/add :one :third 1))]
+  (let [state (-> (es/create-state :test [:one :two 3 "four"])
+                  (es/add :one :first 1)
+                  (es/add :one :second 1)
+                  (es/add :one :third 1))]
 
     (testing "remove"
       (are
         ;; Is the removed event gone, last-op :remove and not noop?
         [stage-id event-id event]
-        (let [state' (es/remove stage-id event-id event state)]
+        (let [state' (es/remove state stage-id event-id event)]
           (is (= false (contains? (into #{} (map first) (es/stage-log stage-id state'))
                                   event-id)))
           (is (= :remove (-> state' :last-op first)))
@@ -100,7 +100,7 @@
       (are
         ;; Is the removed event still in the original stage, last-op :remove and not noop?
         [stage-id event-id event]
-        (let [state' (es/remove stage-id event-id event state)]
+        (let [state' (es/remove state stage-id event-id event)]
           (is (= (es/stage-log state :one)
                  (es/stage-log state' :one)))
           (is (= :remove (-> state' :last-op first)))
@@ -111,10 +111,10 @@
 
 
 (deftest stage-log
-  (let [state (->> (es/create-state :test [:one :two 3 "four"])
-                   (es/add :one :first 1)
-                   (es/add :one :second 2)
-                   (es/add :one :third 3))]
+  (let [state (-> (es/create-state :test [:one :two 3 "four"])
+                  (es/add :one :first 1)
+                  (es/add :one :second 2)
+                  (es/add :one :third 3))]
 
     (testing "First is newest event"
       (is (= :third (-> state (es/stage-log :one) first first))))
@@ -130,12 +130,12 @@
 
 
 (deftest log
-  (let [state (->> (es/create-state :test [:one :two 3 "four"])
-                   (es/add 3 :first 1)
-                   (es/add :two :second 2)
-                   (es/add :two :third 3)
-                   (es/add :one :fourth 4)
-                   (es/add :one :fifth 5))]
+  (let [state (-> (es/create-state :test [:one :two 3 "four"])
+                  (es/add 3 :first 1)
+                  (es/add :two :second 2)
+                  (es/add :two :third 3)
+                  (es/add :one :fourth 4)
+                  (es/add :one :fifth 5))]
 
     (testing "First is newest event"
       (is (= :fifth (-> state es/log first first))))
@@ -167,7 +167,7 @@
                          :add    [es/add! es/add]
                          :remove [es/remove! es/remove])]
         ((first ops) state-atom stage-id event-id event)
-        (= @state-atom ((second ops) stage-id event-id event state)))
+        (= @state-atom ((second ops) state stage-id event-id event)))
 
       :add :one :second 2
       :add :two :first 1

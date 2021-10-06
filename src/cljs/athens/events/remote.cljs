@@ -126,7 +126,7 @@
 (rf/reg-event-fx
   :remote/clear-server-event
   (fn [{db :db} [_ event]]
-    {:db (update db :event-sync (partial event-sync/remove :server (:event/id event) event))}))
+    {:db (update db :event-sync #(event-sync/remove % :server (:event/id event) event))}))
 
 
 (defn- changed-order?
@@ -154,7 +154,7 @@
   :remote/apply-forwarded-event
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
     (js/console.debug ":remote/apply-forwarded-event event:" (pr-str event))
-    (let [db'            (update db :event-sync (partial event-sync/add :server id event))
+    (let [db'            (update db :event-sync #(event-sync/add % :server id event))
           changed-order? (changed-order? (-> db' :event-sync :last-op))
           memory-log     (event-sync/stage-log (:event-sync db') :memory)
           txs            (atomic-resolver/resolve-to-tx @db/dsdb-snapshot event)]
@@ -182,6 +182,6 @@
   :remote/forward-event
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
     (js/console.debug ":remote/forward-event event:" (pr-str event))
-    {:db (update db :event-sync (partial event-sync/add :memory id event))
+    {:db (update db :event-sync #(event-sync/add % :memory id event))
      :fx [[:dispatch-n [[:remote/send-event! event]
                         [:db/not-synced]]]]}))
