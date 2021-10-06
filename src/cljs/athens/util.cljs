@@ -271,6 +271,11 @@
       (re-find #"Mac" os) :mac)))
 
 
+(defn is-mac?
+  []
+  (= (get-os) :mac))
+
+
 (defn app-classes
   ([{:keys [os electron? theme-dark? win-focused? win-fullscreen? win-maximized?]}]
    [(case os

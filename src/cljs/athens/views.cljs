@@ -9,6 +9,7 @@
     [athens.views.athena :refer [athena-component]]
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.filesystem :as filesystem]
+    [athens.views.help :refer [help-popup]]
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
@@ -70,6 +71,7 @@
     (fn []
       [:div (merge {:style {:display "contents"}}
                    (zoom))
+       [help-popup]
        [alert]
        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
          [m-snackbar

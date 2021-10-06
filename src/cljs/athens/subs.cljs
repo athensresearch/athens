@@ -129,3 +129,9 @@
       (:db/remote-graph-conf db)
       {})))
 
+
+(re-frame/reg-sub
+  :help/open?
+  (fn [db _]
+    (:help/open? db)))
+

@@ -7,6 +7,7 @@
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
     ["@material-ui/icons/Error" :default Error]
     ["@material-ui/icons/FileCopy" :default FileCopy]
+    ["@material-ui/icons/Help" :default Help]
     ["@material-ui/icons/Menu" :default Menu]
     ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Replay" :default Replay]
@@ -280,15 +281,17 @@
                                          :title "Synced"})]
                  :else [:> Sync (merge (use-style sync-icon-style)
                                        {:style {:color (color :highlight-color)}
-                                        :title "Synchronizing..."})])]]]
+                                        :title "Synchronizing..."})])]]]]
 
-            [separator]]
+
            [button {:style {:min-width "max-content"} :on-click #(dispatch [:get-db/init]) :primary true} "Load Test DB"])
          [button {:on-click #(dispatch [:theme/toggle])
                   :title "Toggle Color Scheme"}
           (if @theme-dark
             [:> ToggleOff]
             [:> ToggleOn])]
+         [button {:title "Help" :on-click #(dispatch [:help/toggle])}
+          [:> Help]]
          [separator]
          [button {:active   @right-open?
                   :title "Toggle Sidebar"
