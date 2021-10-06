@@ -52,18 +52,6 @@
 
 ;;   - page events
 
-(defn build-page-create-event
-  "Builds `:datascript/create-page` event with `page-uid`, `block-uid` and `title` of page."
-  [last-tx page-uid block-uid title]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/create-page
-     :event/args    {:page-uid  page-uid
-                     :block-uid block-uid
-                     :title     title}}))
-
-
 (defn build-page-rename-event
   "Builds `:datascript/page-rename` event with:
   - `uid`: of page to rename,

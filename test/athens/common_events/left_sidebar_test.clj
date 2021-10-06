@@ -22,9 +22,12 @@
 
     ;; create new pages
     (run!
-      #(->> (common-events/build-page-create-event -1 (first %) (second %) (nth % 2))
-            (resolver/resolve-event-to-tx @@fixture/connection)
-            (d/transact @fixture/connection))
+     #(d/transact @fixture/connection {:block/uid      (first %)
+                                       :node/title     (nth % 2)
+                                       :block/children [{:block/uid      (second %)
+                                                         :block/string   ""
+                                                         :block/order    0
+                                                         :block/children []}]})
       [[test-uid-1 test-block-uid-1 test-title-1]
        [test-uid-2 test-block-uid-2 test-title-2]])
 
@@ -121,9 +124,12 @@
 
     ;; create new pages
     (run!
-      #(->> (common-events/build-page-create-event -1 (first %) (second %) (nth % 2))
-            (resolver/resolve-event-to-tx @@fixture/connection)
-            (d/transact @fixture/connection))
+     #(d/transact @fixture/connection {:block/uid      (first %)
+                                       :node/title     (nth % 2)
+                                       :block/children [{:block/uid      (second %)
+                                                         :block/string   ""
+                                                         :block/order    0
+                                                         :block/children []}]})
       [[test-uid-1 test-block-uid-1 test-title-1]
        [test-uid-2 test-block-uid-2 test-title-2]])
 

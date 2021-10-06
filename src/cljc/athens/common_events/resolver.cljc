@@ -45,28 +45,6 @@
   #(:event/type %2))
 
 
-(defmethod resolve-event-to-tx :datascript/create-page
-  [_db {:event/keys [args]}]
-  (let [{:keys [page-uid
-                block-uid
-                title]} args
-        now             (utils/now-ts)
-        child           {:db/id        -2
-                         :block/string ""
-                         :block/uid    block-uid
-                         :block/order  0
-                         :block/open   true
-                         :create/time  now
-                         :edit/time    now}
-        page-tx         {:db/id          -1
-                         :node/title     title
-                         :block/uid      page-uid
-                         :block/children [child]
-                         :create/time    now
-                         :edit/time      now}]
-    [page-tx]))
-
-
 (defmethod resolve-event-to-tx :datascript/rename-page
   [db {:event/keys [id type args]}]
   (let [{:keys [uid

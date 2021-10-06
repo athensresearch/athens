@@ -323,8 +323,7 @@
       #{:presence/offline} (presence-offline-handler args)
       #{:presence/broadcast-editing} (presence-receive-editing args)
       #{:presence/broadcast-rename} (presence-receive-rename args)
-      #{:datascript/create-page
-        :datascript/rename-page
+      #{:datascript/rename-page
         :datascript/merge-page
         :datascript/delete-page
         :datascript/block-save
@@ -487,13 +486,6 @@
                           :text  "pasted text"
                           :start 0
                           :value ""}})
-
-  ;; send a `create-page` event
-  (send! (common-events/build-page-create-event
-          1
-          "test-page-uid-6"
-          "test-block-uid-1"
-          "Test Page Title 6"))
 
   ;; test atomic op
   (send! {:event/id (random-uuid)

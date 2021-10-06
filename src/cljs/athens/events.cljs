@@ -575,14 +575,11 @@
 (reg-event-fx
   :page/create
   (fn [_ [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
-    (let [local? (not (client/open?))]
+    (let [local?         (not (client/open?))
+          page-create-op (atomic-graph-ops/make-page-new-op title page-uid block-uid)]
       (log/debug ":page/create local?" local? ", args:" (pr-str args))
       (if local?
-        (let [create-page-event (common-events/build-page-create-event -1
-                                                                       page-uid
-                                                                       block-uid
-                                                                       title)
-              tx                (resolver/resolve-event-to-tx @db/dsdb create-page-event)]
+        (let [tx (atomic-resolver/resolve-atomic-op-to-tx @db/dsdb page-create-op)]
           {:fx [[:dispatch-n [[:transact tx]
                               (cond
                                 shift?
@@ -596,7 +593,7 @@
 
                               [:editing/uid block-uid]]]]})
         {:fx [[:dispatch
-               [:remote/page-create page-uid block-uid title shift?]]]}))))
+               [:remote/page-create page-create-op shift?]]]}))))
 
 
 (reg-event-fx

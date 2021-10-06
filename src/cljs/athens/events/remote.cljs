@@ -213,35 +213,30 @@
 
 (rf/reg-event-fx
   :remote/followup-page-create
-  (fn [{db :db} [_ event-id shift?]]
-    (let [{:keys [event]}     (get-event-acceptance-info db event-id)
-          {:keys [page-uid
-                  block-uid]} (:event/args event)]
-      (log/debug ":remote/followup-page-create, page-uid" page-uid)
-      {:fx [[:dispatch-n [(cond
-                            shift?
-                            [:right-sidebar/open-item page-uid]
+  (fn [{_db :db} [_ event-id page-uid block-uid shift?]]
+    (log/debug ":remote/followup-page-create, page-uid" page-uid)
+    {:fx [[:dispatch-n [(cond
+                          shift?
+                          [:right-sidebar/open-item page-uid]
 
-                            (not (util/is-daily-note page-uid))
-                            [:navigate :page {:id page-uid}]
+                          (not (util/is-daily-note page-uid))
+                          [:navigate :page {:id page-uid}]
 
-                            (util/is-daily-note page-uid)
-                            [:daily-note/add page-uid])
+                          (util/is-daily-note page-uid)
+                          [:daily-note/add page-uid])
 
-                          [:editing/uid block-uid]
-                          [:remote/unregister-followup event-id]]]]})))
+                        [:editing/uid block-uid]
+                        [:remote/unregister-followup event-id]]]]}))
 
 
 (rf/reg-event-fx
   :remote/page-create
-  (fn [{db :db} [_ page-uid  block-uid title shift?]]
+  (fn [{db :db} [_ page-create-op shift?]]
     (let [last-seen-tx                 (:remote/last-seen-tx db)
+          {:keys [page-uid block-uid]} (:op/args page-create-op)
           {event-id :event/id
-           :as      page-create-event} (common-events/build-page-create-event last-seen-tx
-                                                                              page-uid
-                                                                              block-uid
-                                                                              title)
-          followup-fx                  [[:dispatch [:remote/followup-page-create event-id shift?]]]]
+           :as      page-create-event} (common-events/build-atomic-event last-seen-tx page-create-op)
+          followup-fx                  [[:dispatch [:remote/followup-page-create event-id page-uid block-uid shift?]]]]
       (log/debug ":remote/page-create" (pr-str page-create-event))
       {:fx [[:dispatch-n [[:remote/register-followup event-id followup-fx]
                           [:remote/send-event! page-create-event]]]]})))
