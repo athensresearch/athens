@@ -1460,20 +1460,13 @@
 (reg-event-fx
   :paste-internal
   (fn [_ [_ uid internal-representation]]
-    (println "uid is" uid)
     (println "internal representation is " internal-representation)
-    (let [local?          (not (client/open?))
-          [uid embed-id]  (db/uid-and-embed-id uid)]
-      (if local?
-        (let [paste-internal-event (common-events/build-paste-internal-event -1
-                                                                             uid
-                                                                             internal-representation)
-              tx                  (resolver/resolve-event-to-tx @db/dsdb paste-internal-event)]
-          (js/console.debug ":paste-internal tx" tx)
+    (let [[uid ]  (db/uid-and-embed-id uid)]
+      (let [paste-internal-event (common-events/build-paste-internal-event -1
+                                                                           uid
+                                                                           internal-representation)]
+        {:fx [[:dispatch [:resolve-transact-forward paste-internal-event]]]}))))
 
-          {:fx [[:dispatch [:transact tx]]]})
-        {:fx [[:dispatch [:remote/paste-internal {:uid                     uid
-                                                  :internal-representation internal-representation}]]]}))))
 
 
 (reg-event-fx

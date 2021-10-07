@@ -280,6 +280,9 @@
   "Takes a string of text and parses it for block refs, block embeds using regex. Then replace the matched pattern
    with new refs.
 
+   Could also use block ref information from the db instead (refs->uids->replacements).
+   Just something to keep in mind for the future if this gets hard to maintain.
+
    Pattern: Strings should not have a space before, after or in between the block uid
             In the following example no pattern is valid:
             (()) (( uid)) ((uid )) (( uid )) ((Uid with space))

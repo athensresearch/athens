@@ -17,47 +17,39 @@
                                              "a"              "a1"})))
 
 
+(def blocks-for-testing
+  [{:block/uid "df27e0c38",
+    :block/string "((df27e0c38))"
+    :block/open true,
+    :block/order 0}
+   {:block/uid "b6c3d65a7",
+    :block/string "((b6c3d65a7))",,
+    :block/open true,}])
+
+
+(def replace-uids-for-testing
+  {"df27e0c38" "111"
+   "b6c3d65a7" "222"})
+
+
 (deftest test-walk-tree-and-update-string-with-new-uids
   (is (= [#:block{:uid "df27e0c38", :string "((111))", :open true, :order 0}
           #:block{:uid "b6c3d65a7", :string "((222))", :open true, :order 1}])
-      (content/walk-tree-to-replace [{:block/uid "df27e0c38",
-                                      :block/string "((df27e0c38))"
-                                      :block/open true,
-                                      :block/order 0}
-                                     {:block/uid "b6c3d65a7",
-                                      :block/string "((b6c3d65a7))",,
-                                      :block/open true,}]
-                                    {"df27e0c38" "111"
-                                     "b6c3d65a7" "222"}
+      (content/walk-tree-to-replace blocks-for-testing
+                                    replace-uids-for-testing
                                     :block/string)))
 
 
 (deftest test-walk-tree-and-update-uids-with-new-uids
   (is (= [#:block{:uid "111", :string "((df27e0c38))", :open true, :order 0}
           #:block{:uid "222", :string "((b6c3d65a7))", :open true, :order 1}])
-      (content/walk-tree-to-replace [{:block/uid "df27e0c38",
-                                      :block/string "((df27e0c38))"
-                                      :block/open true,
-                                      :block/order 0}
-                                     {:block/uid "b6c3d65a7",
-                                      :block/string "((b6c3d65a7))",,
-                                      :block/open true,
-                                      :block/order 1}]
-                                    {"df27e0c38" "111"
-                                     "b6c3d65a7" "222"}
+      (content/walk-tree-to-replace blocks-for-testing
+                                    replace-uids-for-testing
                                     :block/string)))
 
 
-(deftest test-walk-tree-and-update-uids-with-new-uids
+(deftest test-update-all-uids
   (is (= [#:block{:uid "111", :string "((111))", :open true, :order 0}
           #:block{:uid "222", :string "((222))", :open true, :order 1}])
-      (content/update-uids [{:block/uid "df27e0c38",
-                             :block/string "((df27e0c38))"
-                             :block/open true,
-                             :block/order 0}
-                            {:block/uid "b6c3d65a7",
-                             :block/string "((b6c3d65a7))",,
-                             :block/open true,
-                             :block/order 1}]
-                           {"df27e0c38" "111"
-                            "b6c3d65a7" "222"})))
+      (content/update-uids blocks-for-testing
+                           replace-uids-for-testing)))

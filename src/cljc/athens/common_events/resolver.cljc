@@ -1398,8 +1398,6 @@
         tx-data                           (concat reindexed-blocks
                                                   paste-tx-data
                                                   retract)]
-    (println "resolver :datascript/paste-internal tx-data is")
-    (pp/pprint tx-data)
     tx-data))
 
 
