@@ -45,7 +45,7 @@
 
 
 (defn- await-response!
-  [{:event/keys [id] :as data}]
+  [{:event/keys [id]}]
   (log/debug "event-id:" (pr-str id) "WSClient awaiting response:"))
 
 
@@ -203,7 +203,7 @@
     (if (schema/valid-event-response? packet)
       (do
         (log/debug "event-id:" (pr-str id)
-           "Received valid response.")
+                   "Received valid response.")
         (condp = status
           :accepted
           (let [{:accepted/keys [tx-id]} packet]
@@ -215,75 +215,6 @@
                       ", rejection-data:" (pr-str data)))))
       (let [explanation (schema/explain-event-response packet)]
         (log/warn "Received invalid response:" (pr-str explanation))))))
-
-
-(defn- local-eid
-  [remote-eid]
-  (db/e-by-av :remote/db-id remote-eid))
-
-
-(defn- build-addition-tx
-  [tempids e-id additions]
-  (when (seq additions)
-    (let [e->tmp (set/map-invert tempids)]
-      (reduce (fn [acc {:keys [_e a v _tx _added]}]
-                (assoc acc a (if (= :block/children a)
-                               (get e->tmp v (local-eid v))
-                               v)))
-              {:db/id        (get e->tmp e-id (local-eid e-id))
-               :remote/db-id e-id}
-              additions))))
-
-
-(defn- build-retraction-tx
-  [e-id retractions]
-  (when (seq retractions)
-    (reduce (fn [acc {:keys [_e a v _tx _added]}]
-              (conj acc [:db/retract
-                         (local-eid e-id)
-                         a
-                         (if (= :block/children a)
-                           (local-eid v)
-                           v)]))
-            []
-            retractions)))
-
-
-(defn- tx-log->tx
-  [tempids [entity-id tx-log]]
-  (js/console.debug ::tx-log->tx entity-id (pr-str tx-log))
-  (let [additions      (filter :added tx-log)
-        retractions    (remove :added tx-log)
-        additions-tx   (build-addition-tx tempids entity-id additions)
-        retractions-tx (build-retraction-tx entity-id retractions)]
-    (js/console.debug ::tx-log->tx
-                      :+ (count additions)
-                      :- (count retractions)
-                      :additions-tx (pr-str additions-tx)
-                      :retractions-tx (pr-str retractions-tx))
-    (into [additions-tx] retractions-tx)))
-
-
-(defn- reconstruct-tx-from-log
-  [{:keys [tx-data tempids] :as args}]
-  (js/console.debug "Reconstructing tx from" (pr-str args))
-  (->> tx-data
-       (remove #(= :db/txInstant (:a %)))
-       (group-by :e)
-       (mapcat (partial tx-log->tx tempids))
-       (remove #(nil? (second %)))
-       (sort-by :tx)))
-
-
-(defn- ds-tx-log-handler
-  [{:keys [tx-data tempids] :as args}]
-  (js/console.debug "Received TX Log with" (count tx-data) "datoms.")
-  (let [txs          (reconstruct-tx-from-log args)
-        remote-tx-id (:db/current-tx tempids)]
-    (js/console.debug "Reconstructed" (count txs) "DB changes")
-    (d/transact! db/dsdb txs)
-    (rf/dispatch [:remote/last-seen-tx! remote-tx-id])
-    (js/console.log "✅ Transacted locally. last-seen-tx" remote-tx-id)))
 
 
 (defn- reconstruct-entities-from-db-dump

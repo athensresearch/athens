@@ -22,12 +22,12 @@
 
     ;; create new pages
     (run!
-     #(d/transact @fixture/connection {:block/uid      (first %)
-                                       :node/title     (nth % 2)
-                                       :block/children [{:block/uid      (second %)
-                                                         :block/string   ""
-                                                         :block/order    0
-                                                         :block/children []}]})
+      #(d/transact @fixture/connection {:block/uid      (first %)
+                                        :node/title     (nth % 2)
+                                        :block/children [{:block/uid      (second %)
+                                                          :block/string   ""
+                                                          :block/order    0
+                                                          :block/children []}]})
       [[test-uid-1 test-block-uid-1 test-title-1]
        [test-uid-2 test-block-uid-2 test-title-2]])
 
@@ -124,12 +124,12 @@
 
     ;; create new pages
     (run!
-     #(d/transact @fixture/connection {:block/uid      (first %)
-                                       :node/title     (nth % 2)
-                                       :block/children [{:block/uid      (second %)
-                                                         :block/string   ""
-                                                         :block/order    0
-                                                         :block/children []}]})
+      #(d/transact @fixture/connection {:block/uid      (first %)
+                                        :node/title     (nth % 2)
+                                        :block/children [{:block/uid      (second %)
+                                                          :block/string   ""
+                                                          :block/order    0
+                                                          :block/children []}]})
       [[test-uid-1 test-block-uid-1 test-title-1]
        [test-uid-2 test-block-uid-2 test-title-2]])
 

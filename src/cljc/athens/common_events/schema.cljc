@@ -131,15 +131,6 @@
      [:new-username string?]]]])
 
 
-(def datascript-create-page
-  [:map
-   [:event/args
-    [:map
-     [:page-uid string?]
-     [:block-uid string?]
-     [:title string?]]]])
-
-
 (def datascript-delete-page
   [:map
    [:event/args
@@ -576,16 +567,6 @@
    [:v any?]
    [:tx int?]
    [:added {:optional true} boolean?]])
-
-
-(def tx-log
-  [:map
-   [:event/args
-    [:map
-     [:tx-data
-      [:vector #?(:clj  [:fn datom/datom?]
-                  :cljs datom)]]
-     [:tempids map?]]]])
 
 
 (def db-dump

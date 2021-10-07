@@ -1,5 +1,6 @@
 (ns athens.athens-datoms)
 
+
 (def mini-datoms
   [{:block/uid      "0"
     :node/title     "Welcome"

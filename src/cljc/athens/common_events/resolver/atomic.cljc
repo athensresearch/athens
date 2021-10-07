@@ -2,12 +2,7 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common-events.resolver :as resolver]
-    [athens.common.utils :as utils]
-    #?(:clj  [datahike.api :as d]
-       :cljs [datascript.core :as d]))
-  #?(:clj
-     (:import
-       clojure.lang.ExceptionInfo)))
+    [athens.common.utils :as utils]))
 
 
 (defmulti resolve-atomic-op-to-tx
