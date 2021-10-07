@@ -100,14 +100,14 @@
 (rf/reg-fx
   :remote/snapshot-dsdb!
   (fn []
-    (js/console.debug ":remote/snapshot-dsdb! event at time" (:max_tx @db/dsdb))
+    (js/console.debug ":remote/snapshot-dsdb! event at time" (:max-tx @db/dsdb))
     (reset! db/dsdb-snapshot @db/dsdb)))
 
 
 (rf/reg-event-fx
   :remote/rollback-dsdb
   (fn [_ _]
-    (js/console.debug ":remote/rollback-dsdb event from time" (:max_tx @db/dsdb-snapshot))
+    (js/console.debug ":remote/rollback-dsdb event from time" (:max-tx @db/dsdb-snapshot))
     {:reset-conn! @db/dsdb-snapshot}))
 
 
@@ -131,12 +131,15 @@
 
 (defn- changed-order?
   [[type _ _ _ noop?]]
+  ;; TODO: if we support rejections via event removal, this also needs to check
+  ;; if the :remove changed order, while still ignoring removal from the tail.
   (and (= type :add) (not noop?)))
 
 
 (rf/reg-event-fx
   :remote/snapshot-transact
   (fn [_ [_ tx-data]]
+    (js/console.debug ":remote/snapshot-transact update to time" (inc (:max-tx @db/dsdb-snapshot)))
     {:remote/snapshot-transact! tx-data}))
 
 
