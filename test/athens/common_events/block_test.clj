@@ -985,8 +985,7 @@
           (t/is (= 2 (count union-set))))))))
 
 
-;; TODO(RTC) this test is currently broken
-#_(t/deftest drop-same-test
+(t/deftest drop-same-test
   "Basic Case:
      Start with :
        -a
@@ -1048,8 +1047,7 @@
           (t/is (= 0 (:block/order source-block))))))))
 
 
-;; TODO(RTC) this test is currently broken
-#_(t/deftest drop-multi-same-all-test
+(t/deftest drop-multi-same-all-test
   "Basic Case:
        -a
          -b

@@ -264,7 +264,7 @@
          :where
          (between ?parent ?lower-bound ?upper-bound ?ch ?order)
          [(?+or- ?order ?n) ?new-order]
-         [?ch :block/order ?block-uid]]
+         [?ch :block/uid ?block-uid]]
        db
        rules
        inc-or-dec
