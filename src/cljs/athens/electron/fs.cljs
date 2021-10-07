@@ -3,7 +3,6 @@
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
     [athens.electron.utils :as utils]
-    [athens.self-hosted.client :as client]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [goog.functions :refer [debounce]]
