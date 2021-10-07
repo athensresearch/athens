@@ -120,8 +120,7 @@
                :block/open
                :block/refs
                :block/_refs
-               {:block/children [:db/id
-                                 :block/uid
+               {:block/children [:block/uid
                                  :block/order]}]
           eid))
 
