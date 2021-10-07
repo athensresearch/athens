@@ -44,7 +44,7 @@
           (t/is (seq children))
           (t/is (= #{[child-2-eid]} children))))))
 
-  (t/testing "Create new block in page"
+  (t/testing "Create new block between 2 blocks"
     (let [page-1-uid  "page-2-uid"
           child-1-uid "child-2-1-uid"
           child-2-uid "child-2-2-uid"

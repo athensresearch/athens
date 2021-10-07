@@ -592,9 +592,10 @@
   (fn [{:keys [db]} [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
     (log/debug ":page/create args" (pr-str args))
     (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
-                                                  (atomic-graph-ops/make-page-new-op title
-                                                                                     page-uid
-                                                                                     block-uid))]
+                                                  (graph-ops/build-page-new-op @db/dsdb
+                                                                               title
+                                                                               page-uid
+                                                                               block-uid))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           (cond
                             shift?
@@ -851,9 +852,10 @@
   :page/new
   (fn [{:keys [db]} [_ {:keys [title page-uid block-uid] :as args}]]
     (log/debug ":page/new args" (pr-str args))
-    (let [op    (atomic-graph-ops/make-page-new-op title
-                                                   page-uid
-                                                   block-uid)
+    (let [op    (graph-ops/build-page-new-op @db/dsdb
+                                             title
+                                             page-uid
+                                             block-uid)
           event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid block-uid]]]]})))

@@ -8,6 +8,18 @@
     [clojure.set                          :as set]))
 
 
+(defn build-page-new-op
+  "Creates `:page/new` & `:block/new` ops.
+  If page already exists, just creates atomic `:block/new`.
+  If page doesn't exist, generates composite of atomic `:page/new` & `:block/new`."
+  [db page-title page-uid block-uid]
+  (if (common-db/e-by-av db :block/uid page-uid)
+    (atomic/make-block-new-op page-uid block-uid 0)
+    (composite/make-consequence-op {:op/type :page/new}
+                                   [(atomic/make-page-new-op page-title page-uid)
+                                    (atomic/make-block-new-op page-uid block-uid 0)])))
+
+
 (defn build-block-save-op
   "Creates `:block/save` op, taking into account context.
   So it might be a composite or atomic event, depending if new page link is present and if pages exist."
@@ -20,9 +32,10 @@
         atomic-pages    (when-not (empty? new-page-titles)
                           (into []
                                 (for [title new-page-titles]
-                                  (atomic/make-page-new-op title
-                                                           (utils/gen-block-uid)
-                                                           (utils/gen-block-uid)))))
+                                  (build-page-new-op db
+                                                     title
+                                                     (utils/gen-block-uid)
+                                                     (utils/gen-block-uid)))))
         atomic-save     (atomic/make-block-save-op block-uid old-string new-string)
         block-save-op   (if (empty? atomic-pages)
                           atomic-save

@@ -15,6 +15,7 @@
   (let [{:keys [parent-uid
                 block-uid
                 block-order]} args
+        parent-exists?        (common-db/e-by-av db :block/uid parent-uid)
         now                   (utils/now-ts)
         new-block             {:block/uid    block-uid
                                :block/string ""
@@ -22,8 +23,10 @@
                                :block/open   true
                                :create/time  now
                                :edit/time    now}
-        reindex               (concat [new-block]
-                                      (common-db/inc-after db [:block/uid parent-uid] (dec block-order)))
+        reindex               (cond-> [new-block]
+                                parent-exists?
+                                (concat
+                                  (common-db/inc-after db [:block/uid parent-uid] (dec block-order))))
         tx-data               {:block/uid      parent-uid
                                :block/children reindex
                                :edit/time      now}]
@@ -51,23 +54,20 @@
 
 
 (defmethod resolve-atomic-op-to-tx :page/new
-  [_db {:op/keys [args]}]
+  [db {:op/keys [args]}]
   (let [{:keys [page-uid
-                block-uid
                 title]} args
+        page-exists?    (common-db/e-by-av db :node/title title)
         now             (utils/now-ts)
-        child           {:block/string ""
-                         :block/uid    block-uid
-                         :block/order  0
-                         :block/open   true
-                         :create/time  now
-                         :edit/time    now}
         page            {:node/title     title
                          :block/uid      page-uid
-                         :block/children [child]
+                         :block/children []
                          :create/time    now
-                         :edit/time      now}]
-    [page]))
+                         :edit/time      now}
+        txs             (if page-exists?
+                          []
+                          [page])]
+    txs))
 
 
 (defmethod resolve-atomic-op-to-tx :composite/consequence
