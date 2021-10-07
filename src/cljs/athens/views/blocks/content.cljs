@@ -293,8 +293,8 @@
   (let [parsed-uids     (into #{} (re-seq patterns/block-refs-pattern
                                           block-string))
         replaced-string (reduce (fn [block-string ref]
-                                  (let [embed?       (not (empty? (re-find patterns/block-embed-pattern
-                                                                           ref)))
+                                  (let [embed?       (seq (re-find patterns/block-embed-pattern
+                                                                   ref))
                                         uid          (if embed?
                                                        (common-db/strip-markup ref "{{[[embed]]: ((" "))}}")
                                                        (common-db/strip-markup ref "((" "))"))
@@ -365,7 +365,7 @@
         ;; With internal representation
         internal-representation  (some-> (.getData data "application/athens-representation")
                                          edn/read-string)
-        internal?           (not (empty? internal-representation))
+        internal?           (seq internal-representation)
         new-uids            (new-uids-map internal-representation)
         repr-with-new-uids  (into [] (update-uids internal-representation new-uids))
 

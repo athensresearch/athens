@@ -15,7 +15,6 @@
     [athens.self-hosted.client            :as client]
     [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [cljs.pprint                          :as pp]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
@@ -1249,12 +1248,11 @@
   :paste-internal
   (fn [_ [_ uid internal-representation]]
     (println "internal representation is " internal-representation)
-    (let [[uid ]  (db/uid-and-embed-id uid)]
-      (let [paste-internal-event (common-events/build-paste-internal-event -1
-                                                                           uid
-                                                                           internal-representation)]
-        {:fx [[:dispatch [:resolve-transact-forward paste-internal-event]]]}))))
-
+    (let [[uid]  (db/uid-and-embed-id uid)
+          paste-internal-event (common-events/build-paste-internal-event -1
+                                                                         uid
+                                                                         internal-representation)]
+      {:fx [[:dispatch [:resolve-transact-forward paste-internal-event]]]})))
 
 
 (reg-event-fx

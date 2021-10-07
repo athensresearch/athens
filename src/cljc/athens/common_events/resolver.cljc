@@ -4,7 +4,6 @@
     [athens.common-events :as common-events]
     [athens.common.utils :as utils]
     [athens.patterns :as patterns]
-    [cljs.pprint :as pp]
     [clojure.set :as set]
     [clojure.string :as string]
     #?(:clj  [datahike.api :as d]
