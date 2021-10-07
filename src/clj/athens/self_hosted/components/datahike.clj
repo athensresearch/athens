@@ -83,14 +83,16 @@
         (if @new-db?
           (do
             (log/info "Populating fresh Knowledge graph with initial data...")
-            (ds/transact! connection "init-lan-datoms" (->> athens-datoms/lan-datoms
+            (ds/transact! connection "init-lan-datoms" (->> athens-datoms/mini-datoms
+                                                            (common-db/block-uid-nil-eater @connection)
                                                             (common-db/linkmaker @connection)
                                                             (common-db/orderkeeper @connection)))
             (log/info "✅ Populated fresh Knowledge graph."))
           (do
             (log/info "Knowledge graph health check...")
-            (let [linkmaker-txs   (common-db/linkmaker @connection)
-                  orderkeeper-txs (common-db/orderkeeper @connection)]
+            (let [linkmaker-txs       (common-db/linkmaker @connection)
+                  orderkeeper-txs     (common-db/orderkeeper @connection)
+                  block-nil-eater-txs (common-db/block-uid-nil-eater @connection)]
               (when-not (empty? linkmaker-txs)
                 (log/warn "linkmaker fixes#:" (count linkmaker-txs))
                 (log/info "linkmaker fixes:" (pr-str linkmaker-txs))
@@ -99,6 +101,10 @@
                 (log/warn "orderkeeper fixes#:" (count orderkeeper-txs))
                 (log/info "orderkeeper fixes:" (pr-str orderkeeper-txs))
                 (d/transact connection orderkeeper-txs))
+              (when-not (empty? block-nil-eater-txs)
+                (log/warn "block-uid-nil-eater fixes#:" (count block-nil-eater-txs))
+                (log/info "block-uid-nil-eater fixes:" (pr-str block-nil-eater-txs))
+                (d/transact connection block-nil-eater-txs))
               (log/info "✅ Knowledge graph health check."))))
         (assoc component :conn connection))))
 

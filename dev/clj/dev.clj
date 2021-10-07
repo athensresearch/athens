@@ -20,3 +20,11 @@
   "Gets you Datahike connection from system."
   []
   (get-in system [:datahike :conn]))
+
+
+(comment
+  (d/q '[:find ?eid
+         :keys db/id
+         :where [?eid :block/order ?block-order]
+                (not [?eid :block/uid])]
+       @(datahike-conn)))

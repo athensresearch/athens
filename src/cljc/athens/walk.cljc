@@ -1,6 +1,6 @@
 (ns athens.walk
   (:require
-    [athens.common.log :as log]
+    [athens.common.logging :as log]
     [athens.parser :as parser]
     [clojure.string :as str]
     [instaparse.core :as parse]))

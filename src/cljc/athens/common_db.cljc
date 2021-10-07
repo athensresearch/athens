@@ -660,8 +660,9 @@
                             (remove nil?)
                             (map #(get-block db-after %)))
         new-violations (doall
-                         (remove empty?
-                                 (mapcat fix-block-order parents-blocks)))]
+                        (remove #(or (empty? %)
+                                     (nil? (:block/uid %)))
+                                (mapcat fix-block-order parents-blocks)))]
     #_(log/debug "keep-block-order:"
                  "\ntx-data:" (with-out-str
                                 (pp/pprint tx-data))
@@ -716,3 +717,32 @@
                :clj Exception) e
        (orderkeeper-error e input-tx)
        input-tx))))
+
+
+(defn block-uid-nil-eater-error
+  [ex input-tx]
+  (log/error ex "❌ `:block/uid nil` eater error")
+  input-tx)
+
+(defn block-uid-nil-eater
+  "Eats (removes) all block with `:block/order` nil"
+  ([db]
+   (block-uid-nil-eater db []))
+  ([db input-tx]
+   (try
+     (let [tx-report        (d/with db input-tx)
+           violating-db-ids (d/q '[:find ?eid
+                                   :keys db/id
+                                   :where [?eid :block/order]
+                                   (not [?eid :block/uid])]
+                                 (:db-after tx-report))
+           retractions      (into []
+                                  (for [{eid :db/id} violating-db-ids]
+                                    (do
+                                      (log/warn "block-uid-nil-eater, have to remove :db/id" eid)
+                                      [:db/retractEntity eid])))
+           with-eater       (into (vec input-tx) retractions)]
+       with-eater)
+     (catch #?(:cljs :default
+               :clj Exception) e
+         (block-uid-nil-eater-error e input-tx)))))

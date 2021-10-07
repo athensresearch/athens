@@ -74,6 +74,7 @@
       (log/debug "transact! event-id:" event-id ", normalized-txs:" (with-out-str
                                                                       (pprint/pprint txs)))
       (let [processed-tx            (->> txs
+                                         (common-db/block-uid-nil-eater @connection)
                                          (common-db/linkmaker @connection)
                                          (common-db/orderkeeper @connection))
             {:keys [tempids]}       (d/transact connection processed-tx)

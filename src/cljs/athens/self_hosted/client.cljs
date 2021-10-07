@@ -6,6 +6,7 @@
     [athens.common-events.schema       :as schema]
     [athens.common.logging             :as log]
     [athens.db                         :as db]
+    [clojure.pprint                    :as pp]
     [cognitect.transit                 :as transit]
     [com.cognitect.transit.types       :as ty]
     [com.stuartsierra.component        :as component]
@@ -262,7 +263,9 @@
   [last-tx {:keys [datoms]}]
   (log/debug "Received DB Dump")
   (let [entities (reconstruct-entities-from-db-dump datoms)]
-    (log/debug "Reconstructed" (count entities) "entities")
+    (log/info "Reconstructed" (count entities) "entities")
+    (log/debug "Reconstructed entities:" (with-out-str
+                                           (pp/pprint entities)))
     (rf/dispatch [:reset-conn (d/empty-db db/schema)])
     (rf/dispatch [:transact entities])
     (rf/dispatch [:remote/last-seen-tx! last-tx])
