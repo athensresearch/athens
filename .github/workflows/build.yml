@@ -96,11 +96,9 @@ jobs:
        - name: Carve unused vars
          run: script/carve
 
-
-   release-web:
+   build-app:
      needs: [test, lint, style, carve]
-     # Only deploy on tag pushes to the default branch (main). GH pages is effectively a singleton deploy env for main.
-     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/main'
+     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
      runs-on: ubuntu-latest
      steps:
        - name: Git checkout
@@ -115,10 +113,38 @@ jobs:
        - name: Compile components
          run: yarn components
 
-       - name: Compile app
-         run: COMMIT_URL="https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}" lein run -m shadow.cljs.devtools.cli --npm release app --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\" }}"
+       - name: Compile JS Assets
+         run: lein run -m shadow.cljs.devtools.cli --npm release main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\" athens.main.core/AUTO_UPDATE ${AUTO_UPDATE}}}"
          env:
            SENTRY_DSN: ${{ secrets.sentry_dsn }}
+           AUTO_UPDATE: ${{ github.ref == 'refs/heads/main' }}
+           COMMIT_URL: "https://github.com/${{github.repository}}/commit/${{github.sha}}"
+
+       - name: Upload built app for release-web, release-electron
+         uses: actions/upload-artifact@v2
+         with:
+           name: app
+           path: resources
+
+   release-web:
+     needs: [build-app]
+     # Only deploy on tag pushes to the default branch (main). GH pages is effectively a singleton deploy env for main.
+     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/main'
+     runs-on: ubuntu-latest
+     steps:
+       - name: Git checkout
+         uses: actions/checkout@v1
+         with:
+           fetch-depth: 1
+           submodules: 'true'
+
+       - uses: ./.github/custom-actions/node-env
+
+       - name: Download built app
+         uses: actions/download-artifact@v2
+         with:
+           name: app
+           path: resources
 
        - name: Deploy
          uses: peaceiris/actions-gh-pages@v3
@@ -128,7 +154,7 @@ jobs:
            force_orphan: true
 
    release-electron:
-     needs: [test, lint, style, carve]
+     needs: [build-app]
      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
      runs-on: ${{ matrix.os }}
      env:
@@ -146,7 +172,6 @@ jobs:
            fetch-depth: 1
            submodules: 'true'
 
-       - uses: ./.github/custom-actions/clojure-env
        - uses: ./.github/custom-actions/node-env
 
        - name: Prepare for app notarization (macOS)
@@ -156,22 +181,11 @@ jobs:
            mkdir -p ~/private_keys/
            echo '${{ secrets.api_key }}' > ~/private_keys/AuthKey_${{ secrets.api_key_id }}.p8
 
-       - name: Compile components
-         run: yarn components
-
-       - name: Compile JS Assets (*nix)
-         if: matrix.os != 'windows-latest'
-         run: lein run -m shadow.cljs.devtools.cli --npm release main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.main.core/AUTO_UPDATE ${AUTO_UPDATE}}}"
-         env:
-           SENTRY_DSN: ${{ secrets.sentry_dsn }}
-           AUTO_UPDATE: ${{ github.ref == 'refs/heads/main' }}
-
-       - name: Compile JS Assets (Windows)
-         if: matrix.os == 'windows-latest'
-         run: lein run -m shadow.cljs.devtools.cli --npm release main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \`"$env:SENTRY_DSN\`" athens.main.core/AUTO_UPDATE $env:AUTO_UPDATE}}"
-         env:
-           SENTRY_DSN: ${{ secrets.sentry_dsn }}
-           AUTO_UPDATE: ${{ github.ref == 'refs/heads/main' }}
+       - name: Download built app
+         uses: actions/download-artifact@v2
+         with:
+           name: app
+           path: resources
 
        - name: Build and Publish Electron App
          uses: samuelmeuli/action-electron-builder@v1
