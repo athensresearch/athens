@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.17](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.16...v1.0.0-alpha.rtc.17) (2021-10-07)
+
+
+* cache built app ([42032f0](https://github.com/athensresearch/athens/commit/42032f0ae214729cfb276e80bab992312e459e62))
+
 ## [1.0.0-alpha.rtc.16](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.15...v1.0.0-alpha.rtc.16) (2021-10-07)
 
 
