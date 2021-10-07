@@ -1,11 +1,13 @@
 (ns athens.listeners
   (:require
+    [athens.common-db :as common-db]
     [athens.db :as db]
     [athens.electron.utils :as electron-utils]
     [athens.events.selection :as select-events]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
     [athens.util :as util]
+    [clojure.pprint :as pp]
     [clojure.string :as string]
     [goog.events :as events]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]])
@@ -184,12 +186,17 @@
                                 (map #(db/get-block-document [:block/uid %]))
                                 (map #(blocks-to-clipboard-data 0 %))
                                 (apply str))
-            clipboard-data (.. e -event_ -clipboardData)]
+            clipboard-data (.. e -event_ -clipboardData)
+            copied-blocks  (mapv
+                             #(common-db/get-block-document-for-copy  @db/dsdb [:block/uid %])
+                             uids)]
+
+        (println "Copied blocks representation")
+        (pp/pprint copied-blocks)
+
         (doto clipboard-data
           (.setData "text/plain" copy-data)
-          ;; TODO: internal Athens representation of copied data,
-          ;; so it can be Pasted even if source was deleted
-          ;; {:block/keys [uid string children order open]}
+          (.setData "application/athens-representation" (pr-str copied-blocks))
           (.setData "application/athens" (pr-str {:uids uids})))
         (.preventDefault e)))))
 
