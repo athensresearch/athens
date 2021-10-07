@@ -5,6 +5,7 @@
   2nd pass: inline structure
   3rd pass: raw urls"
   (:require
+    [athens.common.logging :as log]
     #?(:cljs [athens.config :as config])
     [clojure.string :as string]
     [clojure.walk :as walk]
@@ -460,15 +461,15 @@ newline = #'\\n'
              result (fn-to-time arg)
              t-1 (js/performance.now)]
          (when config/measure-parser?
-           (js/console.log name ", time:" (- t-1 t-0)))
+           (log/info name ", time:" (- t-1 t-0)))
          result)
        :clj
        (let [t-0 (.getNano (LocalDateTime/now))
              result (fn-to-time arg)
              t-1 (.getNano (LocalDateTime/now))]
          (when false
-           (println name ", time:" (/ (- t-1 t-0)
-                                      1000000) "milliseconds"))
+           (log/info name ", time:" (/ (- t-1 t-0)
+                                       1000000) "milliseconds"))
          result))))
 
 

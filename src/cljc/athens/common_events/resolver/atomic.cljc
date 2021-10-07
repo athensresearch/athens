@@ -2,12 +2,7 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common-events.resolver :as resolver]
-    [athens.common.utils :as utils]
-    #?(:clj  [datahike.api :as d]
-       :cljs [datascript.core :as d]))
-  #?(:clj
-     (:import
-       clojure.lang.ExceptionInfo)))
+    [athens.common.utils :as utils]))
 
 
 (defmulti resolve-atomic-op-to-tx
@@ -38,12 +33,12 @@
 ;; This is Atomic Graph Op, there is also composite version of it
 (defmethod resolve-atomic-op-to-tx :block/save
   [db {:op/keys [args]}]
-  (let [{:keys [block-uid new-string old-string]} args
-        {stored-old-string :block/string}         (try
-                                                    (d/pull db [:block/string] [:block/uid block-uid])
-                                                    (catch #?(:clj ExceptionInfo
-                                                              :cljs js/Error) _ex
-                                                      {:block/string ""}))]
+  (let [{:keys [block-uid
+                new-string
+                old-string]} args
+        stored-old-string    (if-let [block-eid (common-db/e-by-av db :block/uid block-uid)]
+                               (common-db/v-by-ea db block-eid :block/string)
+                               "")]
     (when-not (= stored-old-string old-string)
       (print (ex-info ":block/save operation started from a stale state."
                       {:op/args           args

@@ -1,9 +1,12 @@
 (ns athens.self-hosted.components.datahike
   (:require
-    [athens.athens-datoms       :as athens-datoms]
-    [clojure.tools.logging      :as log]
-    [com.stuartsierra.component :as component]
-    [datahike.api               :as d]))
+    [athens.athens-datoms              :as athens-datoms]
+    [athens.common-db                  :as common-db]
+    [athens.common.logging             :as log]
+    [athens.self-hosted.web.datascript :as ds]
+    [clojure.pprint                    :as pp]
+    [com.stuartsierra.component        :as component]
+    [datahike.api                      :as d]))
 
 
 (def schema
@@ -14,10 +17,6 @@
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one
     :db/unique      :db.unique/identity}
-   {:db/ident       :remote/db-id
-    :db/valueType   :db.type/long
-    :db/unique      :db.unique/identity
-    :db/cardinality :db.cardinality/one}
    {:db/ident       :block/title
     :db/valueType   :db.type/string
     :db/cardinality :db.cardinality/one
@@ -77,12 +76,36 @@
           (log/info "Creating new Datahike database")
           (d/create-database conf-with-schema)
           (reset! new-db? true)))
-      (log/info "Starting Datahike connection: " dh-conf)
+      (log/info "Starting Datahike connection: " (with-out-str
+                                                   (pp/pprint dh-conf)))
       (let [connection (d/connect conf-with-schema)]
-        (log/debug "Datahike connected")
-        (when @new-db?
-          (log/debug "Populating fresh db with datoms.")
-          (d/transact connection athens-datoms/lan-datoms))
+        (log/info "Datahike connected")
+        (if @new-db?
+          (do
+            (log/info "Populating fresh Knowledge graph with initial data...")
+            (ds/transact! connection "init-lan-datoms" (->> athens-datoms/mini-datoms
+                                                            (common-db/block-uid-nil-eater @connection)
+                                                            (common-db/linkmaker @connection)
+                                                            (common-db/orderkeeper @connection)))
+            (log/info "✅ Populated fresh Knowledge graph."))
+          (do
+            (log/info "Knowledge graph health check...")
+            (let [linkmaker-txs       (common-db/linkmaker @connection)
+                  orderkeeper-txs     (common-db/orderkeeper @connection)
+                  block-nil-eater-txs (common-db/block-uid-nil-eater @connection)]
+              (when-not (empty? linkmaker-txs)
+                (log/warn "linkmaker fixes#:" (count linkmaker-txs))
+                (log/info "linkmaker fixes:" (pr-str linkmaker-txs))
+                (d/transact connection linkmaker-txs))
+              (when-not (empty? orderkeeper-txs)
+                (log/warn "orderkeeper fixes#:" (count orderkeeper-txs))
+                (log/info "orderkeeper fixes:" (pr-str orderkeeper-txs))
+                (d/transact connection orderkeeper-txs))
+              (when-not (empty? block-nil-eater-txs)
+                (log/warn "block-uid-nil-eater fixes#:" (count block-nil-eater-txs))
+                (log/info "block-uid-nil-eater fixes:" (pr-str block-nil-eater-txs))
+                (d/transact connection block-nil-eater-txs))
+              (log/info "✅ Knowledge graph health check."))))
         (assoc component :conn connection))))
 
 

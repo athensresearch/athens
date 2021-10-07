@@ -2,11 +2,11 @@
   "Athens Self Hosted Backend entry point."
   (:gen-class)
   (:require
+    [athens.common.logging                     :as log]
     [athens.self-hosted.components.config      :as cfg]
     [athens.self-hosted.components.datahike    :as datahike]
     [athens.self-hosted.components.nrepl       :as nrepl]
     [athens.self-hosted.components.web         :as web]
-    [clojure.tools.logging                     :as log]
     [com.stuartsierra.component                :as component]))
 
 

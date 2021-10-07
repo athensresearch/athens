@@ -4,6 +4,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common-events.schema          :as schema]
+    [athens.common.logging                :as log]
     [athens.db                            :as db]
     [datascript.core                      :as d]
     [event-sync.core                      :as event-sync]
@@ -17,7 +18,7 @@
 (rf/reg-event-fx
   :remote/connect!
   (fn [_ [_ remote-db]]
-    (js/console.log ":remote/connect!" (pr-str remote-db))
+    (log/info ":remote/connect!" (pr-str remote-db))
     {:remote/client-connect! remote-db
      :fx                     [[:dispatch [:loading/set]]
                               [:dispatch [:conn-status :connecting]]]}))
@@ -26,7 +27,7 @@
 (rf/reg-event-fx
   :remote/connected
   (fn [_ _]
-    (js/console.log ":remote/connected")
+    (log/info ":remote/connected")
     {:fx [[:dispatch-n [[:loading/unset]
                         [:conn-status :connected]
                         [:db/sync]]]]}))
@@ -35,33 +36,32 @@
 (rf/reg-event-fx
   :remote/connection-failed
   (fn [_ _]
-    (js/console.log ":remote/connection-failed")
+    (log/warn ":remote/connection-failed")
     {:fx [[:dispatch-n [[:loading/unset]
                         [:conn-status :disconnected]
-                        [:db/sync]
-                        ;; THIS was not recommendation from Stu
-                        [:modal/toggle]]]]}))
+                        [:db/sync]]]]}))
 
 
 (rf/reg-event-fx
   :remote/disconnect!
   (fn [_ _]
     {:remote/client-disconnect!   nil
-     :remote/clear-dsdb-snapshop! nil
+     :remote/clear-dsdb-snapshot! nil
      :dispatch                    [:remote/stop-event-sync]}))
 
 
 (rf/reg-event-db
   :remote/updated-last-seen-tx
   (fn [db _]
-    (js/console.debug ":remote/updated-last-seen-tx")
+    ;; TODO(RTC): clean this up, we don't need last seen TX no mo
+    (log/debug ":remote/updated-last-seen-tx")
     db))
 
 
 (rf/reg-event-fx
   :remote/last-seen-tx!
   (fn [{db :db} [_ new-tx-id]]
-    (js/console.debug "last-seen-tx!" new-tx-id)
+    (log/debug "last-seen-tx!" new-tx-id)
     {:db (assoc db :remote/last-seen-tx new-tx-id)
      :fx [[:dispatch [:remote/updated-last-seen-tx]]]}))
 
@@ -78,8 +78,8 @@
                             (m/explain event)
                             (me/humanize))]
         ;; TODO display alert?
-        (js/console.warn "Not sending invalid event. Error:" (pr-str explanation))
-        (js/console.warn "Invalid event was:" (pr-str event))))))
+        (log/warn "Not sending invalid event. Error:" (pr-str explanation)
+                  "\nInvalid event was:" (pr-str event))))))
 
 
 ;; Remote graph related events
@@ -100,14 +100,14 @@
 (rf/reg-fx
   :remote/snapshot-dsdb!
   (fn []
-    (js/console.debug ":remote/snapshot-dsdb! event at time" (:max_tx @db/dsdb))
+    (log/debug ":remote/snapshot-dsdb! event at time" (:max-tx @db/dsdb))
     (reset! db/dsdb-snapshot @db/dsdb)))
 
 
 (rf/reg-event-fx
   :remote/rollback-dsdb
   (fn [_ _]
-    (js/console.debug ":remote/rollback-dsdb event from time" (:max_tx @db/dsdb-snapshot))
+    (log/debug ":remote/rollback-dsdb event to time" (:max-tx @db/dsdb-snapshot))
     {:reset-conn! @db/dsdb-snapshot}))
 
 
@@ -131,12 +131,15 @@
 
 (defn- changed-order?
   [[type _ _ _ noop?]]
+  ;; TODO: if we support rejections via event removal, this also needs to check
+  ;; if the :remove changed order, while still ignoring removal from the tail.
   (and (= type :add) (not noop?)))
 
 
 (rf/reg-event-fx
   :remote/snapshot-transact
   (fn [_ [_ tx-data]]
+    (log/debug ":remote/snapshot-transact update to time" (inc (:max-tx @db/dsdb-snapshot)))
     {:remote/snapshot-transact! tx-data}))
 
 
@@ -153,13 +156,13 @@
 (rf/reg-event-fx
   :remote/apply-forwarded-event
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
-    (js/console.debug ":remote/apply-forwarded-event event:" (pr-str event))
+    (log/debug ":remote/apply-forwarded-event event:" (pr-str event))
     (let [db'            (update db :event-sync #(event-sync/add % :server id event))
           changed-order? (changed-order? (-> db' :event-sync :last-op))
           memory-log     (event-sync/stage-log (:event-sync db') :memory)
           txs            (atomic-resolver/resolve-to-tx @db/dsdb-snapshot event)]
-      (js/console.debug ":remote/apply-forwarded-event event changed order?:" changed-order?)
-      (js/console.debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
+      (log/debug ":remote/apply-forwarded-event event changed order?:" changed-order?)
+      (log/debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
       {:db db'
        :fx [[:dispatch-n (cond-> []
                            ;; Mark as synced if there's no events left in memory.
@@ -181,7 +184,7 @@
 (rf/reg-event-fx
   :remote/forward-event
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
-    (js/console.debug ":remote/forward-event event:" (pr-str event))
+    (log/debug ":remote/forward-event event:" (pr-str event))
     {:db (update db :event-sync #(event-sync/add % :memory id event))
      :fx [[:dispatch-n [[:remote/send-event! event]
                         [:db/not-synced]]]]}))

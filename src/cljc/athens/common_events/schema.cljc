@@ -26,7 +26,6 @@
 
 (def event-type-graph
   [:enum
-   :datascript/create-page
    :datascript/rename-page
    :datascript/merge-page
    :datascript/delete-page
@@ -69,7 +68,6 @@
 
 (def event-type-graph-server
   [:enum
-   :datascript/tx-log
    :datascript/db-dump])
 
 
@@ -132,15 +130,6 @@
     [:map
      [:current-username string?]
      [:new-username string?]]]])
-
-
-(def datascript-create-page
-  [:map
-   [:event/args
-    [:map
-     [:page-uid string?]
-     [:block-uid string?]
-     [:title string?]]]])
 
 
 (def datascript-delete-page
@@ -482,7 +471,6 @@
    (dispatch :presence/hello presence-hello-args)
    (dispatch :presence/editing presence-editing)
    (dispatch :presence/rename presence-rename)
-   (dispatch :datascript/create-page datascript-create-page)
    (dispatch :datascript/rename-page datascript-rename-page)
    ;; Same args as `datascript-rename-page`
    (dispatch :datascript/merge-page datascript-rename-page)
@@ -591,16 +579,6 @@
    [:added {:optional true} boolean?]])
 
 
-(def tx-log
-  [:map
-   [:event/args
-    [:map
-     [:tx-data
-      [:vector #?(:clj  [:fn datom/datom?]
-                  :cljs datom)]]
-     [:tempids map?]]]])
-
-
 (def db-dump
   [:map
    [:event/args
@@ -652,7 +630,6 @@
 (def server-event
   [:multi {:dispatch :event/type}
    ;; client forwardable events
-   (dispatch :datascript/create-page datascript-create-page true)
    (dispatch :datascript/rename-page datascript-rename-page true)
    ;; Same args as `datascript-rename-page`
    (dispatch :datascript/merge-page datascript-rename-page true)
@@ -696,7 +673,6 @@
    (dispatch :datascript/selected-delete datascript-selected-delete true)
 
    ;; server specific graph events
-   (dispatch :datascript/tx-log tx-log true)
    (dispatch :datascript/db-dump db-dump true)
    ;; server specific presence events
    (dispatch :presence/online presence-online true)

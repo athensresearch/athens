@@ -38,3 +38,6 @@ dist
 
 # docker compose templating backup
 docker-compose.yml.bk
+
+athens-data/*
+!athens-data/README.md

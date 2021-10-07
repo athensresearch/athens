@@ -15,26 +15,6 @@
 (test/use-fixtures :each fixture/integration-test-fixture)
 
 
-(test/deftest create-page
-  (let [test-title        "test page title"
-        test-uid          "test-page-uid-1"
-        test-block-uid    "test-block-uid-1"
-        create-page-event (common-events/build-page-create-event -1 test-uid test-block-uid test-title)
-        txs               (resolver/resolve-event-to-tx @@fixture/connection
-                                                        create-page-event)]
-    (d/transact @fixture/connection txs)
-    (let [e-by-title (d/q '[:find ?e
-                            :where [?e :node/title ?title]
-                            :in $ ?title]
-                          @@fixture/connection test-title)
-          e-by-uid (d/q '[:find ?e
-                          :where [?e :block/uid ?uid]
-                          :in $ ?uid]
-                        @@fixture/connection test-uid)]
-      (test/is (seq e-by-title))
-      (test/is (= e-by-title e-by-uid)))))
-
-
 (test/deftest rename-page
   (test/testing "simple case, no string representations need updating"
     (let [test-page-uid   "test-page-1-1-uid"
@@ -182,12 +162,15 @@
 
 (test/deftest delete-page
   (test/testing "Deleting page with no references"
-    (let [test-uid          "test-page-uid-1"
-          test-block-uid    "test-block-uid-1"
-          test-title        "test page title 1"
-          create-page-event (common-events/build-page-create-event -1 test-uid test-block-uid test-title)
-          create-page-txs   (resolver/resolve-event-to-tx @@fixture/connection
-                                                          create-page-event)]
+    (let [test-uid        "test-page-uid-1"
+          test-block-uid  "test-block-uid-1"
+          test-title      "test page title 1"
+          create-page-txs [{:block/uid      test-uid
+                            :node/title     test-title
+                            :block/children [{:block/uid      test-block-uid
+                                              :block/order    0
+                                              :block/string   ""
+                                              :block/children []}]}]]
 
       (d/transact @fixture/connection create-page-txs)
       (let [e-by-title (d/q '[:find ?e
@@ -273,9 +256,12 @@
 
     ;; create new pages
     (run!
-      #(->> (common-events/build-page-create-event -1 (first %) (second %) (nth % 2))
-            (resolver/resolve-event-to-tx @@fixture/connection)
-            (d/transact @fixture/connection))
+      #(d/transact @fixture/connection [{:block/uid      (first %)
+                                         :node/title     (nth % 2)
+                                         :block/children [{:block/uid      (second %)
+                                                           :block/string   ""
+                                                           :block/order    0
+                                                           :block/children []}]}])
       [[test-uid-1 test-block-uid-1 test-title-1]
        [test-uid-2 test-block-uid-2 test-title-2]])
 
@@ -330,9 +316,12 @@
 
     ;; create new pages
     (run!
-      #(->> (common-events/build-page-create-event -1 (first %) (second %) (nth % 2))
-            (resolver/resolve-event-to-tx @@fixture/connection)
-            (d/transact @fixture/connection))
+      #(d/transact @fixture/connection [{:block/uid      (first %)
+                                         :node/title     (nth % 2)
+                                         :block/children [{:block/uid      (second %)
+                                                           :block/string   ""
+                                                           :block/order    0
+                                                           :block/children []}]}])
       [[test-uid-1 test-block-uid-1 test-title-1]
        [test-uid-2 test-block-uid-2 test-title-2]])
 

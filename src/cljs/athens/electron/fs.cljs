@@ -3,7 +3,6 @@
     [athens.athens-datoms :as athens-datoms]
     [athens.db :as db]
     [athens.electron.utils :as utils]
-    [athens.self-hosted.client :as client]
     [datascript.core :as d]
     [datascript.transit :as dt]
     [goog.functions :refer [debounce]]
@@ -111,31 +110,32 @@
   Path and data to be written are retrieved from the reframe db directly, not passed as arguments.
   User should eventually have MANY backups files. It's their job to manage these backups :)"
   [copy?]
-  (when-not (client/open?)
-    (let [filepath     (:db-path @(rf/subscribe [:db-picker/selected-db]))
-          data         (dt/write-transit-str @db/dsdb)
-          r            (.. stream -Readable (from data))
-          dirname      (.dirname path filepath)
-          time         (.. (js/Date.) getTime)
-          bkp-filename (str time "-" (os-username) "-" "index.transit.bkp")
-          bkp-filepath (.resolve path dirname bkp-filename)
-          w            (.createWriteStream fs bkp-filepath)
-          error-cb     (fn [err]
-                         (when err
-                           (js/alert (js/Error. err))
-                           (js/console.error (js/Error. err))))]
-      (.setEncoding r "utf8")
-      (.on r "error" error-cb)
-      (.on w "error" error-cb)
-      (.on w "finish" (fn []
-                        ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
-                        ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
-                        (when copy?
-                          (.. fs (copyFileSync bkp-filepath filepath))
-                          (let [mtime (.-mtime (.statSync fs filepath))]
-                            (rf/dispatch-sync [:db/update-mtime mtime])
-                            (rf/dispatch [:db/sync])))))
-      (.pipe r w))))
+  (let [selected-db @(rf/subscribe [:db-picker/selected-db])]
+    (when (utils/local-db? selected-db)
+      (let [filepath     (:db-path selected-db)
+            data         (dt/write-transit-str @db/dsdb)
+            r            (.. stream -Readable (from data))
+            dirname      (.dirname path filepath)
+            time         (.. (js/Date.) getTime)
+            bkp-filename (str time "-" (os-username) "-" "index.transit.bkp")
+            bkp-filepath (.resolve path dirname bkp-filename)
+            w            (.createWriteStream fs bkp-filepath)
+            error-cb     (fn [err]
+                           (when err
+                             (js/alert (js/Error. err))
+                             (js/console.error (js/Error. err))))]
+        (.setEncoding r "utf8")
+        (.on r "error" error-cb)
+        (.on w "error" error-cb)
+        (.on w "finish" (fn []
+                          ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
+                          ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
+                          (when copy?
+                            (.. fs (copyFileSync bkp-filepath filepath))
+                            (let [mtime (.-mtime (.statSync fs filepath))]
+                              (rf/dispatch-sync [:db/update-mtime mtime])
+                              (rf/dispatch [:db/sync])))))
+        (.pipe r w)))))
 
 
 (defn write-bkp

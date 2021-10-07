@@ -4,11 +4,13 @@
     [athens.common-events          :as common-events]
     [athens.common-events.fixture  :as fixture]
     [athens.common-events.resolver :as resolver]
+    [athens.common.logging         :as log]
+    [clojure.pprint                :as pp]
     [clojure.test                  :as t]
     [datahike.api                  :as d]))
 
 
-(t/use-fixtures :each fixture/integration-test-fixture)
+(t/use-fixtures :each (partial fixture/integration-test-fixture []))
 
 
 (t/deftest block-save-test
@@ -1033,6 +1035,8 @@
         (t/is (= 0 (:block/order target-block)))
         (t/is (= 1 (:block/order source-block)))
 
+        (log/info "drop-same-parent-tx:" (with-out-str
+                                           (pp/pprint drop-same-parent-txs)))
         (d/transact @fixture/connection drop-same-parent-txs)
         (let [source-block         (common-db/get-block @@fixture/connection [:block/uid source-uid])
               target-block         (common-db/get-block @@fixture/connection [:block/uid target-uid])

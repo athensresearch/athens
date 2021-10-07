@@ -1,6 +1,7 @@
 (ns athens.common-events.fixture
   (:require
     [athens.athens-datoms                   :as athens-datoms]
+    [athens.common.utils                    :as common.utils]
     [athens.self-hosted.components.datahike :as athens-datahike]
     [datahike.api                           :as d]))
 
@@ -9,8 +10,11 @@
 
 
 (def in-mem-config
-  {:store {:backend :mem
-           :id      "default"}})
+  {:store #_ {:backend :mem
+              :id      "default"}
+   {:backend :file
+    :path    "db-testing"
+    :id      "default"}})
 
 
 (def seed-datoms
@@ -36,3 +40,9 @@
      (reset! connection nil)
      (d/release conn)
      (d/delete-database config))))
+
+
+(defn random-tmp-folder-config
+  []
+  {:store {:backend :file
+           :path    (str "/tmp/example-" (common.utils/gen-block-uid))}})

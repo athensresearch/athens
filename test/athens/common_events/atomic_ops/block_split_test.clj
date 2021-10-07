@@ -4,11 +4,24 @@
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common.logging                :as log]
     [clojure.test                         :as t]
     [datahike.api                         :as d]))
 
 
-(t/use-fixtures :each fixture/integration-test-fixture)
+(t/use-fixtures :each (partial fixture/integration-test-fixture [] (fixture/random-tmp-folder-config)))
+
+
+(defn- transact-with-middleware
+  [txs]
+  (let [processed-txs (->> txs
+                           (common-db/linkmaker @@fixture/connection)
+                           (common-db/orderkeeper @@fixture/connection))]
+    (log/debug "\n\nmiddleware\n"
+               "\nfrom:" (pr-str txs)
+               "\nto:" (pr-str processed-txs)
+               "\n")
+    (d/transact @fixture/connection processed-txs)))
 
 
 (t/deftest block-split-tests
@@ -26,7 +39,7 @@
                                             :block/string   start-str
                                             :block/order    0
                                             :block/children []}}]]
-      (d/transact @fixture/connection setup-txs)
+      (transact-with-middleware setup-txs)
       (t/is (nil? (common-db/e-by-av @@fixture/connection
                                      :block/uid
                                      child-2-uid))
@@ -44,7 +57,7 @@
                                                             :new-string      new-tmp-string
                                                             :index           2})
             block-split-tx (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-split-op)]
-        (d/transact @fixture/connection block-split-tx)
+        (transact-with-middleware block-split-tx)
         (let [page         (common-db/get-block @@fixture/connection [:block/uid page-1-uid])
               old-block    (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
               new-block    (common-db/get-block @@fixture/connection [:block/uid child-2-uid])
@@ -77,21 +90,8 @@
                                           :block/string   ""
                                           :block/order    1
                                           :block/children []}]}]]
-      (d/transact @fixture/connection setup-txs)
+      (transact-with-middleware setup-txs)
       (let [page (common-db/get-block @@fixture/connection [:block/uid page-1-uid])]
-        (println "page: " (pr-str page))
-        (comment
-          {:node/title "test page 1"
-           :block/children [#:block{:uid "child-1-1-uid"
-                                    :order 0}
-                            #:block{:uid "child-1-2-uid"
-                                    :order 1}
-                            #:block{:uid "child-2-1-uid"
-                                    :order 0}
-                            #:block{:uid "child-2-2-uid"
-                                    :order 1}]
-           :block/uid "page-2-uid"
-           :db/id 85})
         (t/is (nil? (common-db/e-by-av @@fixture/connection
                                        :block/uid
                                        child-3-uid))
@@ -109,7 +109,7 @@
                                                               :new-string      start-str
                                                               :index           2})
               block-split-tx (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-split-op)]
-          (d/transact @fixture/connection block-split-tx)
+          (transact-with-middleware block-split-tx)
           (let [page        (common-db/get-block @@fixture/connection [:block/uid page-1-uid])
                 old-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
                 old-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])
@@ -124,3 +124,5 @@
             (t/is (= 0 (-> old-1-block :block/order)))
             (t/is (= 1 (-> new-block :block/order)))
             (t/is (= 2 (-> old-2-block :block/order)))))))))
+
+

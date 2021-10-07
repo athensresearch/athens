@@ -1,5 +1,6 @@
 (ns athens.walk
   (:require
+    [athens.common.logging :as log]
     [athens.parser :as parser]
     [clojure.string :as str]
     [instaparse.core :as parse]))
@@ -27,7 +28,6 @@
                       (str "#" inner-title)))
        :block-ref (fn [{_from :from} uid] (swap! data update :block/refs #(conj % uid)))}
       (parser/parse-to-ast string))
-    #?(:cljs
-       (js/console.log "walk-string" (pr-str @data)))
+    (log/debug "walk-string" (pr-str @data))
     @data))
 

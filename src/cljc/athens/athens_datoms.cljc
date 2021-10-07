@@ -1,6 +1,16 @@
 (ns athens.athens-datoms)
 
 
+(def mini-datoms
+  [{:block/uid      "0"
+    :node/title     "Welcome"
+    :page/sidebar   0
+    :block/children [#:block{:uid      "block-1"
+                             :string   "block with link to [[Welcome]]"
+                             :order    0
+                             :children []}]}])
+
+
 ;; Reserved pages that are updated when app is loaded.
 (def datoms
   [{:block/uid "0",

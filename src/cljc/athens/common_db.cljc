@@ -2,13 +2,13 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
+    [athens.common.logging         :as log]
     [athens.parser                 :as parser]
     [athens.patterns               :as patterns]
     [clojure.data                  :as data]
-    [clojure.pprint                :as pprint]
+    [clojure.pprint                :as pp]
     [clojure.set                   :as set]
     [clojure.string                :as string]
-    #?(:clj [clojure.tools.logging :as log])
     #?(:clj  [datahike.api         :as d]
        :cljs [datascript.core      :as d])))
 
@@ -57,10 +57,11 @@
 
 (defn inc-after
   [db eid order]
-  (->> (d/q '[:find ?ch ?new-o
+  (->> (d/q '[:find ?block-uid ?new-o
               :in $ % ?p ?at
-              :keys db/id block/order
-              :where (inc-after ?p ?at ?ch ?new-o)]
+              :keys block/uid block/order
+              :where (inc-after ?p ?at ?ch ?new-o)
+              [?ch :block/uid ?block-uid]]
             db
             rules
             eid
@@ -69,10 +70,11 @@
 
 (defn dec-after
   [db eid order]
-  (->> (d/q '[:find ?ch ?new-o
+  (->> (d/q '[:find ?block-uid ?new-o
               :in $ % ?p ?at
-              :keys db/id block/order
-              :where (dec-after ?p ?at ?ch ?new-o)]
+              :keys block/uid block/order
+              :where (dec-after ?p ?at ?ch ?new-o)
+              [?ch :block/uid ?block-uid]]
             db
             rules
             eid
@@ -111,8 +113,6 @@
   "Fetches whole block based on `:db/id`."
   [db eid]
   (d/pull db '[:db/id
-               #?(:cljs
-                  :remote/db-id)
                :node/title
                :block/uid
                :block/order
@@ -128,10 +128,12 @@
 (defn get-parent-eid
   "Find parent's `:db/id` of given `eid`."
   [db eid]
-  (->> (d/entity db eid)
-       :block/_children
-       first
-       :db/id))
+  (-> (d/entity db eid)
+      :block/_children
+      first
+      (select-keys [:block/uid])
+      seq
+      first))
 
 
 (defn get-parent
@@ -227,10 +229,11 @@
 
 (defn minus-after
   [db eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
+  (->> (d/q '[:find ?block-uid ?new-o
+              :keys block/uid block/order
               :in $ % ?p ?at ?x
-              :where (minus-after ?p ?at ?ch ?new-o ?x)]
+              :where (minus-after ?p ?at ?ch ?new-o ?x)
+              [?ch :block/uid ?block-uid]]
             db
             rules
             eid
@@ -240,10 +243,11 @@
 
 (defn plus-after
   [db eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
+  (->> (d/q '[:find ?block-uid ?new-o
+              :keys block/uid block/order
               :in $ % ?p ?at ?x
-              :where (plus-after ?p ?at ?ch ?new-o ?x)]
+              :where (plus-after ?p ?at ?ch ?new-o ?x)
+              [?ch :block/uid ?block-uid]]
             db
             rules
             eid
@@ -253,13 +257,14 @@
 
 (defn reindex-blocks-between-bounds
   [db inc-or-dec parent-eid lower-bound upper-bound n]
-  #_(println "reindex block")
-  (d/q '[:find ?ch ?new-order
-         :keys db/id block/order
+  #_(log/debug "reindex block")
+  (d/q '[:find ?block-uid ?new-order
+         :keys block/uid block/order
          :in $ % ?+or- ?parent ?lower-bound ?upper-bound ?n
          :where
          (between ?parent ?lower-bound ?upper-bound ?ch ?order)
-         [(?+or- ?order ?n) ?new-order]]
+         [(?+or- ?order ?n) ?new-order]
+         [?ch :block/uid ?block-uid]]
        db
        rules
        inc-or-dec
@@ -334,7 +339,7 @@
 (defn same-parent?
   "Given a coll of uids, determine if uids are all direct children of the same parent."
   [db uids]
-  #_(println "same parent")
+  #_(log/debug "same parent")
   (let [parents (->> uids
                      (mapv (comp first uid-and-embed-id))
                      (d/q '[:find ?parents
@@ -547,8 +552,9 @@
 
 (defn linkmaker-error-handler
   [e input-tx]
-  #?(:cljs (js/console.error "Linkmaker failure." e)
-     :clj  (log/error "Linkmaker failure." e))
+  (log/error e "❌ Linkmaker failure.")
+  (log/debug "Linkmaker original TX:\n" (with-out-str
+                                          (pp/pprint input-tx)))
   ;; Return the original, un-modified, input tx so that transactions can still move forward.
   ;; We can always run linkmaker again later over all strings if we think the db is not correctly linked.
   ;; TODO(reporting): report the error type, without any identifiable information.
@@ -581,13 +587,14 @@
 
   ([db]
    (try
-     (let [linkmaker-txs (into []
+     (let [datoms        (d/datoms db :eavt)
+           linkmaker-txs (into []
                                (comp (keep parseable-string-datom)
                                      (mapcat (partial update-refs db)))
-                               (d/datoms db :eavt))]
-       #_(println "linkmaker:"
-               "\nall:" (with-out-str (clojure.pprint/pprint (d/datoms db :eavt)))
-               "\nlinkmaker-txs:" (with-out-str (clojure.pprint/pprint linkmaker-txs)))
+                               datoms)]
+       #_(log/debug "linkmaker:"
+                    "\nall:" (with-out-str (pp/pprint datoms))
+                    "\nlinkmaker-txs:" (with-out-str (pp/pprint linkmaker-txs)))
        linkmaker-txs)
      (catch #?(:cljs :default
                :clj Exception) e
@@ -606,19 +613,19 @@
                                           (mapcat (partial update-refs db-after)))
                                     tx-data)
            with-linkmaker-txs (into (vec input-tx) linkmaker-txs)]
-       #_(println "linkmaker:"
-                "\ninput-tx:" (with-out-str (pprint/pprint input-tx))
-                "\ntx-data:" (with-out-str (pprint/pprint tx-data))
-                "\nlinkmaker-txs:" (with-out-str (pprint/pprint linkmaker-txs))
-                "\nwith-linkmaker-txs:" (with-out-str (pprint/pprint with-linkmaker-txs)))
+       #_(log/debug "linkmaker:"
+                    "\ninput-tx:" (with-out-str (pp/pprint input-tx))
+                    "\ntx-data:" (with-out-str (pp/pprint tx-data))
+                    "\nlinkmaker-txs:" (with-out-str (pp/pprint linkmaker-txs))
+                    "\nwith-linkmaker-txs:" (with-out-str (pp/pprint with-linkmaker-txs)))
        with-linkmaker-txs)
      (catch #?(:cljs :default
                :clj Exception) e
-       (linkmaker-error-handler e [])))))
+       (linkmaker-error-handler e input-tx)))))
 
 
 (defn fix-block-order
-  [{:block/keys [children]}]
+  [{:block/keys [children] :as parent-block}]
   (let [sorted-kids  (->> children
                           (sort-by #(vector (:block/order %)
                                             (:block/uid %))))
@@ -628,15 +635,15 @@
                                {:block/uid   uid
                                 :block/order idx}))
                            indexed-kids)]
-    #_(println "indexed-kids:" (with-out-str
-                               (pprint/pprint indexed-kids))
-             "\nblock-fixes:" (with-out-str
-                                (pprint/pprint block-fixes)))
+    #_(log/debug "indexed-kids:" (with-out-str
+                                   (pp/pprint indexed-kids))
+                 "\nblock-fixes:" (with-out-str
+                                    (pp/pprint block-fixes)))
     (when-not (empty? block-fixes)
-      #?(:cljs (js/console.error "Needed to fix block-order" (with-out-str
-                                                               (pprint/pprint block-fixes)))
-         :clj (log/error "Needed to fix block-order" (with-out-str
-                                                       (pprint/pprint block-fixes)))))
+      (log/error "\nNeeded to fix block-order:\n" (with-out-str
+                                                    (pp/pprint block-fixes))
+                 "\nOf parent:\n" (with-out-str
+                                    (pp/pprint parent-block))))
     block-fixes))
 
 
@@ -648,11 +655,12 @@
   (let [mod-eids       (->> tx-data
                             (keep (fn [[eid attr]]
                                     (when (= :block/order attr)
-                                      eid)))
+                                      (eid->lookup-ref db-after eid))))
                             set)
-        old-parents    (->> mod-eids
-                            (map #(get-parent-eid db-before %))
-                            set)
+        old-parents    (when db-before
+                         (->> mod-eids
+                              (map #(get-parent-eid db-before %))
+                              set))
         new-parents    (->> mod-eids
                             (map #(get-parent-eid db-after %))
                             set)
@@ -661,25 +669,27 @@
                             (remove nil?)
                             (map #(get-block db-after %)))
         new-violations (doall
-                         (remove empty?
+                         (remove #(or (empty? %)
+                                      (nil? (:block/uid %)))
                                  (mapcat fix-block-order parents-blocks)))]
-    #_(println "keep-block-order:"
-             "\ntx-data:" (with-out-str
-                            (pprint/pprint tx-data))
-             "\nmod-eids:" (pr-str mod-eids)
-             "\nold-parents:" (pr-str old-parents)
-             "\nnew-parents:" (pr-str new-parents)
-             "\nparents-blocks:\n" (with-out-str
-                                     (pprint/pprint parents-blocks))
-             "\nnew-violations:" (pr-str new-violations))
+    #_(log/debug "keep-block-order:"
+                 "\ntx-data:" (with-out-str
+                                (pp/pprint tx-data))
+                 "\nmod-eids:" (pr-str mod-eids)
+                 "\nold-parents:" (pr-str old-parents)
+                 "\nnew-parents:" (pr-str new-parents)
+                 "\nparents-blocks:\n" (with-out-str
+                                         (pp/pprint parents-blocks))
+                 "\nnew-violations:" (pr-str new-violations))
     new-violations))
 
 
 (defn orderkeeper-error
   [ex input-tx]
-  (println "orderkeeper, error" (pr-str ex)
-           "\ninput-tx:" (with-out-str
-                           (pprint/pprint input-tx))))
+  (log/error ex "❌ Orderkeeper failure.")
+  (log/debug "Orderkeeper original TX:\n" (with-out-str
+                                            (pp/pprint input-tx)))
+  input-tx)
 
 
 (defn orderkeeper
@@ -695,10 +705,10 @@
   If `input-tx` is not provided, all `:block/order` will be checked."
   ([db]
    (try
-     (let [orderkeeper-txs (into []
-                                 (keep-block-order {:db-before []
-                                                    :db-after  db
-                                                    :tx-data   (d/datoms db :eavd)}))]
+     (let [datoms          (d/datoms db :eavt)
+           orderkeeper-txs (into []
+                                 (keep-block-order {:db-after  db
+                                                    :tx-data   datoms}))]
        orderkeeper-txs)
      (catch #?(:cljs :default
                :clj Exception) e
@@ -716,3 +726,33 @@
                :clj Exception) e
        (orderkeeper-error e input-tx)
        input-tx))))
+
+
+(defn block-uid-nil-eater-error
+  [ex input-tx]
+  (log/error ex "❌ `:block/uid nil` eater error")
+  input-tx)
+
+
+(defn block-uid-nil-eater
+  "Eats (removes) all block with `:block/order` nil"
+  ([db]
+   (block-uid-nil-eater db []))
+  ([db input-tx]
+   (try
+     (let [tx-report        (d/with db input-tx)
+           violating-db-ids (d/q '[:find ?eid
+                                   :keys db/id
+                                   :where [?eid :block/order]
+                                   (not [?eid :block/uid])]
+                                 (:db-after tx-report))
+           retractions      (into []
+                                  (for [{eid :db/id} violating-db-ids]
+                                    (do
+                                      (log/warn "block-uid-nil-eater, have to remove :db/id" eid)
+                                      [:db/retractEntity eid])))
+           with-eater       (into (vec input-tx) retractions)]
+       with-eater)
+     (catch #?(:cljs :default
+               :clj Exception) e
+       (block-uid-nil-eater-error e input-tx)))))
