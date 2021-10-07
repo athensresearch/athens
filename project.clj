@@ -9,51 +9,15 @@
             :distribution :repo
             :comments     "same as Clojure"}
 
-  :dependencies [[org.clojure/clojure "1.10.3"]
-                 [org.clojure/clojurescript "1.10.879"]
-                 [thheller/shadow-cljs "2.15.3"]
-                 [reagent/reagent "1.0.0"]
-                 [re-frame/re-frame "1.2.0"]
-                 [datascript/datascript "1.1.0"]
-                 [datascript-transit/datascript-transit "0.3.0"]
-                 [denistakeda/posh "0.5.8"]
-                 [cljs-http/cljs-http "0.1.46"]
-                 [day8.re-frame/async-flow-fx "0.2.0"]
-                 [metosin/reitit "0.5.13"]
-                 [metosin/komponentit "0.3.10"]
-                 [instaparse/instaparse "1.4.10"]
-                 [borkdude/sci "0.2.5"]
-                 [garden/garden "1.3.10"]
-                 [stylefy/stylefy "3.0.0"]
-                 [stylefy/reagent "3.0.0"]
-                 [tick/tick "0.4.26-alpha"]
-                 [com.rpl/specter "1.1.3"]
-                 [com.taoensso/sente "1.16.2"]
-                 ;; backend
-                 ;;   logging hell
-                 [org.clojure/tools.logging "1.1.0"]
-                 [ch.qos.logback/logback-classic "1.2.3"]
-                 ;;   IoC
-                 [com.stuartsierra/component "1.0.0"]
-                 ;;   configuration mgmt
-                 [yogthos/config "1.1.7"]
-                 ;;   Datahike
-                 ;;   TODO: monitor https://github.com/replikativ/datahike/issues/364 and
-                 ;;   and uncomment tests that refer to this issue when it is fixed.
-                 [io.replikativ/datahike "0.3.7-SNAPSHOT"]
-                 ;;   web server
-                 [http-kit/http-kit "2.5.3"]
-                 [compojure/compojure "1.6.2"]
-                 ;;   data validation
-                 [metosin/malli "0.5.1"]
-                 ;;   networked repl
-                 [com.stuartsierra/component.repl "0.2.0"]
-                 [nrepl/nrepl "0.8.3"]]
-
   :plugins [[lein-auto "0.1.3"]
             [lein-shell "0.5.0"]
             [lein-ancient "0.7.0"]
-            [cider/cider-nrepl "0.26.0"]]
+            [cider/cider-nrepl "0.26.0"]
+            [lein-tools-deps "0.4.5"]]
+
+  :middleware [lein-tools-deps.plugin/resolve-dependencies-with-deps-edn]
+
+  :lein-tools-deps/config {:config-files [:install :user :project]}
 
   :min-lein-version "2.5.3"
 

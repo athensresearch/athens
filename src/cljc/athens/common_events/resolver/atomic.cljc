@@ -1,6 +1,7 @@
 (ns athens.common-events.resolver.atomic
   (:require
     [athens.common-db :as common-db]
+    [athens.common-events.resolver :as resolver]
     [athens.common.utils :as utils]
     #?(:clj  [datahike.api :as d]
        :cljs [datascript.core :as d]))
@@ -43,25 +44,15 @@
         stored-old-string    (if-let [block-eid (common-db/e-by-av db :block/uid block-uid)]
                                (common-db/v-by-ea db block-eid :block/string)
                                "")]
-    (cond
-      (= stored-old-string old-string)
-      (let [now           (utils/now-ts)
-            updated-block {:block/uid    block-uid
-                           :block/string new-string
-                           :edit/time    now}]
-        [updated-block])
-
-      (= stored-old-string new-string)
-      (let [now           (utils/now-ts)
-            updated-block {:block/uid block-uid
-                           :edit/time now}]
-        [updated-block])
-
-      :else
-      (throw
-        (ex-info ":block/save operation started from a stale state."
-                 {:op/args           args
-                  :actual-old-string stored-old-string})))))
+    (when-not (= stored-old-string old-string)
+      (print (ex-info ":block/save operation started from a stale state."
+                      {:op/args           args
+                       :actual-old-string stored-old-string})))
+    (let [now           (utils/now-ts)
+          updated-block {:block/uid    block-uid
+                         :block/string new-string
+                         :edit/time    now}]
+      [updated-block])))
 
 
 (defmethod resolve-atomic-op-to-tx :page/new
@@ -90,3 +81,10 @@
         (mapcat (fn [consequence]
                   (resolve-atomic-op-to-tx db consequence))
                 consequences)))
+
+
+(defn resolve-to-tx
+  [db {:event/keys [type op] :as event}]
+  (if (contains? #{:op/atomic} type)
+    (resolve-atomic-op-to-tx db op)
+    (resolver/resolve-event-to-tx db event)))
