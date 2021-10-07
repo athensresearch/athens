@@ -10,12 +10,12 @@ services:
     expose:
       - 3010 # Change this according to config.edn
     volumes:
-      - datahike-db:/srv/athens/db
-      - crash-logs:/srv/athens/logs
+      - ./athens-data/db:/srv/athens/db
+      - ./athens-data/logs:/srv/athens/logs
     environment:
       # Use system env vars for settings if available.
       # config_edn is deep merged with the whole config file
-      - config_edn=${config_edn:-{:datahike {:store {:path "/srv/athens/db"}}}}
+      - config_edn=${CONFIG_EDN:-{:datahike {:store {:path "/srv/athens/db"}}}}
 
 
   athens-nginx:
@@ -30,6 +30,3 @@ services:
     ports:
       - 80:80
 
-volumes:
-  datahike-db:
-  crash-logs:

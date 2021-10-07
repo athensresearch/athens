@@ -8,7 +8,8 @@
 (rf/reg-fx
   :presence/send-editing
   (fn [uid]
-    (client/send! (common-events/build-presence-editing-event 42 @(rf/subscribe [:username]) uid))))
+    (when uid
+      (client/send! (common-events/build-presence-editing-event 42 @(rf/subscribe [:username]) uid)))))
 
 
 (rf/reg-fx

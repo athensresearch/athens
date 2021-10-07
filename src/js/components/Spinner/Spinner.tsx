@@ -2,7 +2,7 @@ import styled, { keyframes } from "styled-components";
 import { classnames } from "@/utils/classnames";
 import React from "react";
 
-const spin = keyframes`
+export const spin = keyframes`
   0% {
     transform: rotate(0deg);
   }
@@ -42,7 +42,7 @@ const Wrap = styled.div`
   }
 `;
 
-const Progress = styled.div`
+export const Progress = styled.div`
   width: 3em;
   height: 3em;
   border-radius: 1000em;

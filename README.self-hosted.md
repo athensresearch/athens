@@ -87,26 +87,25 @@ You can create an Athens server without installing anything else via docker comp
 
 Pick a [release](https://github.com/athensresearch/athens/releases you'd like to use, download the `docker-compose.yml` file in the release to a folder, and then run `docker compose up --no-build`.
 
-For example, for `v1.0.0-alpha.rtc.11`: 
+For example, for `v1.0.0-alpha.rtc.12`:
 
 ```sh
-curl https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.11/docker-compose.yml --output docker-compose.yml
+curl https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.12/docker-compose.yml --output docker-compose.yml
 docker compose up
 ```
 
-The server will be acessible at `localhost:80`.
+The server will be acessible at `localhost:80`, and all data will be saved at `./athens-data`.
 
-You can override the configuration via an environment variable:
+You can override the app configuration via an environment variable:
 
 ```sh
-config_edn="{:password \"YourServerPassword\" :datahike {:store {:path \"/srv/athens/db\"}}}" docker compose up
+CONFIG_EDN="{:password \"YourServerPassword\" :datahike {:store {:path \"/srv/athens/db\"}}}" docker compose up
 ```
 
 or via an `.env` file located in the same directory as the downloaded `docker-compose.yml`:
 
 ```sh
 # .env
-config_edn="{:password \"YourServerPassword\" :datahike {:store {:path \"/srv/athens/db\"}}}"
+CONFIG_EDN="{:password \"YourServerPassword\" :datahike {:store {:path \"/srv/athens/db\"}}}"
 ```
-
 

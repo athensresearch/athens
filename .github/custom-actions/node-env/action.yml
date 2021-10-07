@@ -18,5 +18,5 @@ runs:
           ${{ runner.os }}-yarn-
 
     - name: Fetch yarn dependencies
-      run: yarn install --frozen-lockfile
+      run: yarn install --frozen-lockfile --network-timeout 10000000
       shell: bash

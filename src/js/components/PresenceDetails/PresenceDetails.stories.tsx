@@ -17,11 +17,12 @@ export default {
   parameters: {
     badges: [BADGE.DEV, BADGE.IN_USE]
   },
-  decorators: [(Story) => {
-
-
-    return <Storybook.Wrapper><Story /></Storybook.Wrapper>
-  }]
+  decorators: [(Story) => <Storybook.Wrapper style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems:
+      'center'
+  }}><Story /></Storybook.Wrapper>]
 };
 
 const Template = (args) => {
@@ -47,3 +48,71 @@ const Template = (args) => {
 
 export const Default = Template.bind({});
 Default.args = {}
+
+export const ConnectedButAlone = Template.bind({});
+ConnectedButAlone.args = {
+  currentPageMembers: [],
+  differentPageMembers: [],
+}
+
+export const Open = Template.bind({});
+Open.args = { defaultOpen: true }
+
+export const ConnectionStatus = (args) => {
+  const {
+    currentUser,
+    setCurrentUser,
+    currentPageMembers,
+    differentPageMembers,
+    hostAddress,
+    connectionStatus,
+  } = useAppState();
+
+  return (<>
+    <PresenceDetails
+      hostAddress={hostAddress}
+      currentPageMembers={currentPageMembers}
+      differentPageMembers={differentPageMembers}
+      currentUser={currentUser}
+      handleUpdateProfile={(person) => setCurrentUser(person)}
+      {...args}
+      connectionStatus={'local'}
+    />
+    <PresenceDetails
+      hostAddress={hostAddress}
+      currentPageMembers={currentPageMembers}
+      differentPageMembers={differentPageMembers}
+      currentUser={currentUser}
+      handleUpdateProfile={(person) => setCurrentUser(person)}
+      {...args}
+      connectionStatus={'connecting'}
+    />
+    <PresenceDetails
+      hostAddress={hostAddress}
+      currentPageMembers={currentPageMembers}
+      differentPageMembers={differentPageMembers}
+      currentUser={currentUser}
+      handleUpdateProfile={(person) => setCurrentUser(person)}
+      {...args}
+      connectionStatus={'connected'}
+    />
+    <PresenceDetails
+      hostAddress={hostAddress}
+      currentPageMembers={currentPageMembers}
+      differentPageMembers={differentPageMembers}
+      currentUser={currentUser}
+      handleUpdateProfile={(person) => setCurrentUser(person)}
+      {...args}
+      connectionStatus={'reconnecting'}
+    />
+    <PresenceDetails
+      hostAddress={hostAddress}
+      currentPageMembers={currentPageMembers}
+      differentPageMembers={differentPageMembers}
+      currentUser={currentUser}
+      handleUpdateProfile={(person) => setCurrentUser(person)}
+      {...args}
+      connectionStatus={'offline'}
+    />
+  </>)
+};

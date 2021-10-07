@@ -6,7 +6,7 @@ import { useAppState } from '@/utils/useAppState';
 
 import { LeftSidebar } from '@/concept/LeftSidebar';
 import { RightSidebar } from '@/concept/RightSidebar';
-import { AppToolbar } from '@/concept/AppToolbar';
+import { AppToolbar } from '@/AppToolbar';
 import { CommandBar } from '@/concept/CommandBar';
 import { AppLayout, MainContent } from '@/concept/App';
 import { Page } from '@/concept/Page';

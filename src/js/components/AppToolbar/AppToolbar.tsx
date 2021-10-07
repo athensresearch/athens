@@ -3,10 +3,7 @@ import styled from 'styled-components';
 import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Menu as MenuIcon, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
 
 import { Button } from '@/Button';
-
-import { DatabaseMenu, DatabaseMenuProps } from '@/concept/DatabaseMenu';
 import { WindowButtons } from './components/WindowButtons';
-import { PresenceDetails, PresenceDetailsProps } from '@/PresenceDetails';
 
 const AppToolbarWrapper = styled.header`
   background: var(--color-background);
@@ -22,7 +19,7 @@ const AppToolbarWrapper = styled.header`
   padding-left: 10px;
   grid-template-columns: auto 1fr auto;
   transition: border-color 1s ease;
-  z-index: 1070;
+  z-index: var(--zindex-sticky);
   grid-auto-flow: column;
   -webkit-app-region: drag;
 
@@ -65,6 +62,16 @@ const AppToolbarWrapper = styled.header`
 
     .is-fullscreen & {
       padding-left: 22px;
+    }
+  }
+`;
+
+const AthenaButton = styled(Button)`
+  ${Button.Wrap} {
+    gap: 0;
+    
+    svg {
+      margin-right: 0;
     }
   }
 `;
@@ -119,83 +126,63 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   */
   isThemeDark: boolean;
   // Electron only
-  handlePressMinimize?(): void;
-  handlePressClose?(): void;
-  handlePressMaximizeRestore?(): void;
-  handlePressFullscreen?(): void;
-  handlePressHistoryBack(): void;
-  handlePressHistoryForward(): void;
+  onPressMinimize?(): void;
+  onPressClose?(): void;
+  onPressMaximizeRestore?(): void;
+  onPressFullscreen?(): void;
+  onPressHistoryBack(): void;
+  onPressHistoryForward(): void;
   // Main toolbar
-  handlePressCommandBar(): void;
-  handlePressDailyNotes(): void;
-  handlePressAllPages(): void;
-  handlePressGraph(): void;
-  handlePressThemeToggle(): void;
-  handlePressMerge(): void;
-  handlePressSettings(): void;
-  handlePressHistoryBack(): void;
-  handlePressHistoryForward(): void;
-  handlePressLeftSidebarToggle(): void;
-  handlePressRightSidebarToggle(): void;
+  onPressCommandBar(): void;
+  onPressDailyNotes(): void;
+  onPressAllPages(): void;
+  onPressGraph(): void;
+  onPressThemeToggle(): void;
+  onPressMerge(): void;
+  onPressSettings(): void;
+  onPressHistoryBack(): void;
+  onPressHistoryForward(): void;
+  onPressLeftSidebarToggle(): void;
+  onPressRightSidebarToggle(): void;
+  databaseMenu?: React.FC;
+  presenceDetails?: React.FC;
 }
 
-export const AppToolbar = ({
-  os,
-  route,
-  isElectron,
-  isWinFullscreen,
-  isWinFocused,
-  isWinMaximized,
-  isThemeDark,
-  isLeftSidebarOpen,
-  isRightSidebarOpen,
-  isCommandBarOpen,
-  isMergeDialogOpen,
-  isDatabaseDialogOpen,
-  hostAddress,
-  currentUser,
-  currentPageMembers,
-  differentPageMembers,
-  activeDatabase,
-  inactiveDatabases,
-  isSynced,
-  handleChooseDatabase,
-  handlePressAddDatabase,
-  handlePressRemoveDatabase,
-  handlePressImportDatabase,
-  handlePressMoveDatabase,
-  handlePressMember,
-  handlePressCommandBar,
-  handlePressDailyNotes,
-  handlePressAllPages,
-  handlePressGraph,
-  handlePressThemeToggle,
-  handlePressMerge,
-  handlePressSettings,
-  handlePressHistoryBack,
-  handlePressHistoryForward,
-  handlePressLeftSidebarToggle,
-  handlePressRightSidebarToggle,
-  handlePressMinimize,
-  handlePressMaximizeRestore,
-  handlePressClose,
-  handlePressHostAddress,
-  handleUpdateProfile,
-  connectionStatus
-}: AppToolbarProps): React.ReactElement => {
+export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
+  const {
+    os,
+    route,
+    isElectron,
+    isWinFullscreen,
+    isWinFocused,
+    isWinMaximized,
+    isThemeDark,
+    isLeftSidebarOpen,
+    isRightSidebarOpen,
+    isCommandBarOpen,
+    isMergeDialogOpen,
+    onPressCommandBar: handlePressCommandBar,
+    onPressDailyNotes: handlePressDailyNotes,
+    onPressAllPages: handlePressAllPages,
+    onPressGraph: handlePressGraph,
+    onPressThemeToggle: handlePressThemeToggle,
+    onPressMerge: handlePressMerge,
+    onPressSettings: handlePressSettings,
+    onPressHistoryBack: handlePressHistoryBack,
+    onPressHistoryForward: handlePressHistoryForward,
+    onPressLeftSidebarToggle: handlePressLeftSidebarToggle,
+    onPressRightSidebarToggle: handlePressRightSidebarToggle,
+    onPressMinimize: handlePressMinimize,
+    onPressMaximizeRestore: handlePressMaximizeRestore,
+    onPressClose: handlePressClose,
+    databaseMenu,
+    presenceDetails,
+    ...rest
+  } = props;
 
-  return (<AppToolbarWrapper>
+  return (<AppToolbarWrapper {...rest}>
     <AppToolbar.MainControls>
-      <DatabaseMenu
-        activeDatabase={activeDatabase}
-        inactiveDatabases={inactiveDatabases}
-        isSynced={isSynced}
-        handleChooseDatabase={handleChooseDatabase}
-        handlePressAddDatabase={handlePressAddDatabase}
-        handlePressRemoveDatabase={handlePressRemoveDatabase}
-        handlePressImportDatabase={handlePressImportDatabase}
-        handlePressMoveDatabase={handlePressMoveDatabase}
-      />
+      {databaseMenu}
       <Button
         onClick={handlePressLeftSidebarToggle}
         isPressed={isLeftSidebarOpen}
@@ -212,21 +199,11 @@ export const AppToolbar = ({
       <Button isPressed={route === '/daily-notes'} onClick={handlePressDailyNotes}><Today /></Button>
       <Button isPressed={route === '/all-pages'} onClick={handlePressAllPages}><FileCopy /></Button>
       <Button isPressed={route === '/graph'} onClick={handlePressGraph}><BubbleChart /></Button>
-      <Button isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></Button>
+      <AthenaButton isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></AthenaButton>
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
-      <PresenceDetails
-        currentUser={currentUser}
-        currentPageMembers={currentPageMembers}
-        differentPageMembers={differentPageMembers}
-        hostAddress={hostAddress}
-        placement="bottom-end"
-        connectionStatus={connectionStatus}
-        handlePressHostAddress={handlePressHostAddress}
-        handlePressMember={handlePressMember}
-        handleUpdateProfile={handleUpdateProfile}
-      />
-      {/* <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button> */}
+      {presenceDetails}
+      <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button>
       <Button isPressed={route === '/settings'} onClick={handlePressSettings}><Settings /></Button>
       <Button
         onClick={handlePressThemeToggle}>

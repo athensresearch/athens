@@ -53,6 +53,7 @@ const Template = (args: AppToolbarProps) => {
   } = useAppState();
 
   return <AppToolbar
+    databaseMenu={<DatabaseMenu />}
     route={route}
     isWinFullscreen={isWinFullscreen}
     isWinFocused={isWinFocused}
@@ -60,33 +61,33 @@ const Template = (args: AppToolbarProps) => {
     isLeftSidebarOpen={isLeftSidebarOpen}
     isRightSidebarOpen={isRightSidebarOpen}
     isCommandBarOpen={isCommandBarOpen}
-    isMergeDialogOpen={isMergeDialogOpen}
-    isDatabaseDialogOpen={isDatabaseDialogOpen}
     isThemeDark={isThemeDark}
     hostAddress={mockPresence.hostAddress}
     currentUser={currentUser}
     currentPageMembers={mockPresence.currentPageMembers}
     differentPageMembers={mockPresence.differentPageMembers}
-    handleChooseDatabase={() => null}
-    handlePressAddDatabase={() => null}
-    handlePressRemoveDatabase={() => null}
-    handlePressImportDatabase={() => null}
-    activeDatabase={mockDatabases[0]}
-    inactiveDatabases={mockDatabases.slice(1, 4)}
-    isSynced={true}
-    handlePressLeftSidebarToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
-    handlePressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
-    handlePressDailyNotes={() => setRoute('/daily-notes')}
-    handlePressAllPages={() => setRoute('/all-pages')}
-    handlePressGraph={() => setRoute('/graph')}
-    handlePressThemeToggle={() => setIsThemeDark(!isThemeDark)}
-    handlePressMerge={() => setIsMergeDialogOpen(!isMergeDialogOpen)}
-    handlePressSettings={() => setRoute('/settings')}
-    handlePressRightSidebarToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-    handlePressMember={(member) => console.log(member)}
-    handleUpdateProfile={(person) => setCurrentUser(person)}
-    {...args} />
+    onPressLeftSidebarToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
+    onPressCommandBar={() => setIsCommandBarOpen(!isCommandBarOpen)}
+    onPressDailyNotes={() => setRoute('/daily-notes')}
+    onPressAllPages={() => setRoute('/all-pages')}
+    onPressGraph={() => setRoute('/graph')}
+    onPressThemeToggle={() => setIsThemeDark(!isThemeDark)}
+    onPressMerge={() => setIsMergeDialogOpen(!isMergeDialogOpen)}
+    onPressSettings={() => setRoute('/settings')}
+    onPressRightSidebarToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+  />
 };
+// handleChooseDatabase={() => null}
+// handlePressAddDatabase={() => null}
+// handlePressRemoveDatabase={() => null}
+// handlePressImportDatabase={() => null}
+// activeDatabase={mockDatabases[0]}
+// inactiveDatabases={mockDatabases.slice(1, 4)}
+// isSynced={true}
+// isMergeDialogOpen={isMergeDialogOpen}
+// isDatabaseDialogOpen={isDatabaseDialogOpen}
+// onPressMember={(member) => console.log(member)}
+// onUpdateProfile={(person) => setCurrentUser(person)}
 
 export const Default = Template.bind({});
 Default.args = {

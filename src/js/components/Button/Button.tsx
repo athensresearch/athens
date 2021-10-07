@@ -1,6 +1,11 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import { classnames } from '@/utils/classnames';
+import { useFocusRing } from '@react-aria/focus'
+import { useFocusRingEl } from '@/utils/useFocusRingEl';
+import { mergeProps } from '@react-aria/utils';
+import { DOMRoot } from '@/utils/config';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /**
@@ -14,28 +19,30 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   /**
    * Button shape. Set to 'unset' to manually style padding and radius.
    */
-  shape: 'rect' | 'round' | 'unset';
+  shape?: 'rect' | 'round' | 'unset';
   /**
    * Button shape style. Set to 'unset' to manually style color and interaction styles.
    */
-  variant: 'plain' | 'gray' | 'tinted' | 'filled' | 'unset';
+  variant?: 'plain' | 'gray' | 'tinted' | 'filled' | 'unset';
+  /**
+   * Styles provided to the button's focus ring.
+   */
+  focusRingStyle?: React.CSSProperties;
 }
 
 
 /**
  * Primary UI component for user interaction
  */
-export const Button = styled.button.attrs<ButtonProps>(props => {
-  const _shape = props.shape ? props.shape : 'rect';
-  let _variant = props.variant ? props.variant : 'plain';
-  if (props.isPrimary) _variant = 'tinted';
+const ButtonWrap = styled.button.attrs<ButtonProps>(props => {
+  if (props.isPrimary) props.variant = 'tinted';
   return ({
-    "aria-pressed": props.isPressed ? 'true' : 'false',
+    "aria-pressed": props.isPressed ? 'true' : undefined,
     className: classnames(
       'button',
       props.className,
-      'shape-' + _shape,
-      'variant-' + _variant)
+      'shape-' + props.shape,
+      'variant-' + props.variant)
   })
 }) <ButtonProps>`
   margin: 0;
@@ -54,6 +61,10 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
   gap: 0.5rem;
   text-align: left;
 
+  &:focus {
+    outline: none;
+  }
+
   &:enabled {
     cursor: pointer;
   }
@@ -62,8 +73,24 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
     flex: 1 0 auto;
   }
 
-  > svg {
-    margin: -0.0835em -0.325rem;
+  /* Shapes */
+  &.shape-rect {
+    --padding-v: 0.375rem;
+    --padding-h: 0.625rem;
+    border-radius: 0.25rem;
+    padding: var(--padding-v) var(--padding-h);
+  }
+
+  &.shape-round {
+    --padding-v: 0.375rem;
+    --padding-h: 0.625rem;
+    border-radius: 2rem;
+    padding: var(--padding-v) var(--padding-h);
+  }
+
+  svg:not(& * svg) {
+    --icon-padding: 0.25rem;
+    margin: calc((var(--padding-v) * -1) + var(--icon-padding)) calc((var(--padding-h) * -1) + var(--icon-padding));
 
     &:not(:first-child) {
       margin-left: 0.251em;
@@ -71,17 +98,6 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
     &:not(:last-child) {
       margin-right: 0.251em;
     }
-  }
-
-  /* Shapes */
-  &.shape-rect {
-    border-radius: 0.25rem;
-    padding: 0.375rem 0.625rem;
-  }
-
-  &.shape-round {
-    border-radius: 2rem;
-    padding: 0.375em 0.8rem;
   }
 
   /* Variants */
@@ -150,3 +166,31 @@ export const Button = styled.button.attrs<ButtonProps>(props => {
     }
   }
 `;
+
+interface Result extends React.ForwardRefExoticComponent<ButtonProps> {
+  Wrap?: typeof ButtonWrap;
+}
+
+const _Button: Result = React.forwardRef((props: ButtonProps, ref): any => {
+  ref = ref || React.useRef();
+  let { FocusRing, focusProps } = useFocusRingEl(ref);
+
+  return <>
+    <ButtonWrap
+      ref={ref}
+      {...mergeProps(
+        focusProps,
+        props,
+      )}>
+      {props.children}
+    </ButtonWrap>
+    {FocusRing}
+  </>;
+});
+
+_Button.defaultProps = {
+  shape: 'rect',
+  variant: 'plain',
+}
+
+export { _Button as Button };

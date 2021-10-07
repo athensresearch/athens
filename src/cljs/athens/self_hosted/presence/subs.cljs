@@ -1,6 +1,7 @@
 (ns athens.self-hosted.presence.subs
   (:require
     [athens.db :as db]
+    [athens.util :as util]
     [re-frame.core :as rf]))
 
 
@@ -35,6 +36,16 @@
           (select-keys settings [:username :color])))))
 
 
+(defn on-page-uid?
+  [page-uid [_username user]]
+  (= page-uid (:page/uid user)))
+
+
+(defn on-daily-page?
+  [[_username user]]
+  (util/is-daily-note (:page/uid user)))
+
+
 (rf/reg-sub
   :presence/same-page
   :<- [:presence/users-with-page-data]
@@ -44,9 +55,11 @@
     (case current-route-name
 
       :page
-      (into {} (filterv (fn [[_username user]]
-                          (= current-route-uid (:page/uid user)))
+      (into {} (filterv (partial on-page-uid? current-route-uid)
                         users))
+
+      :home
+      (into {} (filterv on-daily-page? users))
 
       {})))
 
@@ -60,9 +73,11 @@
     (case current-route-name
 
       :page
-      (into {} (filterv (fn [[_username user]]
-                          (not= current-route-uid (:page/uid user)))
+      (into {} (filterv (complement (partial on-page-uid? current-route-uid))
                         users))
+
+      :home
+      (into {} (filterv (complement on-daily-page?) users))
 
       users)))
 
