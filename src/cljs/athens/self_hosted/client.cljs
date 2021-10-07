@@ -22,6 +22,7 @@
 (declare open-handler)
 (declare message-handler)
 (declare close-handler)
+(declare forwarded-events)
 
 
 (defn- connect-to-self-hosted!
@@ -35,7 +36,6 @@
 
 
 (def ^:private send-queue (atom []))
-(def ^:private awaiting-response (atom {}))
 
 
 (def ^:private reconnect-timer (atom nil))
@@ -45,10 +45,7 @@
 
 (defn- await-response!
   [{:event/keys [id] :as data}]
-  (js/console.log "WSClient awaiting response:" (str id) (str data))
-  ;; message-handler will set the app as synced once a response has arrived.
-  (rf/dispatch [:db/not-synced])
-  (swap! awaiting-response assoc id data))
+  (js/console.log "WSClient awaiting response:" (str id) (str data)))
 
 
 (defn- reconnecting?
@@ -185,33 +182,23 @@
 
 (defn- awaited-response-handler
   [{:event/keys [id status] :as packet}]
-  (let [req-event (get @awaiting-response id)]
-    (js/console.log "WSClient: response " (pr-str packet)
-                    "to awaited event" (pr-str req-event))
-    (swap! awaiting-response dissoc id)
-    ;; is it hello confirmation?
-    (if (= @await-open-event-id id)
-      (finished-open-handler packet)
-      ;; is valid response?
-      (if (schema/valid-event-response? packet)
-        (do
-          (js/console.debug "Received valid response.")
-          (condp = status
-            :accepted
-            (let [{:accepted/keys [tx-id]} packet]
-              (js/console.log "Event" id "accepted in tx" tx-id)
-              (rf/dispatch [:remote/accept-event {:event-id id
-                                                  :tx-id    tx-id}]))
-            :rejected
-            (let [{:reject/keys [reason data]} packet]
-              (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data))
-              (rf/dispatch [:remote/reject-event {:event-id id
-                                                  :reason   reason
-                                                  :data     data}]))))
-        (let [explanation (schema/explain-event-response packet)]
-          (js/console.warn "Received invalid response:" (pr-str explanation))
-          (rf/dispatch [:remote/fail-event {:event-id id
-                                            :reason   explanation}]))))))
+  (js/console.log "WSClient: response " (pr-str packet))
+  ;; is it hello confirmation?
+  (if (= @await-open-event-id id)
+    (finished-open-handler packet)
+    ;; is valid response?
+    (if (schema/valid-event-response? packet)
+      (do
+        (js/console.debug "Received valid response.")
+        (condp = status
+          :accepted
+          (let [{:accepted/keys [tx-id]} packet]
+            (js/console.log "Event" id "accepted in tx" tx-id))
+          :rejected
+          (let [{:reject/keys [reason data]} packet]
+            (js/console.warn "Event" id "rejected. Reason:" reason ", data:" (pr-str data)))))
+      (let [explanation (schema/explain-event-response packet)]
+        (js/console.warn "Received invalid response:" id (pr-str explanation))))))
 
 
 (defn- local-eid
@@ -322,6 +309,8 @@
     (js/console.debug "Reconstructed" (count entities) "entities")
     (rf/dispatch [:reset-conn (d/empty-db db/schema)])
     (rf/dispatch [:transact entities])
+    (rf/dispatch [:remote/snapshot-dsdb])
+    (rf/dispatch [:remote/start-event-sync])
     (rf/dispatch [:remote/last-seen-tx! last-tx])
     (rf/dispatch [:db/sync])
     (rf/dispatch [:remote/connected])
@@ -366,6 +355,49 @@
   (rf/dispatch [:remote/apply-forwarded-event args]))
 
 
+(def forwarded-events
+  #{:datascript/create-page
+    :datascript/rename-page
+    :datascript/merge-page
+    :datascript/delete-page
+    :datascript/block-save
+    :datascript/new-block
+    :datascript/add-child
+    :datascript/open-block-add-child
+    :datascript/split-block
+    :datascript/split-block-to-children
+    :datascript/unindent
+    :datascript/indent
+    :datascript/indent-multi
+    :datascript/unindent-multi
+    :datascript/page-add-shortcut
+    :datascript/page-remove-shortcut
+    :datascript/drop-child
+    :datascript/drop-multi-child
+    :datascript/drop-link-child
+    :datascript/drop-diff-parent
+    :datascript/drop-multi-diff-source-same-parents
+    :datascript/drop-multi-diff-source-diff-parents
+    :datascript/drop-link-diff-parent
+    :datascript/drop-same
+    :datascript/drop-multi-same-source
+    :datascript/drop-multi-same-all
+    :datascript/drop-link-same-parent
+    :datascript/left-sidebar-drop-above
+    :datascript/left-sidebar-drop-below
+    :datascript/unlinked-references-link
+    :datascript/unlinked-references-link-all
+    :datascript/selected-delete
+    :datascript/block-open
+    :datascript/paste
+    :datascript/paste-verbatim
+    :datascript/delete-only-child
+    :datascript/delete-merge-block
+    :datascript/bump-up
+
+    :op/atomic})
+
+
 (defn- server-event-handler
   [{:event/keys [_id last-tx type args] :as packet}]
   (js/console.debug "WSClient: server event:" (pr-str packet))
@@ -379,46 +411,7 @@
       #{:presence/offline} (presence-offline-handler args)
       #{:presence/broadcast-editing} (presence-receive-editing args)
       #{:presence/broadcast-rename} (presence-receive-rename args)
-      #{:datascript/create-page
-        :datascript/rename-page
-        :datascript/merge-page
-        :datascript/delete-page
-        :datascript/block-save
-        :datascript/new-block
-        :datascript/add-child
-        :datascript/open-block-add-child
-        :datascript/split-block
-        :datascript/split-block-to-children
-        :datascript/unindent
-        :datascript/indent
-        :datascript/indent-multi
-        :datascript/unindent-multi
-        :datascript/page-add-shortcut
-        :datascript/page-remove-shortcut
-        :datascript/drop-child
-        :datascript/drop-multi-child
-        :datascript/drop-link-child
-        :datascript/drop-diff-parent
-        :datascript/drop-multi-diff-source-same-parents
-        :datascript/drop-multi-diff-source-diff-parents
-        :datascript/drop-link-diff-parent
-        :datascript/drop-same
-        :datascript/drop-multi-same-source
-        :datascript/drop-multi-same-all
-        :datascript/drop-link-same-parent
-        :datascript/left-sidebar-drop-above
-        :datascript/left-sidebar-drop-below
-        :datascript/unlinked-references-link
-        :datascript/unlinked-references-link-all
-        :datascript/selected-delete
-        :datascript/block-open
-        :datascript/paste
-        :datascript/paste-verbatim
-        :datascript/delete-only-child
-        :datascript/delete-merge-block
-        :datascript/bump-up
-
-        :op/atomic} (forwarded-event-handler packet))
+      forwarded-events (forwarded-event-handler packet))
 
     (do
       (js/console.warn "TODO invalid server event" (pr-str (schema/explain-server-event packet)))
@@ -445,16 +438,6 @@
                         {:handlers
                          {:datom datom-reader}})))]
     (js/console.log "message-handler" (pr-str packet))
-
-    ;; await-response! sets the app as waiting for sync.
-    ;; Since there is no optimistic event handling, the app is synced as soon as the
-    ;; last message was acknowledged by the server.
-    ;; TODO: this isn't where we should dispatch db/sync, because you can be getting
-    ;; messages broadcast from other clients. Instead we should only dispatch db/sync
-    ;; upon receiving awaited responses. But presence events don't go through
-    ;; don't go through awaited-response-handler even though they go through await-response!,
-    ;; so this is the best place to dispatch db/sync for now.
-    (rf/dispatch [:db/sync])
 
     (if (schema/valid-event-response? packet)
       (awaited-response-handler packet)
