@@ -100,14 +100,14 @@
 (rf/reg-fx
   :remote/snapshot-dsdb!
   (fn []
-    (js/console.debug ":remote/snapshot-dsdb! event at time" (:max-tx @db/dsdb))
+    (log/debug ":remote/snapshot-dsdb! event at time" (:max-tx @db/dsdb))
     (reset! db/dsdb-snapshot @db/dsdb)))
 
 
 (rf/reg-event-fx
   :remote/rollback-dsdb
   (fn [_ _]
-    (js/console.debug ":remote/rollback-dsdb event from time" (:max-tx @db/dsdb-snapshot))
+    (log/debug ":remote/rollback-dsdb event to time" (:max-tx @db/dsdb-snapshot))
     {:reset-conn! @db/dsdb-snapshot}))
 
 
@@ -139,7 +139,7 @@
 (rf/reg-event-fx
   :remote/snapshot-transact
   (fn [_ [_ tx-data]]
-    (js/console.debug ":remote/snapshot-transact update to time" (inc (:max-tx @db/dsdb-snapshot)))
+    (log/debug ":remote/snapshot-transact update to time" (inc (:max-tx @db/dsdb-snapshot)))
     {:remote/snapshot-transact! tx-data}))
 
 
@@ -156,13 +156,13 @@
 (rf/reg-event-fx
   :remote/apply-forwarded-event
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
-    (js/console.debug ":remote/apply-forwarded-event event:" (pr-str event))
+    (log/debug ":remote/apply-forwarded-event event:" (pr-str event))
     (let [db'            (update db :event-sync #(event-sync/add % :server id event))
           changed-order? (changed-order? (-> db' :event-sync :last-op))
           memory-log     (event-sync/stage-log (:event-sync db') :memory)
           txs            (atomic-resolver/resolve-to-tx @db/dsdb-snapshot event)]
-      (js/console.debug ":remote/apply-forwarded-event event changed order?:" changed-order?)
-      (js/console.debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
+      (log/debug ":remote/apply-forwarded-event event changed order?:" changed-order?)
+      (log/debug ":remote/apply-forwarded-event resolved txs:" (pr-str txs))
       {:db db'
        :fx [[:dispatch-n (cond-> []
                            ;; Mark as synced if there's no events left in memory.
@@ -184,7 +184,7 @@
 (rf/reg-event-fx
   :remote/forward-event
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
-    (js/console.debug ":remote/forward-event event:" (pr-str event))
+    (log/debug ":remote/forward-event event:" (pr-str event))
     {:db (update db :event-sync #(event-sync/add % :memory id event))
      :fx [[:dispatch-n [[:remote/send-event! event]
                         [:db/not-synced]]]]}))
