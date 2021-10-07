@@ -1330,6 +1330,76 @@
     tx-data))
 
 
+(defn prepare-data-for-paste
+  "Given an internal representation we need to modify the block order of level 1 blocks
+   in the internal representation."
+  [data start-index parent-uid]
+
+  (let [updated-order (map-indexed (fn [idx itm] (assoc itm :block/order (+ idx start-index)))
+                                   data)
+        tx-data       (map (fn [x]
+                             {:block/uid parent-uid
+                              :block/children x})
+                           updated-order)]
+    tx-data))
+
+
+(defmethod resolve-event-to-tx :datascript/paste-internal
+  [db {:event/keys [args]}]
+
+  (let [{:keys [uid
+                internal-representation]} args
+        current-block                     (common-db/get-block db [:block/uid uid])
+        {:block/keys [order
+                      children
+                      open
+                      string]}            current-block
+        ;; The parent of block depends on:
+        ;; - if the current block is open and has chidren : if this is the case then we want the blocks to be pasted
+        ;;    under the current block as its first children
+        ;; - else the parent is the current block's parent
+        current-block-parent?             (and children
+                                               open)
+        parent                            (if current-block-parent?
+                                            current-block
+                                            (common-db/get-parent db [:block/uid uid]))
+
+        {parent-uid :block/uid
+         parent-eid :db/id}               parent
+        empty-block?                      (and (string/blank? string)
+                                               (empty?        children))
+        ;; - If the block is empty then we delete the empty block and add new blocks. So in this case
+        ;;   the block order for the new blocks is the same as deleted blocks order.
+        ;; - If the block is parent then we want the blocks to be pasted as this blocks first children
+        ;; - If the block is not empty then add the new blocks after the current one.
+        new-block-order                   (cond
+                                            empty-block?          order
+                                            current-block-parent? 0
+                                            :else                 (inc order))
+        paste-tx-data                     (prepare-data-for-paste internal-representation
+                                                                  new-block-order
+                                                                  parent-uid)
+        ;; Reindex the blocks
+        reindex-from                      (cond
+                                            current-block-parent? -1
+                                            :else                 order)
+        blocks-count                      (count internal-representation)
+        n                                 (if empty-block?
+                                            (dec blocks-count)
+                                            blocks-count)
+        reindexed-blocks                  (common-db/plus-after db
+                                                                parent-eid
+                                                                reindex-from
+                                                                n)
+        ;; Retract the block
+        retract                           (when empty-block? [[:db/retractEntity [:block/uid uid]]])
+        ;; Put it all together
+        tx-data                           (concat reindexed-blocks
+                                                  paste-tx-data
+                                                  retract)]
+    tx-data))
+
+
 (defmethod resolve-event-to-tx :datascript/delete-only-child
   [db {:event/keys [args]}]
   (let [{:keys [uid]} args

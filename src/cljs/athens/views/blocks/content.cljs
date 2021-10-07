@@ -1,21 +1,27 @@
 (ns athens.views.blocks.content
   (:require
-    [athens.config                        :as config]
-    [athens.db                            :as db]
-    [athens.electron.images               :as images]
-    [athens.events.selection              :as select-events]
-    [athens.parse-renderer                :refer [parse-and-render]]
-    [athens.style                         :as style]
-    [athens.subs.selection                :as select-subs]
-    [athens.util                          :as util]
+    [athens.common-db :as common-db]
+    [athens.common.utils :as utils]
+    [athens.config :as config]
+    [athens.db :as db]
+    [athens.electron.images :as images]
+    [athens.events.selection :as select-events]
+    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.patterns :as patterns]
+    [athens.style :as style]
+    [athens.subs.selection :as select-subs]
+    [athens.util :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [clojure.edn                          :as edn]
-    [clojure.set                          :as set]
-    [garden.selectors                     :as selectors]
-    [goog.events                          :as goog-events]
-    [komponentit.autosize                 :as autosize]
-    [re-frame.core                        :as rf]
-    [stylefy.core                         :as stylefy])
+    [cljs.pprint :as pp]
+    [clojure.edn :as edn]
+    [clojure.set :as set]
+    [clojure.string :as str]
+    [clojure.walk :as walk]
+    [garden.selectors :as selectors]
+    [goog.events :as goog-events]
+    [komponentit.autosize :as autosize]
+    [re-frame.core :as rf]
+    [stylefy.core :as stylefy])
   (:import
     (goog.events
       EventType)))
@@ -257,6 +263,83 @@
 
 ;; Event Handlers
 
+;; TODO Move the following to correct location
+
+(defn new-uids-map
+  "From Athens representation, extract the uids and create a mapping to new uids."
+  [tree]
+  (let [all-old-uids (mapcat #(->> %
+                                   (tree-seq :block/children :block/children)
+                                   (mapv :block/uid))
+                             tree)
+        mapped-uids (reduce #(assoc %1 %2 (utils/gen-block-uid)) {} all-old-uids)] ; Replace with zipmap
+    mapped-uids))
+
+
+(defn update-strings-with-new-uids
+  "Takes a string of text and parses it for block refs, block embeds using regex. Then replace the matched pattern
+   with new refs.
+
+   Could also use block ref information from the db instead (refs->uids->replacements).
+   Just something to keep in mind for the future if this gets hard to maintain.
+
+   Pattern: Strings should not have a space before, after or in between the block uid
+            In the following example no pattern is valid:
+            (()) (( uid)) ((uid )) (( uid )) ((Uid with space))
+
+            To understand the regex pattern like lookback etc. checkout this link: https://stackoverflow.com/questions/2973436/regex-lookahead-lookbehind-and-atomic-groups
+   "
+  [block-string mapped-uids]
+  (let [parsed-uids     (into #{} (re-seq patterns/block-refs-pattern
+                                          block-string))
+        replaced-string (reduce (fn [block-string ref]
+                                  (let [embed?       (seq (re-find patterns/block-embed-pattern
+                                                                   ref))
+                                        uid          (if embed?
+                                                       (common-db/strip-markup ref "{{[[embed]]: ((" "))}}")
+                                                       (common-db/strip-markup ref "((" "))"))
+                                        new-uid      (get mapped-uids uid nil)
+                                        replace-with (cond
+                                                       (and embed? new-uid)       (str "{{[[embed]]: ((" new-uid "))}}")
+                                                       (and (not embed?) new-uid) (str "((" new-uid "))")
+                                                       :else                      ref)]
+                                    (if new-uid
+                                      (str/replace block-string
+                                                   ref
+                                                   replace-with)
+                                      block-string)))
+                                block-string
+                                parsed-uids)]
+    replaced-string))
+
+
+(defn walk-tree-to-replace
+  "Walk the internal representation and replace specific key-value pairs. This is inspired from the
+  `walk/postwalk-replace` implementation."
+  [tree mapped-uids replace-keyword]
+  (walk/postwalk (fn [x]
+                   (if (and (vector? x)
+                            (= (first x) replace-keyword))
+                     (cond
+                       (= replace-keyword :block/uid)    [:block/uid    (mapped-uids (last x))]
+                       (= replace-keyword :block/string) [:block/string (update-strings-with-new-uids (last x)
+                                                                                                      mapped-uids)])
+                     x))
+                 tree))
+
+
+(defn update-uids
+  "In the internal representation replace the uids and block-strings with new uids."
+  [tree mapped-uids]
+  (let [block-uids-replaced          (walk-tree-to-replace tree
+                                                           mapped-uids
+                                                           :block/uid)
+        blocks-with-replaced-strings (walk-tree-to-replace block-uids-replaced
+                                                           mapped-uids
+                                                           :block/string)]
+    blocks-with-replaced-strings))
+
+
 (defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
   Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
@@ -275,16 +358,35 @@
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
   [e uid state]
-  (let [data        (.. e -clipboardData)
-        text-data   (.getData data "text/plain")
-        _app-clip   (some-> (.getData data "application/athens")
-                            edn/read-string)
-        line-breaks (re-find #"\r?\n" text-data)
-        no-shift    (-> @state :last-keydown :shift not)
-        items       (array-seq (.. e -clipboardData -items))
+  (let [data                (.. e -clipboardData)
+        text-data           (.getData data "text/plain")
+        _app-clip           (some-> (.getData data "application/athens")
+                                    edn/read-string)
+        ;; With internal representation
+        internal-representation  (some-> (.getData data "application/athens-representation")
+                                         edn/read-string)
+        internal?           (seq internal-representation)
+        new-uids            (new-uids-map internal-representation)
+        repr-with-new-uids  (into [] (update-uids internal-representation new-uids))
+
+        line-breaks         (re-find #"\r?\n" text-data)
+        no-shift            (-> @state :last-keydown :shift not)
+        items               (array-seq (.. e -clipboardData -items))
         {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
-        img-regex   #"(?i)^image/(p?jpeg|gif|png)$"]
+        img-regex           #"(?i)^image/(p?jpeg|gif|png)$"]
+
+
+    (println " Representation with updated uids")
+    (pp/pprint repr-with-new-uids)
+
     (cond
+      ;; For internal representation
+      internal?
+      (do
+        (.. e preventDefault)
+        (rf/dispatch [:paste-internal uid repr-with-new-uids]))
+
+      ;; For images
       (seq (filter (fn [item]
                      (let [datatype (.. item -type)]
                        (re-find img-regex datatype))) items))

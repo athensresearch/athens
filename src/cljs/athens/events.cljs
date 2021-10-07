@@ -1245,6 +1245,17 @@
 
 
 (reg-event-fx
+  :paste-internal
+  (fn [_ [_ uid internal-representation]]
+    (println "internal representation is " internal-representation)
+    (let [[uid]  (db/uid-and-embed-id uid)
+          paste-internal-event (common-events/build-paste-internal-event -1
+                                                                         uid
+                                                                         internal-representation)]
+      {:fx [[:dispatch [:resolve-transact-forward paste-internal-event]]]})))
+
+
+(reg-event-fx
   :paste
   (fn [{:keys [db]} [_ uid text :as args]]
     (js/console.debug ":paste args" args)

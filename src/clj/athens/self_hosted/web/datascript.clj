@@ -51,7 +51,8 @@
     :datascript/paste-verbatim
     :datascript/delete-only-child
     :datascript/delete-merge-block
-    :datascript/bump-up})
+    :datascript/bump-up
+    :datascript/paste-internal})
 
 
 (def supported-atomic-ops

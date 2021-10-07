@@ -1400,6 +1400,41 @@
         (t/is (= 1 (-> block-1 :block/children count)))))))
 
 
+(t/deftest paste-internal-event
+  (let [block-1-uid "test-block-1-uid"
+        block-2-uid "test-block-2-uid"
+        test-block-uid "test-block-uid"
+        setup-tx    [{:node/title     "test page"
+                      :block/uid      "page-uid"
+                      :block/children [{:block/uid      block-1-uid
+                                        :block/string   "A block with text"
+                                        :block/order    0
+                                        :block/children []}
+                                       {:block/uid      block-2-uid
+                                        :block/string   ""
+                                        :block/order    1
+                                        :block/children []}]}]]
+    (d/transact @fixture/connection setup-tx)
+    (let [internal-representation  [{:block/uid test-block-uid,
+                                     :block/string "Copy-Paste test block",
+                                     :block/open true,
+                                     :block/order 5}]
+          paste-internal-event (common-events/build-paste-internal-event -1
+                                                                         block-1-uid
+                                                                         internal-representation)
+          paste-tx    (resolver/resolve-event-to-tx @@fixture/connection paste-internal-event)]
+      (d/transact @fixture/connection paste-tx)
+      (let [pasted-block    (common-db/get-block @@fixture/connection [:block/uid test-block-uid])
+            reindexed-block (common-db/get-block @@fixture/connection [:block/uid block-2-uid])]
+
+        (t/is  (= 1
+                  (:block/order pasted-block)))
+        (t/is  (= 2
+                  (:block/order reindexed-block)))
+        (t/is  (= "Copy-Paste test block"
+                  (:block/string pasted-block)))))))
+
+
 (t/deftest delete-only-child
   (let [block-uid "block-uid"
         page-uid  "page-uid"
