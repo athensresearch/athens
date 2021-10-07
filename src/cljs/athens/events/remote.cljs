@@ -46,7 +46,7 @@
   :remote/disconnect!
   (fn [_ _]
     {:remote/client-disconnect!   nil
-     :remote/clear-dsdb-snapshop! nil
+     :remote/clear-dsdb-snapshot! nil
      :dispatch                    [:remote/stop-event-sync]}))
 
 
