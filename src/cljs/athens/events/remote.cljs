@@ -154,6 +154,21 @@
 
 
 (rf/reg-event-fx
+  :remote/reject-forwarded-event
+  (fn [{db :db} [_ {:event/keys [id] :as event}]]
+    (log/debug ":remote/reject-forwarded-event event:" (pr-str event))
+    (let [db'            (update db :event-sync #(event-sync/remove % :memory id event))
+          memory-log     (event-sync/stage-log (:event-sync db') :memory)]
+      {:db db'
+       ;; Rollback and reapply all events in the memory stage.
+       ;; If there's no events to reapply, just mark as synced.
+       :fx [[:dispatch-n (into [[:remote/rollback-dsdb]] (if (empty? memory-log)
+                                                           [[:db/sync]]
+                                                           (map (fn [e] [:resolve-transact (second e)])
+                                                                (-> db' :event-sync :stages :memory))))]]})))
+
+
+(rf/reg-event-fx
   :remote/apply-forwarded-event
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
     (log/debug ":remote/apply-forwarded-event event:" (pr-str event))

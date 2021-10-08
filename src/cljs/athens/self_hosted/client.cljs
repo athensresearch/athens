@@ -212,7 +212,8 @@
           (let [{:reject/keys [reason data]} packet]
             (log/warn "event-id:" (pr-str id)
                       "rejected, reason:" reason
-                      ", rejection-data:" (pr-str data)))))
+                      ", rejection-data:" (pr-str data))
+            (rf/dispatch [:remote/reject-forwarded-event packet]))))
       (let [explanation (schema/explain-event-response packet)]
         (log/warn "Received invalid response:" (pr-str explanation))))))
 

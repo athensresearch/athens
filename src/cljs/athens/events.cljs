@@ -566,6 +566,9 @@
     {:reset-conn! db}))
 
 
+;; Resolves events when the event-fx is resolved, instead of taking a resolution.
+;; This is useful for when you want to apply events one after the other, using
+;; the resulting db to resolve to next one.
 (reg-event-fx
   :resolve-transact
   (fn [_ [_ event]]
