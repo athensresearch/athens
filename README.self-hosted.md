@@ -10,7 +10,7 @@ Use DB Picker -> join with `localhost:3010` as URL, no password.
 
 To create uberjar:
 ``` shell
-yarn server
+yarn server:uberjar
 ```
 
 This will create `target/athens-lan-party-standalone.jar`.
@@ -42,7 +42,7 @@ notice it might be different number if you've changed configuration.
 ### Running Athens Self-Hosted Server
 
 ``` shell
-yarn server:run
+yarn server
 ```
 
 This will start HTTP server on port 3010, unless you've modified `src/clj/config.edn`.
@@ -76,7 +76,7 @@ After starting HTTP & nREPL servers are running on default ports or changes in `
 
 **Clean the Datahike DB**
 
-Stop the Self-Hosted server. [ctrl+c] if using `yarn server:run` or [ctrl+d] if repl.
+Stop the Self-Hosted server. [ctrl+c] if using `yarn server` or [ctrl+d] if repl.
 By default Datahike DB is stored in `/tmp/exmaple`, remove this forlder
 start the srever and Bob's your unkle.
 

@@ -31,8 +31,8 @@
     "storybook": "build-storybook",
     "vercel-build": "yarn storybook",
     "//server scripts": "",
-    "server": "clojure -T:build uber",
-    "server:run": "clojure -M:athens",
+    "server": "clojure -M:athens",
+    "server:uberjar": "clojure -T:build uber",
     "server:test": "clojure -X:test :excludes '[:stress]'",
     "server:test:only": "clojure -M:test --var",
     "server:repl": "clojure"

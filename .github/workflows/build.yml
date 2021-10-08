@@ -216,7 +216,7 @@ jobs:
        - uses: ./.github/custom-actions/clojure-env
 
        - name: Build server JAR
-         run: yarn server
+         run: yarn server:uberjar
 
        - name: Set up Docker Buildx
          uses: docker/setup-buildx-action@v1
