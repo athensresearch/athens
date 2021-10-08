@@ -76,14 +76,12 @@
 (defn make-page-new-op
   "Creates `:page/new` atomic op.
    - `title` - Page title page to be created
-   - `page-uid` - `:block/uid` of page to be created
-   - `block-uid` - `:block/uid` of 1st block to be created in page to be created"
-  [title page-uid block-uid]
+   - `page-uid` - `:block/uid` of page to be created"
+  [title page-uid]
   {:op/type    :page/new
    :op/atomic? true
-   :op/args    {:title     title
-                :page-uid  page-uid
-                :block-uid block-uid}})
+   :op/args    {:title    title
+                :page-uid page-uid}})
 
 
 (defn make-page-rename-op

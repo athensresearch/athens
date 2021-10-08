@@ -50,8 +50,7 @@
    [:op/args
     [:map
      [:title string?]
-     [:page-uid string?]
-     [:block-uid string?]]]])
+     [:page-uid string?]]]])
 
 
 (def atomic-op

@@ -43,7 +43,11 @@
       (t/is (false? atomic?))
       (t/is (= :block/save (:op/type trigger)))
       (t/is (= 2 (count consequences)))
-      (t/is (= :page/new (-> consequences first :op/type)))
+      (t/is (= :composite/consequence (-> consequences first :op/type)))
+      (t/is (= 2 (-> consequences
+                     first
+                     :op/consequences
+                     count)))
       (t/is (= #:op{:type    :block/save,
                     :atomic? true,
                     :args
