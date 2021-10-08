@@ -134,39 +134,9 @@
 
 
 (rf/reg-sub
-  :remote/awaited-events
-  (fn [db _]
-    (:remote/awaited-events db #{})))
-
-
-(rf/reg-sub
-  :remote/accepted-events
-  (fn [db _]
-    (:remote/accepted-events db #{})))
-
-
-(rf/reg-sub
-  :remote/rejected-events
-  (fn [db _]
-    (:remote/rejected-events db #{})))
-
-
-(rf/reg-sub
-  :remote/failed-events
-  (fn [db _]
-    (:remote/failed-events db #{})))
-
-
-(rf/reg-sub
   :remote/last-seen-tx
   (fn [db _]
     (:remote/last-seen-tx db -1)))
-
-
-(rf/reg-sub
-  :remote/awaited-tx
-  (fn [db _]
-    (:remote/awaited-tx db #{})))
 
 
 (rf/reg-sub
