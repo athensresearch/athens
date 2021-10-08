@@ -5,12 +5,18 @@
        [clojure.tools.logging :as log])))
 
 
+#?(:cljs
+   (defn apply-clj->js
+     [f args]
+     (apply f (map clj->js args))))
+
+
 #?(:clj (defmacro error
           [& args]
           `(log/error ~@args))
    :cljs (defn error
            [& args]
-           (apply js/console.error args)))
+           (apply-clj->js js/console.error args)))
 
 
 #?(:clj (defmacro warn
@@ -18,7 +24,7 @@
           `(log/warn ~@args))
    :cljs (defn warn
            [& args]
-           (apply js/console.warn args)))
+           (apply-clj->js js/console.warn args)))
 
 
 #?(:clj (defmacro info
@@ -26,7 +32,7 @@
           `(log/info ~@args))
    :cljs (defn info
            [& args]
-           (apply js/console.log args)))
+           (apply-clj->js js/console.log args)))
 
 
 #?(:clj (defmacro debug
@@ -34,4 +40,4 @@
           `(log/debug ~@args))
    :cljs (defn debug
            [& args]
-           (apply js/console.debug args)))
+           (apply-clj->js js/console.debug args)))

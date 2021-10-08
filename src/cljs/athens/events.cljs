@@ -573,7 +573,7 @@
   :resolve-transact
   (fn [_ [_ event]]
     (let [txs (atomic-resolver/resolve-to-tx @db/dsdb event)]
-      (js/console.debug ":resolve-transact resolved" (:event/type event) "to txs:" txs)
+      (log/debug ":resolve-transact resolved" (:event/type event) "to txs:" txs)
       {:fx [[:dispatch [:transact txs]]]})))
 
 
@@ -582,7 +582,7 @@
   (fn [{:keys [db]} [_ event]]
     (let [selected-db (db-picker/selected-db db)
           forward? (electron.utils/remote-db? selected-db)]
-      (js/console.debug ":resolve-transact-forward forward?" forward?)
+      (log/debug ":resolve-transact-forward forward?" forward?)
       {:fx [[:dispatch-n [[:resolve-transact event]
                           ;; TODO: this isn't right, we want to know if we're in RTC
                           ;; and not if the RTC conn is open right now.
@@ -653,7 +653,7 @@
 (reg-event-fx
   :page/add-shortcut
   (fn [{:keys [db]} [_ uid]]
-    (js/console.debug ":page/add-shortcut:" uid)
+    (log/debug ":page/add-shortcut:" uid)
     (let [event (common-events/build-page-add-shortcut (:remote/last-seen-tx db) uid)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
@@ -844,8 +844,8 @@
                           (= old-string new-string))
           op          (graph-ops/build-block-save-op @db/dsdb uid old-string new-string)
           event       (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
-      (js/console.debug ":block/save local?" local?
-                        ", do-nothing?" do-nothing?)
+      (log/debug ":block/save local?" local?
+                 ", do-nothing?" do-nothing?)
       (when-not do-nothing?
         {:fx [[:dispatch [:resolve-transact-forward event]]
               [:invoke-callback callback]]}))))
