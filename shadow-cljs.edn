@@ -1,43 +1,44 @@
-{:lein   true
- :nrepl {:port 8777}
+{:deps   true
+ :nrepl  {:port 8777}
  :builds {
-
           ;; pure browser https://athensresearch.github.io/athens
-          :app {:target :browser
-                :output-dir "resources/public/js/compiled"
-                :asset-path "js/compiled"
-                :modules {:app {:init-fn athens.core/init}}
-                :compiler-options {:closure-warnings {:global-this :off}
-                                   :infer-externs :auto
-                                   :closure-defines {re-frame.trace.trace-enabled? true}
+          :app {:target           :browser
+                :output-dir       "resources/public/js/compiled"
+                :asset-path       "js/compiled"
+                :modules          {:app {:init-fn athens.core/init}}
+                :compiler-options {:closure-warnings   {:global-this :off}
+                                   :infer-externs      :auto
+                                   :closure-defines    {re-frame.trace.trace-enabled? true}
                                    :output-feature-set :es-next}
-                :dev             {:compiler-options
-                                  {:closure-defines {re-frame.trace.trace-enabled?        true
-                                                     day8.re-frame.tracing.trace-enabled? true}}}
-                :devtools        {:preloads [devtools.preload
-                                             day8.re-frame-10x.preload]
-                                  :http-root    "resources/public"
-                                  :http-port    3000}}
+                :dev              {:compiler-options {:closure-defines {re-frame.trace.trace-enabled?        true
+                                                                        day8.re-frame.tracing.trace-enabled? true}}}
+                :release          {:build-options {:ns-aliases {day8.re-frame.tracing day8.re-frame.tracing-stubs}}}
+                :devtools         {:preloads  [devtools.preload
+                                               day8.re-frame-10x.preload]
+                                   :http-root "resources/public"
+                                   :http-port 3000}}
 
           ;; frontend for electron
-          :renderer {:target :browser
-                     :output-dir "resources/public/js/compiled"
-                     :asset-path "js/compiled"
-                     :modules {:renderer {:init-fn athens.core/init}}
-                     :compiler-options {:closure-warnings {:global-this :off}
-                                        :infer-externs :auto
-                                        :closure-defines {re-frame.trace.trace-enabled? true
-                                                          athens.config.MEASURE_PARSER  false}
+          :renderer {:target           :browser
+                     :output-dir       "resources/public/js/compiled"
+                     :asset-path       "js/compiled"
+                     :modules          {:renderer {:init-fn athens.core/init}}
+                     :compiler-options {:closure-warnings   {:global-this :off}
+                                        :infer-externs      :auto
+                                        :closure-defines    {re-frame.trace.trace-enabled? true}
                                         :output-feature-set :es-next}
-                     :devtools {:preloads [devtools.preload
-                                           day8.re-frame-10x.preload]}}
+                     :dev              {:compiler-options {:closure-defines {re-frame.trace.trace-enabled?        true
+                                                                             day8.re-frame.tracing.trace-enabled? true}}}
+                     :release          {:build-options {:ns-aliases {day8.re-frame.tracing day8.re-frame.tracing-stubs}}}
+                     :devtools         {:preloads [devtools.preload
+                                                   day8.re-frame-10x.preload]}}
 
           ;; backend for electron (node.js)
-          :main {:target :node-script
-                 :output-to "resources/main.js"
-                 :main athens.main.core/main
+          :main {:target           :node-script
+                 :output-to        "resources/main.js"
+                 :main             athens.main.core/main
                  :compiler-options {:output-feature-set :es-next}}
 
-          :karma-test {:target :karma
+          :karma-test {:target    :karma
                        :ns-regexp "-test$"
                        :output-to "target/karma-test.js"}}}

@@ -11,7 +11,8 @@ on:
       - 'docs/**'
 
 env:
-  REGISTRY: ghcr.io   # Github container registry https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
+  # Github container registry https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
+  REGISTRY: ghcr.io
 
 jobs:
 
@@ -28,14 +29,11 @@ jobs:
        - uses: ./.github/custom-actions/node-env
 
        - name: Run JVM tests
-         run: script/test/jvm
-
-       - name: Compile components
-         run: yarn components
+         run: yarn server:test
 
        # TODO: re-enable once web build is fixed
        # - name: Run Karma tests
-       #   run: script/test/karma
+       #   run: yarn client:test
 
    lint:
      runs-on: ubuntu-latest
@@ -46,27 +44,14 @@ jobs:
            fetch-depth: 1
            submodules: 'true'
 
+       # We don't use yarn lint here in order to have faster CI.
+       # Keep version and script up to date!
        - uses: DeLaGuardo/setup-clj-kondo@master
          with:
-           version: '2021.03.03'
+           version: '2021.08.06'
 
        - name: Lint
-         run: script/lint
-
-# # ignore for now
-#   deps-check:
-#     runs-on: ubuntu-18.04
-#     steps:
-#       - name: Git checkout
-#         uses: actions/checkout@v1
-#         with:
-#           fetch-depth: 1
-#           submodules: 'true'
-#
-#       - uses: ./.github/custom-actions/clojure-env
-#
-#       - name: Check Dependencies
-#         run: lein ancient
+         run: clj-kondo --lint src
 
    style:
      runs-on: ubuntu-latest
@@ -80,7 +65,7 @@ jobs:
        - uses: ./.github/custom-actions/clojure-env
 
        - name: Style
-         run: script/style
+         run: yarn lint
 
    carve:
      runs-on: ubuntu-latest
@@ -94,7 +79,7 @@ jobs:
        - uses: ./.github/custom-actions/clojure-env
 
        - name: Carve unused vars
-         run: script/carve
+         run: yarn carve
 
    build-app:
      needs: [test, lint, style, carve]
@@ -110,11 +95,8 @@ jobs:
        - uses: ./.github/custom-actions/clojure-env
        - uses: ./.github/custom-actions/node-env
 
-       - name: Compile components
-         run: yarn components
-
        - name: Compile JS Assets
-         run: lein run -m shadow.cljs.devtools.cli --npm release main renderer --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\" athens.main.core/AUTO_UPDATE ${AUTO_UPDATE}}}"
+         run: yarn prod --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\" athens.main.core/AUTO_UPDATE ${AUTO_UPDATE}}}"
          env:
            SENTRY_DSN: ${{ secrets.sentry_dsn }}
            AUTO_UPDATE: ${{ github.ref == 'refs/heads/main' }}
@@ -234,7 +216,7 @@ jobs:
        - uses: ./.github/custom-actions/clojure-env
 
        - name: Build server JAR
-         run: lein uberjar
+         run: yarn server:uberjar
 
        - name: Set up Docker Buildx
          uses: docker/setup-buildx-action@v1

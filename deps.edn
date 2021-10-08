@@ -1,12 +1,4 @@
-{:aliases
- {:carve
-  {:extra-deps
-   #:borkdude{carve
-              {:git/url "https://github.com/borkdude/carve"
-               :sha     "4b5010a09e030dbd998faff718d12400748ab3b9"}}
-   :main-opts ["-m" "carve.main"]}}
-
- :paths ["src" "target/classes"]
+{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen"]
 
  :deps
  {org.clojure/clojure                   #:mvn{:version "1.10.3"}
@@ -29,9 +21,12 @@
   tick/tick                             #:mvn{:version "0.4.26-alpha"}
   com.rpl/specter                       #:mvn{:version "1.1.3"}
   com.taoensso/sente                    #:mvn{:version "1.16.2"}
+  binaryage/devtools                    #:mvn{:version "1.0.3"}
+  day8.re-frame/re-frame-10x            #:mvn{:version "1.1.13"}
+  day8.re-frame/tracing                 #:mvn{:version "0.6.2"}
   ;; TODO: use released version after >1.5.9 release.
-  org.flatland/ordered                  {:git/url "https://github.com/clj-commons/ordered.git"
-                                         :sha     "c6612e46a596842336b24f0bc6fac2d638c46224"}
+  org.flatland/ordered                  #:git{:url "https://github.com/clj-commons/ordered.git"
+                                              :sha "c6612e46a596842336b24f0bc6fac2d638c46224"}
   ;; backend
   ;;   logging hell
   org.clojure/tools.logging             #:mvn{:version "1.1.0"}
@@ -51,4 +46,53 @@
   metosin/malli                         #:mvn{:version "0.5.1"}
   ;; networked repl
   com.stuartsierra/component.repl       #:mvn{:version "0.2.0"}
-  nrepl/nrepl                           #:mvn{:version "0.8.3"}}}
+  nrepl/nrepl                           #:mvn{:version "0.8.3"}
+  cider/cider-nrepl                     #:mvn{:version "0.27.2"}}
+
+ :aliases
+ {:carve
+  {:extra-deps {borkdude/carve
+                #:git{:url "https://github.com/borkdude/carve"
+                      :sha "c9a4dec89032f2003cc439c473fcd3c41e809669"}}
+   :main-opts  ["-m" "carve.main"]}
+
+  :cljstyle
+  {:deps      {mvxcvi/cljstyle
+               #:git{:url "https://github.com/greglook/cljstyle.git"
+                     :sha "13fd2a3ff4097f1ed5c7ec96baf13e547ac2a26b"}
+
+               ;; Workaround for https://github.com/greglook/cljstyle/issues/79
+               rewrite-clj/rewrite-clj
+               #:mvn{:version "1.0.594-alpha"}}
+   :main-opts ["-m" "cljstyle.main"]}
+
+  :clj-kondo
+  {:extra-deps {borkdude/clj-kondo
+                #:git{:url "https://github.com/borkdude/clj-kondo"
+                      :sha "9bb69c3188f7efe6e17d392def89e89ec9d85ae5"
+                      :tag "v2021.08.06"}}
+   :main-opts  ["-m" "clj-kondo.main"]}
+
+  :outdated
+  {:extra-deps {com.github.liquidz/antq
+                #:mvn{:version "1.1.0"}}
+   ;; Very noisy, due to https://github.com/liquidz/antq/issues/108
+   :main-opts  ["-m" "antq.core"]}
+
+  :build
+  {:deps {io.github.clojure/tools.build
+          #:git{:sha "599be6c8c94a6ac6cc02fc9b43536f9052225b60"
+                :tag "v0.5.1"}}
+   :ns-default build}
+
+  :test
+  {:extra-paths ["test"]
+   :extra-deps {io.github.cognitect-labs/test-runner
+                #:git{:url "https://github.com/cognitect-labs/test-runner.git"
+                      :sha "48c3c67f98362ba1e20526db4eeb6996209c050a"
+                      :tag "v0.5.0"}}
+   :main-opts ["-m" "cognitect.test-runner"]
+   :exec-fn cognitect.test-runner.api/test}
+
+  :athens
+  {:main-opts ["-m" "athens.self-hosted.core"]}}}
