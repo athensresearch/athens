@@ -704,6 +704,9 @@
         next-block-uid            (db/next-block-uid o-uid)]
     (when (and no-selection? end? next-block-uid)
       (let [next-block (db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
+        ;; save the state of this block before merging with the next one
+        ;; (do the same thing as "blur" does)
+        (db/transact-state-for-uid uid state)
         (dispatch [:backspace (cond-> next-block-uid
                                 embed-id (str "-embed-" embed-id))
                    (str (:block/string state) (:block/string next-block))])))))
