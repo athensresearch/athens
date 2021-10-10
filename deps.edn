@@ -53,7 +53,7 @@
  {:carve
   {:extra-deps {borkdude/carve
                 #:git{:url "https://github.com/borkdude/carve"
-                      :sha "c9a4dec89032f2003cc439c473fcd3c41e809669"}}
+                      :sha "7d87e7fdf471121b4f3cc4b442e6ca39503ca07e"}}
    :main-opts  ["-m" "carve.main"]}
 
   :cljstyle

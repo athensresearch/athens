@@ -1,7 +1,7 @@
 (ns athens.parser.impl-test
   (:require
     [athens.parser.impl :as sut]
-    [clojure.test :as t :refer [deftest is are testing]]))
+    [clojure.test :as t :refer [deftest is testing]]))
 
 
 (defmacro parses-to
