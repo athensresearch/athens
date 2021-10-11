@@ -35,7 +35,7 @@
     "server:uberjar": "clojure -T:build uber",
     "server:test": "clojure -X:test :excludes '[:stress]'",
     "server:test:only": "clojure -M:test --var",
-    "server:repl": "clojure"
+    "server:repl": "clojure -A:repl"
   },
   "main": "resources/main.js",
   "build": {
