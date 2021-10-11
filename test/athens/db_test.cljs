@@ -1,7 +1,6 @@
 (ns athens.db-test
   (:require
     [athens.db :as db]
-    [clojure.pprint :refer [pprint]]
     [clojure.test :refer [deftest is are]]
     [datascript.core :as d]))
 
