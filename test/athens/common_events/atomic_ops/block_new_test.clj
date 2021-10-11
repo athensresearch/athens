@@ -8,7 +8,7 @@
     [datahike.api                         :as d]))
 
 
-(t/use-fixtures :each fixture/integration-test-fixture)
+(t/use-fixtures :each (partial fixture/integration-test-fixture []))
 
 
 (t/deftest block-new-test
@@ -126,3 +126,40 @@
           (t/is (= 2 (:block/order block-2))))))))
 
 
+(t/deftest concurrency-simulations
+  (t/testing "just 2 events starting from the same point"
+    (let [page-1-uid    "page-3-uid"
+          block-1-uid   "block-3-1-uid"
+          block-2-uid   "block-3-2-uid"
+          block-3-1-uid "block-3-3-1-uid"
+          block-3-2-uid "block-3-3-2-uid"
+          setup-txs     [{:block/uid      page-1-uid
+                          :node/title     "test page 3"
+                          :block/children [{:block/uid      block-1-uid
+                                            :block/string   ""
+                                            :block/order    0
+                                            :block/children []}
+                                           {:block/uid      block-2-uid
+                                            :block/string   ""
+                                            :block/order    1
+                                            :block/children []}]}]]
+      (fixture/transact-with-middleware setup-txs)
+      (let [;; intention: add block after `block-1-uid`
+            event-1 (atomic-graph-ops/make-block-new-op page-1-uid block-3-1-uid 1)
+            ;; intention: add block after `block-2-uid`
+            event-2 (atomic-graph-ops/make-block-new-op page-1-uid block-3-2-uid 2)]
+        ;; now, there is no order to resolve and apply these events so we have what was intended
+        (t/testing "event-1 before event-2"
+          (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-1))
+          (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-2))
+          (t/is (= 1 (:block/order (common-db/get-block @@fixture/connection
+                                                        [:block/uid block-3-1-uid]))))
+          (t/is (= 3 (:block/order (common-db/get-block @@fixture/connection
+                                                        [:block/uid block-3-2-uid])))))
+        (t/testing "event-1 after event-2"
+          (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-2))
+          (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-1))
+          (t/is (= 1 (:block/order (common-db/get-block @@fixture/connection
+                                                        [:block/uid block-3-1-uid]))))
+          (t/is (= 3 (:block/order (common-db/get-block @@fixture/connection
+                                                        [:block/uid block-3-2-uid])))))))))
