@@ -7,7 +7,7 @@
     [athens.common.logging                :as log]
     [athens.self-hosted.clients           :as clients]
     [clojure.pprint                       :as pprint]
-    [datahike.api                         :as d])
+    [datascript.core                      :as d])
   (:import
     (clojure.lang
       ExceptionInfo)))
@@ -62,12 +62,12 @@
 
 
 (defn transact!
-  "Transact with Datahike.
+  "Transact with Datascript.
 
   Returns event accepte/rejected response.
-  
+
   Log errors."
-  [connection event-id txs]
+  [conn event-id txs]
   (try
     (let [txs (if (map? txs)
                 [txs]
@@ -75,10 +75,10 @@
       (log/debug "transact! event-id:" event-id ", normalized-txs:" (with-out-str
                                                                       (pprint/pprint txs)))
       (let [processed-tx            (->> txs
-                                         (common-db/block-uid-nil-eater @connection)
-                                         (common-db/linkmaker @connection)
-                                         (common-db/orderkeeper @connection))
-            {:keys [tempids]}       (d/transact connection processed-tx)
+                                         (common-db/block-uid-nil-eater @conn)
+                                         (common-db/linkmaker @conn)
+                                         (common-db/orderkeeper @conn))
+            {:keys [tempids]}       (d/transact! conn processed-tx)
             {:db/keys [current-tx]} tempids]
         (log/debug "transact! event-id:" event-id ", transacted in tx-id:" current-tx)
         (common-events/build-event-accepted event-id current-tx)))
@@ -99,16 +99,16 @@
 
 
 (defn default-handler
-  [datahike channel {:event/keys [id type] :as event}]
+  [conn channel {:event/keys [id type] :as event}]
   (let [username (clients/get-client-username channel)]
     (locking single-writer-guard
-      (let [txs (resolver/resolve-event-to-tx @datahike event)]
+      (let [txs (resolver/resolve-event-to-tx @conn event)]
         (log/debug (str "resolved-event-to-tx: username: " username ", event-id: " id ", type: " (pr-str type)))
-        (transact! datahike id txs)))))
+        (transact! conn id txs)))))
 
 
 (defn datascript-handler
-  [datahike channel {:event/keys [id type] :as event}]
+  [conn channel {:event/keys [id type] :as event}]
   (let [username (clients/get-client-username channel)]
     (log/info (str "username: " username ", event-id: " id ", type: " (pr-str type)))
     ;; TODO Check if potentially conflicting event?
@@ -117,7 +117,7 @@
     ;; stale -> reject
     (if (contains? supported-event-types type)
       (try
-        (default-handler datahike channel event)
+        (default-handler conn channel event)
         (catch ExceptionInfo ex
           (let [msg (str "username: " username ", event-id: " id ", Exception during resolving or transacting.")]
             (log/error ex msg)
@@ -135,16 +135,16 @@
 
 
 (defn atomic-op-exec
-  [datahike channel id op]
+  [conn channel id op]
   (let [username (clients/get-client-username channel)]
     (locking single-writer-guard
       (try
-        (let [txs (atomic-resolver/resolve-atomic-op-to-tx @datahike op)]
+        (let [txs (atomic-resolver/resolve-atomic-op-to-tx @conn op)]
           (log/debug "username:" username
                      "event-id:" id
                      "atomic/op:" (pr-str (:op/type op))
                      "Resolved Atomic op to tx.")
-          (transact! datahike id txs))
+          (transact! conn id txs))
         (catch ExceptionInfo ex
           (let [err-msg   (ex-message ex)
                 err-data  (ex-data ex)
@@ -157,14 +157,14 @@
 
 
 (defn atomic-op-handler
-  [datahike channel {:event/keys [id op]}]
+  [conn channel {:event/keys [id op]}]
   (let [username          (clients/get-client-username channel)
         {:op/keys [type]} op]
     (log/debug "username:" username
                "event-id:" id
                "-> Received Atomic Op Type:" (pr-str type))
     (if (contains? supported-atomic-ops type)
-      (atomic-op-exec datahike channel id op)
+      (atomic-op-exec conn channel id op)
       (common-events/build-event-rejected id
                                           (str "Under development event: " type)
                                           {:unsuported-type type}))))

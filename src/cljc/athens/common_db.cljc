@@ -2,15 +2,27 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
-    [athens.common.logging         :as log]
-    [athens.parser                 :as parser]
-    [athens.patterns               :as patterns]
-    [clojure.data                  :as data]
-    [clojure.pprint                :as pp]
-    [clojure.set                   :as set]
-    [clojure.string                :as string]
-    #?(:clj  [datahike.api         :as d]
-       :cljs [datascript.core      :as d])))
+    [athens.common.logging :as log]
+    [athens.parser         :as parser]
+    [athens.patterns       :as patterns]
+    [clojure.data          :as data]
+    [clojure.pprint        :as pp]
+    [clojure.set           :as set]
+    [clojure.string        :as string]
+    [datascript.core       :as d]))
+
+
+(def schema
+  {:schema/version      {}
+   :block/uid           {:db/unique :db.unique/identity}
+   :node/title          {:db/unique :db.unique/identity}
+   :attrs/lookup        {:db/cardinality :db.cardinality/many}
+   :block/children      {:db/cardinality :db.cardinality/many
+                         :db/valueType   :db.type/ref}
+   :block/refs          {:db/cardinality :db.cardinality/many
+                         :db/valueType   :db.type/ref}
+   ;; TODO: do we really still use it?
+   :block/remote-id     {:db/unique :db.unique/identity}})
 
 
 (defn e-by-av
@@ -545,8 +557,8 @@
 
 
 (defn- parseable-string-datom
-  [[eid attr value]]
-  (when (#{:block/string :node/title} attr)
+  [[eid attr value _time added?]]
+  (when (and added? (#{:block/string :node/title} attr))
     [eid value]))
 
 
@@ -577,7 +589,7 @@
   Returns Datascript transactions to be transacted in order to maintain links.
 
   Arguments:
-  - `db`: Current Datascript/Datahike DB value
+  - `db`: Current Datascript DB value
   - `input-tx` (optional): Graph structure modifying TX, analyzed for link updates
 
   If `input-tx` is provided, linkmaker will only update links related to that tx.
@@ -698,7 +710,7 @@
   Returns Datascript transactions to be transacted in order to maintain order.
 
   Arguments:
-  - `db`: Current Datascript/Datahike DB value
+  - `db`: Current Datascript DB value
   - `input-tx`: (optional): Graph structure modifying TX, analyzed for `:block/order` mistakes
 
   If `input-tx` is provided, orderkeeper will only update `:block/order` related to that TX.

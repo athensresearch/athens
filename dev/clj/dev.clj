@@ -5,7 +5,7 @@
   (:require
     [athens.self-hosted.core         :as app]
     [com.stuartsierra.component.repl :as repl :refer [reset start stop system]]
-    [datahike.api                    :as d]))
+    [datascript.core                 :as d]))
 
 
 (defn- local-new-system
@@ -16,10 +16,10 @@
 (repl/set-init local-new-system)
 
 
-(defn datahike-conn
-  "Gets you Datahike connection from system."
+(defn datascript-conn
+  "Gets you Datascript connection from system."
   []
-  (get-in system [:datahike :conn]))
+  (get-in system [:datascript :conn]))
 
 
 (comment
@@ -27,4 +27,4 @@
          :keys db/id
          :where [?eid :block/order ?block-order]
                 (not [?eid :block/uid])]
-       @(datahike-conn)))
+       @(datascript-conn)))

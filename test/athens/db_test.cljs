@@ -1,5 +1,6 @@
 (ns athens.db-test
   (:require
+    [athens.common-db :as common-db]
     [athens.db :as db]
     [clojure.test :refer [deftest is are]]
     [datascript.core :as d]))
@@ -23,7 +24,7 @@
   ;; for query, check that expected-titles were returned by the search.
   (are [node-titles query expected-titles]
        (with-redefs
-         [db/dsdb (d/create-conn db/schema)]
+         [db/dsdb (d/create-conn common-db/schema)]
          (d/transact! db/dsdb (make-nodes-with-titles node-titles))
          (let
            [search-results (db/search-in-node-title query)

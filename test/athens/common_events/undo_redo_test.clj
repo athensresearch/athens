@@ -5,7 +5,7 @@
     [athens.common-events.fixture  :as fixture]
     [athens.common-events.resolver :as resolver]
     [clojure.test                  :as test]
-    [datahike.api                  :as d]))
+    [datascript.core               :as d]))
 
 
 ;; history
@@ -19,26 +19,26 @@
 ;; Not seeing a use case now, but there is an option to do it
 (defn listen!
   [test-fn]
-  (d/listen @fixture/connection :history
-            (fn [tx-report]
-              (when-not (or (->> tx-report :tx-data (some (fn [datom]
-                                                            (= (nth datom 1)
-                                                               :from-undo-redo))))
-                            (->> tx-report :tx-data empty?))
+  (d/listen! @fixture/connection :history
+             (fn [tx-report]
+               (when-not (or (->> tx-report :tx-data (some (fn [datom]
+                                                             (= (nth datom 1)
+                                                                :from-undo-redo))))
+                             (->> tx-report :tx-data empty?))
 
-                (swap! history (fn [buff]
-                                 (->> buff (remove (fn [[_ applied? _]]
-                                                     (not applied?)))
-                                      doall)))
+                 (swap! history (fn [buff]
+                                  (->> buff (remove (fn [[_ applied? _]]
+                                                      (not applied?)))
+                                       doall)))
 
-                (swap! history (fn [cur-his]
-                                 (cons [(-> tx-report :tx-data first (nth 3)) ; removed the `vec` function here because its causing an error
-                                        true
-                                        (:tx-data tx-report)]
-                                       cur-his))))))
+                 (swap! history (fn [cur-his]
+                                  (cons [(-> tx-report :tx-data first (nth 3)) ; removed the `vec` function here because its causing an error
+                                         true
+                                         (:tx-data tx-report)]
+                                        cur-his))))))
   (test-fn)
   (reset! history (atom '()))
-  (d/unlisten @fixture/connection :history))
+  (d/unlisten! @fixture/connection :history))
 
 
 (test/use-fixtures :each fixture/integration-test-fixture listen!)
@@ -62,7 +62,7 @@
                          :block/order    0
                          :block/children []}]]
     ;; create a new page
-    (d/transact @fixture/connection create-page-tx)
+    (d/transact! @fixture/connection create-page-tx)
     (let [e-by-title (d/q '[:find ?e
                             :where [?e :node/title ?title]
                             :in $ ?title]
@@ -75,7 +75,7 @@
       (test/is (= e-by-title e-by-uid)))
 
     ;; create a new block
-    (d/transact @fixture/connection new-block-tx)
+    (d/transact! @fixture/connection new-block-tx)
     (let [{block-string :block/string} (common-db/get-block @@fixture/connection
                                                             [:block/uid  block-uid])]
       (test/is (= string-init block-string)))
@@ -84,7 +84,7 @@
     ;; also check if the new page is still in db
     (let [undo-event (common-events/build-undo-redo-event -1 false)
           tx-data    (resolver/resolve-event-to-tx history undo-event)]
-      (d/transact @fixture/connection tx-data))
+      (d/transact! @fixture/connection tx-data))
 
     (let [block (d/q '[:find ?e
                        :in $ ?uid
@@ -108,7 +108,7 @@
     ;; undo and test the creation of the new page
     (let [undo-event (common-events/build-undo-redo-event -1 false)
           tx-data    (resolver/resolve-event-to-tx history undo-event)]
-      (d/transact @fixture/connection tx-data))
+      (d/transact! @fixture/connection tx-data))
 
     (let [e-by-title (d/q '[:find ?e
                             :where [?e :node/title ?title]
@@ -124,7 +124,7 @@
     ;; redo and test the creation of the new page
     (let [undo-event (common-events/build-undo-redo-event -1 true)
           tx-data    (resolver/resolve-event-to-tx history undo-event)]
-      (d/transact @fixture/connection tx-data))
+      (d/transact! @fixture/connection tx-data))
 
     (let [e-by-title (d/q '[:find ?e
                             :where [?e :node/title ?title]
@@ -140,7 +140,7 @@
     ;; redo and test the creation of the new block
     (let [undo-event (common-events/build-undo-redo-event -1 true)
           tx-data    (resolver/resolve-event-to-tx history undo-event)]
-      (d/transact @fixture/connection tx-data))
+      (d/transact! @fixture/connection tx-data))
 
     (let [{block-string :block/string} (common-db/get-block @@fixture/connection
                                                             [:block/uid  block-uid])]

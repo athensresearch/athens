@@ -6,48 +6,34 @@ Use DB Picker -> join with `localhost:3010` as URL, no password.
 
 ## Server
 
-### Building `uberjar`
-
-To create uberjar:
-``` shell
-yarn server:uberjar
-```
-
-This will create `target/athens-lan-party-standalone.jar`.
-
 ### Custom Config
 
 The default configuration can be found in `config.edn`.
 You can customize it through the `config_edn` environment variable.
 
-Here's an example on how to overwrite the default Datahike store using `config_edn`,
-and configure Server password.
+Here's an example on how to configure the server password using `config_edn`.
 ```
-config_edn: "{:password "YourServerPassword" :datahike {:store {:path \"/srv/athens/db\"}}}"
+config_edn: "{:password "YourServerPassword"}"
 ```
 The `config_edn` will be merged to other configs via deep merging.
 
-### Running `uberjar`
-
-Once you've built `uberjar` you can run it as simply as:
-
-``` shell
-java -jar target/athens-lan-party-standalone.jar
-```
-
-In the output you can notice `Starting WebServer with config:  {:port 3010}`,  
-this **3010** is the port number that Athens Lan-Party runs on,  
-notice it might be different number if you've changed configuration.
 
 ### Running Athens Self-Hosted Server
 
+Run the following commands in two different terminals:
+
 ``` shell
+docker compose up fluree
 yarn server
 ```
 
-This will start HTTP server on port 3010, unless you've modified `src/clj/config.edn`.
+The first command starts the Fluree database using docker to persist data.
+If you set `:in-memory? false` in `src/clj/config.edn` no data is persisted and this command is not needed.
+
+The second command will start HTTP server on port 3010, unless you've modified `src/clj/config.edn`.
 
 Also nREPL server is started on port 8877, unless you've modified `src/clj/config.edn`.
+
 
 ### Developing Athens Self-Hosted Server
 
@@ -74,11 +60,11 @@ After starting HTTP & nREPL servers are running on default ports or changes in `
 (reset)
 ```
 
-**Clean the Datahike DB**
+**Clean the Fluree DB**
 
 Stop the Self-Hosted server. [ctrl+c] if using `yarn server` or [ctrl+d] if repl.
-By default Datahike DB is stored in `/tmp/exmaple`, remove this forlder
-start the srever and Bob's your unkle.
+By default Fluree DB is stored in `./athens-data/fluree`, remove this folder,
+start the server and Bob's your unkle.
 
 
 ## Docker
@@ -99,13 +85,13 @@ The server will be acessible at `localhost:80`, and all data will be saved at `.
 You can override the app configuration via an environment variable:
 
 ```sh
-CONFIG_EDN="{:password \"YourServerPassword\" :datahike {:store {:path \"/srv/athens/db\"}}}" docker compose up
+CONFIG_EDN="{:password \"YourServerPassword\"}" docker compose up
 ```
 
 or via an `.env` file located in the same directory as the downloaded `docker-compose.yml`:
 
 ```sh
 # .env
-CONFIG_EDN="{:password \"YourServerPassword\" :datahike {:store {:path \"/srv/athens/db\"}}}"
+CONFIG_EDN="{:password \"YourServerPassword\"}"
 ```
 

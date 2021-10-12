@@ -6,7 +6,7 @@
     [athens.common-events.resolver :as resolver]
     [clojure.string                :as string]
     [clojure.test                  :as test]
-    [datahike.api                  :as d])
+    [datascript.core               :as d])
   (:import
     (clojure.lang
       ExceptionInfo)))
@@ -30,7 +30,7 @@
                                               :block/order    0
                                               :block/children []}]}]]
       ;; need to apply linkmaker, so resolving page-rename event can follow references for :block/string changes
-      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
+      (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
       (let [uid-by-title    (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             rename-page-txs (resolver/resolve-event-to-tx @@fixture/connection
                                                           (common-events/build-page-rename-event -1
@@ -38,7 +38,7 @@
                                                                                                  test-title-from
                                                                                                  test-title-to))]
         (test/is (= test-page-uid uid-by-title))
-        (d/transact @fixture/connection rename-page-txs)
+        (d/transact! @fixture/connection rename-page-txs)
         (let [uid-by-title (common-db/v-by-ea @@fixture/connection [:node/title test-title-to] :block/uid)]
           (test/is (= test-page-uid uid-by-title))))))
 
@@ -58,7 +58,7 @@
                                                :block/order    0
                                                :block/children []}]}]]
       ;; need to apply linkmaker, so resolving page-rename event can follow references for :block/string changes
-      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
+      (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
       (let [uid-by-title    (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             rename-page-txs (resolver/resolve-event-to-tx @@fixture/connection
                                                           (common-events/build-page-rename-event -1
@@ -66,7 +66,7 @@
                                                                                                  test-title-from
                                                                                                  test-title-to))]
         (test/is (= test-page-uid uid-by-title))
-        (d/transact @fixture/connection rename-page-txs)
+        (d/transact! @fixture/connection rename-page-txs)
         (let [uid-by-title (common-db/v-by-ea @@fixture/connection [:node/title test-title-to] :block/uid)
               block-string (common-db/v-by-ea @@fixture/connection [:block/uid test-block-uid] :block/string)]
           (test/is (thrown-with-msg? ExceptionInfo #"Nothing found for entity id"
@@ -100,7 +100,7 @@
                                                  :block/order    0
                                                  :block/children []}]}]]
       ;; need to apply linkmaker, so resolving page-rename event can follow references for :block/string changes
-      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
+      (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
       (let [uid-by-title   (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             merge-page-txs (resolver/resolve-event-to-tx @@fixture/connection
                                                          (common-events/build-page-merge-event -1
@@ -108,7 +108,7 @@
                                                                                                test-title-from
                                                                                                test-title-to))]
         (test/is (= test-page-from-uid uid-by-title))
-        (d/transact @fixture/connection merge-page-txs)
+        (d/transact! @fixture/connection merge-page-txs)
         (let [{kids :block/children} (common-db/get-page-document @@fixture/connection [:node/title test-title-to])]
           (test/is (thrown-with-msg? ExceptionInfo #"Nothing found for entity id"
                      (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
@@ -141,7 +141,7 @@
                                                  :block/order    0
                                                  :block/children []}]}]]
       ;; need to apply linkmaker, so resolving page-rename event can follow references for :block/string changes
-      (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
+      (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
       (let [uid-by-title   (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             merge-page-txs (resolver/resolve-event-to-tx @@fixture/connection
                                                          (common-events/build-page-merge-event -1
@@ -149,7 +149,7 @@
                                                                                                test-title-from
                                                                                                test-title-to))]
         (test/is (= test-page-from-uid uid-by-title))
-        (d/transact @fixture/connection merge-page-txs)
+        (d/transact! @fixture/connection merge-page-txs)
         (let [{kids :block/children} (common-db/get-page-document @@fixture/connection [:node/title test-title-to])
               uid-by-title           (common-db/v-by-ea @@fixture/connection [:node/title test-title-to] :block/uid)
               block-string           (common-db/v-by-ea @@fixture/connection [:block/uid test-block-1-uid] :block/string)]
@@ -172,7 +172,7 @@
                                               :block/string   ""
                                               :block/children []}]}]]
 
-      (d/transact @fixture/connection create-page-txs)
+      (d/transact! @fixture/connection create-page-txs)
       (let [e-by-title (d/q '[:find ?e
                               :where [?e :node/title ?title]
                               :in $ ?title]
@@ -188,7 +188,7 @@
             delete-page-txs   (resolver/resolve-event-to-tx @@fixture/connection
                                                             delete-page-event)]
 
-        (d/transact @fixture/connection delete-page-txs)
+        (d/transact! @fixture/connection delete-page-txs)
         (let [e-by-title (d/q '[:find ?e
                                 :where [?e :node/title ?title]
                                 :in $ ?title]
@@ -225,7 +225,7 @@
                               [?e :block/string ?text]
                               [?e :block/uid ?uid]
                               :in $ ?uid]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (println "Delete page:" @@fixture/connection)
       (test/is (= #{[block-text]}
                   (d/q query
@@ -233,10 +233,10 @@
                        block-uid)))
 
       ;; delete page 1
-      (d/transact @fixture/connection
-                  (->> test-page-1-uid
-                       (common-events/build-page-delete-event -1)
-                       (resolver/resolve-event-to-tx @@fixture/connection)))
+      (d/transact! @fixture/connection
+                   (->> test-page-1-uid
+                        (common-events/build-page-delete-event -1)
+                        (resolver/resolve-event-to-tx @@fixture/connection)))
       ;; check if page reference was cleaned
       (test/is (= #{[test-page-1-title]}
                   (d/q query
@@ -256,12 +256,12 @@
 
     ;; create new pages
     (run!
-      #(d/transact @fixture/connection [{:block/uid      (first %)
-                                         :node/title     (nth % 2)
-                                         :block/children [{:block/uid      (second %)
-                                                           :block/string   ""
-                                                           :block/order    0
-                                                           :block/children []}]}])
+      #(d/transact! @fixture/connection [{:block/uid      (first %)
+                                          :node/title     (nth % 2)
+                                          :block/children [{:block/uid      (second %)
+                                                            :block/string   ""
+                                                            :block/order    0
+                                                            :block/children []}]}])
       [[test-uid-1 test-block-uid-1 test-title-1]
        [test-uid-2 test-block-uid-2 test-title-2]])
 
@@ -279,7 +279,7 @@
     (run!
       #(->> (common-events/build-page-add-shortcut -1 %)
             (resolver/resolve-event-to-tx @@fixture/connection)
-            (d/transact @fixture/connection))
+            (d/transact! @fixture/connection))
       [test-uid-0 test-uid-1 test-uid-2])
 
     (let [page-shortcut (->> (d/q '[:find (pull ?e [*])
@@ -316,12 +316,12 @@
 
     ;; create new pages
     (run!
-      #(d/transact @fixture/connection [{:block/uid      (first %)
-                                         :node/title     (nth % 2)
-                                         :block/children [{:block/uid      (second %)
-                                                           :block/string   ""
-                                                           :block/order    0
-                                                           :block/children []}]}])
+      #(d/transact! @fixture/connection [{:block/uid      (first %)
+                                          :node/title     (nth % 2)
+                                          :block/children [{:block/uid      (second %)
+                                                            :block/string   ""
+                                                            :block/order    0
+                                                            :block/children []}]}])
       [[test-uid-1 test-block-uid-1 test-title-1]
        [test-uid-2 test-block-uid-2 test-title-2]])
 
@@ -339,7 +339,7 @@
     (run!
       #(->> (common-events/build-page-add-shortcut -1 %)
             (resolver/resolve-event-to-tx @@fixture/connection)
-            (d/transact @fixture/connection))
+            (d/transact! @fixture/connection))
       [test-uid-0 test-uid-1 test-uid-2])
 
     (let [page-shortcut (->> (d/q '[:find (pull ?e [*])
@@ -366,7 +366,7 @@
     ;; remove a page from the page-shortcut
     (->> (common-events/build-page-remove-shortcut -1 test-uid-1)
          (resolver/resolve-event-to-tx @@fixture/connection)
-         (d/transact @fixture/connection))
+         (d/transact! @fixture/connection))
 
     (let [page-shortcut (->> (d/q '[:find (pull ?e [*])
                                     :where
@@ -408,7 +408,7 @@
                                        [child-1 child-2 child-3 child-4])}]]
 
     ;; create blocks
-    (d/transact @fixture/connection setup-txs)
+    (d/transact! @fixture/connection setup-txs)
 
     (let [page-1-children (->> (d/q '[:find (pull ?c [:block/uid])
                                       :in $ ?uid
@@ -428,7 +428,7 @@
       (fn [[uid string]]
         (->> (common-events/build-unlinked-references-link -1 uid string "Test")
              (resolver/resolve-event-to-tx @@fixture/connection)
-             (d/transact @fixture/connection)))
+             (d/transact! @fixture/connection)))
       [child-1 child-2 child-3 child-4])
 
     (let [linked-blocks (->> (d/q '[:find (pull ?c [*])
@@ -463,7 +463,7 @@
                                        [child-1 child-2 child-3 child-4])}]]
 
     ;; block transaction
-    (d/transact @fixture/connection setup-txs)
+    (d/transact! @fixture/connection setup-txs)
 
     (let [page-1-children (->> (d/q '[:find (pull ?c [:block/uid])
                                       :in $ ?uid
@@ -491,7 +491,7 @@
       ;; link unlinked refs all transaction
       (->> (common-events/build-unlinked-references-link-all -1 unlinked-str-ids page-1-title)
            (resolver/resolve-event-to-tx @@fixture/connection)
-           (d/transact @fixture/connection)))
+           (d/transact! @fixture/connection)))
 
     (let [linked-blocks          (->> (d/q '[:find (pull ?c [*])
                                              :in $ ?uid

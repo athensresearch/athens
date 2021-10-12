@@ -524,7 +524,7 @@
   :http-success/get-db
   (fn [_ [_ json-str]]
     (let [datoms (db/str-to-db-tx json-str)
-          new-db (d/db-with (d/empty-db db/schema) datoms)]
+          new-db (d/db-with (d/empty-db common-db/schema) datoms)]
       {:dispatch [:reset-conn new-db]})))
 
 

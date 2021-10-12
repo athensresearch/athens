@@ -7,15 +7,16 @@ services:
     #  context: .
     #  dockerfile: athens.dockerfile
     restart: always
+    depends_on:
+      - fluree
     expose:
       - 3010 # Change this according to config.edn
     volumes:
-      - ./athens-data/db:/srv/athens/db
       - ./athens-data/logs:/srv/athens/logs
     environment:
       # Use system env vars for settings if available.
       # config_edn is deep merged with the whole config file
-      - config_edn=${CONFIG_EDN:-{:datahike {:store {:path "/srv/athens/db"}}}}
+      - CONFIG_EDN=${CONFIG_EDN:-{}}
 
 
   nginx:
@@ -30,3 +31,12 @@ services:
     ports:
       - 80:80
 
+  fluree:
+    # Under default settings maximum recommended event size is 2mb.
+    # Can be increased via fdb-memory-reindex-max to up to 10mb.
+    image: fluree/ledger:latest
+    restart: always
+    ports:
+      - 8090:8090
+    volumes:
+      - ./athens-data/fluree:/var/lib/fluree

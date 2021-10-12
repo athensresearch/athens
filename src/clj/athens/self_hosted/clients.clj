@@ -6,8 +6,6 @@
     [cognitect.transit           :as transit]
     [org.httpkit.server          :as http])
   (:import
-    (datahike.datom
-      Datom)
     (java.io
       ByteArrayInputStream
       ByteArrayOutputStream)))
@@ -17,18 +15,10 @@
 (defonce clients (atom {}))
 
 
-;; Transit reader/writer
-(def ^:private datom-writer
-  (transit/write-handler
-    "datom"
-    (fn [{:keys [e a v tx added]}]
-      [e a v tx added])))
-
-
 (defn ->transit
   [data]
   (let [out    (ByteArrayOutputStream. 4096)
-        writer (transit/writer out :json {:handlers {Datom datom-writer}})]
+        writer (transit/writer out :json)]
     (transit/write writer data)
     (.toString out)))
 

@@ -7,7 +7,7 @@
     [clojure.test                         :as t]))
 
 
-(t/use-fixtures :each (partial fixture/integration-test-fixture [] (fixture/random-tmp-folder-config)))
+(t/use-fixtures :each (partial fixture/integration-test-fixture []))
 
 
 (t/deftest block-split-tests

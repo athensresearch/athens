@@ -4,7 +4,7 @@
     [athens.common-events.fixture  :as fixture]
     [athens.common-events.resolver :as resolver]
     [clojure.test                  :as test]
-    [datahike.api                  :as d]))
+    [datascript.core               :as d]))
 
 
 (test/use-fixtures :each fixture/integration-test-fixture)
@@ -22,12 +22,12 @@
 
     ;; create new pages
     (run!
-      #(d/transact @fixture/connection [{:block/uid      (first %)
-                                         :node/title     (nth % 2)
-                                         :block/children [{:block/uid      (second %)
-                                                           :block/string   ""
-                                                           :block/order    0
-                                                           :block/children []}]}])
+      #(d/transact! @fixture/connection [{:block/uid      (first %)
+                                          :node/title     (nth % 2)
+                                          :block/children [{:block/uid      (second %)
+                                                            :block/string   ""
+                                                            :block/order    0
+                                                            :block/children []}]}])
       [[test-uid-1 test-block-uid-1 test-title-1]
        [test-uid-2 test-block-uid-2 test-title-2]])
 
@@ -45,7 +45,7 @@
     (run!
       #(->> (common-events/build-page-add-shortcut -1 %)
             (resolver/resolve-event-to-tx @@fixture/connection)
-            (d/transact @fixture/connection))
+            (d/transact! @fixture/connection))
       [test-uid-0 test-uid-1 test-uid-2])
 
     (let [page-shortcut (->> (d/q '[:find (pull ?e [*])
@@ -72,7 +72,7 @@
     ;; left-sidebar-drop-above-event
     (->> (common-events/build-left-sidebar-drop-above -1 2 0)
          (resolver/resolve-event-to-tx @@fixture/connection)
-         (d/transact @fixture/connection))
+         (d/transact! @fixture/connection))
 
     (let [page-shortcut (->> (d/q '[:find (pull ?e [*])
                                     :where
@@ -93,7 +93,7 @@
     ;; left-sidebar-drop-above-event
     (->> (common-events/build-left-sidebar-drop-above -1 2 1)
          (resolver/resolve-event-to-tx @@fixture/connection)
-         (d/transact @fixture/connection))
+         (d/transact! @fixture/connection))
 
     (let [page-shortcut (->> (d/q '[:find (pull ?e [*])
                                     :where
@@ -124,12 +124,12 @@
 
     ;; create new pages
     (run!
-      #(d/transact @fixture/connection [{:block/uid      (first %)
-                                         :node/title     (nth % 2)
-                                         :block/children [{:block/uid      (second %)
-                                                           :block/string   ""
-                                                           :block/order    0
-                                                           :block/children []}]}])
+      #(d/transact! @fixture/connection [{:block/uid      (first %)
+                                          :node/title     (nth % 2)
+                                          :block/children [{:block/uid      (second %)
+                                                            :block/string   ""
+                                                            :block/order    0
+                                                            :block/children []}]}])
       [[test-uid-1 test-block-uid-1 test-title-1]
        [test-uid-2 test-block-uid-2 test-title-2]])
 
@@ -147,7 +147,7 @@
     (run!
       #(->> (common-events/build-page-add-shortcut -1 %)
             (resolver/resolve-event-to-tx @@fixture/connection)
-            (d/transact @fixture/connection))
+            (d/transact! @fixture/connection))
       [test-uid-0 test-uid-1 test-uid-2])
 
     (let [page-shortcut (->> (d/q '[:find (pull ?e [*])
@@ -174,7 +174,7 @@
     ;; left-sidebar-drop-below-event
     (->> (common-events/build-left-sidebar-drop-below -1 0 2)
          (resolver/resolve-event-to-tx @@fixture/connection)
-         (d/transact @fixture/connection))
+         (d/transact! @fixture/connection))
 
     (let [page-shortcut (->> (d/q '[:find (pull ?e [*])
                                     :where
@@ -194,7 +194,7 @@
 
     (let [_left-sidebar-drop-below-event (->> (common-events/build-left-sidebar-drop-below -1 0 1)
                                               (resolver/resolve-event-to-tx @@fixture/connection)
-                                              (d/transact @fixture/connection))
+                                              (d/transact! @fixture/connection))
           page-shortcut                  (->> (d/q '[:find (pull ?e [*])
                                                      :where
                                                      [?e :page/sidebar]]

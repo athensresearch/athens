@@ -1,12 +1,11 @@
 (ns athens.self-hosted.client
   "Self-Hosted Mode connector."
   (:require
+    [athens.common-db                  :as common-db]
     [athens.common-events              :as common-events]
     [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events.schema       :as schema]
     [athens.common.logging             :as log]
-    [athens.db                         :as db]
-    [clojure.pprint                    :as pp]
     [cognitect.transit                 :as transit]
     [com.cognitect.transit.types       :as ty]
     [com.stuartsierra.component        :as component]
@@ -218,52 +217,22 @@
         (log/warn "Received invalid response:" (pr-str explanation))))))
 
 
-(defn- reconstruct-entities-from-db-dump
-  [datoms]
-  (log/debug "Reconstructing tx from db dump of" (count datoms) "datoms")
-  (let [insert-id (comp - inc)]
-    (->> datoms
-         ;; NOTE: removing schema, should re apply Datahike schema to Datascript?
-         (remove #(contains? #{:db/txInstant
-                               :db/ident
-                               :db/cardinality
-                               :db/valueType
-                               :db/unique}
-                             ;; attribute
-                             (:a %)))
-         ;; group by entity id
-         (group-by :e)
-         ;; reduce datoms to entities
-         (reduce (fn [acc [entity-id datoms]]
-                   (assoc acc entity-id
-                          (reduce (fn [entity {:keys [a v]}]
-                                    (assoc entity a
-                                           (if (= :block/children a)
-                                             (conj (:block/children entity #{})
-                                                   (insert-id v))
-                                             v)))
-                                  {:db/id (insert-id entity-id)}
-                                  datoms)))
-                 {})
-         ;; only entities
-         vals)))
+(defn datom->tx-entry
+  [[e a v]]
+  [:db/add e a v])
 
 
 (defn- db-dump-handler
   [last-tx {:keys [datoms]}]
   (log/debug "Received DB Dump")
-  (let [entities (reconstruct-entities-from-db-dump datoms)]
-    (log/info "Reconstructed" (count entities) "entities")
-    (log/debug "Reconstructed entities:" (with-out-str
-                                           (pp/pprint entities)))
-    (rf/dispatch [:reset-conn (d/empty-db db/schema)])
-    (rf/dispatch [:transact entities])
-    (rf/dispatch [:remote/snapshot-dsdb])
-    (rf/dispatch [:remote/start-event-sync])
-    (rf/dispatch [:remote/last-seen-tx! last-tx])
-    (rf/dispatch [:db/sync])
-    (rf/dispatch [:remote/connected])
-    (log/info "✅ Transacted DB dump. last-seen-tx" last-tx)))
+  (rf/dispatch [:reset-conn (d/empty-db common-db/schema)])
+  (rf/dispatch [:transact (into [] (map datom->tx-entry) datoms)])
+  (rf/dispatch [:remote/snapshot-dsdb])
+  (rf/dispatch [:remote/start-event-sync])
+  (rf/dispatch [:remote/last-seen-tx! last-tx])
+  (rf/dispatch [:db/sync])
+  (rf/dispatch [:remote/connected])
+  (log/info "✅ Transacted DB dump. last-seen-tx" last-tx))
 
 
 (defn- presence-online-handler

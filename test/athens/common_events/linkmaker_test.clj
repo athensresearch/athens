@@ -5,7 +5,7 @@
     [athens.common-events.fixture  :as fixture]
     [athens.common-events.resolver :as resolver]
     [clojure.test                  :as t]
-    [datahike.api                  :as d]))
+    [datascript.core               :as d]))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
@@ -96,7 +96,7 @@
         block     [{:db/id 102 :block/uid "block" :block/string "the block"}]
         pageblock [{:db/id 103 :block/uid "pageblock" :node/title "the pageblock" :block/string "the pageblock"}]
         neither   [{:db/id 104 :create/time 1}]
-        _         (d/transact @fixture/connection (concat page block pageblock neither))
+        _         (d/transact! @fixture/connection (concat page block pageblock neither))
         db        @@fixture/connection]
     (t/testing "Returns nil if the entity doesn't exist"
       (t/is (nil? (common-db/eid->lookup-ref db 200))))
@@ -138,7 +138,7 @@
         block     [{:db/id 102 :block/uid "block" :block/string "the block"}]
         refblock  [{:db/id 103 :block/uid "refblock" :block/string "the refblock"
                     :block/refs [{:db/id 101} {:db/id 102} {:db/id 103}]}]
-        _         (d/transact @fixture/connection (concat page block refblock))
+        _         (d/transact! @fixture/connection (concat page block refblock))
         db        @@fixture/connection]
     (t/testing "Returns empty if the entity doesn't have refs"
       (t/is (empty? (common-db/block-refs-as-lookup-refs db 101))))
@@ -151,7 +151,7 @@
 
 (defn transact-with-linkmaker
   [tx-data]
-  (d/transact @fixture/connection (common-db/linkmaker @@fixture/connection tx-data)))
+  (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection tx-data)))
 
 
 (defn get-block
@@ -452,7 +452,7 @@
                                                    :block/string testing-block-string
                                                    :block/order  0}]}]]
       ;; Transact without linkmaker.
-      (d/transact @fixture/connection setup-tx)
+      (d/transact! @fixture/connection setup-tx)
       ;; Assert that target page and block has no `:block/refs` to start with.
       (let [target-page  (get-page target-page-uid)
             target-block (get-block target-block-uid)
@@ -460,7 +460,7 @@
         (t/is (empty? (:block/_refs target-page)))
         (t/is (empty? (:block/_refs target-block)))
 
-        (d/transact @fixture/connection add-links-tx)
+        (d/transact! @fixture/connection add-links-tx)
         (let [{testing-block-eid :db/id
                block-refs        :block/refs} (get-block testing-block-uid)
               {target-block-eid :db/id
