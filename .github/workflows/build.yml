@@ -238,7 +238,7 @@ jobs:
          id: nginx-meta
          uses: docker/metadata-action@v3
          with:
-           images: ${{ env.REGISTRY }}/${{ github.repository }}-nginx
+           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/nginx
 
        - name: Build and push athens
          uses: docker/build-push-action@v2

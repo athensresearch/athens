@@ -18,8 +18,8 @@ services:
       - config_edn=${CONFIG_EDN:-{:datahike {:store {:path "/srv/athens/db"}}}}
 
 
-  athens-nginx:
-    image: ghcr.io/athensresearch/athens-nginx:latest
+  nginx:
+    image: ghcr.io/athensresearch/nginx:latest
     # build:
     #  context: .
     #  dockerfile: nginx.dockerfile
