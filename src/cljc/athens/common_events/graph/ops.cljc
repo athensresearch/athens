@@ -14,10 +14,10 @@
   If page doesn't exist, generates composite of atomic `:page/new` & `:block/new`."
   [db page-title page-uid block-uid]
   (if (common-db/e-by-av db :block/uid page-uid)
-    (atomic/make-block-new-op page-uid block-uid 0)
+    (atomic/make-block-new-op block-uid page-uid :first)
     (composite/make-consequence-op {:op/type :page/new}
                                    [(atomic/make-page-new-op page-title page-uid)
-                                    (atomic/make-block-new-op page-uid block-uid 0)])))
+                                    (atomic/make-block-new-op block-uid page-uid :first)])))
 
 
 (defn build-block-save-op
@@ -47,13 +47,13 @@
 
 (defn build-block-split-op
   "Creates `:block/split` composite op, taking into account context."
-  [db {:keys [parent-uid old-block-uid new-block-uid new-block-order
+  [db {:keys [old-block-uid new-block-uid
               old-string new-string index]}]
   (let [save-block-op     (build-block-save-op db
                                                old-block-uid
                                                old-string
                                                (subs new-string 0 index))
-        new-block-op      (atomic/make-block-new-op parent-uid new-block-uid new-block-order)
+        new-block-op      (atomic/make-block-new-op new-block-uid old-block-uid :after)
         new-block-save-op (build-block-save-op db
                                                new-block-uid
                                                ""

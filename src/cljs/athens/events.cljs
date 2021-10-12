@@ -573,7 +573,8 @@
   :resolve-transact
   (fn [_ [_ event]]
     (let [txs (atomic-resolver/resolve-to-tx @db/dsdb event)]
-      (log/debug ":resolve-transact resolved" (:event/type event) "to txs:" txs)
+      (log/debug ":resolve-transact resolved" (pr-str (:event/type event))
+                 "to txs:\n" (pr-str txs))
       {:fx [[:dispatch [:transact txs]]]})))
 
 
@@ -825,9 +826,9 @@
   :enter/new-block
   (fn [{:keys [db]} [_ {:keys [block parent new-uid embed-id]}]]
     (log/debug ":enter/new-block" (pr-str block) (pr-str parent) (pr-str new-uid))
-    (let [op    (atomic-graph-ops/make-block-new-op (:block/uid parent)
-                                                    new-uid
-                                                    (inc (:block/order block)))
+    (let [op    (atomic-graph-ops/make-block-new-op new-uid
+                                                    (:block/uid block)
+                                                    :after)
           event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
@@ -884,13 +885,11 @@
 
 (reg-event-fx
   :enter/split-block
-  (fn [{:keys [db]} [_ {:keys [parent-uid uid new-uid new-order old-string value index embed-id] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid new-uid old-string value index embed-id] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
     (let [op    (graph-ops/build-block-split-op @db/dsdb
-                                                {:parent-uid      parent-uid
-                                                 :old-block-uid   uid
+                                                {:old-block-uid   uid
                                                  :new-block-uid   new-uid
-                                                 :new-block-order new-order
                                                  :old-string      old-string
                                                  :new-string      value
                                                  :index           index})
@@ -941,7 +940,7 @@
                                          (.getAttribute "data-uid"))
                                  uid)
         [uid embed-id]        (db/uid-and-embed-id uid)
-        {:block/keys [string order]
+        {:block/keys [string]
          :as         block}   (db/get-block [:block/uid uid])
         {parent-uid :block/uid
          :as        parent}   (db/get-parent [:block/uid uid])
@@ -1007,11 +1006,9 @@
                                 (not (zero? start))
                                 [:enter/split-block {:uid        uid
                                                      :old-string string
-                                                     :parent-uid parent-uid
                                                      :value      value
                                                      :index      start
                                                      :new-uid    new-uid
-                                                     :new-order  (inc order)
                                                      :embed-id   embed-id}]
 
                                 (empty? value)

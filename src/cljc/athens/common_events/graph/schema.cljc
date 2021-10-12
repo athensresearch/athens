@@ -31,9 +31,14 @@
   [:map
    [:op/args
     [:map
-     [:parent-uid string?]
      [:block-uid string?]
-     [:block-order int?]]]])
+     [:position [:map
+                 [:ref-uid string?]
+                 [:relation [:or int? [:enum
+                                       :before
+                                       :after
+                                       :first
+                                       :last]]]]]]]])
 
 
 (def op-block-save

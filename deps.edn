@@ -24,9 +24,7 @@
   binaryage/devtools                    #:mvn{:version "1.0.3"}
   day8.re-frame/re-frame-10x            #:mvn{:version "1.1.13"}
   day8.re-frame/tracing                 #:mvn{:version "0.6.2"}
-  ;; TODO: use released version after >1.5.9 release.
-  org.flatland/ordered                  #:git{:url "https://github.com/clj-commons/ordered.git"
-                                              :sha "c6612e46a596842336b24f0bc6fac2d638c46224"}
+  org.flatland/ordered                  #:mvn{:version "1.15.10"}
   ;; backend
   ;;   logging hell
   org.clojure/tools.logging             #:mvn{:version "1.1.0"}
@@ -88,11 +86,13 @@
   :test
   {:extra-paths ["test"]
    :extra-deps {io.github.cognitect-labs/test-runner
-                #:git{:url "https://github.com/cognitect-labs/test-runner.git"
-                      :sha "48c3c67f98362ba1e20526db4eeb6996209c050a"
-                      :tag "v0.5.0"}}
+                {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                 :sha "48c3c67f98362ba1e20526db4eeb6996209c050a"
+                 :git/tag "v0.5.0"}}
    :main-opts ["-m" "cognitect.test-runner"]
    :exec-fn cognitect.test-runner.api/test}
 
+  :repl
+  {:extra-paths ["dev/clj"]}
   :athens
   {:main-opts ["-m" "athens.self-hosted.core"]}}}
