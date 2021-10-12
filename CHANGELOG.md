@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.18](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.17...v1.0.0-alpha.rtc.18) (2021-10-12)
+
+
+### Features
+
+* `:page/new` can be composite op. ([d5635a7](https://github.com/athensresearch/athens/commit/d5635a7b1195b414b803420c9bd4b1eece22da35))
+* reject optimistically transacted events ([fc7b4be](https://github.com/athensresearch/athens/commit/fc7b4be7356891592dfc4f500c916529e67eb823))
+
+
+### Bug Fixes
+
+* :git/sha issue and ordered was released. ([e6237d8](https://github.com/athensresearch/athens/commit/e6237d8b56daf13365624d901f5f38eabec66fc8))
+* cljs log converts args to js ([7d2b29f](https://github.com/athensresearch/athens/commit/7d2b29fef5490e87c456c2c764a6e70e5705bff8))
+* update carve to fix report bug ([fb36b0c](https://github.com/athensresearch/athens/commit/fb36b0cb2c9c951d1396b0d2b1f71f31aea98f28))
+
+
+### Refactors
+
+* remove unused old event tracking subs ([118e61d](https://github.com/athensresearch/athens/commit/118e61d94a9eb2c135e9ab7e6d8e2119849f61d0))
+* yarn server runs server, yarn server:uberjar builds uberjar ([1a44b48](https://github.com/athensresearch/athens/commit/1a44b4836bf67cb2e28f4bfb8727520bec7a9423))
+
+
+* concurrency compatible `:block/new-v2` op with tests. ([caabff8](https://github.com/athensresearch/athens/commit/caabff840c2c0b43cac26e979424f300240352f9))
+* move from lein to clj+deps.edn ([af01e2a](https://github.com/athensresearch/athens/commit/af01e2a0d0921ac740d19b7583ff904ded2f7bc3))
+
 ## [1.0.0-alpha.rtc.17](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.16...v1.0.0-alpha.rtc.17) (2021-10-07)
 
 
