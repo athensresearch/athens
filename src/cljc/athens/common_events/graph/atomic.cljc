@@ -11,20 +11,6 @@
 
 (defn make-block-new-op
   "Creates `:block/new` atomic op.
-   - `parent-uid` - `:block/uid` of parent block (or page)
-   - `block-uid` - `:block/uid` of new block to be created
-   - `block-order` - `:block/order` of new block to be created
-       - `int` or 2 keywords `:first` & `:last` (to say that we want this new block to be 1st among the children of `parent-uid` or last)"
-  [parent-uid block-uid block-order]
-  {:op/type    :block/new
-   :op/atomic? true
-   :op/args    {:parent-uid  parent-uid
-                :block-uid   block-uid
-                :block-order block-order}})
-
-
-(defn make-block-new-v2-op
-  "Creates `:block/new-v2` atomic op.
    - `block-uid` - `:block/uid` of new block to be created
    - `ref-uid` - `:block/uid` of location reference block
    - `rel-position` - new block's position relative to `ref-uid`
@@ -32,7 +18,7 @@
       - for children: `:first`, `:last` or `int` absolute number (but you know the cost of using it,
                       in concurrent environment you're party pooper for everyone else, just don't)"
   [block-uid ref-uid rel-position]
-  {:op/type    :block/new-v2
+  {:op/type    :block/new
    :op/atomic? true
    :op/args    {:block-uid block-uid
                 :position  {:ref-uid  ref-uid

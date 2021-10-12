@@ -1,8 +1,8 @@
 (ns athens.common-events.resolver.atomic
   (:require
-    [athens.common-db :as common-db]
+    [athens.common-db              :as common-db]
     [athens.common-events.resolver :as resolver]
-    [athens.common.utils :as utils]))
+    [athens.common.utils           :as utils]))
 
 
 (defmulti resolve-atomic-op-to-tx
@@ -12,40 +12,22 @@
 
 (defmethod resolve-atomic-op-to-tx :block/new
   [db {:op/keys [args]}]
-  (let [{:keys [parent-uid
-                block-uid
-                block-order]} args
-        parent-exists?        (common-db/e-by-av db :block/uid parent-uid)
-        now                   (utils/now-ts)
-        new-block             {:block/uid    block-uid
-                               :block/string ""
-                               :block/order  block-order
-                               :block/open   true
-                               :create/time  now
-                               :edit/time    now}
-        reindex               (cond-> [new-block]
-                                parent-exists?
-                                (concat
-                                  (common-db/inc-after db [:block/uid parent-uid] (dec block-order))))
-        tx-data               {:block/uid      parent-uid
-                               :block/children reindex
-                               :edit/time      now}]
-    [tx-data]))
-
-
-(defmethod resolve-atomic-op-to-tx :block/new-v2
-  [db {:op/keys [args]}]
   (let [{:keys [block-uid
                 position]}              args
         {:keys [ref-uid
                 relation]}              position
         ref-parent?                     (or (int? relation)
                                             (#{:first :last} relation))
-        ref-block                       (common-db/get-block db [:block/uid ref-uid])
+        ref-block-exists?               (int? (common-db/e-by-av db :block/uid ref-uid))
+        ref-block                       (when ref-block-exists?
+                                          (common-db/get-block db [:block/uid ref-uid]))
         {parent-block-uid :block/uid
          :as              parent-block} (if ref-parent?
-                                          ref-block
+                                          (if ref-block-exists?
+                                            ref-block
+                                            {:block/uid ref-uid})
                                           (common-db/get-parent db [:block/uid ref-uid]))
+        parent-block-exists?            (int? (common-db/e-by-av db :block/uid parent-block-uid))
         new-block-order                 (condp = relation
                                           :first  0
                                           :last   (->> parent-block
@@ -63,14 +45,16 @@
                                          :block/open   true
                                          :create/time  now
                                          :edit/time    now}
-        reindex                         (concat [new-block]
-                                                (common-db/inc-after db
-                                                                     [:block/uid parent-block-uid]
-                                                                     (dec new-block-order)))
-        tx-data                         {:block/uid      parent-block-uid
-                                         :block/children reindex
-                                         :edit/time      now}]
-    [tx-data]))
+        reindex                         (if-not parent-block-exists?
+                                          [new-block]
+                                          (concat [new-block]
+                                                  (common-db/inc-after db
+                                                                       [:block/uid parent-block-uid]
+                                                                       (dec new-block-order))))
+        tx-data                         [{:block/uid      parent-block-uid
+                                          :block/children reindex
+                                          :edit/time      now}]]
+    tx-data))
 
 
 ;; This is Atomic Graph Op, there is also composite version of it

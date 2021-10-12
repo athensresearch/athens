@@ -35,13 +35,11 @@
                      count))
             "Page should have only 1 child block after setup.")
       (let [block-split-op (graph-ops/build-block-split-op @@fixture/connection
-                                                           {:parent-uid      page-1-uid
-                                                            :old-block-uid   child-1-uid
-                                                            :new-block-uid   child-2-uid
-                                                            :new-block-order 1
-                                                            :old-string      start-str
-                                                            :new-string      new-tmp-string
-                                                            :index           2})
+                                                           {:old-block-uid child-1-uid
+                                                            :new-block-uid child-2-uid
+                                                            :old-string    start-str
+                                                            :new-string    new-tmp-string
+                                                            :index         2})
             block-split-tx (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-split-op)]
         (fixture/transact-with-middleware block-split-tx)
         (let [page         (common-db/get-block @@fixture/connection [:block/uid page-1-uid])
@@ -87,13 +85,11 @@
                        count))
               "Page should have only 2 children block after setup.")
         (let [block-split-op (graph-ops/build-block-split-op @@fixture/connection
-                                                             {:parent-uid      page-1-uid
-                                                              :old-block-uid   child-1-uid
-                                                              :new-block-uid   child-3-uid
-                                                              :new-block-order 1
-                                                              :old-string      start-str
-                                                              :new-string      start-str
-                                                              :index           2})
+                                                             {:old-block-uid child-1-uid
+                                                              :new-block-uid child-3-uid
+                                                              :old-string    start-str
+                                                              :new-string    start-str
+                                                              :index         2})
               block-split-tx (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-split-op)]
           (fixture/transact-with-middleware block-split-tx)
           (let [page        (common-db/get-block @@fixture/connection [:block/uid page-1-uid])
