@@ -1,4 +1,4 @@
-{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen"]
+{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen" "test"]
 
  :deps
  {org.clojure/clojure                   #:mvn{:version "1.10.3"}
@@ -84,8 +84,7 @@
    :ns-default build}
 
   :test
-  {:extra-paths ["test"]
-   :extra-deps {io.github.cognitect-labs/test-runner
+  {:extra-deps {io.github.cognitect-labs/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner.git"
                  :sha "48c3c67f98362ba1e20526db4eeb6996209c050a"
                  :git/tag "v0.5.0"}}
