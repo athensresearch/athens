@@ -33,6 +33,46 @@
     [tx-data]))
 
 
+(defmethod resolve-atomic-op-to-tx :block/new-v2
+  [db {:op/keys [args]}]
+  (let [{:keys [block-uid
+                position]}              args
+        {:keys [ref-uid
+                relation]}              position
+        ref-parent?                     (or (int? relation)
+                                            (#{:first :last} relation))
+        ref-block                       (common-db/get-block db [:block/uid ref-uid])
+        {parent-block-uid :block/uid
+         :as              parent-block} (if ref-parent?
+                                          ref-block
+                                          (common-db/get-parent db [:block/uid ref-uid]))
+        new-block-order                 (condp = relation
+                                          :first  0
+                                          :last   (->> parent-block
+                                                       :block/children
+                                                       (map :block/order)
+                                                       (reduce max 0)
+                                                       inc)
+                                          :before (:block/order ref-block)
+                                          :after  (inc (:block/order ref-block))
+                                          (inc relation))
+        now                             (utils/now-ts)
+        new-block                       {:block/uid    block-uid
+                                         :block/string ""
+                                         :block/order  new-block-order
+                                         :block/open   true
+                                         :create/time  now
+                                         :edit/time    now}
+        reindex                         (concat [new-block]
+                                                (common-db/inc-after db
+                                                                     [:block/uid parent-block-uid]
+                                                                     (dec new-block-order)))
+        tx-data                         {:block/uid      parent-block-uid
+                                         :block/children reindex
+                                         :edit/time      now}]
+    [tx-data]))
+
+
 ;; This is Atomic Graph Op, there is also composite version of it
 (defmethod resolve-atomic-op-to-tx :block/save
   [db {:op/keys [args]}]

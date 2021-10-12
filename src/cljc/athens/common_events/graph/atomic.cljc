@@ -23,6 +23,22 @@
                 :block-order block-order}})
 
 
+(defn make-block-new-v2-op
+  "Creates `:block/new-v2` atomic op.
+   - `block-uid` - `:block/uid` of new block to be created
+   - `ref-uid` - `:block/uid` of location reference block
+   - `rel-position` - new block's position relative to `ref-uid`
+      - for siblings: `:before` or `:after`
+      - for children: `:first`, `:last` or `int` absolute number (but you know the cost of using it,
+                      in concurrent environment you're party pooper for everyone else, just don't)"
+  [block-uid ref-uid rel-position]
+  {:op/type    :block/new-v2
+   :op/atomic? true
+   :op/args    {:block-uid block-uid
+                :position  {:ref-uid  ref-uid
+                            :relation rel-position}}})
+
+
 (defn make-block-save-op
   "Creates `:block/save` atomic op.
    - `block-uid` - `:block/uid` of block to be saved
