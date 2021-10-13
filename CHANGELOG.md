@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.23](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.22...v1.0.0-alpha.rtc.23) (2021-10-13)
+
+
+* more generous docker health checks ([eb1eba3](https://github.com/athensresearch/athens/commit/eb1eba30640d444b588b5161ebc10c50c740d3a3))
+
 ## [1.0.0-alpha.rtc.22](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.21...v1.0.0-alpha.rtc.22) (2021-10-13)
 
 
