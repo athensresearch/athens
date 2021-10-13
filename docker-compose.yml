@@ -23,10 +23,10 @@ services:
       - CONFIG_EDN=${CONFIG_EDN:-{:fluree {:servers ["http://fluree:8090"]}}}
     healthcheck:
       test: curl -f localhost:3010/health-check
-      interval: 5s
+      interval: 15s
       timeout: 60s
-      retries: 3
-      start_period: 5s
+      retries: 10
+      start_period: 15s
 
 
   nginx:
@@ -53,7 +53,7 @@ services:
       - ./athens-data/fluree:/var/lib/fluree
     healthcheck:
       test: curl -f localhost:8090/fdb/health
-      interval: 5s
+      interval: 15s
       timeout: 30s
       retries: 3
-      start_period: 5s
+      start_period: 15s
