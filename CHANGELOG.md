@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.19](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.18...v1.0.0-alpha.rtc.19) (2021-10-13)
+
+
+### Features
+
+* use fluree as an event-log with a datascript db ([e558ba0](https://github.com/athensresearch/athens/commit/e558ba044acab4134be16e31fa9d25d412e496f0))
+
+
+### Bug Fixes
+
+* datascript comp transacts using web transact fn ([d1e00f3](https://github.com/athensresearch/athens/commit/d1e00f3bccefb65e2969284c4b1c0f2550dfd455))
+
+
+* don't use prefix for docker services ([6de4ff8](https://github.com/athensresearch/athens/commit/6de4ff87016ed18eaad856bf111c955188196c5c))
+* include test in default source paths ([8cf2012](https://github.com/athensresearch/athens/commit/8cf2012f2510f3263839441bfe2ea3cd71ca83a2))
+* use immutable tag for fluree docker ref ([6013ae0](https://github.com/athensresearch/athens/commit/6013ae0e972a490f4f75b06420ebaa753f0889ea))
+
 ## [1.0.0-alpha.rtc.18](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.17...v1.0.0-alpha.rtc.18) (2021-10-12)
 
 
