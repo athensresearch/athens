@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.21](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.20...v1.0.0-alpha.rtc.21) (2021-10-13)
+
+
+* increase max memory for athens server ([44e9672](https://github.com/athensresearch/athens/commit/44e9672004561fa5c10fb493b453ba644ad23ba3))
+
 ## [1.0.0-alpha.rtc.20](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.19...v1.0.0-alpha.rtc.20) (2021-10-13)
 
 
