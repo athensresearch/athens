@@ -46,7 +46,6 @@
     :datascript/unlinked-references-link-all
     :datascript/selected-delete
     :datascript/block-open
-    :datascript/paste
     :datascript/paste-verbatim
     :datascript/delete-only-child
     :datascript/delete-merge-block

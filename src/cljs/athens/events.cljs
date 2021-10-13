@@ -1262,43 +1262,6 @@
 
 
 (reg-event-fx
-  :paste
-  (fn [{:keys [db]} [_ uid text :as args]]
-    (log/debug ":paste args" args)
-    (let [local?          (not (client/open?))
-          [uid embed-id]  (db/uid-and-embed-id uid)
-          {:keys [start
-                  value]} (textarea-keydown/destruct-target js/document.activeElement)
-          block-start?    (zero? start)]
-      (log/debug ":paste local?" local?
-                 ", args:" (pr-str args))
-      (if local?
-        (let [paste-event (common-events/build-paste-event (:remote/last-seen-tx db)
-                                                           uid
-                                                           text
-                                                           start
-                                                           value)
-              tx          (resolver/resolve-event-to-tx @db/dsdb paste-event)]
-          (log/debug ":paste tx" tx)
-          {:fx [[:dispatch [:transact tx]]
-                (when block-start?
-                  (let [block                  (-> tx first :block/children)
-                        {:block/keys [uid
-                                      string]} block
-                        n                      (count string)]
-                    [:editing/uid
-                     (cond-> uid
-                       embed-id (str "-embed-" embed-id))
-                     n]))]})
-        {:fx [[:dispatch
-               [:alert/js "Sorry, Paste event isn't ported to remote setup, yet."]
-               #_[:remote/paste {:uid   uid
-                                 :text  text
-                                 :start start
-                                 :value value}]]]}))))
-
-
-(reg-event-fx
   :paste-verbatim
   (fn [{:keys [db]} [_ uid text]]
     ;; NOTE: use of `value` is questionable, it's the DOM so it's what users sees,

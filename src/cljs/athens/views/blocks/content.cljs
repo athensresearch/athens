@@ -410,21 +410,7 @@
                                          :else (recur (inc order)
                                                       (conj res (assoc-in block [:block/children :block/order] order))
                                                       (next data))))))))]
-    (cljs.pprint/pprint lines)
-    (println "top uids" top_uids)
     (into [] tx-data)))
-
-
-(def exa
-  "- {{[[DONE]]}} Local
-      - {{[[DONE]]}} To the block of an empty block
-      - {{[[DONE]]}} To the last block of a page
-          - {{[[DONE]]}} Copy a single block
-          - {{[[DONE]]}} Copy a block with children
-          - {{[[DONE]]}} If the block is empty then retract it
-      - {{[[DONE]]}} To any empty block in a page
-      - {{[[DONE]]}}  To any block with content in the page
-- {{[[DONE]]}}  To  a open block with children")
 
 
 (defn text-to-internal-representation
@@ -436,8 +422,7 @@
                                 :block/string   "Block for copy paste"}]
         tx-data               (text-to-blocks text
                                               "copy-paste-uid"
-                                              (atom 0))
-        #_clipboard-data        #_(.. e -clipboardData)]
+                                              (atom 0))]
     ;; transact first block
     (d/transact! cpdb copy-paste-block)
 
@@ -446,11 +431,9 @@
 
     ;; get the internal representation 
     ;; we need the eid of the copy-paste-block because that is where all the blocks are added to
+    ;; all the copied data will be added as the children of the `copy-paste-block`
     (:block/children (common-db/get-block-document-for-copy @cpdb
-                                           (:db/id (common-db/get-block @cpdb [:block/uid "copy-paste-uid"]))))))
-
-
-(text-to-internal-representation exa)
+                                                            (:db/id (common-db/get-block @cpdb [:block/uid "copy-paste-uid"]))))))
 
 
 (defn textarea-paste
@@ -481,10 +464,9 @@
         internal?           (seq internal-representation)
         new-uids            (new-uids-map internal-representation)
         repr-with-new-uids  (into [] (update-uids internal-representation new-uids))
+
         ;; External to internal representation
         text-to-inter       (text-to-internal-representation text-data)
-        #_ext-representation  #_(some-> (.getData data "application/athens-ext-representation")
-                                         edn/read-string)
         line-breaks         (re-find #"\r?\n" text-data)
         no-shift            (-> @state :last-keydown :shift not)
         items               (array-seq (.. e -clipboardData -items))
@@ -495,7 +477,7 @@
     (println " Representation with updated uids")
     (pp/pprint repr-with-new-uids)
 
-    (println "External copied data internal representation")
+    (println "External copied data's internal representation")
     (pp/pprint text-to-inter)
     
     (cond
