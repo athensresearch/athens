@@ -411,7 +411,7 @@
 
 (defn text-to-internal-representation
   [text]
-  (let [cpdb                  (d/create-conn db/schema)
+  (let [cpdb                  (d/create-conn common-db/schema)
         copy-paste-block      [{:db/id          -1
                                 :block/uid      "copy-paste-uid"
                                 :block/children []
