@@ -56,7 +56,6 @@
    :datascript/unlinked-references-link-all
    :datascript/selected-delete
    :datascript/block-open
-   :datascript/paste
    :datascript/paste-verbatim
    :datascript/delete-only-child
    :datascript/delete-merge-block
@@ -428,14 +427,6 @@
      [:open?     boolean?]]]])
 
 
-(def datascript-paste
-  [:map
-   [:event/args
-    [:map
-     [:uid  string?
-      :text string?]]]])
-
-
 (def datascript-delete-only-child
   [:map
    [:event/args
@@ -487,7 +478,6 @@
    (dispatch :datascript/unindent-multi datascript-unindent-multi)
    (dispatch :datascript/paste-verbatim datascript-paste-verbatim)
    (dispatch :datascript/paste-internal datascript-paste-internal)
-   (dispatch :datascript/paste datascript-paste)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
    (dispatch :datascript/drop-child datascript-drop-child)
@@ -640,7 +630,6 @@
    (dispatch :datascript/unindent-multi datascript-unindent-multi true)
    (dispatch :datascript/paste-verbatim datascript-paste-verbatim true)
    (dispatch :datascript/paste-internal datascript-paste-internal true)
-   (dispatch :datascript/paste datascript-paste true)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)
    (dispatch :datascript/drop-child datascript-drop-child true)

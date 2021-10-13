@@ -545,23 +545,6 @@
                      :internal-representation internal-representation}}))
 
 
-(defn build-paste-event
-  "Builds `:datascript/paste` event with:
-  - uid  : The uid of block to which text is to be pasted
-  - text : The text to be pasted
-  - start: cursor position in block
-  - value: current `:block/string` value"
-  [last-tx uid text start value]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/paste
-     :event/args    {:uid   uid
-                     :text  text
-                     :start start
-                     :value value}}))
-
-
 (defn build-delete-only-child-event
   "Builds `:datascript/delete-only-child` event with:
   - uid  : The uid of block to delete"
