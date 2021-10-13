@@ -88,4 +88,5 @@
   :repl
   {:extra-paths ["dev/clj"]}
   :athens
-  {:main-opts ["-m" "athens.self-hosted.core"]}}}
+  {:extra-paths ["dev/clj"]
+   :main-opts   ["-m" "athens.self-hosted.core"]}}}

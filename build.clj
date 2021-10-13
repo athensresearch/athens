@@ -9,13 +9,16 @@
 (def class-dir "target/classes")
 (def basis (b/create-basis {:project "deps.edn"}))
 (def uber-file "target/athens-lan-party-standalone.jar")
+(def src-dirs ["src/clj" "src/cljc"])
 
 
 (defn uber
   [_]
   (b/delete {:path "target"})
+  (b/copy-dir {:src-dirs src-dirs
+               :target-dir class-dir})
   (b/compile-clj {:basis basis
-                  :src-dirs ["src/clj" "src/cljc"]
+                  :src-dirs src-dirs
                   :class-dir class-dir})
   (b/uber {:class-dir class-dir
            :uber-file uber-file

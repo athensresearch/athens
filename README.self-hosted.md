@@ -28,11 +28,11 @@ yarn server
 ```
 
 The first command starts the Fluree database using docker to persist data.
-If you set `:in-memory? false` in `src/clj/config.edn` no data is persisted and this command is not needed.
+If you set `:in-memory? false` in `dev/clj/config.edn` no data is persisted and this command is not needed.
 
-The second command will start HTTP server on port 3010, unless you've modified `src/clj/config.edn`.
+The second command will start HTTP server on port 3010, unless you've modified `dev/clj/config.edn`.
 
-Also nREPL server is started on port 8877, unless you've modified `src/clj/config.edn`.
+Also nREPL server is started on port 8877, unless you've modified `dev/clj/config.edn`.
 
 
 ### Developing Athens Self-Hosted Server

@@ -12,21 +12,22 @@
 
   (start
     [component]
-    (let [nrepl-conf    (get-in config [:config :nrepl])
-          port          (get nrepl-conf :port)
-          nrepl-handler #(do (require 'cider.nrepl)
-                             (ns-resolve 'cider.nrepl 'cider-nrepl-handler))
-          handler       (nrepl-handler)]
-      (log/info "Starting NREPL server with config:" (pr-str nrepl-conf))
-      (assoc component :server (nrepl/start-server :port port :handler handler))))
+    (if-let [nrepl-conf (get-in config [:config :nrepl])]
+      (let [port          (:port nrepl-conf)
+            nrepl-handler #(do (require 'cider.nrepl)
+                               (ns-resolve 'cider.nrepl 'cider-nrepl-handler))
+            handler       (nrepl-handler)]
+        (log/info "Starting NREPL server with config:" (pr-str nrepl-conf)) 
+        (assoc component :server (nrepl/start-server :port port :handler handler)))
+      component))
 
 
   (stop
     [component]
-    (log/info "Stopping NREPL server.")
     (when server
-      (nrepl/stop-server server)
-      (assoc component :server nil))))
+      (log/info "Stopping NREPL server.")
+      (nrepl/stop-server server))
+    (dissoc component :server)))
 
 
 (defn new-nrepl-server
