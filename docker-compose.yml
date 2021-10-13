@@ -1,3 +1,6 @@
+# NB: Always use immutable tags (e.g. not latest etc) on docker refs.
+# Any :latest tags on this file will be replaced with athens release version on release.
+
 version: "3"
 services:
   athens:
@@ -34,7 +37,7 @@ services:
   fluree:
     # Under default settings maximum recommended event size is 2mb.
     # Can be increased via fdb-memory-reindex-max to up to 10mb.
-    image: fluree/ledger:latest
+    image: fluree/ledger:fix-fulltext-wildcards
     restart: always
     ports:
       - 8090:8090
