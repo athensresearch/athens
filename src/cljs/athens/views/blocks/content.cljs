@@ -4,6 +4,7 @@
     [athens.common.utils :as utils]
     [athens.config :as config]
     [athens.db :as db]
+    [datascript.core                      :as d]
     [athens.electron.images :as images]
     [athens.events.selection :as select-events]
     [athens.parse-renderer :refer [parse-and-render]]
@@ -261,6 +262,10 @@
       (rf/dispatch [::select-events/set-items selection-order]))))
 
 
+
+
+
+
 ;; Event Handlers
 
 ;; TODO Move the following to correct location
@@ -340,6 +345,114 @@
     blocks-with-replaced-strings))
 
 
+(defn text-to-blocks
+  [text uid root-order]
+  (let [;; Split raw text by line
+        lines       (->> (clojure.string/split-lines text)
+                         (filter (comp not clojure.string/blank?)))
+        ;; Count left offset
+        left-counts (->> lines
+                         (map #(re-find #"^\s*(-|\*)?" %))
+                         (map #(-> % first count)))
+        ;; Trim * - and whitespace
+        sanitize    (map (fn [x] (clojure.string/replace x #"^\s*(-|\*)?\s*" ""))
+                         lines)
+        ;; Generate blocks with tempids
+        blocks      (map-indexed (fn [idx x]
+                                   {:db/id        (dec (* -1 idx))
+                                    :block/string x
+                                    :block/open   true
+                                    :block/uid    (utils/gen-block-uid)}) ; TODO(BUG): UID generation during resolution
+                                 sanitize)
+        top_uids    []
+        ;; Count blocks
+        n           (count blocks)
+        ;; Assign parents
+        parents     (loop [i   1
+                           res [(first blocks)]]
+                      (if (= n i)
+                        res
+                        ;; Nested loop: worst-case O(n^2)
+                        (recur (inc i)
+                               (loop [j (dec i)]
+                                 ;; If j is negative, that means the loop has been compared to every previous line,
+                                 ;; and there are no previous lines with smaller left-offsets, which means block i
+                                 ;; should be a root block.
+                                 ;; Otherwise, block i's parent is the first block with a smaller left-offset
+                                 (if (neg? j)
+                                   (do
+                                     (conj top_uids (nth blocks i))
+                                     (conj res (nth blocks i)))
+                                   (let [curr-count (nth left-counts i)
+                                         prev-count (nth left-counts j nil)]
+                                     (if (< prev-count curr-count)
+                                       (conj res {:db/id          (:db/id (nth blocks j))
+                                                  :block/children (nth blocks i)})
+                                       (recur (dec j)))))))))
+        ;; assign orders for children. order can be local or based on outer context where paste originated
+        ;; if local, look at order within group. if outer, use root-order
+        tx-data     (->> (group-by :db/id parents)
+                         ;; maps smaller than size 8 are ordered, larger are not https://stackoverflow.com/a/15500064
+                         (into (sorted-map-by >))
+                         (mapcat (fn [[_tempid blocks]]
+                                   (loop [order 0
+                                          res   []
+                                          data  blocks]
+                                     (let [{:block/keys [children] :as block} (first data)]
+                                       (cond
+                                         (nil? block) res
+                                         (nil? children) (let [new-res (conj res {:db/id          [:block/uid uid]
+                                                                                  :block/children (assoc block :block/order @root-order)})]
+                                                           (swap! root-order inc)
+                                                           (recur order
+                                                                  new-res
+                                                                  (next data)))
+                                         :else (recur (inc order)
+                                                      (conj res (assoc-in block [:block/children :block/order] order))
+                                                      (next data))))))))]
+    (cljs.pprint/pprint lines)
+    (println "top uids" top_uids)
+    (into [] tx-data)))
+
+
+(def exa
+  "- {{[[DONE]]}} Local
+      - {{[[DONE]]}} To the block of an empty block
+      - {{[[DONE]]}} To the last block of a page
+          - {{[[DONE]]}} Copy a single block
+          - {{[[DONE]]}} Copy a block with children
+          - {{[[DONE]]}} If the block is empty then retract it
+      - {{[[DONE]]}} To any empty block in a page
+      - {{[[DONE]]}}  To any block with content in the page
+- {{[[DONE]]}}  To  a open block with children")
+
+
+(defn text-to-internal-representation
+  [text]
+  (let [cpdb                  (d/create-conn db/schema)
+        copy-paste-block      [{:db/id          -1
+                                :block/uid      "copy-paste-uid"
+                                :block/children []
+                                :block/string   "Block for copy paste"}]
+        tx-data               (text-to-blocks text
+                                              "copy-paste-uid"
+                                              (atom 0))
+        #_clipboard-data        #_(.. e -clipboardData)]
+    ;; transact first block
+    (d/transact! cpdb copy-paste-block)
+
+    ;; transact the copied blocks
+    (d/transact! cpdb tx-data)
+
+    ;; get the internal representation 
+    ;; we need the eid of the copy-paste-block because that is where all the blocks are added to
+    (:block/children (common-db/get-block-document-for-copy @cpdb
+                                           (:db/id (common-db/get-block @cpdb [:block/uid "copy-paste-uid"]))))))
+
+
+(text-to-internal-representation exa)
+
+
 (defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
   Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
@@ -368,7 +481,10 @@
         internal?           (seq internal-representation)
         new-uids            (new-uids-map internal-representation)
         repr-with-new-uids  (into [] (update-uids internal-representation new-uids))
-
+        ;; External to internal representation
+        text-to-inter       (text-to-internal-representation text-data)
+        #_ext-representation  #_(some-> (.getData data "application/athens-ext-representation")
+                                         edn/read-string)
         line-breaks         (re-find #"\r?\n" text-data)
         no-shift            (-> @state :last-keydown :shift not)
         items               (array-seq (.. e -clipboardData -items))
@@ -379,6 +495,9 @@
     (println " Representation with updated uids")
     (pp/pprint repr-with-new-uids)
 
+    (println "External copied data internal representation")
+    (pp/pprint text-to-inter)
+    
     (cond
       ;; For internal representation
       internal?
@@ -402,7 +521,7 @@
       (and line-breaks no-shift)
       (do
         (.. e preventDefault)
-        (rf/dispatch [:paste uid text-data]))
+        (rf/dispatch [:paste-internal uid text-to-inter]))
 
       (not no-shift)
       (do
