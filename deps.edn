@@ -55,11 +55,7 @@
   :cljstyle
   {:deps      {mvxcvi/cljstyle
                #:git{:url "https://github.com/greglook/cljstyle.git"
-                     :sha "13fd2a3ff4097f1ed5c7ec96baf13e547ac2a26b"}
-
-               ;; Workaround for https://github.com/greglook/cljstyle/issues/79
-               rewrite-clj/rewrite-clj
-               #:mvn{:version "1.0.594-alpha"}}
+                     :sha "14c18e5b593c39bc59f10df1b894c31a0020dc49"}}
    :main-opts ["-m" "cljstyle.main"]}
 
   :clj-kondo
