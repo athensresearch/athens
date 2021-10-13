@@ -4,11 +4,9 @@
     [athens.common-events.resolver.atomic :as atomic]
     [athens.common.logging                :as log]
     [athens.self-hosted.event-log         :as event-log]
+    [athens.self-hosted.web.datascript    :as web-datascript]
     [com.stuartsierra.component           :as component]
-    [datascript.core                      :as d])
-  (:import
-    (clojure.lang
-      ExceptionInfo)))
+    [datascript.core                      :as d]))
 
 
 (defrecord Datascript
@@ -27,17 +25,7 @@
 
       (log/info "Replaying" (count events) "events into empty Datascript conn...")
       (doseq [[id data] events]
-        (try
-          (d/transact! conn (atomic/resolve-to-tx @conn data))
-          (catch ExceptionInfo ex
-            (let [err-msg   (ex-message ex)
-                  err-data  (ex-data ex)
-                  err-cause (ex-cause ex)]
-              (log/error ex (str "event-id: " id
-                                 "Replaying transaction FAIL: "
-                                 (pr-str {:msg   err-msg
-                                          :data  err-data
-                                          :cause err-cause})))))))
+        (web-datascript/transact! conn id (atomic/resolve-to-tx @conn data)))
       (log/info "✅ Replayed" (count events) "events.")
 
       ;; NB: these could be events as well, and then we wouldn't always rerun them.
