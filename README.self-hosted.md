@@ -76,7 +76,7 @@ Pick a [release](https://github.com/athensresearch/athens/releases you'd like to
 For example, for `v1.0.0-alpha.rtc.12`:
 
 ```sh
-curl https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.12/docker-compose.yml --output docker-compose.yml
+curl -L -o docker-compose.yml https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.12/docker-compose.yml
 docker compose up
 ```
 
