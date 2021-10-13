@@ -4,6 +4,7 @@
     [athens.common-events.schema       :as schema]
     [athens.common.logging             :as log]
     [athens.self-hosted.clients        :as clients]
+    [athens.self-hosted.event-log      :as event-log]
     [athens.self-hosted.web.datascript :as datascript]
     [athens.self-hosted.web.presence   :as presence]
     [clojure.set                       :as set]
@@ -19,17 +20,23 @@
 
 
 (defn close-handler
-  [datahike channel status]
+  [datascript channel status]
   (let [username (clients/get-client-username channel)]
     (clients/remove-client! channel)
     ;; Notify clients after removing the one that left.
-    (presence/goodbye-handler datahike username)
+    (presence/goodbye-handler datascript username)
     (log/info "username:" username "!! closed connection, status:" status)))
+
+
+(defn- log-event?
+  [{:event/keys [type]}]
+  (or (contains? datascript/supported-event-types type)
+      (= :op/atomic type)))
 
 
 (defn- valid-event-handler
   "Processes valid event received from the client."
-  [datahike server-password channel username {:event/keys [id type] :as data}]
+  [datascript fluree in-memory? server-password channel username {:event/keys [id type] :as data}]
   (if (and (false? username)
            (not= :presence/hello type))
     (do
@@ -37,25 +44,30 @@
       (clients/send! channel (common-events/build-event-rejected id
                                                                  :introduce-yourself
                                                                  {:protocol-error :client-not-introduced})))
-    (if-let [result (cond
-                      (contains? presence/supported-event-types type)
-                      (presence/presence-handler (:conn datahike) server-password channel data)
+    (do
+      (when (and (not in-memory?)
+                 (log-event? data))
+        (event-log/add-event! (:conn fluree) id data))
 
-                      (contains? datascript/supported-event-types type)
-                      (datascript/datascript-handler (:conn datahike) channel data)
+      (if-let [result (cond
+                        (contains? presence/supported-event-types type)
+                        (presence/presence-handler (:conn datascript) server-password channel data)
 
-                      (= :op/atomic type)
-                      (datascript/atomic-op-handler (:conn datahike) channel data)
+                        (contains? datascript/supported-event-types type)
+                        (datascript/datascript-handler (:conn datascript) channel data)
 
-                      :else
-                      (do
-                        (log/error username "-> receive-handler, unsupported event:" (pr-str type))
-                        (common-events/build-event-rejected id
-                                                            (str "Unsupported event: " type)
-                                                            {:unsupported-type type})))]
-      (merge {:event/id id}
-             result)
-      (log/error "username:" username ", event-id:" id ", type:" type "No result for `valid-event-handler`"))))
+                        (= :op/atomic type)
+                        (datascript/atomic-op-handler (:conn datascript) channel data)
+
+                        :else
+                        (do
+                          (log/error username "-> receive-handler, unsupported event:" (pr-str type))
+                          (common-events/build-event-rejected id
+                                                              (str "Unsupported event: " type)
+                                                              {:unsupported-type type})))]
+        (merge {:event/id id}
+               result)
+        (log/error "username:" username ", event-id:" id ", type:" type "No result for `valid-event-handler`")))))
 
 
 (def ^:private forwardable-events
@@ -65,7 +77,7 @@
 
 
 (defn- make-receive-handler
-  [datahike server-password]
+  [datascript fluree in-memory? server-password]
   (fn receive-handler
     [channel msg]
     (let [username (clients/get-client-username channel)
@@ -79,7 +91,7 @@
         (let [{:event/keys [id type]} data]
           (log/debug "username:" username ", event-id:" id ", type:" type "received valid event")
           (let [{:event/keys [status]
-                 :as         result} (valid-event-handler datahike server-password channel username data)]
+                 :as         result} (valid-event-handler datascript fluree in-memory? server-password channel username data)]
             (log/debug "username:" username ", event-id:" id ", processed with status:" status)
             ;; forward to everyone if accepted
             (when (and (= :accepted status)
@@ -91,20 +103,20 @@
 
 
 (defn- make-websocket-handler
-  [datahike server-password]
+  [datascript fluree in-memory? server-password]
   (fn websocket-handler
     [request]
     (http/as-channel request
                      {:on-open    #'open-handler
-                      :on-close   (partial close-handler (:conn datahike))
-                      :on-receive (make-receive-handler datahike server-password)})))
+                      :on-close   (partial close-handler (:conn datascript))
+                      :on-receive (make-receive-handler datascript fluree in-memory? server-password)})))
 
 
 (defn- make-ws-route
-  [datahike server-password]
+  [datascript fluree in-memory? server-password]
   (compojure/routes
     (compojure/GET "/ws" []
-                   (make-websocket-handler datahike server-password))))
+                   (make-websocket-handler datascript fluree in-memory? server-password))))
 
 
 (compojure/defroutes health-check-route
@@ -112,13 +124,13 @@
 
 
 (defn make-handler
-  [datahike server-password]
+  [datascript fluree in-memory? server-password]
   (compojure/routes health-check-route
-                    (make-ws-route datahike server-password)))
+                    (make-ws-route datascript fluree in-memory? server-password)))
 
 
 (defrecord WebServer
-  [config httpkit datahike]
+  [config httpkit datascript fluree]
 
   component/Lifecycle
 
@@ -128,11 +140,13 @@
       (do
         (log/warn "Server already started, it's ok. Though it means we're not managing it properly.")
         component)
-      (let [http-conf       (get-in config [:config :http])
-            server-password (get-in config [:config :password])]
-        (log/info "Starting WebServer with config: " http-conf)
+      (let [{http-conf       :http
+             server-password :password
+             in-memory?      :in-memory?}
+            (:config config)]
+        (log/info "Starting WebServer with config:" http-conf ", in-memory?" in-memory?)
         (assoc component :httpkit
-               (http/run-server (make-handler datahike server-password) http-conf)))))
+               (http/run-server (make-handler datascript fluree in-memory? server-password) http-conf)))))
 
 
   (stop

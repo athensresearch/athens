@@ -7,8 +7,7 @@
     [athens.patterns :as patterns]
     [clojure.set :as set]
     [clojure.string :as string]
-    #?(:clj  [datahike.api :as d]
-       :cljs [datascript.core :as d])))
+    [datascript.core :as d]))
 
 
 (defn between

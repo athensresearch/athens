@@ -1,4 +1,4 @@
-{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen"]
+{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen" "test"]
 
  :deps
  {org.clojure/clojure                   #:mvn{:version "1.10.3"}
@@ -33,10 +33,8 @@
   com.stuartsierra/component            #:mvn{:version "1.0.0"}
   ;;   configuration mgmt
   yogthos/config                        #:mvn{:version "1.1.7"}
-  ;;   Datahike
-  ;;   TODO: monitor https://github.com/replikativ/datahike/issues/364 and
-  ;;   and uncomment tests that refer to this issue when it is fixed.
-  io.replikativ/datahike                #:mvn{:version "0.3.7-SNAPSHOT"}
+  ;;   Fluree
+  com.fluree/db                         #:mvn{:version "1.0.0-rc30"}
   ;; web server
   http-kit/http-kit                     #:mvn{:version "2.5.3"}
   compojure/compojure                   #:mvn{:version "1.6.2"}
@@ -84,8 +82,7 @@
    :ns-default build}
 
   :test
-  {:extra-paths ["test"]
-   :extra-deps {io.github.cognitect-labs/test-runner
+  {:extra-deps {io.github.cognitect-labs/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner.git"
                  :sha "48c3c67f98362ba1e20526db4eeb6996209c050a"
                  :git/tag "v0.5.0"}}

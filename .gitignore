@@ -39,5 +39,6 @@ dist
 # docker compose templating backup
 docker-compose.yml.bk
 
+# dev mode server data
 athens-data/*
 !athens-data/README.md

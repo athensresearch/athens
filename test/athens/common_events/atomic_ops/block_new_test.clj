@@ -6,7 +6,7 @@
     [athens.common-events.resolver.atomic :as atomic-resolver]
     #_[clojure.pprint                       :as pp]
     [clojure.test                         :as t]
-    [datahike.api                         :as d]))
+    [datascript.core                      :as d]))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
@@ -41,8 +41,8 @@
               event-1 (atomic-graph-ops/make-block-new-op block-3-1-uid block-1-uid :after)
               ;; intention: add block after `block-2-uid`
               event-2 (atomic-graph-ops/make-block-new-op block-3-2-uid block-2-uid :after)]
-          (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-1))
-          (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-2))
+          (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-1))
+          (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-2))
           (t/is (= 1 (:block/order (common-db/get-block @@fixture/connection
                                                         [:block/uid block-3-1-uid]))))
           (t/is (= 3 (:block/order (common-db/get-block @@fixture/connection
@@ -79,14 +79,14 @@
               ;; intention: add block after `block-2-uid`
               event-2     (atomic-graph-ops/make-block-new-op block-3-2-uid block-2-uid :after)
               event-2-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-2)]
-          (d/transact @fixture/connection event-2-txs)
+          (d/transact! @fixture/connection event-2-txs)
           (let [block-2   (common-db/get-block @@fixture/connection
                                                [:block/uid block-2-uid])
                 block-3-2 (common-db/get-block @@fixture/connection
                                                [:block/uid block-3-2-uid])]
             (t/is (= block-2-order-prev (:block/order block-2)))
             (t/is (= 2 (:block/order block-3-2))))
-          (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-1))
+          (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection event-1))
           (let [block-3-1 (common-db/get-block @@fixture/connection
                                                [:block/uid block-3-1-uid])
                 block-3-2 (common-db/get-block @@fixture/connection
@@ -111,8 +111,8 @@
                                                    :block/order  0}]}]]
           (fixture/transact-with-middleware setup-txs)
           (let [block-new-v2-op (atomic-graph-ops/make-block-new-op block-2-uid block-1-uid :before)]
-            (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                                     block-new-v2-op))
+            (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                                      block-new-v2-op))
             (let [parent  (common-db/get-block @@fixture/connection [:block/uid parent-block-uid])
                   block-1 (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
                   block-2 (common-db/get-block @@fixture/connection [:block/uid block-2-uid])]
@@ -136,8 +136,8 @@
                                                    :block/order  1}]}]]
           (fixture/transact-with-middleware setup-txs)
           (let [block-new-v2-op (atomic-graph-ops/make-block-new-op block-3-uid block-2-uid :before)]
-            (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                                     block-new-v2-op))
+            (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                                      block-new-v2-op))
             (let [parent  (common-db/get-block @@fixture/connection [:block/uid parent-block-uid])
                   block-1 (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
                   block-2 (common-db/get-block @@fixture/connection [:block/uid block-2-uid])
@@ -160,8 +160,8 @@
                                                    :block/order  0}]}]]
           (fixture/transact-with-middleware setup-txs)
           (let [block-new-v2-op (atomic-graph-ops/make-block-new-op block-2-uid block-1-uid :after)]
-            (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                                     block-new-v2-op))
+            (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                                      block-new-v2-op))
             (let [parent  (common-db/get-block @@fixture/connection [:block/uid parent-block-uid])
                   block-1 (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
                   block-2 (common-db/get-block @@fixture/connection [:block/uid block-2-uid])]
@@ -185,8 +185,8 @@
                                                    :block/order  1}]}]]
           (fixture/transact-with-middleware setup-txs)
           (let [block-new-v2-op (atomic-graph-ops/make-block-new-op block-3-uid block-1-uid :after)]
-            (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                                     block-new-v2-op))
+            (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                                      block-new-v2-op))
             (let [parent  (common-db/get-block @@fixture/connection [:block/uid parent-block-uid])
                   block-1 (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
                   block-2 (common-db/get-block @@fixture/connection [:block/uid block-2-uid])
@@ -208,8 +208,8 @@
                                                  :block/order  0}]}]]
         (fixture/transact-with-middleware setup-txs)
         (let [block-new-v2-op (atomic-graph-ops/make-block-new-op block-2-uid parent-block-uid :first)]
-          (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                                   block-new-v2-op))
+          (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                                    block-new-v2-op))
           (let [parent  (common-db/get-block @@fixture/connection [:block/uid parent-block-uid])
                 block-1 (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
                 block-2 (common-db/get-block @@fixture/connection [:block/uid block-2-uid])]
@@ -230,7 +230,7 @@
         (fixture/transact-with-middleware setup-txs)
         (let [block-new-v2-op  (atomic-graph-ops/make-block-new-op block-2-uid parent-block-uid :last)
               block-new-v2-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-new-v2-op)]
-          (d/transact @fixture/connection block-new-v2-txs)
+          (d/transact! @fixture/connection block-new-v2-txs)
           (let [parent  (common-db/get-block @@fixture/connection [:block/uid parent-block-uid])
                 block-1 (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
                 block-2 (common-db/get-block @@fixture/connection [:block/uid block-2-uid])]
@@ -254,8 +254,8 @@
                                                  :block/order  1}]}]]
         (fixture/transact-with-middleware setup-txs)
         (let [block-new-v2-op (atomic-graph-ops/make-block-new-op block-3-uid parent-block-uid 1)]
-          (d/transact @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                                   block-new-v2-op))
+          (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                                    block-new-v2-op))
           (let [parent  (common-db/get-block @@fixture/connection [:block/uid parent-block-uid])
                 block-1 (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
                 block-2 (common-db/get-block @@fixture/connection [:block/uid block-2-uid])

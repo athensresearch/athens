@@ -1,12 +1,11 @@
 (ns athens.common-events.atomic-ops.page-new-test
   (:require
-    [athens.common-db                     :as common-db]
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [clojure.test                         :as t]
-    [datahike.api                         :as d]))
+    [datascript.core                      :as d]))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
@@ -20,7 +19,7 @@
                                                             test-page-uid)
           page-new-txs   (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                   page-new-event)]
-      (d/transact @fixture/connection page-new-txs)
+      (d/transact! @fixture/connection page-new-txs)
       (let [e-by-title (d/q '[:find ?e
                               :where [?e :node/title ?title]
                               :in $ ?title]

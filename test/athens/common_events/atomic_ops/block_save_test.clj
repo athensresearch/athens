@@ -5,7 +5,7 @@
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [clojure.test                         :as t]
-    [datahike.api                         :as d]))
+    [datascript.core                      :as d]))
 
 
 (t/use-fixtures :each fixture/integration-test-fixture)
@@ -70,7 +70,7 @@
                                          :block/string   empty-str
                                          :block/order    0
                                          :block/children []}}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [child-1-eid    (common-db/e-by-av @@fixture/connection
                                               :block/uid child-1-uid)
             block-save-op  (graph-ops/build-block-save-op @@fixture/connection
@@ -81,7 +81,7 @@
                                                                     block-save-op)]
         (t/is (= empty-str (common-db/v-by-ea @@fixture/connection
                                               child-1-eid :block/string)))
-        (d/transact @fixture/connection block-save-txs)
+        (d/transact! @fixture/connection block-save-txs)
         (t/is (= new-str (common-db/v-by-ea @@fixture/connection
                                             child-1-eid :block/string))))))
 
@@ -97,7 +97,7 @@
                                          :block/string   empty-str
                                          :block/order    0
                                          :block/children []}}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [child-1-eid    (common-db/e-by-av @@fixture/connection
                                               :block/uid child-1-uid)
             block-save-op  (graph-ops/build-block-save-op @@fixture/connection
@@ -110,7 +110,7 @@
                                        :node/title page-title)))
         (t/is (= empty-str (common-db/v-by-ea @@fixture/connection
                                               child-1-eid :block/string)))
-        (d/transact @fixture/connection block-save-txs)
+        (d/transact! @fixture/connection block-save-txs)
         (t/is (not (nil? (common-db/e-by-av @@fixture/connection
                                             :node/title page-title))))
         (t/is (= new-str (common-db/v-by-ea @@fixture/connection

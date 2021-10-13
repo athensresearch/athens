@@ -1,5 +1,6 @@
 (ns athens.db
   (:require
+    [athens.common-db :as common-db]
     [athens.patterns :as patterns]
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
@@ -205,20 +206,7 @@
 
 ;; -- Datascript and Posh ------------------------------------------------
 
-(def schema
-  {:schema/version      {}
-   :block/uid           {:db/unique :db.unique/identity}
-   :node/title          {:db/unique :db.unique/identity}
-   :attrs/lookup        {:db/cardinality :db.cardinality/many}
-   :block/children      {:db/cardinality :db.cardinality/many
-                         :db/valueType   :db.type/ref}
-   :block/refs          {:db/cardinality :db.cardinality/many
-                         :db/valueType   :db.type/ref}
-   ;; TODO: do we really still use it?
-   :block/remote-id     {:db/unique :db.unique/identity}})
-
-
-(defonce dsdb (d/create-conn schema))
+(defonce dsdb (d/create-conn common-db/schema))
 (defonce dsdb-snapshot (atom nil))
 
 

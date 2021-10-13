@@ -33,7 +33,7 @@
     "//server scripts": "",
     "server": "clojure -M:athens",
     "server:uberjar": "clojure -T:build uber",
-    "server:test": "clojure -X:test :excludes '[:stress]'",
+    "server:test": "clojure -X:test",
     "server:test:only": "clojure -M:test --var",
     "server:repl": "clojure -A:repl"
   },

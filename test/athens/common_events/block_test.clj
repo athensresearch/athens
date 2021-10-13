@@ -7,7 +7,7 @@
     [athens.common.logging         :as log]
     [clojure.pprint                :as pp]
     [clojure.test                  :as t]
-    [datahike.api                  :as d]))
+    [datascript.core               :as d]))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
@@ -23,7 +23,7 @@
                         :block/string   string-init
                         :block/order    0
                         :block/children []}]]
-      (d/transact @fixture/connection setup-tx)
+      (d/transact! @fixture/connection setup-tx)
       (let [block-save-event             (common-events/build-block-save-event -1
                                                                                block-uid
                                                                                string-new
@@ -33,7 +33,7 @@
             {block-string :block/string} (common-db/get-block @@fixture/connection
                                                               [:block/uid  block-uid])]
         (t/is (= string-init block-string))
-        (d/transact @fixture/connection block-save-txs)
+        (d/transact! @fixture/connection block-save-txs)
         (let [{new-block-string :block/string} (common-db/get-block @@fixture/connection
                                                                     [:block/uid  block-uid])]
           (t/is (= string-new new-block-string)))))))
@@ -52,7 +52,7 @@
                                          :block/string   ""
                                          :block/order    0
                                          :block/children []}}]]
-      (d/transact @fixture/connection setup-tx)
+      (d/transact! @fixture/connection setup-tx)
       (let [block-open-event   (common-events/build-block-open-event -1
                                                                      block-uid
                                                                      true)
@@ -61,7 +61,7 @@
             current-open-state (:block/open (common-db/get-block @@fixture/connection [:block/uid block-uid]))]
 
         (t/is (= false current-open-state))
-        (d/transact @fixture/connection block-open-txs)
+        (d/transact! @fixture/connection block-open-txs)
 
         (let [current-open-state (:block/open (common-db/get-block @@fixture/connection [:block/uid block-uid]))]
           (t/is (= true current-open-state)))))))
@@ -80,7 +80,7 @@
                                          :block/string   ""
                                          :block/order    0
                                          :block/children []}}]]
-      (d/transact @fixture/connection setup-tx)
+      (d/transact! @fixture/connection setup-tx)
       (let [block-open-event   (common-events/build-block-open-event -1
                                                                      block-uid
                                                                      false)
@@ -89,7 +89,7 @@
             current-open-state (:block/open (common-db/get-block @@fixture/connection [:block/uid block-uid]))]
 
         (t/is (= true current-open-state))
-        (d/transact @fixture/connection block-open-txs)
+        (d/transact! @fixture/connection block-open-txs)
 
         (let [current-open-state (:block/open (common-db/get-block @@fixture/connection [:block/uid block-uid]))]
           (t/is (= false current-open-state)))))))
@@ -108,7 +108,7 @@
                                          :block/string   ""
                                          :block/order    0
                                          :block/children []}}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [page-1-eid      (common-db/e-by-av @@fixture/connection
                                                :block/uid page-1-uid)
             child-1-eid     (common-db/e-by-av @@fixture/connection
@@ -123,7 +123,7 @@
                               :in $ ?eid
                               :where [?eid :block/children ?child]]]
         (t/is (= #{[child-1-eid]} (d/q query-children @@fixture/connection page-1-eid)))
-        (d/transact @fixture/connection new-block-txs)
+        (d/transact! @fixture/connection new-block-txs)
         (let [child-2-eid (common-db/e-by-av @@fixture/connection
                                              :block/uid child-2-uid)
               children (d/q query-children @@fixture/connection page-1-eid)]
@@ -153,7 +153,7 @@
                                                                  :block/string   child-1-init-value
                                                                  :block/order    0
                                                                  :block/children []}}}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
 
       (let [parent-eid        (common-db/e-by-av @@fixture/connection
                                                  :block/uid parent-uid)
@@ -183,7 +183,7 @@
                  child-1))
 
         ;; split the block
-        (d/transact @fixture/connection split-block-txs)
+        (d/transact! @fixture/connection split-block-txs)
         (let [child-2-eid (common-db/e-by-av @@fixture/connection
                                              :block/uid child-2-uid)
               children    (d/q query-children @@fixture/connection parent-eid)
@@ -226,7 +226,7 @@
                                           :block/string   ""
                                           :block/order    0
                                           :block/children []}}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [add-child-event (common-events/build-add-child-event -1 parent-1-uid child-1-uid false)
             txs             (resolver/resolve-event-to-tx @@fixture/connection
                                                           add-child-event)
@@ -234,7 +234,7 @@
                               :in $ ?eid
                               :where [?eid :block/children ?children]]]
         (t/is (= #{} (d/q query-children @@fixture/connection [:block/uid parent-1-uid])))
-        (d/transact @fixture/connection txs)
+        (d/transact! @fixture/connection txs)
         (let [child-eid (common-db/e-by-av @@fixture/connection
                                            :block/uid child-1-uid)
               children  (d/q query-children @@fixture/connection [:block/uid parent-1-uid])]
@@ -257,7 +257,7 @@
                                                           :block/string   ""
                                                           :block/order    0
                                                           :block/children []}}}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
 
       (let [child-1-eid     (common-db/e-by-av @@fixture/connection
                                                :block/uid child-1-uid)
@@ -278,7 +278,7 @@
                  child-1))
 
         ;; add second child
-        (d/transact @fixture/connection add-child-txs)
+        (d/transact! @fixture/connection add-child-txs)
         (let [child-2-eid (common-db/e-by-av @@fixture/connection
                                              :block/uid child-2-uid)
               children    (d/q query-children @@fixture/connection [:block/uid parent-uid])
@@ -316,7 +316,7 @@
                                                           :block/string   ""
                                                           :block/order    0
                                                           :block/children []}}}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
             child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
             split-event   (common-events/build-split-block-to-children-event -1
@@ -329,7 +329,7 @@
         (t/is (= [(select-keys child-1-block [:block/uid :block/order])]
                  (:block/children parent-block)))
 
-        (d/transact @fixture/connection split-txs)
+        (d/transact! @fixture/connection split-txs)
         (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
               child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
               child-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])]
@@ -357,7 +357,7 @@
                                                           :block/string   child-text
                                                           :block/order    0
                                                           :block/children []}}}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [parent-block   (common-db/get-block @@fixture/connection [:block/uid parent-uid])
             child-1-block  (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
             unindent-event (common-events/build-unindent-event -1
@@ -368,7 +368,7 @@
         (t/is (= [(select-keys child-1-block [:block/uid :block/order])]
                  (:block/children parent-block)))
 
-        (d/transact @fixture/connection unindent-txs)
+        (d/transact! @fixture/connection unindent-txs)
         (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
               child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])]
           (t/is (= 0 (-> parent-block :block/children count)))
@@ -399,7 +399,7 @@
                                                            :block/string   child-2-text
                                                            :block/order    1
                                                            :block/children []}]}}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [parent-block   (common-db/get-block @@fixture/connection [:block/uid parent-uid])
             child-1-block  (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
             child-2-block  (common-db/get-block @@fixture/connection [:block/uid child-2-uid])
@@ -412,7 +412,7 @@
                   (select-keys child-2-block [:block/uid :block/order])]
                  (:block/children parent-block)))
 
-        (d/transact @fixture/connection unindent-multi-txs)
+        (d/transact! @fixture/connection unindent-multi-txs)
         (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
               child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
               child-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])]
@@ -442,7 +442,7 @@
                                           :block/string   child-text
                                           :block/order    1
                                           :block/children []}]}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
             child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
             indent-event  (common-events/build-indent-event -1
@@ -453,7 +453,7 @@
         (t/is (= 1 (:block/order child-1-block)))
 
 
-        (d/transact @fixture/connection indent-txs)
+        (d/transact! @fixture/connection indent-txs)
         (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
               child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])]
           (t/is (= 1 (-> parent-block :block/children count)))
@@ -486,7 +486,7 @@
                                           :block/string   child-2-text
                                           :block/order    2
                                           :block/children []}]}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [parent-block         (common-db/get-block @@fixture/connection [:block/uid parent-uid])
             child-1-block        (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
             child-2-block        (common-db/get-block @@fixture/connection [:block/uid child-2-uid])
@@ -499,7 +499,7 @@
         (t/is (= 1 (:block/order child-1-block)))
         (t/is (= 2 (:block/order child-2-block)))
 
-        (d/transact @fixture/connection indent-multi-txs)
+        (d/transact! @fixture/connection indent-multi-txs)
         (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
               child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
               child-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])]
@@ -527,7 +527,7 @@
                                                            :block/string   child-1-text
                                                            :block/order    0
                                                            :block/children []}}}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
             child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
             bump-up-event (common-events/build-bump-up-event -1
@@ -538,14 +538,13 @@
         ;; before -> parent has 1 child
         (t/is (= 1 (-> parent-block :block/children count)))
         (t/is (= child-1-text (:block/string child-1-block)))
-        (d/transact @fixture/connection bump-up-txs)
+        (d/transact! @fixture/connection bump-up-txs)
         (let [parent-block  (common-db/get-block @@fixture/connection [:block/uid parent-uid])
               kids          (:block/children parent-block)
               child-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
               child-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])]
           ;; after bump-up
-          ;; TODO: uncomment when https://github.com/replikativ/datahike/issues/364 is fixed.
-          #_(t/is (= 2 (count kids)))
+          (t/is (= 2 (count kids)))
           (t/is (= (set [(select-keys child-1-block
                                       [:block/uid :block/order])
                          (select-keys child-2-block
@@ -585,7 +584,7 @@
                                           :block/children []}]}]]
 
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [source-block (common-db/get-block @@fixture/connection [:block/uid source-uid])
             target-block (common-db/get-block @@fixture/connection [:block/uid target-uid])
             drop-child-event     (common-events/build-drop-child-event -1
@@ -596,7 +595,7 @@
         (t/is (= 0 (:block/order target-block)))
         (t/is (= 1 (:block/order source-block)))
 
-        (d/transact @fixture/connection drop-child-txs)
+        (d/transact! @fixture/connection drop-child-txs)
         (let [source-block (common-db/get-block @@fixture/connection [:block/uid source-uid])
               target-block (common-db/get-block @@fixture/connection [:block/uid target-uid])]
           (t/is (= 1 (-> target-block :block/children count)))
@@ -639,7 +638,7 @@
                                           :block/order    2
                                           :block/children []}]}]]
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [target-block             (common-db/get-block @@fixture/connection [:block/uid target-uid])
             source-1-block           (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
             source-2-block           (common-db/get-block @@fixture/connection [:block/uid source-2-uid])
@@ -654,7 +653,7 @@
         (t/is (= 2 (:block/order source-2-block)))
 
 
-        (d/transact @fixture/connection drop-child-txs)
+        (d/transact! @fixture/connection drop-child-txs)
         (let [target-block             (common-db/get-block @@fixture/connection [:block/uid target-uid])
               source-1-block           (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
               source-2-block           (common-db/get-block @@fixture/connection [:block/uid source-2-uid])]
@@ -691,7 +690,7 @@
                                           :block/string   source-1-text
                                           :block/order    1
                                           :block/children []}]}]]
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [target-block            (common-db/get-block @@fixture/connection [:block/uid target-uid])
             source-1-block          (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
             drop-link-child-event   (common-events/build-drop-link-child-event -1
@@ -702,7 +701,7 @@
         (t/is (= 0 (:block/order target-block)))
         (t/is (= 1 (:block/order source-1-block)))
 
-        (d/transact @fixture/connection drop-link-child-txs)
+        (d/transact! @fixture/connection drop-link-child-txs)
         (let [target-block       (common-db/get-block @@fixture/connection [:block/uid target-uid])
               source-1-ref-str   (str "((" source-1-uid "))")
               linked-child-1-uid (last (common-db/get-children-uids-recursively @@fixture/connection target-uid))
@@ -749,7 +748,7 @@
                                                 :block/children []}]}]]
 
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [source-block            (common-db/get-block @@fixture/connection [:block/uid source-uid])
             target-block            (common-db/get-block @@fixture/connection [:block/uid target-uid])
             target-parent-block     (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
@@ -762,7 +761,7 @@
         (t/is (= 0 (:block/order target-block)))
         (t/is (= 1 (:block/order source-block)))
 
-        (d/transact @fixture/connection drop-diff-parent-txs)
+        (d/transact! @fixture/connection drop-diff-parent-txs)
         (let [source-block         (common-db/get-block @@fixture/connection [:block/uid source-uid])
               target-block         (common-db/get-block @@fixture/connection [:block/uid target-uid])
               target-parent-block  (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])]
@@ -820,7 +819,7 @@
                                                                     :block/children []}}]}]]
 
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [target-parent-block                      (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
             source-1-parent-block                    (common-db/get-block @@fixture/connection [:block/uid source-1-parent-uid])
             source-uids                              [source-1-uid source-2-uid]
@@ -832,14 +831,13 @@
         (t/is (= 1  (-> target-parent-block :block/children count)))
         (t/is (= 1  (-> source-1-parent-block :block/children count)))
 
-        (d/transact @fixture/connection drop-multi-diff-source-diff-parents-txs)
+        (d/transact! @fixture/connection drop-multi-diff-source-diff-parents-txs)
         (let [source-1-block        (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
               source-2-block        (common-db/get-block @@fixture/connection [:block/uid source-2-uid])
               source-1-parent-block (common-db/get-block @@fixture/connection [:block/uid source-1-parent-uid])
               target-block          (common-db/get-block @@fixture/connection [:block/uid target-uid])
               target-parent-block   (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])]
-          ;; TODO: uncomment when https://github.com/replikativ/datahike/issues/364 is fixed.
-          #_(t/is (= 3 (-> target-parent-block :block/children count)))
+          (t/is (= 3 (-> target-parent-block :block/children count)))
           (t/is (= 0 (-> source-1-parent-block :block/children count)))
           (t/is (= (set [(select-keys target-block [:block/uid :block/order])
                          (select-keys source-1-block [:block/uid :block/order])
@@ -888,7 +886,7 @@
                                                    :block/order    2
                                                    :block/children []}]}]]
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [target-parent-block                       (common-db/get-block @@fixture/connection [:block/uid "page-uid"])
             source-1-parent-block                     (common-db/get-block @@fixture/connection [:block/uid source-1-parent-uid])
             source-uids                               [source-1-uid source-2-uid]
@@ -900,15 +898,14 @@
         (t/is (= 3 (-> target-parent-block :block/children count)))
         (t/is (= 1 (-> source-1-parent-block :block/children count)))
 
-        (d/transact @fixture/connection drop-multi-diff-source-same-parents-txs)
+        (d/transact! @fixture/connection drop-multi-diff-source-same-parents-txs)
         (let [source-1-block        (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
               source-2-block        (common-db/get-block @@fixture/connection [:block/uid source-2-uid])
               source-1-parent-block (common-db/get-block @@fixture/connection [:block/uid source-1-parent-uid])
               target-block          (common-db/get-block @@fixture/connection [:block/uid target-uid])
               target-parent-block   (common-db/get-block @@fixture/connection [:block/uid "page-uid"])]
 
-          ;; TODO: uncomment when https://github.com/replikativ/datahike/issues/364 is fixed.
-          #_(t/is (= 4 (-> target-parent-block   :block/children count)))
+          (t/is (= 4 (-> target-parent-block   :block/children count)))
           (t/is (= 0 (-> source-1-parent-block :block/children count)))
           (t/is (= (set [(select-keys source-1-parent-block [:block/uid :block/order])
                          (select-keys target-block [:block/uid :block/order])
@@ -955,7 +952,7 @@
                                                 :block/children []}]}]]
 
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [source-block                 (common-db/get-block @@fixture/connection [:block/uid source-uid])
             target-block                 (common-db/get-block @@fixture/connection [:block/uid target-uid])
             target-parent-block          (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
@@ -968,7 +965,7 @@
         (t/is (= 0 (:block/order target-block)))
         (t/is (= 1 (:block/order source-block)))
 
-        (d/transact @fixture/connection drop-link-diff-parent-txs)
+        (d/transact! @fixture/connection drop-link-diff-parent-txs)
         ;; The idea here is to find the values of all the block's string under target parent then compare it after adding
         ;; the reference link. Comparision here is done by making a set containing the target parent's block's string and
         ;; the expected set of strings, we then find if after joining both sets the len of this set is same as the previous set.
@@ -1022,7 +1019,7 @@
                                                                   :block/children []}]}]}]]
 
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [source-block            (common-db/get-block @@fixture/connection [:block/uid source-uid])
             target-block            (common-db/get-block @@fixture/connection [:block/uid target-uid])
             target-parent-block     (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
@@ -1037,12 +1034,11 @@
 
         (log/info "drop-same-parent-tx:" (with-out-str
                                            (pp/pprint drop-same-parent-txs)))
-        (d/transact @fixture/connection drop-same-parent-txs)
+        (d/transact! @fixture/connection drop-same-parent-txs)
         (let [source-block         (common-db/get-block @@fixture/connection [:block/uid source-uid])
               target-block         (common-db/get-block @@fixture/connection [:block/uid target-uid])
               target-parent-block  (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])]
-          ;; TODO: uncomment when https://github.com/replikativ/datahike/issues/364 is fixed.
-          #_(t/is (= 2 (-> target-parent-block :block/children count)))
+          (t/is (= 2 (-> target-parent-block :block/children count)))
           (t/is (= 1 (:block/order target-block)))
           (t/is (= 0 (:block/order source-block))))))))
 
@@ -1090,7 +1086,7 @@
                                                             :block/order    2
                                                             :block/children []}]}]}]]
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [target-parent-block       (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
             target-block              (common-db/get-block @@fixture/connection [:block/uid target-uid])
             source-1-block            (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
@@ -1107,14 +1103,13 @@
         (t/is (= 2 (:block/order source-2-block)))
 
 
-        (d/transact @fixture/connection drop-same-all-txs)
+        (d/transact! @fixture/connection drop-same-all-txs)
         (let [target-parent-block       (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
               target-block             (common-db/get-block @@fixture/connection [:block/uid target-uid])
               source-1-block           (common-db/get-block @@fixture/connection [:block/uid source-1-uid])
               source-2-block           (common-db/get-block @@fixture/connection [:block/uid source-2-uid])]
 
-          ;; TODO: uncomment when https://github.com/replikativ/datahike/issues/364 is fixed.
-          #_(t/is (= 3 (-> target-parent-block :block/children count)))
+          (t/is (= 3 (-> target-parent-block :block/children count)))
           (t/is (= 2 (:block/order target-block)))
           (t/is (= 0 (:block/order source-1-block)))
           (t/is (= 1 (:block/order source-2-block))))))))
@@ -1171,7 +1166,7 @@
                                                                   :block/order    1
                                                                   :block/children []}]}]}]]
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [target-parent-block       (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
             target-block              (common-db/get-block @@fixture/connection [:block/uid target-uid])
             source-parent-block       (common-db/get-block @@fixture/connection [:block/uid source-parent-uid])
@@ -1190,7 +1185,7 @@
         (t/is (= 1 (:block/order source-2-block)))
 
 
-        (d/transact @fixture/connection drop-same-source-txs)
+        (d/transact! @fixture/connection drop-same-source-txs)
         (let [target-parent-block       (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
               target-block              (common-db/get-block @@fixture/connection [:block/uid target-uid])
               source-parent-block       (common-db/get-block @@fixture/connection [:block/uid source-parent-uid])
@@ -1243,7 +1238,7 @@
                                                                   :block/children []}]}]}]]
 
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [source-block          (common-db/get-block @@fixture/connection [:block/uid source-uid])
             target-block          (common-db/get-block @@fixture/connection [:block/uid target-uid])
             target-parent-block   (common-db/get-block @@fixture/connection [:block/uid target-parent-uid])
@@ -1257,7 +1252,7 @@
         (t/is (= 1 (:block/order source-block)))
 
 
-        (d/transact @fixture/connection drop-link-same-parent-txs)
+        (d/transact! @fixture/connection drop-link-same-parent-txs)
         ;; The idea here is to find the values of all the block's string under target parent then compare it after adding
         ;; the reference link. Comparision here is done by making a set containing the target parent's block's string and
         ;; the expected set of strings, we then find if after joining both sets the len of this set is same as the previous set.
@@ -1312,7 +1307,7 @@
                                                 :block/children []}]}]]
 
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [uids                   [block-2-uid block-3-uid]
             parent-block           (common-db/get-block @@fixture/connection [:block/uid "page-uid"])
             block-1                (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
@@ -1324,7 +1319,7 @@
         (t/is (= 0 (:block/order block-1)))
         (t/is (= 2 (:block/order block-4)))
 
-        (d/transact @fixture/connection selected-delete-txs)
+        (d/transact! @fixture/connection selected-delete-txs)
         (let [parent-block           (common-db/get-block @@fixture/connection [:block/uid "page-uid"])
               block-1                (common-db/get-block @@fixture/connection [:block/uid block-1-uid])
               block-4                (common-db/get-block @@fixture/connection [:block/uid block-4-uid])]
@@ -1366,12 +1361,12 @@
                                                 :block/children []}]}]]
 
 
-      (d/transact @fixture/connection setup-txs)
+      (d/transact! @fixture/connection setup-txs)
       (let [uids                   [block-1-uid block-2-uid]
             selected-delete-event  (common-events/build-selected-delete-event -1
                                                                               uids)
             selected-delete-txs    (resolver/resolve-event-to-tx @@fixture/connection selected-delete-event)]
-        (d/transact @fixture/connection selected-delete-txs)
+        (d/transact! @fixture/connection selected-delete-txs)
         (let [block-3                (common-db/get-block @@fixture/connection [:block/uid block-3-uid])
               block-4                (common-db/get-block @@fixture/connection [:block/uid block-4-uid])
               block-5                (common-db/get-block @@fixture/connection [:block/uid block-5-uid])]
@@ -1392,14 +1387,14 @@
                                                           :block/string   ""
                                                           :block/order    0
                                                           :block/children []}]}]}]]
-    (d/transact @fixture/connection setup-tx)
+    (d/transact! @fixture/connection setup-tx)
     (let [paste-event (common-events/build-paste-event -1
                                                        block-2-uid
                                                        "- test 1\n  - test 2"
                                                        0
                                                        "")
           paste-tx    (resolver/resolve-event-to-tx @@fixture/connection paste-event)]
-      (d/transact @fixture/connection paste-tx)
+      (d/transact! @fixture/connection paste-tx)
       (let [block-1 (common-db/get-block @@fixture/connection [:block/uid block-1-uid])]
         (t/is (= 1 (-> block-1 :block/children count)))))))
 
@@ -1418,7 +1413,7 @@
                                         :block/string   ""
                                         :block/order    1
                                         :block/children []}]}]]
-    (d/transact @fixture/connection setup-tx)
+    (d/transact! @fixture/connection setup-tx)
     (let [internal-representation  [{:block/uid test-block-uid,
                                      :block/string "Copy-Paste test block",
                                      :block/open true,
@@ -1427,7 +1422,7 @@
                                                                          block-1-uid
                                                                          internal-representation)
           paste-tx    (resolver/resolve-event-to-tx @@fixture/connection paste-internal-event)]
-      (d/transact @fixture/connection paste-tx)
+      (d/transact! @fixture/connection paste-tx)
       (let [pasted-block    (common-db/get-block @@fixture/connection [:block/uid test-block-uid])
             reindexed-block (common-db/get-block @@fixture/connection [:block/uid block-2-uid])]
 
@@ -1450,14 +1445,14 @@
                                      :block/string ""
                                      :block/order 0}]}]]
 
-    (d/transact @fixture/connection setup-tx)
+    (d/transact! @fixture/connection setup-tx)
     (let [{uid :block/uid} (common-db/get-block @@fixture/connection [:block/uid page-uid])]
       (t/is (= page-uid uid)
             "check if setup-tx is added"))
 
     (let [delete-only-child-event (common-events/build-delete-only-child-event -1 block-uid)
           delete-only-child-tx (resolver/resolve-event-to-tx @@fixture/connection delete-only-child-event)]
-      (d/transact @fixture/connection delete-only-child-tx)
+      (d/transact! @fixture/connection delete-only-child-tx)
       (let [page (common-db/get-block @@fixture/connection [:block/uid page-uid])]
         (t/is (empty? (:block/children page))
               "check if the empty, only child is deleted")))))
@@ -1483,14 +1478,14 @@
                                        :block/string value
                                        :block/order 1}]}]]
 
-      (d/transact @fixture/connection setup-tx)
+      (d/transact! @fixture/connection setup-tx)
       (let [{uid :block/uid} (common-db/get-block @@fixture/connection [:block/uid page-uid])]
         (t/is (= page-uid uid)
               "check if setup-tx is added"))
 
       (let [delete-merge-block-event (common-events/build-delete-merge-block-event -1 block-uid value)
             delete-merge-block-tx    (resolver/resolve-event-to-tx @@fixture/connection delete-merge-block-event)]
-        (d/transact @fixture/connection delete-merge-block-tx)
+        (d/transact! @fixture/connection delete-merge-block-tx)
         (let [{children :block/children} (d/pull @@fixture/connection '[{:block/children [:block/string]}] [:block/uid page-uid])]
           (t/is (= 1 (count children))
                 "check if the second child is deleted")
@@ -1518,14 +1513,14 @@
                                        :block/string block-str-2
                                        :block/order 1}]}]]
 
-      (d/transact @fixture/connection setup-tx)
+      (d/transact! @fixture/connection setup-tx)
       (let [{uid :block/uid} (common-db/get-block @@fixture/connection [:block/uid page-uid])]
         (t/is (= page-uid uid)
               "check if setup-tx is added"))
 
       (let [delete-merge-block-event (common-events/build-delete-merge-block-event -1 block-uid-1 block-str-1)
             delete-merge-block-tx    (resolver/resolve-event-to-tx @@fixture/connection delete-merge-block-event)]
-        (d/transact @fixture/connection delete-merge-block-tx)
+        (d/transact! @fixture/connection delete-merge-block-tx)
 
         (let [{string :block/string} (common-db/get-block @@fixture/connection [:block/uid block-uid-2])]
           (t/is (= "a" string)

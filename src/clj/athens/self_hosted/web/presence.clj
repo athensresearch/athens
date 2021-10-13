@@ -5,7 +5,7 @@
     [athens.self-hosted.clients :as clients]
     [clojure.set                :as set]
     [clojure.string             :as str]
-    [datahike.api               :as d]))
+    [datascript.core            :as d]))
 
 
 (let [max-id (atom 0)]
@@ -25,13 +25,14 @@
 
 
 (defn- valid-password
-  [datahike channel id {:keys [username]}]
-  (let [max-tx (:max-tx @datahike)]
+  [conn channel id {:keys [username]}]
+  (let [max-tx (:max-tx @conn)]
     (log/info channel "New Client Intro:" username)
     (clients/add-client! channel username)
 
-    (let [datoms (remove #(= :dx/dbInstant (:a %))
-                         (d/datoms @datahike :eavt))]
+    (let [datoms (map ; Convert Datoms to just vectors.
+                  (comp vec seq)
+                  (d/datoms @conn :eavt))]
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
                      (common-events/build-db-dump-event max-tx datoms))
@@ -63,19 +64,19 @@
 
 
 (defn hello-handler
-  [datahike server-password channel {:event/keys [id args _last-tx]}]
+  [conn server-password channel {:event/keys [id args _last-tx]}]
   (let [{:keys [password]} args]
     (if (or (str/blank? server-password)
             (= server-password password))
-      (valid-password datahike channel id args)
+      (valid-password conn channel id args)
       (invalid-password channel id args))))
 
 
 (defn editing-handler
-  [datahike channel {:event/keys [id args]}]
+  [conn channel {:event/keys [id args]}]
   (let [username            (clients/get-client-username channel)
         {:keys [block-uid]} args
-        max-tx              (:max-tx @datahike)]
+        max-tx              (:max-tx @conn)]
     (when block-uid
       (let [broadcast-presence-editing-event (common-events/build-presence-broadcast-editing-event max-tx username block-uid)]
         (swap! all-presence assoc username {:username username
@@ -85,11 +86,11 @@
 
 
 (defn rename-handler
-  [datahike channel {:event/keys [id args]}]
+  [conn channel {:event/keys [id args]}]
   (let [{:keys
          [current-username
           new-username]}         args
-        max-tx                   (:max-tx @datahike)
+        max-tx                   (:max-tx @conn)
         broadcast-rename-event (common-events/build-presence-broadcast-rename-event max-tx
                                                                                     current-username
                                                                                     new-username)]
@@ -104,17 +105,17 @@
 
 
 (defn goodbye-handler
-  [datahike username]
-  (let [presence-offline-event (athens.common-events/build-presence-offline-event (:max-tx @datahike) username)]
+  [conn username]
+  (let [presence-offline-event (athens.common-events/build-presence-offline-event (:max-tx @conn) username)]
     (swap! all-presence dissoc username)
     (clients/broadcast! presence-offline-event)))
 
 
 (defn presence-handler
-  [datahike server-password channel {:event/keys [type] :as event}]
+  [conn server-password channel {:event/keys [type] :as event}]
   (condp = type
-    :presence/hello   (hello-handler datahike server-password channel event)
-    :presence/editing (editing-handler datahike channel event)
-    :presence/rename (rename-handler datahike channel event)
+    :presence/hello   (hello-handler conn server-password channel event)
+    :presence/editing (editing-handler conn channel event)
+    :presence/rename (rename-handler conn channel event)
     ;; presence/goodbye is called on client close.
     ))

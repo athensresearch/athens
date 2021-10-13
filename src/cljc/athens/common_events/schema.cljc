@@ -1,8 +1,6 @@
 (ns athens.common-events.schema
   (:require
     [athens.common-events.graph.schema :as graph-schema]
-    #?(:clj
-       [datahike.datom                 :as datom])
     [malli.core                        :as m]
     [malli.error                       :as me]
     [malli.util                        :as mu]))
@@ -571,12 +569,7 @@
 
 
 (def datom
-  [:map
-   [:e pos-int?]
-   [:a keyword?]
-   [:v any?]
-   [:tx int?]
-   [:added {:optional true} boolean?]])
+  [:vector any?])
 
 
 (def db-dump
@@ -585,8 +578,7 @@
     [:map
      [:datoms
       ;; NOTE: this is because after serialization & deserialization data is represented differently
-      [:sequential #?(:clj  [:fn datom/datom?]
-                      :cljs datom)]]]]])
+      [:sequential datom]]]]])
 
 
 (def user
