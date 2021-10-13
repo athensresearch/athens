@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.20](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.19...v1.0.0-alpha.rtc.20) (2021-10-13)
+
+
+### Bug Fixes
+
+* include default.config.edn in uberjar, only use config.edn in dev ([8a5ef89](https://github.com/athensresearch/athens/commit/8a5ef89208144a3620949874b1e68ed29fbabf05))
+* remove cljstyle workaround ([fce927e](https://github.com/athensresearch/athens/commit/fce927e99d2591c497352a83351c427510ecbdce))
+
 ## [1.0.0-alpha.rtc.19](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.18...v1.0.0-alpha.rtc.19) (2021-10-13)
 
 
