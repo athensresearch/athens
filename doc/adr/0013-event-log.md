@@ -45,3 +45,4 @@ Besides enabling the scenarios described in [context](#context), there are also 
 - the current event format becomes a frozen API that we need to support indefinitely, since all events must be replayable
 - extra storage needed to store the events, which grows at a similar pace or higher than the current data storage
 - the event storage format is another frozen API, since old events stored in the log need to be readable
+- increased memory usage for docker deployments due to the extra log service
