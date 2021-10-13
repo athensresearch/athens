@@ -262,10 +262,6 @@
       (rf/dispatch [::select-events/set-items selection-order]))))
 
 
-
-
-
-
 ;; Event Handlers
 
 ;; TODO Move the following to correct location
@@ -479,7 +475,7 @@
 
     (println "External copied data's internal representation")
     (pp/pprint text-to-inter)
-    
+
     (cond
       ;; For internal representation
       internal?

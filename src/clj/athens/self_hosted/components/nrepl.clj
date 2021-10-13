@@ -17,7 +17,7 @@
             nrepl-handler #(do (require 'cider.nrepl)
                                (ns-resolve 'cider.nrepl 'cider-nrepl-handler))
             handler       (nrepl-handler)]
-        (log/info "Starting NREPL server with config:" (pr-str nrepl-conf)) 
+        (log/info "Starting NREPL server with config:" (pr-str nrepl-conf))
         (assoc component :server (nrepl/start-server :port port :handler handler)))
       component))
 
