@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.22](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.21...v1.0.0-alpha.rtc.22) (2021-10-13)
+
+
+### Bug Fixes
+
+* use updated schema ns ([e27860d](https://github.com/athensresearch/athens/commit/e27860dd1f3596b01ff8e7d9e67eff19081f6095))
+
+
+* add health checks to docker compose, fix fluree server address ([7fa21b2](https://github.com/athensresearch/athens/commit/7fa21b20ea24e6cb16b6879bb1b5e1982d881049))
+* fixit ([79e9aa1](https://github.com/athensresearch/athens/commit/79e9aa1cbafafa6ae1514fd9d3a57e595acd141e))
+
 ## [1.0.0-alpha.rtc.21](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.20...v1.0.0-alpha.rtc.21) (2021-10-13)
 
 
