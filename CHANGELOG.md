@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.24](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.23...v1.0.0-alpha.rtc.24) (2021-10-14)
+
+
+### Bug Fixes
+
+* fetch all events on startup ([42e21d6](https://github.com/athensresearch/athens/commit/42e21d6344ec0f7394499766f314720e18ba6956))
+
 ## [1.0.0-alpha.rtc.23](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.22...v1.0.0-alpha.rtc.23) (2021-10-13)
 
 
