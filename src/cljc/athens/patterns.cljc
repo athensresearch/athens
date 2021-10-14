@@ -17,11 +17,14 @@
 
 
 (def block-embed-pattern
-  (re-pattern (str "\\{\\{\\[\\[embed\\]\\]: " block-pattern "\\}\\}")))
+  (let [block-pattern   "\\(\\((?!\\s)\\S+?(?=\\)\\))(?<!\\s)\\)\\)"]
+    (re-pattern (str "\\{\\{\\[\\[embed\\]\\]: " block-pattern "\\}\\}"))))
 
 
 (def block-refs-pattern
-  (re-pattern (str block-pattern "|" block-embed-pattern)))
+  (let [block-pattern   "\\(\\((?!\\s)\\S+?(?=\\)\\))(?<!\\s)\\)\\)"
+        embed-pattern   (re-pattern (str "\\{\\{\\[\\[embed\\]\\]: " block-pattern "\\}\\}"))]
+    (re-pattern (str block-pattern "|" embed-pattern))))
 
 
 (defn unlinked
