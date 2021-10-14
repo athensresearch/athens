@@ -18,15 +18,18 @@
     [component]
     (let [in-memory?     (-> config :config :in-memory?)
           fluree-conn    (:conn fluree)
-          conn           (d/create-conn common-db/schema)
-          events         (if in-memory?
-                           event-log/initial-events
-                           (event-log/all-events fluree-conn))]
+          conn           (d/create-conn common-db/schema)]
 
-      (log/info "Replaying" (count events) "events into empty Datascript conn...")
-      (doseq [[id data] events]
-        (web-datascript/transact! conn id (atomic/resolve-to-tx @conn data)))
-      (log/info "✅ Replayed" (count events) "events.")
+      (log/info "Lazily replaying events into empty Datascript conn...")
+      (let [total (atom 0)]
+        ;; NB: don't hold a ref to the lazy event seq, otherwise they
+        ;; can't be GC'd as we go and are all kept in memory at once.
+        (doseq [[id data] (if in-memory?
+                            event-log/initial-events
+                            (event-log/events fluree-conn))]
+          (web-datascript/transact! conn id (atomic/resolve-to-tx @conn data))
+          (swap! total inc))
+        (log/info "✅ Replayed" @total "events."))
 
       ;; NB: these could be events as well, and then we wouldn't always rerun them.
       ;; But rerunning them after replaying all events helps us find events that produce

@@ -41,17 +41,58 @@
   [id (edn/read-string data)])
 
 
-(defn all-events
+;; Resources on lazy clojure ops.
+;; https://clojuredocs.org/clojure.core/lazy-seq
+;; https://clojuredocs.org/clojure.core/lazy-cat
+;; http://clojure-doc.org/articles/language/laziness.html
+;; https://stackoverflow.com/a/44102122/2116927
+;; The lazy-* fns aren't explicitly used here, but all fns used here are lazy,
+;; so the end result is lazy as well.
+(defn lazy-cat-while
+  "Returns a lazy concatenation of (f i), where i starts at 0 and increases by 1 each iteration.
+   Stops when (f i) is an empty seq."
+  [f]
+  (transduce (comp (map f)
+                   (take-while seq))
+             concat
+             (range)))
+
+
+(comment
+  (defn get-page [i]
+    (println "get-page" i)
+    (when (< i 3)
+      [1 2 3]))
+
+  (get-page 2)
+
+  (lazy-cat-while get-page))
+
+
+(defn- events-page
+  "Returns a seq of events in page-number for all events in db split by page-size."
+  [db page-size page-number]
+  @(fdb/query db
+              {:select {"?event" ["*"]}
+               :where  [["?event" "event/id", "?id"]]
+               ;; Subject (?event here) is a monotonically incrementing bigint,
+               ;; so ordering by that gives us insertion order.
+               :opts   {:orderBy ["ASC", "?event"]
+                        :limit   page-size
+                        :offset  (* page-size page-number)}}))
+
+
+(defn events
+  "Returns a lazy-seq of all events in conn up to now."
   [conn]
-  (map deserialize
-       @(fdb/query (fdb/db conn ledger)
-                   {:select {"?event" ["*"]}
-                    :where  [["?event" "event/id", "?id"]]
-                    ;; Subject (?event here) is a monotonically incrementing bigint,
-                    ;; so ordering by that gives us insertion order.
-                    :opts   {:orderBy ["ASC", "?event"]}})))
+  (let [f (partial events-page (fdb/db conn ledger) 100)]
+    (map deserialize (lazy-cat-while f))))
 
 
+;; TODO: what happens on a very large event? e.g. 2mb, 10mb, 100mb
+;; TODO: is this related to that error on the server?
+;; 08:15:55.648 ERROR [AsyncHttpClient-3-1] fluree.db.util.log - "websocket error"
+;; athens_1  | io.netty.handler.codec.http.websocketx.CorruptedWebSocketFrameException: Max frame length of 10240 has been exceeded.
 (defn add-event!
   [conn id data]
   @(fdb/transact conn ledger [(serialize id data)]))
@@ -104,17 +145,17 @@
   (ensure-ledger! conn)
 
   ;; What are the current events in the ledger?
-  (all-events conn)
+  (events conn)
 
   ;; Add a few events.
-  (def events [["uuid-1" [1 2 3]]
-               ["uuid-2" [4 5 6]]
-               ["uuid-3" [7 8 9]]])
+  (def my-events [["uuid-1" [1 2 3]]
+                  ["uuid-2" [4 5 6]]
+                  ["uuid-3" [7 8 9]]])
 
-  (doseq [[id data] events]
+  (doseq [[id data] my-events]
     (add-event! conn id data))
 
   ;; Check the events again.
-  (all-events conn)
+  (events conn)
 
   @(fdb/delete-ledger conn ledger))

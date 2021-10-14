@@ -46,3 +46,4 @@ Besides enabling the scenarios described in [context](#context), there are also 
 - extra storage needed to store the events, which grows at a similar pace or higher than the current data storage
 - the event storage format is another frozen API, since old events stored in the log need to be readable
 - increased memory usage for docker deployments due to the extra log service
+- limits on the event store (e.g. event size) are passed on to the system
