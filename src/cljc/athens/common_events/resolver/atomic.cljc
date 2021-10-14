@@ -77,6 +77,16 @@
       [updated-block])))
 
 
+(defmethod resolve-atomic-op-to-tx :block/remove
+  [db {:op/keys [args]}]
+  (let [{:keys [block-uid]} args
+        block-exists?       (common-db/e-by-av db :block/uid block-uid)
+        retract             (when block-exists?
+                              [:db/retractEntity [:block/uid block-uid]])]
+    (when block-exists?
+      [retract])))
+
+
 (defmethod resolve-atomic-op-to-tx :page/new
   [db {:op/keys [args]}]
   (let [{:keys [page-uid

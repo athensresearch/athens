@@ -795,18 +795,6 @@
 
 
 (reg-event-fx
-  :backspace/delete-merge-block
-  (fn [{:keys [db]} [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
-    (log/debug ":backspace/delete-merge-block args:" (pr-str args))
-    (let [event (common-events/build-delete-merge-block-event (:remote/last-seen-tx db) uid value)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]
-            [:dispatch [:editing/uid
-                        (cond-> prev-block-uid
-                          embed-id (str "-embed-" embed-id))
-                        (count (:block/string prev-block))]]]})))
-
-
-(reg-event-fx
   :split-block-to-children
   (fn [{:keys [db]} [_ {:keys [uid value index new-uid embed-id] :as args}]]
     (log/debug ":split-block-to-children" (pr-str args))
@@ -863,6 +851,22 @@
           event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid block-uid]]]]})))
+
+
+(reg-event-fx
+  :backspace/delete-merge-block
+  (fn [{:keys [db]} [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
+    (log/debug ":backspace/delete-merge-block args:" (pr-str args))
+    (let [op    (graph-ops/build-block-remove-merge-op @db/dsdb
+                                                       uid
+                                                       prev-block-uid
+                                                       value)
+          event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
+                          [:editing/uid
+                           (cond-> prev-block-uid
+                             embed-id (str "-embed-" embed-id))
+                           (count (:block/string prev-block))]]]]})))
 
 
 ;; Atomic events end ==========
