@@ -2,7 +2,9 @@
   (:require
     [athens.common-db              :as common-db]
     [athens.common-events.resolver :as resolver]
-    [athens.common.utils           :as utils]))
+    [athens.common.logging         :as log]
+    [athens.common.utils           :as utils]
+    [clojure.pprint                :as pp]))
 
 
 (defmulti resolve-atomic-op-to-tx
@@ -79,12 +81,60 @@
 
 (defmethod resolve-atomic-op-to-tx :block/remove
   [db {:op/keys [args]}]
-  (let [{:keys [block-uid]} args
-        block-exists?       (common-db/e-by-av db :block/uid block-uid)
-        retract             (when block-exists?
-                              [:db/retractEntity [:block/uid block-uid]])]
-    (when block-exists?
-      [retract])))
+  ;; [x] :db/retractEntity
+  ;; [ ] retract children
+  ;; [x] :db/retract parent's child
+  ;; [x] reindex parent's children
+  (let [{:keys [block-uid]}   args
+        block-exists?         (common-db/e-by-av db :block/uid block-uid)
+        {removed-order :block/order
+         children      :block/children
+         :as           block} (when block-exists?
+                                (common-db/get-block db [:block/uid block-uid]))
+        parent-eid            (when block-exists?
+                                (common-db/get-parent-eid db [:block/uid block-uid]))
+        parent-uid            (when parent-eid
+                                (common-db/v-by-ea db parent-eid :block/uid))
+        reindex               (common-db/dec-after db [:block/uid parent-uid] removed-order)
+        reindex?              (seq reindex)
+        has-kids?             (seq children)
+        descendants-uids      (when has-kids?
+                                (loop [acc        []
+                                       to-look-at children]
+                                  (if-let [look-at (first to-look-at)]
+                                    (do
+                                      (println "XXX:" (pr-str look-at))
+                                      (let [c-uid   (:block/uid look-at)
+                                            c-block (common-db/get-block db [:block/uid c-uid])]
+                                        (recur (conj acc c-uid)
+                                               (apply conj (rest children)
+                                                      (:block/children c-block)))))
+                                    acc)))
+        retract-kids          (mapv (fn [uid]
+                                      [:db/retractEntity [:block/uid uid]])
+                                    descendants-uids)
+        retract-entity        (when block-exists?
+                                [:db/retractEntity [:block/uid block-uid]])
+        retract-parents-child (when parent-uid
+                                [:db/retract [:block/uid parent-uid] :block/children [:block/uid block-uid]])
+        parent                (when reindex?
+                                {:block/uid      parent-uid
+                                 :block/children reindex})
+        txs                   (when block-exists?
+                                (cond-> []
+                                  parent-uid (conj retract-parents-child)
+                                  reindex?   (conj parent)
+                                  has-kids?  (into retract-kids)
+                                  true       (conj retract-entity)))]
+    (log/debug ":block/remove block-uid:" (pr-str block-uid)
+               "\nblock:" (with-out-str
+                            (pp/pprint block))
+               "\nparent-eid:" (pr-str parent-eid)
+               "\nparent-uid:" (pr-str parent-uid)
+               "\nretract-kids:" (pr-str retract-kids)
+               "\nresolved to txs:" (with-out-str
+                                      (pp/pprint txs)))
+    txs))
 
 
 (defmethod resolve-atomic-op-to-tx :page/new
