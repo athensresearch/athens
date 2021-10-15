@@ -222,7 +222,7 @@
       (let [synced? @(subscribe [:db/synced])
             remote? (electron-utils/remote-db? @(subscribe [:db-picker/selected-db]))]
         ;; disconnect the
-        (cond
+        #_(cond
           (not synced?)
           (do
             (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. Try refreshing or quitting again once the sync is complete."])

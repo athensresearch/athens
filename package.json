@@ -126,6 +126,7 @@
     "styled-components": "^5.3.0",
     "tslib": "^2.3.1",
     "utf-8-validate": "^5.0.5",
+    "web3.storage": "^3.3.2",
     "ws": "^8.2.2"
   },
   "devDependencies": {

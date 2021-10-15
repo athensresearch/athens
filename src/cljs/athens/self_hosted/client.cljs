@@ -1,16 +1,16 @@
 (ns athens.self-hosted.client
   "Self-Hosted Mode connector."
   (:require
-    [athens.common-db                  :as common-db]
-    [athens.common-events              :as common-events]
-    [athens.common-events.graph.atomic :as atomic-graph-ops]
-    [athens.common-events.schema       :as schema]
-    [athens.common.logging             :as log]
-    [cognitect.transit                 :as transit]
-    [com.cognitect.transit.types       :as ty]
-    [com.stuartsierra.component        :as component]
-    [datascript.core                   :as d]
-    [re-frame.core                     :as rf]))
+   [athens.common-db                  :as common-db]
+   [athens.common-events              :as common-events]
+   [athens.common-events.graph.atomic :as atomic-graph-ops]
+   [athens.common-events.schema       :as schema]
+   [athens.common.logging             :as log]
+   [cognitect.transit                 :as transit]
+   [com.cognitect.transit.types       :as ty]
+   [com.stuartsierra.component        :as component]
+   [datascript.core                   :as d]
+   [re-frame.core                     :as rf]))
 
 
 (extend-type ty/UUID IUUID)
@@ -226,12 +226,12 @@
   [last-tx {:keys [datoms]}]
   (log/debug "Received DB Dump")
   (rf/dispatch [:reset-conn (d/empty-db common-db/schema)])
-  (rf/dispatch [:transact (into [] (map datom->tx-entry) datoms)])
+  (rf/dispatch [:transact (into [] (map datom->tx-entry) [] #_datoms)])
   (rf/dispatch [:remote/snapshot-dsdb])
   (rf/dispatch [:remote/start-event-sync])
   (rf/dispatch [:remote/last-seen-tx! last-tx])
   (rf/dispatch [:db/sync])
-  (rf/dispatch [:remote/connected])
+  #_(rf/dispatch [:remote/connected])
   (log/info "✅ Transacted DB dump. last-seen-tx" last-tx))
 
 

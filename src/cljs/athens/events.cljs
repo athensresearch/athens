@@ -572,10 +572,17 @@
 (reg-event-fx
   :resolve-transact
   (fn [_ [_ event]]
+    (println "---------" (:max-tx @db/dsdb))
     (let [txs (atomic-resolver/resolve-to-tx @db/dsdb event)]
       (log/debug ":resolve-transact resolved" (pr-str (:event/type event))
                  "to txs:\n" (pr-str txs))
-      {:fx [[:dispatch [:transact txs]]]})))
+
+      ;; this event needs to transact directly!
+      (d/transact! db/dsdb (->> txs
+                                (common-db/block-uid-nil-eater @db/dsdb)
+                                (common-db/linkmaker @db/dsdb)
+                                (common-db/orderkeeper @db/dsdb)))
+      {:fx [#_[:dispatch [:transact txs]]]})))
 
 
 (reg-event-fx
