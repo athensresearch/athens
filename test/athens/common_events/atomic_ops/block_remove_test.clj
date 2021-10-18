@@ -273,16 +273,125 @@
           (t/is (= 1 (-> page :block/children count)))))))
   
   (t/testing "Make sure we remove subtree, event if there was a block ref below"
-    ))
+    (let [page-uid    "page-2-uid"
+          parent-uid  "parent-2-uid"
+          child-1-uid "child-2-1-uid"
+          child-2-uid "child-2-1-1-uid"
+          child-3-uid "child-2-1-1-1-uid"
+          child-4-uid "child-2-2-uid"
+          setup-txs   [{:block/uid      page-uid
+                        :node/title     "test page - removing subtree even with block refs below"
+                        :block/children [{:block/uid      parent-uid
+                                          :block/string   ""
+                                          :block/order    0
+                                          :block/children [{:block/uid      child-1-uid
+                                                            :block/string   ""
+                                                            :block/order    0
+                                                            :block/children [{:block/uid      child-2-uid
+                                                                              :block/string   (str "((" child-1-uid "))")
+                                                                              :block/order    0
+                                                                              :block/children [{:block/uid      child-3-uid
+                                                                                                :block/string   ""
+                                                                                                :block/order    0
+                                                                                                :block/children []}]}]}
+                                                           {:block/uid      child-4-uid
+                                                            :block/string   ""
+                                                            :block/order    1
+                                                            :block/children []}]}]}]]
+      (fixture/transact-with-middleware setup-txs)
+      (let [block-remove-op (graph-ops/build-block-remove-op @@fixture/connection child-1-uid)
+            block-remove-tx (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-remove-op)]
+        (d/transact! @fixture/connection block-remove-tx)
+        (let [page            (common-db/get-block @@fixture/connection [:block/uid page-uid])
+              parent          (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+              child-1-exists? (common-db/e-by-av @@fixture/connection :block/uid child-1-uid)
+              child-2-exists? (common-db/e-by-av @@fixture/connection :block/uid child-2-uid)
+              child-3-exists? (common-db/e-by-av @@fixture/connection :block/uid child-3-uid)
+              child-4         (common-db/get-block @@fixture/connection [:block/uid child-4-uid])]
+          (t/is (not child-1-exists?))
+          (t/is (not child-2-exists?))
+          (t/is (not child-3-exists?))
+          (t/is (= 1 (-> parent :block/children count)))
+          (t/is (= 0 (:block/order child-4)))
+          (t/is (= 1 (-> page :block/children count))))))))
 
 
 (t/deftest block-remove-with-block-refs-involved
   (t/testing "Make sure we modify block string of containing block-refs to removed block"
-    )
+    (let [page-uid     "page-1-uid"
+          parent-uid   "parent-1-uid"
+          child-1-uid  "child-1-1-uid"
+          child-1-text "this text is godly"
+          child-2-uid  "child-1-1-1-uid"
+          child-3-uid  "child-1-2-uid"
+          setup-txs    [{:block/uid      page-uid
+                         :node/title     "test page - removing subtree"
+                         :block/children [{:block/uid      parent-uid
+                                           :block/string   ""
+                                           :block/order    0
+                                           :block/children [{:block/uid      child-1-uid
+                                                             :block/string   child-1-text
+                                                             :block/order    0
+                                                             :block/children [{:block/uid      child-2-uid
+                                                                               :block/string   ""
+                                                                               :block/order    0
+                                                                               :block/children []}]}
+                                                            {:block/uid      child-3-uid
+                                                             :block/string   (str "((" child-1-uid "))")
+                                                             :block/order    1
+                                                             :block/children []}]}]}]]
+      (fixture/transact-with-middleware setup-txs)
+      (let [block-remove-op (graph-ops/build-block-remove-op @@fixture/connection child-1-uid)
+            block-remove-tx (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-remove-op)]
+        (d/transact! @fixture/connection block-remove-tx)
+        (let [page            (common-db/get-block @@fixture/connection [:block/uid page-uid])
+              parent          (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+              child-1-exists? (common-db/e-by-av @@fixture/connection :block/uid child-1-uid)
+              child-2-exists? (common-db/e-by-av @@fixture/connection :block/uid child-2-uid)
+              child-3         (common-db/get-block @@fixture/connection [:block/uid child-3-uid])]
+          (t/is (= 1 (-> page :block/children count)))
+          (t/is (= 1 (-> parent :block/children count)))
+          (t/is (not child-1-exists?))
+          (t/is (not child-2-exists?))
+          (t/is (= 0 (:block/order child-3)))
+          (t/is (= child-1-text (:block/string child-3)))))))
+
   (t/testing "Make sure we don't modify block string of blocks that are deleted but did have block-ref"
-    (comment
-      ;; page-uid
-      ;; - parent-uid
-      ;;   - child-uid
-      ;;     - block containing ((child-uid))
-      )))
+    (let [page-uid     "page-2-uid"
+          parent-uid   "parent-2-uid"
+          child-1-uid  "child-2-1-uid"
+          child-1-text "this text is 1337"
+          child-2-uid  "child-2-1-1-uid"
+          child-3-uid  "child-2-2-uid"
+          setup-txs    [{:block/uid      page-uid
+                         :node/title     "test page - removing subtree with block ref"
+                         :block/children [{:block/uid      parent-uid
+                                           :block/string   ""
+                                           :block/order    0
+                                           :block/children [{:block/uid      child-1-uid
+                                                             :block/string   child-1-text
+                                                             :block/order    0
+                                                             :block/children [{:block/uid      child-2-uid
+                                                                               :block/string   (str "((" child-1-uid "))")
+                                                                               :block/order    0
+                                                                               :block/children []}]}
+                                                            {:block/uid      child-3-uid
+                                                             :block/string   (str "((" child-1-uid "))")
+                                                             :block/order    1
+                                                             :block/children []}]}]}]]
+      (fixture/transact-with-middleware setup-txs)
+      (let [block-remove-op (graph-ops/build-block-remove-op @@fixture/connection child-1-uid)
+            block-remove-tx (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-remove-op)]
+        (d/transact! @fixture/connection block-remove-tx)
+        (let [page            (common-db/get-block @@fixture/connection [:block/uid page-uid])
+              parent          (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+              child-1-exists? (common-db/e-by-av @@fixture/connection :block/uid child-1-uid)
+              child-2-exists? (common-db/e-by-av @@fixture/connection :block/uid child-2-uid)
+              child-3         (common-db/get-block @@fixture/connection [:block/uid child-3-uid])]
+          (t/is (= 1 (-> page :block/children count))
+                (str "Should be 1 child:" (pr-str (:block/children page))))
+          (t/is (= 1 (-> parent :block/children count)))
+          (t/is (not child-1-exists?))
+          (t/is (not child-2-exists?))
+          (t/is (= 0 (:block/order child-3)))
+          (t/is (= child-1-text (:block/string child-3))))))))
