@@ -19,14 +19,11 @@
 
 ;; Effects
 
+
 (rf/reg-fx
   :transact!
   (fn [tx-data]
-    ;; 🎶 Sia "Cheap Thrills"
-    (d/transact! db/dsdb (->> tx-data
-                              (common-db/block-uid-nil-eater @db/dsdb)
-                              (common-db/linkmaker @db/dsdb)
-                              (common-db/orderkeeper @db/dsdb)))))
+    (common-db/transact-with-middleware! db/dsdb tx-data)))
 
 
 (rf/reg-fx
