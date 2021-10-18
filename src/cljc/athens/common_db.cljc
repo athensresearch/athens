@@ -476,7 +476,7 @@
        not-contains? (set selected-uids)))
 
 
-(defn- extract-tag-values
+(defn extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]
   (->> (tree-seq vector? children-fn ast)
