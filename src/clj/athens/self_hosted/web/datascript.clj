@@ -6,8 +6,7 @@
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging                :as log]
     [athens.self-hosted.clients           :as clients]
-    [clojure.pprint                       :as pprint]
-    [datascript.core                      :as d])
+    [clojure.pprint                       :as pprint])
   (:import
     (clojure.lang
       ExceptionInfo)))
@@ -73,11 +72,7 @@
                 txs)]
       (log/debug "transact! event-id:" event-id ", normalized-txs:" (with-out-str
                                                                       (pprint/pprint txs)))
-      (let [processed-tx            (->> txs
-                                         (common-db/block-uid-nil-eater @conn)
-                                         (common-db/linkmaker @conn)
-                                         (common-db/orderkeeper @conn))
-            {:keys [tempids]}       (d/transact! conn processed-tx)
+      (let [{:keys [tempids]}       (common-db/transact-with-middleware! conn txs)
             {:db/keys [current-tx]} tempids]
         (log/debug "transact! event-id:" event-id ", transacted in tx-id:" current-tx)
         (common-events/build-event-accepted event-id current-tx)))

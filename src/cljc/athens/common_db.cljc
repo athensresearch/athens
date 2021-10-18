@@ -768,3 +768,19 @@
      (catch #?(:cljs :default
                :clj Exception) e
        (block-uid-nil-eater-error e input-tx)))))
+
+
+(defn tx-with-middleware
+  [db tx-data]
+  (->> tx-data
+       (block-uid-nil-eater db)
+       (linkmaker db)
+       (orderkeeper db)))
+
+
+(defn transact-with-middleware!
+  "Transact tx-data enriched with middleware txs into conn."
+  [conn tx-data]
+  ;; 🎶 Sia "Cheap Thrills"
+  (d/transact! conn (tx-with-middleware @conn tx-data)))
+
