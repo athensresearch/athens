@@ -16,12 +16,14 @@
 
 (defn user->person
   [{:keys [username color]
+    :page/keys [title]
     :or {username "Unknown"
          color    (first utils/PALETTE)}}]
   ;; TODO: have a real notion of user-id, not just username.
-  {:personId username
-   :username username
-   :color    color})
+  {:personId  username
+   :username  username
+   :color     color
+   :pageTitle title})
 
 
 (defn copy-host-address-to-clipboard
@@ -101,5 +103,8 @@
                   :top "0.25rem"
                   :padding "0.125rem"
                   :background "var(--background-color)"}}]
-        (map (fn [x] [:> Avatar (merge {:showTooltip false :key (:username x)} x)]) @users)))))
+        (->> @users
+             (map user->person)
+             (map (fn [{:keys [personId] :as person}]
+                    [:> Avatar (merge {:showTooltip false :key personId} person)])))))))
 

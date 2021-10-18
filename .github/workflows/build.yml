@@ -64,7 +64,7 @@ jobs:
        - uses: ./.github/custom-actions/clojure-env
 
        - name: Style
-         run: yarn lint
+         run: yarn style
 
    carve:
      runs-on: ubuntu-latest

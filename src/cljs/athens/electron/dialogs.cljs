@@ -95,5 +95,7 @@
   (when (.confirm js/window (str "Do you really want to delete " name "?"))
     (when (utils/local-db? db)
       (.rmSync fs base-dir #js {:recursive true :force true}))
+    (when (utils/remote-db? db)
+      (rf/dispatch [:remote/disconnect!]))
     (rf/dispatch [:db-picker/remove-db db])
     (rf/dispatch [:db-picker/select-most-recent-db])))
