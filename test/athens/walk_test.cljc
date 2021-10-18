@@ -1,7 +1,7 @@
 (ns athens.walk-test
   (:require
     [athens.walk :as walk]
-    [clojure.test :refer [deftest is are]]))
+    [clojure.test :refer [deftest are]]))
 
 
 (deftest db-test

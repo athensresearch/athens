@@ -31,9 +31,8 @@ jobs:
        - name: Run JVM tests
          run: yarn server:test
 
-       # TODO: re-enable once web build is fixed
-       # - name: Run Karma tests
-       #   run: yarn client:test
+       - name: Run Karma tests
+         run: yarn client:test
 
    lint:
      runs-on: ubuntu-latest
