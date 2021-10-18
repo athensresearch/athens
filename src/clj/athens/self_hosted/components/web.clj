@@ -144,7 +144,9 @@
              server-password :password
              in-memory?      :in-memory?}
             (:config config)]
-        (log/info "Starting WebServer with config:" http-conf ", in-memory?" in-memory?)
+        (log/info "Starting WebServer with config:" http-conf
+                  "in-memory?" in-memory?
+                  "password?" (boolean server-password))
         (assoc component :httpkit
                (http/run-server (make-handler datascript fluree in-memory? server-password) http-conf)))))
 
