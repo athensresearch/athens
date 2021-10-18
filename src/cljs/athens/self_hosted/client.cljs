@@ -206,7 +206,7 @@
         (condp = status
           :accepted
           (let [{:accepted/keys [tx-id]} packet]
-            (log/info "event-id:" id "accepted in tx" tx-id))
+            (log/info "event-id:" (pr-str id) "accepted in tx" tx-id))
           :rejected
           (let [{:reject/keys [reason data]} packet]
             (log/warn "event-id:" (pr-str id)
