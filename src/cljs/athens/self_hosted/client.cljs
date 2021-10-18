@@ -257,7 +257,7 @@
 
 (defn- presence-receive-editing
   [args]
-  (log/info "User editing:" (pr-str args))
+  (log/debug "User editing:" (pr-str args))
   (rf/dispatch [:presence/update-editing args]))
 
 
