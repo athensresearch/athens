@@ -16,12 +16,14 @@
 
 (defn user->person
   [{:keys [username color]
+    :page/keys [title]
     :or {username "Unknown"
          color    (first utils/PALETTE)}}]
   ;; TODO: have a real notion of user-id, not just username.
-  {:personId username
-   :username username
-   :color    color})
+  {:personId  username
+   :username  username
+   :color     color
+   :pageTitle title})
 
 
 (defn copy-host-address-to-clipboard
