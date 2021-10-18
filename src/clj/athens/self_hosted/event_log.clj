@@ -83,7 +83,9 @@
 
 
 (defn events
-  "Returns a lazy-seq of all events in conn up to now."
+  "Returns a lazy-seq of all events in conn up to now.
+  Can potentially be very large, so don't hold on to the seq head while
+  processing, and don't use fns that realize the whole coll (e.g. count)."
   [conn]
   (let [f (partial events-page (fdb/db conn ledger) 100)]
     (map deserialize (lazy-cat-while f))))
