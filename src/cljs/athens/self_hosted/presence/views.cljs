@@ -101,5 +101,8 @@
                   :top "0.25rem"
                   :padding "0.125rem"
                   :background "var(--background-color)"}}]
-        (map (fn [x] [:> Avatar (merge {:showTooltip false :key (:username x)} x)]) @users)))))
+        (->> @users
+             (map user->person)
+             (map (fn [{:keys [personId] :as person}]
+                    [:> Avatar (merge {:showTooltip false :key personId} person)])))))))
 
