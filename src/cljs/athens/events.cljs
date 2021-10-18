@@ -10,7 +10,6 @@
     [athens.common.utils                  :as common.utils]
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
-    [athens.electron.utils                :as electron.utils]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.util                          :as util]
