@@ -63,3 +63,35 @@
                                                           new-block-op
                                                           new-block-save-op])]
     split-block-op))
+
+
+(defn build-block-remove-op
+  "Creates `:block/remove` op."
+  [db delete-uid]
+  (when (common-db/e-by-av db :block/uid delete-uid)
+    (atomic/make-block-remove-op delete-uid)))
+
+
+(defn build-block-remove-merge-op
+  "Creates `:block/remove` & `:block/save` ops.
+  Arguments:
+  - `db` db value
+  - `remove-uid` `:block/uid` to delete
+  - `merge-uid` `:block/uid` to merge (postfix) `value` to
+  - `value`: string to be postfixed to `:block/string` of `merge-uid`"
+  [db remove-uid merge-uid value]
+  (let [;; block/remove atomic op
+        block-remove-op     (build-block-remove-op db
+                                                   remove-uid)
+        ;; block/save atomic op]
+        existing-string     (common-db/v-by-ea db
+                                               [:block/uid merge-uid]
+                                               :block/string)
+        block-save-op       (build-block-save-op db
+                                                 merge-uid
+                                                 existing-string
+                                                 (str existing-string value))
+        delete-and-merge-op (composite/make-consequence-op {:op/type :block/remove-and-merge}
+                                                           [block-remove-op
+                                                            block-save-op])]
+    delete-and-merge-op))

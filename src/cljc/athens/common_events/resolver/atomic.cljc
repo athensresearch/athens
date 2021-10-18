@@ -2,7 +2,10 @@
   (:require
     [athens.common-db              :as common-db]
     [athens.common-events.resolver :as resolver]
-    [athens.common.utils           :as utils]))
+    [athens.common.logging         :as log]
+    [athens.common.utils           :as utils]
+    [clojure.pprint                :as pp]
+    [clojure.string                :as s]))
 
 
 (defmulti resolve-atomic-op-to-tx
@@ -75,6 +78,100 @@
                          :block/string new-string
                          :edit/time    now}]
       [updated-block])))
+
+
+(defmethod resolve-atomic-op-to-tx :block/remove
+  [db {:op/keys [args]}]
+  ;; [x] :db/retractEntity
+  ;; [x] retract children
+  ;; [x] :db/retract parent's child
+  ;; [x] reindex parent's children
+  ;; [x] cleanup block refs
+  (let [{:keys [block-uid]}   args
+        block-exists?         (common-db/e-by-av db :block/uid block-uid)
+        {removed-order :block/order
+         children      :block/children
+         :as           block} (when block-exists?
+                                (common-db/get-block db [:block/uid block-uid]))
+        parent-eid            (when block-exists?
+                                (common-db/get-parent-eid db [:block/uid block-uid]))
+        parent-uid            (when parent-eid
+                                (common-db/v-by-ea db parent-eid :block/uid))
+        reindex               (common-db/dec-after db [:block/uid parent-uid] removed-order)
+        reindex?              (seq reindex)
+        has-kids?             (seq children)
+        descendants-uids      (when has-kids?
+                                (loop [acc        []
+                                       to-look-at children]
+                                  (if-let [look-at (first to-look-at)]
+                                    (let [c-uid   (:block/uid look-at)
+                                          c-block (common-db/get-block db [:block/uid c-uid])]
+                                      (recur (conj acc c-uid)
+                                             (apply conj (rest children)
+                                                    (:block/children c-block))))
+                                    acc)))
+        all-uids-to-remove    (conj (set descendants-uids) block-uid)
+        uid->refs             (->> all-uids-to-remove
+                                   (map (fn [uid]
+                                          (let [block    (common-db/get-block db [:block/uid uid])
+                                                rev-refs (set (:block/_refs block))]
+                                            (when-not (empty? rev-refs)
+                                              [uid (set rev-refs)]))))
+                                   (remove nil?)
+                                   (into {}))
+        ref-eids              (mapcat second uid->refs)
+        eids->uids            (->> ref-eids
+                                   (map (fn [{id :db/id}]
+                                          [id (common-db/v-by-ea db id :block/uid)]))
+                                   (into {}))
+        removed-uid->uid-refs (->> uid->refs
+                                   (map (fn [[k refs]]
+                                          [k (set
+                                              (for [{eid :db/id} refs
+                                                    :let         [uid (eids->uids eid)]
+                                                    :when        (not (contains? all-uids-to-remove uid))]
+                                                uid))]))
+                                   (remove #(empty? (second %)))
+                                   (into {}))
+        asserts               (->> removed-uid->uid-refs
+                                   (mapcat (fn [[removed-uid referenced-uids]]
+                                             (let [removed-string (common-db/v-by-ea db [:block/uid removed-uid] :block/string)
+                                                   from-string    (str "((" removed-uid"))")
+                                                   uid->string    (->> referenced-uids
+                                                                       (map (fn [uid]
+                                                                              [uid (common-db/v-by-ea db [:block/uid uid] :block/string)]))
+                                                                       (into {}))]
+                                               (map (fn [[uid original-string]]
+                                                      {:block/uid    uid
+                                                       :block/string (s/replace original-string from-string removed-string)})
+                                                    uid->string)))))
+        has-asserts?          (seq asserts)
+        retract-kids          (mapv (fn [uid]
+                                      [:db/retractEntity [:block/uid uid]])
+                                    descendants-uids)
+        retract-entity        (when block-exists?
+                                [:db/retractEntity [:block/uid block-uid]])
+        retract-parents-child (when parent-uid
+                                [:db/retract [:block/uid parent-uid] :block/children [:block/uid block-uid]])
+        parent                (when reindex?
+                                {:block/uid      parent-uid
+                                 :block/children reindex})
+        txs                   (when block-exists?
+                                (cond-> []
+                                  parent-uid   (conj retract-parents-child)
+                                  reindex?     (conj parent)
+                                  has-kids?    (into retract-kids)
+                                  has-asserts? (into asserts)
+                                  true         (conj retract-entity)))]
+    (log/debug ":block/remove block-uid:" (pr-str block-uid)
+               "\nblock:" (with-out-str
+                            (pp/pprint block))
+               "\nparent-eid:" (pr-str parent-eid)
+               "\nparent-uid:" (pr-str parent-uid)
+               "\nretract-kids:" (pr-str retract-kids)
+               "\nresolved to txs:" (with-out-str
+                                      (pp/pprint txs)))
+    txs))
 
 
 (defmethod resolve-atomic-op-to-tx :page/new
