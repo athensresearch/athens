@@ -127,16 +127,16 @@
         removed-uid->uid-refs (->> uid->refs
                                    (map (fn [[k refs]]
                                           [k (set
-                                              (for [{eid :db/id} refs
-                                                    :let         [uid (eids->uids eid)]
-                                                    :when        (not (contains? all-uids-to-remove uid))]
-                                                uid))]))
+                                               (for [{eid :db/id} refs
+                                                     :let         [uid (eids->uids eid)]
+                                                     :when        (not (contains? all-uids-to-remove uid))]
+                                                 uid))]))
                                    (remove #(empty? (second %)))
                                    (into {}))
         asserts               (->> removed-uid->uid-refs
                                    (mapcat (fn [[removed-uid referenced-uids]]
                                              (let [removed-string (common-db/v-by-ea db [:block/uid removed-uid] :block/string)
-                                                   from-string    (str "((" removed-uid"))")
+                                                   from-string    (str "((" removed-uid "))")
                                                    uid->string    (->> referenced-uids
                                                                        (map (fn [uid]
                                                                               [uid (common-db/v-by-ea db [:block/uid uid] :block/string)]))

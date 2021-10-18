@@ -48,7 +48,7 @@
                    "\npage:" (with-out-str
                                (pp/pprint page))
                    "\nparent:" (with-out-str
-                               (pp/pprint parent))
+                                 (pp/pprint parent))
                    "\nchild:" (with-out-str
                                 (pp/pprint child)))
         (t/is (not child)
@@ -100,26 +100,26 @@
                    "block-remove-op:\n" (with-out-str
                                           (pp/pprint block-remove-op))
                    "block-remove-tx:\n" (with-out-str
-                                          (pp/pprint block-remove-tx)))(let [page         (common-db/get-block @@fixture/connection [:block/uid page-uid])
-                                                                             parent       (common-db/get-block @@fixture/connection [:block/uid parent-uid])
-                                                                             first-child  (common-db/e-by-av @@fixture/connection :block/uid child-1-uid)
-                                                                             second-child (common-db/get-block @@fixture/connection [:block/uid child-2-uid])]
-          (log/debug "block-remove-childless-kids-test:"
-                     "\npage:" (with-out-str
-                                 (pp/pprint page))
-                     "\nparent:" (with-out-str
-                                   (pp/pprint parent))
-                     "\nfirst-child:" (with-out-str
-                                        (pp/pprint first-child))
-                     "\nsecond-child:" (with-out-str
-                                         (pp/pprint second-child)))
-          (t/is (not first-child)
-                "After `:block/remove` block should be gone for good")
-          (t/is (= 1 (-> page :block/children count))
-                "Page should have 1 child after block split")
-          (t/is (= 1 (-> parent :block/children count))
-                "Parent should not have 1 child after `:block/remove`")
-          (t/is (= 0 (-> second-child :block/order)))))))
+                                          (pp/pprint block-remove-tx))) (let [page         (common-db/get-block @@fixture/connection [:block/uid page-uid])
+                                                                              parent       (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+                                                                              first-child  (common-db/e-by-av @@fixture/connection :block/uid child-1-uid)
+                                                                              second-child (common-db/get-block @@fixture/connection [:block/uid child-2-uid])]
+                                                                          (log/debug "block-remove-childless-kids-test:"
+                                                                                     "\npage:" (with-out-str
+                                                                                                 (pp/pprint page))
+                                                                                     "\nparent:" (with-out-str
+                                                                                                   (pp/pprint parent))
+                                                                                     "\nfirst-child:" (with-out-str
+                                                                                                        (pp/pprint first-child))
+                                                                                     "\nsecond-child:" (with-out-str
+                                                                                                         (pp/pprint second-child)))
+                                                                          (t/is (not first-child)
+                                                                                "After `:block/remove` block should be gone for good")
+                                                                          (t/is (= 1 (-> page :block/children count))
+                                                                                "Page should have 1 child after block split")
+                                                                          (t/is (= 1 (-> parent :block/children count))
+                                                                                "Parent should not have 1 child after `:block/remove`")
+                                                                          (t/is (= 0 (-> second-child :block/order)))))))
 
   (t/testing "removing last child"
     (let [page-uid    "page-2-uid"
@@ -271,7 +271,7 @@
           (t/is (= 1 (-> parent :block/children count)))
           (t/is (= 0 (:block/order child-4)))
           (t/is (= 1 (-> page :block/children count)))))))
-  
+
   (t/testing "Make sure we remove subtree, event if there was a block ref below"
     (let [page-uid    "page-2-uid"
           parent-uid  "parent-2-uid"
