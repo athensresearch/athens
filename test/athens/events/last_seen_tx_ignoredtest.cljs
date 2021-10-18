@@ -1,7 +1,10 @@
 #_{:clj-kondo/ignore [:unused-namespace]}
 
 
-(ns athens.events.last-seen-tx-test
+;; TODO: this test is ignored because the web build is currently broken.
+;; When it is fixed, chang the suffix from ignoredtest to test, and it
+;; will run again.
+(ns athens.events.last-seen-tx-ignoredtest
   "Testing `last-seen-tx` events & subscriptions."
   (:require
     [athens.effects]
