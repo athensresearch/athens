@@ -13,7 +13,6 @@
     [athens.electron.utils                :as electron.utils]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
-    [athens.self-hosted.client            :as client]
     [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
@@ -290,7 +289,7 @@
 (reg-event-fx
   :editing/uid
   (fn [{:keys [db]} [_ uid index]]
-    (let [remote? (client/open?)]
+    (let [remote? (db-picker/remote-db? db)]
       (cond->
         {:db                    (assoc db :editing/uid uid)
          :editing/focus         [uid index]}
@@ -581,13 +580,9 @@
 (reg-event-fx
   :resolve-transact-forward
   (fn [{:keys [db]} [_ event]]
-    (let [selected-db (db-picker/selected-db db)
-          forward? (electron.utils/remote-db? selected-db)]
+    (let [forward? (db-picker/remote-db? db)]
       (log/debug ":resolve-transact-forward forward?" forward?)
       {:fx [[:dispatch-n [[:resolve-transact event]
-                          ;; TODO: this isn't right, we want to know if we're in RTC
-                          ;; and not if the RTC conn is open right now.
-                          ;; e.g. can be temporarily offline, but still want to queue up events.
                           (when forward? [:remote/forward-event event])]]]})))
 
 
@@ -693,7 +688,7 @@
   :undo
   (fn [{:keys [db]} _]
     (log/debug ":undo")
-    (let [local? (not (client/open?))]
+    (let [local? (not (db-picker/remote-db? db))]
       (log/debug ":undo: local?" local?)
       (if local?
         (let [undo-event (common-events/build-undo-redo-event (:remote/last-seen-tx db) false)
@@ -706,7 +701,7 @@
   :redo
   (fn [{:keys [db]} _]
     (log/debug ":redo")
-    (let [local? (not (client/open?))]
+    (let [local? (not (db-picker/remote-db? db))]
       (log/debug ":redo: local?" local?)
       (if local?
         (let [redo-event (common-events/build-undo-redo-event (:remote/last-seen-tx db) true)
@@ -839,7 +834,7 @@
   :block/save
   (fn [{:keys [db]} [_ {:keys [uid old-string new-string callback] :as args}]]
     (log/debug ":block/save args" (pr-str args))
-    (let [local?      (not (client/open?))
+    (let [local?      (not (db-picker/remote-db? db))
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
           do-nothing? (or (not block-eid)
                           (= old-string new-string))
@@ -1039,7 +1034,7 @@
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-    (let [local?                    (not (client/open?))
+    (let [local?                    (not (db-picker/remote-db? db))
           block                     (common-db/get-block @db/dsdb [:block/uid uid])
           block-zero?               (zero? (:block/order block))
           {:keys [value start end]} d-key-down]

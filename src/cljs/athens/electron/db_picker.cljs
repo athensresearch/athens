@@ -17,6 +17,13 @@
     (get-in db [:athens/persist :db-picker/all-dbs selected-db-id])))
 
 
+(defn remote-db?
+  [rfdb]
+  (-> rfdb
+      selected-db
+      utils/remote-db?))
+
+
 (rf/reg-sub
   :db-picker/all-dbs
   (fn [db _]
