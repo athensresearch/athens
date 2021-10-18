@@ -39,10 +39,12 @@
       (clients/send! channel
                      (common-events/build-presence-all-online-event max-tx
                                                                     (clients/get-clients-usernames)))
-      (doseq [{:keys [username block-uid]} (vals @all-presence)]
-        (let [broadcast-presence-editing-event
-              (common-events/build-presence-broadcast-editing-event max-tx username block-uid)]
-          (clients/send! channel broadcast-presence-editing-event)))
+      (doseq [{username :username
+               block-uid :block/uid} (vals @all-presence)]
+        (when block-uid
+          (let [broadcast-presence-editing-event
+                (common-events/build-presence-broadcast-editing-event max-tx username block-uid)]
+            (clients/send! channel broadcast-presence-editing-event))))
       (clients/broadcast! (common-events/build-presence-online-event max-tx
                                                                      username)))
 
