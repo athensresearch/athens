@@ -129,6 +129,14 @@
 
 
 (rf/reg-fx
+  :confirm/js!
+  (fn [[message true-cb false-cb]]
+    (if (js/window.confirm message)
+      (true-cb)
+      (false-cb))))
+
+
+(rf/reg-fx
   :right-sidebar/scroll-top
   (fn []
     (let [right-sidebar (js/document.querySelector ".right-sidebar-content")]
