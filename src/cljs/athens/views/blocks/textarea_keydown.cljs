@@ -244,7 +244,14 @@
      (when (not (nil? expansion))
        (set-selection target (- end (count query)) end)
        (replace-selection-with expansion))
-     (let [new-cursor-pos (+ end (- (count query)) (count expansion) 2)]
+     (let [new-cursor-pos (+ end
+                             (- (count query))
+                             ;; Add the expansion count if we have it, but if we
+                             ;; don't just add back the query itself so the cursor
+                             ;; doesn't move back.
+                             (count (or expansion
+                                        query))
+                             2)]
        (set-cursor-position target new-cursor-pos))
      (swap! state assoc :search/type nil))))
 
