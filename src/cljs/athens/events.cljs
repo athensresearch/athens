@@ -783,7 +783,8 @@
   :backspace/delete-only-child
   (fn [{:keys [db]} [_ uid]]
     (log/debug ":backspace/delete-only-child:" (pr-str uid))
-    (let [event (common-events/build-delete-only-child-event (:remote/last-seen-tx db) uid)]
+    (let [op    (graph-ops/build-block-remove-op @db/dsdb uid)
+          event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]
             [:dispatch [:editing/uid nil]]]})))
 

@@ -508,17 +508,6 @@
                      :drag-target  drag-target}}))
 
 
-(defn build-selected-delete-event
-  "Builds `:datascript/selected-delete` event with:
-  - uids : The uids of blocks to be deleted "
-  [last-tx uids]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/selected-delete
-     :event/args    {:uids uids}}))
-
-
 (defn build-block-open-event
   "Builds `:datascript/block-open` event with:
   - block-uid : The uid of block to be opened
@@ -543,30 +532,6 @@
      :event/type    :datascript/paste-internal
      :event/args    {:uid                     uid
                      :internal-representation internal-representation}}))
-
-
-(defn build-delete-only-child-event
-  "Builds `:datascript/delete-only-child` event with:
-  - uid  : The uid of block to delete"
-  [last-tx uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/delete-only-child
-     :event/args    {:uid uid}}))
-
-
-(defn build-delete-merge-block-event
-  "Builds `:datascript/delete-merge-block` event with:
-  - uid  : The uid of block to delete
-  - value: The text content of the block"
-  [last-tx uid value]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/delete-merge-block
-     :event/args    {:uid uid
-                     :value value}}))
 
 
 ;; - presence events
