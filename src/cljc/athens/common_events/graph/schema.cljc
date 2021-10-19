@@ -73,11 +73,11 @@
                                    op-type-atomic-common
                                    op-block-new)]
                      [:block/save (mu/merge
-                                   op-type-atomic-common
-                                   op-block-save)]
+                                    op-type-atomic-common
+                                    op-block-save)]
                      [:block/remove (mu/merge
-                                     op-type-atomic-common
-                                     op-block-remove)]
+                                      op-type-atomic-common
+                                      op-block-remove)]
                      [:page/new (mu/merge
                                   op-type-atomic-common
                                   op-page-new)]
