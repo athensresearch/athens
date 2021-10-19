@@ -8,9 +8,9 @@
 (def atomic-op-types
   [:enum
    :block/new ; ✓
-   :block/save
+   :block/save ; ✓
    :block/open
-   :block/remove
+   :block/remove ; ✓
    :block/move
    :page/new ; ✓
    :page/rename
@@ -50,6 +50,13 @@
      [:old-string string?]]]])
 
 
+(def op-block-remove
+  [:map
+   [:op/args
+    [:map
+     [:block-uid string?]]]])
+
+
 (def op-page-new
   [:map
    [:op/args
@@ -65,18 +72,21 @@
                      [:block/new (mu/merge
                                    op-type-atomic-common
                                    op-block-new)]
-                     [:page/new (mu/merge
-                                  op-type-atomic-common
-                                  op-page-new)]
                      [:block/save (mu/merge
                                     op-type-atomic-common
                                     op-block-save)]
+                     [:block/remove (mu/merge
+                                      op-type-atomic-common
+                                      op-block-remove)]
+                     [:page/new (mu/merge
+                                  op-type-atomic-common
+                                  op-page-new)]
                      [:composite/consequence [:ref ::composite-op]]]
      ::composite-op [:map
                      [:op/type [:enum :composite/consequence]]
                      [:op/atomic? false?]
                      [:op/trigger map?]
-                     [:op/consequences [:vector [:ref ::atomic-op]]]]}}
+                     [:op/consequences [:sequential [:ref ::atomic-op]]]]}}
    ::atomic-op])
 
 
