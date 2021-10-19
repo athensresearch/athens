@@ -2,7 +2,8 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common.utils :as utils]
-    [athens.patterns :as patterns]
+    [athens.parser  :as parser]
+    [clojure.set  :as set]
     [clojure.string :as str]
     [clojure.walk :as walk]
     [datascript.core :as d]))
@@ -19,6 +20,36 @@
     mapped-uids))
 
 
+(defn string->block-lookups
+  "Given string s, compute the set of block refs and block embeds."
+  [s]
+  (let [ast (parser/parse-to-ast s)
+        block-ref-str->uid #(common-db/strip-markup % "((" "))")
+        block-lookups (into #{}
+                            (map (fn [uid] uid))
+                            (common-db/extract-tag-values ast
+                                                          #{:block-ref :component}
+                                                          identity
+                                                          #(let [arg (second %)]
+                                                             (cond
+                                                               ;; If it is a uid
+                                                               (:from arg)
+                                                               [:uid (block-ref-str->uid (:from arg))]
+
+                                                               ;; If it is a block embed
+                                                               (= "[[embed]]:"
+                                                                  (first (str/split arg #" ")))
+                                                               [:embed (block-ref-str->uid (last (str/split arg #" ")))]))))]
+    (set/union block-lookups)))
+
+
+(defn wrap-uid-in-pattern
+  [pattern-type uid]
+  (if (= :embed pattern-type)
+    (str "{{[[embed]]: ((" uid "))}}")
+    (str "((" uid "))")))
+
+
 (defn update-strings-with-new-uids
   "Takes a string of text and parses it for block refs, block embeds using regex. Then replace the matched pattern
    with new refs.
@@ -33,22 +64,22 @@
             To understand the regex pattern like lookback etc. checkout this link: https://stackoverflow.com/questions/2973436/regex-lookahead-lookbehind-and-atomic-groups
    "
   [block-string mapped-uids]
-  (let [parsed-uids     (into #{} (re-seq patterns/block-refs-pattern
-                                          block-string))
+  (let [parsed-uids     (string->block-lookups block-string)
         replaced-string (reduce (fn [block-string ref]
-                                  (let [embed?       (seq (re-find patterns/block-embed-pattern
-                                                                   ref))
-                                        uid          (if embed?
-                                                       (common-db/strip-markup ref "{{[[embed]]: ((" "))}}")
-                                                       (common-db/strip-markup ref "((" "))"))
+                                  (let [embed?       (= :embed
+                                                        (first ref))
+                                        uid          (last ref)
+                                        current-ref  (if embed?
+                                                       (wrap-uid-in-pattern :embed uid)
+                                                       (wrap-uid-in-pattern :uid   uid))
                                         new-uid      (get mapped-uids uid nil)
                                         replace-with (cond
-                                                       (and embed? new-uid)       (str "{{[[embed]]: ((" new-uid "))}}")
-                                                       (and (not embed?) new-uid) (str "((" new-uid "))")
-                                                       :else                      ref)]
+                                                       (and embed? new-uid)       (wrap-uid-in-pattern :embed new-uid)
+                                                       (and (not embed?) new-uid) (wrap-uid-in-pattern :uid new-uid)
+                                                       :else                      current-ref)]
                                     (if new-uid
                                       (str/replace block-string
-                                                   ref
+                                                   current-ref
                                                    replace-with)
                                       block-string)))
                                 block-string
