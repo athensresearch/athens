@@ -210,6 +210,9 @@
       (dispatch [::select-events/delete]))))
 
 
+(def force-leave (atom false))
+
+
 (defn prevent-save
   "Google Closure's events/listen isn't working for some reason anymore.
 
@@ -221,11 +224,21 @@
     (fn [e]
       (let [synced? @(subscribe [:db/synced])
             remote? (electron-utils/remote-db? @(subscribe [:db-picker/selected-db]))]
-        ;; disconnect the
         (cond
-          (not synced?)
+          (and (not synced?)
+               (not @force-leave))
           (do
-            (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. Try refreshing or quitting again once the sync is complete."])
+            ;; The browser blocks the confirm window during beforeunload, so
+            ;; instead we always cancel unload and separately show a confirm window
+            ;; that allows closing the window.
+            (dispatch [:confirm/js
+                       (str "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. "
+                            "Try refreshing or quitting again once the sync is complete. "
+                            "Press OK to wait, or Cancel to leave without saving (will cause data loss!).")
+                       #()
+                       (fn []
+                         (reset! force-leave true)
+                         (js/window.close))])
             (.. e preventDefault)
             (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
             "Returning a string also prevents exit on other browsers.")
