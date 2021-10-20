@@ -73,14 +73,17 @@ You can create an Athens server without installing anything else via docker comp
 
 Pick a [release](https://github.com/athensresearch/athens/releases you'd like to use, download the `docker-compose.yml` file in the release to a folder, and then run `docker compose up --no-build`.
 
-For example, for `v1.0.0-alpha.rtc.12`:
+For example, for `v1.0.0-alpha.rtc.26`:
 
 ```sh
-curl -L -o docker-compose.yml https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.12/docker-compose.yml
-docker compose up
+curl -L -o docker-compose.yml https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.26/docker-compose.yml
+docker compose up --detach
 ```
 
 The server will be acessible at `localhost:80`, and all data will be saved at `./athens-data`.
+
+If any of the services fails to launch, you can use `docker compose logs SERVICE_NAME` to inspect what the problem is.
+Fluree can fail to launch if it does not have enough permissions for the `./athens-data` folder.
 
 You can override the app configuration via an environment variable:
 
@@ -95,3 +98,10 @@ or via an `.env` file located in the same directory as the downloaded `docker-co
 CONFIG_EDN="{:password \"YourServerPassword\"}"
 ```
 
+To update your deployment download the new `docker-compose.yml` file and follow these steps:
+
+```
+docker compose down
+docker compose pull
+docker compose up --detach
+```
