@@ -126,7 +126,7 @@
                :mouse-down          false
                :daily-notes/items   []
                :selection           {:items []}
-               :theme/dark          false
+               :help/open?          false
                :zoom-level          0
                :fs/watcher          nil
                :presence            {}

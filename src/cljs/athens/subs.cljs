@@ -143,3 +143,10 @@
   :connection-status
   (fn [db _]
     (:connection-status db)))
+
+
+(rf/reg-sub
+  :help/open?
+  (fn [db _]
+    (:help/open? db)))
+
