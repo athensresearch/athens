@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.26](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.25...v1.0.0-alpha.rtc.26) (2021-10-20)
+
+
+### Documentation
+
+* ADR for Atomic Graph Operations and Transacting. ([23022fb](https://github.com/athensresearch/athens/commit/23022fbe05f81e676f4e4edfc91046c1fb92e14e))
+
+
+* update fluree ledger to 1.0 ([1db7a24](https://github.com/athensresearch/athens/commit/1db7a241a520bfd757b965060c19e0f19b0e4e2d))
+
 ## [1.0.0-alpha.rtc.25](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.24...v1.0.0-alpha.rtc.25) (2021-10-20)
 
 
