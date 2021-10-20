@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.25](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.24...v1.0.0-alpha.rtc.25) (2021-10-20)
+
+
+### Features
+
+* `:block/remove` delete also subtree ([9a82163](https://github.com/athensresearch/athens/commit/9a821631bb0003cb67b4316db74bd40252714b87))
+* `:block/remove` taking care of block refs too. ([b343572](https://github.com/athensresearch/athens/commit/b343572766df6284293096202129609a8ad364a9))
+* allow leaving even with unsynced changes ([31f107d](https://github.com/athensresearch/athens/commit/31f107d7a3771244ee994d9178e71c88c1eb024a))
+* basic delete works on atomics ([3fb4036](https://github.com/athensresearch/athens/commit/3fb4036ef21c8b8129e29e9441b0c322cc9ed5e1))
+* pass page title on to avatar/presence details ([240a9e7](https://github.com/athensresearch/athens/commit/240a9e7b2dccf89329201250aa06f62efdd47433))
+
+
+### Bug Fixes
+
+* disconnect rtc client when deleting db ([c9a6621](https://github.com/athensresearch/athens/commit/c9a6621f626fc0e6c0504a87f8759d6c499b6f56))
+* don't move back cursor when there's no expansion ([98cfb24](https://github.com/athensresearch/athens/commit/98cfb24cd1bb2e95932b249282714748e2488b45))
+* map user to person in inline presence ([f7fb663](https://github.com/athensresearch/athens/commit/f7fb66306c6c11cdaca90d864115c8ec57eda4ea))
+* print uuid as string ([f38121a](https://github.com/athensresearch/athens/commit/f38121a6b68309f98cbea3927b824f7f660f0e22))
+* rollback-tx-snapshot atomically ([bcb334b](https://github.com/athensresearch/athens/commit/bcb334bb3c4773d79b0840936a945b9227eb7d43))
+* use db-picker instead of client connection to determine if db is remote ([29e8d5b](https://github.com/athensresearch/athens/commit/29e8d5b1e5f22e4686351050987bd85b7e00effa))
+* use right key for block/uid on initial presence ([c140340](https://github.com/athensresearch/athens/commit/c140340ee85acf43036b486c6869ad95fb0b7a14))
+* user editing log should be debug level ([1c0b775](https://github.com/athensresearch/athens/commit/1c0b7750b34878a960effdd041be0de82e0fe040))
+
+
+* commit deps added by fluree to shadow-cljs builds ([d567fca](https://github.com/athensresearch/athens/commit/d567fcad3fbdd21f6bcb48e339cba99cd6ce317d))
+* fix ([fe9df20](https://github.com/athensresearch/athens/commit/fe9df20871a645109e3cb2e81cbec97bed297eb2))
+* re-enable cljs tests, except the one that needs full web build fix ([79da717](https://github.com/athensresearch/athens/commit/79da7177560250faca8aa165ae3a03493a9362ef))
+* remove unused ns ([cef5bc7](https://github.com/athensresearch/athens/commit/cef5bc78e4bfdf370b575eac4ef9d44a84f30fe4))
+* run more tests in cljs ([6a0b035](https://github.com/athensresearch/athens/commit/6a0b035cb911cfcf1890b1eca61564b9f09d5d25))
+* style happy ([ea39d0e](https://github.com/athensresearch/athens/commit/ea39d0e211a6234645c743702ad75f86a627a687))
+* style job should run style, not lint ([bdeae79](https://github.com/athensresearch/athens/commit/bdeae79f52e929669ff9ce3d4de72f20f316925e))
+* these tests need to pass ([d0981c9](https://github.com/athensresearch/athens/commit/d0981c97950deac1f4e38415da98163bc938091e))
+* use atomic `:block/remove` to remove blocks. ([9425330](https://github.com/athensresearch/athens/commit/9425330c366029b44cbeee9ff535ce34be7b72fa))
+* user docker compose server settings as default ([5b9e3da](https://github.com/athensresearch/athens/commit/5b9e3da9ae34460081e5d36a92a1b8f4f10a5adf))
+
 ## [1.0.0-alpha.rtc.24](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.23...v1.0.0-alpha.rtc.24) (2021-10-14)
 
 
