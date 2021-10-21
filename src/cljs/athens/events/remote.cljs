@@ -20,16 +20,14 @@
   (fn [_ [_ remote-db]]
     (log/info ":remote/connect!" (pr-str remote-db))
     {:remote/client-connect! remote-db
-     :fx                     [[:dispatch [:loading/set]]
-                              [:dispatch [:conn-status :connecting]]]}))
+     :fx                     [[:dispatch [:conn-status :connecting]]]}))
 
 
 (rf/reg-event-fx
   :remote/connected
   (fn [_ _]
     (log/info ":remote/connected")
-    {:fx [[:dispatch-n [[:loading/unset]
-                        [:conn-status :connected]
+    {:fx [[:dispatch-n [[:conn-status :connected]
                         [:db/sync]]]]}))
 
 
@@ -37,8 +35,7 @@
   :remote/connection-failed
   (fn [_ _]
     (log/warn ":remote/connection-failed")
-    {:fx [[:dispatch-n [[:loading/unset]
-                        [:conn-status :disconnected]
+    {:fx [[:dispatch-n [[:conn-status :disconnected]
                         [:db/sync]]]]}))
 
 

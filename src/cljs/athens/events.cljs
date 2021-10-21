@@ -29,8 +29,8 @@
   [(inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
     {:db         (db/init-app-db local-storage)
-     :dispatch-n [[:loading/unset]
-                  [:theme/set]]}))
+     :dispatch-n [[:theme/set]
+                  [:loading/unset]]}))
 
 
 (reg-event-db
