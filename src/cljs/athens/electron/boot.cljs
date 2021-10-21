@@ -54,7 +54,7 @@
       {:db         init-app-db
        :dispatch   [:loading/set]
        :async-flow {:first-dispatch first-event
-                    :rules          [ ;; if first time, go to Daily Pages and open left-sidebar
+                    :rules          [;; if first time, go to Daily Pages and open left-sidebar
                                      {:when       :seen?
                                       :events     :fs/create-and-watch
                                       :dispatch-n [[:navigate :home]
