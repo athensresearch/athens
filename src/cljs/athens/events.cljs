@@ -24,13 +24,15 @@
 
 ;; -- re-frame app-db events ---------------------------------------------
 
+;; TODO: boot/web should be rolled into boot/desktop to have a central boot
+;; cycle that works with RTC.
 (reg-event-fx
   :boot/web
   [(inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
     {:db         (db/init-app-db local-storage)
-     :dispatch-n [[:loading/unset]
-                  [:theme/set]]}))
+     :dispatch-n [[:theme/set]
+                  [:loading/unset]]}))
 
 
 (reg-event-db
@@ -501,27 +503,6 @@
 ;; -- event-fx and Datascript Transactions -------------------------------
 
 ;; Import/Export
-
-(reg-event-fx
-  :get-db/init
-  (fn [{rfdb :db} _]
-    {:db         (assoc db/rfdb :loading? true)
-     :async-flow {:first-dispatch [:http/get-db]
-                  :rules          [{:when :seen?
-                                    :events :reset-conn
-                                    :dispatch-n [[:loading/unset]
-                                                 [:navigate (-> rfdb :current-route :data :name)]]
-                                    :halt? true}]}}))
-
-
-(reg-event-fx
-  :http/get-db
-  (fn [_ _]
-    {:http {:method :get
-            :url db/athens-url
-            :opts {:with-credentials? false}
-            :on-success [:http-success/get-db]
-            :on-failure [:alert/set]}}))
 
 
 (reg-event-fx

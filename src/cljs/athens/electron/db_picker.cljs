@@ -91,3 +91,10 @@
        ;; reboot, and run default bd logic, when removing the db leaves db picker empty
        :dispatch-n [(when (empty? (all-dbs new-db)) [:boot])]})))
 
+
+;; Select no db, leave it to the boot sequence to decide what to do.
+(rf/reg-event-fx
+  :db-picker/remove-selection
+  (fn [{:keys [db]} [_]]
+    {:db       (update-in db [:athens/persist] dissoc :db-picker/selected-db-id)
+     :dispatch [:boot]}))

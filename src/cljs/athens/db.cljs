@@ -12,7 +12,6 @@
 
 ;; -- Example Roam DBs ---------------------------------------------------
 
-(def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
 (def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
 (def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
 
