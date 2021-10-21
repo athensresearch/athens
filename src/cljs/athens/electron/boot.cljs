@@ -70,6 +70,8 @@
                                       ;; This event ends the async flow.
                                       :halt?      true}
 
+                                     ;; TODO: failed connection followup, should go back to another db.
+
                                      ;; whether first or nth time, update athens pages
                                      #_{:when       :seen-any-of?
                                         :events     [:fs/create-and-watch :reset-conn]

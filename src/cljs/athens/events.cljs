@@ -24,6 +24,8 @@
 
 ;; -- re-frame app-db events ---------------------------------------------
 
+;; TODO: boot/web should be rolled into boot/desktop to have a central boot
+;; cycle that works with RTC.
 (reg-event-fx
   :boot/web
   [(inject-cofx :local-storage :athens/persist)]
