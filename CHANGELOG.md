@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.27](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.26...v1.0.0-alpha.rtc.27) (2021-10-21)
+
+
+### Bug Fixes
+
+* don't fire db events on navigated while still loading ([a8122b6](https://github.com/athensresearch/athens/commit/a8122b62f0d5d9fe86d738957ddb79641cad7593))
+* let boot control loading status ([2957bca](https://github.com/athensresearch/athens/commit/2957bcae4b3a484e243655b47fd472c74292b144))
+* remove selected db on connection failure ([ef025e4](https://github.com/athensresearch/athens/commit/ef025e4eb343c5b6b5f340122e5ca3c1cdf9f47f))
+* use single exit point on reset-conn for async-flow ([b04a9b7](https://github.com/athensresearch/athens/commit/b04a9b75094aab7e2882795ca85796b284c3d22f))
+
+
+### Refactors
+
+* remove unused get-db events ([3f6fcc3](https://github.com/athensresearch/athens/commit/3f6fcc32bf49e39a22d6712befd180b1e1e36373))
+
+
+* style, lint, carve ([a669ffc](https://github.com/athensresearch/athens/commit/a669ffcbd5e9e53da5aeb2a1a3e87069f0bb86a9))
+
 ## [1.0.0-alpha.rtc.26](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.25...v1.0.0-alpha.rtc.26) (2021-10-20)
 
 
