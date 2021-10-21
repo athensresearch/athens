@@ -64,13 +64,19 @@
                                      {:when       :seen?
                                       :events     :reset-conn
                                       :dispatch-n [[:fs/update-write-db]
+                                                   [:db/sync]
                                                    [:restore-navigation]
                                                    [:theme/set]
                                                    [:loading/unset]]
-                                      ;; This event ends the async flow.
+                                      ;; This event ends the async flow successfully.
                                       :halt?      true}
 
-                                     ;; TODO: failed connection followup, should go back to another db.
+                                     {:when       :seen?
+                                      :events     :remote/connection-failed
+                                      :dispatch   [:db-picker/remove-selection]
+                                      ;; This event ends the async flow unsuccessfully
+                                      ;; and tries to reboot on a different db.
+                                      :halt?      true}
 
                                      ;; whether first or nth time, update athens pages
                                      #_{:when       :seen-any-of?

@@ -27,16 +27,15 @@
   :remote/connected
   (fn [_ _]
     (log/info ":remote/connected")
-    {:fx [[:dispatch-n [[:conn-status :connected]
-                        [:db/sync]]]]}))
+    {:fx [[:dispatch [:conn-status :connected]]]}))
 
 
 (rf/reg-event-fx
   :remote/connection-failed
   (fn [_ _]
     (log/warn ":remote/connection-failed")
-    {:fx [[:dispatch-n [[:conn-status :disconnected]
-                        [:db/sync]]]]}))
+    {:fx [[:dispatch-n [[:alert/js "Was not able to connect to the remote database."]
+                        [:conn-status :disconnected]]]]}))
 
 
 (rf/reg-event-fx
