@@ -100,7 +100,7 @@
                                                                                       :open true,
                                                                                       :order 1}]}
                                                            #:block{:uid "d04604730",
-                                                                   :string "images with `![]()` ![athens-splash](https://raw.githubusercontent.com/athensresearch/athens/master/doc/athens-puk-patrick-unsplash.jpg)",
+                                                                   :string "images with `![]()` ![athens-splash](https://raw.githubusercontent.com/athensresearch/handbook/main/.gitbook/assets/athens-puk-patrick-unsplash.jpg)",
                                                                    :open true,
                                                                    :order 7}
                                                            #:block{:uid "dd1e080f4"
