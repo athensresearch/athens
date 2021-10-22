@@ -16,10 +16,10 @@
     ["@material-ui/icons/KeyboardArrowRight" :default KeyboardArrowRight]
     ["@material-ui/icons/KeyboardArrowUp" :default KeyboardArrowUp]
     ["react-force-graph-2d" :as ForceGraph2D]
+    [athens.dates :as dates]
     [athens.db :as db]
     [athens.router :as router]
     [athens.style :as styles]
-    [athens.util :as util]
     [clojure.set :as set]
     [datascript.core :as d]
     [re-frame.core :as rf :refer [subscribe]]
@@ -353,8 +353,8 @@
                 all-nodes-with-links             (->> all-links (mapcat #(vals %)) set)
                 linked-nodes-without-daily-notes (->> all-links
                                                       (remove (fn [link]
-                                                                (or (util/is-daily-note (get link "source-uid"))
-                                                                    (util/is-daily-note (get link "target-uid")))))
+                                                                (or (dates/is-daily-note (get link "source-uid"))
+                                                                    (dates/is-daily-note (get link "target-uid")))))
                                                       (mapcat #(vals %))
                                                       set)
                 nodes                            (cond->> (if local-node-eid
@@ -378,7 +378,7 @@
 
                                                    (not (:daily-notes? graph-conf))
                                                    (remove (fn [node]
-                                                             (util/is-daily-note (get node "uid"))))
+                                                             (dates/is-daily-note (get node "uid"))))
 
                                                    (not (:orphans? graph-conf))
                                                    (filter (fn [node]
