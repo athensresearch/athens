@@ -3,6 +3,7 @@
     [athens.common-events.bfs :as bfs]
     [clojure.test :refer [deftest is]]))
 
+
 (def tree-with-pages
   [{:block/uid      "0"
     :node/title     "Welcome"
