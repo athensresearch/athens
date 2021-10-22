@@ -2,17 +2,13 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
-    [athens.common-events.graph.ops :as graph-ops]
+    #?(:clj [athens.common-events.bfs :as bfs])
     [athens.common.logging :as log]
     [athens.common.utils :as utils]
     [athens.patterns :as patterns]
     [clojure.set :as set]
     [clojure.string :as string]
-    [datascript.core :as d]
-    [athens.common-events.graph.atomic :as atomic]
-    [athens.common-events.graph.composite :as composite]
-    #?(:clj [athens.common-events.bfs :as bfs])))
-
+    [datascript.core :as d]))
 
 
 (defn between

@@ -1,8 +1,8 @@
 (ns athens.common-events.bfs
   (:require
     [athens.common-events.graph.atomic :as atomic]
-    [athens.common-events.graph.ops :as graph-ops]
-    [athens.common-events.graph.composite :as composite]))
+    [athens.common-events.graph.composite :as composite]
+    [athens.common-events.graph.ops :as graph-ops]))
 
 
 (defn conjoin-to-queue
@@ -34,7 +34,7 @@
                                         :block/order  order
                                         :block/open   open
                                         :block/string string
-                                        ; Used for page
+                                        ;; Used for page
                                         :node/title   title}
             children-uids              (get-children-uids children)
             new-key-value              (zipmap children-uids
@@ -46,7 +46,7 @@
                (if (seq children)
                  (conjoin-to-queue new-q children)
                  new-q)))
-     [res  child-parent-map])))
+      [res  child-parent-map])))
 
 
 (defn internal-repr->atomic-ops
@@ -63,9 +63,9 @@
                                                                parent-uid
                                                                block-order)
         block-save-op                (graph-ops/build-block-save-op db
-                                                                  block-uid
-                                                                  ""
-                                                                  block-string)
+                                                                    block-uid
+                                                                    ""
+                                                                    block-string)
         all-ops                      (if node-title
                                        [new-page-op]
                                        [new-block-op
