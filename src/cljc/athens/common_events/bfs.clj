@@ -20,7 +20,7 @@
    Walk the tree in a bfs manner, extract the individual blocks and the parent-child relationship."
   [tree]
   (loop [res []
-         parent<->child {}
+         child-parent-map {}
          q   (conjoin-to-queue clojure.lang.PersistentQueue/EMPTY
                                tree)]
     (if (seq q)
@@ -41,12 +41,12 @@
                                                (take (count children-uids) (cycle [uid])))
             new-q                      (pop q)]
         (recur (conj res block)
-               (merge parent<->child
+               (merge child-parent-map
                       new-key-value)
                (if (seq children)
                  (conjoin-to-queue new-q children)
                  new-q)))
-     [res  parent<->child])))
+     [res  child-parent-map])))
 
 
 (defn internal-repr->atomic-ops
