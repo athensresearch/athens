@@ -71,13 +71,13 @@ start the server and Bob's your unkle.
 
 You can create an Athens server without installing anything else via docker compose.
 
-Pick a [release](https://github.com/athensresearch/athens/releases you'd like to use, download the `docker-compose.yml` file in the release to a folder, and then run `docker compose up --no-build`.
+Pick a [release](https://github.com/athensresearch/athens/releases you'd like to use, download the `docker-compose.yml` file in the release to a folder, and then run `docker-compose up --detach` to run the services in the background.
 
 For example, for `v1.0.0-alpha.rtc.26`:
 
 ```sh
 curl -L -o docker-compose.yml https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.26/docker-compose.yml
-docker compose up --detach
+docker-compose up --detach
 ```
 
 The server will be acessible at `localhost:80`, and all data will be saved at `./athens-data`.
@@ -101,7 +101,7 @@ CONFIG_EDN="{:password \"YourServerPassword\"}"
 To update your deployment download the new `docker-compose.yml` file and follow these steps:
 
 ```
-docker compose down
-docker compose pull
-docker compose up --detach
+docker-compose down
+docker-compose pull
+docker-compose up --detach
 ```

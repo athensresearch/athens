@@ -61,16 +61,19 @@
           html-title (if html-title-prefix
                        (str html-title-prefix " | Athens")
                        "Athens")
-          today (util/get-day)]
+          today (util/get-day)
+          loading? (:loading? db)]
       (set! (.-title js/document) html-title)
       {:db (-> db
                (assoc :current-route (assoc new-match :controllers controllers))
                (dissoc :merge-prompt))
        :timeout {:action :clear
                  :id :merge-prompt}
-       :dispatch-n [(when home?
+       :dispatch-n [(when (and (not loading?)
+                               home?)
                       [:daily-note/ensure-day today])
-                    (when-let [parent-uid (or uid (and home? (:uid today)))]
+                    (when-let [parent-uid (and (not loading?)
+                                               (or uid (and home? (:uid today))))]
                       [:editing/first-child parent-uid])]})))
 
 
