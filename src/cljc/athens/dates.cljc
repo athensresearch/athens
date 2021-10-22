@@ -51,9 +51,17 @@
 
 
 (defn title-to-date
+  [title]
+  (try
+    (local-date/parse title title-format)
+    (catch #?(:cljs :default
+              :clj Exception) _ nil)))
+
+
+(defn date-to-day
   [date]
   (try
-    (local-date/parse date title-format)
+    (get-day date 0)
     (catch #?(:cljs :default
               :clj Exception) _ nil)))
 
