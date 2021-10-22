@@ -577,7 +577,13 @@
   :page/create
   (fn [{:keys [db]} [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
     (log/debug ":page/create args" (pr-str args))
-    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
+    (let [block-uid (if-let [date (dates/title-to-date title)]
+                      (let [block-uid' (-> date (dates/get-day 0) :uid)]
+                        (log/warn ":page/create overriding uid" block-uid "with" block-uid'
+                                  "for title" title)
+                        block-uid')
+                      block-uid)
+          event (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                   (graph-ops/build-page-new-op @db/dsdb
                                                                                title
                                                                                page-uid
