@@ -107,41 +107,6 @@
     tx-data))
 
 
-(defmethod resolve-event-to-tx :datascript/block-save
-  [_db {:event/keys [id type args]}]
-  (let [{:keys [uid
-                new-string
-                add-time?]} args
-        new-block-string     {:db/id        [:block/uid uid]
-                              :block/string new-string}
-        block-with-time      (if add-time?
-                               (assoc new-block-string :edit/time (utils/now-ts))
-                               new-block-string)
-        tx-data              [block-with-time]]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
-(defmethod resolve-event-to-tx :datascript/new-block
-  [db {:event/keys [id type args]}]
-  (let [{:keys [parent-uid
-                block-order
-                new-uid]} args
-        new-block         {:db/id        -1
-                           :block/uid    new-uid
-                           :block/string ""
-                           :block/order  (inc block-order)
-                           :block/open   true}
-        reindex           (concat [new-block]
-                                  (common-db/inc-after db [:block/uid parent-uid] block-order))
-        tx-data           [{:block/uid      parent-uid
-                            :block/children reindex}]]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
 (defmethod resolve-event-to-tx :datascript/add-child
   [db {:event/keys [id type args]}]
   (let [{:keys [parent-uid
@@ -178,40 +143,6 @@
         tx-data           (into [open-block-tx] add-child-tx)]
     (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
                ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
-(defmethod resolve-event-to-tx :datascript/split-block
-  [db {:event/keys [id type args]}]
-  (let [{:keys [uid
-                value
-                index
-                new-uid]}             args
-        parent                        (common-db/get-parent db [:block/uid uid])
-        block                         (common-db/get-block db [:block/uid uid])
-        {:block/keys [order
-                      children
-                      open]
-         :or         {children []
-                      open     true}} block
-        head                          (subs value 0 index)
-        tail                          (subs value index)
-        retracts                      (mapv (fn [child]
-                                              [:db/retract (:db/id block) :block/children (:db/id child)])
-                                            children)
-        next-block                    {:db/id          -1
-                                       :block/order    (inc order)
-                                       :block/uid      new-uid
-                                       :block/open     open
-                                       :block/children children
-                                       :block/string   tail}
-        reindex                       (->> (common-db/inc-after db (:db/id parent) order)
-                                           (concat [next-block]))
-        new-block                     {:db/id (:db/id block) :block/string head}
-        new-parent                    {:db/id (:db/id parent) :block/children reindex}
-        tx-data                       (conj retracts new-block new-parent)]
-    (log/warn "DEPRECATED!" "event-id:" id ", type:" type ", args:" (pr-str args)
-              ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
@@ -1081,48 +1012,6 @@
                             [(dec ?order) ?new-order]]
                           db source-order (inc target-order) between)
                      (concat [new-source]))]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
-(defmethod resolve-event-to-tx :datascript/selected-delete
-  [db {:event/keys [id type args]}]
-  ;; We know that we only need to dec indices after the last block. The former blocks
-  ;; are necessarily going to remove all tail children, meaning we only need to be
-  ;; concerned with the last N blocks that are selected, adjacent siblings, to
-  ;; determine the minus-after value.
-  (let [{:keys [uids]}                    args
-        selected-sibs-of-last             (->> uids
-                                               (d/q '[:find ?sib-uid ?o
-                                                      :in $ ?uid [?selected ...]
-                                                      :where
-                                                      ;; get all siblings of the last block
-                                                      [?e :block/uid ?uid]
-                                                      [?p :block/children ?e]
-                                                      [?p :block/children ?sib]
-                                                      [?sib :block/uid ?sib-uid]
-                                                      ;; filter selected
-                                                      [(= ?sib-uid ?selected)]
-                                                      [?sib :block/order ?o]]
-                                                    db
-                                                    (last uids))
-                                               (sort-by second))
-        [uid order]                       (last selected-sibs-of-last)
-        parent-eid                        (:db/id (common-db/get-parent db [:block/uid uid]))
-        n                                 (count selected-sibs-of-last)
-        ;; Since the selection is always contiguous, there's only one parent (the last one) whose children need to be reindexed.
-        reindex                           (common-db/minus-after db
-                                                                 parent-eid
-                                                                 order
-                                                                 n)
-        retracted-vec                     (mapcat #(common-db/retract-uid-recursively-tx db %) uids)
-        block-refs-replace                (->> uids
-                                               (map #(common-db/get-block db [:block/uid %]))
-                                               (replace-linked-refs-tx db))
-        tx-data                           (concat retracted-vec
-                                                  reindex
-                                                  block-refs-replace)]
     (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
                ", resolved-tx:" (pr-str tx-data))
     tx-data))

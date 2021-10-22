@@ -111,39 +111,6 @@
                      :value value}}))
 
 
-;;   - block events
-;;     NOTE: `new-uid` is always passed from the caller,
-;;           it would be safer to generate it during resolution
-(defn build-block-save-event
-  "Builds `:datascript/block-save` event with:
-  - `uid`       : `:block/uid` of block to save
-  - `new-string`: new value for `:block/string`
-  - `add-time?` : Should `:edit/time` for this block be transacted"
-  [last-tx uid new-string add-time?]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/block-save
-     :event/args    {:uid        uid
-                     :new-string new-string
-                     :add-time?  add-time?}}))
-
-
-(defn build-new-block-event
-  "Builds `:datascript/new-block` event with:
-  - `parent-uid`: `:block/uid` of parent node
-  - `block-order`: order of current block
-  - `new-uid`: `:block/uid` for new block"
-  [last-tx parent-uid block-order new-uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/new-block
-     :event/args    {:parent-uid  parent-uid
-                     :block-order block-order
-                     :new-uid     new-uid}}))
-
-
 (defn build-add-child-event
   "Builds `:datascript/add-child` event with:
   - `parent-uid`: `:block/uid` of parent block
@@ -176,23 +143,6 @@
      :event/type    :datascript/open-block-add-child
      :event/args    {:parent-uid parent-uid
                      :new-uid    new-uid}}))
-
-
-(defn build-split-block-event
-  "Builds `:datascript/split-block` event with:
-  - `uid`: `:block/uid` of block we're splitting
-  - `value`: Current `:block/string` of block splitted
-  - `index`: index of the split
-  - `new-uid`: `:block/uid` of new block"
-  [last-tx uid value index new-uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/split-block
-     :event/args    {:uid     uid
-                     :value   value
-                     :index   index
-                     :new-uid new-uid}}))
 
 
 (defn build-split-block-to-children-event

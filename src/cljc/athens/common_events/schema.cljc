@@ -27,11 +27,8 @@
    :datascript/rename-page
    :datascript/merge-page
    :datascript/delete-page
-   :datascript/block-save
-   :datascript/new-block
    :datascript/add-child
    :datascript/open-block-add-child
-   :datascript/split-block
    :datascript/split-block-to-children
    :datascript/unindent
    :datascript/indent
@@ -54,7 +51,6 @@
    :datascript/left-sidebar-drop-below
    :datascript/unlinked-references-link
    :datascript/unlinked-references-link-all
-   :datascript/selected-delete
    :datascript/block-open
    :datascript/paste-verbatim
    :datascript/bump-up
@@ -462,12 +458,9 @@
    ;; Same args as `datascript-rename-page`
    (dispatch :datascript/merge-page datascript-rename-page)
    (dispatch :datascript/delete-page datascript-delete-page)
-   (dispatch :datascript/block-save datascript-block-save)
-   (dispatch :datascript/new-block datascript-new-block)
    (dispatch :datascript/add-child datascript-add-child)
    ;; Same args as `datascript-add-child`
    (dispatch :datascript/open-block-add-child datascript-open-block-add-child)
-   (dispatch :datascript/split-block datascript-split-block)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/split-block-to-children datascript-split-block)
    (dispatch :datascript/indent datascript-indent)
@@ -495,7 +488,6 @@
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)
    (dispatch :datascript/bump-up datascript-bump-up)
    (dispatch :datascript/block-open datascript-block-open)
-   (dispatch :datascript/selected-delete datascript-selected-delete)
    (dispatch :op/atomic graph-ops-atomic)])
 
 
@@ -612,12 +604,9 @@
    ;; Same args as `datascript-rename-page`
    (dispatch :datascript/merge-page datascript-rename-page true)
    (dispatch :datascript/delete-page datascript-delete-page true)
-   (dispatch :datascript/block-save datascript-block-save true)
-   (dispatch :datascript/new-block datascript-new-block true)
    (dispatch :datascript/add-child datascript-add-child true)
    ;; Same args as `datascript-add-child`
    (dispatch :datascript/open-block-add-child datascript-open-block-add-child true)
-   (dispatch :datascript/split-block datascript-split-block true)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/split-block-to-children datascript-split-block true)
    (dispatch :datascript/indent datascript-indent true)
@@ -645,8 +634,7 @@
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all true)
    (dispatch :datascript/bump-up datascript-bump-up true)
    (dispatch :datascript/block-open datascript-block-open true)
-   (dispatch :datascript/selected-delete datascript-selected-delete true)
-
+   
    ;; server specific graph events
    (dispatch :datascript/db-dump db-dump true)
    ;; server specific presence events

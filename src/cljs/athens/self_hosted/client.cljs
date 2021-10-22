@@ -277,11 +277,8 @@
   #{:datascript/rename-page
     :datascript/merge-page
     :datascript/delete-page
-    :datascript/block-save
-    :datascript/new-block
     :datascript/add-child
     :datascript/open-block-add-child
-    :datascript/split-block
     :datascript/split-block-to-children
     :datascript/unindent
     :datascript/indent
@@ -304,7 +301,6 @@
     :datascript/left-sidebar-drop-below
     :datascript/unlinked-references-link
     :datascript/unlinked-references-link-all
-    :datascript/selected-delete
     :datascript/block-open
     :datascript/paste-verbatim
     :datascript/bump-up

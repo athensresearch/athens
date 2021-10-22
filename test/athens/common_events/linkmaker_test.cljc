@@ -332,58 +332,7 @@
           (t/is (= [{:db/id testing-block-eid}] block-backrefs))
           (t/is (= #{{:db/id target-page-eid} {:db/id target-block-eid}} (set block-refs))))))
 
-    (t/testing "Block split, 1st Page link stays in 1st block, and 2nd Page link goes to a new block"
-      (let [target-page-1-uid   "target-page-3-1-uid"
-            target-page-1-title "Target Page Title 3 1"
-            target-page-2-uid   "target-page-3-2-uid"
-            target-page-2-title "Target Page Title 3 2"
-
-            source-page-uid        "source-page-3-1-uid"
-            source-page-title      "Source Page Title 3 1"
-            testing-block-1-uid    "testing-block-3-1-uid"
-            testing-block-1-string (str "[[" target-page-1-title "]]"
-                                        "[[" target-page-2-title "]]")
-            split-index            (count (str "[[" target-page-1-title "]]"))
-            testing-block-2-uid    "testing-block-3-2-uid"
-            setup-tx               [{:node/title     target-page-1-title
-                                     :block/uid      target-page-1-uid
-                                     :block/children [{:block/uid    "irrelevant-1"
-                                                       :block/string ""
-                                                       :block/order  0}]}
-                                    {:node/title     target-page-2-title
-                                     :block/uid      target-page-2-uid
-                                     :block/children [{:block/uid    "irrelevant-2"
-                                                       :block/string ""
-                                                       :block/order  0}]}
-                                    {:node/title     source-page-title
-                                     :block/uid      source-page-uid
-                                     :block/children [{:block/uid    testing-block-1-uid
-                                                       :block/string testing-block-1-string
-                                                       :block/order  0}]}]]
-
-        (transact-with-linkmaker setup-tx)
-
-        (let [{testing-block-1-eid :db/id}      (get-block testing-block-1-uid)
-              {target-page-1-refs :block/_refs} (get-page target-page-1-uid)
-              {target-page-2-refs :block/_refs} (get-page target-page-2-uid)
-              split-block-event                 (common-events/build-split-block-event -1
-                                                                                       testing-block-1-uid
-                                                                                       testing-block-1-string
-                                                                                       split-index
-                                                                                       testing-block-2-uid)
-              split-block-tx                    (resolver/resolve-event-to-tx @@fixture/connection split-block-event)]
-          ;; assert that target pages has no `:block/refs` to start with
-          (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
-          (t/is (= [{:db/id testing-block-1-eid}] target-page-2-refs))
-
-          ;; apply split-block
-          (transact-with-linkmaker split-block-tx)
-          (let [{testing-block-2-eid :db/id}      (get-block testing-block-2-uid)
-                {target-page-1-refs :block/_refs} (get-page target-page-1-uid)
-                {target-page-2-refs :block/_refs} (get-page target-page-2-uid)]
-            ;; assert that we do have new ref
-            (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
-            (t/is (= [{:db/id testing-block-2-eid}] target-page-2-refs))))))))
+    ))
 
 
 (t/deftest b3-block-delete
