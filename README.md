@@ -38,9 +38,9 @@ Athens lets you take notes without praying to the search gods, without double-cl
 
 Athens does this with **[[bidirectional links]]** and **((block references))** that let you to take notes on anything from any page. Just [[link]] or ((reference)) another page or block - and voilà! - you can now go to this page and see all the places that linked back to it. The next time you press `[[` or `((`, you will be indexing through your previous notes, helping you connect the dots. You've started creating a graph of your knowledge!
 
-# [Contributing](https://athensresearch.gitbook.io/handbook/contributing)
+# [Contributing](https://handbook.athensresearch.org/community/get-involved)
 
-If you want to contribute to Athens as a developer or designer, please begin by reading [Contributing](https://athensresearch.gitbook.io/handbook/contributing). This also contains instructions on how to build Athens on your own computer.
+If you want to contribute to Athens as a developer or designer, please begin by reading [Contributing](https://handbook.athensresearch.org/community/get-involved). This also contains instructions on how to build Athens on your own computer.
 
 Some tips once you've gotten Athens:
 - [How to use Athens](https://www.loom.com/share/ee5120d1f69d4ce0aab923de71caedd0)
