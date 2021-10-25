@@ -29,7 +29,7 @@
          :as              parent-block} (if ref-parent?
                                           (if ref-block-exists?
                                             ref-block
-                                            {:block/uid ref-uid})
+                                            (throw (ex-info "Ref block does not exist" {})))
                                           (common-db/get-parent db [:block/uid ref-uid]))
         parent-block-exists?            (int? (common-db/e-by-av db :block/uid parent-block-uid))
         new-block-order                 (condp = relation
