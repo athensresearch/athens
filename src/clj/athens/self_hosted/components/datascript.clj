@@ -1,14 +1,14 @@
 (ns athens.self-hosted.components.datascript
   (:require
     [athens.common-db :as common-db]
+    [athens.common-events.graph.ops :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic]
-    [athens.common.logging :as log]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common.logging :as log]
     [athens.self-hosted.event-log :as event-log]
     [athens.self-hosted.web.datascript :as web-datascript]
     [com.stuartsierra.component :as component]
-    [datascript.core :as d]
-    [athens.common-events.graph.ops :as graph-ops]))
+    [datascript.core :as d]))
 
 
 (defrecord Datascript
