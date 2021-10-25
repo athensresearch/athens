@@ -24,7 +24,7 @@
 
 
 (def initial-events
-  [;; TODO: Convert welcome page etc into events, add them here.
+  [;; TODO: Convert welcome page etc into events, add them here.to do this
    ])
 
 

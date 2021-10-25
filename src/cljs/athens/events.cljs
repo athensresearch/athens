@@ -2,6 +2,7 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
+    [athens.common-events.bfs :as bfs]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
@@ -17,9 +18,9 @@
     [clojure.string                       :as string]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
-    [day8.re-frame.tracing                :refer-macros [fn-traced]]
-    [goog.dom                             :refer [getElement]]
-    [re-frame.core                        :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [day8.re-frame.tracing :refer-macros [fn-traced]]
+    [goog.dom :refer [getElement]]
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -1238,13 +1239,16 @@
 
 (reg-event-fx
   :paste-internal
-  (fn [_ [_ uid internal-representation]]
+  (fn [{:keys [db]} [_ uid internal-representation]]
     (println "internal representation is " internal-representation)
     (let [[uid]  (db/uid-and-embed-id uid)
-          paste-internal-event (common-events/build-paste-internal-event -1
-                                                                         uid
-                                                                         internal-representation)]
-      {:fx [[:dispatch [:resolve-transact-forward paste-internal-event]]]})))
+          op     (bfs/build-paste-op @db/dsdb
+                                     {:uid                     uid
+                                      :internal-representation internal-representation})
+          event  (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
+      (cljs.pprint/pprint event)
+
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
