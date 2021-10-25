@@ -1,14 +1,13 @@
 (ns athens.self-hosted.components.datascript
   (:require
-    [athens.common-db :as common-db]
-    [athens.common-events.graph.ops :as graph-ops]
+    [athens.common-db                     :as common-db]
+    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic]
-    [athens.common-events.resolver.atomic :as atomic-resolver]
-    [athens.common.logging :as log]
-    [athens.self-hosted.event-log :as event-log]
-    [athens.self-hosted.web.datascript :as web-datascript]
-    [com.stuartsierra.component :as component]
-    [datascript.core :as d]))
+    [athens.common.logging                :as log]
+    [athens.self-hosted.event-log         :as event-log]
+    [athens.self-hosted.web.datascript    :as web-datascript]
+    [com.stuartsierra.component           :as component]
+    [datascript.core                      :as d]))
 
 
 (defrecord Datascript
@@ -31,7 +30,7 @@
                             (event-log/events fluree-conn))]
           (if (graph-ops/atomic-composite? data)
             (doseq [atomic (graph-ops/extract-atomics data)
-                    :let   [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @conn atomic)]]
+                    :let   [atomic-txs (atomic/resolve-atomic-op-to-tx @conn atomic)]]
               (web-datascript/transact! conn id (atomic/resolve-to-tx @conn atomic-txs)))
             (web-datascript/transact! conn id (atomic/resolve-to-tx @conn data)))
           (swap! total inc))
