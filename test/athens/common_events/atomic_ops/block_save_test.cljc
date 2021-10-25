@@ -98,20 +98,20 @@
                                          :block/order    0
                                          :block/children []}}]]
       (d/transact! @fixture/connection setup-txs)
-      (let [child-1-eid    (common-db/e-by-av @@fixture/connection
-                                              :block/uid child-1-uid)
-            block-save-op  (graph-ops/build-block-save-op @@fixture/connection
-                                                          child-1-uid
-                                                          empty-str
-                                                          new-str)
-            ;; TODO(now) break to atomic ops
-            block-save-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                    block-save-op)]
+      (let [child-1-eid        (common-db/e-by-av @@fixture/connection
+                                                  :block/uid child-1-uid)
+            block-save-op      (graph-ops/build-block-save-op @@fixture/connection
+                                                              child-1-uid
+                                                              empty-str
+                                                              new-str)
+            block-save-atomics (graph-ops/extract-atomics block-save-op)]
         (t/is (nil? (common-db/e-by-av @@fixture/connection
                                        :node/title page-title)))
         (t/is (= empty-str (common-db/v-by-ea @@fixture/connection
                                               child-1-eid :block/string)))
-        (d/transact! @fixture/connection block-save-txs)
+        (doseq [atomic-op block-save-atomics
+                :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+          (d/transact! @fixture/connection atomic-txs))
         (t/is (not (nil? (common-db/e-by-av @@fixture/connection
                                             :node/title page-title))))
         (t/is (= new-str (common-db/v-by-ea @@fixture/connection

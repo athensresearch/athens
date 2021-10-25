@@ -34,15 +34,16 @@
                      :block/children
                      count))
             "Page should have only 1 child block after setup.")
-      (let [block-split-op (graph-ops/build-block-split-op @@fixture/connection
-                                                           {:old-block-uid child-1-uid
-                                                            :new-block-uid child-2-uid
-                                                            :old-string    start-str
-                                                            :new-string    new-tmp-string
-                                                            :index         2})
-            ;; TODO(now) split to atomics
-            block-split-tx (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-split-op)]
-        (fixture/transact-with-middleware block-split-tx)
+      (let [block-split-op      (graph-ops/build-block-split-op @@fixture/connection
+                                                                {:old-block-uid child-1-uid
+                                                                 :new-block-uid child-2-uid
+                                                                 :old-string    start-str
+                                                                 :new-string    new-tmp-string
+                                                                 :index         2})
+            block-split-atomics (graph-ops/extract-atomics block-split-op)]
+        (doseq [atomic-op block-split-atomics
+                :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+          (fixture/transact-with-middleware atomic-txs))
         (let [page         (common-db/get-block @@fixture/connection [:block/uid page-1-uid])
               old-block    (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
               new-block    (common-db/get-block @@fixture/connection [:block/uid child-2-uid])
@@ -85,14 +86,16 @@
                        :block/children
                        count))
               "Page should have only 2 children block after setup.")
-        (let [block-split-op (graph-ops/build-block-split-op @@fixture/connection
-                                                             {:old-block-uid child-1-uid
-                                                              :new-block-uid child-3-uid
-                                                              :old-string    start-str
-                                                              :new-string    start-str
-                                                              :index         2})
-              block-split-tx (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-split-op)]
-          (fixture/transact-with-middleware block-split-tx)
+        (let [block-split-op      (graph-ops/build-block-split-op @@fixture/connection
+                                                                  {:old-block-uid child-1-uid
+                                                                   :new-block-uid child-3-uid
+                                                                   :old-string    start-str
+                                                                   :new-string    start-str
+                                                                   :index         2})
+              block-split-atomics (graph-ops/extract-atomics block-split-op)]
+          (doseq [atomic-op block-split-atomics
+                  :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+            (fixture/transact-with-middleware atomic-txs))
           (let [page        (common-db/get-block @@fixture/connection [:block/uid page-1-uid])
                 old-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
                 old-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])

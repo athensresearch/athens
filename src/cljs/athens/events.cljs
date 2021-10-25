@@ -557,11 +557,13 @@
 (reg-event-fx
   :resolve-transact
   (fn [_ [_ event]]
-    ;; TODO(now) atomic transactions
-    (let [txs (atomic-resolver/resolve-to-tx @db/dsdb event)]
-      (log/debug ":resolve-transact resolved" (pr-str (:event/type event))
-                 "to txs:\n" (pr-str txs))
-      {:fx [[:dispatch [:transact txs]]]})))
+    (if (graph-ops/atomic-composite? event)
+      {:fx [[:dispatch-n (for [atomic (graph-ops/extract-atomics (:event/op event))]
+                           [:resolve-transact atomic])]]}
+      (let [txs (atomic-resolver/resolve-to-tx @db/dsdb event)]
+        (log/debug ":resolve-transact resolved" (pr-str (:event/type event))
+                   "to txs:\n" (pr-str txs))
+        {:fx [[:dispatch [:transact txs]]]}))))
 
 
 (reg-event-fx

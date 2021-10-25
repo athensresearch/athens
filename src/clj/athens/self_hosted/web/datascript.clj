@@ -2,6 +2,7 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
+    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging                :as log]
@@ -133,13 +134,20 @@
   (let [username (clients/get-client-username channel)]
     (locking single-writer-guard
       (try
-        ;; TODO(now) 1st place to extract, resolve & transact
-        (let [txs (atomic-resolver/resolve-atomic-op-to-tx @conn op)]
-          (log/debug "username:" username
-                     "event-id:" id
-                     "atomic/op:" (pr-str (:op/type op))
-                     "Resolved Atomic op to tx.")
-          (transact! conn id txs))
+        (if (graph-ops/atomic-composite? op)
+          (doseq [atomic (graph-ops/extract-atomics op)
+                  :let   [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @conn atomic)]]
+            (log/debug "username:" username
+                       "event-id:" id
+                       "atomic/op:" (pr-str (:op/type atomic))
+                       "Resolved Atomic op to tx.")
+            (transact! conn id atomic-txs))
+          (let [txs (atomic-resolver/resolve-atomic-op-to-tx @conn op)]
+            (log/debug "username:" username
+                       "event-id:" id
+                       "atomic/op:" (pr-str (:op/type op))
+                       "Resolved Atomic op to tx.")
+            (transact! conn id txs)))
         (catch ExceptionInfo ex
           (let [err-msg   (ex-message ex)
                 err-data  (ex-data ex)

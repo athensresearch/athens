@@ -115,10 +115,14 @@
   (fn [_ [_ event]]
     (log/debug ":remote/rollback-resolve-transact-snapshot rollback db to time" (:max-tx @db/dsdb-snapshot))
     (d/reset-conn! db/dsdb @db/dsdb-snapshot)
-    ;; TODO(now) atomic transactions
-    (let [txs (atomic-resolver/resolve-to-tx @db/dsdb-snapshot event)]
-      (log/debug ":remote/rollback-resolve-transact-snapshot resolved txs:" (pr-str txs))
-      (common-db/transact-with-middleware! db/dsdb txs))
+    (if (graph-ops/atomic-composite? event)
+      (doseq [atomic (graph-ops/extract-atomics event)
+              :let   [atomic-txs (atomic-resolver/resolve-to-tx @db/dsdb-snapshot atomic)]]
+        (common-db/transact-with-middleware! db/dsdb atomic-txs)
+        (reset! db/dsdb-snapshot @db/dsdb))
+      (let [txs (atomic-resolver/resolve-to-tx @db/dsdb-snapshot event)]
+        (log/debug ":remote/rollback-resolve-transact-snapshot resolved txs:" (pr-str txs))
+        (common-db/transact-with-middleware! db/dsdb txs)))
     (log/debug ":remote/rollback-resolve-transact-snapshot snapshot at time" (:max-tx @db/dsdb))
     (reset! db/dsdb-snapshot @db/dsdb)
     {}))
