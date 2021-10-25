@@ -7,7 +7,10 @@
     #_[clojure.pprint                       :as pp]
     [clojure.test                         :as t]
     [datascript.core                      :as d])
-  #?(:clj (:import [clojure.lang ExceptionInfo])))
+  #?(:clj
+     (:import
+       (clojure.lang
+         ExceptionInfo))))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
@@ -274,5 +277,5 @@
         (t/is (thrown-with-msg? #?(:cljs js/Error
                                    :clj ExceptionInfo)
                                 #"Ref block does not exist"
-                                (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-new-v2-op)))))))
+                (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-new-v2-op)))))))
 
