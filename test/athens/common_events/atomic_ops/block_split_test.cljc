@@ -40,6 +40,7 @@
                                                             :old-string    start-str
                                                             :new-string    new-tmp-string
                                                             :index         2})
+            ;; TODO(now) split to atomics
             block-split-tx (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-split-op)]
         (fixture/transact-with-middleware block-split-tx)
         (let [page         (common-db/get-block @@fixture/connection [:block/uid page-1-uid])

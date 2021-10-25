@@ -104,6 +104,7 @@
                                                           child-1-uid
                                                           empty-str
                                                           new-str)
+            ;; TODO(now) break to atomic ops
             block-save-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                     block-save-op)]
         (t/is (nil? (common-db/e-by-av @@fixture/connection

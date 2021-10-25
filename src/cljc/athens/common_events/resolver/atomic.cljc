@@ -192,14 +192,15 @@
 
 
 (defmethod resolve-atomic-op-to-tx :composite/consequence
-  [db {:op/keys [consequences] :as _composite}]
-  (into []
-        (mapcat (fn [consequence]
-                  (resolve-atomic-op-to-tx db consequence))
-                consequences)))
+  [_db composite]
+  (throw (ex-info "Can't resolve Composite Graph Operation, only Atomic Graph Ops are allowed."
+                  (select-keys composite [:op/type :op/trigger]))))
 
 
 (defn resolve-to-tx
+  "This expects either Semantic Events or Atomic Graph Ops, but not Composite Graph Ops.
+  Call location should break up composites into atomic ops and call this multiple times,
+  once per atomic operation."
   [db {:event/keys [type op] :as event}]
   (if (contains? #{:op/atomic} type)
     (resolve-atomic-op-to-tx db op)

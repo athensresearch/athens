@@ -2,6 +2,7 @@
   "`re-frame` events related to `:remote/*`."
   (:require
     [athens.common-db                     :as common-db]
+    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common-events.schema          :as schema]
     [athens.common.logging                :as log]
@@ -114,6 +115,7 @@
   (fn [_ [_ event]]
     (log/debug ":remote/rollback-resolve-transact-snapshot rollback db to time" (:max-tx @db/dsdb-snapshot))
     (d/reset-conn! db/dsdb @db/dsdb-snapshot)
+    ;; TODO(now) atomic transactions
     (let [txs (atomic-resolver/resolve-to-tx @db/dsdb-snapshot event)]
       (log/debug ":remote/rollback-resolve-transact-snapshot resolved txs:" (pr-str txs))
       (common-db/transact-with-middleware! db/dsdb txs))
@@ -149,7 +151,10 @@
   :remote/snapshot-transact
   (fn [_ [_ event]]
     (log/debug ":remote/snapshot-transact update to time" (inc (:max-tx @db/dsdb-snapshot)))
-    {:remote/snapshot-transact! (atomic-resolver/resolve-to-tx @db/dsdb-snapshot event)}))
+    (if (graph-ops/atomic-composite? event)
+      {:dispatch-n (for [atomic (graph-ops/extract-atomics (:event/op event))]
+                     {:remote/snapshot-transact atomic})}
+      {:remote/snapshot-transact! (atomic-resolver/resolve-to-tx @db/dsdb-snapshot event)})))
 
 
 (rf/reg-fx

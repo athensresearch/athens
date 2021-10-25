@@ -557,6 +557,7 @@
 (reg-event-fx
   :resolve-transact
   (fn [_ [_ event]]
+    ;; TODO(now) atomic transactions
     (let [txs (atomic-resolver/resolve-to-tx @db/dsdb event)]
       (log/debug ":resolve-transact resolved" (pr-str (:event/type event))
                  "to txs:\n" (pr-str txs))

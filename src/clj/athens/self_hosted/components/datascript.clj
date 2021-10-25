@@ -27,6 +27,7 @@
         (doseq [[id data] (if in-memory?
                             event-log/initial-events
                             (event-log/events fluree-conn))]
+          ;; TODO(now) atomic transactions
           (web-datascript/transact! conn id (atomic/resolve-to-tx @conn data))
           (swap! total inc))
         (log/info "✅ Replayed" @total "events."))

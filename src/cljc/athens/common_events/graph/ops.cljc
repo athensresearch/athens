@@ -95,3 +95,20 @@
                                                            [block-remove-op
                                                             block-save-op])]
     delete-and-merge-op))
+
+
+(defn atomic-composite?
+  [event]
+  (and (= :op/atomic (:event/type event))
+       (= :composite/consequence (-> event :event/op :op/type))))
+
+
+(defn extract-atomics
+  [operation]
+  (into []
+        (mapcat (fn [consequence]
+                  (if (:op/atomic? consequence)
+                    [consequence]
+                    ;; this is plain recursion, maybe do loop recur instead
+                    (extract-atomics consequence)))
+                (:op/consequences operation))))

@@ -133,6 +133,7 @@
   (let [username (clients/get-client-username channel)]
     (locking single-writer-guard
       (try
+        ;; TODO(now) 1st place to extract, resolve & transact
         (let [txs (atomic-resolver/resolve-atomic-op-to-tx @conn op)]
           (log/debug "username:" username
                      "event-id:" id
