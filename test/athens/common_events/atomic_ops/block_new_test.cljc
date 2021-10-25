@@ -6,7 +6,11 @@
     [athens.common-events.resolver.atomic :as atomic-resolver]
     #_[clojure.pprint                       :as pp]
     [clojure.test                         :as t]
-    [datascript.core                      :as d]))
+    [datascript.core                      :as d])
+  #?(:clj
+     (:import
+       (clojure.lang
+         ExceptionInfo))))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
@@ -266,13 +270,12 @@
             (t/is (= 2 (-> block-3 :block/order)))))))
 
 
-    ;; TODO: re-enable and implement error after iterative resolver is implemented.
-    #_(t/testing "missing ref"
+    (t/testing "missing ref"
       (let [parent-block-uid "missing-test-parent-uid"
             block-uid        "missing-test-block-uid"
             block-new-v2-op  (atomic-graph-ops/make-block-new-op block-uid parent-block-uid :last)]
         (t/is (thrown-with-msg? #?(:cljs js/Error
                                    :clj ExceptionInfo)
                                 #"Ref block does not exist"
-                                (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-new-v2-op)))))))
+                (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-new-v2-op)))))))
 
