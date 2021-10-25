@@ -1,6 +1,7 @@
 (ns athens.db
   (:require
     [athens.common-db :as common-db]
+    [athens.common.logging :as log]
     [athens.patterns :as patterns]
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
@@ -322,10 +323,16 @@
   [pull-results]
   (->> (loop [b   pull-results
               res []]
-         (if (:node/title b)
-           (conj res b)
-           (recur (first (:block/_children b))
-                  (conj res (dissoc b :block/_children)))))
+         (cond
+           ;; There's no page in these pull results, log and exit.
+           (nil? b)        (do
+                             (log/warn "No parent found in" (pr-str pull-results))
+                             [])
+           ;; Found the page.
+           (:node/title b) (conj res b)
+           ;; Recur with the parent.
+           :else           (recur (first (:block/_children b))
+                                  (conj res (dissoc b :block/_children)))))
        (rest)
        (reverse)
        vec))

@@ -1,8 +1,8 @@
 (ns athens.router
   (:require
+    [athens.dates :as dates]
     [athens.db :as db]
     [athens.electron.db-picker :as db-picker]
-    [athens.util :as util]
     #_[athens.views :as views]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [posh.reagent :refer [pull]]
@@ -61,7 +61,7 @@
           html-title (if html-title-prefix
                        (str html-title-prefix " | Athens")
                        "Athens")
-          today (util/get-day)
+          today (dates/get-day)
           loading? (:loading? db)]
       (set! (.-title js/document) html-title)
       {:db (-> db
@@ -125,7 +125,7 @@
   "When user is already on a date node-page, clicking on daily notes goes to that date and allows scrolling."
   []
   (let [route-uid @(subscribe [:current-route/uid])]
-    (if (util/is-daily-note route-uid)
+    (if (dates/is-daily-note route-uid)
       (dispatch [:daily-note/reset [route-uid]])
       (dispatch [:daily-note/reset []]))
     (navigate :home)))

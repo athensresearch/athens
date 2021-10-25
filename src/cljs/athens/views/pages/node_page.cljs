@@ -14,11 +14,12 @@
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
     [athens.common-db :as common-db]
     [athens.common.utils :as utils]
+    [athens.dates :as dates]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
     [athens.router :refer [navigate-uid navigate]]
     [athens.style :refer [color DEPTH-SHADOWS]]
-    [athens.util :refer [escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
+    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -505,7 +506,7 @@
         (reset! block-uid (:block/uid node)))
       (let [{:block/keys [children uid] title :node/title} node
             {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
-            daily-note?  (is-daily-note uid)
+            daily-note?  (dates/is-daily-note uid)
             on-daily-notes? (= :home @(subscribe [:current-route/name]))]
 
 

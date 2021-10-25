@@ -263,4 +263,16 @@
             (t/is (= 3 (-> parent :block/children count)))
             (t/is (= 0 (-> block-1 :block/order)))
             (t/is (= 1 (-> block-2 :block/order)))
-            (t/is (= 2 (-> block-3 :block/order)))))))))
+            (t/is (= 2 (-> block-3 :block/order)))))))
+
+
+    ;; TODO: re-enable and implement error after iterative resolver is implemented.
+    #_(t/testing "missing ref"
+      (let [parent-block-uid "missing-test-parent-uid"
+            block-uid        "missing-test-block-uid"
+            block-new-v2-op  (atomic-graph-ops/make-block-new-op block-uid parent-block-uid :last)]
+        (t/is (thrown-with-msg? #?(:cljs js/Error
+                                   :clj ExceptionInfo)
+                                #"Ref block does not exist"
+                                (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-new-v2-op)))))))
+
