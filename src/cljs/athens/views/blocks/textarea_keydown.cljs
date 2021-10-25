@@ -7,11 +7,12 @@
     ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
     ["@material-ui/icons/YouTube" :default YouTube]
     [athens.common.utils :as common.utils]
+    [athens.dates :as dates]
     [athens.db :as db]
     [athens.events.selection :as select-events]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
-    [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
+    [athens.util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
     [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
@@ -96,15 +97,15 @@
 (def slash-options
   [["Add Todo"      Done "{{[[TODO]]}} " "cmd-enter" nil]
    ["Current Time"  Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
-   ["Today"         Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil nil]
-   ["Tomorrow"      Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil nil]
-   ["Yesterday"     Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil nil]
+   ["Today"         Today (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
+   ["Tomorrow"      Today (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
+   ["Yesterday"     Today (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
    ["YouTube Embed" YouTube "{{[[youtube]]: }}" nil 2]
    ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
    ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
 
 
-;; [ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
+;; [ "Block Embed" #(str "[[" (:title (dates/get-day 1)) "]]")]
 ;; [DateRange "Date Picker"]
 ;; [Attachment "Upload Image or File"]
 ;; [ExposurePlus1 "Word Count"]

@@ -5,6 +5,7 @@
     [athens.common-events.graph.atomic    :as atomic]
     [athens.common-events.graph.composite :as composite]
     [athens.common.utils                  :as utils]
+    [athens.dates                         :as dates]
     [clojure.set                          :as set]))
 
 
@@ -34,7 +35,11 @@
                                 (for [title new-page-titles]
                                   (build-page-new-op db
                                                      title
-                                                     (utils/gen-block-uid)
+                                                     (or (-> title
+                                                             dates/title-to-date
+                                                             dates/date-to-day
+                                                             :uid)
+                                                         (utils/gen-block-uid))
                                                      (utils/gen-block-uid)))))
         atomic-save     (atomic/make-block-save-op block-uid old-string new-string)
         block-save-op   (if (empty? atomic-pages)

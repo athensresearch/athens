@@ -8,6 +8,7 @@
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging                :as log]
     [athens.common.utils                  :as common.utils]
+    [athens.dates                         :as dates]
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
     [athens.events.remote]
@@ -74,7 +75,7 @@
         athens-child-count       (-> page-athens :block/children count)
         roam-child-count         (-> page-roam :block/children count)
         new-uid                  (common.utils/gen-block-uid)
-        today-date-page          (:title (athens.util/get-day))
+        today-date-page          (:title (dates/get-day))
         new-children             (conj (:block/children page-athens)
                                        {:block/string   (str "[[Roam Import]] "
                                                              "[[" today-date-page "]] "
@@ -497,7 +498,7 @@
       ;; Don't allow user to scroll up for now.
       (cond
         (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
-        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (util/get-day (util/uid-to-date (last daily-notes)) 1)]]]}))))
+        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))
 
 
 ;; -- event-fx and Datascript Transactions -------------------------------
@@ -579,7 +580,16 @@
   :page/create
   (fn [{:keys [db]} [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
     (log/debug ":page/create args" (pr-str args))
-    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
+    (let [block-uid (if-let [block-uid' (-> title
+                                            dates/title-to-date
+                                            dates/date-to-day
+                                            :uid)]
+                      (do
+                        (log/warn ":page/create overriding uid" block-uid "with" block-uid'
+                                  "for title" title)
+                        block-uid')
+                      block-uid)
+          event (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                   (graph-ops/build-page-new-op @db/dsdb
                                                                                title
                                                                                page-uid
@@ -589,10 +599,10 @@
                             shift?
                             [:right-sidebar/open-item page-uid]
 
-                            (not (util/is-daily-note page-uid))
+                            (not (dates/is-daily-note page-uid))
                             [:navigate :page {:id page-uid}]
 
-                            (util/is-daily-note page-uid)
+                            (dates/is-daily-note page-uid)
                             [:daily-note/add page-uid])
 
                           [:editing/uid block-uid]]]]})))

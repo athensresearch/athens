@@ -4,6 +4,7 @@
     [athens.common-events.resolver :as resolver]
     [athens.common.logging         :as log]
     [athens.common.utils           :as utils]
+    [athens.dates                  :as dates]
     [clojure.pprint                :as pp]
     [clojure.string                :as s]))
 
@@ -185,8 +186,24 @@
                          :block/children []
                          :create/time    now
                          :edit/time      now}
-        txs             (if page-exists?
+        current-uid     (common-db/get-page-uid-by-title db title)
+        txs             (cond
+                          (not= (-> title dates/title-to-date dates/date-to-day)
+                                (-> page-uid dates/uid-to-date dates/date-to-day))
+                          (throw (ex-info "Page title and uid must match for Daily page."
+                                          {:title    title
+                                           :page-uid page-uid}))
+
+                          (and page-exists?
+                               (not= page-uid current-uid))
+                          (throw (ex-info "Page title already exists with different page uid."
+                                          {:page-uid    page-uid
+                                           :current-uid current-uid}))
+
+                          page-exists?
                           []
+
+                          :else
                           [page])]
     txs))
 

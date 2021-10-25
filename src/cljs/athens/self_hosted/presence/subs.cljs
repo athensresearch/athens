@@ -1,7 +1,7 @@
 (ns athens.self-hosted.presence.subs
   (:require
+    [athens.dates :as dates]
     [athens.db :as db]
-    [athens.util :as util]
     [re-frame.core :as rf]))
 
 
@@ -43,7 +43,7 @@
 
 (defn on-daily-page?
   [[_username user]]
-  (util/is-daily-note (:page/uid user)))
+  (dates/is-daily-note (:page/uid user)))
 
 
 (rf/reg-sub
