@@ -5,6 +5,7 @@
     [athens.common-events.graph.atomic    :as atomic]
     [athens.common-events.graph.composite :as composite]
     [athens.common.utils                  :as utils]
+    [athens.dates                         :as dates]
     [clojure.set                          :as set]))
 
 
@@ -34,7 +35,11 @@
                                 (for [title new-page-titles]
                                   (build-page-new-op db
                                                      title
-                                                     (utils/gen-block-uid)
+                                                     (or (-> title
+                                                             dates/title-to-date
+                                                             dates/date-to-day
+                                                             :uid)
+                                                         (utils/gen-block-uid))
                                                      (utils/gen-block-uid)))))
         atomic-save     (atomic/make-block-save-op block-uid old-string new-string)
         block-save-op   (if (empty? atomic-pages)
@@ -95,3 +100,26 @@
                                                            [block-remove-op
                                                             block-save-op])]
     delete-and-merge-op))
+
+
+(defn atomic-composite?
+  [event]
+  (or
+    ;; semantic event
+    (and (= :op/atomic (:event/type event))
+         (= :composite/consequence (-> event :event/op :op/type)))
+    ;; atomic graph op
+    (and (contains? event :op/atomic?)
+         (not (:op/atomic? event)))))
+
+
+(defn extract-atomics
+  [operation]
+  (into []
+        (mapcat (fn [consequence]
+                  (if (:op/atomic? consequence)
+                    [consequence]
+                    ;; this is plain recursion, maybe do loop recur instead
+                    (extract-atomics consequence)))
+                (or (:op/consequences operation)
+                    (-> operation :event/op :op/consequences)))))

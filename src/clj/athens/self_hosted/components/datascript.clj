@@ -4,7 +4,6 @@
     [athens.common-events.resolver.atomic :as atomic]
     [athens.common.logging                :as log]
     [athens.self-hosted.event-log         :as event-log]
-    [athens.self-hosted.web.datascript    :as web-datascript]
     [com.stuartsierra.component           :as component]
     [datascript.core                      :as d]))
 
@@ -27,7 +26,8 @@
         (doseq [[id data] (if in-memory?
                             event-log/initial-events
                             (event-log/events fluree-conn))]
-          (web-datascript/transact! conn id (atomic/resolve-to-tx @conn data))
+          (log/debug "Processing" (pr-str id) "with" (pr-str data))
+          (atomic/resolve-transact! conn data)
           (swap! total inc))
         (log/info "✅ Replayed" @total "events."))
 

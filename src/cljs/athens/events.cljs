@@ -9,6 +9,7 @@
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging                :as log]
     [athens.common.utils                  :as common.utils]
+    [athens.dates                         :as dates]
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
     [athens.events.remote]
@@ -75,7 +76,7 @@
         athens-child-count       (-> page-athens :block/children count)
         roam-child-count         (-> page-roam :block/children count)
         new-uid                  (common.utils/gen-block-uid)
-        today-date-page          (:title (athens.util/get-day))
+        today-date-page          (:title (dates/get-day))
         new-children             (conj (:block/children page-athens)
                                        {:block/string   (str "[[Roam Import]] "
                                                              "[[" today-date-page "]] "
@@ -172,6 +173,8 @@
           merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
                               (map (fn [x] (db/get-roam-node-document [:node/title x] transformed-dates-roam-db))))
           tx-data        (concat merge-shared merge-unshared)]
+      ;; TODO: this functionality needs to create a internal representation event instead.
+      ;; That will cause it to work in RTC and remove the need to transact directly to the in-memory db.
       {:dispatch [:transact tx-data]})))
 
 
@@ -498,7 +501,7 @@
       ;; Don't allow user to scroll up for now.
       (cond
         (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
-        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (util/get-day (util/uid-to-date (last daily-notes)) 1)]]]}))))
+        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))
 
 
 ;; -- event-fx and Datascript Transactions -------------------------------
@@ -534,6 +537,12 @@
 
 
 
+;; TODO: remove this event and also :transact! when the following are converted to events:
+;; - athens.electron.images/dnd-image (needs file upload)
+;; - :upload/roam-edn (needs internal representation)
+;; - athens.self-hosted.client/db-dump-handler (needs internal representation)
+;; - :undo / :redo
+;; No other reframe events should be calling this event.
 (reg-event-fx
   :transact
   (fn [_ [_ tx-data]]
@@ -558,10 +567,14 @@
 (reg-event-fx
   :resolve-transact
   (fn [_ [_ event]]
-    (let [txs (atomic-resolver/resolve-to-tx @db/dsdb event)]
-      (log/debug ":resolve-transact resolved" (pr-str (:event/type event))
-                 "to txs:\n" (pr-str txs))
-      {:fx [[:dispatch [:transact txs]]]})))
+    (log/debug "events/resolve-transact, event:" (pr-str event))
+    (atomic-resolver/resolve-transact! db/dsdb event)
+    (let [synced?   @(subscribe [:db/synced])
+          electron? (athens.util/electron?)]
+      (merge {}
+             (when (and synced? electron?)
+               {:fx [[:dispatch [:db/not-synced]]
+                     [:dispatch [:save]]]})))))
 
 
 (reg-event-fx
@@ -577,7 +590,16 @@
   :page/create
   (fn [{:keys [db]} [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
     (log/debug ":page/create args" (pr-str args))
-    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
+    (let [page-uid (if-let [page-uid' (-> title
+                                          dates/title-to-date
+                                          dates/date-to-day
+                                          :uid)]
+                     (do
+                       (log/warn ":page/create overriding uid" page-uid "with" page-uid'
+                                 "for title" title)
+                       page-uid')
+                     page-uid)
+          event (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                   (graph-ops/build-page-new-op @db/dsdb
                                                                                title
                                                                                page-uid
@@ -587,10 +609,10 @@
                             shift?
                             [:right-sidebar/open-item page-uid]
 
-                            (not (util/is-daily-note page-uid))
+                            (not (dates/is-daily-note page-uid))
                             [:navigate :page {:id page-uid}]
 
-                            (util/is-daily-note page-uid)
+                            (dates/is-daily-note page-uid)
                             [:daily-note/add page-uid])
 
                           [:editing/uid block-uid]]]]})))

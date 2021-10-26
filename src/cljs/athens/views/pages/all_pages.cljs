@@ -3,10 +3,10 @@
     ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
     ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
     [athens.common-db :as common-db]
+    [athens.dates :as dates]
     [athens.db :as db]
     [athens.router :refer [navigate-uid]]
     [athens.style :as style :refer [color OPACITIES]]
-    [athens.util :refer [date-string]]
     [clojure.string :refer [lower-case]]
     [garden.selectors :as selectors]
     [re-frame.core :as rf :refer [dispatch subscribe]]
@@ -161,5 +161,5 @@
                [:tr {:key uid}
                 [:td {:class "title" :on-click #(navigate-uid uid %)} title]
                 [:td {:class "links"} (count _refs)]
-                [:td {:class "date"} (date-string modified)]
-                [:td {:class "date"} (date-string created)]]))]]]))))
+                [:td {:class "date"} (dates/date-string modified)]
+                [:td {:class "date"} (dates/date-string created)]]))]]]))))
