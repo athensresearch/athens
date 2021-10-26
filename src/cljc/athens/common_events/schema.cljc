@@ -6,20 +6,19 @@
     [malli.util                        :as mu]))
 
 
-(def event-type-presence
+(def event-type-presence-client
   [:enum
    :presence/hello
-   :presence/editing
-   :presence/rename])
+   :presence/update])
 
 
 (def event-type-presence-server
   [:enum
+   :presence/session-id
    :presence/online
    :presence/all-online
    :presence/offline
-   :presence/broadcast-editing
-   :presence/broadcast-rename])
+   :presence/update])
 
 
 (def event-type-graph
@@ -78,7 +77,7 @@
    [:event/id uuid?]
    [:event/last-tx int?]
    [:event/type [:or
-                 event-type-presence
+                 event-type-presence-client
                  event-type-graph
                  event-type-atomic]]])
 
@@ -105,28 +104,63 @@
            args)]))
 
 
-(def presence-hello-args
+(def session-id
+  [:session-id string?])
+
+
+;; Having all keys optional enables us to have
+;; anonymous or third party clients.
+;; These are the keys our client uses, if present.
+(def session-intro
+  [:map
+   [:username {:optional true} string?]
+   [:color {:optional true} string?]
+   [:block-uid {:optional true} string?]])
+
+
+(def session
+  (mu/merge
+    session-intro
+    [:map
+     session-id]))
+
+
+(def presence-hello
   [:map
    [:event/args
     [:map
-     [:username string?]
+     [:session-intro session-intro]
      [:password {:optional true} string?]]]])
 
 
-(def presence-editing
+(def presence-session-id
   [:map
    [:event/args
     [:map
-     [:username string?]
-     [:block-uid string?]]]])
+     session-id]]])
 
 
-(def presence-rename
+(def presence-update
   [:map
    [:event/args
-    [:map
-     [:current-username string?]
-     [:new-username string?]]]])
+    session]])
+
+
+(def presence-online
+  [:map
+   [:event/args
+    session]])
+
+
+(def presence-all-online
+  [:map
+   [:event/args
+    [:vector
+     session]]])
+
+
+(def presence-offline
+  presence-online)
 
 
 (def datascript-delete-page
@@ -457,9 +491,8 @@
 
 (def event
   [:multi {:dispatch :event/type}
-   (dispatch :presence/hello presence-hello-args)
-   (dispatch :presence/editing presence-editing)
-   (dispatch :presence/rename presence-rename)
+   (dispatch :presence/hello presence-hello)
+   (dispatch :presence/update presence-update)
    (dispatch :datascript/rename-page datascript-rename-page)
    ;; Same args as `datascript-rename-page`
    (dispatch :datascript/merge-page datascript-rename-page)
@@ -571,44 +604,6 @@
       [:sequential datom]]]]])
 
 
-(def user
-  [:map
-   [:username string?]])
-
-
-(def presence-online
-  [:map
-   [:event/args
-    user]])
-
-
-(def presence-all-online
-  [:map
-   [:event/args
-    [:vector
-     user]]])
-
-
-(def presence-offline
-  presence-online)
-
-
-(def presence-broadcast-editing
-  [:map
-   [:event/args
-    [:map
-     [:username string?]
-     [:block-uid string?]]]])
-
-
-(def presence-broadcast-rename
-  [:map
-   [:event/args
-    [:map
-     [:current-username string?]
-     [:new-username string?]]]])
-
-
 (def server-event
   [:multi {:dispatch :event/type}
    ;; client forwardable events
@@ -656,11 +651,11 @@
    ;; server specific graph events
    (dispatch :datascript/db-dump db-dump true)
    ;; server specific presence events
+   (dispatch :presence/session-id presence-session-id true)
    (dispatch :presence/online presence-online true)
    (dispatch :presence/all-online presence-all-online true)
    (dispatch :presence/offline presence-offline true)
-   (dispatch :presence/broadcast-editing presence-broadcast-editing true)
-   (dispatch :presence/broadcast-rename presence-broadcast-rename true)
+   (dispatch :presence/update presence-update true)
 
    ;; ⚛️ Atomic Graph Ops
    (dispatch :op/atomic graph-ops-atomic true)])

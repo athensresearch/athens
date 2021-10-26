@@ -6,13 +6,7 @@
 
 
 (rf/reg-fx
-  :presence/send-editing
-  (fn [uid]
-    (when uid
-      (client/send! (common-events/build-presence-editing-event 42 @(rf/subscribe [:username]) uid)))))
+  :presence/send-update
+  (fn [m]
+    (client/send! (common-events/build-presence-update-event 42 @(rf/subscribe [:presence/session-id]) m))))
 
-
-(rf/reg-fx
-  :presence/send-rename!
-  (fn [[current-username new-username]]
-    (client/send! (common-events/build-presence-rename-event 42 current-username new-username))))

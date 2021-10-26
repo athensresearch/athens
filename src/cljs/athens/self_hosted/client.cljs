@@ -149,10 +149,13 @@
   (let [connection             (.-target event)
         last-tx                @(rf/subscribe [:remote/last-seen-tx])
         username               @(rf/subscribe [:username])
+        color                  @(rf/subscribe [:color])
         password               @(rf/subscribe [:password])
+        session-intro          {:username username
+                                :color    color}
         {event-id :event/id
          :as      hello-event} (common-events/build-presence-hello-event last-tx
-                                                                         username
+                                                                         session-intro
                                                                          password)]
     (reset! ws-connection connection)
     (reset! reconnect-timer nil)
@@ -236,6 +239,12 @@
   (log/info "✅ Transacted DB dump. last-seen-tx" last-tx))
 
 
+(defn- presence-session-id-handler
+  [{:keys [session-id]}]
+  (log/info "Session id:" session-id)
+  (rf/dispatch [:presence/add-session-id session-id]))
+
+
 (defn- presence-online-handler
   [args]
   (let [username (:username args)]
@@ -256,16 +265,10 @@
     (rf/dispatch [:presence/remove-user args])))
 
 
-(defn- presence-receive-editing
+(defn- presence-update
   [args]
-  (log/debug "User editing:" (pr-str args))
-  (rf/dispatch [:presence/update-editing args]))
-
-
-(defn- presence-receive-rename
-  [args]
-  (log/info "User rename:" (pr-str args))
-  (rf/dispatch [:presence/update-rename args]))
+  (log/debug "User update:" (pr-str args))
+  (rf/dispatch [:presence/update args]))
 
 
 (defn- forwarded-event-handler
@@ -325,11 +328,11 @@
 
     (condp contains? type
       #{:datascript/db-dump} (db-dump-handler last-tx args)
+      #{:presence/session-id} (presence-session-id-handler args)
       #{:presence/online} (presence-online-handler args)
       #{:presence/all-online} (presence-all-online-handler args)
       #{:presence/offline} (presence-offline-handler args)
-      #{:presence/broadcast-editing} (presence-receive-editing args)
-      #{:presence/broadcast-rename} (presence-receive-rename args)
+      #{:presence/update} (presence-update args)
       forwarded-events (forwarded-event-handler packet))
 
     (log/warn "event-id:" (pr-str id)

@@ -42,14 +42,14 @@
 
 
 (deftest update-legacy-to-latest-test
-  (let [graph-conf {:hlt-link-levels 4}
-        expected   (assoc db/default-athens-persist
+  (let [expected   (assoc db/default-athens-persist
                           :theme/dark true
-                          :graph-conf graph-conf
-                          :settings {:email       "id@example.com"
-                                     :username    "foo"
-                                     :monitoring  false
-                                     :backup-time 30})]
+                          :graph-conf {:hlt-link-levels 4}
+                          :settings   {:email       "id@example.com"
+                                       :username    "foo"
+                                       :color       (:color db/default-settings)
+                                       :monitoring  false
+                                       :backup-time 30})]
     (js/localStorage.setItem "auth/email" "id@example.com")
     (js/localStorage.setItem "user/name" "foo")
     (js/localStorage.setItem "debounce-save-time" "30")
@@ -57,3 +57,11 @@
     (js/localStorage.setItem "theme/dark" "true")
     (js/localStorage.setItem "graph-conf" "{:hlt-link-levels 4}")
     (is (= (db/update-legacy-to-latest db/default-athens-persist) expected))))
+
+
+(deftest update-v1-to-v2
+  (let [;; other kv don't really matter.
+        v1 {:persist/version 1
+            :settings        {}}]
+    (is (= (db/update-persisted v1)
+           (assoc-in v1 [:settings :color] (:color db/default-settings))))))

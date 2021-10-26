@@ -30,6 +30,15 @@
    :daily-notes?     true})
 
 
+(def default-pallete
+  #{"#DDA74C"
+    "#C45042"
+    "#611A58"
+    "#21A469"
+    "#009FB8"
+    "#0062BE"})
+
+
 (def greek-pantheon
   #{"Zeus"
     "Hera"
@@ -53,12 +62,14 @@
 (def default-settings
   {:email       nil
    :username    (rand-nth (vec greek-pantheon))
+   :color       (rand-nth (vec default-pallete))
    :monitoring  true
    :backup-time 15})
 
 
 (def default-athens-persist
-  {:persist/version 1
+  {;; Increase this number when making breaking changes to the persistence format.
+   :persist/version 2
    :theme/dark      false
    :graph-conf      default-graph-conf
    :settings        default-settings})
@@ -87,22 +98,29 @@
         (update-when-found [:graph-conf] "graph-conf" edn/read-string))))
 
 
+(defn update-v1-to-v2
+  [persisted]
+  (-> persisted
+      (assoc-in [:settings :color] (:color default-settings))
+      (assoc :persist/version 2)))
+
+
 (defn update-persisted
   "Updates persisted to the latest format."
   [{:keys [:persist/version] :as persisted}]
   ;; Anything saved under the :athens/persist key will be automatically
   ;; persisted and loaded between sessions.
-  {:athens/persist
-   (if-not version
-     (update-legacy-to-latest default-athens-persist)
-     ;; Ignore the clj-kondo warning for v<, it'll go away once we have updates.
-     #_:clj-kondo/ignore
-     (let [v< #(< version %)]
-       (cond-> persisted
-               ;; Update persisted by applying each update fn incrementally.
-               ;; (v< 2) update-v1-to-v2
-               ;; (v< 3) update-v2-to-v3
-               )))})
+  (if-not version
+    ;; Legacy is updated to latest directly by cherry-picking data
+    ;; from local storage into the latest format.
+    (update-legacy-to-latest default-athens-persist)
+    ;; Data saved in previous versions of the current format need to be updated.
+    (let [v< #(< version %)]
+      (cond-> persisted
+        ;; Update persisted by applying each update fn incrementally.
+        (v< 2) update-v1-to-v2
+        ;; (v< 3) update-v2-to-v3
+        ))))
 
 
 ;; -- re-frame -----------------------------------------------------------
@@ -135,7 +153,7 @@
 
 (defn init-app-db
   [persisted]
-  (merge rfdb (update-persisted persisted)))
+  (merge rfdb {:athens/persist (update-persisted persisted)}))
 
 
 ;; -- JSON Parsing ----------------------------------------------------

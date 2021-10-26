@@ -42,7 +42,8 @@
   (fn [_ _]
     {:remote/client-disconnect!   nil
      :remote/clear-dsdb-snapshot! nil
-     :dispatch                    [:remote/stop-event-sync]}))
+     :dispatch-n                  [[:remote/stop-event-sync]
+                                   [:presence/clear]]}))
 
 
 (rf/reg-event-db

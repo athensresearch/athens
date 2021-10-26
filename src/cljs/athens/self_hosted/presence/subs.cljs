@@ -11,6 +11,12 @@
     (-> db :presence :users)))
 
 
+(rf/reg-sub
+  :presence/session-id
+  (fn [db _]
+    (-> db :presence :session-id)))
+
+
 ;; "From :block/uid, derive :page/uid and :page/title. If no :block/uid, give nil"
 (rf/reg-sub
   :presence/users-with-page-data
@@ -25,15 +31,13 @@
 (rf/reg-sub
   :presence/current-user
   :<- [:presence/users-with-page-data]
-  :<- [:settings]
-  (fn [[users settings] [_]]
-    (let [user-in-presence (-> (filter (fn [[_ user]]
-                                         (= (:username settings) (:username user)))
-                                       users)
-                               first
-                               second)]
-      (or user-in-presence
-          (select-keys settings [:username :color])))))
+  :<- [:presence/session-id]
+  (fn [[users session-id] [_]]
+    (-> (filter (fn [[_ user]]
+                  (= session-id (:session-id user)))
+                users)
+        first
+        second)))
 
 
 (defn on-page-uid?

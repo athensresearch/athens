@@ -537,88 +537,63 @@
 ;; - presence events
 
 (defn build-presence-hello-event
-  "Builds `:presence/hello` event with `username`"
-  ([last-tx username]
-   (build-presence-hello-event last-tx username nil))
-  ([last-tx username password]
+  "Builds `:presence/hello` event with `session-intro` and `password` (optional)."
+  ([last-tx session-intro]
+   (build-presence-hello-event last-tx session-intro nil))
+  ([last-tx session-intro password]
    (let [event-id (utils/gen-event-id)]
      {:event/id      event-id
       :event/last-tx last-tx
       :event/type    :presence/hello
-      :event/args    (cond-> {:username username}
+      :event/args    (cond-> {:session-intro session-intro}
                        password (merge {:password password}))})))
 
 
+(defn build-presence-session-id-event
+  "Builds `:presence/session-id` event with `session-id` for the client."
+  [last-tx session-id]
+  (let [event-id (utils/gen-event-id)]
+    {:event/id      event-id
+     :event/last-tx last-tx
+     :event/type    :presence/session-id
+     :event/args    {:session-id session-id}}))
+
+
 (defn build-presence-online-event
-  "Builds `:presence/online` event with `username` that went online."
-  [last-tx username]
+  "Builds `:presence/online` event with `session` that went online."
+  [last-tx session]
   (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/online
-     :event/args    {:username username}}))
+     :event/args    session}))
 
 
 (defn build-presence-all-online-event
-  "Builds `:presence/all-online` event with all active users, excluding origin client."
-  [last-tx clients]
+  "Builds `:presence/all-online` event with all active users."
+  [last-tx sessions]
   (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
      :event/type    :presence/all-online
-     :event/args     (mapv (fn [username]
-                             {:username username})
-                           clients)}))
+     :event/args    (vec sessions)}))
 
 
 (defn build-presence-offline-event
-  [last-tx username]
-  (let [event (build-presence-online-event last-tx username)]
+  [last-tx session]
+  (let [event (build-presence-online-event last-tx session)]
     (assoc event :event/type :presence/offline)))
 
 
-(defn build-presence-editing-event
-  "Sent by client."
-  [last-tx username uid]
+(defn build-presence-update-event
+  "Builds `:presence/update` event with `session-id` and map of session props to update."
+  [last-tx session-id updates]
   (let [event-id (utils/gen-event-id)]
     {:event/id      event-id
      :event/last-tx last-tx
-     :event/type    :presence/editing
-     :event/args    {:username  username
-                     :block-uid uid}}))
-
-
-(defn build-presence-broadcast-editing-event
-  "Sent by server."
-  [last-tx username block-uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :presence/broadcast-editing
-     :event/args    {:username  username
-                     :block-uid block-uid}}))
-
-
-(defn build-presence-rename-event
-  "Sent by client when username is updated"
-  [last-tx current-username new-username]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :presence/rename
-     :event/args    {:current-username current-username
-                     :new-username new-username}}))
-
-
-(defn build-presence-broadcast-rename-event
-  "Sent by server when the updated username is broadcasted"
-  [last-tx current-username new-username]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :presence/broadcast-rename
-     :event/args    {:current-username current-username
-                     :new-username new-username}}))
+     :event/type    :presence/update
+     :event/args    (merge {:session-id session-id}
+                           updates)}))
 
 
 (defn build-atomic-event
