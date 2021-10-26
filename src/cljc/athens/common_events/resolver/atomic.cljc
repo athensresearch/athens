@@ -1,12 +1,13 @@
 (ns athens.common-events.resolver.atomic
   (:require
-    [athens.common-db              :as common-db]
-    [athens.common-events.resolver :as resolver]
-    [athens.common.logging         :as log]
-    [athens.common.utils           :as utils]
-    [athens.dates                  :as dates]
-    [clojure.pprint                :as pp]
-    [clojure.string                :as s]))
+    [athens.common-db               :as common-db]
+    [athens.common-events.graph.ops :as graph-ops]
+    [athens.common-events.resolver  :as resolver]
+    [athens.common.logging          :as log]
+    [athens.common.utils            :as utils]
+    [athens.dates                   :as dates]
+    [clojure.pprint                 :as pp]
+    [clojure.string                 :as s]))
 
 
 (defmulti resolve-atomic-op-to-tx
@@ -29,7 +30,7 @@
          :as              parent-block} (if ref-parent?
                                           (if ref-block-exists?
                                             ref-block
-                                            (throw (ex-info "Ref block does not exist" {})))
+                                            (throw (ex-info "Ref block does not exist" {:block/uid ref-uid})))
                                           (common-db/get-parent db [:block/uid ref-uid]))
         parent-block-exists?            (int? (common-db/e-by-av db :block/uid parent-block-uid))
         new-block-order                 (condp = relation
@@ -219,6 +220,20 @@
   Call location should break up composites into atomic ops and call this multiple times,
   once per atomic operation."
   [db {:event/keys [type op] :as event}]
-  (if (contains? #{:op/atomic} type)
-    (resolve-atomic-op-to-tx db op)
+  (if (or (contains? #{:op/atomic} type)
+          (:op/atomic? event))
+    (resolve-atomic-op-to-tx db (if (:op/atomic? event)
+                                  event
+                                  op))
     (resolver/resolve-event-to-tx db event)))
+
+
+(defn resolve-transact!
+  "Resolve any and all events and transact, duh"
+  [conn event]
+  (if (graph-ops/atomic-composite? event)
+    (doseq [atomic (graph-ops/extract-atomics event)
+            :let   [atomic-txs (resolve-to-tx @conn atomic)]]
+      (common-db/transact-with-middleware! conn atomic-txs))
+    (let [txs (resolve-to-tx @conn event)]
+      (common-db/transact-with-middleware! conn txs))))

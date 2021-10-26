@@ -534,6 +534,7 @@
 
 
 
+;; TODO(now) remove this event and also transact!
 (reg-event-fx
   :transact
   (fn [_ [_ tx-data]]
@@ -558,13 +559,14 @@
 (reg-event-fx
   :resolve-transact
   (fn [_ [_ event]]
-    (if (graph-ops/atomic-composite? event)
-      {:fx [[:dispatch-n (for [atomic (graph-ops/extract-atomics (:event/op event))]
-                           [:resolve-transact atomic])]]}
-      (let [txs (atomic-resolver/resolve-to-tx @db/dsdb event)]
-        (log/debug ":resolve-transact resolved" (pr-str (:event/type event))
-                   "to txs:\n" (pr-str txs))
-        {:fx [[:dispatch [:transact txs]]]}))))
+    (log/debug "events/resolve-transact, event:" (pr-str event))
+    (atomic-resolver/resolve-transact! db/dsdb event)
+    (let [synced?   @(subscribe [:db/synced])
+          electron? (athens.util/electron?)]
+      (merge {}
+             (when (and synced? electron?)
+               {:fx [[:dispatch [:db/not-synced]]
+                     [:dispatch [:save]]]})))))
 
 
 (reg-event-fx
@@ -580,15 +582,15 @@
   :page/create
   (fn [{:keys [db]} [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
     (log/debug ":page/create args" (pr-str args))
-    (let [block-uid (if-let [block-uid' (-> title
-                                            dates/title-to-date
-                                            dates/date-to-day
-                                            :uid)]
+    (let [page-uid (if-let [page-uid' (-> title
+                                          dates/title-to-date
+                                          dates/date-to-day
+                                          :uid)]
                       (do
-                        (log/warn ":page/create overriding uid" block-uid "with" block-uid'
+                        (log/warn ":page/create overriding uid" page-uid "with" page-uid'
                                   "for title" title)
-                        block-uid')
-                      block-uid)
+                        page-uid')
+                      page-uid)
           event (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                   (graph-ops/build-page-new-op @db/dsdb
                                                                                title

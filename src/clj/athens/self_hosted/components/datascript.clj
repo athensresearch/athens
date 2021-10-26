@@ -28,6 +28,8 @@
         (doseq [[id data] (if in-memory?
                             event-log/initial-events
                             (event-log/events fluree-conn))]
+          (log/debug "Processing" (pr-str id) "with" (pr-str data))
+          ;; TODO(now) use proper iterative resolver
           (if (graph-ops/atomic-composite? data)
             (doseq [atomic (graph-ops/extract-atomics data)
                     :let   [atomic-txs (atomic/resolve-atomic-op-to-tx @conn atomic)]]

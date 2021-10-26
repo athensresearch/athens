@@ -2,7 +2,6 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
-    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging                :as log]
@@ -59,7 +58,7 @@
     :page/new
     :composite/consequence})
 
-
+;; TODO(now) don't use this anymore, this is so wrong :-P
 (defn transact!
   "Transact with Datascript.
 
@@ -130,33 +129,20 @@
 
 
 (defn atomic-op-exec
-  [conn channel id op]
-  (let [username (clients/get-client-username channel)]
-    (locking single-writer-guard
-      (try
-        (if (graph-ops/atomic-composite? op)
-          (doseq [atomic (graph-ops/extract-atomics op)
-                  :let   [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @conn atomic)]]
-            (log/debug "username:" username
-                       "event-id:" id
-                       "atomic/op:" (pr-str (:op/type atomic))
-                       "Resolved Atomic op to tx.")
-            (transact! conn id atomic-txs))
-          (let [txs (atomic-resolver/resolve-atomic-op-to-tx @conn op)]
-            (log/debug "username:" username
-                       "event-id:" id
-                       "atomic/op:" (pr-str (:op/type op))
-                       "Resolved Atomic op to tx.")
-            (transact! conn id txs)))
-        (catch ExceptionInfo ex
-          (let [err-msg   (ex-message ex)
-                err-data  (ex-data ex)
-                err-cause (ex-cause ex)]
-            (log/error ex (str "Atomic Graph Op event-id: " id
-                               " FAIL: " (pr-str {:msg   err-msg
-                                                  :data  err-data
-                                                  :cause err-cause})))
-            (common-events/build-event-rejected id err-msg err-data)))))))
+  [conn id op]
+  (locking single-writer-guard
+    (try
+      (atomic-resolver/resolve-transact! conn op)
+      (common-events/build-event-accepted id 42)
+      (catch ExceptionInfo ex
+        (let [err-msg   (ex-message ex)
+              err-data  (ex-data ex)
+              err-cause (ex-cause ex)]
+          (log/error ex (str "Atomic Graph Op event-id: " id
+                             " FAIL: " (pr-str {:msg   err-msg
+                                                :data  err-data
+                                                :cause err-cause})))
+          (common-events/build-event-rejected id err-msg err-data))))))
 
 
 (defn atomic-op-handler
@@ -167,7 +153,7 @@
                "event-id:" id
                "-> Received Atomic Op Type:" (pr-str type))
     (if (contains? supported-atomic-ops type)
-      (atomic-op-exec conn channel id op)
+      (atomic-op-exec conn id op)
       (common-events/build-event-rejected id
                                           (str "Under development event: " type)
                                           {:unsuported-type type}))))

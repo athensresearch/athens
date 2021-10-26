@@ -104,8 +104,13 @@
 
 (defn atomic-composite?
   [event]
-  (and (= :op/atomic (:event/type event))
-       (= :composite/consequence (-> event :event/op :op/type))))
+  (or
+   ;; semantic event
+   (and (= :op/atomic (:event/type event))
+        (= :composite/consequence (-> event :event/op :op/type)))
+   ;; atomic graph op
+   (and (contains? event :op/atomic?)
+        (not (:op/atomic? event)))))
 
 
 (defn extract-atomics
@@ -116,4 +121,5 @@
                     [consequence]
                     ;; this is plain recursion, maybe do loop recur instead
                     (extract-atomics consequence)))
-                (:op/consequences operation))))
+                (or (:op/consequences operation)
+                    (-> operation :event/op :op/consequences)))))
