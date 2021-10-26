@@ -42,7 +42,7 @@
                                                        inc)
                                           :before (:block/order ref-block)
                                           :after  (inc (:block/order ref-block))
-                                          (inc relation))
+                                          relation)
         now                             (utils/now-ts)
         new-block                       {:block/uid    block-uid
                                          :block/string ""
@@ -59,6 +59,9 @@
         tx-data                         [{:block/uid      parent-block-uid
                                           :block/children reindex
                                           :edit/time      now}]]
+    (println "new block order is " new-block-order)
+    (println "reindex blocks")
+    (cljs.pprint/pprint reindex)
     tx-data))
 
 

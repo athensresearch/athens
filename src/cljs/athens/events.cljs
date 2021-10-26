@@ -9,7 +9,6 @@
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging                :as log]
     [athens.common.utils                  :as common.utils]
-    [athens.dates                         :as dates]
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
     [athens.events.remote]
