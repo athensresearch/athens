@@ -229,11 +229,14 @@
 
 
 (defn resolve-transact!
-  "Resolve any and all events and transact, duh"
-  [conn event]
+  "Iteratively resolve and transact event."
+  [conn {:event/keys [id] :as event}]
+  (log/debug "resolve-transact! event-id:" id)
   (if (graph-ops/atomic-composite? event)
     (doseq [atomic (graph-ops/extract-atomics event)
             :let   [atomic-txs (resolve-to-tx @conn atomic)]]
+      (log/debug "resolve-transact! atomic-txs:" (with-out-str (pp/pprint atomic-txs)))
       (common-db/transact-with-middleware! conn atomic-txs))
     (let [txs (resolve-to-tx @conn event)]
+      (log/debug "resolve-transact! txs:" (with-out-str (pp/pprint txs)))
       (common-db/transact-with-middleware! conn txs))))

@@ -54,4 +54,5 @@
                       new-parent))]
     ;; delay because you want to create block *after* the file has been saved to filesystem
     ;; otherwise, <img> is created too fast, and no image is rendered
+    ;; TODO: this functionality needs to create an event instead and upload the file to work with RTC.
     (js/setTimeout #(rf/dispatch [:transact [tx-data]]) 50)))

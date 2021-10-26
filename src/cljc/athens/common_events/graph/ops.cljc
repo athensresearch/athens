@@ -105,12 +105,12 @@
 (defn atomic-composite?
   [event]
   (or
-   ;; semantic event
-   (and (= :op/atomic (:event/type event))
-        (= :composite/consequence (-> event :event/op :op/type)))
-   ;; atomic graph op
-   (and (contains? event :op/atomic?)
-        (not (:op/atomic? event)))))
+    ;; semantic event
+    (and (= :op/atomic (:event/type event))
+         (= :composite/consequence (-> event :event/op :op/type)))
+    ;; atomic graph op
+    (and (contains? event :op/atomic?)
+         (not (:op/atomic? event)))))
 
 
 (defn extract-atomics

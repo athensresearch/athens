@@ -1,11 +1,9 @@
 (ns athens.self-hosted.components.datascript
   (:require
     [athens.common-db                     :as common-db]
-    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic]
     [athens.common.logging                :as log]
     [athens.self-hosted.event-log         :as event-log]
-    [athens.self-hosted.web.datascript    :as web-datascript]
     [com.stuartsierra.component           :as component]
     [datascript.core                      :as d]))
 
@@ -29,12 +27,7 @@
                             event-log/initial-events
                             (event-log/events fluree-conn))]
           (log/debug "Processing" (pr-str id) "with" (pr-str data))
-          ;; TODO(now) use proper iterative resolver
-          (if (graph-ops/atomic-composite? data)
-            (doseq [atomic (graph-ops/extract-atomics data)
-                    :let   [atomic-txs (atomic/resolve-atomic-op-to-tx @conn atomic)]]
-              (web-datascript/transact! conn id (atomic/resolve-to-tx @conn atomic-txs)))
-            (web-datascript/transact! conn id (atomic/resolve-to-tx @conn data)))
+          (atomic/resolve-transact! conn data)
           (swap! total inc))
         (log/info "✅ Replayed" @total "events."))
 

@@ -226,6 +226,7 @@
   [last-tx {:keys [datoms]}]
   (log/debug "Received DB Dump")
   (rf/dispatch [:reset-conn (d/empty-db common-db/schema)])
+  ;; TODO: this transact should be a internal representation event instead.
   (rf/dispatch [:transact (into [] (map datom->tx-entry) datoms)])
   (rf/dispatch [:remote/snapshot-dsdb])
   (rf/dispatch [:remote/start-event-sync])

@@ -20,7 +20,7 @@
 ;; Effects
 
 
-;; TODO(now) remove this effect, it can't exist anymore
+;; TODO: remove this effect when :transact is removed.
 (rf/reg-fx
   :transact!
   (fn [tx-data]

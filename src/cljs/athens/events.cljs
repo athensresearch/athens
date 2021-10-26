@@ -172,6 +172,8 @@
           merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
                               (map (fn [x] (db/get-roam-node-document [:node/title x] transformed-dates-roam-db))))
           tx-data        (concat merge-shared merge-unshared)]
+      ;; TODO: this functionality needs to create a internal representation event instead.
+      ;; That will cause it to work in RTC and remove the need to transact directly to the in-memory db.
       {:dispatch [:transact tx-data]})))
 
 
@@ -534,7 +536,12 @@
 
 
 
-;; TODO(now) remove this event and also transact!
+;; TODO: remove this event and also :transact! when the following are converted to events:
+;; - athens.electron.images/dnd-image (needs file upload)
+;; - :upload/roam-edn (needs internal representation)
+;; - athens.self-hosted.client/db-dump-handler (needs internal representation)
+;; - :undo / :redo
+;; No other reframe events should be calling this event.
 (reg-event-fx
   :transact
   (fn [_ [_ tx-data]]
@@ -586,11 +593,11 @@
                                           dates/title-to-date
                                           dates/date-to-day
                                           :uid)]
-                      (do
-                        (log/warn ":page/create overriding uid" page-uid "with" page-uid'
-                                  "for title" title)
-                        page-uid')
-                      page-uid)
+                     (do
+                       (log/warn ":page/create overriding uid" page-uid "with" page-uid'
+                                 "for title" title)
+                       page-uid')
+                     page-uid)
           event (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                   (graph-ops/build-page-new-op @db/dsdb
                                                                                title
