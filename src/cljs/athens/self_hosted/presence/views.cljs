@@ -33,7 +33,7 @@
   (let [{_block-uid :block/uid
          page-uid  :page/uid}
         (->> (js->clj js-person :keywordize-keys true)
-             :username
+             :personId
              (get all-users))]
     (rf/dispatch (if page-uid
                    ;; TODO: if we support navigating to a block, it should be added here.

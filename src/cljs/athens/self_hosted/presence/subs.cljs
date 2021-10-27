@@ -22,9 +22,9 @@
   :presence/users-with-page-data
   :<- [:presence/users]
   (fn [users _]
-    (into {} (mapv (fn [[username {:keys [_username  block/uid] :as user}]]
-                     (let [{page-title :node/title page-uid :block/uid} (db/get-root-parent-page uid)]
-                       [username (assoc user :page/uid page-uid :page/title page-title :block/uid uid)]))
+    (into {} (mapv (fn [[session-id {:keys [block-uid] :as user}]]
+                     (let [{page-title :node/title page-uid :block/uid} (db/get-root-parent-page block-uid)]
+                       [session-id (assoc user :page/uid page-uid :page/title page-title :block/uid block-uid)]))
                    users))))
 
 
