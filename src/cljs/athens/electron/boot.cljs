@@ -52,7 +52,8 @@
       ;; output => [:reset-conn] OR [:fs/create-and-watch]
 
       {:db         init-app-db
-       :dispatch   [:loading/set]
+       :dispatch-n [[:theme/set]
+                    [:loading/set]]
        :async-flow {:first-dispatch first-event
                     :rules          [;; if first time, go to Daily Pages and open left-sidebar
                                      {:when       :seen?
@@ -66,7 +67,6 @@
                                       :dispatch-n [[:fs/update-write-db]
                                                    [:db/sync]
                                                    [:restore-navigation]
-                                                   [:theme/set]
                                                    [:loading/unset]]
                                       ;; This event ends the async flow successfully.
                                       :halt?      true}
