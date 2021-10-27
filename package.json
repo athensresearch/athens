@@ -35,7 +35,8 @@
     "server:uberjar": "clojure -T:build uber",
     "server:test": "clojure -X:test",
     "server:test:only": "clojure -M:test --var",
-    "server:repl": "clojure -A:repl"
+    "server:repl": "clojure -A:repl",
+    "server:wipe": "rm -rf athens-data/fluree"
   },
   "main": "resources/main.js",
   "build": {
