@@ -127,10 +127,4 @@
                                                flattened)
         block-paste-op (composite/make-consequence-op {:op-type :block/paste}
                                                       add-block-remove-op)]
-    (println "block order is " new-block-order)
-    (println "updated order" updated-order)
-    (println "all-atomic ops" all-atomic-ops)
-    (println "block paste ops are " block-paste-op)
-    (println "flattened list is")
-    (cljs.pprint/pprint flattened)
     block-paste-op))

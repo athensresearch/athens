@@ -59,9 +59,6 @@
         tx-data                         [{:block/uid      parent-block-uid
                                           :block/children reindex
                                           :edit/time      now}]]
-    (println "new block order is " new-block-order)
-    (println "reindex blocks")
-    (cljs.pprint/pprint reindex)
     tx-data))
 
 

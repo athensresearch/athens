@@ -9,6 +9,7 @@
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging                :as log]
     [athens.common.utils                  :as common.utils]
+    [athens.dates                         :as dates]
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
     [athens.events.remote]
@@ -1267,8 +1268,7 @@
                                      {:uid                     uid
                                       :internal-representation internal-representation})
           event  (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
-      (cljs.pprint/pprint event)
-
+      (log/debug "paste internal event is" event)
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 

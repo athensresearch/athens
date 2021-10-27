@@ -266,8 +266,8 @@
                 block-3 (common-db/get-block @@fixture/connection [:block/uid block-3-uid])]
             (t/is (= 3 (-> parent :block/children count)))
             (t/is (= 0 (-> block-1 :block/order)))
-            (t/is (= 1 (-> block-2 :block/order)))
-            (t/is (= 2 (-> block-3 :block/order)))))))
+            (t/is (= 1 (-> block-3 :block/order)))
+            (t/is (= 2 (-> block-2 :block/order)))))))
 
 
     (t/testing "missing ref"

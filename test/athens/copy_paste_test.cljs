@@ -1,10 +1,16 @@
 (ns athens.copy-paste-test
   (:require
+    [athens.common-db :as common-db]
+    [athens.common-events.bfs :as bfs]
+    [athens.common-events.fixture :as fixture]
+    [athens.common-events.graph.ops :as graph-ops]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.views.blocks.internal-representation :as internal-representation]
-    [clojure.test :refer [deftest is]]))
+    [cljs.test :as t]
+    [clojure.test :refer [deftest is]]
+    [datascript.core :as d]))
 
 
-;; TODO(sid): fix these tests, should pass with = instead of not=
 (deftest test-update-strings-with-new-uids
   (is (= "This is a test string with ((uid1)) and ((more_uids1)) and ((some_more_uids1)) ((rast1)))) ((rsrsta1)))) ((arst))a)) ((rst1))rst)) invalid uids (()) (( a)) ((a )) (( a )) ((a b)) s((a1))"
          (internal-representation/update-strings-with-new-uids "This is a test string with ((uid)) and ((more_uids)) and ((some_more_uids)) ((((rast)))) ((rs((rsta)))) ((a((rst))a)) ((((rst))rst)) invalid uids (()) (( a)) ((a )) (( a )) ((a b)) s((a))"
@@ -55,3 +61,43 @@
           #:block{:uid "222", :string "((222))", :open true, :order 1}]
          (internal-representation/update-uids blocks-for-testing
                                               replace-uids-for-testing))))
+
+
+(t/use-fixtures :each (partial fixture/integration-test-fixture []))
+
+
+(deftest paste-internal-event
+  (let [block-1-uid "test-block-1-uid"
+        block-2-uid "test-block-2-uid"
+        test-block-uid "test-block-uid"
+        setup-tx    [{:node/title     "test page"
+                      :block/uid      "page-uid"
+                      :block/children [{:block/uid      block-1-uid
+                                        :block/string   "A block with text"
+                                        :block/order    0
+                                        :block/children []}
+                                       {:block/uid      block-2-uid
+                                        :block/string   ""
+                                        :block/order    1
+                                        :block/children []}]}]]
+    (fixture/transact-with-middleware setup-tx)
+    (let [internal-representation  [{:block/uid test-block-uid,
+                                     :block/string "Copy-Paste test block",
+                                     :block/open true,
+                                     :block/order 5}]
+          op                       (bfs/build-paste-op @@fixture/connection
+                                                       {:uid block-1-uid
+                                                        :internal-representation internal-representation})
+          block-paste-atomics      (graph-ops/extract-atomics op)]
+      (doseq [atomic-op block-paste-atomics
+              :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+        (fixture/transact-with-middleware atomic-txs)))
+    (let [pasted-block    (common-db/get-block @@fixture/connection [:block/uid test-block-uid])
+          reindexed-block (common-db/get-block @@fixture/connection [:block/uid block-2-uid])]
+
+      (is (= 1
+             (:block/order pasted-block)))
+      (is (= 2
+             (:block/order reindexed-block)))
+      (is (= "Copy-Paste test block"
+             (:block/string pasted-block))))))
