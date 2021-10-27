@@ -2,51 +2,34 @@
   (:require
     [athens.common-events       :as common-events]
     [athens.common.logging      :as log]
+    [athens.common.utils        :as utils]
     [athens.self-hosted.clients :as clients]
-    [clojure.set                :as set]
     [clojure.string             :as str]
     [datascript.core            :as d]))
 
 
-(let [max-id (atom 0)]
-  (defn next-id
-    []
-    (swap! max-id inc)))
-
-
-(defonce all-presence (atom {}))
-
-
 (def supported-event-types
   #{:presence/hello
-    :presence/editing
-    :presence/rename
-    :presence/goodbye})
+    :presence/update})
 
 
 (defn- valid-password
-  [conn channel id {:keys [username]}]
-  (let [max-tx (:max-tx @conn)]
-    (log/info channel "New Client Intro:" username)
-    (clients/add-client! channel username)
-
+  [conn channel id {:keys [session-intro]}]
+  (let [max-tx     (:max-tx @conn)
+        session-id (str (utils/random-uuid))
+        session    (assoc session-intro :session-id session-id)]
+    (log/info channel "New Client Intro:" session-intro)
+    (clients/add-client! channel session)
+    (clients/send! channel (common-events/build-presence-session-id-event max-tx session-id))
     (let [datoms (map ; Convert Datoms to just vectors.
                   (comp vec seq)
                   (d/datoms @conn :eavt))]
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
-                     (common-events/build-db-dump-event max-tx datoms))
-      (clients/send! channel
-                     (common-events/build-presence-all-online-event max-tx
-                                                                    (clients/get-clients-usernames)))
-      (doseq [{username :username
-               block-uid :block/uid} (vals @all-presence)]
-        (when block-uid
-          (let [broadcast-presence-editing-event
-                (common-events/build-presence-broadcast-editing-event max-tx username block-uid)]
-            (clients/send! channel broadcast-presence-editing-event))))
-      (clients/broadcast! (common-events/build-presence-online-event max-tx
-                                                                     username)))
+                     (common-events/build-db-dump-event max-tx datoms)))
+    (clients/send! channel
+                   (common-events/build-presence-all-online-event max-tx (clients/get-client-sessions)))
+    (clients/broadcast! (common-events/build-presence-online-event max-tx session))
 
     ;; TODO Recipe for diff/patch updating client
     ;; 1. query for tx-ids since `last-tx`
@@ -74,50 +57,28 @@
       (invalid-password channel id args))))
 
 
-(defn editing-handler
+(defn update-handler
   [conn channel {:event/keys [id args]}]
-  (let [username            (clients/get-client-username channel)
-        {:keys [block-uid]} args
-        max-tx              (:max-tx @conn)]
-    (when block-uid
-      (let [broadcast-presence-editing-event (common-events/build-presence-broadcast-editing-event max-tx username block-uid)]
-        (swap! all-presence assoc username {:username username
-                                            :block/uid block-uid})
-        (clients/broadcast! broadcast-presence-editing-event)
-        (common-events/build-event-accepted id max-tx)))))
-
-
-(defn rename-handler
-  [conn channel {:event/keys [id args]}]
-  (let [{:keys
-         [current-username
-          new-username]}         args
-        max-tx                   (:max-tx @conn)
-        broadcast-rename-event (common-events/build-presence-broadcast-rename-event max-tx
-                                                                                    current-username
-                                                                                    new-username)]
-
-    (swap! all-presence (fn [all]
-                          (-> all
-                              (update-in [:presence :users] set/rename-keys {current-username new-username})
-                              (update-in [:presence :users new-username] assoc :username new-username))))
-    (clients/add-client! channel new-username)
-    (clients/broadcast! broadcast-rename-event)
+  (let [{:keys [session-id]}  (clients/get-client-session channel)
+        max-tx                (:max-tx @conn)
+        ;; Always build a new event with the session-id for this channel.
+        ;; If the client sends a incorrect/spoofed session-id, it will be ignored.
+        presence-update-event (common-events/build-presence-update-event max-tx session-id args)]
+    (swap! clients/clients update channel merge args)
+    (clients/broadcast! presence-update-event)
     (common-events/build-event-accepted id max-tx)))
 
 
 (defn goodbye-handler
-  [conn username]
-  (let [presence-offline-event (athens.common-events/build-presence-offline-event (:max-tx @conn) username)]
-    (swap! all-presence dissoc username)
+  [conn session]
+  (let [presence-offline-event (athens.common-events/build-presence-offline-event (:max-tx @conn) session)]
     (clients/broadcast! presence-offline-event)))
 
 
 (defn presence-handler
   [conn server-password channel {:event/keys [type] :as event}]
   (condp = type
-    :presence/hello   (hello-handler conn server-password channel event)
-    :presence/editing (editing-handler conn channel event)
-    :presence/rename (rename-handler conn channel event)
+    :presence/hello  (hello-handler conn server-password channel event)
     ;; presence/goodbye is called on client close.
-    ))
+    :presence/update (update-handler conn channel event)))
+

@@ -5,25 +5,20 @@
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
     [athens.self-hosted.presence.subs]
-    [athens.self-hosted.presence.utils :as utils]
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
 
 ;; Avatar
 
-
-
 (defn user->person
-  [{:keys [username color]
-    :page/keys [title]
-    :or {username "Unknown"
-         color    (first utils/PALETTE)}}]
-  ;; TODO: have a real notion of user-id, not just username.
-  {:personId  username
-   :username  username
-   :color     color
-   :pageTitle title})
+  [{:keys [session-id username color]
+    :page/keys [title]}]
+  (when (and session-id username color)
+    {:personId  session-id
+     :username  username
+     :color     color
+     :pageTitle title}))
 
 
 (defn copy-host-address-to-clipboard
@@ -38,7 +33,7 @@
   (let [{_block-uid :block/uid
          page-uid  :page/uid}
         (->> (js->clj js-person :keywordize-keys true)
-             :username
+             :personId
              (get all-users))]
     (rf/dispatch (if page-uid
                    ;; TODO: if we support navigating to a block, it should be added here.
@@ -48,14 +43,12 @@
 
 
 (defn edit-current-user
-  [current-username js-person]
+  [js-person]
   (let [{:keys [username color]} (js->clj js-person :keywordize-keys true)]
     (rf/dispatch [:settings/update :username username])
     (rf/dispatch [:settings/update :color color])
-    ;; Change the color of the old name immediately, then wait for the
-    ;; rename to happen in the server.
-    (rf/dispatch [:presence/update-color current-username color])
-    (rf/dispatch [:presence/send-rename current-username username])))
+    (rf/dispatch [:presence/send-update {:username username
+                                         :color color}])))
 
 
 ;; Exports
@@ -67,20 +60,22 @@
                all-users              (rf/subscribe [:presence/users-with-page-data])
                same-page              (rf/subscribe [:presence/same-page])
                diff-page              (rf/subscribe [:presence/diff-page])
-               others-seq             #(->> (dissoc % (:username @current-user))
+               others-seq             #(->> (dissoc % (:session-id @current-user))
                                             vals
-                                            (map user->person))]
+                                            (map user->person)
+                                            (remove nil?))]
               (fn []
                 (let [current-user'          (user->person @current-user)
                       current-page-members   (others-seq @same-page)
                       different-page-members (others-seq @diff-page)]
+                  (println current-page-members different-page-members)
                   [:> PresenceDetails {:current-user              current-user'
                                        :current-page-members      current-page-members
                                        :different-page-members    different-page-members
                                        :host-address              (:url @selected-db)
                                        :handle-copy-host-address copy-host-address-to-clipboard
                                        :handle-press-member       #(go-to-user-block @all-users %)
-                                       :handle-update-profile     #(edit-current-user (:username @current-user) %)
+                                       :handle-update-profile     #(edit-current-user %)
                                        ;; TODO: show other states when we support them.
                                        :connection-status         "connected"}]))))
 

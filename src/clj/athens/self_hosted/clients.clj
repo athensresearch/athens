@@ -12,6 +12,7 @@
 
 
 ;; Internal state
+;; channel -> session info
 (defonce clients (atom {}))
 
 
@@ -30,11 +31,41 @@
     (transit/read reader)))
 
 
+;; Client management API
+
+(defn get-client-session
+  [channel]
+  (get @clients channel))
+
+
+(defn get-client-sessions
+  []
+  (vals @clients))
+
+
+(defn get-client-username
+  [channel]
+  (or (:username (get-client-session channel))
+      "<unknown>"))
+
+
+(defn add-client!
+  [channel session]
+  (log/debug "add-client! username:" (:username session))
+  (swap! clients assoc channel session))
+
+
+(defn remove-client!
+  [channel]
+  (log/debug "remove-client! username:" (get-client-username channel))
+  (swap! clients dissoc channel))
+
+
 ;; Public send API
 (defn send!
   "Send data to a client via `channel`"
   [channel data]
-  (let [username              (get @clients channel)
+  (let [username              (get-client-username channel)
         valid-event-response? (schema/valid-event-response? data)
         valid-server-event?   (schema/valid-server-event? data)]
     (if (or valid-event-response?
@@ -60,34 +91,3 @@
   (log/debug "Broadcasting event-id:" id "type:" type)
   (doseq [client (keys @clients)]
     (send! client event)))
-
-
-;; Client management API
-(defn add-client!
-  ([channel]
-   (add-client! channel false))
-  ([channel username]
-   (log/debug "add-client! username:" username)
-   (swap! clients assoc channel username)))
-
-
-(defn get-client-username
-  [channel]
-  (get @clients channel))
-
-
-(defn get-clients
-  []
-  @clients)
-
-
-(defn get-clients-usernames
-  []
-  (vals @clients))
-
-
-(defn remove-client!
-  [channel]
-  (let [username (get @clients channel)]
-    (log/debug "remove-client! username:" username)
-    (swap! clients dissoc channel)))

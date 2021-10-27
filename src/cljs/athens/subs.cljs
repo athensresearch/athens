@@ -11,6 +11,12 @@
 
 
 (rf/reg-sub
+  :color
+  (fn [db _]
+    (-> db :athens/persist :settings :color)))
+
+
+(rf/reg-sub
   :password
   :<- [:db-picker/selected-db]
   (fn [selected-db _]

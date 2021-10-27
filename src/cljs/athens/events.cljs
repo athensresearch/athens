@@ -297,7 +297,7 @@
       (cond->
         {:db                    (assoc db :editing/uid uid)
          :editing/focus         [uid index]}
-        (and uid remote?) (assoc :presence/send-editing uid)))))
+        (and uid remote?) (assoc :presence/send-update {:block-uid uid})))))
 
 
 (reg-event-fx
@@ -594,8 +594,9 @@
                                           dates/date-to-day
                                           :uid)]
                      (do
-                       (log/warn ":page/create overriding uid" page-uid "with" page-uid'
-                                 "for title" title)
+                       (when (not= page-uid page-uid')
+                         (log/warn ":page/create overriding uid" page-uid "with" page-uid'
+                                   "for title" title))
                        page-uid')
                      page-uid)
           event (common-events/build-atomic-event (:remote/last-seen-tx db)
