@@ -64,4 +64,6 @@
         v1 {:persist/version 1
             :settings        {}}]
     (is (= (db/update-persisted v1)
-           (assoc-in v1 [:settings :color] (:color db/default-settings))))))
+           (-> v1
+               (assoc-in [:settings :color] (:color db/default-settings))
+               (assoc :persist/version 2))))))
