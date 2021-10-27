@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "1.0.0-alpha.rtc.27",
+  "version": "1.0.0-alpha.rtc.28",
   "description": "An open-source knowledege graph for research and notetaking",
   "repository": {
     "type": "git",
@@ -164,7 +164,7 @@
     "tsconfig-paths-webpack-plugin": "^3.5.1",
     "typescript": "^4.3.5"
   },
-  "resolutions-comments":{
+  "resolutions-comments": {
     "ua-parser-js": "See https://github.com/faisalman/ua-parser-js/issues/536"
   },
   "resolutions": {

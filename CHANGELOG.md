@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.28](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.27...v1.0.0-alpha.rtc.28) (2021-10-27)
+
+
+### Features
+
+* store user color between sessions ([994acf0](https://github.com/athensresearch/athens/commit/994acf0bb096e6feeb3930e4c52b8bdf4cfa4f48))
+
+
+### Bug Fixes
+
+* break shape-parent-query loop if there's no parent ([bc2d170](https://github.com/athensresearch/athens/commit/bc2d170f8d06e0050ca04e299bdb3c2407f808d8))
+* fix inline presence, go to user page ([37a5507](https://github.com/athensresearch/athens/commit/37a550789b17a5c2d20b52a05fb541074e0447cc))
+* throw on recreating page with different uid, mismatched daily page title/uid ([7cce9eb](https://github.com/athensresearch/athens/commit/7cce9eb7f952ae647b0757686ac57d7c00f8812b))
+* use daily note uid for daily note title on page create ([e26b917](https://github.com/athensresearch/athens/commit/e26b91745c87b1ffa2ee67bad17f20c88b4ceb00))
+* use daily notes uid for new pages on :block/save ([5fce285](https://github.com/athensresearch/athens/commit/5fce285eb05716fa2dbb60fb415edb222691d469))
+* use resolve-transact! in all locations, mark :transact event for removal ([d11125b](https://github.com/athensresearch/athens/commit/d11125baf527e6770a112c9d939194dccc0cc307))
+
+
+### Refactors
+
+* move date utils into cljc ns ([615ae86](https://github.com/athensresearch/athens/commit/615ae86e2e4c1948f2ef5ab60dc91a516bdaa72d))
+* use date-to-day to simplify logic ([6853a5c](https://github.com/athensresearch/athens/commit/6853a5c68e28718e176690ee497810063ee4a33e))
+
+
+### Work in Progress
+
+* cleaned requires. ([c171845](https://github.com/athensresearch/athens/commit/c171845f523388f1edf1db9edf88d5ed5f489848))
+* fixing wrong resolution and fallout ([c7c156b](https://github.com/athensresearch/athens/commit/c7c156bf0bfc35cdbf41f98cc1933e63e08c9962))
+* Marked locations to make new atomic transactions be possible. ([d2e4580](https://github.com/athensresearch/athens/commit/d2e4580034b9ddebf894d6a3edf99c2c0627792b))
+* Moving to 1 transaction per each atomic graph op. ([51225fe](https://github.com/athensresearch/athens/commit/51225fe9dae733f5ac443ed215e0eefb78309753))
+
+
+* add disabled test for missing block new ref ([e750d53](https://github.com/athensresearch/athens/commit/e750d53a51535317a5b6646b31de64e79ef38a95))
+* add server:wipe script ([f87d458](https://github.com/athensresearch/athens/commit/f87d4581b4263f58f3759f60fe63d93052b6bc40))
+* enable `:block/new` test that checks for existence of rel block. ([fe7b8a7](https://github.com/athensresearch/athens/commit/fe7b8a744bd992210f1b88c3c8874e1914863858))
+* pin ua-parser-js to an uncompromised version ([2d18345](https://github.com/athensresearch/athens/commit/2d1834542a9ad6608d5612036d01ec92e8d2283b))
+* style happy. ([a3c2163](https://github.com/athensresearch/athens/commit/a3c2163487373b2806de663d28244944db3a35e6))
+* update v1-to-v2 test ([ee45e99](https://github.com/athensresearch/athens/commit/ee45e99d9d5c16c44dc8ae3c662088136f656846))
+
 ## [1.0.0-alpha.rtc.27](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.26...v1.0.0-alpha.rtc.27) (2021-10-21)
 
 
