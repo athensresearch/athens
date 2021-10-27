@@ -1265,8 +1265,8 @@
     (println "internal representation is " internal-representation)
     (let [[uid]  (db/uid-and-embed-id uid)
           op     (bfs/build-paste-op @db/dsdb
-                                     {:uid                     uid
-                                      :internal-representation internal-representation})
+                                     uid
+                                     internal-representation)
           event  (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       (log/debug "paste internal event is" event)
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))

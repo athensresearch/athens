@@ -25,7 +25,8 @@
          ;; Why not add the parent in block data? I think it is easier to create the child-parent map
          ;; than to pass the current parent to subsequent recur
          child-parent-map      {}
-         q   (conjoin-to-queue #queue []
+         q   (conjoin-to-queue #?(:cljs #queue []
+                                  :clj  clojure.lang.PersistentQueue/EMPTY)
                                tree)]
     (if (seq q)
       (let [{:block/keys [uid
@@ -57,7 +58,6 @@
   "Takes the internal representation of a block and creates :block/new and :block/save atomic
    events from it."
   [db block-internal-representation parent-uid]
-  (println "parent uid is" parent-uid)
   (let [{block-uid    :block/uid
          block-string :block/string
          block-order  :block/order
@@ -84,47 +84,61 @@
    - `db` db value
    - `uid` uid of the block where the internal representation needs to be pasted
    - `internal-representation` of the pages/blocks selected"
-  [db {:keys [uid
-              internal-representation]}]
 
-  (let [current-block                        (common-db/get-block db [:block/uid uid])
-        current-block-parent-uid             (:block/uid (common-db/get-parent db [:block/uid uid]))
-        {:block/keys [order
-                      children
-                      open
-                      string]}               current-block
-        ;; The parent of block depends on:
-        ;; - if the current block is open and has chidren : if this is the case then we want the blocks to be pasted
-        ;;   under the current block as its first children
-        ;; - else the parent is the current block's parent
-        current-block-parent?                (and children
-                                                  open)
-        empty-block?                         (and (string/blank? string)
-                                                  (empty?        children))
-        ;; - If the block is empty then we delete the empty block and add new blocks. So in this case
-        ;;   the block order for the new blocks is the same as deleted blocks order.
-        ;; - If the block is parent then we want the blocks to be pasted as this blocks first children
-        ;; - If the block is not empty then add the new blocks after the current one.
-        block-remove-op                      (graph-ops/build-block-remove-op db uid)
-        new-block-order                      (cond
-                                               empty-block?          order
-                                               current-block-parent? 0
-                                               :else                 (inc order))
-        updated-order                        (map-indexed (fn [idx itm] (assoc itm :block/order (+ idx new-block-order)))
-                                                          internal-representation)
-        [individual-blocks child-parent-map] (get-individual-blocks updated-order)
-        all-atomic-ops                       (map #(let [block-uid (:block/uid %1)
-                                                         parent-uid (get child-parent-map block-uid
-                                                                         current-block-parent-uid)
-                                                         atomic-ops (internal-repr->atomic-ops db
-                                                                                               %
-                                                                                               parent-uid)]
-                                                     atomic-ops)
-                                                  individual-blocks)
-        flattened                            (flatten all-atomic-ops)
-        add-block-remove-op                  (if empty-block?
-                                               (conj flattened block-remove-op)
-                                               flattened)
-        block-paste-op (composite/make-consequence-op {:op-type :block/paste}
-                                                      add-block-remove-op)]
-    block-paste-op))
+  ([db internal-representation]
+   (let [[individual-blocks child-parent-map] (get-individual-blocks internal-representation)
+         all-atomic-ops                       (map #(let [block-uid (:block/uid %1)
+                                                          parent-uid (get child-parent-map block-uid
+                                                                          "orphan")
+                                                          atomic-ops (internal-repr->atomic-ops db
+                                                                                                %
+                                                                                                parent-uid)]
+                                                      atomic-ops)
+                                                   individual-blocks)
+         flattened                            (flatten all-atomic-ops)
+         block-paste-op (composite/make-consequence-op {:op-type :block/paste}
+                                                       flattened)]
+     block-paste-op))
+  ([db uid internal-representation]
+   (let [current-block                        (common-db/get-block db [:block/uid uid])
+         current-block-parent-uid             (:block/uid (common-db/get-parent db [:block/uid uid]))
+         {:block/keys [order
+                       children
+                       open
+                       string]}               current-block
+         ;; The parent of block depends on:
+         ;; - if the current block is open and has chidren : if this is the case then we want the blocks to be pasted
+         ;;   under the current block as its first children
+         ;; - else the parent is the current block's parent
+         current-block-parent?                (and children
+                                                   open)
+         empty-block?                         (and (string/blank? string)
+                                                   (empty?        children))
+         ;; - If the block is empty then we delete the empty block and add new blocks. So in this case
+         ;;   the block order for the new blocks is the same as deleted blocks order.
+         ;; - If the block is parent then we want the blocks to be pasted as this blocks first children
+         ;; - If the block is not empty then add the new blocks after the current one.
+         block-remove-op                      (graph-ops/build-block-remove-op db uid)
+         new-block-order                      (cond
+                                                empty-block?          order
+                                                current-block-parent? 0
+                                                :else                 (inc order))
+         updated-order                        (map-indexed (fn [idx itm] (assoc itm :block/order (+ idx new-block-order)))
+                                                           internal-representation)
+         [individual-blocks child-parent-map] (get-individual-blocks updated-order)
+         all-atomic-ops                       (map #(let [block-uid (:block/uid %1)
+                                                          parent-uid (get child-parent-map block-uid
+                                                                          current-block-parent-uid)
+                                                          atomic-ops (internal-repr->atomic-ops db
+                                                                                                %
+                                                                                                parent-uid)]
+                                                      atomic-ops)
+                                                   individual-blocks)
+         flattened                            (flatten all-atomic-ops)
+         add-block-remove-op                  (if empty-block?
+                                                (conj flattened block-remove-op)
+                                                flattened)
+         block-paste-op (composite/make-consequence-op {:op-type :block/paste}
+                                                       add-block-remove-op)]
+     block-paste-op)))
+

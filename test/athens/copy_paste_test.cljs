@@ -86,8 +86,8 @@
                                      :block/open true,
                                      :block/order 5}]
           op                       (bfs/build-paste-op @@fixture/connection
-                                                       {:uid block-1-uid
-                                                        :internal-representation internal-representation})
+                                                       block-1-uid
+                                                       internal-representation)
           block-paste-atomics      (graph-ops/extract-atomics op)]
       (doseq [atomic-op block-paste-atomics
               :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
