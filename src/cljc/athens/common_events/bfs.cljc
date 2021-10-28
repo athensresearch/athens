@@ -88,8 +88,12 @@
   ([db internal-representation]
    (let [[individual-blocks child-parent-map] (get-individual-blocks internal-representation)
          all-atomic-ops                       (map #(let [block-uid (:block/uid %1)
+                                                          ;; `parent-uid` is nil for the blocks that
+                                                          ;; represent a page. The assumption here is
+                                                          ;; that all the tree is internal-representation
+                                                          ;; are pages and not independant blocks.
                                                           parent-uid (get child-parent-map block-uid
-                                                                          "orphan")
+                                                                          nil)
                                                           atomic-ops (internal-repr->atomic-ops db
                                                                                                 %
                                                                                                 parent-uid)]

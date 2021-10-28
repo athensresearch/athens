@@ -1,9 +1,9 @@
 (ns athens.athens-datoms
   (:require
-    [datascript.core :as datascript]
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
-    [athens.common-events.bfs :as bfs]))
+    [athens.common-events.bfs :as bfs]
+    [datascript.core :as datascript]))
 
 
 (def mini-datoms
@@ -295,13 +295,13 @@
                                                                    :open true,
                                                                    :order 0}]}]}]}])
 
+
 (def welcome-event
   (let [op (bfs/build-paste-op (datascript/empty-db common-db/schema)
                                mini-datoms)
         event (common-events/build-atomic-event  0 op)]
     [(:event/id event)
      event]))
-
 
 
 ;; Lan Party Datoms

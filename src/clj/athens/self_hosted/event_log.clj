@@ -1,7 +1,7 @@
 (ns athens.self-hosted.event-log
   (:require
-    [clojure.edn :as edn]
     [athens.athens-datoms :as datoms]
+    [clojure.edn :as edn]
     [clojure.tools.logging :as log]
     [fluree.db.api :as fdb]))
 
@@ -22,7 +22,6 @@
     :_predicate/name :event/data
     :_predicate/doc "Event data serialized as an EDN string."
     :_predicate/type :string}])
-
 
 
 (def initial-events
@@ -103,14 +102,14 @@
 
 (defn ensure-ledger!
   [conn]
-  (log/info "Populating fresh ledger with initial events..." initial-events)
-  (doseq [[id data] initial-events]
-    (add-event! conn id data))
   (when (empty? @(fdb/ledger-info conn ledger))
     (log/info "Fluree ledger for event-log not found, creating" ledger)
     @(fdb/new-ledger conn ledger)
     (fdb/wait-for-ledger-ready conn ledger)
     @(fdb/transact conn ledger schema)
+    (log/info "Populating fresh ledger with initial events..." initial-events)
+    (doseq [[id data] initial-events]
+      (add-event! conn id data))
     (log/info "✅ Populated fresh ledger.")
     (log/info "✅ Fluree ledger for event-log created.")))
 
