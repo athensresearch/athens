@@ -1,5 +1,6 @@
 (ns athens.self-hosted.event-log
   (:require
+    [athens.athens-datoms :as datoms]
     [clojure.edn :as edn]
     [clojure.tools.logging :as log]
     [fluree.db.api :as fdb]))
@@ -24,8 +25,7 @@
 
 
 (def initial-events
-  [;; TODO: Convert welcome page etc into events, add them here.
-   ])
+  [datoms/welcome-event])
 
 
 (defn serialize
@@ -107,7 +107,7 @@
     @(fdb/new-ledger conn ledger)
     (fdb/wait-for-ledger-ready conn ledger)
     @(fdb/transact conn ledger schema)
-    (log/info "Populating fresh ledger with initial events...")
+    (log/info "Populating fresh ledger with initial events..." initial-events)
     (doseq [[id data] initial-events]
       (add-event! conn id data))
     (log/info "✅ Populated fresh ledger.")

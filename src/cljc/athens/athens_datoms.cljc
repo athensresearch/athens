@@ -1,4 +1,9 @@
-(ns athens.athens-datoms)
+(ns athens.athens-datoms
+  (:require
+    [athens.common-db :as common-db]
+    [athens.common-events :as common-events]
+    [athens.common-events.bfs :as bfs]
+    [datascript.core :as datascript]))
 
 
 (def mini-datoms
@@ -289,6 +294,14 @@
                                                                    :string "[[Welcome]] is a special page. When you restart Athens, any changes you make to this page will be overwritten, so don't write anything you need in this page!",
                                                                    :open true,
                                                                    :order 0}]}]}]}])
+
+
+(def welcome-event
+  (let [op (bfs/build-paste-op (datascript/empty-db common-db/schema)
+                               mini-datoms)
+        event (common-events/build-atomic-event  0 op)]
+    [(:event/id event)
+     event]))
 
 
 ;; Lan Party Datoms

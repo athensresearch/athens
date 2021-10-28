@@ -42,7 +42,7 @@
                                                        inc)
                                           :before (:block/order ref-block)
                                           :after  (inc (:block/order ref-block))
-                                          (inc relation))
+                                          relation)
         now                             (utils/now-ts)
         new-block                       {:block/uid    block-uid
                                          :block/string ""
