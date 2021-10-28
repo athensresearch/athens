@@ -110,6 +110,8 @@
     (log/info "Populating fresh ledger with initial events..." initial-events)
     (doseq [[id data] initial-events]
       (add-event! conn id data))
+    ;; Workaround for https://github.com/fluree/db/issues/126
+    (Thread/sleep 2000)
     (log/info "✅ Populated fresh ledger.")
     (log/info "✅ Fluree ledger for event-log created.")))
 
