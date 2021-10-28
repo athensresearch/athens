@@ -89,6 +89,9 @@
 
   :repl
   {:extra-paths ["dev/clj"]}
+
   :athens
   {:extra-paths ["dev/clj"]
-   :main-opts   ["-m" "athens.self-hosted.core"]}}}
+   :main-opts   ["-m" "athens.self-hosted.core"]
+   ;; Workaround for https://github.com/fluree/db/issues/125
+   :jvm-opts    ["-Dorg.asynchttpclient.webSocketMaxFrameSize=10000000"]}}}
