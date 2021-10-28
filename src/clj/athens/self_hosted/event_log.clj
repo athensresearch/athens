@@ -96,24 +96,27 @@
 ;; 08:15:55.648 ERROR [AsyncHttpClient-3-1] fluree.db.util.log - "websocket error"
 ;; athens_1  | io.netty.handler.codec.http.websocketx.CorruptedWebSocketFrameException: Max frame length of 10240 has been exceeded.
 (defn add-event!
+  "Returns the block the event guaranteed to be present in."
   [conn id data]
-  @(fdb/transact conn ledger [(serialize id data)]))
+  (:block @(fdb/transact conn ledger [(serialize id data)])))
 
 
 (defn ensure-ledger!
   [conn]
   (when (empty? @(fdb/ledger-info conn ledger))
-    (log/info "Fluree ledger for event-log not found, creating" ledger)
-    @(fdb/new-ledger conn ledger)
-    (fdb/wait-for-ledger-ready conn ledger)
-    @(fdb/transact conn ledger schema)
-    (log/info "Populating fresh ledger with initial events..." initial-events)
-    (doseq [[id data] initial-events]
-      (add-event! conn id data))
-    ;; Workaround for https://github.com/fluree/db/issues/126
-    (Thread/sleep 2000)
-    (log/info "✅ Populated fresh ledger.")
-    (log/info "✅ Fluree ledger for event-log created.")))
+    (let [block (atom nil)]
+      (log/info "Fluree ledger for event-log not found, creating" ledger)
+      @(fdb/new-ledger conn ledger)
+      (fdb/wait-for-ledger-ready conn ledger)
+      (reset! block (:block @(fdb/transact conn ledger schema)))
+      (log/info "Populating fresh ledger with initial events...")
+      (doseq [[id data] initial-events]
+        (reset! block (add-event! conn id data)))
+      (log/info "✅ Populated fresh ledger.")
+      (log/info "Bringing local ledger to to date with latest transactions...")
+      (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
+      (log/info "✅ Fluree local ledger up to date.")
+      (log/info "✅ Fluree ledger for event-log created."))))
 
 
 #_(defn events-since
