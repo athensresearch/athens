@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.29](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.28...v1.0.0-alpha.rtc.29) (2021-10-28)
+
+
+### Bug Fixes
+
+* bring local ledger up to date during ensure-ledger! ([a15ecea](https://github.com/athensresearch/athens/commit/a15ecea8e207d7b835d848de739870b97c798cde)), closes [/github.com/fluree/db/issues/126#issuecomment-953903963](https://github.com/athensresearch//github.com/fluree/db/issues/126/issues/issuecomment-953903963)
+* don't include a link to Welcome in mini-datoms ([00ba659](https://github.com/athensresearch/athens/commit/00ba6594f49c2f800ec0242268b9b6c2fd91fdc3))
+* load theme earlier in the boot sequence ([5297d0c](https://github.com/athensresearch/athens/commit/5297d0cec193db3e5beadaecda2a8b92f25fb9ff))
+* use initial datoms, but without any page links ([e1e23d6](https://github.com/athensresearch/athens/commit/e1e23d6e3675489125c0d243e81efb85ae5c0a0e))
+* workaround for fluree tx limit ([45b6877](https://github.com/athensresearch/athens/commit/45b6877554eff88a01db9334f6036f8b90e0989e))
+* workaround query delay ([0ae6ca8](https://github.com/athensresearch/athens/commit/0ae6ca83fc9e56a0966c74463859582fa0ea20d0))
+
+
+* don't build dmg zip ([92ca6b4](https://github.com/athensresearch/athens/commit/92ca6b41e604d5c038c247430f7270b69fb2c8ba))
+
 ## [1.0.0-alpha.rtc.28](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.27...v1.0.0-alpha.rtc.28) (2021-10-27)
 
 
