@@ -520,6 +520,7 @@
      :event/args    {:block-uid block-uid
                      :open?     open?}}))
 
+
 ;; - presence events
 
 (defn build-presence-hello-event
