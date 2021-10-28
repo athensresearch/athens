@@ -83,7 +83,9 @@ docker-compose up --detach
 The server will be acessible at `localhost:80`, and all data will be saved at `./athens-data`.
 
 If any of the services fails to launch, you can use `docker compose logs SERVICE_NAME` to inspect what the problem is.
-Fluree can fail to launch if it does not have enough permissions for the `./athens-data` folder.
+
+The `fluree` service can fail to launch if it does not have enough permissions for the `./athens-data` folder.
+You can work around this particular failure more by manually creating the data folder via `mkdir -p ./athens-date/fluree`.
 
 You can override the app configuration via an environment variable:
 
