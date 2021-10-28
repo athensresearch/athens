@@ -11,7 +11,7 @@
     :node/title     "Welcome"
     :page/sidebar   0
     :block/children [#:block{:uid      "block-1"
-                             :string   "block with link to [[Welcome]]"
+                             :string   "block without link to Welcome"
                              :order    0
                              :children []}]}])
 
