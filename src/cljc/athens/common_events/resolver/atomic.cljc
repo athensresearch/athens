@@ -84,20 +84,14 @@
 
 (defmethod resolve-atomic-op-to-tx :block/move
   [db {:op/keys [args]}]
-  ;; [ ] retract block from old parent
-  ;; [ ] reindex old parent's children
-  ;; [ ] calculate block's position in new parent
-  ;; [ ] add block to new parent
-  ;; [ ] reindex new parent's children
-  (log/info "atomic-resolver :block/move args:" (pr-str args))
+  (log/debug "atomic-resolver :block/move args:" (pr-str args))
   (let [{:keys [block-uid
                 position]}                      args
         {:keys [ref-uid
                 relation]}                      position
         {old-block-order :block/order
          :as             moved-block}           (common-db/get-block db [:block/uid block-uid])
-        {old-parent-block-uid :block/uid
-         :as                  old-parent-block} (common-db/get-parent db [:block/uid block-uid])
+        {old-parent-block-uid :block/uid}       (common-db/get-parent db [:block/uid block-uid])
         ref-parent?                             (or (int? relation)
                                                     (#{:first :last} relation))
         ref-block-exists?                       (int? (common-db/e-by-av db :block/uid ref-uid))
@@ -127,18 +121,29 @@
     (if same-parent?
       (let [lower-bound-index (min old-block-order new-block-order)
             upper-bound-index (max old-block-order new-block-order)
-            +or-              (if (< new-block-order old-block-order)
-                                -
-                                +)
+            up?               (< new-block-order old-block-order)
+            +or-              (if up? + -)
             reindexed-parent  {:block/uid      old-parent-block-uid
                                :edit/time      now
                                :block/children (common-db/reindex-blocks-between-bounds db
                                                                                         +or-
                                                                                         [:block/uid old-parent-block-uid]
-                                                                                        lower-bound-index
-                                                                                        upper-bound-index
+                                                                                        (if up?
+                                                                                          (dec lower-bound-index)
+                                                                                          (dec lower-bound-index))
+                                                                                        (if up?
+                                                                                          upper-bound-index
+                                                                                          (dec upper-bound-index))
                                                                                         1)}
             tx-data           [updated-block reindexed-parent]]
+        (log/info "same-parent:\n"
+                  (with-out-str
+                    (pp/pprint {:lower   lower-bound-index
+                                :upper   upper-bound-index
+                                :old-bo  old-block-order
+                                :new-bo  new-block-order
+                                :up?     up?
+                                :tx-data tx-data})))
         tx-data)
       
       (let [retract-from-old-parent [:db/retract [:block/uid old-parent-block-uid] :block/children [:block/uid block-uid]]

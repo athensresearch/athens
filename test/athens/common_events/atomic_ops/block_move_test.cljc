@@ -6,6 +6,7 @@
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [clojure.test                         :as t]
+    [athens.common.logging :as log]
     [datascript.core                      :as d]))
 
 
@@ -15,110 +16,210 @@
 (t/deftest block-move-atomic-op-same-parent-cases
 
   (t/testing "Moving block up"
-    (let [parent-uid  "parent-1-uid"
-          child-1-uid "child-1-1-uid"
-          child-2-uid "child-1-2-uid"
-          child-3-uid "child-1-3-uid"
-          child-4-uid "child-1-4-uid"
-          child-5-uid "child-1-5-uid"
-          setup-tx    [{:block/uid      parent-uid
-                        :block/string   ""
-                        :block/order    0
-                        :block/children [{:block/uid      child-1-uid
-                                          :block/string   ""
-                                          :block/order    0
-                                          :block/children []}
-                                         {:block/uid      child-2-uid
-                                          :block/string   ""
-                                          :block/order    1
-                                          :block/children []}
-                                         {:block/uid      child-3-uid
-                                          :block/string   ""
-                                          :block/order    2
-                                          :block/children []}
-                                         {:block/uid      child-4-uid
-                                          :block/string   ""
-                                          :block/order    3
-                                          :block/children []}
-                                         {:block/uid      child-5-uid
-                                          :block/string   ""
-                                          :block/order    4
-                                          :block/children []}]}]]
-      (fixture/transact-with-middleware setup-tx)
-      (let [block-move-op  (atomic-ops/make-block-move-op child-4-uid child-2-uid :before)
-            block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
-        (d/transact! @fixture/connection block-move-txs)
-        (let [child-1-block (common-db/get-block @@fixture/connection
-                                                 [:block/uid child-1-uid])
-              child-2-block (common-db/get-block @@fixture/connection
-                                                 [:block/uid child-2-uid])
-              child-3-block (common-db/get-block @@fixture/connection
-                                                 [:block/uid child-3-uid])
-              child-4-block (common-db/get-block @@fixture/connection
-                                                 [:block/uid child-4-uid])
-              child-5-block (common-db/get-block @@fixture/connection
-                                                 [:block/uid child-5-uid])]
-          (t/is (= 0 (:block/order child-1-block)))
-          (t/is (= 1 (:block/order child-4-block)))
-          (t/is (= 2 (:block/order child-2-block)))
-          (t/is (= 3 (:block/order child-3-block)))
-          (t/is (= 4 (:block/order child-5-block)))))
-      
-      ;; (atomic-ops/make-block-move-op child-2-uid parent-uid :first)
-      ))
+    (t/testing "using :before"
+      (log/info "same parent move up :before")
+      (let [parent-uid  "parent-1-uid"
+            child-1-uid "child-1-1-uid"
+            child-2-uid "child-1-2-uid"
+            child-3-uid "child-1-3-uid"
+            child-4-uid "child-1-4-uid"
+            child-5-uid "child-1-5-uid"
+            setup-tx    [{:block/uid      parent-uid
+                          :block/string   ""
+                          :block/order    0
+                          :block/children [{:block/uid      child-1-uid
+                                            :block/string   ""
+                                            :block/order    0
+                                            :block/children []}
+                                           {:block/uid      child-2-uid
+                                            :block/string   ""
+                                            :block/order    1
+                                            :block/children []}
+                                           {:block/uid      child-3-uid
+                                            :block/string   ""
+                                            :block/order    2
+                                            :block/children []}
+                                           {:block/uid      child-4-uid
+                                            :block/string   ""
+                                            :block/order    3
+                                            :block/children []}
+                                           {:block/uid      child-5-uid
+                                            :block/string   ""
+                                            :block/order    4
+                                            :block/children []}]}]]
+        (fixture/transact-with-middleware setup-tx)
+        (let [block-move-op  (atomic-ops/make-block-move-op child-4-uid child-2-uid :before)
+              block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
+          (d/transact! @fixture/connection block-move-txs)
+          (let [child-1-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-1-uid])
+                child-2-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-2-uid])
+                child-3-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-3-uid])
+                child-4-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-4-uid])
+                child-5-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-5-uid])]
+            (t/is (= 0 (:block/order child-1-block)))
+            (t/is (= 1 (:block/order child-4-block)))
+            (t/is (= 2 (:block/order child-2-block)))
+            (t/is (= 3 (:block/order child-3-block)))
+            (t/is (= 4 (:block/order child-5-block)))))))
+
+    (t/testing "using :after"
+      (log/info "same parent move up :after")
+      (let [parent-uid  "parent-11-uid"
+            child-1-uid "child-11-1-uid"
+            child-2-uid "child-11-2-uid"
+            child-3-uid "child-11-3-uid"
+            child-4-uid "child-11-4-uid"
+            child-5-uid "child-11-5-uid"
+            setup-tx    [{:block/uid      parent-uid
+                          :block/string   ""
+                          :block/order    0
+                          :block/children [{:block/uid      child-1-uid
+                                            :block/string   ""
+                                            :block/order    0
+                                            :block/children []}
+                                           {:block/uid      child-2-uid
+                                            :block/string   ""
+                                            :block/order    1
+                                            :block/children []}
+                                           {:block/uid      child-3-uid
+                                            :block/string   ""
+                                            :block/order    2
+                                            :block/children []}
+                                           {:block/uid      child-4-uid
+                                            :block/string   ""
+                                            :block/order    3
+                                            :block/children []}
+                                           {:block/uid      child-5-uid
+                                            :block/string   ""
+                                            :block/order    4
+                                            :block/children []}]}]]
+        (fixture/transact-with-middleware setup-tx)
+        (let [block-move-op  (atomic-ops/make-block-move-op child-4-uid child-1-uid :after)
+              block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
+          (d/transact! @fixture/connection block-move-txs)
+          (let [child-1-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-1-uid])
+                child-2-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-2-uid])
+                child-3-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-3-uid])
+                child-4-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-4-uid])
+                child-5-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-5-uid])]
+            (t/is (= 0 (:block/order child-1-block)))
+            (t/is (= 1 (:block/order child-4-block)))
+            (t/is (= 2 (:block/order child-2-block)))
+            (t/is (= 3 (:block/order child-3-block)))
+            (t/is (= 4 (:block/order child-5-block))))))))
 
   (t/testing "Moving block down"
-    (let [parent-uid  "parent-2-uid"
-          child-1-uid "child-2-1-uid"
-          child-2-uid "child-2-2-uid"
-          child-3-uid "child-2-3-uid"
-          child-4-uid "child-2-4-uid"
-          child-5-uid "child-2-5-uid"
-          setup-tx    [{:block/uid      parent-uid
-                        :block/string   ""
-                        :block/order    0
-                        :block/children [{:block/uid      child-1-uid
-                                          :block/string   ""
-                                          :block/order    0
-                                          :block/children []}
-                                         {:block/uid      child-2-uid
-                                          :block/string   ""
-                                          :block/order    1
-                                          :block/children []}
-                                         {:block/uid      child-3-uid
-                                          :block/string   ""
-                                          :block/order    2
-                                          :block/children []}
-                                         {:block/uid      child-4-uid
-                                          :block/string   ""
-                                          :block/order    3
-                                          :block/children []}
-                                         {:block/uid      child-5-uid
-                                          :block/string   ""
-                                          :block/order    4
-                                          :block/children []}]}]]
-      (fixture/transact-with-middleware setup-tx)
-      (let [block-move-op  (atomic-ops/make-block-move-op child-2-uid child-4-uid :after)
-            block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
-        (d/transact! @fixture/connection block-move-txs)
-        (let [child-1-block (common-db/get-block @@fixture/connection
-                                                 [:block/uid child-1-uid])
-              child-2-block (common-db/get-block @@fixture/connection
-                                                 [:block/uid child-2-uid])
-              child-3-block (common-db/get-block @@fixture/connection
-                                                 [:block/uid child-3-uid])
-              child-4-block (common-db/get-block @@fixture/connection
-                                                 [:block/uid child-4-uid])
-              child-5-block (common-db/get-block @@fixture/connection
-                                                 [:block/uid child-5-uid])]
-          (t/is (= 0 (:block/order child-1-block)))
-          (t/is (= 1 (:block/order child-3-block)))
-          (t/is (= 2 (:block/order child-4-block)))
-          (t/is (= 3 (:block/order child-2-block)))
-          (t/is (= 4 (:block/order child-5-block)))))
-      
-      ;; (atomic-ops/make-block-move-op child-2-uid parent-uid :first)
-      )))
+    (t/testing "using :after"
+      (log/info "same parent move down :after")
+      (let [parent-uid  "parent-2-uid"
+            child-1-uid "child-2-1-uid"
+            child-2-uid "child-2-2-uid"
+            child-3-uid "child-2-3-uid"
+            child-4-uid "child-2-4-uid"
+            child-5-uid "child-2-5-uid"
+            setup-tx    [{:block/uid      parent-uid
+                          :block/string   ""
+                          :block/order    0
+                          :block/children [{:block/uid      child-1-uid
+                                            :block/string   ""
+                                            :block/order    0
+                                            :block/children []}
+                                           {:block/uid      child-2-uid
+                                            :block/string   ""
+                                            :block/order    1
+                                            :block/children []}
+                                           {:block/uid      child-3-uid
+                                            :block/string   ""
+                                            :block/order    2
+                                            :block/children []}
+                                           {:block/uid      child-4-uid
+                                            :block/string   ""
+                                            :block/order    3
+                                            :block/children []}
+                                           {:block/uid      child-5-uid
+                                            :block/string   ""
+                                            :block/order    4
+                                            :block/children []}]}]]
+        (fixture/transact-with-middleware setup-tx)
+        (let [block-move-op  (atomic-ops/make-block-move-op child-2-uid child-4-uid :after)
+              block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
+          (d/transact! @fixture/connection block-move-txs)
+          (let [child-1-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-1-uid])
+                child-2-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-2-uid])
+                child-3-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-3-uid])
+                child-4-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-4-uid])
+                child-5-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-5-uid])]
+            (t/is (= 0 (:block/order child-1-block)))
+            (t/is (= 1 (:block/order child-3-block)))
+            (t/is (= 2 (:block/order child-4-block)))
+            (t/is (= 3 (:block/order child-2-block)))
+            (t/is (= 4 (:block/order child-5-block)))))))
+
+    (t/testing "using :before"
+      (log/info "same parent move down :before")
+      (let [parent-uid  "parent-22-uid"
+            child-1-uid "child-22-1-uid"
+            child-2-uid "child-22-2-uid"
+            child-3-uid "child-22-3-uid"
+            child-4-uid "child-22-4-uid"
+            child-5-uid "child-22-5-uid"
+            setup-tx    [{:block/uid      parent-uid
+                          :block/string   ""
+                          :block/order    0
+                          :block/children [{:block/uid      child-1-uid
+                                            :block/string   ""
+                                            :block/order    0
+                                            :block/children []}
+                                           {:block/uid      child-2-uid
+                                            :block/string   ""
+                                            :block/order    1
+                                            :block/children []}
+                                           {:block/uid      child-3-uid
+                                            :block/string   ""
+                                            :block/order    2
+                                            :block/children []}
+                                           {:block/uid      child-4-uid
+                                            :block/string   ""
+                                            :block/order    3
+                                            :block/children []}
+                                           {:block/uid      child-5-uid
+                                            :block/string   ""
+                                            :block/order    4
+                                            :block/children []}]}]]
+        (fixture/transact-with-middleware setup-tx)
+        (let [block-move-op  (atomic-ops/make-block-move-op child-2-uid child-5-uid :before)
+              block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
+          (d/transact! @fixture/connection block-move-txs)
+          (let [child-1-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-1-uid])
+                child-2-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-2-uid])
+                child-3-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-3-uid])
+                child-4-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-4-uid])
+                child-5-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-5-uid])]
+            (t/is (= 0 (:block/order child-1-block)))
+            (t/is (= 1 (:block/order child-3-block)))
+            (t/is (= 2 (:block/order child-4-block)))
+            (t/is (= 3 (:block/order child-2-block)))
+            (t/is (= 4 (:block/order child-5-block)))))))))
 
 
 (t/deftest block-move-atomic-op-diff-parent-cases
