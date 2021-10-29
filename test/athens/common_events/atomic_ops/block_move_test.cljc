@@ -5,8 +5,8 @@
     [athens.common-events.graph.atomic    :as atomic-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
-    [clojure.test                         :as t]
     [athens.common.logging :as log]
+    [clojure.test                         :as t]
     [datascript.core                      :as d]))
 
 
@@ -269,6 +269,6 @@
           (t/is (= 1 (:block/order child-1-1-block)))
           (t/is (= 2 (:block/order child-1-2-block)))
           (t/is (= 0 (:block/order child-2-1-block)))))
-      
+
       ;; (atomic-ops/make-block-move-op child-2-uid parent-uid :first)
       )))

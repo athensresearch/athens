@@ -165,7 +165,7 @@
                                 :up?     up?
                                 :tx-data tx-data})))
         tx-data)
-      
+
       (let [retract-from-old-parent [:db/retract [:block/uid old-parent-block-uid] :block/children [:block/uid block-uid]]
             old-parent-reindexed    {:block/uid      old-parent-block-uid
                                      :edit/time      now
