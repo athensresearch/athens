@@ -104,6 +104,9 @@
                                                     (throw (ex-info "Ref block does not exist" {:block/uid ref-uid})))
                                                   (common-db/get-parent db [:block/uid ref-uid]))
         same-parent?                            (= new-parent-block-uid old-parent-block-uid)
+        ref-block-order                         (:block/order ref-block)
+        ;; Up means it went from a higher number (e.g. 5) to a lower number (e.g. 2).
+        up?                                     (< ref-block-order old-block-order)
         new-block-order                         (condp = relation
                                                   :first  0
                                                   :last   (->> new-parent-block
@@ -111,8 +114,18 @@
                                                                (map :block/order)
                                                                (reduce max 0)
                                                                inc)
-                                                  :before (:block/order ref-block)
-                                                  :after  (inc (:block/order ref-block))
+                                                  :before (cond
+                                                            ;; it replaces ref block
+                                                            (not same-parent?) ref-block-order
+                                                            up?                ref-block-order
+                                                            ;; the ref block is unmoved
+                                                            :else              (dec ref-block-order))
+                                                  :after  (cond
+                                                            ;; the ref block is unmoved
+                                                            (not same-parent?) (inc ref-block-order)
+                                                            up?                (inc ref-block-order)
+                                                            ;; it replaces the ref block
+                                                            :else              ref-block-order)
                                                   relation)
         now                                     (utils/now-ts)
         updated-block                           (merge moved-block
@@ -121,19 +134,26 @@
     (if same-parent?
       (let [lower-bound-index (min old-block-order new-block-order)
             upper-bound-index (max old-block-order new-block-order)
-            up?               (< new-block-order old-block-order)
             +or-              (if up? + -)
             reindexed-parent  {:block/uid      old-parent-block-uid
                                :edit/time      now
                                :block/children (common-db/reindex-blocks-between-bounds db
                                                                                         +or-
                                                                                         [:block/uid old-parent-block-uid]
+                                                                                        ;; NB: reindex-blocks-between excludes the bounds
+                                                                                        ;; We need to figure out the right bounds:
                                                                                         (if up?
+                                                                                          ;; block moved up to occupy lower-bound-index
+                                                                                          ;; so the block previously there needs to
+                                                                                          ;; be included in the reindexing.
                                                                                           (dec lower-bound-index)
-                                                                                          (dec lower-bound-index))
+                                                                                          lower-bound-index)
                                                                                         (if up?
                                                                                           upper-bound-index
-                                                                                          (dec upper-bound-index))
+                                                                                          ;; block moved down to occupy upper-bound-index
+                                                                                          ;; so the block previously there needs to
+                                                                                          ;; be included in the reindexing.
+                                                                                          (inc upper-bound-index))
                                                                                         1)}
             tx-data           [updated-block reindexed-parent]]
         (log/info "same-parent:\n"
