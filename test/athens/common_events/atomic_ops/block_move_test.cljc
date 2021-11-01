@@ -3,6 +3,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.atomic    :as atomic-ops]
+    [athens.common-events.graph.composite :as composite-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging :as log]
@@ -302,3 +303,94 @@
           (t/is (= 0 (:block/order child-1-1-block)))
           (t/is (= 1 (-> child-1-1-block :block/children count)))
           (t/is (= 0 (:block/order child-1-2-block))))))))
+
+
+(t/deftest block-move-atomic-op-chains-aka-multi-cases
+  (t/testing "flat source"
+    (let [parent-1-uid "parent-1-uid"
+          child-1-uid  "child-1-1-uid"
+          child-2-uid  "child-1-2-uid"
+          child-3-uid  "child-1-3-uid"
+          setup-tx     [{:block/uid      parent-1-uid
+                         :block/string   ""
+                         :block/order    0
+                         :block/children [{:block/uid      child-1-uid
+                                           :block/string   ""
+                                           :block/order    0
+                                           :block/children []}
+                                          {:block/uid      child-2-uid
+                                           :block/string   ""
+                                           :block/order    1
+                                           :block/children []}
+                                          {:block/uid      child-3-uid
+                                           :block/string   ""
+                                           :block/order    2
+                                           :block/children []}]}]]
+      (fixture/transact-with-middleware setup-tx)
+      (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
+                                                            [(atomic-ops/make-block-move-op child-2-uid child-1-uid :first)
+                                                             (atomic-ops/make-block-move-op child-3-uid child-2-uid :after)])]
+        ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
+        (doseq [atomic (graph-ops/extract-atomics chained-move)
+                :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
+          (d/transact! @fixture/connection atomic-txs))
+        (let [parent-block  (common-db/get-block @@fixture/connection
+                                                   [:block/uid parent-1-uid])
+              child-1-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-1-uid])
+              child-2-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-2-uid])
+              child-3-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-3-uid])]
+          (t/is (= 1 (-> parent-block :block/children count)))
+          (t/is (= 2 (-> child-1-block :block/children count)))
+          (t/is (= 0 (:block/order child-1-block)))
+          (t/is (= 0 (:block/order child-2-block)))
+          (t/is (= 1 (:block/order child-3-block)))))))
+
+  (t/testing "flat source, but has children"
+    (let [parent-1-uid  "parent-2-uid"
+          child-1-uid   "child-2-1-uid"
+          child-2-uid   "child-2-2-uid"
+          child-2-1-uid "child-2-2-1-uid"
+          child-3-uid   "child-2-3-uid"
+          setup-tx      [{:block/uid      parent-1-uid
+                          :block/string   ""
+                          :block/order    0
+                          :block/children [{:block/uid      child-1-uid
+                                            :block/string   ""
+                                            :block/order    0
+                                            :block/children []}
+                                           {:block/uid      child-2-uid
+                                            :block/string   ""
+                                            :block/order    1
+                                            :block/children [{:block/uid      child-2-1-uid
+                                                              :block/string   ""
+                                                              :block/order    0
+                                                              :block/children []}]}
+                                           {:block/uid      child-3-uid
+                                            :block/string   ""
+                                            :block/order    2
+                                            :block/children []}]}]]
+      (fixture/transact-with-middleware setup-tx)
+      (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
+                                                            [(atomic-ops/make-block-move-op child-2-uid child-1-uid :first)
+                                                             (atomic-ops/make-block-move-op child-3-uid child-2-uid :after)])]
+        ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
+        (doseq [atomic (graph-ops/extract-atomics chained-move)
+                :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
+          (d/transact! @fixture/connection atomic-txs))
+        (let [parent-block  (common-db/get-block @@fixture/connection
+                                                   [:block/uid parent-1-uid])
+              child-1-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-1-uid])
+              child-2-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-2-uid])
+              child-3-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-3-uid])]
+          (t/is (= 1 (-> parent-block :block/children count)))
+          (t/is (= 2 (-> child-1-block :block/children count)))
+          (t/is (= 1 (-> child-2-block :block/children count)))
+          (t/is (= 0 (:block/order child-1-block)))
+          (t/is (= 0 (:block/order child-2-block)))
+          (t/is (= 1 (:block/order child-3-block))))))))

@@ -1171,9 +1171,17 @@
   :drop-multi/child
   (fn [{:keys [db]} [_ {:keys [source-uids target-uid] :as args}]]
     (log/debug ":drop-multi/child args" (pr-str args))
-    (let [event (common-events/build-drop-multi-child-event (:remote/last-seen-tx db)
-                                                            source-uids
-                                                            target-uid)]
+    (let [atomic-op (composite-ops/make-consequence-op {:op/type :block/move-chain}
+                                                       (concat [(atomic-graph-ops/make-block-move-op (first source-uids)
+                                                                                                     target-uid
+                                                                                                     :first)]
+                                                               (doall
+                                                                (for [[one two] (partition 2 1 source-uids)]
+                                                                  (atomic-graph-ops/make-block-move-op two
+                                                                                                       one
+                                                                                                       :after)))))
+          event     (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                      atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
