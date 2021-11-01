@@ -1151,16 +1151,6 @@
 
 
 (reg-event-fx
-  :drop/child
-  (fn [{:keys [db]} [_ {:keys [source-uid target-uid] :as args}]]
-    (log/debug ":drop/child args" (pr-str args))
-    (let [event (common-events/build-drop-child-event (:remote/last-seen-tx db)
-                                                      source-uid
-                                                      target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
   :drop-multi/child
   (fn [{:keys [db]} [_ {:keys [source-uids target-uid] :as args}]]
     (log/debug ":drop-multi/child args" (pr-str args))

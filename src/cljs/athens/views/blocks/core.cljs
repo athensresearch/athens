@@ -183,8 +183,15 @@
                                     (and move-action? drag-target-child?)        [:block/move {:source-uid source-uid
                                                                                                :target-uid target-uid
                                                                                                :target-rel :first}]
-
-                                    (and move-action? drag-target-same-parents?) [:drop/same {:drag-target drag-target
+                                    #_                                           [:drop/child {:source-uid source-uid
+                                                                                               :target-uid target-uid}]
+                                    ;; block/move :first
+                                    (and move-action? drag-target-same-parents?) [:block/move {:source-uid source-uid
+                                                                                               :target-uid target-uid
+                                                                                               :target-rel (if (= :above drag-target)
+                                                                                                             :before
+                                                                                                             :after)}]
+                                    #_[:drop/same {:drag-target drag-target
                                                                                               :source-uid  source-uid
                                                                                               :target-uid  target-uid}]
                                     ;; block/move (:before or :after (drag-target))
