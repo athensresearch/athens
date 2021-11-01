@@ -167,18 +167,24 @@
         tx-data)
 
       (let [retract-from-old-parent [:db/retract [:block/uid old-parent-block-uid] :block/children [:block/uid block-uid]]
+            old-parent-reindex      (common-db/dec-after db
+                                                         [:block/uid old-parent-block-uid]
+                                                         old-block-order)
             old-parent-reindexed    {:block/uid      old-parent-block-uid
                                      :edit/time      now
-                                     :block/children (common-db/dec-after db
-                                                                          [:block/uid old-parent-block-uid]
-                                                                          (dec old-block-order))}
+                                     :block/children old-parent-reindex}
             new-parent-reindexed    {:block/uid      new-parent-block-uid
                                      :edit/time      now
                                      :block/children (concat [updated-block]
                                                              (common-db/inc-after db
                                                                                   [:block/uid new-parent-block-uid]
                                                                                   (dec new-block-order)))}
-            tx-data                 [retract-from-old-parent old-parent-reindexed new-parent-reindexed]]
+            tx-data                 (if (seq old-parent-reindex)
+                                      [retract-from-old-parent
+                                       old-parent-reindexed
+                                       new-parent-reindexed]
+                                      [retract-from-old-parent
+                                       new-parent-reindexed])]
         tx-data))))
 
 

@@ -271,4 +271,34 @@
           (t/is (= 0 (:block/order child-2-1-block)))))
 
       ;; (atomic-ops/make-block-move-op child-2-uid parent-uid :first)
-      )))
+      ))
+
+  (t/testing "Move block to new parent using :first"
+    (let [parent-1-uid  "parent-11-uid"
+          child-1-1-uid "child-11-1-uid"
+          child-1-2-uid "child-11-2-uid"
+          setup-tx      [{:block/uid      parent-1-uid
+                          :block/string   ""
+                          :block/order    0
+                          :block/children [{:block/uid      child-1-1-uid
+                                            :block/string   ""
+                                            :block/order    0
+                                            :block/children []}
+                                           {:block/uid      child-1-2-uid
+                                            :block/string   ""
+                                            :block/order    1
+                                            :block/children []}]}]]
+      (fixture/transact-with-middleware setup-tx)
+      (let [block-move-op  (atomic-ops/make-block-move-op child-1-2-uid child-1-1-uid :first)
+            block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
+        (d/transact! @fixture/connection block-move-txs)
+        (let [parent-block    (common-db/get-block @@fixture/connection
+                                                   [:block/uid parent-1-uid])
+              child-1-1-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-1-1-uid])
+              child-1-2-block (common-db/get-block @@fixture/connection
+                                                   [:block/uid child-1-2-uid])]
+          (t/is (= 1 (-> parent-block :block/children count)))
+          (t/is (= 0 (:block/order child-1-1-block)))
+          (t/is (= 1 (-> child-1-1-block :block/children count)))
+          (t/is (= 0 (:block/order child-1-2-block))))))))
