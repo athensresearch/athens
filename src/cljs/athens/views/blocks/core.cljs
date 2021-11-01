@@ -191,12 +191,17 @@
                                                                                                :target-rel (if (= :above drag-target)
                                                                                                              :before
                                                                                                              :after)}]
-                                    #_[:drop/same {:drag-target drag-target
+                                    #_                                           [:drop/same {:drag-target drag-target
                                                                                               :source-uid  source-uid
                                                                                               :target-uid  target-uid}]
                                     ;; block/move (:before or :after (drag-target))
 
-                                    (and move-action? drag-target-diff-parents?) [:drop/diff-parent {:drag-target drag-target
+                                    (and move-action? drag-target-diff-parents?) [:block/move {:source-uid source-uid
+                                                                                               :target-uid target-uid
+                                                                                               :target-rel (if (= :above drag-target)
+                                                                                                             :before
+                                                                                                             :after)}]
+                                    #_                                           [:drop/diff-parent {:drag-target drag-target
                                                                                                      :source-uid  source-uid
                                                                                                      :target-uid  target-uid}]
                                     ;; block/move (:before or :after (drag-target))
