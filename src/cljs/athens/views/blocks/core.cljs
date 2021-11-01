@@ -148,57 +148,28 @@
 
 
 (defn drop-bullet
-  "
-  Terminology :
-    - DnD               : This is short for Dragged and dropped.
-    - Zero level blocks : Refers to top level blocks in a page.
+  "Terminology :
     - source-uid        : The block which is being dropped.
     - target-uid        : The block on which source is being dropped.
-    - drag-target       : Represents where the block is being dragged. It can be :child meaning
-                          dragged as a child, :above meaning the source block is dropped above the
-                          target block, :below meaning the source block is dropped below the target block.
+    - drag-target       : Represents where the block is being dragged. It can be `:child` meaning
+                          dragged as a child, `:above` meaning the source block is dropped above the
+                          target block, `:below` meaning the source block is dropped below the target block.
     - action-allowed    : There can be 2 types of actions.
         - `link` action : When a block is DnD by dragging a bullet while
                          `shift` key is pressed to create a block link.
-        - `move` action : When a block is DnD to other part of Athens page.
-
-  Types of events :
-    - `:drop/same-parent`  : When a block that is under some parent (including Zero level blocks) is DnD
-                             under that same parent this event is fired. In case of Zero level blocks if one
-                             of this level blocks changes their relative position this event is fired.
-    - `:drop/child`        : When a block is DnD as the first child of some other block this event is fired
-    - `:drop/diff-parent`  : When a block that is under some parent is DnD to some other place not under the
-                             current parent this event is fired. If a block is DnD as the first block in page
-                             it is considered `:drop/diff-parent` event."
+        - `move` action : When a block is DnD to other part of Athens page. "
 
   [source-uid target-uid drag-target action-allowed]
-  (let [source-parent             (db/get-parent [:block/uid source-uid])
-        target-parent             (db/get-parent [:block/uid target-uid])
-        drag-target-child?        (= drag-target :child)
-        drag-target-same-parents? (= source-parent target-parent)
-        drag-target-diff-parents? (not drag-target-same-parents?)
-        move-action?              (= action-allowed "move")
-        link-action?              (= action-allowed "link")
-        event                     (if move-action?
-                                    [:block/move {:source-uid source-uid
-                                                  :target-uid target-uid
-                                                  :target-rel (if drag-target-child?
-                                                                :first
-                                                                ({:above :before} drag-target drag-target))}]
-                                    (cond
-                                      ;; block/move (:before or :after (drag-target))
-                                      (and link-action? drag-target-child?)        [:drop-link/child {:source-uid source-uid
-                                                                                                      :target-uid target-uid}]
-                                      ;; block/new (:first) & block/save
-                                      (and link-action? drag-target-same-parents?) [:drop-link/same-parent {:drag-target drag-target
-                                                                                                            :source-uid  source-uid
-                                                                                                            :target-uid  target-uid}]
-                                      ;; block/new (:before or :after) & block/save
-                                      (and link-action? drag-target-diff-parents?) [:drop-link/diff-parent {:drag-target drag-target
-                                                                                                            :source-uid  source-uid
-                                                                                                            :target-uid  target-uid}]
-                                      ;; block/new (:before or :after) & block/save
-                                      ))]
+  (let [drag-target-child? (= drag-target :child)
+        move-action?       (= action-allowed "move")
+        event              [(if move-action?
+                              :block/move
+                              :block/link)
+                            {:source-uid source-uid
+                             :target-uid target-uid
+                             :target-rel (if drag-target-child?
+                                           :first
+                                           ({:above :before} drag-target drag-target))}]]
     (log/debug "drop-bullet" (pr-str {:source-uid     source-uid
                                       :target-uid     target-uid
                                       :drag-target    drag-target

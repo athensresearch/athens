@@ -4,6 +4,7 @@
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs :as bfs]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.graph.composite :as composite-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
@@ -1148,6 +1149,22 @@
                                                                                               target-uid
                                                                                               target-rel))]
       {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+
+
+(reg-event-fx
+ :block/link
+ (fn [{:keys [db]} [_ {:keys [source-uid target-uid target-rel] :as args}]]
+   (log/debug ":block/link args" (pr-str args))
+   (let [block-uid    (common.utils/gen-block-uid)
+         atomic-event (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                        (composite-ops/make-consequence-op {:op/type :block/link}
+                                                                                           [(atomic-graph-ops/make-block-new-op block-uid
+                                                                                                                                target-uid
+                                                                                                                                target-rel)
+                                                                                            (atomic-graph-ops/make-block-save-op block-uid
+                                                                                                                                 ""
+                                                                                                                                 (str "((" source-uid "))"))]))]
+     {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
 
 
 (reg-event-fx
