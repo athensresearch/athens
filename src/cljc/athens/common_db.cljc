@@ -268,6 +268,8 @@
 
 
 (defn reindex-blocks-between-bounds
+  "Increase/decrease by n all child blocks of parent-eid between
+  lower-bound (exclusive) and upper-bound (exclusive)."
   [db inc-or-dec parent-eid lower-bound upper-bound n]
   #_(log/debug "reindex block")
   (d/q '[:find ?block-uid ?new-order

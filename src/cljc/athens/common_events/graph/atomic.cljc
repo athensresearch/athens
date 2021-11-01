@@ -61,15 +61,17 @@
 (defn make-block-move-op
   "Creates `:block/move` atomic op.
    - `block-uid` - `:block/uid` of block to move
-   - `parent-uid` - `:block/uid` of new parent block
-   - `index` - (optional) `:block/order` new position on `:block/children`
-       - if not provided, position is preserved"
-  [block-uid parent-uid index]
+   - `ref-uid` - `:block/uid` of location reference block
+   - `rel-position` - block's new position relative to `ref-uid`
+      - for siblings: `:before` or `:after`
+      - for children: `:first`, `:last` or `int` absolute number (but you know the cost of using it,
+                      in concurrent environment you're party pooper for everyone else, just don't)"
+  [block-uid ref-uid rel-position]
   {:op/type    :block/move
    :op/atomic? true
    :op/args    {:block-uid  block-uid
-                :parent-uid parent-uid
-                :index      index}})
+                :position  {:ref-uid  ref-uid
+                            :relation rel-position}}})
 
 
 ;; Page Ops
