@@ -1140,6 +1140,17 @@
 
 
 (reg-event-fx
+  :block/move
+  (fn [{:keys [db]} [_ {:keys [source-uid target-uid target-rel] :as args}]]
+    (log/debug ":block/move args" (pr-str args))
+    (let [atomic-event (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                         (atomic-graph-ops/make-block-move-op source-uid
+                                                                                              target-uid
+                                                                                              target-rel))]
+      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+
+
+(reg-event-fx
   :drop/child
   (fn [{:keys [db]} [_ {:keys [source-uid target-uid] :as args}]]
     (log/debug ":drop/child args" (pr-str args))

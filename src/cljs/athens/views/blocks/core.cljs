@@ -1,12 +1,13 @@
 (ns athens.views.blocks.core
   (:require
-    ["/components/Block/components/Anchor" :refer [Anchor]]
-    ["/components/Block/components/Toggle" :refer [Toggle]]
-    ["/components/Button/Button" :refer [Button]]
+    ["/components/Block/components/Anchor"   :refer [Anchor]]
+    ["/components/Block/components/Toggle"   :refer [Toggle]]
+    ["/components/Button/Button"             :refer [Button]]
+    [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
     [athens.events.selection                 :as select-events]
-    [athens.router :as router]
+    [athens.router                           :as router]
     [athens.self-hosted.presence.views       :as presence]
     [athens.style                            :as style]
     [athens.subs.selection                   :as select-subs]
@@ -171,31 +172,44 @@
                              it is considered `:drop/diff-parent` event."
 
   [source-uid target-uid drag-target action-allowed]
-  (let [source-parent              (db/get-parent [:block/uid source-uid])
-        target-parent              (db/get-parent [:block/uid target-uid])
-        drag-target-child?         (= drag-target :child)
-        drag-target-same-parents?  (= source-parent target-parent)
-        drag-target-diff-parents?  (not drag-target-same-parents?)
-        move-action                (= action-allowed "move")
-        link-action                (= action-allowed "link")
-        event         (cond
-                        (and move-action drag-target-child?)        [:drop/child {:source-uid source-uid
-                                                                                  :target-uid target-uid}]
-                        (and move-action drag-target-same-parents?) [:drop/same {:drag-target drag-target
-                                                                                 :source-uid  source-uid
-                                                                                 :target-uid  target-uid}]
+  (let [source-parent             (db/get-parent [:block/uid source-uid])
+        target-parent             (db/get-parent [:block/uid target-uid])
+        drag-target-child?        (= drag-target :child)
+        drag-target-same-parents? (= source-parent target-parent)
+        drag-target-diff-parents? (not drag-target-same-parents?)
+        move-action?              (= action-allowed "move")
+        link-action?              (= action-allowed "link")
+        event                     (cond
+                                    (and move-action? drag-target-child?)        [:block/move {:source-uid source-uid
+                                                                                               :target-uid target-uid
+                                                                                               :target-rel :first}]
 
-                        (and move-action drag-target-diff-parents?) [:drop/diff-parent {:drag-target drag-target
-                                                                                        :source-uid  source-uid
-                                                                                        :target-uid  target-uid}]
-                        (and link-action drag-target-child?)        [:drop-link/child {:source-uid source-uid
-                                                                                       :target-uid target-uid}]
-                        (and link-action drag-target-same-parents?) [:drop-link/same-parent {:drag-target drag-target
-                                                                                             :source-uid  source-uid
-                                                                                             :target-uid  target-uid}]
-                        (and link-action drag-target-diff-parents?) [:drop-link/diff-parent {:drag-target drag-target
-                                                                                             :source-uid  source-uid
-                                                                                             :target-uid  target-uid}])]
+                                    (and move-action? drag-target-same-parents?) [:drop/same {:drag-target drag-target
+                                                                                              :source-uid  source-uid
+                                                                                              :target-uid  target-uid}]
+                                    ;; block/move (:before or :after (drag-target))
+
+                                    (and move-action? drag-target-diff-parents?) [:drop/diff-parent {:drag-target drag-target
+                                                                                                     :source-uid  source-uid
+                                                                                                     :target-uid  target-uid}]
+                                    ;; block/move (:before or :after (drag-target))
+                                    (and link-action? drag-target-child?)        [:drop-link/child {:source-uid source-uid
+                                                                                                    :target-uid target-uid}]
+                                    ;; block/new (:first) & block/save
+                                    (and link-action? drag-target-same-parents?) [:drop-link/same-parent {:drag-target drag-target
+                                                                                                          :source-uid  source-uid
+                                                                                                          :target-uid  target-uid}]
+                                    ;; block/new (:before or :after) & block/save
+                                    (and link-action? drag-target-diff-parents?) [:drop-link/diff-parent {:drag-target drag-target
+                                                                                                          :source-uid  source-uid
+                                                                                                          :target-uid  target-uid}]
+                                    ;; block/new (:before or :after) & block/save
+                                    )]
+    (log/debug "drop-bullet" (pr-str {:source-uid     source-uid
+                                      :target-uid     target-uid
+                                      :drag-target    drag-target
+                                      :action-allowed action-allowed
+                                      :event          event}))
     (rf/dispatch event)))
 
 
