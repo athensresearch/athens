@@ -1178,49 +1178,6 @@
 
 
 (reg-event-fx
-  :drop-link/child
-  (fn [{:keys [db]} [_ {:keys [source-uid target-uid] :as args}]]
-    (log/debug ":drop-link/child args" (pr-str args))
-    (let [event (common-events/build-drop-link-child-event (:remote/last-seen-tx db)
-                                                           source-uid
-                                                           target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop/diff-parent
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop/diff-parent args" args)
-    (let [event (common-events/build-drop-diff-parent-event (:remote/last-seen-tx db)
-                                                            drag-target
-                                                            source-uid
-                                                            target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-link/diff-parent
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop-link/diff-parent args" args)
-    (let [event (common-events/build-drop-link-diff-parent-event (:remote/last-seen-tx db)
-                                                                 drag-target
-                                                                 source-uid
-                                                                 target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop/same
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop/same args" args)
-    (let [event (common-events/build-drop-same-event (:remote/last-seen-tx db)
-                                                     drag-target
-                                                     source-uid
-                                                     target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
   :drop-multi/same-source
   (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
     ;; When the selected blocks have same parent and are DnD under some other block this event is fired.
@@ -1242,17 +1199,6 @@
                                                                drag-target
                                                                source-uids
                                                                target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-link/same-parent
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop-link/same-parent args" args)
-    (let [event (common-events/build-drop-link-same-parent-event (:remote/last-seen-tx db)
-                                                                 drag-target
-                                                                 source-uid
-                                                                 target-uid)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
