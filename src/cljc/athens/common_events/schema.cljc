@@ -33,9 +33,6 @@
    :datascript/split-block
    :datascript/split-block-to-children
    :datascript/unindent
-   :datascript/indent
-   :datascript/indent-multi
-   :datascript/unindent-multi
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
    :datascript/left-sidebar-drop-above
@@ -213,34 +210,12 @@
      [:new-uid string?]]]])
 
 
-(def datascript-indent
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:value string?]]]])
-
-
-(def datascript-indent-multi
-  [:map
-   [:event/args
-    [:map
-     [:uids [:vector string?]]]]])
-
-
 (def datascript-unindent
   [:map
    [:event/args
     [:map
      [:uid string?]
      [:value string?]]]])
-
-
-(def datascript-unindent-multi
-  [:map
-   [:event/args
-    [:map
-     [:uids [:vector string?]]]]])
 
 
 (def datascript-paste-internal
@@ -371,10 +346,7 @@
    (dispatch :datascript/split-block datascript-split-block)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/split-block-to-children datascript-split-block)
-   (dispatch :datascript/indent datascript-indent)
-   (dispatch :datascript/indent-multi datascript-indent-multi)
    (dispatch :datascript/unindent datascript-unindent)
-   (dispatch :datascript/unindent-multi datascript-unindent-multi)
    (dispatch :datascript/paste-verbatim datascript-paste-verbatim)
    (dispatch :datascript/paste-internal datascript-paste-internal)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
@@ -474,10 +446,7 @@
    (dispatch :datascript/split-block datascript-split-block true)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/split-block-to-children datascript-split-block true)
-   (dispatch :datascript/indent datascript-indent true)
-   (dispatch :datascript/indent-multi datascript-indent-multi true)
    (dispatch :datascript/unindent datascript-unindent true)
-   (dispatch :datascript/unindent-multi datascript-unindent-multi true)
    (dispatch :datascript/paste-verbatim datascript-paste-verbatim true)
    (dispatch :datascript/paste-internal datascript-paste-internal true)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)

@@ -1045,46 +1045,47 @@
 
 (reg-event-fx
   :indent
-  (fn [{:keys [db]} [_ {:keys [uid d-key-down] :as args}]]
+  (fn [_ [_ {:keys [uid d-key-down] :as args}]]
     ;; - `block-zero`: The first block in a page
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-    (let [local?                    (not (db-picker/remote-db? db))
-          block                     (common-db/get-block @db/dsdb [:block/uid uid])
+    (let [block                     (common-db/get-block @db/dsdb [:block/uid uid])
           block-zero?               (zero? (:block/order block))
-          {:keys [value start end]} d-key-down]
-      (log/debug ":indent local?" local?
+          prev-block-uid            (common-db/prev-block-uid @db/dsdb uid)
+          {:keys [start end]} d-key-down]
+      (log/debug "prev-sib-uid" prev-block-uid
                  ", args:" (pr-str args)
                  ", block-zero?" block-zero?)
       (when-not block-zero?
-        (let [event (common-events/build-indent-event (:remote/last-seen-tx db)
-                                                      uid
-                                                      value)]
-          {:fx [[:dispatch            [:resolve-transact-forward event]]
-                [:set-cursor-position [uid start end]]]})))))
+        {:fx [[:dispatch            [:block/move {:source-uid uid
+                                                  :target-uid prev-block-uid
+                                                  :target-rel :first}]]
+              [:set-cursor-position [uid start end]]]}))))
 
 
 (reg-event-fx
   :indent/multi
-  (fn [{:keys [db]} [_ {:keys [uids]}]]
+  (fn [_ [_ {:keys [uids]}]]
     (log/debug ":indent/multi" (pr-str uids))
     (let [sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
+          f-uid                    (first sanitized-selected-uids)
           dsdb                     @db/dsdb
+          f-uid-prev-block-uid     (common-db/prev-block-uid dsdb f-uid)
           same-parent?             (common-db/same-parent? dsdb sanitized-selected-uids)
-          first-block-order        (:block/order (common-db/get-block dsdb [:block/uid (first sanitized-selected-uids)]))
+          first-block-order        (:block/order (common-db/get-block dsdb [:block/uid f-uid]))
           block-zero?              (zero? first-block-order)]
+      (println "prev id" f-uid-prev-block-uid "uid " f-uid)
       (log/debug ":indent/multi same-parent?" same-parent?
                  ", not block-zero?" (not  block-zero?))
       (when (and same-parent? (not block-zero?))
-        (let [event  (common-events/build-indent-multi-event (:remote/last-seen-tx db)
-                                                             sanitized-selected-uids)]
-          {:fx [[:dispatch [:resolve-transact-forward event]]]})))))
+        {:fx [[:dispatch [:drop-multi/child {:source-uids sanitized-selected-uids
+                                             :target-uid  f-uid-prev-block-uid}]]]}))))
 
 
 (reg-event-fx
   :unindent
-  (fn [{:keys [db]} [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
+  (fn [_ [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
     (log/debug ":unindent args" (pr-str args))
     (let [parent                    (common-db/get-parent @db/dsdb
                                                           (common-db/e-by-av @db/dsdb :block/uid uid))
@@ -1097,16 +1098,16 @@
           do-nothing?               (or is-parent-root-embed?
                                         (:node/title parent)
                                         (= context-root-uid (:block/uid parent)))
-          {:keys [value start end]} d-key-down]
+          prev-block-uid            (common-db/prev-block-uid @db/dsdb uid)
+          {:keys [start end]} d-key-down]
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
-        (let [event (common-events/build-unindent-event (:remote/last-seen-tx db)
-                                                        uid
-                                                        value)]
-          {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                              [:editing/uid (str uid (when embed-id
-                                                       (str "-embed-" embed-id)))]]]
-                [:set-cursor-position [uid start end]]]})))))
+        {:fx [[:dispatch-n [[:block/move {:source-uid uid
+                                          :target-uid prev-block-uid
+                                          :target-rel :after}]
+                            [:editing/uid (str uid (when embed-id
+                                                     (str "-embed-" embed-id)))]]]
+              [:set-cursor-position [uid start end]]]}))))
 
 
 (reg-event-fx
@@ -1114,6 +1115,7 @@
   (fn [{:keys [db]} [_ {:keys [uids]}]]
     (log/debug ":unindent/multi" uids)
     (let [[f-uid f-embed-id]          (common-db/uid-and-embed-id (first uids))
+          f-uid-prev-block-uid            (common-db/prev-block-uid @db/dsdb f-uid)
           sanitized-selected-uids     (mapv (comp
                                               first
                                               common-db/uid-and-embed-id) uids)
@@ -1135,9 +1137,9 @@
                                           (= parent-uid context-root-uid))]
       (log/debug ":unindent/multi do-nothing?" do-nothing?)
       (when-not do-nothing?
-        (let [event (common-events/build-unindent-multi-event (:remote/last-seen-tx db)
-                                                              sanitized-selected-uids)]
-          {:fx [[:dispatch [:resolve-transact-forward event]]]})))))
+        {:fx [[:dispatch [:drop-multi/sibling {:source-uids  sanitized-selected-uids
+                                               :target-uid   f-uid-prev-block-uid
+                                               :drag-target  :below}]]]}))))
 
 
 (reg-event-fx
