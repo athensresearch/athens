@@ -12,17 +12,14 @@
 (defn make-block-new-op
   "Creates `:block/new` atomic op.
    - `block-uid` - `:block/uid` of new block to be created
-   - `ref-uid` - `:block/uid` of location reference block
-   - `rel-position` - new block's position relative to `ref-uid`
-      - for siblings: `:before` or `:after`
-      - for children: `:first`, `:last` or `int` absolute number (but you know the cost of using it,
-                      in concurrent environment you're party pooper for everyone else, just don't)"
-  [block-uid ref-uid rel-position]
+   - `position` - new blocks position
+      - for siblings: `:before` or `:after` together with `ref-uid`
+      - for children: `:first`, `:last` together with `ref-uid` or `ref-title`"
+  [block-uid position]
   {:op/type    :block/new
    :op/atomic? true
    :op/args    {:block-uid block-uid
-                :position  {:ref-uid  ref-uid
-                            :relation rel-position}}})
+                :position  position}})
 
 
 (defn make-block-save-op
@@ -61,31 +58,25 @@
 (defn make-block-move-op
   "Creates `:block/move` atomic op.
    - `block-uid` - `:block/uid` of block to move
-   - `ref-uid` - `:block/uid` of location reference block
-   - `rel-position` - block's new position relative to `ref-uid`
-      - for siblings: `:before` or `:after`
-      - for children: `:first`, `:last` or `int` absolute number (but you know the cost of using it,
-                      in concurrent environment you're party pooper for everyone else, just don't)"
-  [block-uid ref-uid rel-position]
+  - `position` - new blocks position
+      - for siblings: `:before` or `:after` together with `ref-uid`
+      - for children: `:first`, `:last` together with `ref-uid` or `ref-title`"
+  [block-uid position]
   {:op/type    :block/move
    :op/atomic? true
-   :op/args    {:block-uid  block-uid
-                :position  {:ref-uid  ref-uid
-                            :relation rel-position}}})
+   :op/args    {:block-uid block-uid
+                :position  position}})
 
 
 ;; Page Ops
 
-;; TODO(RTC): remove page-uid, use just title, after we've migrated fully to atomic ops
 (defn make-page-new-op
   "Creates `:page/new` atomic op.
-   - `title` - Page title page to be created
-   - `page-uid` - `:block/uid` of page to be created"
-  [title page-uid]
+   - `title` - Page title page to be created "
+  [title]
   {:op/type    :page/new
    :op/atomic? true
-   :op/args    {:title    title
-                :page-uid page-uid}})
+   :op/args    {:title title}})
 
 
 (defn make-page-rename-op

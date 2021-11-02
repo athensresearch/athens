@@ -457,9 +457,8 @@
   :daily-note/ensure-day
   (fn [_ [_ {:keys [uid title]}]]
     (when-not (db/e-by-av :block/uid uid)
-      {:dispatch [:page/create {:title     title
-                                :page-uid  uid
-                                :block-uid (common.utils/gen-block-uid)}]})))
+      {:dispatch [:page/new {:title     title
+                             :block-uid (common.utils/gen-block-uid)}]})))
 
 
 (reg-event-fx
@@ -562,14 +561,9 @@
     {:reset-conn! db}))
 
 
-;; Resolves events when the event-fx is resolved, instead of taking a resolution.
-;; This is useful for when you want to apply events one after the other, using
-;; the resulting db to resolve to next one.
 (reg-event-fx
-  :resolve-transact
-  (fn [_ [_ event]]
-    (log/debug "events/resolve-transact, event:" (pr-str event))
-    (atomic-resolver/resolve-transact! db/dsdb event)
+  :electron-sync
+  (fn [_ _]
     (let [synced?   @(subscribe [:db/synced])
           electron? (athens.util/electron?)]
       (merge {}
@@ -578,46 +572,28 @@
                      [:dispatch [:save]]]})))))
 
 
+;; Resolves events when the event-fx is resolved, instead of taking a resolution.
+;; This is useful for when you want to apply events one after the other, using
+;; the resulting db to resolve to next one.
+(reg-event-fx
+  :resolve-transact
+  (fn [_ [_ event]]
+    (log/debug "events/resolve-transact, event:" (pr-str event))
+    (atomic-resolver/resolve-transact! db/dsdb event)
+    {:fx [[:dispatch [:electron-sync]]]}))
+
+
+;; Same as above, but also forwards the event.
+;; Anything that uses atomic-resolver/resolve-transact! must duplicate the code
+;; to ensure db/dsdb is synchronized and cannot just reuse the existing :resolve* events.
 (reg-event-fx
   :resolve-transact-forward
   (fn [{:keys [db]} [_ event]]
     (let [forward? (db-picker/remote-db? db)]
-      (log/debug ":resolve-transact-forward forward?" forward?)
-      {:fx [[:dispatch-n [[:resolve-transact event]
+      (log/debug ":resolve-transact-forward event:" event "forward?" forward?)
+      (atomic-resolver/resolve-transact! db/dsdb event)
+      {:fx [[:dispatch-n [[:electron-sync]
                           (when forward? [:remote/forward-event event])]]]})))
-
-
-(reg-event-fx
-  :page/create
-  (fn [{:keys [db]} [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
-    (log/debug ":page/create args" (pr-str args))
-    (let [page-uid (if-let [page-uid' (-> title
-                                          dates/title-to-date
-                                          dates/date-to-day
-                                          :uid)]
-                     (do
-                       (when (not= page-uid page-uid')
-                         (log/warn ":page/create overriding uid" page-uid "with" page-uid'
-                                   "for title" title))
-                       page-uid')
-                     page-uid)
-          event (common-events/build-atomic-event (:remote/last-seen-tx db)
-                                                  (graph-ops/build-page-new-op @db/dsdb
-                                                                               title
-                                                                               page-uid
-                                                                               block-uid))]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                          (cond
-                            shift?
-                            [:right-sidebar/open-item page-uid]
-
-                            (not (dates/is-daily-note page-uid))
-                            [:navigate :page {:id page-uid}]
-
-                            (dates/is-daily-note page-uid)
-                            [:daily-note/add page-uid])
-
-                          [:editing/uid block-uid]]]]})))
 
 
 (reg-event-fx
@@ -821,9 +797,8 @@
   :enter/new-block
   (fn [{:keys [db]} [_ {:keys [block parent new-uid embed-id]}]]
     (log/debug ":enter/new-block" (pr-str block) (pr-str parent) (pr-str new-uid))
-    (let [op    (atomic-graph-ops/make-block-new-op new-uid
-                                                    (:block/uid block)
-                                                    :after)
+    (let [op    (atomic-graph-ops/make-block-new-op new-uid {:ref-uid (:block/uid block)
+                                                             :relation :after})
           event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
@@ -849,15 +824,31 @@
 
 (reg-event-fx
   :page/new
-  (fn [{:keys [db]} [_ {:keys [title page-uid block-uid] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [title block-uid shift?] :or {shift? false} :as args}]]
     (log/debug ":page/new args" (pr-str args))
-    (let [op    (graph-ops/build-page-new-op @db/dsdb
-                                             title
-                                             page-uid
-                                             block-uid)
-          event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
+    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                  (graph-ops/build-page-new-op @db/dsdb
+                                                                               title
+                                                                               block-uid))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
+                          [:page/new-followup title shift?]
                           [:editing/uid block-uid]]]]})))
+
+
+(reg-event-fx
+  :page/new-followup
+  (fn [_ [_ title shift?]]
+    (log/debug ":page/new-followup title" title "shift?" shift?)
+    (let [page-uid (common-db/get-page-uid @db/dsdb title)]
+      {:fx [[:dispatch-n [(cond
+                            shift?
+                            [:right-sidebar/open-item page-uid]
+
+                            (not (dates/is-daily-note page-uid))
+                            [:navigate :page {:id page-uid}]
+
+                            (dates/is-daily-note page-uid)
+                            [:daily-note/add page-uid])]]]})))
 
 
 (reg-event-fx
@@ -1161,8 +1152,8 @@
     (log/debug ":block/move args" (pr-str args))
     (let [atomic-event (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                          (atomic-graph-ops/make-block-move-op source-uid
-                                                                                              target-uid
-                                                                                              target-rel))]
+                                                                                              {:ref-uid target-uid
+                                                                                               :relation target-rel}))]
       {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
 
 
@@ -1174,8 +1165,8 @@
           atomic-event (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                          (composite-ops/make-consequence-op {:op/type :block/link}
                                                                                             [(atomic-graph-ops/make-block-new-op block-uid
-                                                                                                                                 target-uid
-                                                                                                                                 target-rel)
+                                                                                                                                 {:ref-uid target-uid
+                                                                                                                                  :relation target-rel})
                                                                                              (atomic-graph-ops/make-block-save-op block-uid
                                                                                                                                   ""
                                                                                                                                   (str "((" source-uid "))"))]))]
@@ -1186,13 +1177,13 @@
   [target-uid source-uids first-rel]
   (composite-ops/make-consequence-op {:op/type :block/move-chain}
                                      (concat [(atomic-graph-ops/make-block-move-op (first source-uids)
-                                                                                   target-uid
-                                                                                   first-rel)]
+                                                                                   {:ref-uid target-uid
+                                                                                    :relation first-rel})]
                                              (doall
                                                (for [[one two] (partition 2 1 source-uids)]
                                                  (atomic-graph-ops/make-block-move-op two
-                                                                                      one
-                                                                                      :after))))))
+                                                                                      {:ref-uid one
+                                                                                       :relation :after}))))))
 
 
 (reg-event-fx

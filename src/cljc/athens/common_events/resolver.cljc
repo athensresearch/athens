@@ -66,7 +66,7 @@
         linked-refs                     (common-db/get-linked-refs-by-page-title db old-name)
         new-linked-refs                 (common-db/map-new-refs linked-refs old-name new-name)
         {old-page-kids :block/children} (common-db/get-page-document db [:block/uid uid])
-        new-parent-uid                  (common-db/get-page-uid-by-title db new-name)
+        new-parent-uid                  (common-db/get-page-uid db new-name)
         existing-page-block-count       (common-db/existing-block-count db new-name)
         reindex                         (map (fn [{:block/keys [order uid]}]
                                                {:db/id           [:block/uid uid]
@@ -94,7 +94,7 @@
                                     :in $ ?uid]
                                   db uid))
         retract-blocks     (common-db/retract-uid-recursively-tx db uid)
-        delete-linked-refs (->> (common-db/get-page-uid-by-title db title)
+        delete-linked-refs (->> (common-db/get-page-uid db title)
                                 (vector :block/uid)
                                 (common-db/get-block db)
                                 vector

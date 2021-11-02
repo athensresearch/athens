@@ -10,7 +10,7 @@
 
 
 (def seed-datoms
-  athens-datoms/lan-datoms)
+  athens-datoms/welcome-page-datoms)
 
 
 (defn integration-test-fixture

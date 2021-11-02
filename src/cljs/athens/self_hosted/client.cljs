@@ -444,7 +444,6 @@
 
   (send! (common-events/build-atomic-event
           1
-          (atomic-graph-ops/make-page-new-op "test title"
-                                             "page-uid-1"))))
+          (atomic-graph-ops/make-page-new-op "test title"))))
 
 

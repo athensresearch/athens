@@ -66,7 +66,7 @@
 (rf/reg-event-fx
   :fs/create-and-watch
   (fn [_ [_ {:keys [base-dir images-dir db-path] :as local-db}]]
-    (let [new-db (d/db-with (d/empty-db common-db/schema) athens-datoms/datoms)]
+    (let [new-db (d/db-with (d/empty-db common-db/schema) athens-datoms/welcome-page-datoms)]
       (utils/create-dir-if-needed! base-dir)
       (utils/create-dir-if-needed! images-dir)
       (.writeFileSync fs db-path (dt/write-transit-str new-db))

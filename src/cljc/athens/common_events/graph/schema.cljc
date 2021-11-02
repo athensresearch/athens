@@ -13,12 +13,41 @@
    :block/remove ; ✓
    :block/move
    :page/new ; ✓
+   ;; TODO: page operations should never take page uids, just titles
    :page/rename
    :page/merge
    :page/remove
    :shortcut/new
    :shortcut/remove
    :shortcut/move])
+
+
+(def child-position
+  [:or
+   [:map
+    [:ref-title string?]
+    [:relation [:enum
+                :first
+                :last]]]
+   [:map
+    [:ref-uid uuid?]
+    [:relation [:enum
+                :first
+                :last]]]])
+
+
+(def sibling-position
+  [:map
+   [:ref-uid uuid?]
+   [:relation [:enum
+               :before
+               :after]]])
+
+
+(def position
+  [:or
+   child-position
+   sibling-position])
 
 
 (def op-type-atomic-common
@@ -32,13 +61,7 @@
    [:op/args
     [:map
      [:block-uid string?]
-     [:position [:map
-                 [:ref-uid string?]
-                 [:relation [:or int? [:enum
-                                       :before
-                                       :after
-                                       :first
-                                       :last]]]]]]]])
+     [:position position]]]])
 
 
 (def op-block-save
@@ -61,8 +84,7 @@
   [:map
    [:op/args
     [:map
-     [:title string?]
-     [:page-uid string?]]]])
+     [:title string?]]]])
 
 
 (def atomic-op
