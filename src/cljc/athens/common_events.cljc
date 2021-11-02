@@ -212,19 +212,6 @@
                      :new-uid new-uid}}))
 
 
-(defn build-unindent-event
-  "Builds `:datascript/unindent` event with:
-  - `uid`: `:block/uid` of triggering block
-  - `value`: `:block/string` of triggering block"
-  [last-tx uid value]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/unindent
-     :event/args    {:uid   uid
-                     :value value}}))
-
-
 (defn build-page-add-shortcut
   "Builds `:datascript/page-add-shortcut` event with:
   - `uid`: `:block/uid` of triggering block"

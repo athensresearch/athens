@@ -19,7 +19,6 @@
     :datascript/open-block-add-child
     :datascript/split-block
     :datascript/split-block-to-children
-    :datascript/unindent
     :datascript/page-add-shortcut
     :datascript/page-remove-shortcut
     :datascript/left-sidebar-drop-above
