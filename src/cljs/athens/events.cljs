@@ -1052,7 +1052,11 @@
     ;;                 transaction that updates the string).
     (let [block                     (common-db/get-block @db/dsdb [:block/uid uid])
           block-zero?               (zero? (:block/order block))
-          prev-block-uid            (common-db/prev-block-uid @db/dsdb uid)
+          prev-block-uid            (:block/uid (common-db/nth-sibling @db/dsdb uid -1))
+          prev-block-children?      (seq (:block/children (common-db/get-block @db/dsdb [:block/uid prev-block-uid])))
+          target-rel                (if prev-block-children?
+                                      :last
+                                      :first)
           {:keys [start end]} d-key-down]
       (log/debug "prev-sib-uid" prev-block-uid
                  ", args:" (pr-str args)
@@ -1060,7 +1064,7 @@
       (when-not block-zero?
         {:fx [[:dispatch            [:block/move {:source-uid uid
                                                   :target-uid prev-block-uid
-                                                  :target-rel :first}]]
+                                                  :target-rel target-rel}]]
               [:set-cursor-position [uid start end]]]}))))
 
 
@@ -1098,12 +1102,12 @@
           do-nothing?               (or is-parent-root-embed?
                                         (:node/title parent)
                                         (= context-root-uid (:block/uid parent)))
-          prev-block-uid            (common-db/prev-block-uid @db/dsdb uid)
           {:keys [start end]} d-key-down]
+      (println "parent is" parent)
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
         {:fx [[:dispatch-n [[:block/move {:source-uid uid
-                                          :target-uid prev-block-uid
+                                          :target-uid (:block/uid parent)
                                           :target-rel :after}]
                             [:editing/uid (str uid (when embed-id
                                                      (str "-embed-" embed-id)))]]]
