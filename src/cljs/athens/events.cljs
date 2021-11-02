@@ -4,6 +4,7 @@
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs :as bfs]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.graph.composite :as composite-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
@@ -1140,123 +1141,66 @@
 
 
 (reg-event-fx
-  :drop/child
-  (fn [{:keys [db]} [_ {:keys [source-uid target-uid] :as args}]]
-    (log/debug ":drop/child args" (pr-str args))
-    (let [event (common-events/build-drop-child-event (:remote/last-seen-tx db)
-                                                      source-uid
-                                                      target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+  :block/move
+  (fn [{:keys [db]} [_ {:keys [source-uid target-uid target-rel] :as args}]]
+    (log/debug ":block/move args" (pr-str args))
+    (let [atomic-event (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                         (atomic-graph-ops/make-block-move-op source-uid
+                                                                                              target-uid
+                                                                                              target-rel))]
+      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+
+
+(reg-event-fx
+  :block/link
+  (fn [{:keys [db]} [_ {:keys [source-uid target-uid target-rel] :as args}]]
+    (log/debug ":block/link args" (pr-str args))
+    (let [block-uid    (common.utils/gen-block-uid)
+          atomic-event (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                         (composite-ops/make-consequence-op {:op/type :block/link}
+                                                                                            [(atomic-graph-ops/make-block-new-op block-uid
+                                                                                                                                 target-uid
+                                                                                                                                 target-rel)
+                                                                                             (atomic-graph-ops/make-block-save-op block-uid
+                                                                                                                                  ""
+                                                                                                                                  (str "((" source-uid "))"))]))]
+      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+
+
+(defn- block-move-chain
+  [target-uid source-uids first-rel]
+  (composite-ops/make-consequence-op {:op/type :block/move-chain}
+                                     (concat [(atomic-graph-ops/make-block-move-op (first source-uids)
+                                                                                   target-uid
+                                                                                   first-rel)]
+                                             (doall
+                                               (for [[one two] (partition 2 1 source-uids)]
+                                                 (atomic-graph-ops/make-block-move-op two
+                                                                                      one
+                                                                                      :after))))))
 
 
 (reg-event-fx
   :drop-multi/child
   (fn [{:keys [db]} [_ {:keys [source-uids target-uid] :as args}]]
     (log/debug ":drop-multi/child args" (pr-str args))
-    (let [event (common-events/build-drop-multi-child-event (:remote/last-seen-tx db)
-                                                            source-uids
-                                                            target-uid)]
+    (let [atomic-op (block-move-chain target-uid source-uids :first)
+          event     (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                      atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
-  :drop-link/child
-  (fn [{:keys [db]} [_ {:keys [source-uid target-uid] :as args}]]
-    (log/debug ":drop-link/child args" (pr-str args))
-    (let [event (common-events/build-drop-link-child-event (:remote/last-seen-tx db)
-                                                           source-uid
-                                                           target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop/diff-parent
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop/diff-parent args" args)
-    (let [event (common-events/build-drop-diff-parent-event (:remote/last-seen-tx db)
-                                                            drag-target
-                                                            source-uid
-                                                            target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-link/diff-parent
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop-link/diff-parent args" args)
-    (let [event (common-events/build-drop-link-diff-parent-event (:remote/last-seen-tx db)
-                                                                 drag-target
-                                                                 source-uid
-                                                                 target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop/same
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop/same args" args)
-    (let [event (common-events/build-drop-same-event (:remote/last-seen-tx db)
-                                                     drag-target
-                                                     source-uid
-                                                     target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-multi/same-source
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    ;; When the selected blocks have same parent and are DnD under some other block this event is fired.
-    (log/debug ":drop-multi/same-source args" args)
-    (let [event (common-events/build-drop-multi-same-source-event (:remote/last-seen-tx db)
-                                                                  drag-target
-                                                                  source-uids
-                                                                  target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-multi/same-all
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
+  :drop-multi/sibling
+  (fn [{:keys [db]} [_ {:keys [source-uids target-uid drag-target] :as args}]]
     ;; When the selected blocks have same parent and are DnD under the same parent this event is fired.
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
-    (log/debug ":drop-multi/same-all args" args)
-    (let [event (common-events/build-drop-multi-same-all-event (:remote/last-seen-tx db)
-                                                               drag-target
-                                                               source-uids
-                                                               target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-link/same-parent
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop-link/same-parent args" args)
-    (let [event (common-events/build-drop-link-same-parent-event (:remote/last-seen-tx db)
-                                                                 drag-target
-                                                                 source-uid
-                                                                 target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-multi/diff-source-same-parents
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    (log/debug ":drop-multi/diff-source-same-parents args" args)
-    (let [event (common-events/build-drop-multi-diff-source-same-parents-event (:remote/last-seen-tx db)
-                                                                               drag-target
-                                                                               source-uids
-                                                                               target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-multi/diff-source-diff-parents
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    (log/debug ":drop-multi/diff-source-diff-parents args" args)
-    (let [event (common-events/build-drop-multi-diff-source-diff-parents-event (:remote/last-seen-tx db)
-                                                                               drag-target
-                                                                               source-uids
-                                                                               target-uid)]
+    (log/debug ":drop-multi/sibling args" (pr-str args))
+    (let [rel-position ({:above :before
+                         :below :after} drag-target :before)
+          atomic-op    (block-move-chain target-uid source-uids rel-position)
+          event        (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                         atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 

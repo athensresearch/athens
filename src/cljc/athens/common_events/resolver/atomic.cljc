@@ -156,29 +156,41 @@
                                                                                           (inc upper-bound-index))
                                                                                         1)}
             tx-data           [updated-block reindexed-parent]]
-        (log/info "same-parent:\n"
-                  (with-out-str
-                    (pp/pprint {:lower   lower-bound-index
-                                :upper   upper-bound-index
-                                :old-bo  old-block-order
-                                :new-bo  new-block-order
-                                :up?     up?
-                                :tx-data tx-data})))
+        (log/debug "same-parent:\n"
+                   (with-out-str
+                     (pp/pprint {:lower   lower-bound-index
+                                 :upper   upper-bound-index
+                                 :old-bo  old-block-order
+                                 :new-bo  new-block-order
+                                 :up?     up?
+                                 :tx-data tx-data})))
         tx-data)
 
       (let [retract-from-old-parent [:db/retract [:block/uid old-parent-block-uid] :block/children [:block/uid block-uid]]
+            old-parent-reindex      (common-db/dec-after db
+                                                         [:block/uid old-parent-block-uid]
+                                                         old-block-order)
             old-parent-reindexed    {:block/uid      old-parent-block-uid
                                      :edit/time      now
-                                     :block/children (common-db/dec-after db
-                                                                          [:block/uid old-parent-block-uid]
-                                                                          (dec old-block-order))}
+                                     :block/children old-parent-reindex}
             new-parent-reindexed    {:block/uid      new-parent-block-uid
                                      :edit/time      now
                                      :block/children (concat [updated-block]
                                                              (common-db/inc-after db
                                                                                   [:block/uid new-parent-block-uid]
                                                                                   (dec new-block-order)))}
-            tx-data                 [retract-from-old-parent old-parent-reindexed new-parent-reindexed]]
+            tx-data                 (if (seq old-parent-reindex)
+                                      [retract-from-old-parent
+                                       old-parent-reindexed
+                                       new-parent-reindexed]
+                                      [retract-from-old-parent
+                                       new-parent-reindexed])]
+        (log/debug "diff-parent:\n"
+                   (with-out-str
+                     (pp/pprint {:old-bo  old-block-order
+                                 :new-bo  new-block-order
+                                 :up?     up?
+                                 :tx-data tx-data})))
         tx-data))))
 
 
