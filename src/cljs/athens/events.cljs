@@ -1191,41 +1191,17 @@
 
 
 (reg-event-fx
-  :drop-multi/same-source
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    ;; When the selected blocks have same parent and are DnD under some other block this event is fired.
-    (log/debug ":drop-multi/same-source args" args)
-    (let [event (common-events/build-drop-multi-same-source-event (:remote/last-seen-tx db)
-                                                                  drag-target
-                                                                  source-uids
-                                                                  target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-multi/same-all
+  :drop-multi/sibling
   (fn [{:keys [db]} [_ {:keys [source-uids target-uid drag-target] :as args}]]
     ;; When the selected blocks have same parent and are DnD under the same parent this event is fired.
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
-    (log/debug ":drop-multi/same-all args" args)
+    (log/debug ":drop-multi/sibling args" (pr-str args))
     (let [rel-position ({:above :before
                          :below :after} drag-target :before)
           atomic-op    (block-move-chain target-uid source-uids rel-position)
           event        (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                          atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
- :drop-multi/diff-source
- (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
-   (log/debug ":drop-multi/diff-source args" (pr-str args))
-   (let [rel-position ({:above :before
-                        :below :after} drag-target :before)
-         atomic-op    (block-move-chain target-uid source-uids rel-position)
-         event        (common-events/build-atomic-event (:remote/last-seen-tx db)
-                                                        atomic-op)]
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
