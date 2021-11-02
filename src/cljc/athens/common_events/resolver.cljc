@@ -5,7 +5,6 @@
     [athens.common.logging :as log]
     [athens.common.utils :as utils]
     [athens.patterns :as patterns]
-    [clojure.set :as set]
     [clojure.string :as string]
     [datascript.core :as d]))
 
@@ -430,71 +429,6 @@
     (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
                ", resolved-tx:" (pr-str tx-data))
     tx-data))
-
-
-
-
-
-(defn add-new-blocks
-  "Given a vector of blocks add more blocks to it"
-  [current-blocks add-these-blocks add-to-index]
-  (let [current-blocks-count (count current-blocks)
-        end-index            (if (> add-to-index
-                                    current-blocks-count)
-                               current-blocks-count
-                               add-to-index)
-        blocks-vec           (vec current-blocks)
-        head                 (subvec blocks-vec
-                                     0
-                                     end-index)
-        tail                 (subvec blocks-vec
-                                     end-index)
-        new-blocks-vec       (concat head
-                                     add-these-blocks
-                                     tail)]
-    new-blocks-vec))
-
-
-(defn retract
-  "retract blocks"
-  [db selected-uids]
-  (let [parents-of-selected-uids  (mapv
-                                    #(common-db/get-parent db [:block/uid %])
-                                    selected-uids)]
-    (map (fn [uid parent]
-           [:db/retract     (:db/id parent)
-            :block/children [:block/uid uid]])
-         selected-uids
-         parents-of-selected-uids)))
-
-
-(defn reindex
-  "reindex blocks"
-  [blocks start-index-for-reindex end-index-for-reindex base-value]
-  (let [blocks-vec         (vec blocks)
-        head               (subvec blocks-vec
-                                   0
-                                   start-index-for-reindex)
-        blocks-vec-count   (count blocks-vec)
-        end-index          (if (>= end-index-for-reindex
-                                   blocks-vec-count)
-                             blocks-vec-count
-                             (+ 1 end-index-for-reindex))
-        tail               (subvec blocks-vec
-                                   end-index)
-        blocks-to-reindex  (subvec blocks-vec
-                                   start-index-for-reindex
-                                   end-index)
-        reindexed-blocks   (map-indexed
-                             (fn [idx block]
-                               (let [new-order (+ idx base-value)]
-                                 {:block/uid   (:block/uid block)
-                                  :block/order new-order}))
-                             blocks-to-reindex)
-        updated-blocks-vec (concat head
-                                   reindexed-blocks
-                                   tail)]
-    updated-blocks-vec))
 
 
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above

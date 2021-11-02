@@ -385,20 +385,6 @@
       get-block))
 
 
-(defn same-parent?
-  "Given a coll of uids, determine if uids are all direct children of the same parent."
-  [uids]
-  (let [parents (->> uids
-                     (mapv (comp first uid-and-embed-id))
-                     (d/q '[:find ?parents
-                            :in $ [?uids ...]
-                            :where
-                            [?e :block/uid ?uids]
-                            [?parents :block/children ?e]]
-                          @dsdb))]
-    (= (count parents) 1)))
-
-
 (defn deepest-child-block
   [id]
   (let [document (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] id)

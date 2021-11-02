@@ -1152,19 +1152,19 @@
 
 
 (reg-event-fx
- :block/link
- (fn [{:keys [db]} [_ {:keys [source-uid target-uid target-rel] :as args}]]
-   (log/debug ":block/link args" (pr-str args))
-   (let [block-uid    (common.utils/gen-block-uid)
-         atomic-event (common-events/build-atomic-event (:remote/last-seen-tx db)
-                                                        (composite-ops/make-consequence-op {:op/type :block/link}
-                                                                                           [(atomic-graph-ops/make-block-new-op block-uid
-                                                                                                                                target-uid
-                                                                                                                                target-rel)
-                                                                                            (atomic-graph-ops/make-block-save-op block-uid
-                                                                                                                                 ""
-                                                                                                                                 (str "((" source-uid "))"))]))]
-     {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+  :block/link
+  (fn [{:keys [db]} [_ {:keys [source-uid target-uid target-rel] :as args}]]
+    (log/debug ":block/link args" (pr-str args))
+    (let [block-uid    (common.utils/gen-block-uid)
+          atomic-event (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                         (composite-ops/make-consequence-op {:op/type :block/link}
+                                                                                            [(atomic-graph-ops/make-block-new-op block-uid
+                                                                                                                                 target-uid
+                                                                                                                                 target-rel)
+                                                                                             (atomic-graph-ops/make-block-save-op block-uid
+                                                                                                                                  ""
+                                                                                                                                  (str "((" source-uid "))"))]))]
+      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
 
 
 (defn- block-move-chain
@@ -1174,10 +1174,10 @@
                                                                                    target-uid
                                                                                    first-rel)]
                                              (doall
-                                              (for [[one two] (partition 2 1 source-uids)]
-                                                (atomic-graph-ops/make-block-move-op two
-                                                                                     one
-                                                                                     :after))))))
+                                               (for [[one two] (partition 2 1 source-uids)]
+                                                 (atomic-graph-ops/make-block-move-op two
+                                                                                      one
+                                                                                      :after))))))
 
 
 (reg-event-fx
