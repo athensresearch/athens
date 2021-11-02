@@ -38,17 +38,6 @@
    :datascript/unindent-multi
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
-   :datascript/drop-child
-   :datascript/drop-multi-child
-   :datascript/drop-link-child
-   :datascript/drop-diff-parent
-   :datascript/drop-multi-diff-source-same-parents
-   :datascript/drop-multi-diff-source-diff-parents
-   :datascript/drop-link-diff-parent
-   :datascript/drop-same
-   :datascript/drop-multi-same-source
-   :datascript/drop-multi-same-all
-   :datascript/drop-link-same-parent
    :datascript/left-sidebar-drop-above
    :datascript/left-sidebar-drop-below
    :datascript/unlinked-references-link
@@ -513,17 +502,6 @@
    (dispatch :datascript/paste-internal datascript-paste-internal)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
-   (dispatch :datascript/drop-child datascript-drop-child)
-   (dispatch :datascript/drop-multi-child datascript-drop-multi-child)
-   (dispatch :datascript/drop-link-child datascript-drop-link-child)
-   (dispatch :datascript/drop-diff-parent datascript-drop-diff-parent)
-   (dispatch :datascript/drop-multi-diff-source-same-parents datascript-drop-multi-diff-source-same-parents)
-   (dispatch :datascript/drop-multi-diff-source-diff-parents datascript-drop-multi-diff-source-diff-parents)
-   (dispatch :datascript/drop-link-diff-parent datascript-drop-link-diff-parent)
-   (dispatch :datascript/drop-same datascript-drop-same)
-   (dispatch :datascript/drop-multi-same-source datascript-drop-multi-same-source)
-   (dispatch :datascript/drop-multi-same-all datascript-drop-multi-same-all)
-   (dispatch :datascript/drop-link-same-parent datascript-drop-link-same-parent)
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above)
    (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below)
    (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link)
@@ -627,17 +605,6 @@
    (dispatch :datascript/paste-internal datascript-paste-internal true)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)
-   (dispatch :datascript/drop-child datascript-drop-child true)
-   (dispatch :datascript/drop-multi-child datascript-drop-multi-child true)
-   (dispatch :datascript/drop-link-child datascript-drop-link-child true)
-   (dispatch :datascript/drop-diff-parent datascript-drop-diff-parent true)
-   (dispatch :datascript/drop-multi-diff-source-same-parents datascript-drop-multi-diff-source-same-parents true)
-   (dispatch :datascript/drop-multi-diff-source-diff-parents datascript-drop-multi-diff-source-diff-parents true)
-   (dispatch :datascript/drop-link-diff-parent datascript-drop-link-diff-parent true)
-   (dispatch :datascript/drop-same datascript-drop-same true)
-   (dispatch :datascript/drop-multi-same-source datascript-drop-multi-same-source true)
-   (dispatch :datascript/drop-multi-same-all datascript-drop-multi-same-all true)
-   (dispatch :datascript/drop-link-same-parent datascript-drop-link-same-parent true)
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above true)
    (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below true)
    (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link true)

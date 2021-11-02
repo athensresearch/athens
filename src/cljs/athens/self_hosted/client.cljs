@@ -293,17 +293,6 @@
     :datascript/unindent-multi
     :datascript/page-add-shortcut
     :datascript/page-remove-shortcut
-    :datascript/drop-child
-    :datascript/drop-multi-child
-    :datascript/drop-link-child
-    :datascript/drop-diff-parent
-    :datascript/drop-multi-diff-source-same-parents
-    :datascript/drop-multi-diff-source-diff-parents
-    :datascript/drop-link-diff-parent
-    :datascript/drop-same
-    :datascript/drop-multi-same-source
-    :datascript/drop-multi-same-all
-    :datascript/drop-link-same-parent
     :datascript/left-sidebar-drop-above
     :datascript/left-sidebar-drop-below
     :datascript/unlinked-references-link
