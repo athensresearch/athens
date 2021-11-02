@@ -1043,6 +1043,18 @@
     (enter rfdb uid d-event)))
 
 
+(defn get-prev-block-uid-and-target-rel
+  [uid]
+  (let [prev-block-uid            (:block/uid (common-db/nth-sibling @db/dsdb uid -1))
+        prev-block-children?      (if prev-block-uid
+                                    (seq (:block/children (common-db/get-block @db/dsdb [:block/uid prev-block-uid])))
+                                    nil)
+        target-rel                (if prev-block-children?
+                                    :last
+                                    :first)]
+    [prev-block-uid target-rel]))
+
+
 (reg-event-fx
   :indent
   (fn [_ [_ {:keys [uid d-key-down] :as args}]]
@@ -1050,18 +1062,16 @@
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-    (let [block                     (common-db/get-block @db/dsdb [:block/uid uid])
-          block-zero?               (zero? (:block/order block))
-          prev-block-uid            (:block/uid (common-db/nth-sibling @db/dsdb uid -1))
-          prev-block-children?      (seq (:block/children (common-db/get-block @db/dsdb [:block/uid prev-block-uid])))
-          target-rel                (if prev-block-children?
-                                      :last
-                                      :first)
-          {:keys [start end]} d-key-down]
-      (log/debug "prev-sib-uid" prev-block-uid
+    (let [block                        (common-db/get-block @db/dsdb [:block/uid uid])
+          block-zero?                  (zero? (:block/order block))
+          [prev-block-uid target-rel]  (get-prev-block-uid-and-target-rel uid)
+          {:keys [start end]}          d-key-down]
+      (log/debug "null-sib-uid" (and block-zero?
+                                     prev-block-uid)
                  ", args:" (pr-str args)
                  ", block-zero?" block-zero?)
-      (when-not block-zero?
+      (when (and prev-block-uid
+                 (not block-zero?))
         {:fx [[:dispatch            [:block/move {:source-uid uid
                                                   :target-uid prev-block-uid
                                                   :target-rel target-rel}]]
@@ -1075,16 +1085,17 @@
     (let [sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
           f-uid                    (first sanitized-selected-uids)
           dsdb                     @db/dsdb
-          f-uid-prev-block-uid     (common-db/prev-block-uid dsdb f-uid)
+          [prev-block-uid
+           target-rel]             (get-prev-block-uid-and-target-rel f-uid)
           same-parent?             (common-db/same-parent? dsdb sanitized-selected-uids)
           first-block-order        (:block/order (common-db/get-block dsdb [:block/uid f-uid]))
           block-zero?              (zero? first-block-order)]
-      (println "prev id" f-uid-prev-block-uid "uid " f-uid)
       (log/debug ":indent/multi same-parent?" same-parent?
                  ", not block-zero?" (not  block-zero?))
       (when (and same-parent? (not block-zero?))
-        {:fx [[:dispatch [:drop-multi/child {:source-uids sanitized-selected-uids
-                                             :target-uid  f-uid-prev-block-uid}]]]}))))
+        {:fx [[:dispatch [:drop-multi/sibling {:source-uids sanitized-selected-uids
+                                               :target-uid  prev-block-uid
+                                               :drag-target target-rel}]]]}))))
 
 
 (reg-event-fx
@@ -1119,7 +1130,6 @@
   (fn [{:keys [db]} [_ {:keys [uids]}]]
     (log/debug ":unindent/multi" uids)
     (let [[f-uid f-embed-id]          (common-db/uid-and-embed-id (first uids))
-          f-uid-prev-block-uid            (common-db/prev-block-uid @db/dsdb f-uid)
           sanitized-selected-uids     (mapv (comp
                                               first
                                               common-db/uid-and-embed-id) uids)
@@ -1142,7 +1152,7 @@
       (log/debug ":unindent/multi do-nothing?" do-nothing?)
       (when-not do-nothing?
         {:fx [[:dispatch [:drop-multi/sibling {:source-uids  sanitized-selected-uids
-                                               :target-uid   f-uid-prev-block-uid
+                                               :target-uid   parent-uid
                                                :drag-target  :below}]]]}))))
 
 
@@ -1203,7 +1213,7 @@
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
     (log/debug ":drop-multi/sibling args" (pr-str args))
     (let [rel-position ({:above :before
-                         :below :after} drag-target :before)
+                         :below :after} drag-target drag-target)
           atomic-op    (block-move-chain target-uid source-uids rel-position)
           event        (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                          atomic-op)]
