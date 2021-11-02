@@ -166,24 +166,6 @@
        db rules uid prev-sib-order))
 
 
-(defn get-older-sib
-  [db uid]
-  (let [sib-uid   (d/q '[:find ?uid .
-                         :in $ % ?target-uid
-                         :where
-                         (siblings ?target-uid ?sib)
-                         [?target-e :block/uid ?target-uid]
-                         [?target-e :block/order ?target-o]
-                         [(dec ?target-o) ?prev-sib-order]
-                         [?sib :block/order ?prev-sib-order]
-                         [?sib :block/uid ?uid]]
-                       db
-                       rules
-                       uid)
-        older-sib (get-block db [:block/uid sib-uid])]
-    older-sib))
-
-
 (defn sort-block-children
   [block]
   (if-let [children (seq (:block/children block))]
@@ -245,20 +227,6 @@
               :keys block/uid block/order
               :in $ % ?p ?at ?x
               :where (minus-after ?p ?at ?ch ?new-o ?x)
-              [?ch :block/uid ?block-uid]]
-            db
-            rules
-            eid
-            order
-            x)))
-
-
-(defn plus-after
-  [db eid order x]
-  (->> (d/q '[:find ?block-uid ?new-o
-              :keys block/uid block/order
-              :in $ % ?p ?at ?x
-              :where (plus-after ?p ?at ?ch ?new-o ?x)
               [?ch :block/uid ?block-uid]]
             db
             rules
