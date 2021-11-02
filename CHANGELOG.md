@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.30](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.29...v1.0.0-alpha.rtc.30) (2021-11-02)
+
+
+### Bug Fixes
+
+* :block/move to new parent. ([c9da42b](https://github.com/athensresearch/athens/commit/c9da42bf3a049aa8b98b9122002813caeb2108a0))
+* take same-page/up into account when computing new-block-order ([ccac6dd](https://github.com/athensresearch/athens/commit/ccac6dd4918bda9b811d93d8e87e632238973874))
+
+
+### Work in Progress
+
+* 1st drop event moved to `:block/move` ([a0de566](https://github.com/athensresearch/athens/commit/a0de566607cf380b5f8c7564705e33ec85644556))
+* cleanup of drop blocks ([ed8dc57](https://github.com/athensresearch/athens/commit/ed8dc57c2f882b53d5696432b15e2d44033b43e4))
+* cleanup, x-mas came early this year. ([3366d4b](https://github.com/athensresearch/athens/commit/3366d4bd2b75356a38852c4c9e98ebd159bc5e0e))
+* drop diff parent using `:block/move` ([a07ef16](https://github.com/athensresearch/athens/commit/a07ef168ee706e67b472b7439ec36ffe2a2e76b1))
+* drop same parent using `:block/move` ([3ce1174](https://github.com/athensresearch/athens/commit/3ce1174397e76bc76703f5c62fc11295f2daf4ba))
+* drop semantic events cleanup. ([1a22f1b](https://github.com/athensresearch/athens/commit/1a22f1b2dd2fb8ed53ce18d51734f827cecc8292))
+* drop-multi different source parents cases using `:block/move`. ([de0c9a8](https://github.com/athensresearch/athens/commit/de0c9a833714cac0b68c384ef4100c408be31adf))
+* drop-multi/same-all using block/move-chain ([bf310bc](https://github.com/athensresearch/athens/commit/bf310bc5260f64d7e758fee57dff22520834b988))
+* failing tests. ([7472553](https://github.com/athensresearch/athens/commit/7472553867dc6a955cba882d65f960683bfe79df))
+* introduced `:block/link` re-frame event to drop links to blocks. ([b600f4c](https://github.com/athensresearch/athens/commit/b600f4c12bbfa395a47137eb5298435d09387b47))
+* last drop-multi migrated to `:block/move` ([4407534](https://github.com/athensresearch/athens/commit/4407534b5bfb955b6c4d4394c4acd1aadb4154d4))
+* moving blocks like a boss, well not really just yet. ([b9a05ed](https://github.com/athensresearch/athens/commit/b9a05edc5f261988c8862a87f72afe5c9b196b7c))
+* removed dead coda around drop events. ([60fcdbf](https://github.com/athensresearch/athens/commit/60fcdbf5f13291f700e1693856894e507bb7a0a5))
+* simple drop multi using chain of `:block/move` ([7226bd5](https://github.com/athensresearch/athens/commit/7226bd52f40d6c1d53204bf5c9a3be28ccd25c4e))
+
 ## [1.0.0-alpha.rtc.29](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.28...v1.0.0-alpha.rtc.29) (2021-10-28)
 
 
