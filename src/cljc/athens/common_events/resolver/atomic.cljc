@@ -156,14 +156,14 @@
                                                                                           (inc upper-bound-index))
                                                                                         1)}
             tx-data           [updated-block reindexed-parent]]
-        (log/info "same-parent:\n"
-                  (with-out-str
-                    (pp/pprint {:lower   lower-bound-index
-                                :upper   upper-bound-index
-                                :old-bo  old-block-order
-                                :new-bo  new-block-order
-                                :up?     up?
-                                :tx-data tx-data})))
+        (log/debug "same-parent:\n"
+                   (with-out-str
+                     (pp/pprint {:lower   lower-bound-index
+                                 :upper   upper-bound-index
+                                 :old-bo  old-block-order
+                                 :new-bo  new-block-order
+                                 :up?     up?
+                                 :tx-data tx-data})))
         tx-data)
 
       (let [retract-from-old-parent [:db/retract [:block/uid old-parent-block-uid] :block/children [:block/uid block-uid]]
@@ -185,6 +185,12 @@
                                        new-parent-reindexed]
                                       [retract-from-old-parent
                                        new-parent-reindexed])]
+        (log/debug "diff-parent:\n"
+                   (with-out-str
+                     (pp/pprint {:old-bo  old-block-order
+                                 :new-bo  new-block-order
+                                 :up?     up?
+                                 :tx-data tx-data})))
         tx-data))))
 
 

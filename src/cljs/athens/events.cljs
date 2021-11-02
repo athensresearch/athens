@@ -1217,25 +1217,15 @@
 
 
 (reg-event-fx
-  :drop-multi/diff-source-same-parents
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    (log/debug ":drop-multi/diff-source-same-parents args" args)
-    (let [event (common-events/build-drop-multi-diff-source-same-parents-event (:remote/last-seen-tx db)
-                                                                               drag-target
-                                                                               source-uids
-                                                                               target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-multi/diff-source-diff-parents
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    (log/debug ":drop-multi/diff-source-diff-parents args" args)
-    (let [event (common-events/build-drop-multi-diff-source-diff-parents-event (:remote/last-seen-tx db)
-                                                                               drag-target
-                                                                               source-uids
-                                                                               target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+ :drop-multi/diff-source
+ (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
+   (log/debug ":drop-multi/diff-source args" (pr-str args))
+   (let [rel-position ({:above :before
+                        :below :after} drag-target :before)
+         atomic-op    (block-move-chain target-uid source-uids rel-position)
+         event        (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                        atomic-op)]
+     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx

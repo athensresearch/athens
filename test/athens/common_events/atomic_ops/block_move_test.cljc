@@ -6,7 +6,8 @@
     [athens.common-events.graph.composite :as composite-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
-    [athens.common.logging :as log]
+    [athens.common.logging                :as log]
+    [clojure.pprint                       :as pp]
     [clojure.test                         :as t]
     [datascript.core                      :as d]))
 
@@ -335,7 +336,7 @@
                 :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
           (d/transact! @fixture/connection atomic-txs))
         (let [parent-block  (common-db/get-block @@fixture/connection
-                                                   [:block/uid parent-1-uid])
+                                                 [:block/uid parent-1-uid])
               child-1-block (common-db/get-block @@fixture/connection
                                                  [:block/uid child-1-uid])
               child-2-block (common-db/get-block @@fixture/connection
@@ -381,7 +382,7 @@
                 :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
           (d/transact! @fixture/connection atomic-txs))
         (let [parent-block  (common-db/get-block @@fixture/connection
-                                                   [:block/uid parent-1-uid])
+                                                 [:block/uid parent-1-uid])
               child-1-block (common-db/get-block @@fixture/connection
                                                  [:block/uid child-1-uid])
               child-2-block (common-db/get-block @@fixture/connection
@@ -393,4 +394,114 @@
           (t/is (= 1 (-> child-2-block :block/children count)))
           (t/is (= 0 (:block/order child-1-block)))
           (t/is (= 0 (:block/order child-2-block)))
-          (t/is (= 1 (:block/order child-3-block))))))))
+          (t/is (= 1 (:block/order child-3-block)))))))
+
+  (t/testing "different parents selection"
+    (let [parent-1-uid "parent-3-uid"
+          child-1-uid  "child-3-1-uid"
+          child-2-uid  "child-3-2-uid"
+          child-3-uid  "child-3-3-uid"
+          child-4-uid  "child-3-4-uid"
+          setup-tx     [{:block/uid      parent-1-uid
+                         :block/string   ""
+                         :block/order    0
+                         :block/children [{:block/uid      child-1-uid
+                                           :block/string   ""
+                                           :block/order    0
+                                           :block/children [{:block/uid      child-2-uid ; <- selected
+                                                             :block/string   ""
+                                                             :block/order    0
+                                                             :block/children []}]}
+                                          {:block/uid      child-3-uid                   ; <- selected
+                                           :block/string   ""
+                                           :block/order    1
+                                           :block/children []}
+                                          {:block/uid      child-4-uid
+                                           :block/string   ""
+                                           :block/order    2
+                                           :block/children []}]}]]
+      (fixture/transact-with-middleware setup-tx)
+      (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
+                                                            [(atomic-ops/make-block-move-op child-2-uid child-4-uid :after)
+                                                             (atomic-ops/make-block-move-op child-3-uid child-2-uid :after)])]
+        ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
+        (doseq [atomic (graph-ops/extract-atomics chained-move)
+                :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
+          (log/debug "weird tx:\n" (with-out-str
+                                     (pp/pprint atomic-txs)))
+          (d/transact! @fixture/connection atomic-txs))
+        (let [parent-block  (common-db/get-block @@fixture/connection
+                                                 [:block/uid parent-1-uid])
+              child-1-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-1-uid])
+              child-2-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-2-uid])
+              child-3-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-3-uid])
+              child-4-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-4-uid])]
+          (t/is (= 4 (-> parent-block :block/children count)))
+          (t/is (= 0 (-> child-1-block :block/children count)))
+          (t/is (= 0 (:block/order child-1-block)))
+          (t/is (= 1 (:block/order child-4-block)))
+          (t/is (= 2 (:block/order child-2-block)))
+          (t/is (= 3 (:block/order child-3-block)))))))
+
+  (t/testing "different parents selection"
+    (let [parent-1-uid "parent-4-uid"
+          child-1-uid  "child-4-1-uid"
+          child-2-uid  "child-4-2-uid"
+          child-3-uid  "child-4-3-uid"
+          child-4-uid  "child-4-4-uid"
+          child-5-uid  "child-4-5-uid"
+          setup-tx     [{:block/uid      parent-1-uid
+                         :block/string   ""
+                         :block/order    0
+                         :block/children [{:block/uid      child-1-uid
+                                           :block/string   ""
+                                           :block/order    0
+                                           :block/children [{:block/uid      child-2-uid ; <- selected
+                                                             :block/string   ""
+                                                             :block/order    0
+                                                             :block/children []}]}
+                                          {:block/uid      child-3-uid                   ; <- selected
+                                           :block/string   ""
+                                           :block/order    1
+                                           :block/children []}
+                                          {:block/uid      child-4-uid
+                                           :block/string   ""
+                                           :block/order    2
+                                           :block/children [{:block/uid      child-5-uid
+                                                             :block/string   ""
+                                                             :block/order    0
+                                                             :block/children []}]}]}]] ; <- move after this block
+      (fixture/transact-with-middleware setup-tx)
+      (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
+                                                            [(atomic-ops/make-block-move-op child-2-uid child-5-uid :after)
+                                                             (atomic-ops/make-block-move-op child-3-uid child-2-uid :after)])]
+        ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
+        (doseq [atomic (graph-ops/extract-atomics chained-move)
+                :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
+          (log/debug "weird tx:\n" (with-out-str
+                                     (pp/pprint atomic-txs)))
+          (d/transact! @fixture/connection atomic-txs))
+        (let [parent-block  (common-db/get-block @@fixture/connection
+                                                 [:block/uid parent-1-uid])
+              child-1-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-1-uid])
+              child-2-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-2-uid])
+              child-3-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-3-uid])
+              child-4-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-4-uid])
+              child-5-block (common-db/get-block @@fixture/connection
+                                                 [:block/uid child-5-uid])]
+          (t/is (= 2 (-> parent-block :block/children count)))
+          (t/is (= 0 (-> child-1-block :block/children count)))
+          (t/is (= 3 (-> child-4-block :block/children count)))
+          (t/is (= 0 (:block/order child-1-block)))
+          (t/is (= 1 (:block/order child-4-block)))
+          (t/is (= 0 (:block/order child-5-block)))
+          (t/is (= 1 (:block/order child-2-block)))
+          (t/is (= 2 (:block/order child-3-block))))))))
