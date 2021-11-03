@@ -1211,8 +1211,7 @@
     ;; When the selected blocks have same parent and are DnD under the same parent this event is fired.
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
     (log/debug ":drop-multi/sibling args" (pr-str args))
-    (let [rel-position ({:above :before
-                         :below :after} drag-target drag-target)
+    (let [rel-position drag-target
           atomic-op    (block-move-chain target-uid source-uids rel-position)
           event        (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                          atomic-op)]
