@@ -30,7 +30,7 @@
                 :first
                 :last]]]
    [:map
-    [:ref-uid uuid?]
+    [:ref-uid string?]
     [:relation [:enum
                 :first
                 :last]]]])
@@ -38,7 +38,7 @@
 
 (def sibling-position
   [:map
-   [:ref-uid uuid?]
+   [:ref-uid string?]
    [:relation [:enum
                :before
                :after]]])
