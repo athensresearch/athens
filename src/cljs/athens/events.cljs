@@ -1114,7 +1114,6 @@
                                         (:node/title parent)
                                         (= context-root-uid (:block/uid parent)))
           {:keys [start end]} d-key-down]
-      (println "parent is" parent)
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
         {:fx [[:dispatch-n [[:block/move {:source-uid uid
