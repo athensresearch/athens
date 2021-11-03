@@ -270,10 +270,10 @@
           (t/is (= 0 (:block/order child-2-2-block)))
           (t/is (= 1 (:block/order child-1-1-block)))
           (t/is (= 2 (:block/order child-1-2-block)))
-          (t/is (= 0 (:block/order child-2-1-block)))))
+          (t/is (= 0 (:block/order child-2-1-block)))))))
 
-      ;; (atomic-ops/make-block-move-op child-2-uid parent-uid :first)
-      ))
+  ;; (atomic-ops/make-block-move-op child-2-uid parent-uid :first)
+
 
   (t/testing "Move block to new parent using :first"
     (let [parent-1-uid  "parent-11-uid"
