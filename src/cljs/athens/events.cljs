@@ -1152,7 +1152,7 @@
       (when-not do-nothing?
         {:fx [[:dispatch [:drop-multi/sibling {:source-uids  sanitized-selected-uids
                                                :target-uid   parent-uid
-                                               :drag-target  :below}]]]}))))
+                                               :drag-target  :after}]]]}))))
 
 
 (reg-event-fx
