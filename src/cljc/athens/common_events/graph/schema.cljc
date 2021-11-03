@@ -109,8 +109,8 @@
                                       op-type-atomic-common
                                       op-block-remove)]
                      [:block/move (mu/merge
-                                   op-type-atomic-common
-                                   op-block-move)]
+                                    op-type-atomic-common
+                                    op-block-move)]
                      [:page/new (mu/merge
                                   op-type-atomic-common
                                   op-page-new)]
