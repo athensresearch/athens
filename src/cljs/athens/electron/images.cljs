@@ -44,14 +44,14 @@
                                 (let [reindex          (db/inc-after (:db/id block) -1)
                                       new-children     (conj reindex new-block)
                                       new-target-block {:db/id [:block/uid target-uid] :block/children new-children}]
-                      new-target-block)
+                                  new-target-block)
                                 (let [index        (case drag-target
                                                      :before (dec order)
                                                      :after  order)
                                       reindex      (db/inc-after (:db/id parent) index)
                                       new-children (conj reindex new-block)
                                       new-parent   {:db/id (:db/id parent) :block/children new-children}]
-                      new-parent))]
+                                  new-parent))]
     ;; delay because you want to create block *after* the file has been saved to filesystem
     ;; otherwise, <img> is created too fast, and no image is rendered
     ;; TODO: this functionality needs to create an event instead and upload the file to work with RTC.
