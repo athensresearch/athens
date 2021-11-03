@@ -130,19 +130,24 @@
   [e block state]
   (.. e preventDefault)
   (.. e stopPropagation)
-  (let [{:block/keys [children uid open]} block
-        closest-container (.. e -target (closest ".block-container"))
-        {:keys [x y]} (mouse-offset e closest-container)
-        middle-y          (vertical-center closest-container)
-        dragging-ancestor (.. e -target (closest ".dragging"))
-        dragging?         dragging-ancestor
-        is-selected?      @(rf/subscribe [::select-subs/selected? uid])
-        target            (cond
-                            dragging? nil
-                            is-selected? nil
-                            (or (neg? y) (< y middle-y)) :above
-                            (or (not open) (and (empty? children) (< 50 x))) :child
-                            (< middle-y y) :below)]
+  (let [{:block/keys [children
+                      uid
+                      open]} block
+        closest-container    (.. e -target (closest ".block-container"))
+        {:keys [x y]}        (mouse-offset e closest-container)
+        middle-y             (vertical-center closest-container)
+        dragging-ancestor    (.. e -target (closest ".dragging"))
+        dragging?            dragging-ancestor
+        is-selected?         @(rf/subscribe [::select-subs/selected? uid])
+        target               (cond
+                               dragging?           nil
+                               is-selected?        nil
+                               (or (neg? y)
+                                   (< y middle-y)) :before
+                               (or (not open)
+                                   (and (empty? children)
+                                        (< 50 x))) :first
+                               (< middle-y y)      :after)]
     (when target
       (swap! state assoc :drag-target target))))
 
@@ -151,25 +156,22 @@
   "Terminology :
     - source-uid        : The block which is being dropped.
     - target-uid        : The block on which source is being dropped.
-    - drag-target       : Represents where the block is being dragged. It can be `:child` meaning
-                          dragged as a child, `:above` meaning the source block is dropped above the
-                          target block, `:below` meaning the source block is dropped below the target block.
+    - drag-target       : Represents where the block is being dragged. It can be `:first` meaning
+                          dragged as a child, `:before` meaning the source block is dropped above the
+                          target block, `:after` meaning the source block is dropped below the target block.
     - action-allowed    : There can be 2 types of actions.
         - `link` action : When a block is DnD by dragging a bullet while
                          `shift` key is pressed to create a block link.
         - `move` action : When a block is DnD to other part of Athens page. "
 
   [source-uid target-uid drag-target action-allowed]
-  (let [drag-target-child? (= drag-target :child)
-        move-action?       (= action-allowed "move")
-        event              [(if move-action?
-                              :block/move
-                              :block/link)
-                            {:source-uid source-uid
-                             :target-uid target-uid
-                             :target-rel (if drag-target-child?
-                                           :first
-                                           ({:above :before} drag-target drag-target))}]]
+  (let [move-action? (= action-allowed "move")
+        event         [(if move-action?
+                         :block/move
+                         :block/link)
+                       {:source-uid source-uid
+                        :target-uid target-uid
+                        :target-rel drag-target}]]
     (log/debug "drop-bullet" (pr-str {:source-uid     source-uid
                                       :target-uid     target-uid
                                       :drag-target    drag-target
@@ -186,7 +188,7 @@
   [source-uids target-uid drag-target]
   (let [source-uids          (mapv (comp first db/uid-and-embed-id) source-uids)
         target-uid           (first (db/uid-and-embed-id target-uid))
-        event                (if (= drag-target :child)
+        event                (if (= drag-target :first)
                                [:drop-multi/child {:source-uids source-uids
                                                    :target-uid  target-uid}]
                                [:drop-multi/sibling {:source-uids source-uids
@@ -321,7 +323,7 @@
            :on-drag-leave     (fn [e] (block-drag-leave e block state))
            :on-drop           (fn [e] (block-drop e block state))}
 
-          (when (= (:drag-target @state) :above) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
+          (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
 
           [:div.block-body
            (when (seq children)
@@ -366,8 +368,8 @@
                 (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
                 opts]]))
 
-          (when (= (:drag-target @state) :child) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"} :child true}])
-          (when (= (:drag-target @state) :below) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"}}])])))))
+          (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"} :child true}])
+          (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"}}])])))))
 
 
 (defn block-component
