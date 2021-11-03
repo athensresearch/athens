@@ -11,7 +11,7 @@
    :block/save ; ✓
    :block/open
    :block/remove ; ✓
-   :block/move
+   :block/move ; ✓
    :page/new ; ✓
    ;; TODO: page operations should never take page uids, just titles
    :page/rename
@@ -80,6 +80,14 @@
      [:block-uid string?]]]])
 
 
+(def op-block-move
+  [:map
+   [:op/args
+    [:map
+     [:block-uid string?]
+     [:position position]]]])
+
+
 (def op-page-new
   [:map
    [:op/args
@@ -100,6 +108,9 @@
                      [:block/remove (mu/merge
                                       op-type-atomic-common
                                       op-block-remove)]
+                     [:block/move (mu/merge
+                                    op-type-atomic-common
+                                    op-block-move)]
                      [:page/new (mu/merge
                                   op-type-atomic-common
                                   op-page-new)]

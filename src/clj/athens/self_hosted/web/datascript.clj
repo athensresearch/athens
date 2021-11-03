@@ -37,6 +37,8 @@
 (def supported-atomic-ops
   #{:block/new
     :block/save
+    :block/remove
+    :block/move
     :page/new
     :composite/consequence})
 
