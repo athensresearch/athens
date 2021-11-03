@@ -5,20 +5,23 @@
     [athens.common-events.graph.atomic    :as atomic]
     [athens.common-events.graph.composite :as composite]
     [athens.common.utils                  :as utils]
-    [athens.dates                         :as dates]
     [clojure.set                          :as set]))
 
 
 (defn build-page-new-op
-  "Creates `:page/new` & `:block/new` ops.
+  "Creates `:page/new` & optionally `:block/new` ops.
   If page already exists, just creates atomic `:block/new`.
   If page doesn't exist, generates composite of atomic `:page/new` & `:block/new`."
-  [db page-title page-uid block-uid]
-  (if (common-db/e-by-av db :block/uid page-uid)
-    (atomic/make-block-new-op block-uid page-uid :first)
-    (composite/make-consequence-op {:op/type :page/new}
-                                   [(atomic/make-page-new-op page-title page-uid)
-                                    (atomic/make-block-new-op block-uid page-uid :first)])))
+  ([_db page-title]
+   (atomic/make-page-new-op page-title))
+  ([db page-title block-uid]
+   (let [location (common-db/compat-position db {:ref-title page-title
+                                                 :relation :first})]
+     (if (common-db/e-by-av db :node/title page-title)
+       (atomic/make-block-new-op block-uid location)
+       (composite/make-consequence-op {:op/type :page/new}
+                                      [(atomic/make-page-new-op page-title)
+                                       (atomic/make-block-new-op block-uid location)])))))
 
 
 (defn build-block-save-op
@@ -28,19 +31,12 @@
   (let [links-in-old    (utils/find-page-links old-string)
         links-in-new    (utils/find-page-links new-string)
         link-diff       (set/difference links-in-new links-in-old)
-        new-page-titles (remove #(seq (common-db/get-page-uid-by-title db %))
+        new-page-titles (remove #(seq (common-db/get-page-uid db %))
                                 link-diff)
         atomic-pages    (when-not (empty? new-page-titles)
                           (into []
                                 (for [title new-page-titles]
-                                  (build-page-new-op db
-                                                     title
-                                                     (or (-> title
-                                                             dates/title-to-date
-                                                             dates/date-to-day
-                                                             :uid)
-                                                         (utils/gen-block-uid))
-                                                     (utils/gen-block-uid)))))
+                                  (build-page-new-op db title))))
         atomic-save     (atomic/make-block-save-op block-uid old-string new-string)
         block-save-op   (if (empty? atomic-pages)
                           atomic-save
@@ -58,7 +54,8 @@
                                                old-block-uid
                                                old-string
                                                (subs new-string 0 index))
-        new-block-op      (atomic/make-block-new-op new-block-uid old-block-uid :after)
+        new-block-op      (atomic/make-block-new-op new-block-uid {:ref-uid old-block-uid
+                                                                   :relation :after})
         new-block-save-op (build-block-save-op db
                                                new-block-uid
                                                ""

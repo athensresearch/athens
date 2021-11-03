@@ -545,13 +545,11 @@
                                         uid (db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
-                                      (let [page-uid  (common.utils/gen-block-uid)
-                                            block-uid (common.utils/gen-block-uid)]
+                                      (let [block-uid (common.utils/gen-block-uid)]
                                         (.blur target)
-                                        (dispatch [:page/create {:title     link
-                                                                 :page-uid  page-uid
-                                                                 :block-uid block-uid
-                                                                 :shift?    shift}]))))
+                                        (dispatch [:page/new {:title     link
+                                                              :block-uid block-uid
+                                                              :shift?    shift}]))))
 
                                   ;; same logic as link
                                   (and (re-find #"(?s)#" head)
@@ -560,13 +558,11 @@
                                         uid (db/v-by-ea eid :block/uid)]
                                     (if eid
                                       (router/navigate-uid uid e)
-                                      (let [page-uid  (common.utils/gen-block-uid)
-                                            block-uid (common.utils/gen-block-uid)]
+                                      (let [block-uid (common.utils/gen-block-uid)]
                                         (.blur target)
-                                        (dispatch [:page/create {:title     link
-                                                                 :page-uid  page-uid
-                                                                 :block-uid block-uid
-                                                                 :shift?    shift}]))))
+                                        (dispatch [:page/new {:title     link
+                                                              :block-uid block-uid
+                                                              :shift?    shift}]))))
 
                                   (and (re-find #"(?s)\(\(" head)
                                        (re-find #"(?s)\)\)" tail)

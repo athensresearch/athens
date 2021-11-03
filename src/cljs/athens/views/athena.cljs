@@ -188,16 +188,13 @@
       (= KeyCodes.ENTER key) (cond
                                ;; if page doesn't exist, create and open
                                (and (zero? index) (nil? item))
-                               (let [page-uid  (utils/gen-block-uid)
-                                     block-uid (utils/gen-block-uid)]
+                               (let [block-uid (utils/gen-block-uid)]
                                  (dispatch [:athena/toggle])
-                                 (js/console.debug "athena key down" (pr-str {:page-uid  page-uid
-                                                                              :block-uid block-uid
+                                 (js/console.debug "athena key down" (pr-str {:block-uid block-uid
                                                                               :title     query}))
-                                 (dispatch [:page/create {:title     query
-                                                          :page-uid  page-uid
-                                                          :block-uid block-uid
-                                                          :shift?    shift}]))
+                                 (dispatch [:page/new {:title     query
+                                                       :block-uid block-uid
+                                                       :shift?    shift}]))
                                ;; if shift: open in right-sidebar
                                shift
                                (do (dispatch [:athena/toggle])
@@ -308,12 +305,10 @@
                                                 (if (nil? x)
                                                   ^{:key i}
                                                   [:div (use-style result-style {:on-click (fn [_]
-                                                                                             (let [page-uid  (utils/gen-block-uid)
-                                                                                                   block-uid (utils/gen-block-uid)]
+                                                                                             (let [block-uid (utils/gen-block-uid)]
                                                                                                (dispatch [:athena/toggle])
-                                                                                               (dispatch [:page/create {:title     query
-                                                                                                                        :page-uid  page-uid
-                                                                                                                        :block-uid block-uid}])))
+                                                                                               (dispatch [:page/new {:title     query
+                                                                                                                     :block-uid block-uid}])))
                                                                                  :class    (when (= i index) "selected")})
 
                                                    [:div (use-style result-body-style)

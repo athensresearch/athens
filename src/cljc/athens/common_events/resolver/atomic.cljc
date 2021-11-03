@@ -20,9 +20,13 @@
   (let [{:keys [block-uid
                 position]}              args
         {:keys [ref-uid
+                ref-title
                 relation]}              position
-        ref-parent?                     (or (int? relation)
-                                            (#{:first :last} relation))
+        _valid-position                 (common-db/validate-position db position)
+        ref-title->uid                  (common-db/get-page-uid db ref-title)
+        ;; Pages must be referenced by title but internally we still use uids for them.
+        ref-uid                         (or ref-uid ref-title->uid)
+        ref-parent?                     (#{:first :last} relation)
         ref-block-exists?               (int? (common-db/e-by-av db :block/uid ref-uid))
         ref-block                       (when ref-block-exists?
                                           (common-db/get-block db [:block/uid ref-uid]))
@@ -41,8 +45,7 @@
                                                        (reduce max 0)
                                                        inc)
                                           :before (:block/order ref-block)
-                                          :after  (inc (:block/order ref-block))
-                                          relation)
+                                          :after  (inc (:block/order ref-block)))
         now                             (utils/now-ts)
         new-block                       {:block/uid    block-uid
                                          :block/string ""
@@ -85,15 +88,18 @@
 (defmethod resolve-atomic-op-to-tx :block/move
   [db {:op/keys [args]}]
   (log/debug "atomic-resolver :block/move args:" (pr-str args))
-  (let [{:keys [block-uid
-                position]}                      args
-        {:keys [ref-uid
-                relation]}                      position
+  (let [{:keys [block-uid position]}            args
+        {:keys [ref-uid ref-title relation]}    position
+        _valid-position                         (common-db/validate-position db position)
+        _valid-block-uid                        (when (common-db/get-page-title db block-uid)
+                                                  (throw (ex-info "Block to be moved is a page, cannot move pages." args)))
+        ref-title->uid                          (common-db/get-page-uid db ref-title)
+        ;; Pages must be referenced by title but internally we still use uids for them.
+        ref-uid                                 (or ref-uid ref-title->uid)
         {old-block-order :block/order
          :as             moved-block}           (common-db/get-block db [:block/uid block-uid])
         {old-parent-block-uid :block/uid}       (common-db/get-parent db [:block/uid block-uid])
-        ref-parent?                             (or (int? relation)
-                                                    (#{:first :last} relation))
+        ref-parent?                             (#{:first :last} relation)
         ref-block-exists?                       (int? (common-db/e-by-av db :block/uid ref-uid))
         ref-block                               (when ref-block-exists?
                                                   (common-db/get-block db [:block/uid ref-uid]))
@@ -125,8 +131,7 @@
                                                             (not same-parent?) (inc ref-block-order)
                                                             up?                (inc ref-block-order)
                                                             ;; it replaces the ref block
-                                                            :else              ref-block-order)
-                                                  relation)
+                                                            :else              ref-block-order))
         now                                     (utils/now-ts)
         updated-block                           (merge moved-block
                                                        {:block/order new-block-order
@@ -290,33 +295,18 @@
 
 (defmethod resolve-atomic-op-to-tx :page/new
   [db {:op/keys [args]}]
-  (let [{:keys [page-uid
-                title]} args
+  (let [{:keys [title]} args
         page-exists?    (common-db/e-by-av db :node/title title)
+        page-uid        (or (-> title dates/title-to-date dates/date-to-day :uid)
+                            (utils/gen-block-uid))
         now             (utils/now-ts)
         page            {:node/title     title
                          :block/uid      page-uid
                          :block/children []
                          :create/time    now
                          :edit/time      now}
-        current-uid     (common-db/get-page-uid-by-title db title)
-        txs             (cond
-                          (not= (-> title dates/title-to-date dates/date-to-day)
-                                (-> page-uid dates/uid-to-date dates/date-to-day))
-                          (throw (ex-info "Page title and uid must match for Daily page."
-                                          {:title    title
-                                           :page-uid page-uid}))
-
-                          (and page-exists?
-                               (not= page-uid current-uid))
-                          (throw (ex-info "Page title already exists with different page uid."
-                                          {:page-uid    page-uid
-                                           :current-uid current-uid}))
-
-                          page-exists?
+        txs             (if page-exists?
                           []
-
-                          :else
                           [page])]
     txs))
 
@@ -343,10 +333,11 @@
 (defn resolve-transact!
   "Iteratively resolve and transact event."
   [conn {:event/keys [id] :as event}]
-  (log/debug "resolve-transact! event-id:" id)
+  (log/debug "resolve-transact! event-id:" (pr-str id))
   (if (graph-ops/atomic-composite? event)
     (doseq [atomic (graph-ops/extract-atomics event)
-            :let   [atomic-txs (resolve-to-tx @conn atomic)]]
+            :let   [_ (log/debug "resolve-transact! atomic:" (with-out-str (pp/pprint atomic)))
+                    atomic-txs (resolve-to-tx @conn atomic)]]
       (log/debug "resolve-transact! atomic-txs:" (with-out-str (pp/pprint atomic-txs)))
       (common-db/transact-with-middleware! conn atomic-txs))
     (let [txs (resolve-to-tx @conn event)]

@@ -262,7 +262,7 @@
                       ", local:" (pr-str local)
                       ", page-uid:" page-uid)
     (when-not do-nothing?
-      (let [existing-page-uid (common-db/get-page-uid-by-title @db/dsdb local)
+      (let [existing-page-uid (common-db/get-page-uid @db/dsdb local)
             merge?            (not (nil?  existing-page-uid))]
         (js/console.debug "new-page-name:" (pr-str local)
                           ", existing-page-uid:" (pr-str existing-page-uid))

@@ -183,7 +183,7 @@
       (conj :node/title :page/sidebar)))
 
 
-(defn get-page-uid-by-title
+(defn get-page-uid
   "Finds page `:block/uid` by `page-title`."
   [db page-title]
   (d/q '[:find ?uid .
@@ -286,6 +286,28 @@
            (siblings ?curr-uid ?sibs)
            [?sibs :block/order ?find-order]]
          db rules uid find-order)))
+
+
+(defn nth-child
+  "Find child that has order n in parent."
+  [db parent-uid order]
+  (d/q '[:find (pull ?child [*]) .
+         :in $ ?parent-uid ?order
+         :where
+         [?parent :block/uid ?parent-uid]
+         [?parent :block/children ?child]
+         [?child :block/order ?order]]
+       db parent-uid order))
+
+
+(defn get-page-title
+  [db uid]
+  (d/q '[:find ?title .
+         :in $ ?uid
+         :where
+         [?e :block/uid ?uid]
+         [?e :note/title ?title]]
+       db uid))
 
 
 (defn deepest-child-block
@@ -423,6 +445,53 @@
               [?e :node/title ?t]]
             db)
        (d/pull-many db '[* :block/_refs])))
+
+
+(defn compat-position
+  "Build a position by coercing incompatible arguments into compatible ones.
+  ref-uid to a page will instead use that page's title as ref-title.
+  Integer relation will be converted to :first if 0, or :after (with matching ref-uid) if not.
+  Warns when coercion was required."
+  [db {:keys [relation ref-uid ref-title] :as p}]
+  (let [[coerced-ref-uid
+         coerced-relation] (when (integer? relation)
+                             (if (= relation 0)
+                               [nil :first]
+                               (let [parent-uid (or ref-uid (get-page-uid db ref-title))
+                                     prev-uid (:block/uid (nth-child db parent-uid (dec relation)))]
+                                 (if prev-uid
+                                   [prev-uid :after]
+                                   ;; Can't find the previous block, just put it on last.
+                                   [nil :last]))))
+        coerced-ref-title  (when (and (not ref-title)
+                                      (not coerced-ref-uid)
+                                      ref-uid)
+                             (get-page-title db ref-uid))]
+    (when (or coerced-ref-uid coerced-relation coerced-ref-title)
+      (log/warn "Coercion required for" p))
+    (merge
+      {:relation (or coerced-relation relation)}
+      (if-let [title' (or coerced-ref-title ref-title)]
+        {:ref-title title'}
+        {:ref-uid (or coerced-ref-uid ref-uid)}))))
+
+
+(defn validate-position
+  [db {:keys [ref-uid ref-title] :as position}]
+  (let [ref-title->uid (get-page-uid db ref-title)
+        ref-uid->title (get-page-title db ref-uid)]
+    ;; Fail on error conditions.
+    (when-some [fail-msg (cond
+                           (and ref-uid ref-uid->title)
+                           "Location ref-uid is a page, location must use ref-title instead."
+
+                           ;; TODO: this could be idempotent instead and create the page.
+                           (and ref-title (not ref-title->uid))
+                           "Location ref-title does not exist."
+
+                           (and ref-uid (not (e-by-av db :block/uid ref-uid)))
+                           "Location ref-uid does not exist.")]
+      (throw (ex-info fail-msg position)))))
 
 
 (defn extract-tag-values
