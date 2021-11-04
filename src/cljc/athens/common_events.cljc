@@ -242,9 +242,6 @@
                      :target-order target-order}}))
 
 
-
-
-
 (defn build-unlinked-references-link
   "Builds `:datascript/unlinked-references-link` event with:
   - `uid`:  `:block/uid` of the block with unlinked reference

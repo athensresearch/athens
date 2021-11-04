@@ -210,7 +210,6 @@
                    child-1)))))))
 
 
-
 (t/deftest split-block-to-children-test
   (t/testing "Just splitting text, no link management involved"
     (let [parent-uid  "test-parent-1-uid"

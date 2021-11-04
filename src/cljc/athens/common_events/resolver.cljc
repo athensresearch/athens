@@ -238,7 +238,6 @@
     tx-data))
 
 
-
 (defmethod resolve-event-to-tx :datascript/page-add-shortcut
   [db {:event/keys [id type args]}]
   (let [{:keys [uid]}        args
