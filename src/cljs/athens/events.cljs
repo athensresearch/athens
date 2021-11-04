@@ -876,10 +876,10 @@
                         :or {add-time? false}
                         :as args}]]
     (log/debug ":enter/add-child args:" (pr-str args))
-    (let [event (common-events/build-add-child-event (:remote/last-seen-tx db)
-                                                     (:block/uid block)
-                                                     new-uid
-                                                     add-time?)]
+    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                  (atomic-graph-ops/make-block-new-op new-uid
+                                                                                      {:ref-uid  (:block/uid block)
+                                                                                       :relation :first}))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
@@ -1228,7 +1228,17 @@
     ;; NOTE: use of `value` is questionable, it's the DOM so it's what users sees,
     ;; but what users sees should taken from DB. How would `value` behave with multiple editors?
     (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
-          event                 (common-events/build-paste-verbatim-event (:remote/last-seen-tx db) uid text start value)]
+          block-empty? (string/blank? value)
+          block-start? (zero? start)
+          new-string   (cond
+                         block-empty?       text
+                         (and (not block-empty?)
+                              block-start?) (str text value)
+                         :else              (str (subs value 0 start)
+                                                 text
+                                                 (subs value start)))
+          op          (graph-ops/build-block-save-op @db/dsdb uid value new-string)
+          event       (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 

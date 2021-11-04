@@ -93,24 +93,6 @@
      :event/args    {:uid uid}}))
 
 
-;; TODO: Do we need `value` here? can't we discover it during event resolution?
-(defn build-paste-verbatim-event
-  "Builds `:datascript/paste-verbatim` evnt with:
-  - `uid`: of block that events applies to,
-  - `text`: string that was pasted,
-  - `start`: cursor position in block,
-  - `value`: previous value (?) of block"
-  [last-tx uid text start value]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/paste-verbatim
-     :event/args    {:uid   uid
-                     :text  text
-                     :start start
-                     :value value}}))
-
-
 ;;   - block events
 ;;     NOTE: `new-uid` is always passed from the caller,
 ;;           it would be safer to generate it during resolution
@@ -260,17 +242,7 @@
                      :target-order target-order}}))
 
 
-(defn build-bump-up-event
-  "Builds `:datascript/bump-up` event with:
-  - `uid`: `:block/uid` of trigerring block
-  - `new-uid`: new `:block/uid`"
-  [last-tx uid new-uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/bump-up
-     :event/args    {:uid     uid
-                     :new-uid new-uid}}))
+
 
 
 (defn build-unlinked-references-link

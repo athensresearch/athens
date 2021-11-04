@@ -238,49 +238,6 @@
     tx-data))
 
 
-(defmethod resolve-event-to-tx :datascript/bump-up
-  [db {:event/keys [id type args]}]
-  (let [{:keys [uid
-                new-uid]}          args
-        {block-order :block/order} (common-db/get-block db [:block/uid uid])
-        {parent-eid :db/id}        (common-db/get-parent db [:block/uid uid])
-        new-block                  {:db/id        -1
-                                    :block/order  block-order
-                                    :block/uid    new-uid
-                                    :block/open   true
-                                    :block/string ""}
-        reindex                    (concat [new-block]
-                                           (common-db/inc-after db
-                                                                parent-eid
-                                                                (dec block-order)))
-        tx-data                    [{:db/id          parent-eid
-                                     :block/children reindex}]]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
-(defmethod resolve-event-to-tx :datascript/paste-verbatim
-  [_db {:event/keys [id type args]}]
-  (let [{:keys [uid
-                text
-                start
-                value]} args
-        block-empty? (string/blank? value)
-        block-start? (zero? start)
-        new-string   (cond
-                       block-empty?       text
-                       (and (not block-empty?)
-                            block-start?) (str text value)
-                       :else              (str (subs value 0 start)
-                                               text
-                                               (subs value start)))
-        tx-data      [{:db/id        [:block/uid uid]
-                       :block/string new-string}]]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
 
 (defmethod resolve-event-to-tx :datascript/page-add-shortcut
   [db {:event/keys [id type args]}]
