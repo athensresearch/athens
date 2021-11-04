@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.31](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.30...v1.0.0-alpha.rtc.31) (2021-11-04)
+
+
+### Features
+
+* log resolve-transact! total time ([bda3449](https://github.com/athensresearch/athens/commit/bda34494c1b9fa9a4dff99866b7fdfbe6207bbb6))
+* remove page-uid, absolute block order use in protocol ([682c24d](https://github.com/athensresearch/athens/commit/682c24d717f19ebbf0b5a7a3c75b82f38af63aa7))
+
+
+### Bug Fixes
+
+* `:block/move` allowed to go places. ([bf2a17e](https://github.com/athensresearch/athens/commit/bf2a17efdaf2a4e85898a4b531273af4c443b2ea))
+* block internal state `drag-target` compatible with block move relative positioning. ([e8832e9](https://github.com/athensresearch/athens/commit/e8832e9ac42b3d8f246fadbdf9c29d58d54ebd58))
+* clear session list on reconnect ([114cdbc](https://github.com/athensresearch/athens/commit/114cdbcb941002b8d2c785d8867ef01528884003))
+* improve compat-position warning ([a529de4](https://github.com/athensresearch/athens/commit/a529de4ab2efd5544369565f45a3e762ccb48220))
+* improve logging for paste ([e337145](https://github.com/athensresearch/athens/commit/e33714548391060b67ce9b03b44fac89412fe83c))
+* last block on an empty page should not be 1 ([2322689](https://github.com/athensresearch/athens/commit/2322689995c06a94a078a5b27cfdaf93de6bde68))
+* position ref-uid is string ([6f3a898](https://github.com/athensresearch/athens/commit/6f3a898a60da16dc28e57ca277eaa424f2e03508))
+* style ([6f71e7a](https://github.com/athensresearch/athens/commit/6f71e7a0ffee0abf5f09f78a650d5a1ca0879446))
+* style fix. ([08dbf26](https://github.com/athensresearch/athens/commit/08dbf26d95475ca24ad298d2a8c3f8eaa486251a))
+
+
+### Refactors
+
+* faster page lookups ([74d7ecc](https://github.com/athensresearch/athens/commit/74d7ecc6745dfe546bb13c5b1e3dbf7b0ec6ca58))
+
+
+* all ([9159f48](https://github.com/athensresearch/athens/commit/9159f489e11f95a60226093eeed38c3b41e93cf4))
+
 ## [1.0.0-alpha.rtc.30](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.29...v1.0.0-alpha.rtc.30) (2021-11-02)
 
 
