@@ -876,10 +876,10 @@
                         :or {add-time? false}
                         :as args}]]
     (log/debug ":enter/add-child args:" (pr-str args))
-    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
-                                                  (atomic-graph-ops/make-block-new-op new-uid
-                                                                                      {:ref-uid  (:block/uid block)
-                                                                                       :relation :first}))]
+    (let [event (common-events/build-add-child-event (:remote/last-seen-tx db)
+                                                     (:block/uid block)
+                                                     new-uid
+                                                     add-time?)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
