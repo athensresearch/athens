@@ -1,14 +1,16 @@
 (ns athens.common.utils
   "Athens Common Utilities.
   Shared between CLJ and CLJS."
-  #?(:cljs (:require-macros [athens.common.utils]))
+  #?(:cljs
+     (:require-macros
+       [athens.common.utils]))
   #?(:clj
      (:import
+       (java.time
+         LocalDateTime)
        (java.util
          Date
-         UUID)
-       (java.time
-        LocalDateTime))))
+         UUID))))
 
 
 (defn now-ts

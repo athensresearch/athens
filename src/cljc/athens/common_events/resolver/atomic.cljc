@@ -337,13 +337,13 @@
   [conn {:event/keys [id] :as event}]
   (log/debug "resolve-transact! event-id:" (pr-str id))
   (utils/log-time
-   (str "resolve-transact! event-id: " (pr-str id) " took")
-   (if (graph-ops/atomic-composite? event)
-     (doseq [atomic (graph-ops/extract-atomics event)
-             :let   [_ (log/debug "resolve-transact! atomic:" (with-out-str (pp/pprint atomic)))
-                     atomic-txs (resolve-to-tx @conn atomic)]]
-       (log/debug "resolve-transact! atomic-txs:" (with-out-str (pp/pprint atomic-txs)))
-       (common-db/transact-with-middleware! conn atomic-txs))
-     (let [txs (resolve-to-tx @conn event)]
-       (log/debug "resolve-transact! txs:" (with-out-str (pp/pprint txs)))
-       (common-db/transact-with-middleware! conn txs)))))
+    (str "resolve-transact! event-id: " (pr-str id) " took")
+    (if (graph-ops/atomic-composite? event)
+      (doseq [atomic (graph-ops/extract-atomics event)
+              :let   [_ (log/debug "resolve-transact! atomic:" (with-out-str (pp/pprint atomic)))
+                      atomic-txs (resolve-to-tx @conn atomic)]]
+        (log/debug "resolve-transact! atomic-txs:" (with-out-str (pp/pprint atomic-txs)))
+        (common-db/transact-with-middleware! conn atomic-txs))
+      (let [txs (resolve-to-tx @conn event)]
+        (log/debug "resolve-transact! txs:" (with-out-str (pp/pprint txs)))
+        (common-db/transact-with-middleware! conn txs)))))

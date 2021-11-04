@@ -462,10 +462,10 @@
                              (get-page-title db ref-uid))
         new-pos            (when (or coerced-ref-uid coerced-relation coerced-ref-title)
                              (merge
-                              {:relation (or coerced-relation relation)}
-                              (if-let [title' (or coerced-ref-title ref-title)]
-                                {:ref-title title'}
-                                {:ref-uid (or coerced-ref-uid ref-uid)})))]
+                               {:relation (or coerced-relation relation)}
+                               (if-let [title' (or coerced-ref-title ref-title)]
+                                 {:ref-title title'}
+                                 {:ref-uid (or coerced-ref-uid ref-uid)})))]
 
     (when new-pos
       (log/warn "compat-position: coercion required for" (pr-str pos) "to" (pr-str new-pos)))
