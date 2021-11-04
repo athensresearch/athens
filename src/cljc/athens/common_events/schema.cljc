@@ -296,14 +296,6 @@
      [:value string?]]]])
 
 
-(def datascript-bump-up
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:new-uid string?]]]])
-
-
 (def graph-ops-atomic
   [:map
    [:event/op graph-schema/atomic-op]])
