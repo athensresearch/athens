@@ -445,7 +445,7 @@
   ref-uid to a page will instead use that page's title as ref-title.
   Integer relation will be converted to :first if 0, or :after (with matching ref-uid) if not.
   Warns when coercion was required."
-  [db {:keys [relation ref-uid ref-title] :as p}]
+  [db {:keys [relation ref-uid ref-title] :as pos}]
   (let [[coerced-ref-uid
          coerced-relation] (when (integer? relation)
                              (if (= relation 0)
@@ -459,14 +459,17 @@
         coerced-ref-title  (when (and (not ref-title)
                                       (not coerced-ref-uid)
                                       ref-uid)
-                             (get-page-title db ref-uid))]
-    (when (or coerced-ref-uid coerced-relation coerced-ref-title)
-      (log/warn "compat-position: coercion required for" (pr-str p)))
-    (merge
-      {:relation (or coerced-relation relation)}
-      (if-let [title' (or coerced-ref-title ref-title)]
-        {:ref-title title'}
-        {:ref-uid (or coerced-ref-uid ref-uid)}))))
+                             (get-page-title db ref-uid))
+        new-pos            (when (or coerced-ref-uid coerced-relation coerced-ref-title)
+                             (merge
+                              {:relation (or coerced-relation relation)}
+                              (if-let [title' (or coerced-ref-title ref-title)]
+                                {:ref-title title'}
+                                {:ref-uid (or coerced-ref-uid ref-uid)})))]
+
+    (when new-pos
+      (log/warn "compat-position: coercion required for" (pr-str pos) "to" (pr-str new-pos)))
+    (or new-pos pos)))
 
 
 (defn validate-position
