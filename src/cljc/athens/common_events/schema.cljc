@@ -40,10 +40,8 @@
    :datascript/unlinked-references-link-all
    :datascript/selected-delete
    :datascript/block-open
-   :datascript/paste-verbatim
    :datascript/delete-only-child
    :datascript/delete-merge-block
-   :datascript/bump-up
    :datascript/paste-internal])
 
 
@@ -217,16 +215,6 @@
      [:internal-representation [:vector map?]]]]])
 
 
-(def datascript-paste-verbatim
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:text string?]
-     [:start nat-int?]
-     [:value string?]]]])
-
-
 (def datascript-page-add-shortcut
   [:map
    [:event/args
@@ -308,14 +296,6 @@
      [:value string?]]]])
 
 
-(def datascript-bump-up
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:new-uid string?]]]])
-
-
 (def graph-ops-atomic
   [:map
    [:event/op graph-schema/atomic-op]])
@@ -337,7 +317,6 @@
    (dispatch :datascript/split-block datascript-split-block)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/split-block-to-children datascript-split-block)
-   (dispatch :datascript/paste-verbatim datascript-paste-verbatim)
    (dispatch :datascript/paste-internal datascript-paste-internal)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
@@ -347,7 +326,6 @@
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)
    (dispatch :datascript/delete-only-child datascript-delete-only-child)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block)
-   (dispatch :datascript/bump-up datascript-bump-up)
    (dispatch :datascript/block-open datascript-block-open)
    (dispatch :datascript/selected-delete datascript-selected-delete)
    (dispatch :op/atomic graph-ops-atomic)])
@@ -436,7 +414,6 @@
    (dispatch :datascript/split-block datascript-split-block true)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/split-block-to-children datascript-split-block true)
-   (dispatch :datascript/paste-verbatim datascript-paste-verbatim true)
    (dispatch :datascript/paste-internal datascript-paste-internal true)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)
@@ -446,7 +423,6 @@
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all true)
    (dispatch :datascript/delete-only-child datascript-delete-only-child true)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block true)
-   (dispatch :datascript/bump-up datascript-bump-up true)
    (dispatch :datascript/block-open datascript-block-open true)
    (dispatch :datascript/selected-delete datascript-selected-delete true)
 
