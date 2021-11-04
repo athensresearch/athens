@@ -363,6 +363,7 @@
   (log/info "WSClient Disconnected:" event)
   (let [connection (.-target event)
         url        (.-url connection)]
+    (rf/dispatch [:presence/clear])
     (rf/dispatch [:conn-status :reconnecting])
     (remove-listeners! connection)
     (delayed-reconnect! url)))
