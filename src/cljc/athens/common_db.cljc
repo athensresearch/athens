@@ -186,13 +186,9 @@
 (defn get-page-uid
   "Finds page `:block/uid` by `page-title`."
   [db page-title]
-  (d/q '[:find ?uid .
-         :in $ ?title
-         :where
-         [?eid :node/title ?title]
-         [?eid :block/uid ?uid]]
-       db
-       page-title))
+  (-> db
+      (d/entity [:node/title page-title])
+      :block/uid))
 
 
 (defn existing-block-count
@@ -302,12 +298,9 @@
 
 (defn get-page-title
   [db uid]
-  (d/q '[:find ?title .
-         :in $ ?uid
-         :where
-         [?e :block/uid ?uid]
-         [?e :note/title ?title]]
-       db uid))
+  (-> db
+      (d/entity [:block/uid uid])
+      :node/title))
 
 
 (defn deepest-child-block
