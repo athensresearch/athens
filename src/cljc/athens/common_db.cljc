@@ -576,6 +576,14 @@
     [eid value]))
 
 
+(defn find-page-links
+  [s]
+  (->> (string->lookup-refs s)
+       (filter #(= :node/title (first %)))
+       (map second)
+       (into #{})))
+
+
 (defn linkmaker-error-handler
   [e input-tx]
   (log/error e "❌ Linkmaker failure.")
