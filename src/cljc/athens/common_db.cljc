@@ -468,7 +468,7 @@
                                       ref-uid)
                              (get-page-title db ref-uid))]
     (when (or coerced-ref-uid coerced-relation coerced-ref-title)
-      (log/warn "Coercion required for" p))
+      (log/warn "compat-position: coercion required for" (pr-str p)))
     (merge
       {:relation (or coerced-relation relation)}
       (if-let [title' (or coerced-ref-title ref-title)]
@@ -487,10 +487,10 @@
 
                            ;; TODO: this could be idempotent instead and create the page.
                            (and ref-title (not ref-title->uid))
-                           "Location ref-title does not exist."
+                           (str "Location ref-title does not exist:" ref-title)
 
                            (and ref-uid (not (e-by-av db :block/uid ref-uid)))
-                           "Location ref-uid does not exist.")]
+                           (str "Location ref-uid does not exist:" ref-uid))]
       (throw (ex-info fail-msg position)))))
 
 
