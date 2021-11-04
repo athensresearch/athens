@@ -1219,7 +1219,7 @@
                                      uid
                                      internal-representation)
           event  (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
-      (log/debug "paste internal event is" event)
+      (log/debug "paste internal event is" (pr-str event))
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 

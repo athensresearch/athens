@@ -186,13 +186,9 @@
 (defn get-page-uid
   "Finds page `:block/uid` by `page-title`."
   [db page-title]
-  (d/q '[:find ?uid .
-         :in $ ?title
-         :where
-         [?eid :node/title ?title]
-         [?eid :block/uid ?uid]]
-       db
-       page-title))
+  (-> db
+      (d/entity [:node/title page-title])
+      :block/uid))
 
 
 (defn existing-block-count
@@ -302,12 +298,9 @@
 
 (defn get-page-title
   [db uid]
-  (d/q '[:find ?title .
-         :in $ ?uid
-         :where
-         [?e :block/uid ?uid]
-         [?e :note/title ?title]]
-       db uid))
+  (-> db
+      (d/entity [:block/uid uid])
+      :node/title))
 
 
 (defn deepest-child-block
@@ -452,7 +445,7 @@
   ref-uid to a page will instead use that page's title as ref-title.
   Integer relation will be converted to :first if 0, or :after (with matching ref-uid) if not.
   Warns when coercion was required."
-  [db {:keys [relation ref-uid ref-title] :as p}]
+  [db {:keys [relation ref-uid ref-title] :as pos}]
   (let [[coerced-ref-uid
          coerced-relation] (when (integer? relation)
                              (if (= relation 0)
@@ -466,14 +459,17 @@
         coerced-ref-title  (when (and (not ref-title)
                                       (not coerced-ref-uid)
                                       ref-uid)
-                             (get-page-title db ref-uid))]
-    (when (or coerced-ref-uid coerced-relation coerced-ref-title)
-      (log/warn "Coercion required for" p))
-    (merge
-      {:relation (or coerced-relation relation)}
-      (if-let [title' (or coerced-ref-title ref-title)]
-        {:ref-title title'}
-        {:ref-uid (or coerced-ref-uid ref-uid)}))))
+                             (get-page-title db ref-uid))
+        new-pos            (when (or coerced-ref-uid coerced-relation coerced-ref-title)
+                             (merge
+                               {:relation (or coerced-relation relation)}
+                               (if-let [title' (or coerced-ref-title ref-title)]
+                                 {:ref-title title'}
+                                 {:ref-uid (or coerced-ref-uid ref-uid)})))]
+
+    (when new-pos
+      (log/warn "compat-position: coercion required for" (pr-str pos) "to" (pr-str new-pos)))
+    (or new-pos pos)))
 
 
 (defn validate-position
@@ -487,10 +483,10 @@
 
                            ;; TODO: this could be idempotent instead and create the page.
                            (and ref-title (not ref-title->uid))
-                           "Location ref-title does not exist."
+                           (str "Location ref-title does not exist:" ref-title)
 
                            (and ref-uid (not (e-by-av db :block/uid ref-uid)))
-                           "Location ref-uid does not exist.")]
+                           (str "Location ref-uid does not exist:" ref-uid))]
       (throw (ex-info fail-msg position)))))
 
 
@@ -578,6 +574,14 @@
   [[eid attr value _time added?]]
   (when (and added? (#{:block/string :node/title} attr))
     [eid value]))
+
+
+(defn find-page-links
+  [s]
+  (->> (string->lookup-refs s)
+       (filter #(= :node/title (first %)))
+       (map second)
+       (into #{})))
 
 
 (defn linkmaker-error-handler
