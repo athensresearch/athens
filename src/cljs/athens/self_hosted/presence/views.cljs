@@ -68,7 +68,6 @@
                 (let [current-user'          (user->person @current-user)
                       current-page-members   (others-seq @same-page)
                       different-page-members (others-seq @diff-page)]
-                  (println current-page-members different-page-members)
                   [:> PresenceDetails {:current-user              current-user'
                                        :current-page-members      current-page-members
                                        :different-page-members    different-page-members
