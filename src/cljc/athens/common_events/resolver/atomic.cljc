@@ -39,11 +39,12 @@
         parent-block-exists?            (int? (common-db/e-by-av db :block/uid parent-block-uid))
         new-block-order                 (condp = relation
                                           :first  0
-                                          :last   (->> parent-block
-                                                       :block/children
-                                                       (map :block/order)
-                                                       (reduce max 0)
-                                                       inc)
+                                          :last   (if-let [parent-block-children (:block/children parent-block)]
+                                                    (->> parent-block-children
+                                                         (map :block/order)
+                                                         (reduce max 0)
+                                                         inc)
+                                                    0)
                                           :before (:block/order ref-block)
                                           :after  (inc (:block/order ref-block)))
         now                             (utils/now-ts)
@@ -115,11 +116,12 @@
         up?                                     (< ref-block-order old-block-order)
         new-block-order                         (condp = relation
                                                   :first  0
-                                                  :last   (->> new-parent-block
-                                                               :block/children
-                                                               (map :block/order)
-                                                               (reduce max 0)
-                                                               inc)
+                                                  :last   (if-let [parent-block-children (:block/children new-parent-block)]
+                                                            (->> parent-block-children
+                                                                 (map :block/order)
+                                                                 (reduce max 0)
+                                                                 inc)
+                                                            0)
                                                   :before (cond
                                                             ;; it replaces ref block
                                                             (not same-parent?) ref-block-order
