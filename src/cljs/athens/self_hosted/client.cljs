@@ -295,10 +295,8 @@
     :datascript/unlinked-references-link-all
     :datascript/selected-delete
     :datascript/block-open
-    :datascript/paste-verbatim
     :datascript/delete-only-child
     :datascript/delete-merge-block
-    :datascript/bump-up
     :datascript/paste-internal
 
     :op/atomic})
@@ -363,6 +361,7 @@
   (log/info "WSClient Disconnected:" event)
   (let [connection (.-target event)
         url        (.-url connection)]
+    (rf/dispatch [:presence/clear])
     (rf/dispatch [:conn-status :reconnecting])
     (remove-listeners! connection)
     (delayed-reconnect! url)))
@@ -424,15 +423,6 @@
           :event/type    :presence/hello
           :event/args    {:username "Bob's your uncle"}})
   ;; => {:result :sent}
-
-  ;; send a `:datascript/paste-verbatim` event
-  (send! {:event/id      "test-id2"
-          :event/last-tx 1
-          :event/type    :datascript/paste-verbatim
-          :event/args    {:uid   "invalid-uid"
-                          :text  "pasted text"
-                          :start 0
-                          :value ""}})
 
   ;; test atomic op
   (send! {:event/id (random-uuid)

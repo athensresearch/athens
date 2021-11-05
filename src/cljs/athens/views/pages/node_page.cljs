@@ -171,8 +171,7 @@
         parent-block          (db/get-block [:block/uid parent-uid])]
     (dispatch [:enter/add-child {:block     parent-block
                                  :new-uid   new-uid
-                                 :embed-id  embed-id
-                                 :add-time? true}])
+                                 :embed-id  embed-id}])
     (dispatch [:editing/uid new-uid])))
 
 

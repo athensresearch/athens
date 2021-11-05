@@ -39,11 +39,12 @@
         parent-block-exists?            (int? (common-db/e-by-av db :block/uid parent-block-uid))
         new-block-order                 (condp = relation
                                           :first  0
-                                          :last   (->> parent-block
-                                                       :block/children
-                                                       (map :block/order)
-                                                       (reduce max 0)
-                                                       inc)
+                                          :last   (if-let [parent-block-children (:block/children parent-block)]
+                                                    (->> parent-block-children
+                                                         (map :block/order)
+                                                         (reduce max 0)
+                                                         inc)
+                                                    0)
                                           :before (:block/order ref-block)
                                           :after  (inc (:block/order ref-block)))
         now                             (utils/now-ts)
@@ -115,11 +116,12 @@
         up?                                     (< ref-block-order old-block-order)
         new-block-order                         (condp = relation
                                                   :first  0
-                                                  :last   (->> new-parent-block
-                                                               :block/children
-                                                               (map :block/order)
-                                                               (reduce max 0)
-                                                               inc)
+                                                  :last   (if-let [parent-block-children (:block/children new-parent-block)]
+                                                            (->> parent-block-children
+                                                                 (map :block/order)
+                                                                 (reduce max 0)
+                                                                 inc)
+                                                            0)
                                                   :before (cond
                                                             ;; it replaces ref block
                                                             (not same-parent?) ref-block-order
@@ -334,12 +336,14 @@
   "Iteratively resolve and transact event."
   [conn {:event/keys [id] :as event}]
   (log/debug "resolve-transact! event-id:" (pr-str id))
-  (if (graph-ops/atomic-composite? event)
-    (doseq [atomic (graph-ops/extract-atomics event)
-            :let   [_ (log/debug "resolve-transact! atomic:" (with-out-str (pp/pprint atomic)))
-                    atomic-txs (resolve-to-tx @conn atomic)]]
-      (log/debug "resolve-transact! atomic-txs:" (with-out-str (pp/pprint atomic-txs)))
-      (common-db/transact-with-middleware! conn atomic-txs))
-    (let [txs (resolve-to-tx @conn event)]
-      (log/debug "resolve-transact! txs:" (with-out-str (pp/pprint txs)))
-      (common-db/transact-with-middleware! conn txs))))
+  (utils/log-time
+    (str "resolve-transact! event-id: " (pr-str id) " took")
+    (if (graph-ops/atomic-composite? event)
+      (doseq [atomic (graph-ops/extract-atomics event)
+              :let   [_ (log/debug "resolve-transact! atomic:" (with-out-str (pp/pprint atomic)))
+                      atomic-txs (resolve-to-tx @conn atomic)]]
+        (log/debug "resolve-transact! atomic-txs:" (with-out-str (pp/pprint atomic-txs)))
+        (common-db/transact-with-middleware! conn atomic-txs))
+      (let [txs (resolve-to-tx @conn event)]
+        (log/debug "resolve-transact! txs:" (with-out-str (pp/pprint txs)))
+        (common-db/transact-with-middleware! conn txs)))))

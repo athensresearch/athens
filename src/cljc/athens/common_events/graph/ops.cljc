@@ -4,7 +4,6 @@
     [athens.common-db                     :as common-db]
     [athens.common-events.graph.atomic    :as atomic]
     [athens.common-events.graph.composite :as composite]
-    [athens.common.utils                  :as utils]
     [clojure.set                          :as set]))
 
 
@@ -28,8 +27,8 @@
   "Creates `:block/save` op, taking into account context.
   So it might be a composite or atomic event, depending if new page link is present and if pages exist."
   [db block-uid old-string new-string]
-  (let [links-in-old    (utils/find-page-links old-string)
-        links-in-new    (utils/find-page-links new-string)
+  (let [links-in-old    (common-db/find-page-links old-string)
+        links-in-new    (common-db/find-page-links new-string)
         link-diff       (set/difference links-in-new links-in-old)
         new-page-titles (remove #(seq (common-db/get-page-uid db %))
                                 link-diff)
