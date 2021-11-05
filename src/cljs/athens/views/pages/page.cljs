@@ -14,7 +14,7 @@
         page-eid (common-db/e-by-av @db/dsdb :node/title @title)]
     (if (int? page-eid)
       [node-page/page page-eid]
-      [:h3 "404: This page doesn't exist"])))
+      [:h3 (str "404: Page with title '" @title "' doesn't exist")])))
 
 
 (defn page
