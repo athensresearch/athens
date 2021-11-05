@@ -38,7 +38,6 @@
    :datascript/unlinked-references-link
    :datascript/unlinked-references-link-all
    :datascript/selected-delete
-   :datascript/block-open
    :datascript/delete-only-child
    :datascript/delete-merge-block
    :datascript/paste-internal])
@@ -324,7 +323,6 @@
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)
    (dispatch :datascript/delete-only-child datascript-delete-only-child)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block)
-   (dispatch :datascript/block-open datascript-block-open)
    (dispatch :datascript/selected-delete datascript-selected-delete)
    (dispatch :op/atomic graph-ops-atomic)])
 
@@ -420,7 +418,6 @@
    (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all true)
    (dispatch :datascript/delete-only-child datascript-delete-only-child true)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block true)
-   (dispatch :datascript/block-open datascript-block-open true)
    (dispatch :datascript/selected-delete datascript-selected-delete true)
 
    ;; server specific graph events

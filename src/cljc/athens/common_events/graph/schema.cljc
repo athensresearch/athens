@@ -9,7 +9,7 @@
   [:enum
    :block/new ; ✓
    :block/save ; ✓
-   :block/open
+   :block/open ; ✓
    :block/remove ; ✓
    :block/move ; ✓
    :page/new ; ✓
@@ -73,6 +73,14 @@
      [:old-string string?]]]])
 
 
+(def op-block-open
+  [:map
+   [:op/args
+    [:map
+     [:block-uid string?]
+     [:open? boolean?]]]])
+
+
 (def op-block-remove
   [:map
    [:op/args
@@ -105,6 +113,9 @@
                      [:block/save (mu/merge
                                     op-type-atomic-common
                                     op-block-save)]
+                     [:block/open (mu/merge
+                                    op-type-atomic-common
+                                    op-block-open)]
                      [:block/remove (mu/merge
                                       op-type-atomic-common
                                       op-block-remove)]

@@ -22,7 +22,7 @@
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [goog.dom :refer [getElement]]
-    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [re-frame.core :as rf  :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -1271,12 +1271,11 @@
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
-(reg-event-fx
+(rf/reg-event-fx
   :block/open
   (fn [{:keys [db]} [_ {:keys [block-uid open?] :as args}]]
     (log/debug ":block/open args" args)
-    (let [event (common-events/build-block-open-event (:remote/last-seen-tx db)
-                                                      block-uid
-                                                      open?)]
+    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                  (atomic-graph-ops/make-block-open-op block-uid open?))]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
