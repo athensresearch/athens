@@ -39,7 +39,8 @@
                                                                  :new-block-uid child-2-uid
                                                                  :old-string    start-str
                                                                  :new-string    new-tmp-string
-                                                                 :index         2})
+                                                                 :index         2
+                                                                 :relation      :after})
             block-split-atomics (graph-ops/extract-atomics block-split-op)]
         (doseq [atomic-op block-split-atomics
                 :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
@@ -91,7 +92,8 @@
                                                                    :new-block-uid child-3-uid
                                                                    :old-string    start-str
                                                                    :new-string    start-str
-                                                                   :index         2})
+                                                                   :index         2
+                                                                   :relation      :after})
               block-split-atomics (graph-ops/extract-atomics block-split-op)]
           (doseq [atomic-op block-split-atomics
                   :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
@@ -110,4 +112,61 @@
             (t/is (= 0 (-> old-1-block :block/order)))
             (t/is (= 1 (-> new-block :block/order)))
             (t/is (= 2 (-> old-2-block :block/order)))))))))
+
+
+(t/deftest block-split-to-child-test
+  (t/testing "`:block/split` add splitted block as first child with re-indexing 🪄"
+    (let [page-1-uid  "page-3-uid"
+          child-1-uid "child-3-1-uid"
+          child-2-uid "child-3-2-uid"
+          child-3-uid "child-3-3-uid"
+          start-str   "a-o-k"
+          new-str     "o-k"
+          setup-txs   [{:block/uid      page-1-uid
+                        :node/title     "test page 2"
+                        :block/children [{:block/uid      child-1-uid
+                                          :block/string   start-str
+                                          :block/order    0
+                                          :block/children []}
+                                         {:block/uid      child-2-uid
+                                          :block/string   ""
+                                          :block/order    1
+                                          :block/children []}]}]]
+      (fixture/transact-with-middleware setup-txs)
+      (let [page (common-db/get-block @@fixture/connection [:block/uid page-1-uid])]
+        (t/is (nil? (common-db/e-by-av @@fixture/connection
+                                       :block/uid
+                                       child-3-uid))
+              "Should not have 3rd child before block split.")
+        (t/is (= 2 (-> page
+                       :block/children
+                       count))
+              "Page should have only 2 children block after setup.")
+        (let [block-split-op      (graph-ops/build-block-split-op @@fixture/connection
+                                                                  {:old-block-uid child-1-uid
+                                                                   :new-block-uid child-3-uid
+                                                                   :old-string    start-str
+                                                                   :new-string    start-str
+                                                                   :index         2
+                                                                   :relation      :first})
+              block-split-atomics (graph-ops/extract-atomics block-split-op)]
+          (doseq [atomic-op block-split-atomics
+                  :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+            (fixture/transact-with-middleware atomic-txs))
+          (let [page        (common-db/get-block @@fixture/connection [:block/uid page-1-uid])
+                old-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
+                old-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])
+                new-block   (common-db/get-block @@fixture/connection [:block/uid child-3-uid])]
+            (t/is (= 2 (-> page :block/children count))
+                  "Page should have 2 children after block split")
+            (t/is (= 1 (-> old-1-block :block/children count))
+                  "old-1-block should have 1 child after block split")
+            ;; `:block/string` tests
+            (t/is (= "a-" (-> old-1-block :block/string)))
+            (t/is (= "" (-> old-2-block :block/string)))
+            (t/is (= new-str (-> new-block :block/string)))
+            ;; `:block/order' tests`
+            (t/is (= 0 (-> old-1-block :block/order)))
+            (t/is (= 0 (-> new-block :block/order)))
+            (t/is (= 1 (-> old-2-block :block/order)))))))))
 

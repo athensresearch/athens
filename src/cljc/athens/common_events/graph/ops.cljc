@@ -48,13 +48,14 @@
 (defn build-block-split-op
   "Creates `:block/split` composite op, taking into account context."
   [db {:keys [old-block-uid new-block-uid
-              old-string new-string index]}]
+              old-string new-string index
+              relation]}]
   (let [save-block-op     (build-block-save-op db
                                                old-block-uid
                                                old-string
                                                (subs new-string 0 index))
         new-block-op      (atomic/make-block-new-op new-block-uid {:ref-uid old-block-uid
-                                                                   :relation :after})
+                                                                   :relation relation})
         new-block-save-op (build-block-save-op db
                                                new-block-uid
                                                ""
