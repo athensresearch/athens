@@ -22,8 +22,6 @@
     :datascript/page-remove-shortcut
     :datascript/left-sidebar-drop-above
     :datascript/left-sidebar-drop-below
-    :datascript/unlinked-references-link
-    :datascript/unlinked-references-link-all
     :datascript/selected-delete
     :datascript/block-open
     :datascript/delete-only-child

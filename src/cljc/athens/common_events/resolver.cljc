@@ -389,31 +389,6 @@
       true (concat [[:db/add "new" :from-undo-redo true]]))))
 
 
-(defmethod resolve-event-to-tx :datascript/unlinked-references-link
-  [_ {:event/keys [id type args]}]
-  (let [{:keys [uid string title]} args
-        ignore-case-title          (re-pattern (str "(?i)" title))
-        new-str                    (string/replace string ignore-case-title (str "[[" title "]]"))
-        tx-data                    [{:db/id [:block/uid uid] :block/string new-str}]]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
-(defmethod resolve-event-to-tx :datascript/unlinked-references-link-all
-  [_ {:event/keys [id type args]}]
-  (let [{:keys [unlinked-refs title]} args
-        tx-data (mapv
-                  (fn [{:block/keys [string uid]}]
-                    (let [ignore-case-title (re-pattern (str "(?i)" title))
-                          new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
-                      {:db/id [:block/uid uid] :block/string new-str}))
-                  unlinked-refs)]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
 (defmethod resolve-event-to-tx :datascript/block-open
   [_db {:event/keys [id type args]}]
   (let [{:keys [block-uid
