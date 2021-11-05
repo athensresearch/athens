@@ -182,11 +182,9 @@
         block-page            (.. e -target (closest ".block-page"))
         [uid embed-id]        (common-db/uid-and-embed-id uid)
         new-uid               (utils/gen-block-uid)
-        string                (:block/string (db/get-block [:block/uid uid]))
         {:keys [start value]} (textarea-keydown/destruct-key-down e)]
     (cond
       block-page (dispatch [:enter/split-block {:uid        uid
-                                                :old-string string
                                                 :value      value
                                                 :index      start
                                                 :new-uid    new-uid

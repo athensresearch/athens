@@ -822,7 +822,7 @@
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
           do-nothing? (or (not block-eid)
                           (= old-string new-string))
-          op          (graph-ops/build-block-save-op @db/dsdb uid old-string new-string)
+          op          (graph-ops/build-block-save-op @db/dsdb uid new-string)
           event       (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       (log/debug ":block/save local?" local?
                  ", do-nothing?" do-nothing?)
@@ -894,15 +894,14 @@
 
 (reg-event-fx
   :enter/split-block
-  (fn [{:keys [db]} [_ {:keys [uid new-uid old-string value index embed-id relation] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
     (let [op    (graph-ops/build-block-split-op @db/dsdb
-                                                {:old-block-uid   uid
-                                                 :new-block-uid   new-uid
-                                                 :old-string      old-string
-                                                 :new-string      value
-                                                 :index           index
-                                                 :relation        relation})
+                                                {:old-block-uid uid
+                                                 :new-block-uid new-uid
+                                                 :string        value
+                                                 :index         index
+                                                 :relation      relation})
           event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
@@ -951,8 +950,7 @@
                                          (.getAttribute "data-uid"))
                                  uid)
         [uid embed-id]        (db/uid-and-embed-id uid)
-        {:block/keys [string]
-         :as         block}   (db/get-block [:block/uid uid])
+        block                 (db/get-block [:block/uid uid])
         {parent-uid :block/uid
          :as        parent}   (db/get-parent [:block/uid uid])
         is-parent-root-embed? (= (some-> d-key-down :target
@@ -998,7 +996,6 @@
                                      embed-id root-embed?
                                      (not= start (count value)))
                                 [:enter/split-block {:uid        uid
-                                                     :old-string string
                                                      :value      value
                                                      :index      start
                                                      :new-uid    new-uid
@@ -1019,7 +1016,6 @@
 
                                 (not (zero? start))
                                 [:enter/split-block {:uid        uid
-                                                     :old-string string
                                                      :value      value
                                                      :index      start
                                                      :new-uid    new-uid
@@ -1181,7 +1177,6 @@
                                                                                                                                  {:ref-uid target-uid
                                                                                                                                   :relation target-rel})
                                                                                              (atomic-graph-ops/make-block-save-op block-uid
-                                                                                                                                  ""
                                                                                                                                   (str "((" source-uid "))"))]))]
       {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
 
@@ -1250,7 +1245,7 @@
                          :else              (str (subs value 0 start)
                                                  text
                                                  (subs value start)))
-          op          (graph-ops/build-block-save-op @db/dsdb uid value new-string)
+          op          (graph-ops/build-block-save-op @db/dsdb uid new-string)
           event       (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 

@@ -41,17 +41,17 @@
                  :trigger #:op{:type :block/save},
                  :consequences
                  [#:op{:type :page/new, :atomic? true, :args {:title "Welcome"}}
-                  #:op{:type :block/save, :atomic? true, :args {:block-uid "block-1", :old-string "", :new-string "block with link to [[Welcome]]"}}]}]
+                  #:op{:type :block/save, :atomic? true, :args {:block-uid "block-1", :string "block with link to [[Welcome]]"}}]}]
            (bfs/internal-representation->atomic-ops db tree-with-pages nil)))
 
     (is (= [#:op{:type :block/new, :atomic? true, :args {:block-uid "eaa4c9435", :position {:ref-title "title", :relation :first}}}
-            #:op{:type :block/save, :atomic? true, :args {:block-uid "eaa4c9435", :old-string "", :new-string "block 1"}}
+            #:op{:type :block/save, :atomic? true, :args {:block-uid "eaa4c9435", :string "block 1"}}
             #:op{:type :block/new, :atomic? true, :args {:block-uid "88c9ff662", :position {:ref-uid "eaa4c9435", :relation :last}}}
-            #:op{:type :block/save, :atomic? true, :args {:block-uid "88c9ff662", :old-string "", :new-string "B1 C1"}}
+            #:op{:type :block/save, :atomic? true, :args {:block-uid "88c9ff662", :string "B1 C1"}}
             #:op{:type :block/new, :atomic? true, :args {:block-uid "7d11d532f", :position {:ref-uid "88c9ff662", :relation :after}}}
-            #:op{:type :block/save, :atomic? true, :args {:block-uid "7d11d532f", :old-string "", :new-string "B1 C2"}}
+            #:op{:type :block/save, :atomic? true, :args {:block-uid "7d11d532f", :string "B1 C2"}}
             #:op{:type :block/new, :atomic? true, :args {:block-uid "db5fa9a43", :position {:ref-uid "7d11d532f", :relation :last}}}
-            #:op{:type :block/save, :atomic? true, :args {:block-uid "db5fa9a43", :old-string "", :new-string "B1 C2 C1"}}]
+            #:op{:type :block/save, :atomic? true, :args {:block-uid "db5fa9a43", :string "B1 C2 C1"}}]
            (bfs/internal-representation->atomic-ops db tree-without-page {:ref-title "title" :relation :first})))))
 
 
