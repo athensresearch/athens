@@ -36,7 +36,7 @@
   ;;   configuration mgmt
   yogthos/config                        #:mvn{:version "1.1.7"}
   ;;   Fluree
-  com.fluree/db                         #:mvn{:version "1.0.0-rc30"}
+  com.fluree/db                         #:mvn{:version "1.0.0-rc33"}
   ;; web server
   http-kit/http-kit                     #:mvn{:version "2.5.3"}
   compojure/compojure                   #:mvn{:version "1.6.2"}
@@ -93,6 +93,4 @@
 
   :athens
   {:extra-paths ["dev/clj"]
-   :main-opts   ["-m" "athens.self-hosted.core"]
-   ;; Workaround for https://github.com/fluree/db/issues/125
-   :jvm-opts    ["-Dorg.asynchttpclient.webSocketMaxFrameSize=10000000"]}}}
+   :main-opts   ["-m" "athens.self-hosted.core"]}}}
