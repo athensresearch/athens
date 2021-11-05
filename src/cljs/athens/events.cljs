@@ -872,14 +872,12 @@
 
 (reg-event-fx
   :enter/add-child
-  (fn [{:keys [db]} [_ {:keys [block new-uid embed-id add-time?]
-                        :or {add-time? false}
-                        :as args}]]
+  (fn [{:keys [db]} [_ {:keys [block new-uid embed-id] :as args}]]
     (log/debug ":enter/add-child args:" (pr-str args))
-    (let [event (common-events/build-add-child-event (:remote/last-seen-tx db)
-                                                     (:block/uid block)
-                                                     new-uid
-                                                     add-time?)]
+    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                  (atomic-graph-ops/make-block-new-op new-uid
+                                                                                      {:ref-uid  (:block/uid block)
+                                                                                       :relation :first}))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
