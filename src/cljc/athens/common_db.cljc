@@ -414,15 +414,6 @@
        (mapv #(d/pull db '[:db/id :node/title :block/uid :block/string] %))))
 
 
-(defn get-data
-  [db pattern]
-  (->> pattern
-       (get-ref-ids db)
-       (merge-parents-and-block db)
-       group-by-parent
-       seq))
-
-
 (defn get-all-pages
   [db]
   (->> (d/q '[:find [?e ...]
