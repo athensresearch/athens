@@ -1,22 +1,20 @@
 (ns athens.views.pages.page
   (:require
-    [athens.db :as db]
+    [athens.common-db              :as common-db]
+    [athens.db                     :as db]
     [athens.views.pages.block-page :as block-page]
-    [athens.views.pages.node-page :as node-page]
-    [posh.reagent :refer [pull]]
-    [re-frame.core :as rf]))
+    [athens.views.pages.node-page  :as node-page]
+    [posh.reagent                  :refer [pull]]
+    [re-frame.core                 :as rf]))
 
 
 (defn page-by-title
   []
-  (let [title           (rf/subscribe [:current-route/page-title])
-        {:keys [node/title
-                block/string
-                db/id]} @(pull db/dsdb '[*] [:node/title @title])]
-    (cond
-      title  [node-page/page id]
-      string [block-page/page id]
-      :else  [:h3 "404: This page doesn't exist"])))
+  (let [title    (rf/subscribe [:current-route/page-title])
+        page-eid (common-db/e-by-av @db/dsdb :node/title @title)]
+    (if (int? page-eid)
+      [node-page/page page-eid]
+      [:h3 "404: This page doesn't exist"])))
 
 
 (defn page
