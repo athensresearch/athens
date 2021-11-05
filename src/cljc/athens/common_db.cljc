@@ -423,14 +423,6 @@
        seq))
 
 
-(defn get-unlinked-references
-  "For node-page references UI."
-  [db title]
-  (->> title
-       patterns/unlinked
-       (get-data db)))
-
-
 (defn get-all-pages
   [db]
   (->> (d/q '[:find [?e ...]
