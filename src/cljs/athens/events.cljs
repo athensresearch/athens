@@ -302,11 +302,12 @@
                                    new-items)
           sorted-items  (into (sorted-map-by (fn [k1 k2]
                                                (compare
-                                                [(get-in inc-items [k1 :index]) k2]
-                                                [(get-in inc-items [k2 :index]) k1]))) inc-items)]
+                                                 [(get-in inc-items [k1 :index]) k2]
+                                                 [(get-in inc-items [k2 :index]) k1]))) inc-items)]
       {:db         (assoc db :right-sidebar/items sorted-items)
        :dispatch-n [(when (not (:right-sidebar/open db)) [:right-sidebar/toggle])
                     [:right-sidebar/scroll-top]]})))
+
 
 (reg-event-fx
   :right-sidebar/scroll-top

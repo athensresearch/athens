@@ -155,13 +155,13 @@
             [sortable-header :created "Created" {:date? true}]]]
           [:tbody
            (doall
-            (for [{:keys    [block/uid node/title block/_refs]
-                   modified :edit/time
-                   created  :create/time} sorted-pages]
-              [:tr {:key uid}
-               [:td {:class    "title"
-                     :on-click #(router/navigate-page title %)}
-                title]
-               [:td {:class "links"} (count _refs)]
-               [:td {:class "date"} (dates/date-string modified)]
-               [:td {:class "date"} (dates/date-string created)]]))]]]))))
+             (for [{:keys    [block/uid node/title block/_refs]
+                    modified :edit/time
+                    created  :create/time} sorted-pages]
+               [:tr {:key uid}
+                [:td {:class    "title"
+                      :on-click #(router/navigate-page title %)}
+                 title]
+                [:td {:class "links"} (count _refs)]
+                [:td {:class "date"} (dates/date-string modified)]
+                [:td {:class "date"} (dates/date-string created)]]))]]]))))

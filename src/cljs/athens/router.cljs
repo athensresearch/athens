@@ -92,8 +92,7 @@
               html-title        (if html-title-prefix
                                   (str html-title-prefix " | Athens")
                                   "Athens")
-              today             (dates/get-day)
-              ]
+              today             (dates/get-day)]
           (set! (.-title js/document) html-title)
           {:db         (-> db
                            (assoc :current-route (assoc new-match :controllers controllers))

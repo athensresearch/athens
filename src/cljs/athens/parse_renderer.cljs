@@ -38,7 +38,6 @@
     [athens.parser.impl :as parser-impl]
     [athens.router :as router]
     [athens.style :refer [color OPACITIES]]
-    [clojure.string :as str]
     [instaparse.core :as insta]
     [posh.reagent :refer [pull #_q]]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -93,25 +92,6 @@
    :border-bottom [["1px" "solid" (color :highlight-color)]]
    ::stylefy/mode [[:hover {:background-color (color :highlight-color :opacity-lower)
                             :cursor "alias"}]]})
-
-
-(defn parse-title
-  "Title coll is a sequence of plain strings or hiccup elements. If string, return string, otherwise parse the hiccup
-  for its plain-text representation."
-  [title-coll]
-  (->> (map (fn [el]
-              (if (string? el)
-                el
-                (str "[[" (clojure.string/join (get-in el [3 2])) "]]"))) title-coll)
-       (str/join "")))
-
-
-;; Helper functions for recursive link rendering
-(defn pull-node-from-string
-  "Gets a block's node from the display string name (or partially parsed string tree)"
-  [title-coll]
-  (let [title (parse-title title-coll)]
-    (pull db/dsdb '[*] [:node/title title])))
 
 
 (defn render-page-link
