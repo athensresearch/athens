@@ -883,10 +883,10 @@
   :enter/add-child
   (fn [{:keys [db]} [_ {:keys [block new-uid embed-id] :as args}]]
     (log/debug ":enter/add-child args:" (pr-str args))
-    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
-                                                  (atomic-graph-ops/make-block-new-op new-uid
-                                                                                      {:ref-uid  (:block/uid block)
-                                                                                       :relation :first}))]
+    (let [position (common-db/compat-position @db/dsdb {:ref-uid  (:block/uid block)
+                                                        :relation :first})
+          event    (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                     (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
@@ -913,10 +913,10 @@
   :enter/bump-up
   (fn [{:keys [db]} [_ {:keys [uid new-uid embed-id] :as args}]]
     (log/debug ":enter/bump-up args" (pr-str args))
-    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
-                                                  (atomic-graph-ops/make-block-new-op new-uid
-                                                                                      {:ref-uid  uid
-                                                                                       :relation :before}))]
+    (let [position (common-db/compat-position @db/dsdb {:ref-uid  new-uid
+                                                        :relation :before})
+          event    (common-events/build-atomic-event (:remote/last-seen-tx db)
+                                                     (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
