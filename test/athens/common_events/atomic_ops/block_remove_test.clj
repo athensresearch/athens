@@ -247,10 +247,11 @@
                                                             :block/children [{:block/uid      child-2-uid
                                                                               :block/string   ""
                                                                               :block/order    0
-                                                                              :block/children [{:block/uid      child-3-uid
-                                                                                                :block/string   ""
-                                                                                                :block/order    0
-                                                                                                :block/children []}]}]}
+                                                                              :block/children []}
+                                                                             {:block/uid      child-3-uid
+                                                                              :block/string   ""
+                                                                              :block/order    0
+                                                                              :block/children []}]}
                                                            {:block/uid      child-4-uid
                                                             :block/string   ""
                                                             :block/order    1

@@ -228,7 +228,7 @@
                                     (let [c-uid   (:block/uid look-at)
                                           c-block (common-db/get-block db [:block/uid c-uid])]
                                       (recur (conj acc c-uid)
-                                             (apply conj (rest children)
+                                             (apply conj (rest to-look-at)
                                                     (:block/children c-block))))
                                     acc)))
         all-uids-to-remove    (conj (set descendants-uids) block-uid)
