@@ -214,30 +214,6 @@
     tx-data))
 
 
-(defmethod resolve-event-to-tx :datascript/split-block-to-children
-  [db {:event/keys [id type args]}]
-  (let [{:keys [uid
-                value
-                index
-                new-uid]} args
-        head              (subs value 0 index)
-        tail              (subs value index)
-        new-block         {:db/id        -1
-                           :block/order  0
-                           :block/uid    new-uid
-                           :block/open   true
-                           :block/string tail}
-        reindex           (concat [new-block]
-                                  (common-db/inc-after db [:block/uid uid] -1))
-        tx-data           [{:block/uid      uid
-                            :block/string   head
-                            :block/children reindex
-                            :edit/time      (utils/now-ts)}]]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
 (defmethod resolve-event-to-tx :datascript/page-add-shortcut
   [db {:event/keys [id type args]}]
   (let [{:keys [uid]}        args

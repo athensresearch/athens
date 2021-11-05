@@ -777,20 +777,6 @@
             [:dispatch [:editing/uid nil]]]})))
 
 
-(reg-event-fx
-  :split-block-to-children
-  (fn [{:keys [db]} [_ {:keys [uid value index new-uid embed-id] :as args}]]
-    (log/debug ":split-block-to-children" (pr-str args))
-    (let [event (common-events/build-split-block-to-children-event (:remote/last-seen-tx db)
-                                                                   uid
-                                                                   value
-                                                                   index
-                                                                   new-uid)]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                          [:editing/uid (str new-uid (when embed-id
-                                                       (str "-embed-" embed-id)))]]]]})))
-
-
 ;; Atomic events start ==========
 
 (reg-event-fx
@@ -887,14 +873,15 @@
 
 (reg-event-fx
   :enter/split-block
-  (fn [{:keys [db]} [_ {:keys [uid new-uid old-string value index embed-id] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid new-uid old-string value index embed-id relation] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
     (let [op    (graph-ops/build-block-split-op @db/dsdb
                                                 {:old-block-uid   uid
                                                  :new-block-uid   new-uid
                                                  :old-string      old-string
                                                  :new-string      value
-                                                 :index           index})
+                                                 :index           index
+                                                 :relation        relation})
           event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
@@ -989,10 +976,13 @@
                                 (and (:block/open block)
                                      embed-id root-embed?
                                      (not= start (count value)))
-                                [:split-block-to-children {:uid     uid
-                                                           :value   value
-                                                           :index   start
-                                                           :new-uid new-uid}]
+                                [:enter/split-block {:uid        uid
+                                                     :old-string string
+                                                     :value      value
+                                                     :index      start
+                                                     :new-uid    new-uid
+                                                     :embed-id   embed-id
+                                                     :relation   :first}]
 
                                 (and (empty? value) embed-id (not is-parent-root-embed?))
                                 [:unindent {:uid              uid
@@ -1012,7 +1002,8 @@
                                                      :value      value
                                                      :index      start
                                                      :new-uid    new-uid
-                                                     :embed-id   embed-id}]
+                                                     :embed-id   embed-id
+                                                     :relation   :after}]
 
                                 (empty? value)
                                 [:unindent {:uid              uid

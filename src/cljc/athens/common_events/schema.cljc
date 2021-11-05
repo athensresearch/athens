@@ -31,7 +31,6 @@
    :datascript/add-child
    :datascript/open-block-add-child
    :datascript/split-block
-   :datascript/split-block-to-children
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
    :datascript/left-sidebar-drop-above
@@ -316,7 +315,6 @@
    (dispatch :datascript/open-block-add-child datascript-open-block-add-child)
    (dispatch :datascript/split-block datascript-split-block)
    ;; same args as `datascript-split-block`
-   (dispatch :datascript/split-block-to-children datascript-split-block)
    (dispatch :datascript/paste-internal datascript-paste-internal)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
@@ -413,7 +411,6 @@
    (dispatch :datascript/open-block-add-child datascript-open-block-add-child true)
    (dispatch :datascript/split-block datascript-split-block true)
    ;; same args as `datascript-split-block`
-   (dispatch :datascript/split-block-to-children datascript-split-block true)
    (dispatch :datascript/paste-internal datascript-paste-internal true)
    (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)
