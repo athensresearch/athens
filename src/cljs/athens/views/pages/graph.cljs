@@ -465,7 +465,7 @@
                                     (.fill ctx)))
               ;; node actions
               :onNodeClick      (fn [^js node ^js event]
-                                  (router/navigate-uid (.. node -uid) event))
+                                  (router/navigate-page (.. node -label) event))
               :onNodeHover      (fn [^js node]
                                   (let [_          (reset! highlight-nodes #{})
                                         _          (reset! highlight-links #{})

@@ -3,7 +3,7 @@
     ["@material-ui/icons/Link" :default Link]
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
-    [athens.router :refer [navigate-uid]]
+    [athens.router :as router]
     [athens.style :refer [color]]
     [athens.views.blocks.core :as blocks]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -86,7 +86,7 @@
   (let [right-sidebar? (.. e -target (closest ".right-sidebar"))]
     (if right-sidebar?
       (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
-      (navigate-uid breadcrumb-uid e))))
+      (router/navigate-uid breadcrumb-uid e))))
 
 
 (defn block-page-el
@@ -116,7 +116,7 @@
                 {:on-click (fn [e]
                              (.. e preventDefault)
                              (if (.. e -shiftKey)
-                               (navigate-uid uid e)
+                               (router/navigate-uid uid e)
                                (dispatch [:editing/uid uid])))})
           [autosize/textarea
            {:id          (str "editable-uid-" uid)
@@ -149,7 +149,8 @@
                 (for [[group-title group] refs]
                   [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
                    [:h4 (use-style node-page/references-group-title-style)
-                    [:a {:on-click #(navigate-uid (:block/uid @(parse-renderer/pull-node-from-string group-title)))} group-title]]
+                    [:a {:on-click #(router/navigate-page group-title)}
+                     group-title]]
                    (doall
                      (for [block group]
                        [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})

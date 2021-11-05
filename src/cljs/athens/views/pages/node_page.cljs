@@ -16,8 +16,8 @@
     [athens.common.utils :as utils]
     [athens.dates :as dates]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
-    [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
-    [athens.router :refer [navigate-uid navigate]]
+    [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+    [athens.router :as router]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
@@ -282,7 +282,7 @@
 
           (let [cancel-fn  #(swap! state merge init-state)
                 confirm-fn (fn []
-                             (navigate-uid existing-page-uid)
+                             (router/navigate-page local)
                              (dispatch [:page/merge {:page-uid page-uid
                                                      :old-name initial
                                                      :new-name local
@@ -368,7 +368,7 @@
                                             (if daily-note?
                                               (dispatch [:daily-note/delete uid title])
                                               (dispatch [:page/delete uid title]))
-                                            (navigate :pages))}
+                                            (router/navigate :pages))}
                     [:> Delete] [:span "Delete Page"]]]]])))
 
 
@@ -422,7 +422,8 @@
             (for [[group-title group] linked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
+                [:a {:on-click #(router/navigate-page group-title %)}
+                 group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
@@ -472,7 +473,8 @@
             (for [[group-title group] @unlinked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
+                [:a {:on-click #(router/navigate-page group-title %)}
+                 group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
@@ -542,7 +544,7 @@
                            :on-click (fn [e]
                                        (.. e preventDefault)
                                        (if (or daily-note? (.. e -shiftKey))
-                                         (navigate-uid uid e)
+                                         (router/navigate-uid uid e)
                                          (dispatch [:editing/uid uid])))})
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
