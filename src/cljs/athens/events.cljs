@@ -913,7 +913,7 @@
   :enter/bump-up
   (fn [{:keys [db]} [_ {:keys [uid new-uid embed-id] :as args}]]
     (log/debug ":enter/bump-up args" (pr-str args))
-    (let [position (common-db/compat-position @db/dsdb {:ref-uid  new-uid
+    (let [position (common-db/compat-position @db/dsdb {:ref-uid  uid
                                                         :relation :before})
           event    (common-events/build-atomic-event (:remote/last-seen-tx db)
                                                      (atomic-graph-ops/make-block-new-op new-uid position))]
