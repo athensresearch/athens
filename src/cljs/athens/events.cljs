@@ -298,8 +298,8 @@
     (let [remote? (db-picker/remote-db? db)]
       {:db            (assoc db :editing/uid uid)
        :editing/focus [uid index]
-       :dispatch      (when (and uid remote?)
-                        [:presence/send-update {:block-uid uid}])})))
+       :dispatch-n    [(when (and uid remote?)
+                         [:presence/send-update {:block-uid uid}])]})))
 
 
 (reg-event-fx
