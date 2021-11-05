@@ -392,8 +392,8 @@
   (fn [db [_ selected-items]]
     (let [last-item         (last selected-items)
           next-block-uid    (db/next-block-uid last-item true)
-          ordered-selection (-> (into [] selected-items)
-                                (into [next-block-uid]))]
+          ordered-selection (cond-> (into [] selected-items)
+                              next-block-uid (into [next-block-uid]))]
       (log/debug ":selected/down, new-selection:" (pr-str ordered-selection))
       (assoc-in db [:selection :items] ordered-selection))))
 
