@@ -165,7 +165,7 @@
      ;; https://athensresearch.gitbook.io/handbook/athens/athens-components-documentation/
      :component            (fn [& contents]
                              (component (first contents) uid))
-     :page-link            (fn [{_from :from} & title-coll] (render-page-link (first title-coll)))
+     :page-link            (fn [{_from :from} & title-coll] (render-page-link title-coll))
      :hashtag              (fn [{_from :from} & title-coll]
                              [:span (use-style hashtag {:class    "hashtag"
                                                         :on-click #(router/navigate-page (first title-coll) %)})
