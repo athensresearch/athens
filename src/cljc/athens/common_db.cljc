@@ -384,28 +384,6 @@
        shape-parent-query))
 
 
-(defn merge-parents-and-block
-  [db ref-ids]
-  (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively db v)))
-                           {}
-                           ref-ids)
-        blocks (map (fn [id] (get-block-document db id)) ref-ids)]
-    (mapv
-      (fn [block]
-        (merge block {:block/parents (get parents (:db/id block))}))
-      blocks)))
-
-
-(defn group-by-parent
-  [blocks]
-  (group-by (fn [x]
-              (-> x
-                  :block/parents
-                  first
-                  :node/title))
-            blocks))
-
-
 (defn get-linked-refs-by-page-title
   [db page-title]
   (->> (d/pull db '[* :block/_refs] [:node/title page-title])
