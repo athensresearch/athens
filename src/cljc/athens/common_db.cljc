@@ -348,26 +348,6 @@
     (= (count parents) 1)))
 
 
-(defn- shape-parent-query
-  "Normalize path from deeply nested block to root node."
-  [pull-results]
-  (->> (loop [b   pull-results
-              res []]
-         (if (:node/title b)
-           (conj res b)
-           (recur (first (:block/_children b))
-                  (conj res (dissoc b :block/_children)))))
-       rest
-       reverse
-       vec))
-
-
-(defn get-block-document
-  [db id]
-  (->> (d/pull db block-document-pull-vector id)
-       sort-block-children))
-
-
 (def block-document-pull-vector-for-copy
   '[:block/uid :block/string :block/open :block/order {:block/children ...}])
 
@@ -376,12 +356,6 @@
   [db eid]
   (->> (d/pull db block-document-pull-vector-for-copy eid)
        sort-block-children))
-
-
-(defn get-parents-recursively
-  [db eid]
-  (->> (d/pull db '[:db/id :node/title :block/uid :block/string {:block/_children ...}] eid)
-       shape-parent-query))
 
 
 (defn get-linked-refs-by-page-title
