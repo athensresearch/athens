@@ -15,29 +15,23 @@
 
 (defn- valid-password
   [conn channel id {:keys [session-intro]}]
-  (let [max-tx     (:max-tx @conn)
-        session-id (str (utils/random-uuid))
+  (let [session-id (str (utils/random-uuid))
         session    (assoc session-intro :session-id session-id)]
     (log/info channel "New Client Intro:" session-intro)
     (clients/add-client! channel session)
-    (clients/send! channel (common-events/build-presence-session-id-event max-tx session-id))
+    (clients/send! channel (common-events/build-presence-session-id-event session-id))
     (let [datoms (map ; Convert Datoms to just vectors.
                   (comp vec seq)
                   (d/datoms @conn :eavt))]
       (log/debug channel "Sending" (count datoms) "eavt")
       (clients/send! channel
-                     (common-events/build-db-dump-event max-tx datoms)))
+                     (common-events/build-db-dump-event datoms)))
     (clients/send! channel
-                   (common-events/build-presence-all-online-event max-tx (clients/get-client-sessions)))
-    (clients/broadcast! (common-events/build-presence-online-event max-tx session))
-
-    ;; TODO Recipe for diff/patch updating client
-    ;; 1. query for tx-ids since `last-tx`
-    ;; 2. query for all eavt touples from 1.
-    ;; 3. send! to client
+                   (common-events/build-presence-all-online-event (clients/get-client-sessions)))
+    (clients/broadcast! (common-events/build-presence-online-event session))
 
     ;; confirm
-    (common-events/build-event-accepted id max-tx)))
+    (common-events/build-event-accepted id)))
 
 
 (defn- invalid-password
@@ -49,7 +43,7 @@
 
 
 (defn hello-handler
-  [conn server-password channel {:event/keys [id args _last-tx]}]
+  [conn server-password channel {:event/keys [id args]}]
   (let [{:keys [password]} args]
     (if (or (str/blank? server-password)
             (= server-password password))
@@ -58,20 +52,19 @@
 
 
 (defn update-handler
-  [conn channel {:event/keys [id args]}]
+  [channel {:event/keys [id args]}]
   (let [{:keys [session-id]}  (clients/get-client-session channel)
-        max-tx                (:max-tx @conn)
         ;; Always build a new event with the session-id for this channel.
         ;; If the client sends a incorrect/spoofed session-id, it will be ignored.
-        presence-update-event (common-events/build-presence-update-event max-tx session-id args)]
+        presence-update-event (common-events/build-presence-update-event session-id args)]
     (swap! clients/clients update channel merge args)
     (clients/broadcast! presence-update-event)
-    (common-events/build-event-accepted id max-tx)))
+    (common-events/build-event-accepted id)))
 
 
 (defn goodbye-handler
-  [conn session]
-  (let [presence-offline-event (athens.common-events/build-presence-offline-event (:max-tx @conn) session)]
+  [session]
+  (let [presence-offline-event (athens.common-events/build-presence-offline-event session)]
     (clients/broadcast! presence-offline-event)))
 
 
@@ -80,5 +73,4 @@
   (condp = type
     :presence/hello  (hello-handler conn server-password channel event)
     ;; presence/goodbye is called on client close.
-    :presence/update (update-handler conn channel event)))
-
+    :presence/update (update-handler channel event)))

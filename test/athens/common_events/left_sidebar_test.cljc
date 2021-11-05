@@ -43,7 +43,7 @@
 
     ;; add the pages to the page shortcut
     (run!
-      #(->> (common-events/build-page-add-shortcut -1 %)
+      #(->> (common-events/build-page-add-shortcut %)
             (resolver/resolve-event-to-tx @@fixture/connection)
             (d/transact! @fixture/connection))
       [test-uid-0 test-uid-1 test-uid-2])
@@ -70,7 +70,7 @@
         "check if the page-shortcuts are added based on the sequence of the moment they're added"))
 
     ;; left-sidebar-drop-above-event
-    (->> (common-events/build-left-sidebar-drop-above -1 2 0)
+    (->> (common-events/build-left-sidebar-drop-above 2 0)
          (resolver/resolve-event-to-tx @@fixture/connection)
          (d/transact! @fixture/connection))
 
@@ -91,7 +91,7 @@
         "check if the page-shortcut is correctly dropped above and become the first item"))
 
     ;; left-sidebar-drop-above-event
-    (->> (common-events/build-left-sidebar-drop-above -1 2 1)
+    (->> (common-events/build-left-sidebar-drop-above 2 1)
          (resolver/resolve-event-to-tx @@fixture/connection)
          (d/transact! @fixture/connection))
 
@@ -145,7 +145,7 @@
 
     ;; add the pages to the page shortcut
     (run!
-      #(->> (common-events/build-page-add-shortcut -1 %)
+      #(->> (common-events/build-page-add-shortcut %)
             (resolver/resolve-event-to-tx @@fixture/connection)
             (d/transact! @fixture/connection))
       [test-uid-0 test-uid-1 test-uid-2])
@@ -172,7 +172,7 @@
         "check if the page-shortcuts are added based on the sequence of the moment they're added"))
 
     ;; left-sidebar-drop-below-event
-    (->> (common-events/build-left-sidebar-drop-below -1 0 2)
+    (->> (common-events/build-left-sidebar-drop-below 0 2)
          (resolver/resolve-event-to-tx @@fixture/connection)
          (d/transact! @fixture/connection))
 
@@ -192,7 +192,7 @@
              (every? true?))
         "check if the page-shortcut is correctly dropped below and become the last item"))
 
-    (let [_left-sidebar-drop-below-event (->> (common-events/build-left-sidebar-drop-below -1 0 1)
+    (let [_left-sidebar-drop-below-event (->> (common-events/build-left-sidebar-drop-below 0 1)
                                               (resolver/resolve-event-to-tx @@fixture/connection)
                                               (d/transact! @fixture/connection))
           page-shortcut                  (->> (d/q '[:find (pull ?e [*])

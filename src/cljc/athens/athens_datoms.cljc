@@ -302,7 +302,7 @@
 (def welcome-event
   (let [op (bfs/build-paste-op (datascript/empty-db common-db/schema)
                                welcome-page-datoms)
-        event (common-events/build-atomic-event  0 op)]
+        event (common-events/build-atomic-event op)]
     [(:event/id event)
      event]))
 

@@ -82,7 +82,7 @@
 
     ;; undo and test the creation of the new block
     ;; also check if the new page is still in db
-    (let [undo-event (common-events/build-undo-redo-event -1 false)
+    (let [undo-event (common-events/build-undo-redo-event  false)
           tx-data    (resolver/resolve-event-to-tx history undo-event)]
       (d/transact! @fixture/connection tx-data))
 
@@ -106,7 +106,7 @@
       (test/is (= e-by-title e-by-uid)))
 
     ;; undo and test the creation of the new page
-    (let [undo-event (common-events/build-undo-redo-event -1 false)
+    (let [undo-event (common-events/build-undo-redo-event false)
           tx-data    (resolver/resolve-event-to-tx history undo-event)]
       (d/transact! @fixture/connection tx-data))
 
@@ -122,7 +122,7 @@
       (test/is (empty? e-by-uid)))
 
     ;; redo and test the creation of the new page
-    (let [undo-event (common-events/build-undo-redo-event -1 true)
+    (let [undo-event (common-events/build-undo-redo-event true)
           tx-data    (resolver/resolve-event-to-tx history undo-event)]
       (d/transact! @fixture/connection tx-data))
 
@@ -138,7 +138,7 @@
       (test/is (= e-by-title e-by-uid)))
 
     ;; redo and test the creation of the new block
-    (let [undo-event (common-events/build-undo-redo-event -1 true)
+    (let [undo-event (common-events/build-undo-redo-event true)
           tx-data    (resolver/resolve-event-to-tx history undo-event)]
       (d/transact! @fixture/connection tx-data))
 

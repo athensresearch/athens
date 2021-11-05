@@ -212,7 +212,7 @@
                                                 :block/order  0}]}]]
 
       (transact-with-linkmaker setup-tx)
-      (let [delete-page-event (common-events/build-page-delete-event -1 target-page-uid)
+      (let [delete-page-event (common-events/build-page-delete-event target-page-uid)
             delete-page-txs   (resolver/resolve-event-to-tx @@fixture/connection delete-page-event)]
 
         (transact-with-linkmaker delete-page-txs)
@@ -243,7 +243,7 @@
       (let [{original-block-refs :block/refs} (get-block test-block-uid)
             {original-page-refs :block/refs}  (get-page test-page-uid)
             target-page-new-title             "Target page new"
-            rename-page-event                 (common-events/build-page-rename-event -1 target-page-uid target-page-title target-page-new-title)
+            rename-page-event                 (common-events/build-page-rename-event target-page-uid target-page-title target-page-new-title)
             rename-page-txs                   (resolver/resolve-event-to-tx @@fixture/connection rename-page-event)]
 
         ;; Page should have refs to it.
@@ -275,7 +275,7 @@
       (let [{block-backrefs :block/_refs} (get-block test-block-uid)
             {page-backrefs :block/_refs}  (get-page test-page-uid)
             target-page-new-title             (str "ref to ((" test-block-uid "))")
-            rename-page-event                 (common-events/build-page-rename-event -1 target-page-uid target-page-title target-page-new-title)
+            rename-page-event                 (common-events/build-page-rename-event target-page-uid target-page-title target-page-new-title)
             rename-page-txs                   (resolver/resolve-event-to-tx @@fixture/connection rename-page-event)]
 
         ;; Page should have ref to block, but not to page.
@@ -366,11 +366,11 @@
         (let [{testing-block-1-eid :db/id}      (get-block testing-block-1-uid)
               {target-page-1-refs :block/_refs} (get-page target-page-1-uid)
               {target-page-2-refs :block/_refs} (get-page target-page-2-uid)
-              split-block-event                 (common-events/build-split-block-event -1
-                                                                                       testing-block-1-uid
-                                                                                       testing-block-1-string
-                                                                                       split-index
-                                                                                       testing-block-2-uid)
+              split-block-event                 (common-events/build-split-block-event
+                                                  testing-block-1-uid
+                                                  testing-block-1-string
+                                                  split-index
+                                                  testing-block-2-uid)
               split-block-tx                    (resolver/resolve-event-to-tx @@fixture/connection split-block-event)]
           ;; assert that target pages has no `:block/refs` to start with
           (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
@@ -403,7 +403,7 @@
                                                 :block/order  0}]}]]
 
       (transact-with-linkmaker setup-tx)
-      (let [delete-page-event (common-events/build-block-delete-event -1 target-block-uid)
+      (let [delete-page-event (common-events/build-block-delete-event target-block-uid)
             delete-page-txs   (resolver/resolve-event-to-tx @@fixture/connection delete-page-event)]
 
         (transact-with-linkmaker delete-page-txs)

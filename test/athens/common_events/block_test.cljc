@@ -4,8 +4,6 @@
     [athens.common-events :as common-events]
     [athens.common-events.fixture :as fixture]
     [athens.common-events.resolver :as resolver]
-    [athens.common.logging :as log]
-    [clojure.pprint :as pp]
     [clojure.test :as t]
     [datascript.core :as d]))
 
@@ -24,10 +22,7 @@
                         :block/order    0
                         :block/children []}]]
       (d/transact! @fixture/connection setup-tx)
-      (let [block-save-event             (common-events/build-block-save-event -1
-                                                                               block-uid
-                                                                               string-new
-                                                                               false)
+      (let [block-save-event             (common-events/build-block-save-event block-uid string-new false)
             block-save-txs               (resolver/resolve-event-to-tx @@fixture/connection
                                                                        block-save-event)
             {block-string :block/string} (common-db/get-block @@fixture/connection
@@ -57,10 +52,7 @@
                                                :block/uid page-1-uid)
             child-1-eid     (common-db/e-by-av @@fixture/connection
                                                :block/uid child-1-uid)
-            new-block-event (common-events/build-new-block-event -1
-                                                                 page-1-uid
-                                                                 0
-                                                                 child-2-uid)
+            new-block-event (common-events/build-new-block-event page-1-uid 0 child-2-uid)
             new-block-txs   (resolver/resolve-event-to-tx @@fixture/connection
                                                           new-block-event)
             query-children  '[:find ?child
@@ -108,11 +100,7 @@
                                        :block/order
                                        :block/string]
                                       child-1-eid)
-            split-block-event (common-events/build-split-block-event -1
-                                                                     child-1-uid
-                                                                     child-1-init-value
-                                                                     2
-                                                                     child-2-uid)
+            split-block-event (common-events/build-split-block-event child-1-uid child-1-init-value 2 child-2-uid)
             split-block-txs   (resolver/resolve-event-to-tx @@fixture/connection
                                                             split-block-event)
             query-children    '[:find ?child

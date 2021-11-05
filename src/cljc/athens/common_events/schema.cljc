@@ -54,7 +54,6 @@
 (def event-common
   [:map
    [:event/id uuid?]
-   [:event/last-tx int?]
    [:event/type [:or
                  event-type-presence-client
                  event-type-graph
@@ -64,7 +63,6 @@
 (def event-common-server
   [:map
    [:event/id uuid?]
-   [:event/last-tx int?]
    [:event/type [:or
                  event-type-graph
                  event-type-graph-server
@@ -324,8 +322,7 @@
 
 
 (def response-accepted
-  [:map
-   [:accepted/tx-id int?]])
+  [:map])
 
 
 (def rejection-reason
