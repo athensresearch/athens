@@ -541,10 +541,9 @@
                                        (re-find #"(?s)\]\]" tail)
                                        (nil? (re-find #"(?s)\[" link))
                                        (nil? (re-find #"(?s)\]" link)))
-                                  (let [eid (db/e-by-av :node/title link)
-                                        uid (db/v-by-ea eid :block/uid)]
+                                  (let [eid (db/e-by-av :node/title link)]
                                     (if eid
-                                      (router/navigate-uid uid e)
+                                      (router/navigate-page link e)
                                       (let [block-uid (common.utils/gen-block-uid)]
                                         (.blur target)
                                         (dispatch [:page/new {:title     link
@@ -554,10 +553,9 @@
                                   ;; same logic as link
                                   (and (re-find #"(?s)#" head)
                                        (re-find #"(?s)\s" tail))
-                                  (let [eid (db/e-by-av :node/title hashtag)
-                                        uid (db/v-by-ea eid :block/uid)]
+                                  (let [eid (db/e-by-av :node/title hashtag)]
                                     (if eid
-                                      (router/navigate-uid uid e)
+                                      (router/navigate-page hashtag e)
                                       (let [block-uid (common.utils/gen-block-uid)]
                                         (.blur target)
                                         (dispatch [:page/new {:title     link

@@ -36,7 +36,7 @@
     [athens.config :as config]
     [athens.db :as db]
     [athens.parser.impl :as parser-impl]
-    [athens.router :refer [navigate-uid]]
+    [athens.router :as router]
     [athens.style :refer [color OPACITIES]]
     [clojure.string :as str]
     [instaparse.core :as insta]
@@ -117,14 +117,13 @@
 (defn render-page-link
   "Renders a page link given the title of the page."
   [title]
-  (let [node (pull-node-from-string title)]
-    [:span (use-style page-link {:class "page-link"})
-     [:span {:class "formatting"} "[["]
-     (into [:span {:on-click (fn [e]
-                               (.. e stopPropagation) ; prevent bubbling up click handler for nested links
-                               (navigate-uid (:block/uid @node) e))}]
-           title)
-     [:span {:class "formatting"} "]]"]]))
+  [:span (use-style page-link {:class "page-link"})
+   [:span {:class "formatting"} "[["]
+   (into [:span {:on-click (fn [e]
+                             (.. e stopPropagation) ; prevent bubbling up click handler for nested links
+                             (router/navigate-page title e))}]
+         title)
+   [:span {:class "formatting"} "]]"]])
 
 
 ;; -- Component ---
@@ -186,18 +185,17 @@
      ;; https://athensresearch.gitbook.io/handbook/athens/athens-components-documentation/
      :component            (fn [& contents]
                              (component (first contents) uid))
-     :page-link            (fn [{_from :from} & title-coll] (render-page-link title-coll))
+     :page-link            (fn [{_from :from} & title-coll] (render-page-link (first title-coll)))
      :hashtag              (fn [{_from :from} & title-coll]
-                             (let [node (pull-node-from-string title-coll)]
-                               [:span (use-style hashtag {:class    "hashtag"
-                                                          :on-click #(navigate-uid (:block/uid @node) %)})
-                                [:span {:class "formatting"} "#"]
-                                [:span {:class "contents"} title-coll]]))
+                             [:span (use-style hashtag {:class    "hashtag"
+                                                        :on-click #(router/navigate-page (first title-coll) %)})
+                              [:span {:class "formatting"} "#"]
+                              [:span {:class "contents"} title-coll]])
      :block-ref            (fn [{_from :from} ref-uid]
                              (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
                                (if @block
                                  [:span (use-style block-ref {:class "block-ref"})
-                                  [:span {:class "contents" :on-click #(navigate-uid ref-uid %)}
+                                  [:span {:class "contents" :on-click #(router/navigate-uid ref-uid %)}
                                    (if (= uid ref-uid)
                                      [parse-and-render "{{SELF}}"]
                                      [parse-and-render (:block/string @block) ref-uid])]]

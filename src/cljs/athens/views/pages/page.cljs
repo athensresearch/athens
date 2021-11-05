@@ -7,6 +7,18 @@
     [re-frame.core :as rf]))
 
 
+(defn page-by-title
+  []
+  (let [title           (rf/subscribe [:current-route/page-title])
+        {:keys [node/title
+                block/string
+                db/id]} @(pull db/dsdb '[*] [:node/title @title])]
+    (cond
+      title  [node-page/page id]
+      string [block-page/page id]
+      :else  [:h3 "404: This page doesn't exist"])))
+
+
 (defn page
   "Can be a block or a node page."
   []

@@ -287,6 +287,28 @@
 
 
 (reg-event-fx
+  :right-sidebar/open-page
+  (fn [{:keys [db]} [_ page-title is-graph?]]
+    (let [{:keys [:block/uid]
+           :as   block} (d/pull @db/dsdb '[:block/uid :node/title :block/string] [:node/title page-title])
+          new-item      (merge block {:open true :index -1 :is-graph? is-graph?})
+          ;; Avoid a memory leak by forgetting the comparison function
+          ;; that is stored in the sorted map
+          ;; `(assoc (:right-sidebar/items db) uid new-item)`
+          new-items     (into {}
+                              (assoc (:right-sidebar/items db) uid new-item))
+          inc-items     (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
+                                   {}
+                                   new-items)
+          sorted-items  (into (sorted-map-by (fn [k1 k2]
+                                               (compare
+                                                [(get-in inc-items [k1 :index]) k2]
+                                                [(get-in inc-items [k2 :index]) k1]))) inc-items)]
+      {:db         (assoc db :right-sidebar/items sorted-items)
+       :dispatch-n [(when (not (:right-sidebar/open db)) [:right-sidebar/toggle])
+                    [:right-sidebar/scroll-top]]})))
+
+(reg-event-fx
   :right-sidebar/scroll-top
   (fn []
     {:right-sidebar/scroll-top nil}))

@@ -306,7 +306,7 @@
          :in $ ?uid
          :where
          [?e :block/uid ?uid]
-         [?e :note/title ?title]]
+         [?e :node/title ?title]]
        db uid))
 
 

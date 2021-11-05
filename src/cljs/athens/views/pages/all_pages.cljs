@@ -5,7 +5,7 @@
     [athens.common-db :as common-db]
     [athens.dates :as dates]
     [athens.db :as db]
-    [athens.router :refer [navigate-uid]]
+    [athens.router :as router]
     [athens.style :as style :refer [color OPACITIES]]
     [clojure.string :refer [lower-case]]
     [garden.selectors :as selectors]
@@ -155,11 +155,13 @@
             [sortable-header :created "Created" {:date? true}]]]
           [:tbody
            (doall
-             (for [{:keys [block/uid node/title block/_refs]
-                    modified :edit/time
-                    created :create/time} sorted-pages]
-               [:tr {:key uid}
-                [:td {:class "title" :on-click #(navigate-uid uid %)} title]
-                [:td {:class "links"} (count _refs)]
-                [:td {:class "date"} (dates/date-string modified)]
-                [:td {:class "date"} (dates/date-string created)]]))]]]))))
+            (for [{:keys    [block/uid node/title block/_refs]
+                   modified :edit/time
+                   created  :create/time} sorted-pages]
+              [:tr {:key uid}
+               [:td {:class    "title"
+                     :on-click #(router/navigate-page title %)}
+                title]
+               [:td {:class "links"} (count _refs)]
+               [:td {:class "date"} (dates/date-string modified)]
+               [:td {:class "date"} (dates/date-string created)]]))]]]))))
