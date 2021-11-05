@@ -47,5 +47,7 @@
 
 (rf/reg-event-fx
   :presence/send-update
-  (fn [_ [_ m]]
-    {:fx [[:presence/send-update m]]}))
+  (fn [{:keys [db]} [_ m]]
+    {;; Optimistically update own presence to not have weird delay.
+     :dispatch [:presence/update (merge m {:session-id (get-in db [:presence :session-id])})]
+     :fx [[:presence/send-update-fx m]]}))

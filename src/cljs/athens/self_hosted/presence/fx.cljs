@@ -6,7 +6,7 @@
 
 
 (rf/reg-fx
-  :presence/send-update
+  :presence/send-update-fx
   (fn [m]
     (client/send! (common-events/build-presence-update-event 42 @(rf/subscribe [:presence/session-id]) m))))
 
