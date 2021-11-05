@@ -144,7 +144,15 @@ jobs:
 
      strategy:
        matrix:
-         os: [ubuntu-latest, macos-latest, windows-latest]
+         os: [ubuntu-latest, windows-latest]
+         electron-arch-overrides: [""]
+         # Separate out the arm64 macos build, those are the longest builds.
+         # package.json still includes configuration to build both targets.
+         include:
+           - os: macos-latest
+             electron-arch-overrides: "-c.mac.target.target=dmg -c.mac.target.arch=x64"
+           - os: macos-latest
+             electron-arch-overrides: "-c.mac.target.target=dmg -c.mac.target.arch=arm64"             
 
      steps:
        - name: Git checkout
@@ -192,7 +200,7 @@ jobs:
            # Auto-update is also disabled in code inside athens.main.core.
            # NB: GH actions doesn't have ternary operator, but can workaround using AND/OR logic.
            # see https://github.com/actions/runner/issues/409#issuecomment-752775072
-           args: ${{ github.ref != 'refs/heads/main' && '-c.publish.publishAutoUpdate=false' || '' }}
+           args: ${{ github.ref != 'refs/heads/main' && '-c.publish.publishAutoUpdate=false' || '' }} ${{ matrix.electron-arch-overrides }}
 
          env:
            # macOS notarization API key
