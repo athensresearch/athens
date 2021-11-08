@@ -146,7 +146,7 @@
                 (for [[group-title group] refs]
                   [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
                    [:h4 (use-style node-page/references-group-title-style)
-                    [:a {:on-click #(router/navigate-page group-title)}
+                    [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title))}
                      group-title]]
                    (doall
                      (for [block group]
