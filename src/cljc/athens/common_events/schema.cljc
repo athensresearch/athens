@@ -321,10 +321,6 @@
    [:event/status event-status]])
 
 
-(def response-accepted
-  [:map])
-
-
 (def rejection-reason
   [:enum :introduce-yourself :stale-client])
 
@@ -337,8 +333,7 @@
 
 (def event-response
   [:multi {:dispatch :event/status}
-   [:accepted (mu/merge event-response-common
-                        response-accepted)]
+   [:accepted event-response-common]
    [:rejected (mu/merge event-response-common
                         response-rejected)]])
 
