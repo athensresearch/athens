@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.33](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.32...v1.0.0-alpha.rtc.33) (2021-11-08)
+
+
+### Bug Fixes
+
+* page navigation by title including nested cases. ([7e37201](https://github.com/athensresearch/athens/commit/7e3720102b1aa016faf73fd48d08a2343415fa60))
+* use right bindings in :block/save event ([e301070](https://github.com/athensresearch/athens/commit/e301070ba0e956cf7a0e8659b7839eb75c82d1e4))
+
+
+### Refactors
+
+* remove unused require. ([76a9db6](https://github.com/athensresearch/athens/commit/76a9db686885bffdeaf5deefd94a9b7ce496b54f))
+
 ## [1.0.0-alpha.rtc.32](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.31...v1.0.0-alpha.rtc.32) (2021-11-08)
 
 
