@@ -1254,7 +1254,12 @@
   :unlinked-references/link
   (fn [{:keys [db]} [_ {:block/keys [string uid]} title]]
     (log/debug ":unlinked-references/link:" uid)
-    (let [event (common-events/build-unlinked-references-link (:remote/last-seen-tx db) uid string title)]
+    (let [ignore-case-title  (re-pattern (str "(?i)" title))
+          new-str            (string/replace string ignore-case-title (str "[[" title "]]"))
+          op                 (graph-ops/build-block-save-op @db/dsdb
+                                                            uid
+                                                            new-str)
+          event              (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
@@ -1262,7 +1267,17 @@
   :unlinked-references/link-all
   (fn [{:keys [db]} [_ unlinked-refs title]]
     (log/debug ":unlinked-references/link:" title)
-    (let [event (common-events/build-unlinked-references-link-all (:remote/last-seen-tx db) unlinked-refs title)]
+    (let [block-save-ops      (mapv
+                                (fn [{:block/keys [string uid]}]
+                                  (let [ignore-case-title (re-pattern (str "(?i)" title))
+                                        new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
+                                    (graph-ops/build-block-save-op @db/dsdb
+                                                                   uid
+                                                                   new-str)))
+                                unlinked-refs)
+          link-all-op         (composite-ops/make-consequence-op {:op/type :block/unlinked-refs-link-all}
+                                                                 block-save-ops)
+          event              (common-events/build-atomic-event (:remote/last-seen-tx db) link-all-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 

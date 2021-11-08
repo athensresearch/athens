@@ -35,8 +35,6 @@
    :datascript/page-remove-shortcut
    :datascript/left-sidebar-drop-above
    :datascript/left-sidebar-drop-below
-   :datascript/unlinked-references-link
-   :datascript/unlinked-references-link-all
    :datascript/selected-delete
    :datascript/delete-only-child
    :datascript/delete-merge-block
@@ -243,27 +241,6 @@
      [:target-order int?]]]])
 
 
-(def datascript-unlinked-references-link
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:string string?]
-     [:title string?]]]])
-
-
-(def datascript-unlinked-references-link-all
-  [:map
-   [:event/args
-    [:map
-     [:unlinked-refs
-      [:sequential
-       [:map
-        [:block/string string?]
-        [:block/uid string?]]]]
-     [:title string?]]]])
-
-
 (def datascript-selected-delete
   [:map
    [:event/args
@@ -319,8 +296,6 @@
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above)
    (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below)
-   (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link)
-   (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)
    (dispatch :datascript/delete-only-child datascript-delete-only-child)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block)
    (dispatch :datascript/selected-delete datascript-selected-delete)
@@ -414,8 +389,6 @@
    (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above true)
    (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below true)
-   (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link true)
-   (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all true)
    (dispatch :datascript/delete-only-child datascript-delete-only-child true)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block true)
    (dispatch :datascript/selected-delete datascript-selected-delete true)

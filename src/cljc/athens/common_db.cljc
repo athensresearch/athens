@@ -355,26 +355,6 @@
     (= (count parents) 1)))
 
 
-(defn- shape-parent-query
-  "Normalize path from deeply nested block to root node."
-  [pull-results]
-  (->> (loop [b   pull-results
-              res []]
-         (if (:node/title b)
-           (conj res b)
-           (recur (first (:block/_children b))
-                  (conj res (dissoc b :block/_children)))))
-       rest
-       reverse
-       vec))
-
-
-(defn get-block-document
-  [db id]
-  (->> (d/pull db block-document-pull-vector id)
-       sort-block-children))
-
-
 (def block-document-pull-vector-for-copy
   '[:block/uid :block/string :block/open :block/order {:block/children ...}])
 
@@ -385,57 +365,12 @@
        sort-block-children))
 
 
-(defn get-parents-recursively
-  [db eid]
-  (->> (d/pull db '[:db/id :node/title :block/uid :block/string {:block/_children ...}] eid)
-       shape-parent-query))
-
-
-(defn merge-parents-and-block
-  [db ref-ids]
-  (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively db v)))
-                           {}
-                           ref-ids)
-        blocks (map (fn [id] (get-block-document db id)) ref-ids)]
-    (mapv
-      (fn [block]
-        (merge block {:block/parents (get parents (:db/id block))}))
-      blocks)))
-
-
-(defn group-by-parent
-  [blocks]
-  (group-by (fn [x]
-              (-> x
-                  :block/parents
-                  first
-                  :node/title))
-            blocks))
-
-
 (defn get-linked-refs-by-page-title
   [db page-title]
   (->> (d/pull db '[* :block/_refs] [:node/title page-title])
        :block/_refs
        (mapv :db/id)
        (mapv #(d/pull db '[:db/id :node/title :block/uid :block/string] %))))
-
-
-(defn get-data
-  [db pattern]
-  (->> pattern
-       (get-ref-ids db)
-       (merge-parents-and-block db)
-       group-by-parent
-       seq))
-
-
-(defn get-unlinked-references
-  "For node-page references UI."
-  [db title]
-  (->> title
-       patterns/unlinked
-       (get-data db)))
 
 
 (defn get-all-pages
