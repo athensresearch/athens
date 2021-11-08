@@ -25,14 +25,12 @@
 (defn make-block-save-op
   "Creates `:block/save` atomic op.
    - `block-uid` - `:block/uid` of block to be saved
-   - `old-string` - old value of `:block/string`
-   - `new-string` - new value of `:block/string` to be saved"
-  [block-uid old-string new-string]
+   - `string` - new value of `:block/string` to be saved"
+  [block-uid new-string]
   {:op/type    :block/save
    :op/atomic? true
-   :op/args    {:block-uid  block-uid
-                :old-string old-string
-                :new-string new-string}})
+   :op/args    {:block-uid block-uid
+                :string    new-string}})
 
 
 (defn make-block-open-op

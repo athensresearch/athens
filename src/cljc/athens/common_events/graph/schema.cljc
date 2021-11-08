@@ -69,8 +69,7 @@
    [:op/args
     [:map
      [:block-uid string?]
-     [:new-string string?]
-     [:old-string string?]]]])
+     [:string string?]]]])
 
 
 (def op-block-remove

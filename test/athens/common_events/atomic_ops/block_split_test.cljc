@@ -37,8 +37,7 @@
       (let [block-split-op      (graph-ops/build-block-split-op @@fixture/connection
                                                                 {:old-block-uid child-1-uid
                                                                  :new-block-uid child-2-uid
-                                                                 :old-string    start-str
-                                                                 :new-string    new-tmp-string
+                                                                 :string        new-tmp-string
                                                                  :index         2
                                                                  :relation      :after})
             block-split-atomics (graph-ops/extract-atomics block-split-op)]
@@ -90,8 +89,7 @@
         (let [block-split-op      (graph-ops/build-block-split-op @@fixture/connection
                                                                   {:old-block-uid child-1-uid
                                                                    :new-block-uid child-3-uid
-                                                                   :old-string    start-str
-                                                                   :new-string    start-str
+                                                                   :string        start-str
                                                                    :index         2
                                                                    :relation      :after})
               block-split-atomics (graph-ops/extract-atomics block-split-op)]
@@ -145,8 +143,7 @@
         (let [block-split-op      (graph-ops/build-block-split-op @@fixture/connection
                                                                   {:old-block-uid child-1-uid
                                                                    :new-block-uid child-3-uid
-                                                                   :old-string    start-str
-                                                                   :new-string    start-str
+                                                                   :string        start-str
                                                                    :index         2
                                                                    :relation      :first})
               block-split-atomics (graph-ops/extract-atomics block-split-op)]

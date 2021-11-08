@@ -26,9 +26,10 @@
 (defn build-block-save-op
   "Creates `:block/save` op, taking into account context.
   So it might be a composite or atomic event, depending if new page link is present and if pages exist."
-  [db block-uid old-string new-string]
-  (let [links-in-old    (common-db/find-page-links old-string)
-        links-in-new    (common-db/find-page-links new-string)
+  [db block-uid string]
+  (let [old-string      (common-db/get-block-string db block-uid)
+        links-in-old    (common-db/find-page-links old-string)
+        links-in-new    (common-db/find-page-links string)
         link-diff       (set/difference links-in-new links-in-old)
         new-page-titles (remove #(seq (common-db/get-page-uid db %))
                                 link-diff)
@@ -36,7 +37,7 @@
                           (into []
                                 (for [title new-page-titles]
                                   (build-page-new-op db title))))
-        atomic-save     (atomic/make-block-save-op block-uid old-string new-string)
+        atomic-save     (atomic/make-block-save-op block-uid string)
         block-save-op   (if (empty? atomic-pages)
                           atomic-save
                           (composite/make-consequence-op {:op/type :block/save}
@@ -48,18 +49,11 @@
 (defn build-block-split-op
   "Creates `:block/split` composite op, taking into account context."
   [db {:keys [old-block-uid new-block-uid
-              old-string new-string index
-              relation]}]
-  (let [save-block-op     (build-block-save-op db
-                                               old-block-uid
-                                               old-string
-                                               (subs new-string 0 index))
+              string index relation]}]
+  (let [save-block-op     (build-block-save-op db old-block-uid (subs string 0 index))
         new-block-op      (atomic/make-block-new-op new-block-uid {:ref-uid old-block-uid
                                                                    :relation relation})
-        new-block-save-op (build-block-save-op db
-                                               new-block-uid
-                                               ""
-                                               (subs new-string index))
+        new-block-save-op (build-block-save-op db new-block-uid (subs string index))
         split-block-op    (composite/make-consequence-op {:op/type :block/split}
                                                          [save-block-op
                                                           new-block-op
@@ -89,10 +83,7 @@
         existing-string     (common-db/v-by-ea db
                                                [:block/uid merge-uid]
                                                :block/string)
-        block-save-op       (build-block-save-op db
-                                                 merge-uid
-                                                 existing-string
-                                                 (str existing-string value))
+        block-save-op       (build-block-save-op db merge-uid (str existing-string value))
         delete-and-merge-op (composite/make-consequence-op {:op/type :block/remove-and-merge}
                                                            [block-remove-op
                                                             block-save-op])]

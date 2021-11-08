@@ -63,13 +63,10 @@
   "A helper fn that takes `state` containing textarea changes and when user has made a text change dispatches `transact-string`.
    Used in `block-page-el` function to log when there is a diff and `on-blur`"
   [state block-uid]
-  (let [old-string  (:string/previous state)
-        new-string  (:string/local state)]
-    (dispatch [:block/save {:uid        block-uid
-                            :old-string old-string
-                            :new-string new-string
-                            :callback   #()
-                            :add-time?  true}])))
+  (dispatch [:block/save {:uid       block-uid
+                          :string    (:string/local state)
+                          :callback  #()
+                          :add-time? true}]))
 
 
 ;; Components

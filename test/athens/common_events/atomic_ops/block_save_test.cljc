@@ -15,29 +15,24 @@
 
   (t/testing "Simple `:block/save` cases, just saving string."
     (let [block-uid     "block-uid-1"
-          empty-str     ""
           new-str       "new-string"
           block-save-op (graph-ops/build-block-save-op @@fixture/connection
                                                        block-uid
-                                                       empty-str
                                                        new-str)]
       (t/is (= #:op{:type    :block/save,
                     :atomic? true,
-                    :args    {:block-uid  block-uid
-                              :old-string empty-str
-                              :new-string new-str}}
+                    :args    {:block-uid block-uid
+                              :string    new-str}}
                block-save-op))))
 
   (t/testing "Requires `:page/new`, getting interesting"
     (let [block-uid         "block-uid-2"
-          empty-str         ""
           new-str           "[[new-page]]"
           {:op/keys [consequences
                      atomic?
                      trigger
                      type]} (graph-ops/build-block-save-op @@fixture/connection
                                                            block-uid
-                                                           empty-str
                                                            new-str)]
 
       (t/is (= :composite/consequence type))
@@ -48,9 +43,8 @@
       (t/is (= #:op{:type    :block/save,
                     :atomic? true,
                     :args
-                    {:block-uid  "block-uid-2",
-                     :old-string "",
-                     :new-string "[[new-page]]"}}
+                    {:block-uid "block-uid-2",
+                     :string    "[[new-page]]"}}
                (-> consequences second))))))
 
 
@@ -70,10 +64,7 @@
       (d/transact! @fixture/connection setup-txs)
       (let [child-1-eid    (common-db/e-by-av @@fixture/connection
                                               :block/uid child-1-uid)
-            block-save-op  (graph-ops/build-block-save-op @@fixture/connection
-                                                          child-1-uid
-                                                          empty-str
-                                                          new-str)
+            block-save-op  (graph-ops/build-block-save-op @@fixture/connection child-1-uid new-str)
             block-save-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                     block-save-op)]
         (t/is (= empty-str (common-db/v-by-ea @@fixture/connection
@@ -97,10 +88,7 @@
       (d/transact! @fixture/connection setup-txs)
       (let [child-1-eid        (common-db/e-by-av @@fixture/connection
                                                   :block/uid child-1-uid)
-            block-save-op      (graph-ops/build-block-save-op @@fixture/connection
-                                                              child-1-uid
-                                                              empty-str
-                                                              new-str)
+            block-save-op      (graph-ops/build-block-save-op @@fixture/connection child-1-uid new-str)
             block-save-atomics (graph-ops/extract-atomics block-save-op)]
         (t/is (nil? (common-db/e-by-av @@fixture/connection
                                        :node/title page-title)))

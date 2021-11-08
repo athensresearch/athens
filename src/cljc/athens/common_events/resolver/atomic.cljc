@@ -68,22 +68,11 @@
 
 ;; This is Atomic Graph Op, there is also composite version of it
 (defmethod resolve-atomic-op-to-tx :block/save
-  [db {:op/keys [args]}]
-  (let [{:keys [block-uid
-                new-string
-                old-string]} args
-        stored-old-string    (if-let [block-eid (common-db/e-by-av db :block/uid block-uid)]
-                               (common-db/v-by-ea db block-eid :block/string)
-                               "")]
-    (when-not (= stored-old-string old-string)
-      (print (ex-info ":block/save operation started from a stale state."
-                      {:op/args           args
-                       :actual-old-string stored-old-string})))
-    (let [now           (utils/now-ts)
-          updated-block {:block/uid    block-uid
-                         :block/string new-string
-                         :edit/time    now}]
-      [updated-block])))
+  [_db {:op/keys [args]}]
+  (let [{:keys [block-uid string]} args]
+    [{:block/uid    block-uid
+      :block/string string
+      :edit/time    (utils/now-ts)}]))
 
 
 (defmethod resolve-atomic-op-to-tx :block/move
