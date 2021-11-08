@@ -91,7 +91,7 @@
    - `internal-representation` of the pages/blocks selected"
 
   ([db internal-representation]
-   (composite/make-consequence-op {:op-type :block/paste} (internal-representation->atomic-ops db internal-representation nil)))
+   (composite/make-consequence-op {:op/type :block/paste} (internal-representation->atomic-ops db internal-representation nil)))
   ([db uid internal-representation]
    (let [current-block-parent-uid             (:block/uid (common-db/get-parent db [:block/uid uid]))
          {:block/keys [order
@@ -117,5 +117,5 @@
          default-position                     (common-db/compat-position db {:ref-uid  current-block-parent-uid
                                                                              :relation new-block-order})
          extra-ops                            (if empty-block? [(graph-ops/build-block-remove-op db uid)] [])]
-     (composite/make-consequence-op {:op-type :block/paste}
+     (composite/make-consequence-op {:op/type :block/paste}
                                     (concat extra-ops (internal-representation->atomic-ops db internal-representation default-position))))))

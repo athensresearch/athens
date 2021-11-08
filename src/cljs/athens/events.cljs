@@ -1282,7 +1282,7 @@
                                                                    string
                                                                    new-str)))
                                 unlinked-refs)
-          link-all-op         (composite-ops/make-consequence-op {:op-type :block/unlinked-refs-link-all}
+          link-all-op         (composite-ops/make-consequence-op {:op/type :block/unlinked-refs-link-all}
                                                                  block-save-ops)
           event              (common-events/build-atomic-event (:remote/last-seen-tx db) link-all-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
