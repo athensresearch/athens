@@ -389,18 +389,6 @@
       true (concat [[:db/add "new" :from-undo-redo true]]))))
 
 
-(defmethod resolve-event-to-tx :datascript/block-open
-  [_db {:event/keys [id type args]}]
-  (let [{:keys [block-uid
-                open?]}      args
-        new-block-state      [:db/add     [:block/uid block-uid]
-                              :block/open open?]
-        tx-data              [new-block-state]]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
 (defmethod resolve-event-to-tx :datascript/delete-only-child
   [db {:event/keys [id type args]}]
   (let [{:keys [uid]} args

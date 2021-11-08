@@ -303,6 +303,13 @@
       :node/title))
 
 
+(defn get-block-string
+  [db uid]
+  (-> db
+      (d/entity [:block/uid uid])
+      :block/string))
+
+
 (defn deepest-child-block
   [db id]
   (let [document (->> (d/pull db '[:block/order :block/uid {:block/children ...}] id)

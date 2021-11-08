@@ -69,7 +69,7 @@
                                       default-position default-position
                                       :else (throw (ex-info "Cannot determine position for enhanced internal representation" eir)))]
       [(atomic/make-block-new-op uid position)
-       (graph-ops/build-block-save-op db uid "" string)])))
+       (graph-ops/build-block-save-op db uid string)])))
 
 
 (defn internal-representation->atomic-ops

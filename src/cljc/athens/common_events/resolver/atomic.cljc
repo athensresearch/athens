@@ -68,22 +68,30 @@
 
 ;; This is Atomic Graph Op, there is also composite version of it
 (defmethod resolve-atomic-op-to-tx :block/save
+  [_db {:op/keys [args]}]
+  (let [{:keys [block-uid string]} args]
+    [{:block/uid    block-uid
+      :block/string string
+      :edit/time    (utils/now-ts)}]))
+
+
+(defmethod resolve-atomic-op-to-tx :block/open
   [db {:op/keys [args]}]
+  (log/debug "atomic-resolver :block/open args:" (pr-str args))
   (let [{:keys [block-uid
-                new-string
-                old-string]} args
-        stored-old-string    (if-let [block-eid (common-db/e-by-av db :block/uid block-uid)]
-                               (common-db/v-by-ea db block-eid :block/string)
-                               "")]
-    (when-not (= stored-old-string old-string)
-      (print (ex-info ":block/save operation started from a stale state."
-                      {:op/args           args
-                       :actual-old-string stored-old-string})))
-    (let [now           (utils/now-ts)
-          updated-block {:block/uid    block-uid
-                         :block/string new-string
-                         :edit/time    now}]
-      [updated-block])))
+                open?]} args
+        block-eid       (common-db/e-by-av db :block/uid block-uid)
+        current-open?   (when (int? block-eid)
+                          (common-db/v-by-ea db block-eid :block/open))]
+    (if (= current-open? open?)
+      (do
+        (log/info ":block/open already at desired state, :block/open" open?)
+        [])
+      (let [now           (utils/now-ts)
+            updated-block {:block/uid  block-uid
+                           :block/open open?
+                           :edit/time  now}]
+        [updated-block]))))
 
 
 (defmethod resolve-atomic-op-to-tx :block/move
@@ -228,7 +236,7 @@
                                     (let [c-uid   (:block/uid look-at)
                                           c-block (common-db/get-block db [:block/uid c-uid])]
                                       (recur (conj acc c-uid)
-                                             (apply conj (rest children)
+                                             (apply conj (rest to-look-at)
                                                     (:block/children c-block))))
                                     acc)))
         all-uids-to-remove    (conj (set descendants-uids) block-uid)

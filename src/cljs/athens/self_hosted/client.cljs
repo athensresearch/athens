@@ -291,7 +291,6 @@
     :datascript/left-sidebar-drop-above
     :datascript/left-sidebar-drop-below
     :datascript/selected-delete
-    :datascript/block-open
     :datascript/delete-only-child
     :datascript/delete-merge-block
     :datascript/paste-internal
