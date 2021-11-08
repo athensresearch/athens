@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.32](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.31...v1.0.0-alpha.rtc.32) (2021-11-08)
+
+
+### Bug Fixes
+
+* cleaner `page/page-by-title` ([a446a58](https://github.com/athensresearch/athens/commit/a446a5873c69efc7b29b9d204e43497340c050c0))
+* don't dispatch nil, reframe does not accept it. ([72a8272](https://github.com/athensresearch/athens/commit/72a8272d2faa0dbe3f6334b943e3168b8fa63479))
+* don't infinite loop during `:block/remove` ([e9b5180](https://github.com/athensresearch/athens/commit/e9b518098fcfff146fa0b31d3e34af3447168db0))
+* fix wrong refactor ([5dfa574](https://github.com/athensresearch/athens/commit/5dfa5744de9d543d89a836b74b2f25f5be489d81))
+* make nested page links work again. ([6e1f0e1](https://github.com/athensresearch/athens/commit/6e1f0e182e56d77a0252e003b2ac57a6717e9fc8))
+* style/carve happy ([aa54c78](https://github.com/athensresearch/athens/commit/aa54c78534dd42bc591b1694de5cebc83c9df0b0))
+* update own presence optimistically ([94ab5fb](https://github.com/athensresearch/athens/commit/94ab5fb4f1d8670a80b522555e017161fbfe73db))
+* use compat-position for child and bump up ([308356c](https://github.com/athensresearch/athens/commit/308356c327728bc017e069881235387ad6460635))
+
+
+### Enhancements
+
+* more informant 404 page. ([880133d](https://github.com/athensresearch/athens/commit/880133dfb97d8b256f324227455bfe7263516b2e))
+* navigate to pages by page title, not uid. ([66e3bf2](https://github.com/athensresearch/athens/commit/66e3bf2ba89013ec70805c5330575e0845710573))
+
+
+* bump fluree ([d749d88](https://github.com/athensresearch/athens/commit/d749d88a427981a1c1792a61bd7671f1ef374966))
+* separate arm64 ci build ([46da69c](https://github.com/athensresearch/athens/commit/46da69cab4255ba90a54089c5e3a420065c2ad2a))
+* this would infinite loop, but isn't anymore. ([dc36450](https://github.com/athensresearch/athens/commit/dc36450832451019fe253c9451d477f5eea5671b))
+
+
+### Refactors
+
+* remove last-tx ([cd56dde](https://github.com/athensresearch/athens/commit/cd56dde8643e4c92b8535ee367c43db84d745db4))
+* remove old-string from :block/save event ([9cea456](https://github.com/athensresearch/athens/commit/9cea456de456589aa36bb4df85954804678aedde))
+* remove response-accepted schema ([e9267c9](https://github.com/athensresearch/athens/commit/e9267c9a9ba11aa6f3660e49075751bc04afcc05))
+
 ## [1.0.0-alpha.rtc.31](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.30...v1.0.0-alpha.rtc.31) (2021-11-04)
 
 
