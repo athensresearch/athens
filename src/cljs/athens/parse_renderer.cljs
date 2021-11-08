@@ -3,41 +3,12 @@
   (:require
     ["katex" :as katex]
     ["katex/dist/contrib/mhchem"]
-    #_["codemirror/addon/edit/closebrackets"]
-    #_["codemirror/addon/edit/matchbrackets"]
-    #_["codemirror/mode/clike/clike"]
-    #_["codemirror/mode/clojure/clojure"]
-    #_["codemirror/mode/coffeescript/coffeescript"]
-    #_["codemirror/mode/commonlisp/commonlisp"]
-    #_["codemirror/mode/css/css"]
-    #_["codemirror/mode/dart/dart"]
-    #_["codemirror/mode/dockerfile/dockerfile"]
-    #_["codemirror/mode/elm/elm"]
-    #_["codemirror/mode/erlang/erlang"]
-    #_["codemirror/mode/go/go"]
-    #_["codemirror/mode/haskell/haskell"]
-    #_["codemirror/mode/javascript/javascript"]
-    #_["codemirror/mode/lua/lua"]
-    #_["codemirror/mode/mathematica/mathematica"]
-    #_["codemirror/mode/perl/perl"]
-    #_["codemirror/mode/php/php"]
-    #_["codemirror/mode/powershell/powershell"]
-    #_["codemirror/mode/python/python"]
-    #_["codemirror/mode/ruby/ruby"]
-    #_["codemirror/mode/rust/rust"]
-    #_["codemirror/mode/scheme/scheme"]
-    #_["codemirror/mode/shell/shell"]
-    #_["codemirror/mode/smalltalk/smalltalk"]
-    #_["codemirror/mode/sql/sql"]
-    #_["codemirror/mode/swift/swift"]
-    #_["codemirror/mode/vue/vue"]
-    #_["codemirror/mode/xml/xml"]
-    #_["react-codemirror2" :rename {UnControlled CodeMirror}]
     [athens.config :as config]
     [athens.db :as db]
     [athens.parser.impl :as parser-impl]
     [athens.router :as router]
     [athens.style :refer [color OPACITIES]]
+    [clojure.string :as str]
     [instaparse.core :as insta]
     [posh.reagent :refer [pull #_q]]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -94,6 +65,17 @@
                             :cursor "alias"}]]})
 
 
+(defn parse-title
+  "Title coll is a sequence of plain strings or hiccup elements. If string, return string, otherwise parse the hiccup
+  for its plain-text representation."
+  [title-coll]
+  (->> (map (fn [el]
+              (if (string? el)
+                el
+                (str "[[" (clojure.string/join (get-in el [3 2])) "]]"))) title-coll)
+       (str/join "")))
+
+
 (defn render-page-link
   "Renders a page link given the title of the page."
   [title]
@@ -101,7 +83,7 @@
    [:span {:class "formatting"} "[["]
    (into [:span {:on-click (fn [e]
                              (.. e stopPropagation) ; prevent bubbling up click handler for nested links
-                             (router/navigate-page title e))}]
+                             (router/navigate-page (parse-title title) e))}]
          title)
    [:span {:class "formatting"} "]]"]])
 
@@ -168,7 +150,7 @@
      :page-link            (fn [{_from :from} & title-coll] (render-page-link title-coll))
      :hashtag              (fn [{_from :from} & title-coll]
                              [:span (use-style hashtag {:class    "hashtag"
-                                                        :on-click #(router/navigate-page (first title-coll) %)})
+                                                        :on-click #(router/navigate-page (parse-title title-coll) %)})
                               [:span {:class "formatting"} "#"]
                               [:span {:class "contents"} title-coll]])
      :block-ref            (fn [{_from :from} ref-uid]
