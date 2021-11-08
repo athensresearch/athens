@@ -3,7 +3,6 @@
   (:require
     ["katex" :as katex]
     ["katex/dist/contrib/mhchem"]
-    [athens.common.logging :as log]
     [athens.config :as config]
     [athens.db :as db]
     [athens.parser.impl :as parser-impl]
