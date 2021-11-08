@@ -75,6 +75,25 @@
       :edit/time    (utils/now-ts)}]))
 
 
+(defmethod resolve-atomic-op-to-tx :block/open
+  [db {:op/keys [args]}]
+  (log/debug "atomic-resolver :block/open args:" (pr-str args))
+  (let [{:keys [block-uid
+                open?]} args
+        block-eid       (common-db/e-by-av db :block/uid block-uid)
+        current-open?   (when (int? block-eid)
+                          (common-db/v-by-ea db block-eid :block/open))]
+    (if (= current-open? open?)
+      (do
+        (log/info ":block/open already at desired state, :block/open" open?)
+        [])
+      (let [now           (utils/now-ts)
+            updated-block {:block/uid  block-uid
+                           :block/open open?
+                           :edit/time  now}]
+        [updated-block]))))
+
+
 (defmethod resolve-atomic-op-to-tx :block/move
   [db {:op/keys [args]}]
   (log/debug "atomic-resolver :block/move args:" (pr-str args))

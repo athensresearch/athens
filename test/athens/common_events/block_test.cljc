@@ -39,62 +39,6 @@
           (t/is (= string-new new-block-string)))))))
 
 
-(t/deftest block-open-test
-  (t/testing "Open a block with children"
-    (let [block-uid   "test-block-uid"
-          child-1-uid "child-1-1-uid"
-          string-init "start test string"
-          setup-tx    [{:block/uid      block-uid
-                        :block/string   string-init
-                        :block/order    0
-                        :block/open     false
-                        :block/children {:block/uid      child-1-uid
-                                         :block/string   ""
-                                         :block/order    0
-                                         :block/children []}}]]
-      (d/transact! @fixture/connection setup-tx)
-      (let [block-open-event   (common-events/build-block-open-event -1
-                                                                     block-uid
-                                                                     true)
-            block-open-txs     (resolver/resolve-event-to-tx @@fixture/connection
-                                                             block-open-event)
-            current-open-state (:block/open (common-db/get-block @@fixture/connection [:block/uid block-uid]))]
-
-        (t/is (= false current-open-state))
-        (d/transact! @fixture/connection block-open-txs)
-
-        (let [current-open-state (:block/open (common-db/get-block @@fixture/connection [:block/uid block-uid]))]
-          (t/is (= true current-open-state)))))))
-
-
-(t/deftest block-close-test
-  (t/testing "Close a block with children"
-    (let [block-uid   "test-block-uid"
-          child-1-uid "child-1-1-uid"
-          string-init "start test string"
-          setup-tx    [{:block/uid      block-uid
-                        :block/string   string-init
-                        :block/order    0
-                        :block/open     true
-                        :block/children {:block/uid      child-1-uid
-                                         :block/string   ""
-                                         :block/order    0
-                                         :block/children []}}]]
-      (d/transact! @fixture/connection setup-tx)
-      (let [block-open-event   (common-events/build-block-open-event -1
-                                                                     block-uid
-                                                                     false)
-            block-open-txs     (resolver/resolve-event-to-tx @@fixture/connection
-                                                             block-open-event)
-            current-open-state (:block/open (common-db/get-block @@fixture/connection [:block/uid block-uid]))]
-
-        (t/is (= true current-open-state))
-        (d/transact! @fixture/connection block-open-txs)
-
-        (let [current-open-state (:block/open (common-db/get-block @@fixture/connection [:block/uid block-uid]))]
-          (t/is (= false current-open-state)))))))
-
-
 (t/deftest new-block-tests
   (t/testing "Adding new block to new page"
     (let [page-1-uid  "page-1-uid"

@@ -293,7 +293,6 @@
     :datascript/unlinked-references-link
     :datascript/unlinked-references-link-all
     :datascript/selected-delete
-    :datascript/block-open
     :datascript/delete-only-child
     :datascript/delete-merge-block
     :datascript/paste-internal

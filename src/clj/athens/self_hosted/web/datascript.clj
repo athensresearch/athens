@@ -25,7 +25,6 @@
     :datascript/unlinked-references-link
     :datascript/unlinked-references-link-all
     :datascript/selected-delete
-    :datascript/block-open
     :datascript/delete-only-child
     :datascript/delete-merge-block
     :datascript/paste-internal})
@@ -34,6 +33,7 @@
 (def supported-atomic-ops
   #{:block/new
     :block/save
+    :block/open
     :block/remove
     :block/move
     :page/new
