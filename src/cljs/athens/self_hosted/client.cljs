@@ -147,16 +147,13 @@
   [event]
   (log/info "WSClient Connected:" event)
   (let [connection             (.-target event)
-        last-tx                @(rf/subscribe [:remote/last-seen-tx])
         username               @(rf/subscribe [:username])
         color                  @(rf/subscribe [:color])
         password               @(rf/subscribe [:password])
         session-intro          {:username username
                                 :color    color}
         {event-id :event/id
-         :as      hello-event} (common-events/build-presence-hello-event last-tx
-                                                                         session-intro
-                                                                         password)]
+         :as      hello-event} (common-events/build-presence-hello-event session-intro password)]
     (reset! ws-connection connection)
     (reset! reconnect-timer nil)
     (reset! reconnect-counter -1)
@@ -226,17 +223,16 @@
 
 
 (defn- db-dump-handler
-  [last-tx {:keys [datoms]}]
+  [{:keys [datoms]}]
   (log/debug "Received DB Dump")
   (rf/dispatch [:reset-conn (d/empty-db common-db/schema)])
   ;; TODO: this transact should be a internal representation event instead.
   (rf/dispatch [:transact (into [] (map datom->tx-entry) datoms)])
   (rf/dispatch [:remote/snapshot-dsdb])
   (rf/dispatch [:remote/start-event-sync])
-  (rf/dispatch [:remote/last-seen-tx! last-tx])
   (rf/dispatch [:db/sync])
   (rf/dispatch [:remote/connected])
-  (log/info "✅ Transacted DB dump. last-seen-tx" last-tx))
+  (log/info "✅ Transacted DB dump."))
 
 
 (defn- presence-session-id-handler
@@ -299,14 +295,14 @@
 
 
 (defn- server-event-handler
-  [{:event/keys [id last-tx type args] :as packet}]
+  [{:event/keys [id type args] :as packet}]
   (log/debug "event-id:" (pr-str id)
              ", type:" type
              "WSClient received from server")
   (if (schema/valid-server-event? packet)
 
     (condp contains? type
-      #{:datascript/db-dump} (db-dump-handler last-tx args)
+      #{:datascript/db-dump} (db-dump-handler args)
       #{:presence/session-id} (presence-session-id-handler args)
       #{:presence/online} (presence-online-handler args)
       #{:presence/all-online} (presence-all-online-handler args)
@@ -415,21 +411,16 @@
 
   ;; send a `:presence/hello` event
   (send! {:event/id      "test-id"
-          :event/last-tx 0
           :event/type    :presence/hello
           :event/args    {:username "Bob's your uncle"}})
   ;; => {:result :sent}
 
   ;; test atomic op
   (send! {:event/id (random-uuid)
-          :event/last-tx 1
           :event/type :op/atomic
           :event/args #:op{:type :block/new,
                            :atomic? true,
                            :args {:parent-uid "test1", :block-uid "test2", :block-order 2}}})
 
   (send! (common-events/build-atomic-event
-          1
           (atomic-graph-ops/make-page-new-op "test title"))))
-
-

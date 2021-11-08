@@ -4,7 +4,6 @@
     [athens.common-events          :as common-events]
     [athens.common-events.fixture  :as fixture]
     [athens.common-events.resolver :as resolver]
-    [clojure.string                :as string]
     [clojure.test                  :as test]
     [datascript.core               :as d])
   #?(:clj
@@ -34,8 +33,7 @@
       (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
       (let [uid-by-title    (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             rename-page-txs (resolver/resolve-event-to-tx @@fixture/connection
-                                                          (common-events/build-page-rename-event -1
-                                                                                                 test-page-uid
+                                                          (common-events/build-page-rename-event test-page-uid
                                                                                                  test-title-from
                                                                                                  test-title-to))]
         (test/is (= test-page-uid uid-by-title))
@@ -62,8 +60,7 @@
       (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
       (let [uid-by-title    (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             rename-page-txs (resolver/resolve-event-to-tx @@fixture/connection
-                                                          (common-events/build-page-rename-event -1
-                                                                                                 test-page-uid
+                                                          (common-events/build-page-rename-event test-page-uid
                                                                                                  test-title-from
                                                                                                  test-title-to))]
         (test/is (= test-page-uid uid-by-title))
@@ -106,8 +103,7 @@
       (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
       (let [uid-by-title   (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             merge-page-txs (resolver/resolve-event-to-tx @@fixture/connection
-                                                         (common-events/build-page-merge-event -1
-                                                                                               test-page-from-uid
+                                                         (common-events/build-page-merge-event test-page-from-uid
                                                                                                test-title-from
                                                                                                test-title-to))]
         (test/is (= test-page-from-uid uid-by-title))
@@ -149,8 +145,7 @@
       (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
       (let [uid-by-title   (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             merge-page-txs (resolver/resolve-event-to-tx @@fixture/connection
-                                                         (common-events/build-page-merge-event -1
-                                                                                               test-page-from-uid
+                                                         (common-events/build-page-merge-event test-page-from-uid
                                                                                                test-title-from
                                                                                                test-title-to))]
         (test/is (= test-page-from-uid uid-by-title))
@@ -191,7 +186,7 @@
         (test/is (seq e-by-title))
         (test/is (= e-by-title e-by-uid)))
 
-      (let [delete-page-event (common-events/build-page-delete-event -1 test-uid)
+      (let [delete-page-event (common-events/build-page-delete-event test-uid)
             delete-page-txs   (resolver/resolve-event-to-tx @@fixture/connection
                                                             delete-page-event)]
 
@@ -242,7 +237,7 @@
       ;; delete page 1
       (d/transact! @fixture/connection
                    (->> test-page-1-uid
-                        (common-events/build-page-delete-event -1)
+                        (common-events/build-page-delete-event)
                         (resolver/resolve-event-to-tx @@fixture/connection)))
       ;; check if page reference was cleaned
       (test/is (= #{[test-page-1-title]}
@@ -284,7 +279,7 @@
 
     ;; add the pages to the page shortcut
     (run!
-      #(->> (common-events/build-page-add-shortcut -1 %)
+      #(->> (common-events/build-page-add-shortcut %)
             (resolver/resolve-event-to-tx @@fixture/connection)
             (d/transact! @fixture/connection))
       [test-uid-0 test-uid-1 test-uid-2])
@@ -344,7 +339,7 @@
 
     ;; add the pages to the page shortcut
     (run!
-      #(->> (common-events/build-page-add-shortcut -1 %)
+      #(->> (common-events/build-page-add-shortcut %)
             (resolver/resolve-event-to-tx @@fixture/connection)
             (d/transact! @fixture/connection))
       [test-uid-0 test-uid-1 test-uid-2])
@@ -371,7 +366,7 @@
         "check if the page-shortcuts are added based on the sequence of the moment they're added"))
 
     ;; remove a page from the page-shortcut
-    (->> (common-events/build-page-remove-shortcut -1 test-uid-1)
+    (->> (common-events/build-page-remove-shortcut test-uid-1)
          (resolver/resolve-event-to-tx @@fixture/connection)
          (d/transact! @fixture/connection))
 
@@ -394,5 +389,3 @@
                           [test-title-0 test-title-2])
              (every? true?))
         "check if the page shortcuts are still ordered after removing a page"))))
-
-

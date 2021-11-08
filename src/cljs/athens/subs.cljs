@@ -140,12 +140,6 @@
 
 
 (rf/reg-sub
-  :remote/last-seen-tx
-  (fn [db _]
-    (:remote/last-seen-tx db -1)))
-
-
-(rf/reg-sub
   :connection-status
   (fn [db _]
     (:connection-status db)))

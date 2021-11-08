@@ -46,7 +46,7 @@
   (locking single-writer-guard
     (try
       (atomic-resolver/resolve-transact! conn event)
-      (common-events/build-event-accepted id (:max-tx @conn))
+      (common-events/build-event-accepted id)
       (catch ExceptionInfo ex
         (let [err-msg   (ex-message ex)
               err-data  (ex-data ex)
@@ -86,14 +86,14 @@
 
 
 (defn atomic-op-handler
-  [conn channel {:event/keys [id op]}]
+  [conn channel {:event/keys [id op] :as event}]
   (let [username          (clients/get-client-username channel)
         {:op/keys [type]} op]
     (log/debug "username:" username
                "event-id:" id
                "-> Received Atomic Op Type:" (pr-str type))
     (if (contains? supported-atomic-ops type)
-      (exec! conn op)
+      (exec! conn event)
       (common-events/build-event-rejected id
                                           (str "Under development event: " type)
                                           {:unsuported-type type}))))

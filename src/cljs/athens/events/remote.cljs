@@ -46,22 +46,6 @@
                                    [:presence/clear]]}))
 
 
-(rf/reg-event-db
-  :remote/updated-last-seen-tx
-  (fn [db _]
-    ;; TODO(RTC): clean this up, we don't need last seen TX no mo
-    (log/debug ":remote/updated-last-seen-tx")
-    db))
-
-
-(rf/reg-event-fx
-  :remote/last-seen-tx!
-  (fn [{db :db} [_ new-tx-id]]
-    (log/debug "last-seen-tx!" new-tx-id)
-    {:db (assoc db :remote/last-seen-tx new-tx-id)
-     :fx [[:dispatch [:remote/updated-last-seen-tx]]]}))
-
-
 ;; Send it
 
 (rf/reg-event-fx

@@ -171,9 +171,7 @@
         open-block-tx     [:db/add [:block/uid parent-uid] :block/open true]
         ;; delegate add-child-tx creation
         add-child-tx      (resolve-event-to-tx db
-                                               (common-events/build-add-child-event -1
-                                                                                    parent-uid
-                                                                                    new-uid))
+                                               (common-events/build-add-child-event parent-uid new-uid))
         tx-data           (into [open-block-tx] add-child-tx)]
     (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
                ", resolved-tx:" (pr-str tx-data))

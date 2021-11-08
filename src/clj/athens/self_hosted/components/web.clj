@@ -16,11 +16,11 @@
 ;; WebSocket handlers
 
 (defn close-handler
-  [conn channel status]
+  [channel status]
   (let [{:keys [username] :as session} (clients/get-client-session channel)]
     (clients/remove-client! channel)
     ;; Notify clients after removing the one that left.
-    (presence/goodbye-handler conn session)
+    (presence/goodbye-handler session)
     (log/info "username:" username "!! closed connection, status:" status)))
 
 
@@ -103,7 +103,7 @@
   (fn websocket-handler
     [request]
     (http/as-channel request
-                     {:on-close   (partial close-handler (:conn datascript))
+                     {:on-close   close-handler
                       :on-receive (make-receive-handler datascript fluree in-memory? server-password)})))
 
 

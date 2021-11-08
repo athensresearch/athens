@@ -9,12 +9,10 @@
 ;; - confirmation events
 
 (defn build-event-accepted
-  "Builds ACK Event Response with `:accepted/tx-id` transaction id
-  that accepted this event."
-  [id tx-id]
-  {:event/id       id
-   :event/status   :accepted
-   :accepted/tx-id tx-id})
+  "Builds ACK Event Response accepting this event."
+  [id]
+  {:event/id     id
+   :event/status :accepted})
 
 
 (defn build-event-rejected
@@ -30,24 +28,22 @@
 
 (defn build-db-dump-event
   "Builds `:datascript/db-dump` events with `datoms`."
-  [last-tx datoms]
+  [datoms]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/db-dump
-     :event/args    {:datoms datoms}}))
+    {:event/id   event-id
+     :event/type :datascript/db-dump
+     :event/args {:datoms datoms}}))
 
 
 ;; undo-redo events
 
 (defn build-undo-redo-event
   "Builds `:datascript/undo-redo`"
-  [last-tx redo?]
+  [redo?]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/undo-redo
-     :event/args    {:redo? redo?}}))
+    {:event/id   event-id
+     :event/type :datascript/undo-redo
+     :event/args {:redo? redo?}}))
 
 
 ;;   - page events
@@ -57,14 +53,13 @@
   - `uid`: of page to rename,
   - `old-name`: Old page name
   - `new-name`: New page name"
-  [last-tx uid old-name new-name]
+  [uid old-name new-name]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/rename-page
-     :event/args    {:uid      uid
-                     :old-name old-name
-                     :new-name new-name}}))
+    {:event/id   event-id
+     :event/type :datascript/rename-page
+     :event/args {:uid      uid
+                  :old-name old-name
+                  :new-name new-name}}))
 
 
 (defn build-page-merge-event
@@ -72,25 +67,23 @@
   - `uid`: `:block/uid` of page being renamed
   - `old-name`: old page name
   - `new-name`: new page name"
-  [last-tx uid old-name new-name]
+  [uid old-name new-name]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/merge-page
-     :event/args    {:uid      uid
-                     :old-name old-name
-                     :new-name new-name}}))
+    {:event/id   event-id
+     :event/type :datascript/merge-page
+     :event/args {:uid      uid
+                  :old-name old-name
+                  :new-name new-name}}))
 
 
 (defn build-page-delete-event
   "Builds `:datascript/page-delete` event with:
   - `uid`: of page to be deleted."
-  [last-tx uid]
+  [uid]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/delete-page
-     :event/args    {:uid uid}}))
+    {:event/id   event-id
+     :event/type :datascript/delete-page
+     :event/args {:uid uid}}))
 
 
 ;;   - block events
@@ -101,14 +94,13 @@
   - `uid`       : `:block/uid` of block to save
   - `new-string`: new value for `:block/string`
   - `add-time?` : Should `:edit/time` for this block be transacted"
-  [last-tx uid new-string add-time?]
+  [uid new-string add-time?]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/block-save
-     :event/args    {:uid        uid
-                     :new-string new-string
-                     :add-time?  add-time?}}))
+    {:event/id   event-id
+     :event/type :datascript/block-save
+     :event/args {:uid        uid
+                  :new-string new-string
+                  :add-time?  add-time?}}))
 
 
 (defn build-new-block-event
@@ -116,14 +108,13 @@
   - `parent-uid`: `:block/uid` of parent node
   - `block-order`: order of current block
   - `new-uid`: `:block/uid` for new block"
-  [last-tx parent-uid block-order new-uid]
+  [parent-uid block-order new-uid]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/new-block
-     :event/args    {:parent-uid  parent-uid
-                     :block-order block-order
-                     :new-uid     new-uid}}))
+    {:event/id   event-id
+     :event/type :datascript/new-block
+     :event/args {:parent-uid  parent-uid
+                  :block-order block-order
+                  :new-uid     new-uid}}))
 
 
 (defn build-add-child-event
@@ -131,33 +122,30 @@
   - `parent-uid`: `:block/uid` of parent block
   - `new-uid`  : new child's block uid
   - `add-time?`: Should `:edit/time` for this block be transacted"
-  ([last-tx parent-uid new-uid] (let [event-id (utils/gen-event-id)]
-                                  {:event/id      event-id
-                                   :event/last-tx last-tx
-                                   :event/type    :datascript/add-child
-                                   :event/args    {:parent-uid parent-uid
-                                                   :new-uid    new-uid
-                                                   :add-time?  false}}))
-  ([last-tx parent-uid new-uid add-time?] (let [event-id (utils/gen-event-id)]
-                                            {:event/id      event-id
-                                             :event/last-tx last-tx
-                                             :event/type    :datascript/add-child
-                                             :event/args    {:parent-uid parent-uid
-                                                             :new-uid    new-uid
-                                                             :add-time?  add-time?}})))
+  ([parent-uid new-uid] (let [event-id (utils/gen-event-id)]
+                          {:event/id   event-id
+                           :event/type :datascript/add-child
+                           :event/args {:parent-uid parent-uid
+                                        :new-uid    new-uid
+                                        :add-time?  false}}))
+  ([parent-uid new-uid add-time?] (let [event-id (utils/gen-event-id)]
+                                    {:event/id   event-id
+                                     :event/type :datascript/add-child
+                                     :event/args {:parent-uid parent-uid
+                                                  :new-uid    new-uid
+                                                  :add-time?  add-time?}})))
 
 
 (defn build-open-block-add-child-event
   "Builds `:datascript/open-block-add-child` event with:
   - `parent-uid`: `:block/uid` of parent block
   - `new-uid`: `:block/uid` for new block"
-  [last-tx parent-uid new-uid]
+  [parent-uid new-uid]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/open-block-add-child
-     :event/args    {:parent-uid parent-uid
-                     :new-uid    new-uid}}))
+    {:event/id   event-id
+     :event/type :datascript/open-block-add-child
+     :event/args {:parent-uid parent-uid
+                  :new-uid    new-uid}}))
 
 
 (defn build-split-block-event
@@ -166,133 +154,121 @@
   - `value`: Current `:block/string` of block splitted
   - `index`: index of the split
   - `new-uid`: `:block/uid` of new block"
-  [last-tx uid value index new-uid]
+  [uid value index new-uid]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/split-block
-     :event/args    {:uid     uid
-                     :value   value
-                     :index   index
-                     :new-uid new-uid}}))
+    {:event/id   event-id
+     :event/type :datascript/split-block
+     :event/args {:uid     uid
+                  :value   value
+                  :index   index
+                  :new-uid new-uid}}))
 
 
 (defn build-page-add-shortcut
   "Builds `:datascript/page-add-shortcut` event with:
   - `uid`: `:block/uid` of triggering block"
-  [last-tx uid]
+  [uid]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/page-add-shortcut
-     :event/args    {:uid uid}}))
+    {:event/id   event-id
+     :event/type :datascript/page-add-shortcut
+     :event/args {:uid uid}}))
 
 
 (defn build-page-remove-shortcut
   "Builds `:datascript/page-remove-shortcut` event with:
   - `uid`: `:block/uid` of triggering block"
-  [last-tx uid]
+  [uid]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/page-remove-shortcut
-     :event/args    {:uid uid}}))
+    {:event/id   event-id
+     :event/type :datascript/page-remove-shortcut
+     :event/args {:uid uid}}))
 
 
 (defn build-left-sidebar-drop-above
   "Builds `:datascript/left-sidebar-drop-above` event with:
   - `source-order`: original position on the left sidebar
   - `target-order`: new position on the left sidebar"
-  [last-tx source-order target-order]
+  [source-order target-order]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/left-sidebar-drop-above
-     :event/args    {:source-order source-order
-                     :target-order target-order}}))
+    {:event/id   event-id
+     :event/type :datascript/left-sidebar-drop-above
+     :event/args {:source-order source-order
+                  :target-order target-order}}))
 
 
 (defn build-left-sidebar-drop-below
   "Builds `:datascript/left-sidebar-drop-below` event with:
   - `source-order`: original position on the left sidebar
   - `target-order`: new position on the left sidebar"
-  [last-tx source-order target-order]
+  [source-order target-order]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :datascript/left-sidebar-drop-below
-     :event/args    {:source-order source-order
-                     :target-order target-order}}))
+    {:event/id   event-id
+     :event/type :datascript/left-sidebar-drop-below
+     :event/args {:source-order source-order
+                  :target-order target-order}}))
 
 
 ;; - presence events
 
 (defn build-presence-hello-event
   "Builds `:presence/hello` event with `session-intro` and `password` (optional)."
-  ([last-tx session-intro]
-   (build-presence-hello-event last-tx session-intro nil))
-  ([last-tx session-intro password]
+  ([session-intro]
+   (build-presence-hello-event session-intro nil))
+  ([session-intro password]
    (let [event-id (utils/gen-event-id)]
-     {:event/id      event-id
-      :event/last-tx last-tx
-      :event/type    :presence/hello
-      :event/args    (cond-> {:session-intro session-intro}
-                       password (merge {:password password}))})))
+     {:event/id   event-id
+      :event/type :presence/hello
+      :event/args (cond-> {:session-intro session-intro}
+                    password (merge {:password password}))})))
 
 
 (defn build-presence-session-id-event
   "Builds `:presence/session-id` event with `session-id` for the client."
-  [last-tx session-id]
+  [session-id]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :presence/session-id
-     :event/args    {:session-id session-id}}))
+    {:event/id   event-id
+     :event/type :presence/session-id
+     :event/args {:session-id session-id}}))
 
 
 (defn build-presence-online-event
   "Builds `:presence/online` event with `session` that went online."
-  [last-tx session]
+  [session]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :presence/online
-     :event/args    session}))
+    {:event/id   event-id
+     :event/type :presence/online
+     :event/args session}))
 
 
 (defn build-presence-all-online-event
   "Builds `:presence/all-online` event with all active users."
-  [last-tx sessions]
+  [sessions]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :presence/all-online
-     :event/args    (vec sessions)}))
+    {:event/id   event-id
+     :event/type :presence/all-online
+     :event/args (vec sessions)}))
 
 
 (defn build-presence-offline-event
-  [last-tx session]
-  (let [event (build-presence-online-event last-tx session)]
+  [session]
+  (let [event (build-presence-online-event session)]
     (assoc event :event/type :presence/offline)))
 
 
 (defn build-presence-update-event
   "Builds `:presence/update` event with `session-id` and map of session props to update."
-  [last-tx session-id updates]
+  [session-id updates]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :presence/update
-     :event/args    (merge {:session-id session-id}
-                           updates)}))
+    {:event/id   event-id
+     :event/type :presence/update
+     :event/args (merge {:session-id session-id}
+                        updates)}))
 
 
 (defn build-atomic-event
   "Builds atomic graph operation"
-  [last-tx atomic-op]
+  [atomic-op]
   (let [event-id (utils/gen-event-id)]
-    {:event/id      event-id
-     :event/last-tx last-tx
-     :event/type    :op/atomic
-     :event/op      atomic-op}))
-
+    {:event/id   event-id
+     :event/type :op/atomic
+     :event/op   atomic-op}))

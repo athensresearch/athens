@@ -54,7 +54,6 @@
 (def event-common
   [:map
    [:event/id uuid?]
-   [:event/last-tx int?]
    [:event/type [:or
                  event-type-presence-client
                  event-type-graph
@@ -64,7 +63,6 @@
 (def event-common-server
   [:map
    [:event/id uuid?]
-   [:event/last-tx int?]
    [:event/type [:or
                  event-type-graph
                  event-type-graph-server
@@ -323,11 +321,6 @@
    [:event/status event-status]])
 
 
-(def response-accepted
-  [:map
-   [:accepted/tx-id int?]])
-
-
 (def rejection-reason
   [:enum :introduce-yourself :stale-client])
 
@@ -340,8 +333,7 @@
 
 (def event-response
   [:multi {:dispatch :event/status}
-   [:accepted (mu/merge event-response-common
-                        response-accepted)]
+   [:accepted event-response-common]
    [:rejected (mu/merge event-response-common
                         response-rejected)]])
 
