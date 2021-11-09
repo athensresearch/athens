@@ -386,14 +386,14 @@
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
-  [e _uid _state]
+  [e _uid state]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items                 @(subscribe [::select-subs/items])
         editing-uid                    @(subscribe [:editing/uid])
         current-root-uid               @(subscribe [:current-route/uid])
         [editing-uid embed-id]         (db/uid-and-embed-id editing-uid)
-        local-string                   (:string/local @_state)]
+        local-string                   (:string/local @state)]
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent {:uid              editing-uid
