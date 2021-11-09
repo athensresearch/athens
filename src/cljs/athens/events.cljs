@@ -1046,11 +1046,12 @@
 
 
 (defn block-save-block-move-composite-op
-  [source-uid ref-uid relation string]
+  [db source-uid ref-uid relation string]
   (let [block-save-op             (graph-ops/build-block-save-op @db/dsdb source-uid string)
+        location                  (common-db/compat-position db {:ref-title ref-uid
+                                                                 :relation relation})
         block-move-op             (atomic-graph-ops/make-block-move-op source-uid
-                                                                       {:ref-uid ref-uid
-                                                                        :relation relation})
+                                                                       location)
         block-save-block-move-op  (composite-ops/make-consequence-op {:op/type :block-save-block-move}
                                                                      [block-save-op
                                                                       block-move-op])]
@@ -1059,7 +1060,7 @@
 
 (reg-event-fx
   :indent
-  (fn [_ [_ {:keys [uid d-key-down local-string] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid d-key-down local-string] :as args}]]
     ;; - `block-zero`: The first block in a page
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
@@ -1068,7 +1069,8 @@
           block-zero?                  (zero? (:block/order block))
           [prev-block-uid target-rel]  (get-prev-block-uid-and-target-rel uid)
           {:keys [start end]}          d-key-down
-          block-save-block-move-op     (block-save-block-move-composite-op uid
+          block-save-block-move-op     (block-save-block-move-composite-op db
+                                                                           uid
                                                                            prev-block-uid
                                                                            target-rel
                                                                            local-string)
@@ -1106,7 +1108,7 @@
 
 (reg-event-fx
   :unindent
-  (fn [_ [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
     (log/debug ":unindent args" (pr-str args))
     (let [parent                    (common-db/get-parent @db/dsdb
                                                           (common-db/e-by-av @db/dsdb :block/uid uid))
@@ -1120,7 +1122,8 @@
                                         (:node/title parent)
                                         (= context-root-uid (:block/uid parent)))
           {:keys [start end]}       d-key-down
-          block-save-block-move-op  (block-save-block-move-composite-op uid
+          block-save-block-move-op  (block-save-block-move-composite-op db
+                                                                        uid
                                                                         (:block/uid parent)
                                                                         :after
                                                                         local-string)
