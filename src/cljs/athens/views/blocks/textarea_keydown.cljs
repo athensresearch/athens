@@ -392,16 +392,19 @@
         selected-items                 @(subscribe [::select-subs/items])
         editing-uid                    @(subscribe [:editing/uid])
         current-root-uid               @(subscribe [:current-route/uid])
-        [editing-uid embed-id]         (db/uid-and-embed-id editing-uid)]
+        [editing-uid embed-id]         (db/uid-and-embed-id editing-uid)
+        local-string                   (:string/local @_state)]
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent {:uid              editing-uid
                               :d-key-down       d-key-down
                               :context-root-uid current-root-uid
-                              :embed-id         embed-id}])
+                              :embed-id         embed-id
+                              :local-string     local-string}])
         (dispatch [:indent
-                   {:uid        editing-uid
-                    :d-key-down d-key-down}])))))
+                   {:uid           editing-uid
+                    :d-key-down    d-key-down
+                    :local-string  local-string}])))))
 
 
 (defn handle-escape
