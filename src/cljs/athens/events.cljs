@@ -1043,9 +1043,22 @@
     [prev-block-uid target-rel]))
 
 
+(defn block-save-block-move-composite-op
+  [db source-uid ref-uid relation string]
+  (let [block-save-op             (graph-ops/build-block-save-op @db/dsdb source-uid string)
+        location                  (common-db/compat-position db {:ref-title ref-uid
+                                                                 :relation relation})
+        block-move-op             (atomic-graph-ops/make-block-move-op source-uid
+                                                                       location)
+        block-save-block-move-op  (composite-ops/make-consequence-op {:op/type :block-save-block-move}
+                                                                     [block-save-op
+                                                                      block-move-op])]
+    block-save-block-move-op))
+
+
 (reg-event-fx
   :indent
-  (fn [_ [_ {:keys [uid d-key-down] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid d-key-down local-string] :as args}]]
     ;; - `block-zero`: The first block in a page
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
@@ -1053,16 +1066,21 @@
     (let [block                        (common-db/get-block @db/dsdb [:block/uid uid])
           block-zero?                  (zero? (:block/order block))
           [prev-block-uid target-rel]  (get-prev-block-uid-and-target-rel uid)
-          {:keys [start end]}          d-key-down]
+          {:keys [start end]}          d-key-down
+          block-save-block-move-op     (block-save-block-move-composite-op db
+                                                                           uid
+                                                                           prev-block-uid
+                                                                           target-rel
+                                                                           local-string)
+          event                        (common-events/build-atomic-event block-save-block-move-op)]
+
       (log/debug "null-sib-uid" (and block-zero?
                                      prev-block-uid)
                  ", args:" (pr-str args)
                  ", block-zero?" block-zero?)
       (when (and prev-block-uid
                  (not block-zero?))
-        {:fx [[:dispatch            [:block/move {:source-uid uid
-                                                  :target-uid prev-block-uid
-                                                  :target-rel target-rel}]]
+        {:fx [[:dispatch            [:resolve-transact-forward event]]
               [:set-cursor-position [uid start end]]]}))))
 
 
@@ -1088,7 +1106,7 @@
 
 (reg-event-fx
   :unindent
-  (fn [_ [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
     (log/debug ":unindent args" (pr-str args))
     (let [parent                    (common-db/get-parent @db/dsdb
                                                           (common-db/e-by-av @db/dsdb :block/uid uid))
@@ -1101,12 +1119,17 @@
           do-nothing?               (or is-parent-root-embed?
                                         (:node/title parent)
                                         (= context-root-uid (:block/uid parent)))
-          {:keys [start end]} d-key-down]
+          {:keys [start end]}       d-key-down
+          block-save-block-move-op  (block-save-block-move-composite-op db
+                                                                        uid
+                                                                        (:block/uid parent)
+                                                                        :after
+                                                                        local-string)
+          event                     (common-events/build-atomic-event block-save-block-move-op)]
+
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [[:dispatch-n [[:block/move {:source-uid uid
-                                          :target-uid (:block/uid parent)
-                                          :target-rel :after}]
+        {:fx [[:dispatch-n [[:resolve-transact-forward event]
                             [:editing/uid (str uid (when embed-id
                                                      (str "-embed-" embed-id)))]]]
               [:set-cursor-position [uid start end]]]}))))
