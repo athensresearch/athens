@@ -11,7 +11,6 @@
 
 (set! (.. autoUpdater -logger) log)
 (set! (.. autoUpdater -logger -transports -file -level) "info")
-(set! (.. autoUpdater -channel) "beta")
 (set! (.. autoUpdater -autoDownload) false)
 (set! (.. autoUpdater -autoInstallOnAppQuit) false)
 
