@@ -12,14 +12,6 @@
 
 (def log (js/require "electron-log"))
 
-
-;; Channels don't work on github releases, instead using prereleases.
-;; Also see .github/workflows/build.yml for more context and how auto-update data is published.
-;; https://github.com/electron-userland/electron-builder/issues/1722#issuecomment-310468372
-;; https://github.com/electron-userland/electron-builder/issues/4988
-;; https://www.electron.build/auto-update#appupdater-eventemitter
-(set! (.. autoUpdater -allowPrerelease) true)
-
 (set! (.. autoUpdater -logger) log)
 (set! (.. autoUpdater -logger -transports -file -level) "info")
 (set! (.. autoUpdater -autoDownload) false)
