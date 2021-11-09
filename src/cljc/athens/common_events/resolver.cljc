@@ -1,7 +1,6 @@
 (ns athens.common-events.resolver
   (:require
     [athens.common-db :as common-db]
-    [athens.common-events :as common-events]
     [athens.common.logging :as log]
     [athens.common.utils :as utils]
     [athens.patterns :as patterns]
@@ -159,20 +158,6 @@
         new-block         {:block/uid      parent-uid
                            :block/children reindex}
         tx-data           [new-block]]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
-(defmethod resolve-event-to-tx :datascript/open-block-add-child
-  [db {:event/keys [id type args]}]
-  (let [{:keys [parent-uid
-                new-uid]} args
-        open-block-tx     [:db/add [:block/uid parent-uid] :block/open true]
-        ;; delegate add-child-tx creation
-        add-child-tx      (resolve-event-to-tx db
-                                               (common-events/build-add-child-event parent-uid new-uid))
-        tx-data           (into [open-block-tx] add-child-tx)]
     (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
                ", resolved-tx:" (pr-str tx-data))
     tx-data))

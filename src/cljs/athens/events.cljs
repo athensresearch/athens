@@ -914,11 +914,19 @@
 (reg-event-fx
   :enter/open-block-add-child
   (fn [_ [_ {:keys [block new-uid embed-id]}]]
+    ;; Triggered when there is a closed embeded block with no content in the top level block
+    ;; and then one presses enter in the embeded block.
     (log/debug ":enter/open-block-add-child" (pr-str block) (pr-str new-uid))
     (let [block-uid                  (:block/uid block)
-          event (common-events/build-open-block-add-child-event
-                  block-uid
-                  new-uid)]
+          block-open-op           (atomic-graph-ops/make-block-open-op block-uid
+                                                                       true)
+          position                (common-db/compat-position @db/dsdb {:ref-uid  (:block/uid block)
+                                                                       :relation :first})
+          add-child-op            (atomic-graph-ops/make-block-new-op new-uid position)
+          open-block-add-child-op (composite-ops/make-consequence-op {:op/type :open-block-add-child}
+                                                                     [block-open-op
+                                                                      add-child-op])
+          event                   (common-events/build-atomic-event open-block-add-child-op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
@@ -951,6 +959,7 @@
         root-block?           (boolean (:node/title parent))
         context-root-uid      (get-in rfdb [:current-route :path-params :id])
         new-uid               (common.utils/gen-block-uid)
+
         {:keys [value start]} d-key-down
         event                 (cond
                                 (and (:block/open block)

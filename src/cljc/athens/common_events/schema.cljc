@@ -29,7 +29,6 @@
    :datascript/block-save
    :datascript/new-block
    :datascript/add-child
-   :datascript/open-block-add-child
    :datascript/split-block
    :datascript/page-add-shortcut
    :datascript/page-remove-shortcut
@@ -183,14 +182,6 @@
      [:add-time? boolean?]]]])
 
 
-(def datascript-open-block-add-child
-  [:map
-   [:event/args
-    [:map
-     [:parent-uid string?]
-     [:new-uid   string?]]]])
-
-
 (def datascript-split-block
   [:map
    [:event/args
@@ -286,7 +277,6 @@
    (dispatch :datascript/new-block datascript-new-block)
    (dispatch :datascript/add-child datascript-add-child)
    ;; Same args as `datascript-add-child`
-   (dispatch :datascript/open-block-add-child datascript-open-block-add-child)
    (dispatch :datascript/split-block datascript-split-block)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/paste-internal datascript-paste-internal)
@@ -373,7 +363,6 @@
    (dispatch :datascript/new-block datascript-new-block true)
    (dispatch :datascript/add-child datascript-add-child true)
    ;; Same args as `datascript-add-child`
-   (dispatch :datascript/open-block-add-child datascript-open-block-add-child true)
    (dispatch :datascript/split-block datascript-split-block true)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/paste-internal datascript-paste-internal true)

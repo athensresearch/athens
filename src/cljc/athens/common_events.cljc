@@ -136,18 +136,6 @@
                                                   :add-time?  add-time?}})))
 
 
-(defn build-open-block-add-child-event
-  "Builds `:datascript/open-block-add-child` event with:
-  - `parent-uid`: `:block/uid` of parent block
-  - `new-uid`: `:block/uid` for new block"
-  [parent-uid new-uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/open-block-add-child
-     :event/args {:parent-uid parent-uid
-                  :new-uid    new-uid}}))
-
-
 (defn build-split-block-event
   "Builds `:datascript/split-block` event with:
   - `uid`: `:block/uid` of block we're splitting
