@@ -103,37 +103,6 @@
                   :new-uid     new-uid}}))
 
 
-(defn build-add-child-event
-  "Builds `:datascript/add-child` event with:
-  - `parent-uid`: `:block/uid` of parent block
-  - `new-uid`  : new child's block uid
-  - `add-time?`: Should `:edit/time` for this block be transacted"
-  ([parent-uid new-uid] (let [event-id (utils/gen-event-id)]
-                          {:event/id   event-id
-                           :event/type :datascript/add-child
-                           :event/args {:parent-uid parent-uid
-                                        :new-uid    new-uid
-                                        :add-time?  false}}))
-  ([parent-uid new-uid add-time?] (let [event-id (utils/gen-event-id)]
-                                    {:event/id   event-id
-                                     :event/type :datascript/add-child
-                                     :event/args {:parent-uid parent-uid
-                                                  :new-uid    new-uid
-                                                  :add-time?  add-time?}})))
-
-
-(defn build-open-block-add-child-event
-  "Builds `:datascript/open-block-add-child` event with:
-  - `parent-uid`: `:block/uid` of parent block
-  - `new-uid`: `:block/uid` for new block"
-  [parent-uid new-uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/open-block-add-child
-     :event/args {:parent-uid parent-uid
-                  :new-uid    new-uid}}))
-
-
 (defn build-split-block-event
   "Builds `:datascript/split-block` event with:
   - `uid`: `:block/uid` of block we're splitting

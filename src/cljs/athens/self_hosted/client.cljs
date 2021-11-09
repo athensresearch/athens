@@ -280,7 +280,6 @@
     :datascript/block-save
     :datascript/new-block
     :datascript/add-child
-    :datascript/open-block-add-child
     :datascript/split-block
     :datascript/page-add-shortcut
     :datascript/page-remove-shortcut
