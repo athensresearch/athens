@@ -202,7 +202,7 @@ jobs:
            # from releases or releases+prereleases (in athens.main.core).
            # NB: GH actions doesn't have ternary operator, but can workaround using AND/OR logic.
            # see https://github.com/actions/runner/issues/409#issuecomment-752775072
-           args: ${{ startsWith(github.ref, 'refs/tags/v1.') && '-c.publish.publishAutoUpdate=true' || '-c.publish.publishAutoUpdate=false' }} ${{ matrix.electron-arch-overrides }}
+           args: -c.publish.publishAutoUpdate=${{ startsWith(github.ref, 'refs/tags/v1.') }} ${{ matrix.electron-arch-overrides }}
 
          env:
            # macOS notarization API key
