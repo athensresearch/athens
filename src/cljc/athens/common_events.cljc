@@ -48,20 +48,6 @@
 
 ;;   - page events
 
-(defn build-page-rename-event
-  "Builds `:datascript/page-rename` event with:
-  - `uid`: of page to rename,
-  - `old-name`: Old page name
-  - `new-name`: New page name"
-  [uid old-name new-name]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/rename-page
-     :event/args {:uid      uid
-                  :old-name old-name
-                  :new-name new-name}}))
-
-
 (defn build-page-merge-event
   "Builds `:datascript/page-merge` event with:
   - `uid`: `:block/uid` of page being renamed

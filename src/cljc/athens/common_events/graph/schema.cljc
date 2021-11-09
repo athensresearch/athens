@@ -7,14 +7,14 @@
 
 (def atomic-op-types
   [:enum
-   :block/new ; ✓
-   :block/save ; ✓
-   :block/open ; ✓
+   :block/new    ; ✓
+   :block/save   ; ✓
+   :block/open   ; ✓
    :block/remove ; ✓
-   :block/move ; ✓
-   :page/new ; ✓
+   :block/move   ; ✓
+   :page/new     ; ✓
+   :page/rename  ; ✓
    ;; TODO: page operations should never take page uids, just titles
-   :page/rename
    :page/merge
    :page/remove
    :shortcut/new
@@ -102,6 +102,14 @@
      [:title string?]]]])
 
 
+(def op-page-rename
+  [:map
+   [:op/args
+    [:map
+     [:old-name string?]
+     [:new-name string?]]]])
+
+
 (def atomic-op
   [:schema
    {:registry
@@ -124,6 +132,9 @@
                      [:page/new (mu/merge
                                   op-type-atomic-common
                                   op-page-new)]
+                     [:page/rename (mu/merge
+                                     op-type-atomic-common
+                                     op-page-rename)]
                      [:composite/consequence [:ref ::composite-op]]]
      ::composite-op [:map
                      [:op/type [:enum :composite/consequence]]

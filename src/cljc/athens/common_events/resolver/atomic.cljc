@@ -321,6 +321,27 @@
     txs))
 
 
+(defmethod resolve-atomic-op-to-tx :page/rename
+  [db {:op/keys [args]}]
+  (let [{:keys [old-name
+                new-name]} args
+        page-eid           (common-db/e-by-av db :node/title old-name)
+        page-exists?       (int? page-eid)
+        now                (utils/now-ts)
+        page               (when page-exists?
+                             (common-db/get-block db [:node/title old-name]))
+        linked-refs        (common-db/get-linked-refs-by-page-title db old-name)
+        new-linked-refs    (common-db/map-new-refs linked-refs old-name new-name)
+        updated-page       (when page-exists?
+                             {:db/id      [:block/uid (:block/uid page)]
+                              :node/title new-name
+                              :edit/time  now})
+        txs                (concat [updated-page] new-linked-refs)]
+    (if page-exists?
+      txs
+      (throw (ex-info "Page you've tried to rename doesn't exist." args)))))
+
+
 (defmethod resolve-atomic-op-to-tx :composite/consequence
   [_db composite]
   (throw (ex-info "Can't resolve Composite Graph Operation, only Atomic Graph Ops are allowed."
