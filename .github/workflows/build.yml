@@ -109,8 +109,9 @@ jobs:
 
    release-web:
      needs: [build-app]
-     # Only deploy on tag pushes to the default branch (main). GH pages is effectively a singleton deploy env for main.
-     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/main'
+     # Only deploy on v1.* tag pushes to the default branch (main).
+     # GH pages is effectively a singleton deploy env for main, and we only want v1 stable to be deployed there for now.
+     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v1.') && github.ref == 'refs/heads/main'
      runs-on: ubuntu-latest
      steps:
        - name: Git checkout
@@ -195,12 +196,13 @@ jobs:
            # release the app after building
            release: ${{ startsWith(github.ref, 'refs/tags/v') }}
 
-           # Skip auto-update files on branches other than main.
+           # Only publish auto-update files on v1.* stable.
            # Ideally we could use electron-builder release channels, but they don't work for github publishing.
-           # Auto-update is also disabled in code inside athens.main.core.
+           # Instead we control whether the auto-update is published (here) and whether the app will auto-update
+           # from releases or releases+prereleases (in athens.main.core).
            # NB: GH actions doesn't have ternary operator, but can workaround using AND/OR logic.
            # see https://github.com/actions/runner/issues/409#issuecomment-752775072
-           args: ${{ github.ref != 'refs/heads/main' && '-c.publish.publishAutoUpdate=false' || '' }} ${{ matrix.electron-arch-overrides }}
+           args: ${{ startsWith(github.ref, 'refs/tags/v1.') && '-c.publish.publishAutoUpdate=true' || '-c.publish.publishAutoUpdate=false' }} ${{ matrix.electron-arch-overrides }}
 
          env:
            # macOS notarization API key
