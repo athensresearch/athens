@@ -43,21 +43,6 @@
   #(:event/type %2))
 
 
-(defmethod resolve-event-to-tx :datascript/rename-page
-  [db {:event/keys [id type args]}]
-  (let [{:keys [uid
-                old-name
-                new-name]} args
-        linked-refs        (common-db/get-linked-refs-by-page-title db old-name)
-        new-linked-refs    (common-db/map-new-refs linked-refs old-name new-name)
-        new-page           {:db/id      [:block/uid uid]
-                            :node/title new-name}
-        new-datoms         (concat [new-page] new-linked-refs)]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str new-datoms))
-    new-datoms))
-
-
 (defmethod resolve-event-to-tx :datascript/merge-page
   [db {:event/keys [id type args]}]
   (let [{:keys [uid

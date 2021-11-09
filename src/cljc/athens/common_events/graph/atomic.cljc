@@ -79,12 +79,12 @@
 
 (defn make-page-rename-op
   "Creates `:page/rename` atomic op.
-   - `page-uid` - `:block/uid` of page to be renamed
+   - `old-name` - Page name before rename,
    - `new-name` - Page should have this name after operation"
-  [page-uid new-name]
+  [old-name new-name]
   {:op/type    :page/rename
    :op/atomic? true
-   :op/args    {:page-uid page-uid
+   :op/args    {:old-name old-name
                 :new-name new-name}})
 
 
