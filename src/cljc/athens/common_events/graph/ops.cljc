@@ -14,7 +14,7 @@
   ([_db page-title]
    (atomic/make-page-new-op page-title))
   ([db page-title block-uid]
-   (let [location (common-db/compat-position db {:ref-title page-title
+   (let [location (common-db/compat-position db {:ref-name page-title
                                                  :relation :first})]
      (if (common-db/e-by-av db :node/title page-title)
        (atomic/make-block-new-op block-uid location)

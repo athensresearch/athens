@@ -14,7 +14,7 @@
    - `block-uid` - `:block/uid` of new block to be created
    - `position` - new blocks position
       - for siblings: `:before` or `:after` together with `ref-uid`
-      - for children: `:first`, `:last` together with `ref-uid` or `ref-title`"
+      - for children: `:first`, `:last` together with `ref-uid` or `ref-name`"
   [block-uid position]
   {:op/type    :block/new
    :op/atomic? true
@@ -58,7 +58,7 @@
    - `block-uid` - `:block/uid` of block to move
   - `position` - new blocks position
       - for siblings: `:before` or `:after` together with `ref-uid`
-      - for children: `:first`, `:last` together with `ref-uid` or `ref-title`"
+      - for children: `:first`, `:last` together with `ref-uid` or `ref-name`"
   [block-uid position]
   {:op/type    :block/move
    :op/atomic? true
@@ -70,11 +70,11 @@
 
 (defn make-page-new-op
   "Creates `:page/new` atomic op.
-   - `title` - Page title page to be created "
-  [title]
+   - `name` - Page name to be created "
+  [name]
   {:op/type    :page/new
    :op/atomic? true
-   :op/args    {:title title}})
+   :op/args    {:name name}})
 
 
 (defn make-page-rename-op
@@ -90,8 +90,8 @@
 
 (defn make-page-merge-op
   "Creates `:page/merge` atomic op.
-   - `from-name` - `:node/title` of page to be merged into `to-name`
-   - `to-name` - `:node/title` merge to this page"
+   - `from-name` - name of page to be merged into `to-name`
+   - `to-name` - name merge to this page"
   [from-name to-name]
   {:op/type    :page/merge
    :op/atomic? true
@@ -101,11 +101,11 @@
 
 (defn make-page-remove-op
   "Creates `:page/remove` atomic op.
-   - `page-title` - `:node/title` of the page to be deleted"
-  [page-title]
+   - `name` - name of the page to be deleted"
+  [name]
   {:op/type    :page/remove
    :op/atomic? true
-   :op/args    {:title page-title}})
+   :op/args    {:name name}})
 
 
 ;; Shortcut

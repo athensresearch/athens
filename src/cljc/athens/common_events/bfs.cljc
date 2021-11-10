@@ -63,7 +63,7 @@
                                       ;; There's a block before this one that we can add this one after.
                                       previous-uid {:ref-uid previous-uid   :relation :after}
                                       ;; There's no previous block, but we can add it to the end of the parent.
-                                      parent-title {:ref-title parent-title :relation :last}
+                                      parent-title {:ref-name parent-title :relation :last}
                                       parent-uid   {:ref-uid parent-uid     :relation :last}
                                       ;; There's a default place where we can drop blocks, use it.
                                       default-position default-position
