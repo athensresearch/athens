@@ -90,13 +90,13 @@
 
 (defn make-page-merge-op
   "Creates `:page/merge` atomic op.
-   - `page-uid` - `:block/uid` of page to be merged into `new-page`
-   - `new-page` - page name of a page we'll merge contents of `page-uid` page into"
-  [page-uid new-page]
+   - `from-name` - `:node/title` of page to be merged into `to-name`
+   - `to-name` - `:node/title` merge to this page"
+  [from-name to-name]
   {:op/type    :page/merge
    :op/atomic? true
-   :op/args    {:page-uid page-uid
-                :new-page new-page}})
+   :op/args    {:from-name from-name
+                :to-name   to-name}})
 
 
 (defn make-page-remove-op

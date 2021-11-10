@@ -14,8 +14,7 @@
    :block/move   ; ✓
    :page/new     ; ✓
    :page/rename  ; ✓
-   ;; TODO: page operations should never take page uids, just titles
-   :page/merge
+   :page/merge   ; ✓
    :page/remove  ; ✓
    :shortcut/new
    :shortcut/remove
@@ -110,6 +109,14 @@
      [:new-name string?]]]])
 
 
+(def op-page-merge
+  [:map
+   [:op/args
+    [:map
+     [:from-name string?]
+     [:to-name string?]]]])
+
+
 (def op-page-remove
   [:map
    [:op/args
@@ -142,6 +149,9 @@
                      [:page/rename (mu/merge
                                      op-type-atomic-common
                                      op-page-rename)]
+                     [:page/merge (mu/merge
+                                    op-type-atomic-common
+                                    op-page-merge)]
                      [:page/remove (mu/merge
                                      op-type-atomic-common
                                      op-page-remove)]

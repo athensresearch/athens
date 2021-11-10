@@ -281,10 +281,9 @@
           (let [cancel-fn  #(swap! state merge init-state)
                 confirm-fn (fn []
                              (router/navigate-page local)
-                             (dispatch [:page/merge {:page-uid page-uid
-                                                     :old-name initial
-                                                     :new-name local
-                                                     :callback cancel-fn}]))]
+                             (dispatch [:page/merge {:from-name initial
+                                                     :to-name   local
+                                                     :callback  cancel-fn}]))]
             ;; display alert
             ;; NOTE: alert should be global reusable component, not local to node_page
             (swap! state assoc

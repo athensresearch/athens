@@ -20,30 +20,6 @@
   #(:event/type %2))
 
 
-(defmethod resolve-event-to-tx :datascript/merge-page
-  [db {:event/keys [id type args]}]
-  (let [{:keys [uid
-                old-name
-                new-name]}              args
-        linked-refs                     (common-db/get-linked-refs-by-page-title db old-name)
-        new-linked-refs                 (common-db/map-new-refs linked-refs old-name new-name)
-        {old-page-kids :block/children} (common-db/get-page-document db [:block/uid uid])
-        new-parent-uid                  (common-db/get-page-uid db new-name)
-        existing-page-block-count       (common-db/existing-block-count db new-name)
-        reindex                         (map (fn [{:block/keys [order uid]}]
-                                               {:db/id           [:block/uid uid]
-                                                :block/order     (+ order existing-page-block-count)
-                                                :block/_children [:block/uid new-parent-uid]})
-                                             old-page-kids)
-        delete-page                     [:db/retractEntity [:block/uid uid]]
-        new-datoms                      (concat [delete-page]
-                                                new-linked-refs
-                                                reindex)]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str new-datoms))
-    new-datoms))
-
-
 (defmethod resolve-event-to-tx :datascript/delete-page
   [db {:event/keys [id type args]}]
   (let [{uid :uid}         args

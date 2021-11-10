@@ -620,17 +620,6 @@
 
 
 (reg-event-fx
-  :page/merge
-  (fn [_ [_ {:keys [page-uid old-name new-name callback] :as args}]]
-    (log/debug ":page/merge args:" (pr-str (select-keys args [:page-uid
-                                                              :old-name
-                                                              :new-name])))
-    (let [event (common-events/build-page-merge-event page-uid old-name new-name)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]
-            [:invoke-callback callback]]})))
-
-
-(reg-event-fx
   :page/delete
   (fn [_ [_ title]]
     (log/debug ":page/delete:" title)
@@ -830,6 +819,15 @@
   (fn [_ [_ {:keys [old-name new-name callback] :as args}]]
     (log/debug ":page/rename args:" (pr-str (select-keys args [:old-name :new-name])))
     (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-rename-op old-name new-name))]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:invoke-callback callback]]})))
+
+
+(reg-event-fx
+  :page/merge
+  (fn [_ [_ {:keys [from-name to-name callback] :as args}]]
+    (log/debug ":page/merge args:" (pr-str (select-keys args [:from-name :to-name])))
+    (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-merge-op from-name to-name))]
       {:fx [[:dispatch [:resolve-transact-forward event]]
             [:invoke-callback callback]]})))
 
