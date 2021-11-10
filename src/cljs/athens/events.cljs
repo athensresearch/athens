@@ -1001,7 +1001,8 @@
                                 [:unindent {:uid              uid
                                             :d-key-down       d-key-down
                                             :context-root-uid context-root-uid
-                                            :embed-id         embed-id}]
+                                            :embed-id         embed-id
+                                            :local-string     ""}]
 
                                 (and (empty? value) embed-id is-parent-root-embed?)
                                 [:enter/new-block {:block    block
@@ -1021,7 +1022,8 @@
                                 [:unindent {:uid              uid
                                             :d-key-down       d-key-down
                                             :context-root-uid context-root-uid
-                                            :embed-id         embed-id}]
+                                            :embed-id         embed-id
+                                            :local-string     ""}]
 
                                 (and (zero? start) value)
                                 [:enter/bump-up {:uid      uid
