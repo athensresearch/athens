@@ -12,11 +12,6 @@
 
 (def log (js/require "electron-log"))
 
-
-;; NB: channels don't work on github releases, instead use use prereleases.
-;; https://github.com/electron-userland/electron-builder/issues/1722#issuecomment-310468372
-;; https://github.com/electron-userland/electron-builder/issues/4988
-(set! (.. autoUpdater -channel) "beta")
 (set! (.. autoUpdater -logger) log)
 (set! (.. autoUpdater -logger -transports -file -level) "info")
 (set! (.. autoUpdater -autoDownload) false)
