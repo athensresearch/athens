@@ -24,7 +24,7 @@
 (def child-position
   [:or
    [:map
-    [:ref-title string?]
+    [:ref-name string?]
     [:relation [:enum
                 :first
                 :last]]]
@@ -98,7 +98,7 @@
   [:map
    [:op/args
     [:map
-     [:title string?]]]])
+     [:name string?]]]])
 
 
 (def op-page-rename
@@ -121,7 +121,7 @@
   [:map
    [:op/args
     [:map
-     [:title string?]]]])
+     [:name string?]]]])
 
 
 (def atomic-op
