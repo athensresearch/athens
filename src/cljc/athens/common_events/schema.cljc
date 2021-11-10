@@ -137,13 +137,6 @@
   presence-online)
 
 
-(def datascript-delete-page
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]]]])
-
-
 (def datascript-block-save
   [:map
    [:event/args
@@ -258,7 +251,6 @@
   [:multi {:dispatch :event/type}
    (dispatch :presence/hello presence-hello)
    (dispatch :presence/update presence-update)
-   (dispatch :datascript/delete-page datascript-delete-page)
    (dispatch :datascript/block-save datascript-block-save)
    (dispatch :datascript/new-block datascript-new-block)
    (dispatch :datascript/add-child datascript-add-child)
@@ -341,7 +333,6 @@
 (def server-event
   [:multi {:dispatch :event/type}
    ;; client forwardable events
-   (dispatch :datascript/delete-page datascript-delete-page true)
    (dispatch :datascript/block-save datascript-block-save true)
    (dispatch :datascript/new-block datascript-new-block true)
    (dispatch :datascript/add-child datascript-add-child true)

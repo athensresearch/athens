@@ -364,7 +364,7 @@
                    [:> Button {:on-click #(do
                                             (if daily-note?
                                               (dispatch [:daily-note/delete uid title])
-                                              (dispatch [:page/delete uid title]))
+                                              (dispatch [:page/delete title]))
                                             (router/navigate :pages))}
                     [:> Delete] [:span "Delete Page"]]]]])))
 

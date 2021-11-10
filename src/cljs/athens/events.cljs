@@ -505,7 +505,7 @@
   (fn [{:keys [db]} [_ uid title]]
     (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ; Filter current date from daily note vec
           new-db (assoc db :daily-notes/items filtered-dn)]
-      {:fx [[:dispatch [:page/delete uid title]]]
+      {:fx [[:dispatch [:page/delete title]]]
        :db new-db})))
 
 
@@ -613,7 +613,7 @@
   :resolve-transact-forward
   (fn [{:keys [db]} [_ event]]
     (let [forward? (db-picker/remote-db? db)]
-      (log/debug ":resolve-transact-forward event:" event "forward?" forward?)
+      (log/debug ":resolve-transact-forward event:" (pr-str event) "forward?" (pr-str forward?))
       (atomic-resolver/resolve-transact! db/dsdb event)
       {:fx [[:dispatch-n [[:electron-sync]
                           (when forward? [:remote/forward-event event])]]]})))
@@ -621,9 +621,9 @@
 
 (reg-event-fx
   :page/delete
-  (fn [_ [_ uid _title]]
-    (log/debug ":page/delete:" uid)
-    (let [event (common-events/build-page-delete-event uid)]
+  (fn [_ [_ title]]
+    (log/debug ":page/delete:" title)
+    (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-remove-op title))]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
