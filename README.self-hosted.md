@@ -71,26 +71,31 @@ start the server and Bob's your unkle.
 
 You can create an Athens server without installing anything else via docker compose.
 
-Pick a [release](https://github.com/athensresearch/athens/releases you'd like to use, download the `docker-compose.yml` file in the release to a folder, and then run `docker-compose up --detach` to run the services in the background.
+Pick a [release](https://github.com/athensresearch/athens/releases) you'd like to use, download the `docker-compose.yml` file in the release to a folder, and then run `docker-compose up --detach` to run the services in the background.
 
-For example, for `v1.0.0-alpha.rtc.26`:
+For example, for `v1.0.0-alpha.rtc.27`:
 
 ```sh
-curl -L -o docker-compose.yml https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.26/docker-compose.yml
+curl -L -o docker-compose.yml https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.27/docker-compose.yml
 docker-compose up --detach
 ```
 
 The server will be acessible at `localhost:80`, and all data will be saved at `./athens-data`.
 
-If any of the services fails to launch, you can use `docker compose logs SERVICE_NAME` to inspect what the problem is.
+If any of the services fails to launch, you can use `docker-compose logs SERVICE_NAME` to inspect what the problem is. You can also run `docker-compose ps`  to see all running services. You should see that services `fluree`, `athens`, and `nginx` are all up and probably `healthy`.
 
 The `fluree` service can fail to launch if it does not have enough permissions for the `./athens-data` folder.
-You can work around this particular failure more by manually creating the data folder via `mkdir -p ./athens-date/fluree`.
+You can work around this particular failure more by manually creating the data folder via 
+
+```
+mkdir -p ./athens-data/fluree
+chmod -R 777 athens-data/fluree
+```
 
 You can override the app configuration via an environment variable:
 
 ```sh
-CONFIG_EDN="{:password \"YourServerPassword\"}" docker compose up
+CONFIG_EDN="{:password \"YourServerPassword\"}" docker-compose up
 ```
 
 or via an `.env` file located in the same directory as the downloaded `docker-compose.yml`:
@@ -100,10 +105,19 @@ or via an `.env` file located in the same directory as the downloaded `docker-co
 CONFIG_EDN="{:password \"YourServerPassword\"}"
 ```
 
-To update your deployment download the new `docker-compose.yml` file and follow these steps:
+To update your deployment curl the new `docker-compose.yml` file and follow these steps:
 
 ```
 docker-compose down
 docker-compose pull
 docker-compose up --detach
 ```
+
+
+## DigitalOcean
+
+Athens the team has only ran the backend server on DigitalOcean for usage. A minimum of 4gb of memory are needed.
+
+Use marketplace docker image: `docker 19.03.12 on Ubuntu 20.04` which has docker and docker-compose pre-installed.
+
+If you resize your droplet image, if you have trouble opening the console, just wait a few minutes and refresh the Digital Ocean dashboard.
