@@ -30,8 +30,7 @@
                                               :block/string   ""
                                               :block/order    0
                                               :block/children []}]}]]
-      ;; need to apply linkmaker, so resolving page-rename event can follow references for :block/string changes
-      (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
+      (fixture/transact-with-middleware setup-txs)
       (let [uid-by-title    (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             rename-page-txs (atomic-resolver/resolve-to-tx @@fixture/connection
                                                            (atomic-graph-ops/make-page-rename-op test-title-from test-title-to))]
@@ -56,8 +55,7 @@
                                                :block/string   test-string-from
                                                :block/order    0
                                                :block/children []}]}]]
-      ;; need to apply linkmaker, so resolving page-rename event can follow references for :block/string changes
-      (d/transact! @fixture/connection (common-db/linkmaker @@fixture/connection setup-txs))
+      (fixture/transact-with-middleware setup-txs)
       (let [uid-by-title    (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             rename-page-txs (atomic-resolver/resolve-to-tx @@fixture/connection
                                                            (atomic-graph-ops/make-page-rename-op test-title-from test-title-to))]
