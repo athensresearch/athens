@@ -23,8 +23,6 @@
 
 (def event-type-graph
   [:enum
-   :datascript/rename-page
-   :datascript/merge-page
    :datascript/delete-page
    :datascript/block-save
    :datascript/new-block
@@ -146,15 +144,6 @@
      [:uid string?]]]])
 
 
-(def datascript-rename-page
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:old-name string?]
-     [:new-name string?]]]])
-
-
 (def datascript-block-save
   [:map
    [:event/args
@@ -269,9 +258,6 @@
   [:multi {:dispatch :event/type}
    (dispatch :presence/hello presence-hello)
    (dispatch :presence/update presence-update)
-   (dispatch :datascript/rename-page datascript-rename-page)
-   ;; Same args as `datascript-rename-page`
-   (dispatch :datascript/merge-page datascript-rename-page)
    (dispatch :datascript/delete-page datascript-delete-page)
    (dispatch :datascript/block-save datascript-block-save)
    (dispatch :datascript/new-block datascript-new-block)
@@ -355,9 +341,6 @@
 (def server-event
   [:multi {:dispatch :event/type}
    ;; client forwardable events
-   (dispatch :datascript/rename-page datascript-rename-page true)
-   ;; Same args as `datascript-rename-page`
-   (dispatch :datascript/merge-page datascript-rename-page true)
    (dispatch :datascript/delete-page datascript-delete-page true)
    (dispatch :datascript/block-save datascript-block-save true)
    (dispatch :datascript/new-block datascript-new-block true)

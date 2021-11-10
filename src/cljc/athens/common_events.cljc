@@ -48,20 +48,6 @@
 
 ;;   - page events
 
-(defn build-page-merge-event
-  "Builds `:datascript/page-merge` event with:
-  - `uid`: `:block/uid` of page being renamed
-  - `old-name`: old page name
-  - `new-name`: new page name"
-  [uid old-name new-name]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/merge-page
-     :event/args {:uid      uid
-                  :old-name old-name
-                  :new-name new-name}}))
-
-
 (defn build-page-delete-event
   "Builds `:datascript/page-delete` event with:
   - `uid`: of page to be deleted."

@@ -342,6 +342,27 @@
       (throw (ex-info "Page you've tried to rename doesn't exist." args)))))
 
 
+(defmethod resolve-atomic-op-to-tx :page/merge
+  [db {:op/keys [args]}]
+  (let [{:keys [from-name
+                to-name]} args
+        linked-refs                     (common-db/get-linked-refs-by-page-title db from-name)
+        new-linked-refs                 (common-db/map-new-refs linked-refs from-name to-name)
+        {old-page-kids :block/children} (common-db/get-page-document db [:node/title from-name])
+        existing-page-block-count       (common-db/existing-block-count db to-name)
+        reindex                         (map (fn [{:block/keys [order uid]}]
+                                               {:db/id           [:block/uid uid]
+                                                :block/order     (+ order existing-page-block-count)
+                                                :block/_children [:node/title to-name]})
+                                             old-page-kids)
+        delete-page                     [:db/retractEntity [:node/title from-name]]
+        new-datoms                      (concat [delete-page]
+                                                new-linked-refs
+                                                reindex)]
+    (log/debug "type:" type ", args:" (pr-str args) ", resolved-tx:" (pr-str new-datoms))
+    new-datoms))
+
+
 (defmethod resolve-atomic-op-to-tx :composite/consequence
   [_db composite]
   (throw (ex-info "Can't resolve Composite Graph Operation, only Atomic Graph Ops are allowed."

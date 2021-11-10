@@ -274,9 +274,7 @@
 
 
 (def forwarded-events
-  #{:datascript/rename-page
-    :datascript/merge-page
-    :datascript/delete-page
+  #{:datascript/delete-page
     :datascript/block-save
     :datascript/new-block
     :datascript/add-child
