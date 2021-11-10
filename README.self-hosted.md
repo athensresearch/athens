@@ -132,7 +132,7 @@ Use marketplace docker image: `docker 19.03.12 on Ubuntu 20.04` which has docker
 
 If you resize your droplet image, if you have trouble opening the console, just wait a few minutes and refresh the Digital Ocean dashboard.
 
-Once your droplet has been created, open the console, run the instructions in [docker](docker), add the IP address to your Athens client to connect to the server!
+Once your droplet has been created, open the console to ssh to the server, follow the instructions in [Docker](#docker) to start the server, and copy and paste the IP address to your Athens client to connect to the server (and add a password if you configured one).
 
 ![Athens Vision _ Ecosystem Visualization _ Product - Frame 13](https://user-images.githubusercontent.com/8952138/141150925-9f8df004-faa0-4fbe-9875-c276d60c5118.jpg)
 
