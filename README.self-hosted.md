@@ -82,7 +82,7 @@ docker-compose up --detach
 
 The server will be acessible at `localhost:80`, and all data will be saved at `./athens-data`.
 
-If any of the services fails to launch, you can use `docker-compose logs SERVICE_NAME` to inspect what the problem is. You can also run `docker-compose ps`  to see all running services. You should see that services `fluree`, `athens`, and `nginx` are all up and probably `healthy`.
+If any of the services fails to launch, you can use `docker-compose logs SERVICE_NAME` to inspect what the problem is. You can also run `docker-compose ps`  to see all running services. You should see that services `fluree`, `athens`, and `nginx` are up and `healthy`.
 
 The `fluree` service can fail to launch if it does not have enough permissions for the `./athens-data` folder.
 You can work around this particular failure more by manually creating the data folder via 
@@ -105,9 +105,13 @@ or via an `.env` file located in the same directory as the downloaded `docker-co
 CONFIG_EDN="{:password \"YourServerPassword\"}"
 ```
 
-To update your deployment curl the new `docker-compose.yml` file and follow these steps:
+To update your deployment, curl the new `docker-compose.yml` file and restart docker-compose entirely:
 
 ```
+# curl a new version of Athens described by docker-compose
+curl -L -o docker-compose.yml https://github.com/athensresearch/athens/releases/download/v1.0.0-alpha.rtc.33/docker-compose.yml
+
+# restart docker-compose
 docker-compose down
 docker-compose pull
 docker-compose up --detach
@@ -116,7 +120,9 @@ docker-compose up --detach
 
 ## DigitalOcean
 
-Athens the team has only ran the backend server on DigitalOcean for usage. A minimum of 4gb of memory are needed.
+Athens the team has tested the backend beta server on DigitalOcean the most, and not as much yet on other cloud providers like AWS or GCP.
+
+A minimum of 4gb of memory are needed.
 
 Use marketplace docker image: `docker 19.03.12 on Ubuntu 20.04` which has docker and docker-compose pre-installed.
 
