@@ -214,10 +214,10 @@
                                                 :block/order  0}]}]]
 
       (transact-with-linkmaker setup-tx)
-      (let [delete-page-event (common-events/build-page-delete-event target-page-uid)
-            delete-page-txs   (resolver/resolve-event-to-tx @@fixture/connection delete-page-event)]
+      (let [remove-page-op  (atomic-graph-ops/make-page-remove-op target-page-title)
+            remove-page-txs (atomic-resolver/resolve-to-tx @@fixture/connection remove-page-op)]
 
-        (transact-with-linkmaker delete-page-txs)
+        (transact-with-linkmaker remove-page-txs)
         (let [{block-refs :block/refs} (get-block test-block-uid)
               {page-refs :block/refs}  (get-page test-page-uid)]
           ;; Assert that we don't have any refs.

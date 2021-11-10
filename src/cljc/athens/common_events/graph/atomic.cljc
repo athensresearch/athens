@@ -101,11 +101,11 @@
 
 (defn make-page-remove-op
   "Creates `:page/remove` atomic op.
-   - `page-uid` - `:block/uid` of the page to be deleted"
-  [page-uid]
+   - `page-title` - `:node/title` of the page to be deleted"
+  [page-title]
   {:op/type    :page/remove
    :op/atomic? true
-   :op/args    {:page-uid page-uid}})
+   :op/args    {:title page-title}})
 
 
 ;; Shortcut

@@ -3,8 +3,6 @@
     [athens.common-db :as common-db]
     [athens.common.logging :as log]
     [athens.common.utils :as utils]
-    [athens.patterns :as patterns]
-    [clojure.string :as string]
     [datascript.core :as d]))
 
 
@@ -14,26 +12,6 @@
   (if (< s t)
     (and (< s x) (< x t))
     (and (< t x) (< x s))))
-
-
-(defn replace-linked-refs-tx
-  "For a given block, unlinks [[brackets]], #[[brackets]], #brackets, or ((brackets))."
-  [db blocks]
-  (let [deleted-blocks (sequence (map #(assoc % :block/pattern (patterns/linked (or (:node/title %) (:block/uid %)))))
-                                 blocks)
-        block-refs-ids (sequence (comp (map #(:block/pattern %))
-                                       (mapcat #(common-db/get-ref-ids db %))
-                                       (distinct))
-                                 deleted-blocks)
-        block-refs     (d/pull-many db [:db/id :block/string] block-refs-ids)]
-    (into []
-          (map (fn [block-ref]
-                 (let [updated-content (reduce (fn [content {:keys [block/pattern block/string node/title]}]
-                                                 (string/replace content pattern (or title string)))
-                                               (:block/string block-ref)
-                                               deleted-blocks)]
-                   (assoc block-ref :block/string updated-content))))
-          block-refs)))
 
 
 ;; TODO start using this resolution in handlers
@@ -82,7 +60,7 @@
                                 (vector :block/uid)
                                 (common-db/get-block db)
                                 vector
-                                (replace-linked-refs-tx db))
+                                (common-db/replace-linked-refs-tx db))
         tx-data            (concat retract-blocks
                                    delete-linked-refs)]
     (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
@@ -300,7 +278,7 @@
         retracted-vec                     (mapcat #(common-db/retract-uid-recursively-tx db %) uids)
         block-refs-replace                (->> uids
                                                (map #(common-db/get-block db [:block/uid %]))
-                                               (replace-linked-refs-tx db))
+                                               (common-db/replace-linked-refs-tx db))
         tx-data                           (concat retracted-vec
                                                   reindex
                                                   block-refs-replace)]
@@ -389,7 +367,7 @@
         reindex             (common-db/dec-after db (:db/id parent) (:block/order block))
         block-refs-replace  (->> (common-db/get-block db [:block/uid uid])
                                  vector
-                                 (replace-linked-refs-tx db))
+                                 (common-db/replace-linked-refs-tx db))
         new-parent          {:db/id (:db/id parent) :block/children reindex}
         tx-data             (into (conj retracts retract-block new-prev-block new-parent)
                                   block-refs-replace)]

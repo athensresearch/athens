@@ -16,7 +16,7 @@
    :page/rename  ; ✓
    ;; TODO: page operations should never take page uids, just titles
    :page/merge
-   :page/remove
+   :page/remove  ; ✓
    :shortcut/new
    :shortcut/remove
    :shortcut/move])
@@ -110,6 +110,13 @@
      [:new-name string?]]]])
 
 
+(def op-page-remove
+  [:map
+   [:op/args
+    [:map
+     [:title string?]]]])
+
+
 (def atomic-op
   [:schema
    {:registry
@@ -135,6 +142,9 @@
                      [:page/rename (mu/merge
                                      op-type-atomic-common
                                      op-page-rename)]
+                     [:page/remove (mu/merge
+                                     op-type-atomic-common
+                                     op-page-remove)]
                      [:composite/consequence [:ref ::composite-op]]]
      ::composite-op [:map
                      [:op/type [:enum :composite/consequence]]

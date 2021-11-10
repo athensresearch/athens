@@ -342,6 +342,22 @@
       (throw (ex-info "Page you've tried to rename doesn't exist." args)))))
 
 
+(defmethod resolve-atomic-op-to-tx :page/remove
+  [db {:op/keys [args]}]
+  (let [{page-title :title} args
+        _ (log/debug "atomic-resolver: :page/remove: " (pr-str args))
+        page-uid            (common-db/get-page-uid db page-title)
+        retract-blocks      (common-db/retract-uid-recursively-tx db page-uid)
+        delete-linked-refs  (->> page-uid
+                                 (vector :block/uid)
+                                 (common-db/get-block db)
+                                 vector
+                                 (common-db/replace-linked-refs-tx db))
+        tx-data             (concat retract-blocks
+                                    delete-linked-refs)]
+    tx-data))
+
+
 (defmethod resolve-atomic-op-to-tx :composite/consequence
   [_db composite]
   (throw (ex-info "Can't resolve Composite Graph Operation, only Atomic Graph Ops are allowed."

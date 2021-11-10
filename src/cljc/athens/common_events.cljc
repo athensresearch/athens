@@ -62,16 +62,6 @@
                   :new-name new-name}}))
 
 
-(defn build-page-delete-event
-  "Builds `:datascript/page-delete` event with:
-  - `uid`: of page to be deleted."
-  [uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/delete-page
-     :event/args {:uid uid}}))
-
-
 ;;   - block events
 ;;     NOTE: `new-uid` is always passed from the caller,
 ;;           it would be safer to generate it during resolution
