@@ -359,7 +359,7 @@
         new-datoms                      (concat [delete-page]
                                                 new-linked-refs
                                                 reindex)]
-    (log/debug "type:" type ", args:" (pr-str args) ", resolved-tx:" (pr-str new-datoms))
+    (log/debug ":page/merge args:" (pr-str args) ", resolved-tx:" (pr-str new-datoms))
     new-datoms))
 
 
