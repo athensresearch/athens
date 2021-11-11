@@ -85,11 +85,11 @@ The server will be acessible at `localhost:80`, and all data will be saved at `.
 If any of the services fails to launch, you can use `docker-compose logs SERVICE_NAME` to inspect what the problem is. You can also run `docker-compose ps`  to see all running services. You should see that services `fluree`, `athens`, and `nginx` are up and `healthy`.
 
 The `fluree` service can fail to launch if it does not have enough permissions for the `./athens-data` folder.
-You can work around this particular failure more by manually creating the data folder via 
+You can work around this particular failure more by manually creating the data folder and giving all users of the machine read and write access. This is not a long-term workaround, and we will have more constrained permissions before Athens RTC is beta.
 
 ```
 mkdir -p ./athens-data/fluree
-chmod -R 777 athens-data/fluree
+chmod -R 777 ./athens-data/fluree
 ```
 
 You can override the app configuration via an environment variable:
@@ -122,7 +122,7 @@ docker-compose up --detach
 
 Athens the team has tested the backend beta server on DigitalOcean the most, and not as much yet on other cloud providers like AWS or GCP.
 
-A minimum of 4gb of memory are needed.
+A minimum of 4gb of memory is needed.
 
 ![image](https://user-images.githubusercontent.com/8952138/141150237-dce5f183-f25c-4a9b-9526-dcc310c09a44.png)
 
@@ -130,9 +130,9 @@ Use marketplace docker image: `docker 19.03.12 on Ubuntu 20.04` which has docker
 
 ![digital-ocean-docker-image](https://user-images.githubusercontent.com/8952138/141150155-7be8bce5-1804-431c-9cd0-4cf11e9c8d87.jpg)
 
-If you resize your droplet image, if you have trouble opening the console, just wait a few minutes and refresh the Digital Ocean dashboard.
+If you resize your droplet image and have trouble opening the console, just wait a few minutes and refresh the Digital Ocean dashboard.
 
 Once your droplet has been created, open the console to ssh to the server, follow the instructions in [Docker](#docker) to start the server, and copy and paste the IP address to your Athens client to connect to the server (and add a password if you configured one).
 
-![Athens Vision _ Ecosystem Visualization _ Product - Frame 13](https://user-images.githubusercontent.com/8952138/141150925-9f8df004-faa0-4fbe-9875-c276d60c5118.jpg)
+![digital-ocean-console-and-ip-address](https://user-images.githubusercontent.com/8952138/141150925-9f8df004-faa0-4fbe-9875-c276d60c5118.jpg)
 
