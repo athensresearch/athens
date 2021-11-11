@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.34](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.33...v1.0.0-alpha.rtc.34) (2021-11-11)
+
+
+### Features
+
+* `:page/delete` is atomic. ([1b00805](https://github.com/athensresearch/athens/commit/1b00805022eb5e4ad71c5ea6af07762fec7af460))
+* `:page/merge` is atomic, so atomic. ([8f09340](https://github.com/athensresearch/athens/commit/8f09340214633f48f8e090991e65f6324219e157))
+* add schema for shortcut atomic operations ([95d8d40](https://github.com/athensresearch/athens/commit/95d8d40f3e04601694b912a719ea82fee7e565d1))
+* atomic `:page/rename` ([1a41e07](https://github.com/athensresearch/athens/commit/1a41e072819c1d8a83d45da5cc0692a6431a8366))
+
+
+### Bug Fixes
+
+* `:block/indent` positioning ([13d7f20](https://github.com/athensresearch/athens/commit/13d7f2087caa20beb9efb18edbb9eaa5a5fa4def))
+* `:page/merge` throwing exceptions in `orderkeeper` no more. ([bf82419](https://github.com/athensresearch/athens/commit/bf82419731e3fecfed90b07e9e0a3b5e722b96f5))
+* enable atomic `:page/rename` on protocol. ([1cb5a0f](https://github.com/athensresearch/athens/commit/1cb5a0f6bd2c4de43ba9f1818e47c7bca3b6e6df))
+* make `:page/remove` idempotent. ([e67806b](https://github.com/athensresearch/athens/commit/e67806b7da51450375912ee21304a7e21a504d34))
+* these tests should not expect exceptions anymore. ([a123490](https://github.com/athensresearch/athens/commit/a123490d1ca78cb78643edea5399add467b8a5ee))
+
+
+### Refactors
+
+* use name instead of title to identify pages in protocol ([9bc0e95](https://github.com/athensresearch/athens/commit/9bc0e95a425fc027fa31bb59640ff5babdb8f3ed))
+* use startsWith boolean output as string ([c7cb73e](https://github.com/athensresearch/athens/commit/c7cb73eafe9704e659a9fdebe2dea0c26b0b7dc4))
+
+
+* gh pages, auto-updates only for v1.* ([f07ea50](https://github.com/athensresearch/athens/commit/f07ea503f89febb57180d6964adb77ff56b13d7b))
+* remove in-app update setting ([bdd15a8](https://github.com/athensresearch/athens/commit/bdd15a85e5eebf50f2221ab8c28ba0d747179d70)), closes [/github.com/athensresearch/athens/pull/1803#discussion_r745655213](https://github.com/athensresearch//github.com/athensresearch/athens/pull/1803/issues/discussion_r745655213)
+* use if condition on composite action ([4d708e5](https://github.com/athensresearch/athens/commit/4d708e53f05d72cb01efd29ac9d5a2d9496913aa))
+
 ## [1.0.0-alpha.rtc.33](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.32...v1.0.0-alpha.rtc.33) (2021-11-08)
 
 
