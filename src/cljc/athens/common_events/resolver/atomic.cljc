@@ -399,7 +399,6 @@
     tx-data))
 
 
-
 (defmethod resolve-atomic-op-to-tx :shortcut/remove
   [db {:op/keys [args]}]
   (let [{page-name :name}    args
