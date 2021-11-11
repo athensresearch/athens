@@ -387,13 +387,11 @@
   [db {:op/keys [args]}]
   (let [{page-name :name}    args
         page-uid             (common-db/get-page-uid db page-name)
-        reindex-shortcut-txs (common-db/get-sidebar-elements db)
-        add-shortcut-tx      {:block/uid    page-uid
-                              :page/sidebar (or (count reindex-shortcut-txs)
-                                                0)}
-        tx-data              (conj reindex-shortcut-txs
-                                   add-shortcut-tx)]
-    tx-data))
+        sidebar-count        (count (common-db/get-sidebar-elements db))
+        add-shortcut-tx      [{:block/uid    page-uid
+                               :page/sidebar (or sidebar-count
+                                                 0)}]]
+    add-shortcut-tx))
 
 
 (defmethod resolve-atomic-op-to-tx :shortcut/remove
