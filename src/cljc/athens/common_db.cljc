@@ -65,6 +65,14 @@
      [?p :block/children ?sib-e]]])
 
 
+(defn get-sidebar-elements
+  [db]
+  (d/q '[:find [(pull ?e [*]) ...]
+         :where
+         [?e :page/sidebar _]]
+       db))
+
+
 (defn inc-after
   [db eid order]
   (->> (d/q '[:find ?block-uid ?new-o

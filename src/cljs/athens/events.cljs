@@ -628,18 +628,20 @@
 
 
 (reg-event-fx
-  :page/add-shortcut
-  (fn [_ [_ uid]]
-    (log/debug ":page/add-shortcut:" uid)
-    (let [event (common-events/build-page-add-shortcut uid)]
+  :left-sidebar/add-shortcut
+  (fn [_ [_ name]]
+    (log/debug ":page/add-shortcut:" name)
+    (let [add-shortcut-op (atomic-graph-ops/make-shortcut-new-op name)
+          event           (common-events/build-atomic-event add-shortcut-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
-  :page/remove-shortcut
-  (fn [_ [_ uid]]
-    (log/debug ":page/remove-shortcut:" uid)
-    (let [event (common-events/build-page-remove-shortcut uid)]
+  :left-sidebar/remove-shortcut
+  (fn [_ [_ name]]
+    (log/debug ":page/remove-shortcut:" name)
+    (let [remove-shortcut-op (atomic-graph-ops/make-shortcut-remove-op name)
+          event              (common-events/build-atomic-event remove-shortcut-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 

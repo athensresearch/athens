@@ -28,8 +28,6 @@
    :datascript/new-block
    :datascript/add-child
    :datascript/split-block
-   :datascript/page-add-shortcut
-   :datascript/page-remove-shortcut
    :datascript/left-sidebar-drop-above
    :datascript/left-sidebar-drop-below
    :datascript/selected-delete
@@ -182,20 +180,6 @@
      [:internal-representation [:vector map?]]]]])
 
 
-(def datascript-page-add-shortcut
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]]]])
-
-
-(def datascript-page-remove-shortcut
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]]]])
-
-
 (def datascript-left-sidebar-drop-above
   [:map
    [:event/args
@@ -258,8 +242,6 @@
    (dispatch :datascript/split-block datascript-split-block)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/paste-internal datascript-paste-internal)
-   (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
-   (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above)
    (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below)
    (dispatch :datascript/delete-only-child datascript-delete-only-child)
@@ -340,8 +322,6 @@
    (dispatch :datascript/split-block datascript-split-block true)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/paste-internal datascript-paste-internal true)
-   (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)
-   (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)
    (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above true)
    (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below true)
    (dispatch :datascript/delete-only-child datascript-delete-only-child true)

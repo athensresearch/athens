@@ -279,8 +279,6 @@
     :datascript/new-block
     :datascript/add-child
     :datascript/split-block
-    :datascript/page-add-shortcut
-    :datascript/page-remove-shortcut
     :datascript/left-sidebar-drop-above
     :datascript/left-sidebar-drop-below
     :datascript/selected-delete

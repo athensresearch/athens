@@ -383,6 +383,33 @@
     tx-data))
 
 
+(defmethod resolve-atomic-op-to-tx :shortcut/new
+  [db {:op/keys [args]}]
+  (let [{page-name :name}    args
+        page-uid             (common-db/get-page-uid db page-name)
+        reindex-shortcut-txs (common-db/get-sidebar-elements db)
+        add-shortcut-tx      {:block/uid    page-uid
+                              :page/sidebar (or (count reindex-shortcut-txs)
+                                                0)}
+        tx-data              (conj reindex-shortcut-txs
+                                   add-shortcut-tx)]
+    tx-data))
+
+
+(defmethod resolve-atomic-op-to-tx :shortcut/remove
+  [db {:op/keys [args]}]
+  (let [{page-name :name}    args
+        page-uid             (common-db/get-page-uid db page-name)
+        reindex-shortcut-txs (->> (common-db/get-sidebar-elements db)
+                                  (remove #(= page-uid (:block/uid %)))
+                                  (sort-by :page/sidebar)
+                                  (map-indexed (fn [i m] (assoc m :page/sidebar i)))
+                                  vec)
+        remove-shortcut-tx    [:db/retract [:block/uid page-uid] :page/sidebar]
+        tx-data               (conj reindex-shortcut-txs remove-shortcut-tx)]
+    tx-data))
+
+
 (defmethod resolve-atomic-op-to-tx :composite/consequence
   [_db composite]
   (throw (ex-info "Can't resolve Composite Graph Operation, only Atomic Graph Ops are allowed."
