@@ -32,6 +32,9 @@
     :block/remove
     :block/move
     :page/new
+    :page/rename
+    ;; :page/merge
+    ;; :page/remove
     :composite/consequence})
 
 
