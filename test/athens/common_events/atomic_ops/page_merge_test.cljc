@@ -44,10 +44,7 @@
         (t/is (= test-page-from-uid uid-by-title))
         (d/transact! @fixture/connection merge-page-txs)
         (let [{kids :block/children} (common-db/get-page-document @@fixture/connection [:node/title test-title-to])]
-          (t/is (thrown-with-msg? #?(:cljs js/Error
-                                     :clj ExceptionInfo)
-                                  #"Nothing found for entity id"
-                  (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
+          (t/is (nil? (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
           (t/is (= 2 (count kids)))
           (t/is (= test-page-from-uid uid-by-title))))))
 
@@ -83,10 +80,7 @@
               block-string           (common-db/v-by-ea @@fixture/connection [:block/uid test-block-1-uid] :block/string)
               block-1                (common-db/get-block @@fixture/connection [:block/uid test-block-1-uid])
               block-2                (common-db/get-block @@fixture/connection [:block/uid test-block-2-uid])]
-          (t/is (thrown-with-msg? #?(:cljs js/Error
-                                     :clj ExceptionInfo)
-                                  #"Nothing found for entity id"
-                  (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
+          (t/is (nil? (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
           (t/is (= 2 (count kids)))
           (t/is (= test-page-to-uid uid-by-title))
           (t/is (= test-string-to block-string))
@@ -137,10 +131,7 @@
               block-2                (common-db/get-block @@fixture/connection [:block/uid test-block-2-uid])
               block-3                (common-db/get-block @@fixture/connection [:block/uid test-block-3-uid])
               block-4                (common-db/get-block @@fixture/connection [:block/uid test-block-4-uid])]
-          (t/is (thrown-with-msg? #?(:cljs js/Error
-                                     :clj ExceptionInfo)
-                                  #"Nothing found for entity id"
-                  (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
+          (t/is (nil? (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
           (t/is (= 4 (count kids)))
           (t/is (= test-page-to-uid uid-by-title))
           (t/is (= test-string-to block-string))

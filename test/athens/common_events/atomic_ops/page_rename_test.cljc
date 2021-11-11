@@ -63,9 +63,6 @@
         (d/transact! @fixture/connection rename-page-txs)
         (let [uid-by-title (common-db/v-by-ea @@fixture/connection [:node/title test-title-to] :block/uid)
               block-string (common-db/v-by-ea @@fixture/connection [:block/uid test-block-uid] :block/string)]
-          (t/is (thrown-with-msg? #?(:cljs js/Error
-                                     :clj ExceptionInfo)
-                                  #"Nothing found for entity id"
-                  (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
+          (t/is (nil? (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
           (t/is (= test-page-uid uid-by-title))
           (t/is (= test-string-to block-string)))))))
