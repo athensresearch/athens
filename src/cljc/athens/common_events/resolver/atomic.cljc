@@ -383,13 +383,10 @@
   [db {:op/keys [args]}]
   (let [{page-name :name}    args
         page-uid             (common-db/get-page-uid db page-name)
-        reindex-shortcut-txs (->> (common-db/get-sidebar-elements db)
-                                  (sort-by :page/sidebar)
-                                  (map-indexed (fn [i m] (assoc m :page/sidebar i)))
-                                  vec)
+        reindex-shortcut-txs (common-db/get-sidebar-elements db)
         add-shortcut-tx      {:block/uid    page-uid
                               :page/sidebar (or (count reindex-shortcut-txs)
-                                                1)}
+                                                0)}
         tx-data              (conj reindex-shortcut-txs
                                    add-shortcut-tx)]
     tx-data))
