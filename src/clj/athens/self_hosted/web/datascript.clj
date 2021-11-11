@@ -34,7 +34,7 @@
     :page/new
     :page/rename
     ;; :page/merge
-    ;; :page/remove
+    :page/remove
     :composite/consequence})
 
 

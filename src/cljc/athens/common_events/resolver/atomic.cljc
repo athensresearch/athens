@@ -365,17 +365,21 @@
 
 (defmethod resolve-atomic-op-to-tx :page/remove
   [db {:op/keys [args]}]
-  (let [{page-name :name} args
-        _ (log/debug "atomic-resolver: :page/remove: " (pr-str args))
-        page-uid            (common-db/get-page-uid db page-name)
-        retract-blocks      (common-db/retract-uid-recursively-tx db page-uid)
-        delete-linked-refs  (->> page-uid
-                                 (vector :block/uid)
-                                 (common-db/get-block db)
-                                 vector
-                                 (common-db/replace-linked-refs-tx db))
-        tx-data             (concat retract-blocks
-                                    delete-linked-refs)]
+  (log/debug "atomic-resolver: :page/remove: " (pr-str args))
+  (let [{page-name :name}  args
+        page-uid           (common-db/get-page-uid db page-name)
+        retract-blocks     (when page-uid
+                             (common-db/retract-uid-recursively-tx db page-uid))
+        delete-linked-refs (when page-uid
+                             (->> page-uid
+                                  (vector :block/uid)
+                                  (common-db/get-block db)
+                                  vector
+                                  (common-db/replace-linked-refs-tx db)))
+        tx-data            (if page-uid
+                             (concat retract-blocks
+                                     delete-linked-refs)
+                             [])]
     tx-data))
 
 
