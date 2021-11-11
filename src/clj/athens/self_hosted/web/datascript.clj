@@ -33,7 +33,7 @@
     :shortcut/add
     :shortcut/remove
     :page/rename
-    ;; :page/merge
+    :page/merge
     :page/remove
     :composite/consequence})
 
