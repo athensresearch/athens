@@ -138,10 +138,7 @@
 
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above
   [db {:event/keys [id type args]}]
-  (let [{:keys [source-title target-title]}  args
-        [source-order target-order]     (common-db/find-source-target-order db
-                                                                            source-title
-                                                                            target-title)
+  (let [{:keys [source-order target-order]}  args
         source-eid  (d/q '[:find ?e .
                            :in $ ?source-order
                            :where [?e :page/sidebar ?source-order]]
@@ -171,10 +168,7 @@
 
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-below
   [db {:event/keys [id type args]}]
-  (let [{:keys [source-title target-title]}  args
-        [source-order target-order]     (common-db/find-source-target-order db
-                                                                            source-title
-                                                                            target-title)
+  (let [{:keys [source-order target-order]}  args
         source-eid (d/q '[:find ?e .
                           :in $ ?source-order
                           :where [?e :page/sidebar ?source-order]]
