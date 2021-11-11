@@ -351,10 +351,10 @@
                   [:div (use-style menu-style)
                    [:<>
                     (if sidebar
-                      [:> Button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                      [:> Button {:on-click #(dispatch [:left-sidebar/remove-shortcut title])}
                        [:> BookmarkBorder]
                        [:span "Remove Shortcut"]]
-                      [:> Button {:on-click #(dispatch [:page/add-shortcut uid])}
+                      [:> Button {:on-click #(dispatch [:left-sidebar/add-shortcut title])}
                        [:> Bookmark]
                        [:span "Add Shortcut"]])
                     [:> Button {:on-click #(dispatch [:right-sidebar/open-item uid true])}

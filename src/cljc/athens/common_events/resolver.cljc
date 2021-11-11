@@ -136,44 +136,18 @@
     tx-data))
 
 
-(defmethod resolve-event-to-tx :datascript/page-add-shortcut
-  [db {:event/keys [id type args]}]
-  (let [{:keys [uid]}        args
-        reindex-shortcut-txs (->> (d/q '[:find [(pull ?e [*]) ...]
-                                         :where
-                                         [?e :page/sidebar _]]
-                                       db)
-                                  (sort-by :page/sidebar)
-                                  (map-indexed (fn [i m] (assoc m :page/sidebar i)))
-                                  vec)
-        add-shortcut-tx      {:block/uid uid :page/sidebar (or (count reindex-shortcut-txs) 1)}
-        tx-data              (conj reindex-shortcut-txs add-shortcut-tx)]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
 
 
-(defmethod resolve-event-to-tx :datascript/page-remove-shortcut
-  [db {:event/keys [id type args]}]
-  (let [{:keys [uid]}        args
-        reindex-shortcut-txs (->> (d/q '[:find [(pull ?e [*]) ...]
-                                         :where
-                                         [?e :page/sidebar _]]
-                                       db)
-                                  (remove #(= uid (:block/uid %)))
-                                  (sort-by :page/sidebar)
-                                  (map-indexed (fn [i m] (assoc m :page/sidebar i)))
-                                  vec)
-        remove-shortcut-tx    [:db/retract [:block/uid uid] :page/sidebar]
-        tx-data               (conj reindex-shortcut-txs remove-shortcut-tx)]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
+
+
 
 
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above
   [db {:event/keys [id type args]}]
-  (let [{:keys [source-order target-order]}  args
+  (let [{:keys [source-title target-title]}  args
+        [source-order target-order]     (common-db/find-source-target-order db
+                                                                            source-title
+                                                                            target-title)
         source-eid  (d/q '[:find ?e .
                            :in $ ?source-order
                            :where [?e :page/sidebar ?source-order]]
@@ -189,10 +163,12 @@
                                 [?shortcut :page/sidebar ?order]
                                 [(?between ?source-order ?target-order ?order)]
                                 [(?inc-or-dec ?order) ?new-order]]
-                              db source-order (if (< source-order target-order)
-                                                target-order
-                                                (dec target-order))
-                              between inc-or-dec)
+                              db
+                              source-order (if (< source-order target-order)
+                                             target-order
+                                             (dec target-order))
+                              between
+                              inc-or-dec)
                          (concat [new-source]))]
     (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
                ", resolved-tx:" (pr-str tx-data))
@@ -201,7 +177,10 @@
 
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-below
   [db {:event/keys [id type args]}]
-  (let [{:keys [source-order target-order]}  args
+  (let [{:keys [source-title target-title]}  args
+        [source-order target-order]     (common-db/find-source-target-order db
+                                                                            source-title
+                                                                            target-title)
         source-eid (d/q '[:find ?e .
                           :in $ ?source-order
                           :where [?e :page/sidebar ?source-order]]

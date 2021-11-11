@@ -139,9 +139,11 @@
                                           (prn source-order order)
                                           (cond
                                             (= source-order order) nil
-                                            (and (= source-order (dec order)) (= @drag :above)) nil
-                                            (= @drag :below) (dispatch [:left-sidebar/drop-below source-order order])
-                                            :else (dispatch [:left-sidebar/drop-above source-order order])))
+                                            (and (= source-order
+                                                    (dec order))
+                                                 (= @drag :above)) nil
+                                            (= @drag :below)       (dispatch [:left-sidebar/drop-below source-order order])
+                                            :else                  (dispatch [:left-sidebar/drop-above source-order order])))
                                         (reset! drag nil))})
         title]])))
 

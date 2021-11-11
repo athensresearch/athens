@@ -93,24 +93,10 @@
                   :new-uid new-uid}}))
 
 
-(defn build-page-add-shortcut
-  "Builds `:datascript/page-add-shortcut` event with:
-  - `uid`: `:block/uid` of triggering block"
-  [uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/page-add-shortcut
-     :event/args {:uid uid}}))
 
 
-(defn build-page-remove-shortcut
-  "Builds `:datascript/page-remove-shortcut` event with:
-  - `uid`: `:block/uid` of triggering block"
-  [uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/page-remove-shortcut
-     :event/args {:uid uid}}))
+
+
 
 
 (defn build-left-sidebar-drop-above

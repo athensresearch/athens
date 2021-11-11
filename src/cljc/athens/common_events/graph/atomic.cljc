@@ -112,20 +112,20 @@
 
 (defn make-shortcut-new-op
   "Creates `:shortcut/new` atomic op.
-   - `page-uid` - `:block/uid` of page to be added to shortcuts"
-  [page-uid]
+   - `name` - name of page to be added to shortcuts"
+  [name]
   {:op/type    :shortcut/new
    :op/atomic? true
-   :op/args    {:page-uid page-uid}})
+   :op/args    {:name name}})
 
 
 (defn make-shortcut-remove-op
   "Creates `:shortcut/remove` atomic op.
-   - `page-uid` - `:block/uid` of page to be removed from shortcuts"
-  [page-uid]
+   - `name` - name of page to be removed from shortcuts"
+  [name]
   {:op/type    :shortcut/remove
    :op/atomic? true
-   :op/args    {:page-uid page-uid}})
+   :op/args    {:name name}})
 
 
 (defn make-shortcut-move-op
