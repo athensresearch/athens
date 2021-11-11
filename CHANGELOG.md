@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.35](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.34...v1.0.0-alpha.rtc.35) (2021-11-11)
+
+
+### Bug Fixes
+
+* re-enable `:page/merge` ([a5a3b76](https://github.com/athensresearch/athens/commit/a5a3b76fd9d8d18ce63710ea712f03eb89a25dc9))
+
 ## [1.0.0-alpha.rtc.34](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.33...v1.0.0-alpha.rtc.34) (2021-11-11)
 
 
