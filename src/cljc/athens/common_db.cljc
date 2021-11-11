@@ -74,6 +74,7 @@
          [?e :page/sidebar _]]
        db))
 
+
 (defn find-title-from-order
   [sidebar-elements order]
   (-> (filter (fn [el]

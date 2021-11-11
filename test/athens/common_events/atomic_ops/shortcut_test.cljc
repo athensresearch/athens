@@ -10,6 +10,7 @@
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
 
+
 (t/deftest shortcut-add-test
   (let [setup-tx  [{:block/uid      "parent-uid"
                     :node/title     "Hello World!"
@@ -25,6 +26,7 @@
       (t/is (= 1
                (-> (common-db/get-sidebar-elements @@fixture/connection)
                    (count)))))))
+
 
 (t/deftest shortcut-remove-test
   (let [setup-tx  [{:block/uid      "parent-uid"

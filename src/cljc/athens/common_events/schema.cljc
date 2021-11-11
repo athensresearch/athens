@@ -180,12 +180,6 @@
      [:internal-representation [:vector map?]]]]])
 
 
-
-
-
-
-
-
 (def datascript-left-sidebar-drop-above
   [:map
    [:event/args

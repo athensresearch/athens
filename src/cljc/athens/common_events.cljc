@@ -93,12 +93,6 @@
                   :new-uid new-uid}}))
 
 
-
-
-
-
-
-
 (defn build-left-sidebar-drop-above
   "Builds `:datascript/left-sidebar-drop-above` event with:
   - `source-order`: original position on the left sidebar

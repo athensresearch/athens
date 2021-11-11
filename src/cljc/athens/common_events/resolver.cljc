@@ -136,12 +136,6 @@
     tx-data))
 
 
-
-
-
-
-
-
 (defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above
   [db {:event/keys [id type args]}]
   (let [{:keys [source-title target-title]}  args
