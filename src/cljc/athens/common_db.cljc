@@ -34,9 +34,7 @@
 
 (defn v-by-ea
   [db e a]
-  (-> (d/datoms db :eavt e a)
-      first
-      :v))
+  (get (d/entity db e) a))
 
 
 (def rules
@@ -656,6 +654,7 @@
         old-parents    (when db-before
                          (->> mod-eids
                               (map #(get-parent-eid db-before %))
+                              (remove #(string/blank? (v-by-ea db-after % :block/uid)))
                               set))
         new-parents    (->> mod-eids
                             (map #(get-parent-eid db-after %))
