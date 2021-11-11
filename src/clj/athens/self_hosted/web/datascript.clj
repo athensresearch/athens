@@ -30,7 +30,7 @@
     :block/remove
     :block/move
     :page/new
-    :shortcut/add
+    :shortcut/new
     :shortcut/remove
     :page/rename
     ;; :page/merge
