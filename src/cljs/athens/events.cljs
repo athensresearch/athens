@@ -322,7 +322,7 @@
       {:db            (assoc db :editing/uid uid)
        :editing/focus [uid index]
        :dispatch-n    [(when (and uid remote?)
-                         [:presence/send-update {:block-uid uid}])]})))
+                         [:presence/send-update {:block-uid (util/embed-uid->original-uid uid)}])]})))
 
 
 (reg-event-fx
