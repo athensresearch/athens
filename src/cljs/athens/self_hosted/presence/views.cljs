@@ -5,6 +5,7 @@
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
     [athens.self-hosted.presence.subs]
+    [athens.util :as util]
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
@@ -83,7 +84,7 @@
 
 (defn inline-presence-el
   [uid]
-  (let [users (rf/subscribe [:presence/has-presence uid])]
+  (let [users (rf/subscribe [:presence/has-presence (util/embed-uid->original-uid uid)])]
     (when (seq @users)
       (into
         [:> (.-Stack Avatar)

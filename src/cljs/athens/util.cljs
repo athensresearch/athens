@@ -24,6 +24,15 @@
 (declare specter-recursive-path)
 
 
+(defn embed-uid->original-uid
+  "Return the original-uid for uid if it is embed, otherwise returns uid.
+   Embeds have a modified and local uid to make them unique for selection and focus.
+   But for presence, the original uid is used instead because the embed uid
+   is not present in other clients."
+  [uid]
+  (-> uid (string/split #"-embed-") first))
+
+
 (defn recursively-modify-block-for-embed
   "Modify the block and all the block children to have same embed-id for
    referencing the embed block rather than block in original page"

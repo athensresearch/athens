@@ -193,8 +193,8 @@
 
 (defn- awaited-response-handler
   [{:event/keys [id status] :as packet}]
-  (log/info "event-id:" (pr-str id)
-            "WSClient: response status:" (pr-str status))
+  (log/debug "event-id:" (pr-str id)
+             "WSClient: response status:" (pr-str status))
   ;; is it hello confirmation?
   (if (= @await-open-event-id id)
     (finished-open-handler packet)
@@ -206,7 +206,7 @@
         (condp = status
           :accepted
           (let [{:accepted/keys [tx-id]} packet]
-            (log/info "event-id:" (pr-str id) "accepted in tx" tx-id))
+            (log/debug "event-id:" (pr-str id) "accepted in tx" tx-id))
           :rejected
           (let [{:reject/keys [reason data]} packet]
             (log/warn "event-id:" (pr-str id)
@@ -269,7 +269,7 @@
 
 (defn- forwarded-event-handler
   [args]
-  (log/info "Forwarded event:" (pr-str args))
+  (log/debug "Forwarded event:" (pr-str args))
   (rf/dispatch [:remote/apply-forwarded-event args]))
 
 

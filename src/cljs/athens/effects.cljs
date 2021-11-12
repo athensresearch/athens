@@ -177,7 +177,7 @@
     (if (schema/valid-event? event)
       ;; valid event let's send it
       (do
-        (log/info "Sending event:" (pr-str event))
+        (log/debug "Sending event:" (pr-str event))
         (client/send! event))
       (let [explanation (-> schema/event
                             (m/explain event)
