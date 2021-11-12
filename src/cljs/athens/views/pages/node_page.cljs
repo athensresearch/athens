@@ -467,7 +467,7 @@
        (when (get @state unlinked?)
          [:div (use-style references-list-style)
           (doall
-            (for [[group-title group] @unlinked-refs]
+            (for [[[group-title] group] @unlinked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
                 [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title) %)}
