@@ -28,8 +28,6 @@
    :datascript/new-block
    :datascript/add-child
    :datascript/split-block
-   :datascript/left-sidebar-drop-above
-   :datascript/left-sidebar-drop-below
    :datascript/selected-delete
    :datascript/delete-only-child
    :datascript/delete-merge-block
@@ -180,22 +178,6 @@
      [:internal-representation [:vector map?]]]]])
 
 
-(def datascript-left-sidebar-drop-above
-  [:map
-   [:event/args
-    [:map
-     [:source-order int?]
-     [:target-order int?]]]])
-
-
-(def datascript-left-sidebar-drop-below
-  [:map
-   [:event/args
-    [:map
-     [:source-order int?]
-     [:target-order int?]]]])
-
-
 (def datascript-selected-delete
   [:map
    [:event/args
@@ -242,8 +224,6 @@
    (dispatch :datascript/split-block datascript-split-block)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/paste-internal datascript-paste-internal)
-   (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above)
-   (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below)
    (dispatch :datascript/delete-only-child datascript-delete-only-child)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block)
    (dispatch :datascript/selected-delete datascript-selected-delete)
@@ -322,8 +302,6 @@
    (dispatch :datascript/split-block datascript-split-block true)
    ;; same args as `datascript-split-block`
    (dispatch :datascript/paste-internal datascript-paste-internal true)
-   (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above true)
-   (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below true)
    (dispatch :datascript/delete-only-child datascript-delete-only-child true)
    (dispatch :datascript/delete-merge-block datascript-delete-merge-block true)
    (dispatch :datascript/selected-delete datascript-selected-delete true)

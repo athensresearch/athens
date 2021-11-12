@@ -142,8 +142,8 @@
                                             (and (= source-order
                                                     (dec order))
                                                  (= @drag :above)) nil
-                                            (= @drag :below)       (dispatch [:left-sidebar/drop-below source-order order])
-                                            :else                  (dispatch [:left-sidebar/drop-above source-order order])))
+                                            (= @drag :below)       (dispatch [:left-sidebar/drop source-order order :after])
+                                            :else                  (dispatch [:left-sidebar/drop source-order order :before])))
                                         (reset! drag nil))})
         title]])))
 

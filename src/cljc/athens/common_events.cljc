@@ -93,30 +93,6 @@
                   :new-uid new-uid}}))
 
 
-(defn build-left-sidebar-drop-above
-  "Builds `:datascript/left-sidebar-drop-above` event with:
-  - `source-order`: original position on the left sidebar
-  - `target-order`: new position on the left sidebar"
-  [source-order target-order]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/left-sidebar-drop-above
-     :event/args {:source-order source-order
-                  :target-order target-order}}))
-
-
-(defn build-left-sidebar-drop-below
-  "Builds `:datascript/left-sidebar-drop-below` event with:
-  - `source-order`: original position on the left sidebar
-  - `target-order`: new position on the left sidebar"
-  [source-order target-order]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/left-sidebar-drop-below
-     :event/args {:source-order source-order
-                  :target-order target-order}}))
-
-
 ;; - presence events
 
 (defn build-presence-hello-event

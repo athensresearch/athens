@@ -646,18 +646,13 @@
 
 
 (reg-event-fx
-  :left-sidebar/drop-above
-  (fn [_ [_ source-order target-order]]
-    (log/debug ":left-sidebar/drop-above" ", source-order:" source-order ", target-order:" target-order)
-    (let [event (common-events/build-left-sidebar-drop-above source-order target-order)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :left-sidebar/drop-below
-  (fn [_ [_ source-order target-order]]
-    (log/debug ":left-sidebar/drop-below" ", source-order:" source-order ", target-order:" target-order)
-    (let [event (common-events/build-left-sidebar-drop-below source-order target-order)]
+  :left-sidebar/drop
+  (fn [_ [_ source-order target-order relation]]
+    (let [[source-name target-name] (common-db/find-source-target-title @db/dsdb source-order target-order)
+          drop-op                   (atomic-graph-ops/make-shortcut-move-op source-name
+                                                                            {:ref-name target-name
+                                                                             :relation relation})
+          event (common-events/build-atomic-event drop-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 

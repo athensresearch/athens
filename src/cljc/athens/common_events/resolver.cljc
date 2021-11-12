@@ -6,14 +6,6 @@
     [datascript.core :as d]))
 
 
-(defn between
-  "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
-  [s t x]
-  (if (< s t)
-    (and (< s x) (< x t))
-    (and (< t x) (< x s))))
-
-
 ;; TODO start using this resolution in handlers
 (defmulti resolve-event-to-tx
   "Resolves `:datascript/*` event in context of existing DB into transactions."
@@ -133,58 +125,6 @@
         tx-data                       (conj retracts new-block new-parent)]
     (log/warn "DEPRECATED!" "event-id:" id ", type:" type ", args:" (pr-str args)
               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
-(defmethod resolve-event-to-tx :datascript/left-sidebar-drop-above
-  [db {:event/keys [id type args]}]
-  (let [{:keys [source-order target-order]}  args
-        source-eid  (d/q '[:find ?e .
-                           :in $ ?source-order
-                           :where [?e :page/sidebar ?source-order]]
-                         db source-order)
-        new-source  {:db/id source-eid :page/sidebar (if (< source-order target-order)
-                                                       (dec target-order)
-                                                       target-order)}
-        inc-or-dec  (if (< source-order target-order) dec inc)
-        tx-data     (->> (d/q '[:find ?shortcut ?new-order
-                                :keys db/id page/sidebar
-                                :in $ ?source-order ?target-order ?between ?inc-or-dec
-                                :where
-                                [?shortcut :page/sidebar ?order]
-                                [(?between ?source-order ?target-order ?order)]
-                                [(?inc-or-dec ?order) ?new-order]]
-                              db
-                              source-order (if (< source-order target-order)
-                                             target-order
-                                             (dec target-order))
-                              between
-                              inc-or-dec)
-                         (concat [new-source]))]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
-(defmethod resolve-event-to-tx :datascript/left-sidebar-drop-below
-  [db {:event/keys [id type args]}]
-  (let [{:keys [source-order target-order]}  args
-        source-eid (d/q '[:find ?e .
-                          :in $ ?source-order
-                          :where [?e :page/sidebar ?source-order]]
-                        db source-order)
-        new-source {:db/id source-eid :page/sidebar target-order}
-        tx-data (->> (d/q '[:find ?shortcut ?new-order
-                            :keys db/id page/sidebar
-                            :in $ ?source-order ?target-order ?between
-                            :where
-                            [?shortcut :page/sidebar ?order]
-                            [(?between ?source-order ?target-order ?order)]
-                            [(dec ?order) ?new-order]]
-                          db source-order (inc target-order) between)
-                     (concat [new-source]))]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
     tx-data))
 
 
