@@ -789,12 +789,12 @@
 
 (reg-event-fx
   :block/save
-  (fn [{:keys [db]} [_ {:keys [uid old-string string callback] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid string callback] :as args}]]
     (log/debug ":block/save args" (pr-str args))
     (let [local?      (not (db-picker/remote-db? db))
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
           do-nothing? (or (not block-eid)
-                          (= old-string string))
+                          (= string (->> block-eid (d/entity @db/dsdb) :block/string)))
           op          (graph-ops/build-block-save-op @db/dsdb uid string)
           event       (common-events/build-atomic-event op)]
       (log/debug ":block/save local?" local?
