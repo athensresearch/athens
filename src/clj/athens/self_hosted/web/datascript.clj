@@ -15,8 +15,6 @@
     :datascript/new-block
     :datascript/add-child
     :datascript/split-block
-    :datascript/left-sidebar-drop-above
-    :datascript/left-sidebar-drop-below
     :datascript/selected-delete
     :datascript/delete-only-child
     :datascript/delete-merge-block

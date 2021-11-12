@@ -54,3 +54,143 @@
                    (count)))))))
 
 
+(t/deftest shortcut-move-before-test
+  "Test 1 :
+    - start ->
+      page 1  ; <- before this
+      page 2
+      page 3  ; <- move this
+    - end ->
+      page 3
+      page 1
+      page 2
+   Test 2
+    - start ->
+      page 3  ; <- move this
+      page 1
+      page 2  ; <- before this
+    -end ->
+      page 1
+      page 3
+      page 2"
+  (let [setup-tx  [{:block/uid      "page-1-uid"
+                    :node/title     "page 1"
+                    :block/children []}
+                   {:block/uid      "page-2-uid"
+                    :node/title     "page 2"
+                    :block/children []}
+                   {:block/uid      "page-3-uid"
+                    :node/title     "page 3"
+                    :block/children []}]]
+    (fixture/transact-with-middleware setup-tx)
+    (t/is (= 0
+             (-> (common-db/get-sidebar-elements @@fixture/connection)
+                 (count))))
+    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                              (atomic-graph-ops/make-shortcut-new-op "page 1")))
+    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                              (atomic-graph-ops/make-shortcut-new-op "page 2")))
+    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                              (atomic-graph-ops/make-shortcut-new-op "page 3")))
+    (t/is (= 3
+             (-> (common-db/get-sidebar-elements @@fixture/connection)
+                 (count))))
+
+    ;; Test 1
+    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                              (atomic-graph-ops/make-shortcut-move-op "page 3"
+                                                                                                                      {:ref-name "page 1"
+                                                                                                                       :relation :before})))
+
+    (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
+          page-1-loc  (common-db/find-order-from-title sidebar-els "page 1")
+          page-2-loc  (common-db/find-order-from-title sidebar-els "page 2")
+          page-3-loc  (common-db/find-order-from-title sidebar-els "page 3")]
+      (t/is (= 0 page-3-loc))
+      (t/is (= 1 page-1-loc))
+      (t/is (= 2 page-2-loc)))
+
+
+    ;; Test 2
+    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                              (atomic-graph-ops/make-shortcut-move-op "page 3"
+                                                                                                                      {:ref-name "page 2"
+                                                                                                                       :relation :before})))
+    (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
+          page-1-loc  (common-db/find-order-from-title sidebar-els "page 1")
+          page-2-loc  (common-db/find-order-from-title sidebar-els "page 2")
+          page-3-loc  (common-db/find-order-from-title sidebar-els "page 3")]
+      (t/is (= 0 page-1-loc))
+      (t/is (= 1 page-3-loc))
+      (t/is (= 2 page-2-loc)))))
+
+
+(t/deftest shortcut-move-after-test
+  "Test 1 :  Note this case is not possible through UI this action is registered as
+             move page 3 before 2
+    - start ->
+      page 1  ; <- after this
+      page 2
+      page 3  ; <- move this
+    - end ->
+      page 1
+      page 3
+      page 2
+   Test 2
+    - start ->
+      page 1  ; <- move this
+      page 3
+      page 2  ; <- after this
+    -end ->
+      page 3
+      page 2
+      page 1"
+  (let [setup-tx  [{:block/uid      "page-1-uid"
+                    :node/title     "page 1"
+                    :block/children []}
+                   {:block/uid      "page-2-uid"
+                    :node/title     "page 2"
+                    :block/children []}
+                   {:block/uid      "page-3-uid"
+                    :node/title     "page 3"
+                    :block/children []}]]
+    (fixture/transact-with-middleware setup-tx)
+    (t/is (= 0
+             (-> (common-db/get-sidebar-elements @@fixture/connection)
+                 (count))))
+    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                              (atomic-graph-ops/make-shortcut-new-op "page 1")))
+    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                              (atomic-graph-ops/make-shortcut-new-op "page 2")))
+    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                              (atomic-graph-ops/make-shortcut-new-op "page 3")))
+    (t/is (= 3
+             (-> (common-db/get-sidebar-elements @@fixture/connection)
+                 (count))))
+
+    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                              (atomic-graph-ops/make-shortcut-move-op "page 3"
+                                                                                                                      {:ref-name "page 2"
+                                                                                                                       :relation :before})))
+
+    (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
+          page-1-loc  (common-db/find-order-from-title sidebar-els "page 1")
+          page-2-loc  (common-db/find-order-from-title sidebar-els "page 2")
+          page-3-loc  (common-db/find-order-from-title sidebar-els "page 3")]
+      (t/is (= 0 page-1-loc))
+      (t/is (= 1 page-3-loc))
+      (t/is (= 2 page-2-loc)))
+
+
+    ;; Test 2
+    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
+                                                                              (atomic-graph-ops/make-shortcut-move-op "page 1"
+                                                                                                                      {:ref-name "page 2"
+                                                                                                                       :relation :after})))
+    (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
+          page-1-loc  (common-db/find-order-from-title sidebar-els "page 1")
+          page-2-loc  (common-db/find-order-from-title sidebar-els "page 2")
+          page-3-loc  (common-db/find-order-from-title sidebar-els "page 3")]
+      (t/is (= 0 page-3-loc))
+      (t/is (= 1 page-2-loc))
+      (t/is (= 2 page-1-loc)))))

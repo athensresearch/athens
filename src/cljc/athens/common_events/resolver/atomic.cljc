@@ -413,6 +413,42 @@
     tx-data))
 
 
+(defmethod resolve-atomic-op-to-tx :shortcut/move
+  [db {:op/keys [args]}]
+  (let [{source-name  :name
+         ref-position :shortcut-position}  args
+        {:keys [ref-name
+                relation]}                 ref-position
+        source-uid                         (common-db/get-page-uid db source-name)
+        [source-order
+         target-order]                     (common-db/find-source-target-order db
+                                                                               source-name
+                                                                               ref-name)
+        new-source-order                   (if (and  (= :before relation)
+                                                     (< source-order target-order))
+                                             (dec target-order)
+                                             target-order)
+        new-source                         [{:block/uid    source-uid
+                                             :page/sidebar new-source-order}]
+        new-target-order                   (cond
+                                             (and  (= :before relation)
+                                                   (< source-order target-order)) target-order
+                                             (= :before relation)                 (dec target-order)
+                                             :else                                (inc target-order))
+        inc-or-dec                         (if (and (= :before relation)
+                                                    (> source-order target-order))
+                                             inc
+                                             dec)
+        reindex                            (common-db/reindex-sidebar-after-move db
+                                                                                 source-order
+                                                                                 new-target-order
+                                                                                 common-db/between
+                                                                                 inc-or-dec)
+        tx-data                            (concat new-source
+                                                   reindex)]
+    tx-data))
+
+
 (defmethod resolve-atomic-op-to-tx :composite/consequence
   [_db composite]
   (throw (ex-info "Can't resolve Composite Graph Operation, only Atomic Graph Ops are allowed."

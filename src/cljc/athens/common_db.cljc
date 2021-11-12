@@ -73,6 +73,66 @@
        db))
 
 
+(defn find-title-from-order
+  [sidebar-elements order]
+  (-> (filter (fn [el]
+                (= (:page/sidebar el)
+                   order))
+              sidebar-elements)
+      (first)
+      (:node/title)))
+
+
+(defn find-source-target-title
+  [db source-order target-order]
+  (let [sidebar-elements   (get-sidebar-elements db)
+        source-title (find-title-from-order sidebar-elements source-order)
+        target-title (find-title-from-order sidebar-elements target-order)]
+    [source-title target-title]))
+
+
+(defn find-order-from-title
+  [sidebar-elements title]
+  (-> (filter (fn [el]
+                (= (:node/title el)
+                   title))
+              sidebar-elements)
+      (first)
+      (:page/sidebar)))
+
+
+(defn find-source-target-order
+  [db source-title target-title]
+  (let [sidebar-elements   (get-sidebar-elements db)
+        source-order (find-order-from-title sidebar-elements source-title)
+        target-order (find-order-from-title sidebar-elements target-title)]
+    [source-order target-order]))
+
+
+(defn between
+  "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
+  [s t x]
+  (if (< s t)
+    (and (< s x) (< x t))
+    (and (< t x) (< x s))))
+
+
+(defn reindex-sidebar-after-move
+  [db source-order target-order between inc-or-dec]
+  (d/q '[:find ?shortcut ?new-order
+         :keys db/id page/sidebar
+         :in $ ?source-order ?target-order ?between ?inc-or-dec
+         :where
+         [?shortcut :page/sidebar ?order]
+         [(?between ?source-order ?target-order ?order)]
+         [(?inc-or-dec ?order) ?new-order]]
+       db
+       source-order
+       target-order
+       between
+       inc-or-dec))
+
+
 (defn inc-after
   [db eid order]
   (->> (d/q '[:find ?block-uid ?new-o

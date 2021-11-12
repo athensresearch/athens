@@ -130,10 +130,12 @@
 
 (defn make-shortcut-move-op
   "Creates `:shortcut/move` atomic op.
-   - `page-uid` - `:block/uid` of page to be moved to new position in shortcuts
-   - `index` - new position for `page-uid` shortcut"
-  [page-uid index]
+   - `source-name` - name of page to be moved to new position in shortcuts
+   - `ref-position` - new position for source-name shortcut
+      - `ref-name` - name of the page relative to which source page is to be moved
+      - `relation` - move the source-name :above or :below ref"
+  [source-name ref-position]
   {:op/type    :shortcut/move
    :op/atomic? true
-   :op/args    {:page-uid page-uid
-                :index    index}})
+   :op/args    {:name              source-name
+                :shortcut-position ref-position}})
