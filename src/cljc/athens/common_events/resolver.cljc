@@ -6,14 +6,6 @@
     [datascript.core :as d]))
 
 
-(defn between
-  "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
-  [s t x]
-  (if (< s t)
-    (and (< s x) (< x t))
-    (and (< t x) (< x s))))
-
-
 ;; TODO start using this resolution in handlers
 (defmulti resolve-event-to-tx
   "Resolves `:datascript/*` event in context of existing DB into transactions."
