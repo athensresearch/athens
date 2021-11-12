@@ -327,11 +327,11 @@
 
 (reg-event-fx
   :editing/target
-  (fn [{:keys [db]} [_ target]]
+  (fn [_ [_ target]]
     (let [uid (-> (.. target -id)
                   (string/split "editable-uid-")
                   second)]
-      {:db (assoc db :editing/uid uid)})))
+      {:dispatch [:editing/uid uid]})))
 
 
 (reg-event-fx
