@@ -650,7 +650,7 @@
   (fn [_ [_ source-order target-order relation]]
     (let [[source-name target-name] (common-db/find-source-target-title @db/dsdb source-order target-order)
           drop-op                   (atomic-graph-ops/make-shortcut-move-op source-name
-                                                                            {:ref-name target-name
+                                                                            {:page/title target-name
                                                                              :relation relation})
           event (common-events/build-atomic-event drop-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
@@ -774,7 +774,7 @@
   :enter/new-block
   (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
     (log/debug ":enter/new-block" (pr-str block) (pr-str parent) (pr-str new-uid))
-    (let [op    (atomic-graph-ops/make-block-new-op new-uid {:ref-uid (:block/uid block)
+    (let [op    (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
                                                              :relation :after})
           event (common-events/build-atomic-event op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
@@ -868,7 +868,7 @@
   :enter/add-child
   (fn [_ [_ {:keys [block new-uid embed-id] :as args}]]
     (log/debug ":enter/add-child args:" (pr-str args))
-    (let [position (common-db/compat-position @db/dsdb {:ref-uid  (:block/uid block)
+    (let [position (common-db/compat-position @db/dsdb {:block/uid  (:block/uid block)
                                                         :relation :first})
           event    (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
@@ -896,7 +896,7 @@
   :enter/bump-up
   (fn [_ [_ {:keys [uid new-uid embed-id] :as args}]]
     (log/debug ":enter/bump-up args" (pr-str args))
-    (let [position (common-db/compat-position @db/dsdb {:ref-uid  uid
+    (let [position (common-db/compat-position @db/dsdb {:block/uid  uid
                                                         :relation :before})
           event    (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
@@ -913,7 +913,7 @@
     (let [block-uid                  (:block/uid block)
           block-open-op           (atomic-graph-ops/make-block-open-op block-uid
                                                                        true)
-          position                (common-db/compat-position @db/dsdb {:ref-uid  (:block/uid block)
+          position                (common-db/compat-position @db/dsdb {:block/uid  (:block/uid block)
                                                                        :relation :first})
           add-child-op            (atomic-graph-ops/make-block-new-op new-uid position)
           open-block-add-child-op (composite-ops/make-consequence-op {:op/type :open-block-add-child}
@@ -1052,7 +1052,7 @@
 (defn block-save-block-move-composite-op
   [source-uid ref-uid relation string]
   (let [block-save-op             (graph-ops/build-block-save-op @db/dsdb source-uid string)
-        location                  (common-db/compat-position @db/dsdb {:ref-uid ref-uid
+        location                  (common-db/compat-position @db/dsdb {:block/uid ref-uid
                                                                        :relation relation})
         block-move-op             (atomic-graph-ops/make-block-move-op source-uid
                                                                        location)
@@ -1176,7 +1176,7 @@
     (log/debug ":block/move args" (pr-str args))
     (let [atomic-event (common-events/build-atomic-event
                          (atomic-graph-ops/make-block-move-op source-uid
-                                                              {:ref-uid target-uid
+                                                              {:block/uid target-uid
                                                                :relation target-rel}))]
       {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
 
@@ -1189,7 +1189,7 @@
           atomic-event (common-events/build-atomic-event
                          (composite-ops/make-consequence-op {:op/type :block/link}
                                                             [(atomic-graph-ops/make-block-new-op block-uid
-                                                                                                 {:ref-uid target-uid
+                                                                                                 {:block/uid target-uid
                                                                                                   :relation target-rel})
                                                              (atomic-graph-ops/make-block-save-op block-uid
                                                                                                   (str "((" source-uid "))"))]))]
@@ -1200,12 +1200,12 @@
   [target-uid source-uids first-rel]
   (composite-ops/make-consequence-op {:op/type :block/move-chain}
                                      (concat [(atomic-graph-ops/make-block-move-op (first source-uids)
-                                                                                   {:ref-uid target-uid
+                                                                                   {:block/uid target-uid
                                                                                     :relation first-rel})]
                                              (doall
                                                (for [[one two] (partition 2 1 source-uids)]
                                                  (atomic-graph-ops/make-block-move-op two
-                                                                                      {:ref-uid one
+                                                                                      {:block/uid one
                                                                                        :relation :after}))))))
 
 

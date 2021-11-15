@@ -61,10 +61,10 @@
           previous-uid              (:block/uid previous)
           position                  (cond
                                       ;; There's a block before this one that we can add this one after.
-                                      previous-uid {:ref-uid previous-uid   :relation :after}
+                                      previous-uid {:block/uid previous-uid   :relation :after}
                                       ;; There's no previous block, but we can add it to the end of the parent.
-                                      parent-title {:ref-name parent-title :relation :last}
-                                      parent-uid   {:ref-uid parent-uid     :relation :last}
+                                      parent-title {:page/title parent-title :relation :last}
+                                      parent-uid   {:block/uid parent-uid     :relation :last}
                                       ;; There's a default place where we can drop blocks, use it.
                                       default-position default-position
                                       :else (throw (ex-info "Cannot determine position for enhanced internal representation" eir)))]
@@ -114,8 +114,8 @@
                                                 empty-block?          order
                                                 current-block-parent? 0
                                                 :else                 (inc order))
-         default-position                     (common-db/compat-position db {:ref-uid  current-block-parent-uid
-                                                                             :relation new-block-order})
+         default-position                     (common-db/compat-position db {:block/uid current-block-parent-uid
+                                                                             :relation  new-block-order})
          extra-ops                            (if empty-block? [(graph-ops/build-block-remove-op db uid)] [])]
      (composite/make-consequence-op {:op/type :block/paste}
                                     (concat extra-ops (internal-representation->atomic-ops db internal-representation default-position))))))

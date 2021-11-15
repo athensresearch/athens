@@ -50,7 +50,7 @@
                                             :block/order    4
                                             :block/children []}]}]]
         (fixture/transact-with-middleware setup-tx)
-        (let [block-move-op  (atomic-ops/make-block-move-op child-4-uid {:ref-uid child-2-uid :relation :before})
+        (let [block-move-op  (atomic-ops/make-block-move-op child-4-uid {:block/uid child-2-uid :relation :before})
               block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
           (d/transact! @fixture/connection block-move-txs)
           (let [child-1-block (common-db/get-block @@fixture/connection
@@ -101,7 +101,7 @@
                                             :block/order    4
                                             :block/children []}]}]]
         (fixture/transact-with-middleware setup-tx)
-        (let [block-move-op  (atomic-ops/make-block-move-op child-4-uid {:ref-uid child-1-uid :relation :after})
+        (let [block-move-op  (atomic-ops/make-block-move-op child-4-uid {:block/uid child-1-uid :relation :after})
               block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
           (d/transact! @fixture/connection block-move-txs)
           (let [child-1-block (common-db/get-block @@fixture/connection
@@ -153,7 +153,7 @@
                                             :block/order    4
                                             :block/children []}]}]]
         (fixture/transact-with-middleware setup-tx)
-        (let [block-move-op  (atomic-ops/make-block-move-op child-2-uid {:ref-uid child-4-uid :relation :after})
+        (let [block-move-op  (atomic-ops/make-block-move-op child-2-uid {:block/uid child-4-uid :relation :after})
               block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
           (d/transact! @fixture/connection block-move-txs)
           (let [child-1-block (common-db/get-block @@fixture/connection
@@ -204,7 +204,7 @@
                                             :block/order    4
                                             :block/children []}]}]]
         (fixture/transact-with-middleware setup-tx)
-        (let [block-move-op  (atomic-ops/make-block-move-op child-2-uid {:ref-uid child-5-uid :relation :before})
+        (let [block-move-op  (atomic-ops/make-block-move-op child-2-uid {:block/uid child-5-uid :relation :before})
               block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
           (d/transact! @fixture/connection block-move-txs)
           (let [child-1-block (common-db/get-block @@fixture/connection
@@ -256,7 +256,7 @@
                                             :block/children []}]}]]
       (fixture/transact-with-middleware setup-tx)
       ;; from:
-      (let [block-move-op  (atomic-ops/make-block-move-op child-2-2-uid {:ref-uid child-1-1-uid :relation :before})
+      (let [block-move-op  (atomic-ops/make-block-move-op child-2-2-uid {:block/uid child-1-1-uid :relation :before})
             block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
         (d/transact! @fixture/connection block-move-txs)
         (let [child-1-1-block (common-db/get-block @@fixture/connection
@@ -291,7 +291,7 @@
                                             :block/order    1
                                             :block/children []}]}]]
       (fixture/transact-with-middleware setup-tx)
-      (let [block-move-op  (atomic-ops/make-block-move-op child-1-2-uid {:ref-uid child-1-1-uid :relation :first})
+      (let [block-move-op  (atomic-ops/make-block-move-op child-1-2-uid {:block/uid child-1-1-uid :relation :first})
             block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
         (d/transact! @fixture/connection block-move-txs)
         (let [parent-block    (common-db/get-block @@fixture/connection
@@ -329,8 +329,8 @@
                                            :block/children []}]}]]
       (fixture/transact-with-middleware setup-tx)
       (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
-                                                            [(atomic-ops/make-block-move-op child-2-uid {:ref-uid child-1-uid :relation :first})
-                                                             (atomic-ops/make-block-move-op child-3-uid {:ref-uid child-2-uid :relation :after})])]
+                                                            [(atomic-ops/make-block-move-op child-2-uid {:block/uid child-1-uid :relation :first})
+                                                             (atomic-ops/make-block-move-op child-3-uid {:block/uid child-2-uid :relation :after})])]
         ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
         (doseq [atomic (graph-ops/extract-atomics chained-move)
                 :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
@@ -375,8 +375,8 @@
                                             :block/children []}]}]]
       (fixture/transact-with-middleware setup-tx)
       (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
-                                                            [(atomic-ops/make-block-move-op child-2-uid {:ref-uid child-1-uid :relation :first})
-                                                             (atomic-ops/make-block-move-op child-3-uid {:ref-uid child-2-uid :relation :after})])]
+                                                            [(atomic-ops/make-block-move-op child-2-uid {:block/uid child-1-uid :relation :first})
+                                                             (atomic-ops/make-block-move-op child-3-uid {:block/uid child-2-uid :relation :after})])]
         ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
         (doseq [atomic (graph-ops/extract-atomics chained-move)
                 :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
@@ -422,8 +422,8 @@
                                            :block/children []}]}]]
       (fixture/transact-with-middleware setup-tx)
       (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
-                                                            [(atomic-ops/make-block-move-op child-2-uid {:ref-uid child-4-uid :relation :after})
-                                                             (atomic-ops/make-block-move-op child-3-uid {:ref-uid child-2-uid :relation :after})])]
+                                                            [(atomic-ops/make-block-move-op child-2-uid {:block/uid child-4-uid :relation :after})
+                                                             (atomic-ops/make-block-move-op child-3-uid {:block/uid child-2-uid :relation :after})])]
         ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
         (doseq [atomic (graph-ops/extract-atomics chained-move)
                 :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
@@ -477,8 +477,8 @@
                                                              :block/children []}]}]}]] ; <- move after this block
       (fixture/transact-with-middleware setup-tx)
       (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
-                                                            [(atomic-ops/make-block-move-op child-2-uid {:ref-uid child-5-uid :relation :after})
-                                                             (atomic-ops/make-block-move-op child-3-uid {:ref-uid child-2-uid :relation :after})])]
+                                                            [(atomic-ops/make-block-move-op child-2-uid {:block/uid child-5-uid :relation :after})
+                                                             (atomic-ops/make-block-move-op child-3-uid {:block/uid child-2-uid :relation :after})])]
         ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
         (doseq [atomic (graph-ops/extract-atomics chained-move)
                 :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]

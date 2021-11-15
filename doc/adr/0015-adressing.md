@@ -30,7 +30,7 @@ While developing the protocol operations for pages we naturally hit a tension be
 Creation and deletion operations would reference the title, but rename and move operations would reference the name.
 
 
-## Decision
+## Decision #1 (reverted)
 
 The title abstraction is suitable for a page but what really matters is that it is addressed uniquely by a known name.
 This points to a higher level concept where more things can have such names, and things can have more than one name.
@@ -42,10 +42,27 @@ Blocks cannot be named right now but it sounds like something we could do.
 We will use the more general name instead of just title in the Athens protocol.
 
 
-## Consequences
+## Consequences #1
 
 Protocol operations for position and page will refer to name instead of title.
 Actually resolutions and code for the frontend and backend can still refer to titles.
 
 We can expand the use of names via new protocol operations in the future.
+
+
+## Decision #2
+
+While reviewing the Athens protocol, the issue of identity for pages came up again.
+
+Both page and shortcut operations needs to uniquely identify pages and cannot operate over non-page entities.
+If they received the more general names, they would need to verify these correspond to pages and not to blocks.
+
+This reason proved sufficient to revert the previous decision.
+We still would like to have a name-like abstraction for the reasons stated above, but they are a net benefit for the current set of operations.
+
+
+## Consequences #2
+
+Pages will again be addressed via title in the Athens protocol.
+Names can also be used to address pages in the future via new operations or new versions of the existing operations.
 

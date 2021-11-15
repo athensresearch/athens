@@ -21,8 +21,8 @@
                                                        new-str)]
       (t/is (= #:op{:type    :block/save,
                     :atomic? true,
-                    :args    {:block-uid block-uid
-                              :string    new-str}}
+                    :args    {:block/uid    block-uid
+                              :block/string new-str}}
                block-save-op))))
 
   (t/testing "Requires `:page/new`, getting interesting"
@@ -43,8 +43,8 @@
       (t/is (= #:op{:type    :block/save,
                     :atomic? true,
                     :args
-                    {:block-uid "block-uid-2",
-                     :string    "[[new-page]]"}}
+                    {:block/uid    "block-uid-2",
+                     :block/string "[[new-page]]"}}
                (-> consequences second))))))
 
 

@@ -17,15 +17,14 @@
 
 (defmethod resolve-atomic-op-to-tx :block/new
   [db {:op/keys [args]}]
-  (let [{:keys [block-uid
-                position]}              args
-        {:keys [ref-uid
-                ref-name
-                relation]}              position
+  (let [{:block/keys [uid position]}    args
+        {relation  :relation
+         ref-uid   :block/uid
+         ref-title :page/title}         position
         _valid-position                 (common-db/validate-position db position)
-        ref-name->uid                  (common-db/get-page-uid db ref-name)
+        ref-title->uid                  (common-db/get-page-uid db ref-title)
         ;; Pages must be referenced by title but internally we still use uids for them.
-        ref-uid                         (or ref-uid ref-name->uid)
+        ref-uid                         (or ref-uid ref-title->uid)
         ref-parent?                     (#{:first :last} relation)
         ref-block-exists?               (int? (common-db/e-by-av db :block/uid ref-uid))
         ref-block                       (when ref-block-exists?
@@ -48,7 +47,7 @@
                                           :before (:block/order ref-block)
                                           :after  (inc (:block/order ref-block)))
         now                             (utils/now-ts)
-        new-block                       {:block/uid    block-uid
+        new-block                       {:block/uid    uid
                                          :block/string ""
                                          :block/order  new-block-order
                                          :block/open   true
@@ -69,8 +68,8 @@
 ;; This is Atomic Graph Op, there is also composite version of it
 (defmethod resolve-atomic-op-to-tx :block/save
   [_db {:op/keys [args]}]
-  (let [{:keys [block-uid string]} args]
-    [{:block/uid    block-uid
+  (let [{:block/keys [uid string]} args]
+    [{:block/uid    uid
       :block/string string
       :edit/time    (utils/now-ts)}]))
 
@@ -78,17 +77,16 @@
 (defmethod resolve-atomic-op-to-tx :block/open
   [db {:op/keys [args]}]
   (log/debug "atomic-resolver :block/open args:" (pr-str args))
-  (let [{:keys [block-uid
-                open?]} args
-        block-eid       (common-db/e-by-av db :block/uid block-uid)
-        current-open?   (when (int? block-eid)
-                          (common-db/v-by-ea db block-eid :block/open))]
+  (let [{:block/keys [uid open?]} args
+        block-eid                 (common-db/e-by-av db :block/uid uid)
+        current-open?             (when (int? block-eid)
+                                    (common-db/v-by-ea db block-eid :block/open))]
     (if (= current-open? open?)
       (do
         (log/info ":block/open already at desired state, :block/open" open?)
         [])
       (let [now           (utils/now-ts)
-            updated-block {:block/uid  block-uid
+            updated-block {:block/uid  uid
                            :block/open open?
                            :edit/time  now}]
         [updated-block]))))
@@ -97,17 +95,19 @@
 (defmethod resolve-atomic-op-to-tx :block/move
   [db {:op/keys [args]}]
   (log/debug "atomic-resolver :block/move args:" (pr-str args))
-  (let [{:keys [block-uid position]}            args
-        {:keys [ref-uid ref-name relation]}    position
+  (let [{:block/keys [uid position]}            args
+        {relation  :relation
+         ref-uid   :block/uid
+         ref-title :page/title}                 position
         _valid-position                         (common-db/validate-position db position)
-        _valid-block-uid                        (when (common-db/get-page-title db block-uid)
+        _valid-block-uid                        (when (common-db/get-page-title db uid)
                                                   (throw (ex-info "Block to be moved is a page, cannot move pages." args)))
-        ref-name->uid                          (common-db/get-page-uid db ref-name)
+        ref-title->uid                          (common-db/get-page-uid db ref-title)
         ;; Pages must be referenced by title but internally we still use uids for them.
-        ref-uid                                 (or ref-uid ref-name->uid)
+        ref-uid                                 (or ref-uid ref-title->uid)
         {old-block-order :block/order
-         :as             moved-block}           (common-db/get-block db [:block/uid block-uid])
-        {old-parent-block-uid :block/uid}       (common-db/get-parent db [:block/uid block-uid])
+         :as             moved-block}           (common-db/get-block db [:block/uid uid])
+        {old-parent-block-uid :block/uid}       (common-db/get-parent db [:block/uid uid])
         ref-parent?                             (#{:first :last} relation)
         ref-block-exists?                       (int? (common-db/e-by-av db :block/uid ref-uid))
         ref-block                               (when ref-block-exists?
@@ -181,7 +181,7 @@
                                  :tx-data tx-data})))
         tx-data)
 
-      (let [retract-from-old-parent [:db/retract [:block/uid old-parent-block-uid] :block/children [:block/uid block-uid]]
+      (let [retract-from-old-parent [:db/retract [:block/uid old-parent-block-uid] :block/children [:block/uid uid]]
             old-parent-reindex      (common-db/dec-after db
                                                          [:block/uid old-parent-block-uid]
                                                          old-block-order)
@@ -216,14 +216,14 @@
   ;; [x] :db/retract parent's child
   ;; [x] reindex parent's children
   ;; [x] cleanup block refs
-  (let [{:keys [block-uid]}   args
-        block-exists?         (common-db/e-by-av db :block/uid block-uid)
+  (let [{:block/keys [uid]}   args
+        block-exists?         (common-db/e-by-av db :block/uid uid)
         {removed-order :block/order
          children      :block/children
          :as           block} (when block-exists?
-                                (common-db/get-block db [:block/uid block-uid]))
+                                (common-db/get-block db [:block/uid uid]))
         parent-eid            (when block-exists?
-                                (common-db/get-parent-eid db [:block/uid block-uid]))
+                                (common-db/get-parent-eid db [:block/uid uid]))
         parent-uid            (when parent-eid
                                 (common-db/v-by-ea db parent-eid :block/uid))
         reindex               (common-db/dec-after db [:block/uid parent-uid] removed-order)
@@ -239,7 +239,7 @@
                                              (apply conj (rest to-look-at)
                                                     (:block/children c-block))))
                                     acc)))
-        all-uids-to-remove    (conj (set descendants-uids) block-uid)
+        all-uids-to-remove    (conj (set descendants-uids) uid)
         uid->refs             (->> all-uids-to-remove
                                    (map (fn [uid]
                                           (let [block    (common-db/get-block db [:block/uid uid])
@@ -279,9 +279,9 @@
                                       [:db/retractEntity [:block/uid uid]])
                                     descendants-uids)
         retract-entity        (when block-exists?
-                                [:db/retractEntity [:block/uid block-uid]])
+                                [:db/retractEntity [:block/uid uid]])
         retract-parents-child (when parent-uid
-                                [:db/retract [:block/uid parent-uid] :block/children [:block/uid block-uid]])
+                                [:db/retract [:block/uid parent-uid] :block/children [:block/uid uid]])
         parent                (when reindex?
                                 {:block/uid      parent-uid
                                  :block/children reindex})
@@ -292,7 +292,7 @@
                                   has-kids?    (into retract-kids)
                                   has-asserts? (into asserts)
                                   true         (conj retract-entity)))]
-    (log/debug ":block/remove block-uid:" (pr-str block-uid)
+    (log/debug ":block/remove block-uid:" (pr-str uid)
                "\nblock:" (with-out-str
                             (pp/pprint block))
                "\nparent-eid:" (pr-str parent-eid)
@@ -305,26 +305,26 @@
 
 (defmethod resolve-atomic-op-to-tx :page/new
   [db {:op/keys [args]}]
-  (let [{:keys [name]} args
-        page-exists?   (common-db/e-by-av db :node/title name)
-        page-uid       (or (-> name dates/title-to-date dates/date-to-day :uid)
-                           (utils/gen-block-uid))
-        now            (utils/now-ts)
-        page           {:node/title     name
-                        :block/uid      page-uid
-                        :block/children []
-                        :create/time    now
-                        :edit/time      now}
-        txs            (if page-exists?
-                         []
-                         [page])]
+  (let [{:page/keys [title]} args
+        page-exists?         (common-db/e-by-av db :node/title title)
+        page-uid             (or (-> title dates/title-to-date dates/date-to-day :uid)
+                                 (utils/gen-block-uid))
+        now                  (utils/now-ts)
+        page                 {:node/title     title
+                              :block/uid      page-uid
+                              :block/children []
+                              :create/time    now
+                              :edit/time      now}
+        txs                  (if page-exists?
+                               []
+                               [page])]
     txs))
 
 
 (defmethod resolve-atomic-op-to-tx :page/rename
   [db {:op/keys [args]}]
-  (let [{:keys [old-name
-                new-name]} args
+  (let [old-name           (-> args :page/title)
+        new-name           (-> args :target :page/title)
         page-eid           (common-db/e-by-av db :node/title old-name)
         page-exists?       (int? page-eid)
         now                (utils/now-ts)
@@ -344,8 +344,8 @@
 
 (defmethod resolve-atomic-op-to-tx :page/merge
   [db {:op/keys [args]}]
-  (let [{:keys [from-name
-                to-name]} args
+  (let [from-name                       (-> args :page/title)
+        to-name                         (-> args :target :page/title)
         linked-refs                     (common-db/get-linked-refs-by-page-title db from-name)
         new-linked-refs                 (common-db/map-new-refs linked-refs from-name to-name)
         {old-page-kids :block/children} (common-db/get-page-document db [:node/title from-name])
@@ -366,27 +366,27 @@
 (defmethod resolve-atomic-op-to-tx :page/remove
   [db {:op/keys [args]}]
   (log/debug "atomic-resolver: :page/remove: " (pr-str args))
-  (let [{page-name :name}  args
-        page-uid           (common-db/get-page-uid db page-name)
-        retract-blocks     (when page-uid
-                             (common-db/retract-uid-recursively-tx db page-uid))
-        delete-linked-refs (when page-uid
-                             (->> page-uid
-                                  (vector :block/uid)
-                                  (common-db/get-block db)
-                                  vector
-                                  (common-db/replace-linked-refs-tx db)))
-        tx-data            (if page-uid
-                             (concat retract-blocks
-                                     delete-linked-refs)
-                             [])]
+  (let [{:page/keys [title]} args
+        page-uid             (common-db/get-page-uid db title)
+        retract-blocks       (when page-uid
+                               (common-db/retract-uid-recursively-tx db page-uid))
+        delete-linked-refs   (when page-uid
+                               (->> page-uid
+                                    (vector :block/uid)
+                                    (common-db/get-block db)
+                                    vector
+                                    (common-db/replace-linked-refs-tx db)))
+        tx-data              (if page-uid
+                               (concat retract-blocks
+                                       delete-linked-refs)
+                               [])]
     tx-data))
 
 
 (defmethod resolve-atomic-op-to-tx :shortcut/new
   [db {:op/keys [args]}]
-  (let [{page-name :name}    args
-        page-uid             (common-db/get-page-uid db page-name)
+  (let [{:page/keys [title]} args
+        page-uid             (common-db/get-page-uid db title)
         reindex-shortcut-txs (->> (common-db/get-sidebar-elements db)
                                   (sort-by :page/sidebar)
                                   (map-indexed (fn [i m] (assoc m :page/sidebar i)))
@@ -401,8 +401,8 @@
 
 (defmethod resolve-atomic-op-to-tx :shortcut/remove
   [db {:op/keys [args]}]
-  (let [{page-name :name}    args
-        page-uid             (common-db/get-page-uid db page-name)
+  (let [{:page/keys [title]} args
+        page-uid             (common-db/get-page-uid db title)
         reindex-shortcut-txs (->> (common-db/get-sidebar-elements db)
                                   (remove #(= page-uid (:block/uid %)))
                                   (sort-by :page/sidebar)
@@ -415,15 +415,15 @@
 
 (defmethod resolve-atomic-op-to-tx :shortcut/move
   [db {:op/keys [args]}]
-  (let [{source-name  :name
-         ref-position :shortcut-position}  args
-        {:keys [ref-name
-                relation]}                 ref-position
-        source-uid                         (common-db/get-page-uid db source-name)
+  (let [{title        :page/title
+         ref-position :shortcut/position}  args
+        {relation  :relation
+         ref-title :page/title}            ref-position
+        source-uid                         (common-db/get-page-uid db title)
         [source-order
          target-order]                     (common-db/find-source-target-order db
-                                                                               source-name
-                                                                               ref-name)
+                                                                               title
+                                                                               ref-title)
         new-source-order                   (if (and  (= :before relation)
                                                      (< source-order target-order))
                                              (dec target-order)
