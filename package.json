@@ -104,6 +104,7 @@
     "electron-log": "^4.2.4",
     "electron-updater": "^4.3.4",
     "electron-window-state": "^5.0.3",
+    "emoji-picker-element": "^1.8.2",
     "highlight.js": "^11.1.0",
     "iconoir": "^1.0.0",
     "iconoir-react": "^2.1.0",
