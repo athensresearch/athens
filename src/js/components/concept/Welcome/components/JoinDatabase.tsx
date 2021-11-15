@@ -61,7 +61,7 @@ export const JoinDatabase = React.forwardRef(
     return (
       <PageWrapper ref={ref}>
         <Preview>
-          <Heading>Join a Shared Graph</Heading>
+          <Heading>Join a Shared Database</Heading>
           <IconWrap>
             <Wifi strokeWidth={1} />
             <Plus strokeWidth={2} />

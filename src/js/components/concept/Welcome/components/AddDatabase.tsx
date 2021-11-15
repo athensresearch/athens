@@ -317,7 +317,7 @@ export const AddDatabase = React.forwardRef(
           </Button>
         </Header>
         <Preview style={{ "--shadow-color": database.color }}>
-          <Heading>Create a New Graph</Heading>
+          <Heading>Create a New Database</Heading>
           <DatabaseIcon {...database} />
           <DatabaseNameField
             placeholder={"Name"}
