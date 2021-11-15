@@ -16,7 +16,9 @@
 ;; ==========================
 (defn opaque-text
   [text]
-  [:span (use-style {:color (color :body-text-color :opacity-med) :font-weight "normal"}) text])
+  [:span (use-style {:color       (color :body-text-color :opacity-med)
+                     :font-weight "normal"})
+   text])
 
 
 (defn space
@@ -28,26 +30,36 @@
                   :border        (str "1px solid " (color :body-text-color :opacity-low))
                   :border-top    0})])
 
+(defn- add-keys [sequence]
+  (doall
+   (for [el sequence]
+     ^{:keys (hash el)}
+     el)))
 
 (defn example
   [template & args]
-  (let [opaque-texts (map #(conj [opaque-text] %) args)
-        insert-spaces (fn [str-or-vec]
-                        (if (and (string? str-or-vec)
-                                 (str/includes? str-or-vec "$space"))
-                          (-> str-or-vec
-                              (str/split #"\$space")
-                              (interleave (repeat [space])))
-                          str-or-vec))]
+  (let [opaque-texts    (map #(r/as-element [opaque-text %]) args)
+        space-component (r/as-element [space])
+        insert-spaces   (fn [str-or-vec]
+                          (if (and (string? str-or-vec)
+                                   (str/includes? str-or-vec "$space"))
+                            (into [:<>]
+                                  (-> str-or-vec
+                                      (str/split #"\$space")
+                                      (interleave (repeat space-component))
+                                      add-keys))
+                            str-or-vec))]
     [:span (use-style
-             {:font-size   "85%"
-              :font-weight "bold"
-              :user-select "all"
-              :word-break  "break-word"})
+            {:font-size   "85%"
+             :font-weight "bold"
+             :user-select "all"
+             :word-break  "break-word"})
      (as-> template t
            (str/split t #"\$text")
            (interleave t (concat opaque-texts [nil]))
-           (map insert-spaces t))]))
+           (map insert-spaces t)
+           (add-keys t)
+           (into [:<>] t))]))
 
 
 ;; Help content
@@ -85,7 +97,7 @@
             {:description "Checkbox"
              :example     [example "{{[[TODO]]}}$space$text" "Label"]}
             {:description "Inline code"
-             :example     [example "`$text`" "Code"]}
+             :example     [example "`$text`" "Inline Code"]}
             {:description "Highlight"
              :example     [example "^^$text^^" "Athens"]}
             {:description "Italicize"
@@ -198,32 +210,33 @@
 
 (defn shortcut
   [shortcut-str]
-  [:div (use-style {:display     "flex"
-                    :align-items "center"
-                    :gap         "0.3rem"})
-   (let [key-to-display (fn [key]
-                          (-> key
-                              (str/replace #"mod" mod-key)
-                              (str/replace #"alt" alt-key)
-                              (str/replace #"shift" "⇧")
-                              (str/replace #"minus" "-")
-                              (str/replace #"plus" "+")))
-         keys (as-> shortcut-str s
-                    (str/split s #"\+")
-                    (map key-to-display s))]
+  (let [key-to-display (fn [key]
+                         (-> key
+                             (str/replace #"mod" mod-key)
+                             (str/replace #"alt" alt-key)
+                             (str/replace #"shift" "⇧")
+                             (str/replace #"minus" "-")
+                             (str/replace #"plus" "+")))
+        keys           (as-> shortcut-str s
+                         (str/split s #"\+")
+                         (map key-to-display s))]
+    [:div (use-style {:display     "flex"
+                      :align-items "center"
+                      :gap         "0.3rem"})
 
-
-     (for [key keys]
-       ^{:key key} [:span (use-style {:font-family    "inherit"
-                                      :display        "inline-flex"
-                                      :gap            "0.3em"
-                                      :text-transform "uppercase"
-                                      :font-size      "0.8em"
-                                      :padding-inline "0.35em"
-                                      :background     (color :background-plus-2)
-                                      :border-radius  "0.25rem"
-                                      :font-weight    600})
-                    key]))])
+     (doall
+      (for [key keys]
+        ^{:key key}
+        [:span (use-style {:font-family    "inherit"
+                           :display        "inline-flex"
+                           :gap            "0.3em"
+                           :text-transform "uppercase"
+                           :font-size      "0.8em"
+                           :padding-inline "0.35em"
+                           :background     (color :background-plus-2)
+                           :border-radius  "0.25rem"
+                           :font-weight    600})
+         key]))]))
 
 
 (def modal-body-styles
@@ -271,7 +284,10 @@
            :font-size      "100%"
            :padding        "1rem 1.5rem"})
     title]
-   children])
+   (doall
+    (for [child children]
+      ^{:key (hash child)}
+      child))])
 
 
 (defn help-section-group
@@ -286,25 +302,27 @@
                     :margin      0
                     :font-weight "bold"})
     title]
-   [:div children]])
+   [:div
+    (doall
+     (for [child children]
+       ^{:key (hash child)}
+       child))]])
 
 
 (defn help-item
   [item]
   [:div (use-style
-          {:border-radius         "0.5rem"
-           :align-items           "center"
-           :display               "grid"
-           :gap                   "1rem"
-           :grid-template-columns "12rem 1fr"
-           :padding               "0.25rem 0.5rem"
-           ::stylefy/manual       [["&:nth-child(odd)"
-                                    {:background (color :background-plus-2 :opacity-low)}]]})
-
-
+         {:border-radius         "0.5rem"
+          :align-items           "center"
+          :display               "grid"
+          :gap                   "1rem"
+          :grid-template-columns "12rem 1fr"
+          :padding               "0.25rem 0.5rem"
+          ::stylefy/manual       ["&:nth-child(odd)"
+                                  {:background (color :background-plus-2 :opacity-low)}]})
    [:span (use-style
-            {:display         "flex"
-             :justify-content "space-between"})
+           {:display         "flex"
+            :justify-content "space-between"})
     ;; Position of the example changes if there is a shortcut or not.
     (:description item)
     (when (contains? item :shortcut)
@@ -315,11 +333,6 @@
      [shortcut (:shortcut item)])])
 
 
-(defn modal-body
-  [& children]
-  [:div (use-style modal-body-styles) children])
-
-
 ;; Help popup UI
 ;; Why the escape handler?
 ;; Because when disabled the modal autofocus (which moves the modal to the top when
@@ -328,28 +341,25 @@
 ;; Because of that, our own escape handler is added.
 (defn help-popup
   []
-  (r/with-let
-    [open? (subscribe [:help/open?])
-     close #(dispatch [:help/toggle])
-     escape-handler (fn [event]
-                      (when
-                        (and @open? (= (.. event -keyCode) KeyCodes.ESC))
-                        (close)))
-     _ (js/addEventListener "keydown" escape-handler)]
+  (r/with-let [open? (subscribe [:help/open?])
+               close #(dispatch [:help/toggle])
+               escape-handler (fn [event]
+                                (when
+                                    (and @open? (= (.. event -keyCode) KeyCodes.ESC))
+                                  (close)))
+               _ (js/addEventListener "keydown" escape-handler)]
     [:> Modal {:open             @open?
                :style            {:overflow-y "auto"}
                :disableAutoFocus true
                :onClose          close}
-     [modal-body
+     [:div (use-style modal-body-styles)
       [:div (use-style help-styles)
        [:header (use-style help-header-styles)
         [:h1 (use-style help-title)
          "Help"]
-        [:nav
-         (use-style
-           {:display "flex"
-            :gap     "1rem"
-            :padding "1rem"})]]
+        [:nav (use-style {:display "flex"
+                          :gap     "1rem"
+                          :padding "1rem"})]]
        ;; Links at the top of the help. Uncomment when the correct links are obtained.
        ;; [help-link
        ;; [:> LiveHelp]
@@ -361,15 +371,18 @@
        ;; [:> AddToPhotos]
        ;; "Get Help on Discord"]]]
        [:div (use-style {:overflow-y "auto"})
-        (for [section content]
-          ^{:key section}
-          [help-section (:name section)
-           (for [group (:groups section)]
-             ^{:key group}
-             [help-section-group (:name group)
-              (for [item (:items group)]
-                ^{:key item}
-                [help-item item])])])]]]]
+        (doall
+         (for [section content]
+           ^{:key section}
+           [help-section (:name section)
+            (doall
+             (for [group (:groups section)]
+               ^{:key group}
+               [help-section-group (:name group)
+                (doall
+                 (for [item (:items group)]
+                   ^{:key item}
+                   [help-item item]))]))]))]]]]
     (finally js/removeEventListener "keydown" escape-handler)))
 
 
