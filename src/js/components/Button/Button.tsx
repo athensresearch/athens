@@ -58,7 +58,7 @@ export const ButtonWrap = styled.button.attrs<ButtonProps>(props => {
   transition-property: background, color;
   transition-duration: 0.075s;
   transition-timing-function: ease;
-  gap: 0.5rem;
+  gap: 1ch;
   text-align: left;
 
   &:focus {
@@ -88,7 +88,7 @@ export const ButtonWrap = styled.button.attrs<ButtonProps>(props => {
     padding: var(--padding-v) var(--padding-h);
   }
 
-  svg:not(& * svg) {
+  :where(:not(& * svg), :not(.unset-margin)) svg {
     --icon-padding: 0.25rem;
     margin: calc((var(--padding-v) * -1) + var(--icon-padding)) calc((var(--padding-h) * -1) + var(--icon-padding));
 
