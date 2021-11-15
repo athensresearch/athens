@@ -110,4 +110,13 @@
                     ;; this is plain recursion, maybe do loop recur instead
                     (extract-atomics consequence)))
                 (or (:op/consequences operation)
-                    (-> operation :event/op :op/consequences)))))
+                    (-> operation :event/op :op/consequences)
+                    [(or (:event/op operation)
+                         operation)]))))
+
+
+(defn contains-op?
+  [op op-type]
+  (let [atomics  (extract-atomics op)
+        filtered (filter #(= op-type (:op/type %)) atomics)]
+    (seq filtered)))
