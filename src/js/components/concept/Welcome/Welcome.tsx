@@ -4,7 +4,7 @@ import styled, { keyframes } from "styled-components";
 import { AddBox, Wifi } from "@material-ui/icons";
 import { Slide, Fade } from "@material-ui/core";
 
-import { Button } from "@/Button";
+import { Button, ButtonWrap } from "@/Button";
 import { Overlay } from "@/Overlay";
 import { Input } from "@/Input";
 import { DatabasesList } from "./components/DatabasesList";
@@ -32,10 +32,12 @@ const Sidebar = styled.aside`
   border-top-left-radius: inherit;
   border-bottom-left-radius: inherit;
   --webkit-overflow-scrolling: touch;
+
   @supports (backdrop-filter: blur(20px)) {
     background: var(--background-color---opacity-high);
     backdrop-filter: blur(20px);
   }
+
   header {
     padding: 2rem 1rem;
     display: flex;
@@ -84,11 +86,13 @@ const WelcomeActions = styled.div`
   display: grid;
   grid-auto-flow: row;
   margin-top: auto;
-  ${Button} {
+
+  ${ButtonWrap} {
     justify-content: flex-start;
     padding: 1rem 2rem;
     border-radius: 0;
     color: var(--body-text-color);
+
     svg {
       position: relative;
       margin-right: 0.125rem;
@@ -123,7 +127,8 @@ export const Header = styled.div`
   margin-bottom: auto;
   padding: 0.5rem;
   justify-content: flex-end;
-  ${Button} {
+
+  ${ButtonWrap} {
     color: var(--body-text-color---opacity-high);
     font-size: var(--font-size--text-sm);
   }
@@ -141,6 +146,7 @@ export const TextField = styled(Input)`
   text-align: center;
   border-radius: 100em;
   transition: all 0.2s ease-in-out;
+
   &:focus {
     outline: none;
     animation: ${pulseInputOutline} 1s ease-in-out alternate infinite;

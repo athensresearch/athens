@@ -34,7 +34,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 /**
  * Primary UI component for user interaction
  */
-const ButtonWrap = styled.button.attrs<ButtonProps>(props => {
+export const ButtonWrap = styled.button.attrs<ButtonProps>(props => {
   if (props.isPrimary) props.variant = 'tinted';
   return ({
     "aria-pressed": props.isPressed ? 'true' : undefined,
