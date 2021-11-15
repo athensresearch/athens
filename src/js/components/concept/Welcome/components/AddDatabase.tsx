@@ -141,6 +141,7 @@ const IconButton = styled(Button)`
   background: var(--background-plus-1);
   border: 1px solid var(--border-color);
   font-size: 2em;
+  will-change: transform;
 
   span {
     opacity: 0.5;

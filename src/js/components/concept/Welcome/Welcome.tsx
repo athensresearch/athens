@@ -92,10 +92,10 @@ const WelcomeActions = styled.div`
     padding: 1rem 2rem;
     border-radius: 0;
     color: var(--body-text-color);
+    gap: 1.5ch;
 
     svg {
       position: relative;
-      margin-right: 0.125rem;
       margin-left: -0.75rem;
       padding: 0.35rem;
       display: inline-block;
