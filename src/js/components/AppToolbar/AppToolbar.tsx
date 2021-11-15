@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Menu as MenuIcon, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
+import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Help, Menu as MenuIcon, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
 
 import { Button } from '@/Button';
 import { WindowButtons } from './components/WindowButtons';
@@ -122,6 +122,10 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   */
   isDatabaseDialogOpen: boolean;
   /**
+  * Whether the help dialog is open
+  */
+  isHelpOpen: boolean;
+  /**
   * Whether the theme is set to dark mode
   */
   isThemeDark: boolean;
@@ -137,6 +141,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   onPressDailyNotes(): void;
   onPressAllPages(): void;
   onPressGraph(): void;
+  onPressHelp(): void;
   onPressThemeToggle(): void;
   onPressMerge(): void;
   onPressSettings(): void;
@@ -156,6 +161,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isWinFullscreen,
     isWinFocused,
     isWinMaximized,
+    isHelpOpen,
     isThemeDark,
     isLeftSidebarOpen,
     isRightSidebarOpen,
@@ -165,6 +171,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressDailyNotes: handlePressDailyNotes,
     onPressAllPages: handlePressAllPages,
     onPressGraph: handlePressGraph,
+    onPressHelp: handlePressHelp,
     onPressThemeToggle: handlePressThemeToggle,
     onPressMerge: handlePressMerge,
     onPressSettings: handlePressSettings,
@@ -209,6 +216,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         onClick={handlePressThemeToggle}>
         {isThemeDark ? <ToggleOff /> : <ToggleOn />}
       </Button>
+      <Button isPressed={isHelpOpen} onClick={handlePressHelp}><Help /></Button>
       <AppToolbar.Separator />
       <Button
         isPressed={isRightSidebarOpen}

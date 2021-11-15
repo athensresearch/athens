@@ -12,6 +12,7 @@
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.devtool :refer [devtool-component]]
+    [athens.views.help :refer [help-popup]]
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
@@ -74,6 +75,7 @@
        [:div (merge {:style {:display "contents"}}
                     (zoom))
         [:> GlobalStyles]
+        [help-popup]
         [alert]
         (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
           [m-snackbar

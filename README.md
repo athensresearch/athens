@@ -58,15 +58,15 @@ Please see our [Open Collective](https://opencollective.com/athens) for more det
 
 To learn more about this project, please read:
 
-- [Athens' $1.9M Seed Round, led by Caffeinated Capital](https://athens-research.ghost.io/athens-1-9m-seed-round-led-by-caffeinated-capital/)
-- [Athens Joins Y Combinator](https://athens-research.ghost.io/athens-joins-y-combinator/)
-- [MVP Update, Funding, and Why I Started Athens](https://athens-research.ghost.io/mvp-update-funding-and-why-i-started-athens/)
-- [Why you should learn Clojure - my first month as a Clojurian](https://athens-research.ghost.io/why-you-should-learn-clojure-my-first-month-as-a-clojurian/)
+- [Athens' $1.9M Seed Round, led by Caffeinated Capital](https://athensresearch.ghost.io/athens-1-9m-seed-round-led-by-caffeinated-capital/)
+- [Athens Joins Y Combinator](https://athensresearch.ghost.io/athens-joins-y-combinator/)
+- [MVP Update, Funding, and Why I Started Athens](https://athensresearch.ghost.io/mvp-update-funding-and-why-i-started-athens/)
+- [Why you should learn Clojure - my first month as a Clojurian](https://athensresearch.ghost.io/why-you-should-learn-clojure-my-first-month-as-a-clojurian/)
 
 # Thank You
 
 Athens is here today because of our Sponsors and Contributors. Thank you.
 
-[![Sponsors](https://athens-research.ghost.io/content/images/size/w1140/2021/04/spnosors.png)](https://opencollective.com/athens)
+[![Sponsors](https://athensresearch.ghost.io/content/images/size/w1140/2021/04/spnosors.png)](https://opencollective.com/athens)
 
 ![Contributors](https://user-images.githubusercontent.com/8952138/111184984-c1d83180-856e-11eb-9b7f-136de40d8252.png)
