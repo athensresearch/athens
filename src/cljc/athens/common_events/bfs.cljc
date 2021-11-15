@@ -53,7 +53,7 @@
 (defn enhanced-internal-representation->atomic-ops
   "Takes the enhanced internal representation and creates :page/new or :block/new and :block/save atomic events.
   Throws if default-position is nil and position cannot be determined."
-  [db default-position {:keys [block/uid block/string node/title previous parent] :as eir}]
+  [db default-position {:keys [block/uid block/string block/open node/title previous parent] :as eir}]
   (if title
     [(atomic/make-page-new-op title)]
     (let [{parent-title :node/title
@@ -68,8 +68,9 @@
                                       ;; There's a default place where we can drop blocks, use it.
                                       default-position default-position
                                       :else (throw (ex-info "Cannot determine position for enhanced internal representation" eir)))]
-      [(atomic/make-block-new-op uid position)
-       (graph-ops/build-block-save-op db uid string)])))
+      (cond-> [(atomic/make-block-new-op uid position)
+               (graph-ops/build-block-save-op db uid string)]
+        (= open false) (conj (atomic/make-block-open-op uid false))))))
 
 
 (defn internal-representation->atomic-ops
