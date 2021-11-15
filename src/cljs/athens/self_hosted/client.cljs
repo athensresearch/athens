@@ -289,19 +289,18 @@
 
 (defn- server-event-handler
   [{:event/keys [id type args] :as packet}]
-  (log/debug "event-id:" (pr-str id)
-             ", type:" type
-             "WSClient received from server")
+  (log/debug "WSClient received from server."
+             "event-id:" (pr-str id) ", type:" (pr-str type))
   (if (schema/valid-server-event? packet)
 
     (condp contains? type
-      #{:datascript/db-dump} (db-dump-handler args)
+      #{:datascript/db-dump}  (db-dump-handler args)
       #{:presence/session-id} (presence-session-id-handler args)
-      #{:presence/online} (presence-online-handler args)
+      #{:presence/online}     (presence-online-handler args)
       #{:presence/all-online} (presence-all-online-handler args)
-      #{:presence/offline} (presence-offline-handler args)
-      #{:presence/update} (presence-update args)
-      forwarded-events (forwarded-event-handler packet))
+      #{:presence/offline}    (presence-offline-handler args)
+      #{:presence/update}     (presence-update args)
+      forwarded-events        (forwarded-event-handler packet))
 
     (log/warn "event-id:" (pr-str id)
               ", type:" type

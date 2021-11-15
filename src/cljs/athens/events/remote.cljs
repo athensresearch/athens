@@ -1,6 +1,7 @@
 (ns athens.events.remote
   "`re-frame` events related to `:remote/*`."
   (:require
+    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common-events.schema          :as schema]
     [athens.common.logging                :as log]
@@ -155,26 +156,32 @@
   :remote/apply-forwarded-event
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
     (log/debug ":remote/apply-forwarded-event event:" (pr-str event))
-    (let [db'        (update db :event-sync #(event-sync/add % :server id event))
-          new-event? (new-event? (-> db' :event-sync :last-op))
-          memory-log (event-sync/stage-log (:event-sync db') :memory)]
-      (log/debug ":remote/apply-forwarded-event new event?:" new-event?)
+    (let [db'          (update db :event-sync #(event-sync/add % :server id event))
+          new-event?   (new-event? (-> db' :event-sync :last-op))
+          memory-log   (event-sync/stage-log (:event-sync db') :memory)
+          page-removes (graph-ops/contains-op? (:event/op event) :page/remove)]
+      (log/debug ":remote/apply-forwarded-event new event?:" (pr-str new-event?))
       {:db db'
        :fx [[:dispatch-n (cond-> []
                            ;; Mark as synced if there's no events left in memory.
-                           (empty? memory-log)  (into [[:db/sync]])
+                           (empty? memory-log) (into [[:db/sync]])
+                           ;; when it was remove op
+                           page-removes        (into [[:page/removed (-> page-removes
+                                                                         first
+                                                                         :op/args
+                                                                         :name)]])
                            ;; If no new event was added, just update the snapshot with event.
-                           (not new-event?) (into [[:remote/snapshot-transact event]])
+                           (not new-event?)    (into [[:remote/snapshot-transact event]])
                            ;; If there's a new event, apply it over the last dsdb snapshot from
                            ;; the server, then use that as the new snapshot, then reapply
                            ;; all events in the memory stage.
                            ;; NB: would be more performant to just transact over dsdb and dsdb-snapshot
                            ;; if there's no txs in-memory to reapply, but this is ok for now.
-                           new-event?       (into [[:remote/rollback-resolve-transact-snapshot event]])
-                           new-event?       (into (map (fn [e] [:resolve-transact (second e)])
-                                                       (-> db' :event-sync :stages :memory)))
+                           new-event?          (into [[:remote/rollback-resolve-transact-snapshot event]])
+                           new-event?          (into (map (fn [e] [:resolve-transact (second e)])
+                                                          (-> db' :event-sync :stages :memory)))
                            ;; Remove the server event after everything is done.
-                           true                 (into [[:remote/clear-server-event event]]))]]})))
+                           true                (into [[:remote/clear-server-event event]]))]]})))
 
 
 (rf/reg-event-fx
