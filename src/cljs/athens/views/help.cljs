@@ -30,11 +30,14 @@
                   :border        (str "1px solid " (color :body-text-color :opacity-low))
                   :border-top    0})])
 
-(defn- add-keys [sequence]
+
+(defn- add-keys
+  [sequence]
   (doall
-   (for [el sequence]
-     ^{:keys (hash el)}
-     el)))
+    (for [el sequence]
+      ^{:keys (hash el)}
+      el)))
+
 
 (defn example
   [template & args]
@@ -50,10 +53,10 @@
                                       add-keys))
                             str-or-vec))]
     [:span (use-style
-            {:font-size   "85%"
-             :font-weight "bold"
-             :user-select "all"
-             :word-break  "break-word"})
+             {:font-size   "85%"
+              :font-weight "bold"
+              :user-select "all"
+              :word-break  "break-word"})
      (as-> template t
            (str/split t #"\$text")
            (interleave t (concat opaque-texts [nil]))
@@ -218,25 +221,25 @@
                              (str/replace #"minus" "-")
                              (str/replace #"plus" "+")))
         keys           (as-> shortcut-str s
-                         (str/split s #"\+")
-                         (map key-to-display s))]
+                             (str/split s #"\+")
+                             (map key-to-display s))]
     [:div (use-style {:display     "flex"
                       :align-items "center"
                       :gap         "0.3rem"})
 
      (doall
-      (for [key keys]
-        ^{:key key}
-        [:span (use-style {:font-family    "inherit"
-                           :display        "inline-flex"
-                           :gap            "0.3em"
-                           :text-transform "uppercase"
-                           :font-size      "0.8em"
-                           :padding-inline "0.35em"
-                           :background     (color :background-plus-2)
-                           :border-radius  "0.25rem"
-                           :font-weight    600})
-         key]))]))
+       (for [key keys]
+         ^{:key key}
+         [:span (use-style {:font-family    "inherit"
+                            :display        "inline-flex"
+                            :gap            "0.3em"
+                            :text-transform "uppercase"
+                            :font-size      "0.8em"
+                            :padding-inline "0.35em"
+                            :background     (color :background-plus-2)
+                            :border-radius  "0.25rem"
+                            :font-weight    600})
+          key]))]))
 
 
 (def modal-body-styles
@@ -285,9 +288,9 @@
            :padding        "1rem 1.5rem"})
     title]
    (doall
-    (for [child children]
-      ^{:key (hash child)}
-      child))])
+     (for [child children]
+       ^{:key (hash child)}
+       child))])
 
 
 (defn help-section-group
@@ -304,25 +307,25 @@
     title]
    [:div
     (doall
-     (for [child children]
-       ^{:key (hash child)}
-       child))]])
+      (for [child children]
+        ^{:key (hash child)}
+        child))]])
 
 
 (defn help-item
   [item]
   [:div (use-style
-         {:border-radius         "0.5rem"
-          :align-items           "center"
-          :display               "grid"
-          :gap                   "1rem"
-          :grid-template-columns "12rem 1fr"
-          :padding               "0.25rem 0.5rem"
-          ::stylefy/manual       ["&:nth-child(odd)"
-                                  {:background (color :background-plus-2 :opacity-low)}]})
+          {:border-radius         "0.5rem"
+           :align-items           "center"
+           :display               "grid"
+           :gap                   "1rem"
+           :grid-template-columns "12rem 1fr"
+           :padding               "0.25rem 0.5rem"
+           ::stylefy/manual       ["&:nth-child(odd)"
+                                   {:background (color :background-plus-2 :opacity-low)}]})
    [:span (use-style
-           {:display         "flex"
-            :justify-content "space-between"})
+            {:display         "flex"
+             :justify-content "space-between"})
     ;; Position of the example changes if there is a shortcut or not.
     (:description item)
     (when (contains? item :shortcut)
@@ -345,44 +348,44 @@
                close #(dispatch [:help/toggle])
                escape-handler (fn [event]
                                 (when
-                                    (and @open? (= (.. event -keyCode) KeyCodes.ESC))
+                                  (and @open? (= (.. event -keyCode) KeyCodes.ESC))
                                   (close)))
                _ (js/addEventListener "keydown" escape-handler)]
-    [:> Modal {:open             @open?
-               :style            {:overflow-y "auto"}
-               :disableAutoFocus true
-               :onClose          close}
-     [:div (use-style modal-body-styles)
-      [:div (use-style help-styles)
-       [:header (use-style help-header-styles)
-        [:h1 (use-style help-title)
-         "Help"]
-        [:nav (use-style {:display "flex"
-                          :gap     "1rem"
-                          :padding "1rem"})]]
-       ;; Links at the top of the help. Uncomment when the correct links are obtained.
-       ;; [help-link
-       ;; [:> LiveHelp]
-       ;; "Get Help on Discord"]
-       ;; [help-link
-       ;; [:> Error]
-       ;; "Get Help on Discord"]
-       ;; [help-link
-       ;; [:> AddToPhotos]
-       ;; "Get Help on Discord"]]]
-       [:div (use-style {:overflow-y "auto"})
-        (doall
-         (for [section content]
-           ^{:key section}
-           [help-section (:name section)
-            (doall
-             (for [group (:groups section)]
-               ^{:key group}
-               [help-section-group (:name group)
-                (doall
-                 (for [item (:items group)]
-                   ^{:key item}
-                   [help-item item]))]))]))]]]]
-    (finally js/removeEventListener "keydown" escape-handler)))
+              [:> Modal {:open             @open?
+                         :style            {:overflow-y "auto"}
+                         :disableAutoFocus true
+                         :onClose          close}
+               [:div (use-style modal-body-styles)
+                [:div (use-style help-styles)
+                 [:header (use-style help-header-styles)
+                  [:h1 (use-style help-title)
+                   "Help"]
+                  [:nav (use-style {:display "flex"
+                                    :gap     "1rem"
+                                    :padding "1rem"})]]
+                 ;; Links at the top of the help. Uncomment when the correct links are obtained.
+                 ;; [help-link
+                 ;; [:> LiveHelp]
+                 ;; "Get Help on Discord"]
+                 ;; [help-link
+                 ;; [:> Error]
+                 ;; "Get Help on Discord"]
+                 ;; [help-link
+                 ;; [:> AddToPhotos]
+                 ;; "Get Help on Discord"]]]
+                 [:div (use-style {:overflow-y "auto"})
+                  (doall
+                    (for [section content]
+                      ^{:key section}
+                      [help-section (:name section)
+                       (doall
+                         (for [group (:groups section)]
+                           ^{:key group}
+                           [help-section-group (:name group)
+                            (doall
+                              (for [item (:items group)]
+                                ^{:key item}
+                                [help-item item]))]))]))]]]]
+              (finally js/removeEventListener "keydown" escape-handler)))
 
 
