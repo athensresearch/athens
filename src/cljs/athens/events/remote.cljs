@@ -181,8 +181,7 @@
                            new-event?          (into (map (fn [e] [:resolve-transact (second e)])
                                                           (-> db' :event-sync :stages :memory)))
                            ;; Remove the server event after everything is done.
-                           true                (into [[:remote/clear-server-event event]])
-                           )]]})))
+                           true                (into [[:remote/clear-server-event event]]))]]})))
 
 
 (rf/reg-event-fx
