@@ -289,13 +289,17 @@
         new-uids            (internal-representation/new-uids-map internal-representation)
         repr-with-new-uids  (into [] (internal-representation/update-uids internal-representation new-uids))
 
-        ;; External to internal representation
-        text-to-inter       (internal-representation/text-to-internal-representation text-data)
-        line-breaks         (re-find #"\r?\n" text-data)
-        no-shift            (-> @state :last-keydown :shift not)
+        ;; For images in clipboard
         items               (array-seq (.. e -clipboardData -items))
         {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
-        img-regex           #"(?i)^image/(p?jpeg|gif|png)$"]
+        img-regex           #"(?i)^image/(p?jpeg|gif|png)$"
+
+        ;; External to internal representation
+        text-to-inter       (when-not items
+                              (internal-representation/text-to-internal-representation text-data))
+        line-breaks         (re-find #"\r?\n" text-data)
+        no-shift            (-> @state :last-keydown :shift not)]
+
 
 
     (println " Representation with updated uids")
@@ -324,6 +328,7 @@
                   (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
             items)
 
+      ;; For external copy-paste
       (and line-breaks no-shift)
       (do
         (.. e preventDefault)

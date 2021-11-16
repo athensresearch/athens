@@ -1253,15 +1253,19 @@
 
 (reg-event-fx
   :paste-internal
-  (fn [_ [_ uid internal-representation]]
+  (fn [{:keys [db]} [_ uid internal-representation]]
     (println "internal representation is " internal-representation)
-    (let [[uid]  (db/uid-and-embed-id uid)
-          op     (bfs/build-paste-op @db/dsdb
-                                     uid
-                                     internal-representation)
-          event  (common-events/build-atomic-event op)]
-      (log/debug "paste internal event is" (pr-str event))
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+    (let [local? (not (db-picker/remote-db? db))]
+      (log/debug ":paste-internal : local?" local?)
+      (if local?
+        (let [[uid]  (db/uid-and-embed-id uid)
+              op     (bfs/build-paste-op @db/dsdb
+                                         uid
+                                         internal-representation)
+              event  (common-events/build-atomic-event op)]
+          (log/debug "paste internal event is" (pr-str event))
+          {:fx [[:dispatch [:resolve-transact-forward event]]]})
+        {:fx [[:dispatch [:alert/js "Paste not supported in Lan-Party, yet."]]]}))))
 
 
 (reg-event-fx
