@@ -35,7 +35,8 @@
   (fn [_ _]
     (log/warn ":remote/connection-failed")
     {:fx [[:dispatch-n [[:alert/js "Was not able to connect to the remote database."]
-                        [:conn-status :disconnected]]]]}))
+                        [:conn-status :disconnected]
+                        [:db-picker/select-default-db]]]]}))
 
 
 (rf/reg-event-fx
