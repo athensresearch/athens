@@ -1,21 +1,16 @@
 (ns athens.common-events.fixture
   (:require
-    [athens.athens-datoms                     :as athens-datoms]
-    [athens.common-db                         :as common-db]
-    [athens.common.logging                    :as log]
-    [datascript.core                          :as d]))
+    [athens.common-db      :as common-db]
+    [athens.common.logging :as log]
+    [datascript.core       :as d]))
 
 
 (def connection (atom nil))
 
 
-(def seed-datoms
-  athens-datoms/welcome-page-datoms)
-
-
 (defn integration-test-fixture
   ([test-fn]
-   (integration-test-fixture seed-datoms test-fn))
+   (integration-test-fixture [] test-fn))
 
   ([datoms test-fn]
    (let [conn (d/create-conn common-db/schema)]
