@@ -449,10 +449,16 @@
 (defn get-internal-representation
   "Returns internal representation for eid in db."
   [db eid]
-  (->> (d/pull db block-document-pull-vector-for-copy eid)
-       sort-block-children
-       (walk/postwalk-replace {:block/open :block/open?
-                               :node/title :page/title})))
+  (let [remove-ks [:block/order]
+        rename-ks {:block/open :block/open?
+                   :node/title :page/title}]
+    (->> (d/pull db block-document-pull-vector-for-copy eid)
+         sort-block-children
+         (walk/prewalk (fn [node]
+                         (if (map? node)
+                           (apply dissoc node remove-ks)
+                           node)))
+         (walk/postwalk-replace rename-ks))))
 
 
 (defn get-linked-refs-by-page-title
