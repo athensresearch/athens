@@ -169,7 +169,7 @@
                            page-removes        (into [[:page/removed (-> page-removes
                                                                          first
                                                                          :op/args
-                                                                         :name)]])
+                                                                         :page/title)]])
                            ;; If no new event was added, just update the snapshot with event.
                            (not new-event?)    (into [[:remote/snapshot-transact event]])
                            ;; If there's a new event, apply it over the last dsdb snapshot from
