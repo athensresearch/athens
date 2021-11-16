@@ -149,17 +149,35 @@
 (def self-hosted-client (atom nil))
 
 
+(defn self-hosted-health-check
+  [url success-cb failure-cb]
+  (.. (js/fetch (str "http://" url "/health-check"))
+      (then (fn [response]
+              (if (.-ok response)
+                (success-cb)
+                (failure-cb))))
+      (catch failure-cb)))
+
+
 (rf/reg-fx
   :remote/client-connect!
-  (fn [{:keys [ws-url] :as remote-db}]
+  (fn [{:keys [url ws-url] :as remote-db}]
     (log/debug ":remote/client-connect!" (pr-str remote-db))
     (when @self-hosted-client
       (log/info ":remote/client-connect! already connected, restarting")
       (component/stop @self-hosted-client))
-    (log/info ":remote/client-connect! connecting")
-    (reset! self-hosted-client (-> ws-url
-                                   client/new-ws-client
-                                   component/start))))
+    (log/info ":remote/client-connect! health-check")
+    (self-hosted-health-check
+      url
+      (fn []
+        (log/info ":remote/client-connect! health-check success")
+        (log/info ":remote/client-connect! connecting")
+        (reset! self-hosted-client (-> ws-url
+                                       client/new-ws-client
+                                       component/start)))
+      (fn []
+        (log/warn ":remote/client-connect! health-check failure")
+        (rf/dispatch [:remote/connection-failed])))))
 
 
 (rf/reg-fx
