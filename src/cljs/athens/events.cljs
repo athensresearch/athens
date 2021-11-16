@@ -636,13 +636,16 @@
 (rf/reg-event-fx
   :page/removed
   (fn [{:keys [db]} [_ title]]
-    (let [editing-uid  (:editing/uid db)
-          current-page (when editing-uid
-                         (loop [block (common-db/get-block @db/dsdb [:block/uid editing-uid])]
-                           (if (:node/title block)
-                             (:node/title block)
-                             (recur (common-db/get-parent @db/dsdb [:block/uid (:block/uid block)])))))]
-      (when (= current-page title)
+    (let [route-template     (get-in db [:current-route :template])
+          page-title?        (string/starts-with? route-template "/page-t/")
+          current-page-title (if page-title?
+                               (get-in db [:current-route :path-params :title])
+                               (when-let [block-uid (get-in db [:current-route :path-params :id])]
+                                 (loop [block (common-db/get-block @db/dsdb [:block/uid block-uid])]
+                                   (if (:node/title block)
+                                     (:node/title block)
+                                     (recur (common-db/get-parent @db/dsdb [:block/uid (:block/uid block)]))))))]
+      (when (= current-page-title title)
         (log/debug ":page/removed" title)
         {:fx [[:dispatch-n [[:alert/js (str "This page \"" title "\" has being deleted by other player.")]
                             [:navigate :home]]]]}))))
