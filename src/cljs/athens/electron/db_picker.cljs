@@ -37,7 +37,7 @@
 
 
 ;; Add a db to the db picker list and select it as the current db.
-;; Adding a db with the same base-dir will show an alert.
+;; Adding a db with the same id will overwrite the previous one.
 (rf/reg-event-fx
   :db-picker/add-and-select-db
   (fn [{:keys [db]} [_ {:keys [id] :as added-db}]]
@@ -80,6 +80,12 @@
       {:dispatch (if most-recent-db
                    [:db-picker/select-db most-recent-db true]
                    [:fs/open-dialog])})))
+
+
+(rf/reg-event-fx
+  :db-picker/select-default-db
+  (fn [_ [_]]
+    {:dispatch [:db-picker/add-and-select-db (utils/local-db (utils/default-base-dir))]}))
 
 
 ;; Delete a db from the db-picker.
