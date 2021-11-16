@@ -28,11 +28,12 @@
     :block/remove
     :block/move
     :page/new
-    :shortcut/new
-    :shortcut/remove
     :page/rename
     :page/merge
     :page/remove
+    :shortcut/new
+    :shortcut/remove
+    :shortcut/move
     :composite/consequence})
 
 
