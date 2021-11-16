@@ -14,17 +14,20 @@
 
 
 (def tree-without-page
-  [{:block/uid "eaa4c9435"
+  [{:block/uid    "eaa4c9435"
     :block/string "block 1"
+    :block/open?  true
     :block/children
-    [{:block/uid "88c9ff662"
-      :block/string "B1 C1"}
-     {:block/uid "7d11d532f"
+    [{:block/uid    "88c9ff662"
+      :block/string "B1 C1"
+      :block/open?  true}
+     {:block/uid    "7d11d532f"
       :block/string "B1 C2"
-      :block/open? false
+      :block/open?  false
       :block/children
-      [{:block/uid "db5fa9a43"
-        :block/string "B1 C2 C1"}]}]}])
+      [{:block/uid    "db5fa9a43"
+        :block/string "B1 C2 C1"
+        :block/open?  true}]}]}])
 
 
 (deftest get-individual-blocks-from-tree-test
@@ -72,14 +75,14 @@
                              {:block/uid    "7d11d532f",
                               :block/string "B1 C2",
                               :block/order  1
-                              :block/open   true,
+                              :block/open   false,
                               :block/children
                               [{:block/uid    "db5fa9a43",
                                 :block/string "B1 C2 C1",
                                 :block/order  0
                                 :block/open   true}]}]}]))]
-    (is (= tree-with-page (common-db/get-internal-representation db (d/entity db [:node/title "Welcome"]))))
-    (is (= tree-without-page (common-db/get-internal-representation db (d/entity db [:block/uid "eaa4c9435"]))))))
+    (is (= (first tree-with-page) (common-db/get-internal-representation db (:db/id (d/entity db [:node/title "Welcome"])))))
+    (is (= (first tree-without-page) (common-db/get-internal-representation db (:db/id (d/entity db [:block/uid "eaa4c9435"])))))))
 
 
 (comment
