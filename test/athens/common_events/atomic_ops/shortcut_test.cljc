@@ -99,7 +99,7 @@
     ;; Test 1
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                               (atomic-graph-ops/make-shortcut-move-op "page 3"
-                                                                                                                      {:ref-name "page 1"
+                                                                                                                      {:page/title "page 1"
                                                                                                                        :relation :before})))
 
     (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
@@ -114,7 +114,7 @@
     ;; Test 2
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                               (atomic-graph-ops/make-shortcut-move-op "page 3"
-                                                                                                                      {:ref-name "page 2"
+                                                                                                                      {:page/title "page 2"
                                                                                                                        :relation :before})))
     (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
           page-1-loc  (common-db/find-order-from-title sidebar-els "page 1")
@@ -170,7 +170,7 @@
 
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                               (atomic-graph-ops/make-shortcut-move-op "page 3"
-                                                                                                                      {:ref-name "page 2"
+                                                                                                                      {:page/title "page 2"
                                                                                                                        :relation :before})))
 
     (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
@@ -185,7 +185,7 @@
     ;; Test 2
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                               (atomic-graph-ops/make-shortcut-move-op "page 1"
-                                                                                                                      {:ref-name "page 2"
+                                                                                                                      {:page/title "page 2"
                                                                                                                        :relation :after})))
     (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
           page-1-loc  (common-db/find-order-from-title sidebar-els "page 1")

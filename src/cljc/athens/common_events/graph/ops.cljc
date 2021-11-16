@@ -14,8 +14,8 @@
   ([_db page-title]
    (atomic/make-page-new-op page-title))
   ([db page-title block-uid]
-   (let [location (common-db/compat-position db {:ref-name page-title
-                                                 :relation :first})]
+   (let [location (common-db/compat-position db {:page/title page-title
+                                                 :relation  :first})]
      (if (common-db/e-by-av db :node/title page-title)
        (atomic/make-block-new-op block-uid location)
        (composite/make-consequence-op {:op/type :page/new}
@@ -51,8 +51,8 @@
   [db {:keys [old-block-uid new-block-uid
               string index relation]}]
   (let [save-block-op     (build-block-save-op db old-block-uid (subs string 0 index))
-        new-block-op      (atomic/make-block-new-op new-block-uid {:ref-uid old-block-uid
-                                                                   :relation relation})
+        new-block-op      (atomic/make-block-new-op new-block-uid {:block/uid old-block-uid
+                                                                   :relation  relation})
         new-block-save-op (build-block-save-op db new-block-uid (subs string index))
         split-block-op    (composite/make-consequence-op {:op/type :block/split}
                                                          [save-block-op
@@ -79,7 +79,7 @@
   (let [;; block/remove atomic op
         block-remove-op     (build-block-remove-op db
                                                    remove-uid)
-        ;; block/save atomic op]
+        ;; block/save atomic op]gg
         existing-string     (common-db/v-by-ea db
                                                [:block/uid merge-uid]
                                                :block/string)
