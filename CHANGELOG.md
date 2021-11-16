@@ -2,6 +2,66 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.39](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.38...v1.0.0-alpha.rtc.39) (2021-11-16)
+
+
+### Features
+
+* **help-popup:** Add help popup with content. ([178eb09](https://github.com/athensresearch/athens/commit/178eb0954f15ad6a66ab7fa4c293d75017b70cad))
+* **help-popup:** Add tooltip to help icon ([c3e1d0b](https://github.com/athensresearch/athens/commit/c3e1d0b5885466c77550e3739d8ce8f5b2f32bd4))
+* **help-popup:** Comment out help links until we have ([fcc6c4c](https://github.com/athensresearch/athens/commit/fcc6c4cf416ffb491a5800c0a9edae9c1e0d609d))
+* **help-popup:** Fix a few shortcuts ([c96ace5](https://github.com/athensresearch/athens/commit/c96ace58d50f46fa5eb0386d12c86c7edea0f3a9))
+* **help-popup:** Fix border mismatches ([17b1f45](https://github.com/athensresearch/athens/commit/17b1f45cffcfa777b7b1d7b1e2880b9d7cbafe26))
+* **help-popup:** Fix closing of modal using escape. ([1e6c8f8](https://github.com/athensresearch/athens/commit/1e6c8f8e41dcabffe1a08fab5830e813c44ec605))
+* **help-popup:** Fix copy and remove  a shortcut that ([c706c89](https://github.com/athensresearch/athens/commit/c706c89fc4c9ba5761fb9ec44085f4a0a696d4dd))
+* **help-popup:** Fix issue with scroll-bar and move ([5b27673](https://github.com/athensresearch/athens/commit/5b27673f207d2458cce81c7e57aa4299cb39a9af))
+* **help-popup:** Fix scroll behaviour ([3f77421](https://github.com/athensresearch/athens/commit/3f774210affadf7b01a2ec8fb672708f1b4122bf))
+* **help-popup:** Fix spacing ([6924941](https://github.com/athensresearch/athens/commit/6924941a5a41a90564b7c69f0226f6913325ddf4))
+* **help-popup:** Remove "code block" from Help. ([55042ae](https://github.com/athensresearch/athens/commit/55042ae560a143a3bf7049cc03601644158619d0))
+* notify user of page being removed from beneath. ([bbb0bd9](https://github.com/athensresearch/athens/commit/bbb0bd98f12fc301afe064ec497b15d2d3c9fea6))
+* use athens protocol for initial events in local ([1d3ba34](https://github.com/athensresearch/athens/commit/1d3ba34029444b0fe5c5f9f2db4d74d5f9d55f0c))
+
+
+### Bug Fixes
+
+* all the warnings and errors in help POPUP ([be59fe2](https://github.com/athensresearch/athens/commit/be59fe26984e1573949805c5094649b71076af21))
+* better current page title detection ([2c10096](https://github.com/athensresearch/athens/commit/2c1009612ccf3f9f28a5d492502d55a6b6f41f78))
+* don't delete dbs from disk in db-picker ([0ce8eee](https://github.com/athensresearch/athens/commit/0ce8eee4c104b62745ee885a8cff282ad92d120a))
+* editing/target should delegate to editing/uid ([179bc64](https://github.com/athensresearch/athens/commit/179bc64a9b38ae6264c1beca83fa03a3eb9a2a60))
+* embeds show presence as well as the original block ([679c1e1](https://github.com/athensresearch/athens/commit/679c1e1cf13abdb0cfd44e386d571e6ebbfe4ee9))
+* enable `shortcut/move` atomic op on server. ([33ab6b7](https://github.com/athensresearch/athens/commit/33ab6b7940a566d728fd9cf7cd4e6d73549846bf))
+* go to default db after connection failure ([d503b28](https://github.com/athensresearch/athens/commit/d503b287f43daee6cc83040a7f40cc6676ee5a3f))
+* group-title is now nested in a vector ([76d2b05](https://github.com/athensresearch/athens/commit/76d2b054b842d74eddc39c3f005e4d60af986b0a))
+* health-check server before connecting to websocket ([8bd701c](https://github.com/athensresearch/athens/commit/8bd701cf999f220953623e67975af513432bf880))
+* locally determine old string for do nothing check ([e996564](https://github.com/athensresearch/athens/commit/e996564a3f70b450420737e4a6957c06f2d5a163))
+* remove block/order from IR ([ae50ec5](https://github.com/athensresearch/athens/commit/ae50ec5321387a49fce1f765efad59ecefec91dc))
+* we this argument `page/title` not `name` anymore ([fabe834](https://github.com/athensresearch/athens/commit/fabe8349e3d57ebf7d608806d832a24e3464300e))
+
+
+### Work in Progress
+
+* help-popup ([ec3c304](https://github.com/athensresearch/athens/commit/ec3c30425225d8558d531cecedbb6d251ea1dbb3))
+
+
+### Documentation
+
+* add digitalocean instruction and better permissions instructions ([8f1a793](https://github.com/athensresearch/athens/commit/8f1a793e954c49c0cae2cb341b28ce2cc6e28f25))
+* Fix links to Athens Research Blog ([#1666](https://github.com/athensresearch/athens/issues/1666)) ([f7fccce](https://github.com/athensresearch/athens/commit/f7fccce389eab664a3a815d1627b976ad2e5a7d0))
+
+
+* auto update all builds except on v2 ([fa7d7c9](https://github.com/athensresearch/athens/commit/fa7d7c97d60442f0631ace1bae196f8c15f92949))
+* style, lint, carve ([d686d5e](https://github.com/athensresearch/athens/commit/d686d5ead9e38f49eafe51bd2104dd27b326503e))
+
+
+### Refactors
+
+* reduce log noise on non-verbose settings ([9ddf93e](https://github.com/athensresearch/athens/commit/9ddf93e84812adf7f62238adb4557a78c2b03220))
+* review athens protocol ([dd64548](https://github.com/athensresearch/athens/commit/dd6454891976dbfa7d7fba6dfdba68ab9629322f))
+* review internal representation names ([909ad57](https://github.com/athensresearch/athens/commit/909ad57364872c892b59498a05f2b06838a7e310))
+* style happy ([e8135ed](https://github.com/athensresearch/athens/commit/e8135ed111dc457a9b4712dae770d819b1fcb310))
+* style happy. ([b0cf925](https://github.com/athensresearch/athens/commit/b0cf925037abfe272504b43120cef3c60623e319))
+* use button tooltip instead ([a2c36b7](https://github.com/athensresearch/athens/commit/a2c36b776a3fbd11fcee19623a3d9f8902defcd0))
+
 ## [1.0.0-alpha.rtc.38](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.37...v1.0.0-alpha.rtc.38) (2021-11-11)
 
 ## [1.0.0-alpha.rtc.37](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.36...v1.0.0-alpha.rtc.37) (2021-11-11)
