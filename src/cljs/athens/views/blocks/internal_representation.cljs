@@ -201,5 +201,5 @@
     ;; get the internal representation 
     ;; we need the eid of the copy-paste-block because that is where all the blocks are added to
     ;; all the copied data will be added as the children of the `copy-paste-block`
-    (:block/children (common-db/get-block-document-for-copy @cpdb
+    (:block/children (common-db/get-internal-representation @cpdb
                                                             (:db/id (common-db/get-block @cpdb [:block/uid "copy-paste-uid"]))))))
