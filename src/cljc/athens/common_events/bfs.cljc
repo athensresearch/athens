@@ -11,7 +11,7 @@
 (defn enhance-block
   [block previous parent]
   (merge block
-         {:parent (let [page-ks (select-keys parent [:node/title])]
+         {:parent (let [page-ks (select-keys parent [:page/title])]
                     (if (empty? page-ks)
                       (select-keys parent [:block/uid])
                       page-ks))}
@@ -36,7 +36,7 @@
   Toplevel pages will be sorted after all toplevel blocks. "
   [internal-representation]
   (let [{blocks true
-         pages  false} (group-by (comp nil? :node/title) internal-representation)
+         pages  false} (group-by (comp nil? :page/title) internal-representation)
         ;; Enhance toplevel blocks as if they had a nil parent.
         ;; The first block will have neither a parent or a previous.
         blocks         (or blocks [])
@@ -53,10 +53,10 @@
 (defn enhanced-internal-representation->atomic-ops
   "Takes the enhanced internal representation and creates :page/new or :block/new and :block/save atomic events.
   Throws if default-position is nil and position cannot be determined."
-  [db default-position {:keys [block/uid block/string block/open node/title previous parent] :as eir}]
+  [db default-position {:keys [block/uid block/string block/open? page/title previous parent] :as eir}]
   (if title
     [(atomic/make-page-new-op title)]
-    (let [{parent-title :node/title
+    (let [{parent-title :page/title
            parent-uid   :block/uid} parent
           previous-uid              (:block/uid previous)
           position                  (cond
@@ -70,7 +70,7 @@
                                       :else (throw (ex-info "Cannot determine position for enhanced internal representation" eir)))]
       (cond-> [(atomic/make-block-new-op uid position)
                (graph-ops/build-block-save-op db uid string)]
-        (= open false) (conj (atomic/make-block-open-op uid false))))))
+        (= open? false) (conj (atomic/make-block-open-op uid false))))))
 
 
 (defn internal-representation->atomic-ops

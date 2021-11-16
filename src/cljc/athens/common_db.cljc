@@ -9,6 +9,7 @@
     [clojure.pprint        :as pp]
     [clojure.set           :as set]
     [clojure.string        :as string]
+    [clojure.walk          :as walk]
     [datascript.core       :as d]))
 
 
@@ -442,13 +443,16 @@
 
 
 (def block-document-pull-vector-for-copy
-  '[:block/uid :block/string :block/open :block/order {:block/children ...}])
+  '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
-(defn get-block-document-for-copy
+(defn get-internal-representation
+  "Returns internal representation for eid in db."
   [db eid]
   (->> (d/pull db block-document-pull-vector-for-copy eid)
-       sort-block-children))
+       sort-block-children
+       (walk/postwalk-replace {:block/open :block/open?
+                               :node/title :page/title})))
 
 
 (defn get-linked-refs-by-page-title

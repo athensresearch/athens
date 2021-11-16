@@ -188,7 +188,7 @@
                                 (apply str))
             clipboard-data (.. e -event_ -clipboardData)
             copied-blocks  (mapv
-                             #(common-db/get-block-document-for-copy  @db/dsdb [:block/uid %])
+                             #(common-db/get-internal-representation  @db/dsdb [:block/uid %])
                              uids)]
 
         (println "Copied blocks representation")

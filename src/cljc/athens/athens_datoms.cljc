@@ -11,7 +11,7 @@
 
 
 (def welcome-page-internal-representation
-  [{:node/title     welcome-page-title
+  [{:page/title     welcome-page-title
     :block/children [#:block{:uid "ee770c334",
                              :string "Welcome to Athens, Open-Source Networked Thought!",}
                      #:block{:uid "6aecd4172",
@@ -20,10 +20,10 @@
                                                 :string "![](https://athens-assets-1.s3.us-east-2.amazonaws.com/welcome.gif)",}]}
                      #:block{:uid "7e409b1cb",
                              :string "**How to Use Athens**",
-                             :open false,
+                             :open? false,
                              :children [#:block{:uid "289cc9981",
                                                 :string "Outliner Features",
-                                                :open false,
+                                                :open? false,
                                                 :children [#:block{:uid "62b9428d5",
                                                                    :string "You can click on a bullet • to zoom in on it.",
                                                                    :children [#:block{:uid "70907b596",
@@ -38,7 +38,7 @@
                                                                                       :string "You can drag and drop with multiple blocks selected!",}]}]}
                                         #:block{:uid "6b8c28b09",
                                                 :string "Markup Features",
-                                                :open false,
+                                                :open? false,
                                                 :children [#:block{:uid "e434db606",
                                                                    :string "To edit the raw-text of a block, simply click on it and begin typing!",}
                                                            #:block{:uid "e5dec8a28",
@@ -47,19 +47,19 @@
                                                                    :string "Mono-spaced text with `backticks`"}
                                                            #:block{:uid "a8760ca6d",
                                                                    :string "Links with `[[]]`, `#`, or `#[[]]`: [[Welcome]] #Welcome #[[Welcome]]",
-                                                                   :open false,
+                                                                   :open? false,
                                                                    :children [#:block{:uid "239090a3c",
                                                                                       :string "Nothing happens if you click on these links because you're already on this page.",}]}
                                                            #:block{:uid "7f087f26e",
                                                                    :string "Block references with `(())`: ((b0acdcabd))",
-                                                                   :open false,
+                                                                   :open? false,
                                                                    :children [#:block{:uid "b0acdcabd",
                                                                                       :string "I am being referenced by other blocks.",}]}
                                                            #:block{:uid "0f5b500f6",
                                                                    :string "{{[[TODO]]}} `ctrl-enter` / `cmd-enter` (for mac) to cycle between TODO and DONE",}
                                                            #:block{:uid "851cfb2f3",
                                                                    :string "embeds with `{{[[youtube: ]]}}` and `{{``iframe: }}`",
-                                                                   :open false,
+                                                                   :open? false,
                                                                    :children [#:block{:uid "d1825590b",
                                                                                       :string "{{[[youtube]]: https://www.youtube.com/watch?v=dQw4w9WgXcQ}}",}
                                                                               #:block{:uid "56771d0e4",
@@ -88,7 +88,7 @@
                                                                                                          :string "$$\\ce{Zn^2+  <=>[+ 2OH-][+ 2H+]  $\\underset{\\text{amphoteres Hydroxid}}{\\ce{Zn(OH)2 v}}$  <=>[+ 2OH-][+ 2H+]  $\\underset{\\text{Hydroxozikat}}{\\ce{[Zn(OH)4]^2-}}$}$$"}]}]}]}
                                         #:block{:uid "94272f778",
                                                 :string "All Keybindings",
-                                                :open false,
+                                                :open? false,
                                                 :children [#:block{:uid "e425468c5",
                                                                    :string "block shortcuts (while editing a block)",
                                                                    :children [#:block{:uid "0ea74b8e8",
@@ -127,39 +127,39 @@
                                                                                       :string "`ctrl-comma` / `cmd-comma` (for mac): open settings page",}]}]}
                                         #:block{:uid "1002528bd",
                                                 :string "Left Sidebar",
-                                                :open false,
+                                                :open? false,
                                                 :children [#:block{:uid "574973f5c",
                                                                    :string "Mark a page as a shortcut with the caret next to the page title.",}]}
                                         #:block{:uid "72538ef7f",
                                                 :string "Right Sidebar",
-                                                :open false,
+                                                :open? false,
                                                 :children [#:block{:uid "9d6e1fd07",
                                                                    :string "Open a block or page in the right sidebar by shift clicking on the link, title, or bullet.",}]}]}
                      #:block{:uid "21785e1a9",
                              :string "**FAQ**",
-                             :open false,
+                             :open? false,
                              :children [#:block{:uid "792717c36",
                                                 :string "How does Athens persist data?",
-                                                :open false,
+                                                :open? false,
                                                 :children [#:block{:uid "58803d15f",
                                                                    :string "Athens is persisted to your filesystem at `documents/athens` by default.",}
                                                            #:block{:uid "0f62fecbc",
                                                                    :string "Database can be changed through settings button on the top right corner.",}]}
                                         #:block{:uid "68246ce0a",
                                                 :string "How can I report bugs?",
-                                                :open false,
+                                                :open? false,
                                                 :children [#:block{:uid "37dcfbf20",
                                                                    :string "If your bug isn't already on our [GitHub Bug and Issue Board](https://github.com/athensresearch/athens/projects/4), post the bug to the beta testers Discord channel. Screenshots are particularly useful. Also post the version of Athens and Operating System you are on.",}]}
                                         #:block{:uid "9576d79db",
                                                 :string "How do I update Athens?",
-                                                :open false,
+                                                :open? false,
                                                 :children [#:block{:uid "199259bce",
                                                                    :string "When Athens is launched, it looks for newer versions. If it finds a newer version, it downloads it and launches it the next time you open Athens.",}
                                                            #:block{:uid "bf257cc8e",
                                                                    :string "You can see the version at the bottom of the left sidebar when it is opened. Click on the version to go to our [release notes on Notion](https://www.notion.so/athensresearch/Weekly-Updates-e18afa006cfd4fec9c462940ac3b84da).",}]}
                                         #:block{:uid "2464d4538",
                                                 :string "Is there anything special about the [[Welcome]] page?",
-                                                :open false,
+                                                :open? false,
                                                 :children [#:block{:uid "6275554a3",
                                                                    :string "[[Welcome]] is a special page. When you restart Athens, any changes you make to this page will be overwritten, so don't write anything you need in this page!",}]}]}]}])
 

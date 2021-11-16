@@ -6,11 +6,11 @@
     [datascript.core :as d]))
 
 
-(def tree-with-pages
-  [{:node/title     "Welcome"
+(def tree-with-page
+  [{:page/title     "Welcome"
     :block/children [#:block{:uid    "block-1"
                              :string "block with link to [[Welcome]]"
-                             :open   false}]}])
+                             :open?   false}]}])
 
 
 (def tree-without-page
@@ -21,7 +21,7 @@
       :block/string "B1 C1"}
      {:block/uid "7d11d532f"
       :block/string "B1 C2"
-      :block/open false
+      :block/open? false
       :block/children
       [{:block/uid "db5fa9a43"
         :block/string "B1 C2 C1"}]}]}])
@@ -38,7 +38,7 @@
                  [#:op{:type :page/new, :atomic? true, :args {:page/title "Welcome"}}
                   #:op{:type :block/save, :atomic? true, :args {:block/uid "block-1", :block/string "block with link to [[Welcome]]"}}]}
             #:op{:type :block/open :atomic? true :args {:block/uid "block-1" :block/open? false}}]
-           (bfs/internal-representation->atomic-ops db tree-with-pages nil)))
+           (bfs/internal-representation->atomic-ops db tree-with-page nil)))
 
     (is (= [#:op{:type :block/new, :atomic? true, :args {:block/uid "eaa4c9435", :block/position {:page/title "title", :relation :first}}}
             #:op{:type :block/save, :atomic? true, :args {:block/uid "eaa4c9435", :block/string "block 1"}}
@@ -52,7 +52,39 @@
            (bfs/internal-representation->atomic-ops db tree-without-page {:page/title "title" :relation :first})))))
 
 
+(deftest get-internal-representation
+  (let [db (-> (d/empty-db common-db/schema)
+               (d/db-with [{:node/title     "Welcome"
+                            :page/sidebar   0
+                            :block/children [#:block{:uid    "block-1"
+                                                     :string "block with link to [[Welcome]]"
+                                                     :open   false
+                                                     :order  0}]}
+                           {:block/uid    "eaa4c9435",
+                            :block/string "block 1",
+                            :block/open   true,
+                            :block/order  0
+                            :block/children
+                            [{:block/uid    "88c9ff662",
+                              :block/string "B1 C1",
+                              :block/order  0
+                              :block/open   true}
+                             {:block/uid    "7d11d532f",
+                              :block/string "B1 C2",
+                              :block/order  1
+                              :block/open   true,
+                              :block/children
+                              [{:block/uid    "db5fa9a43",
+                                :block/string "B1 C2 C1",
+                                :block/order  0
+                                :block/open   true}]}]}]))]
+    (is (= tree-with-page (common-db/get-internal-representation db (d/entity db [:node/title "Welcome"]))))
+    (is (= tree-without-page (common-db/get-internal-representation db (d/entity db [:block/uid "eaa4c9435"]))))))
+
+
 (comment
   (binding [t/*stack-trace-depth* 5] (t/run-tests))
+
+  (get-internal-representation)
 
   (bfs/internal-representation->atomic-ops (d/empty-db common-db/schema) tree-without-page {:page/title "title" :relation :first}))
