@@ -11,7 +11,7 @@
 (defn enhance-block
   [block previous parent]
   (merge block
-         {:parent (let [page-ks (select-keys parent [:node/title])]
+         {:parent (let [page-ks (select-keys parent [:page/title])]
                     (if (empty? page-ks)
                       (select-keys parent [:block/uid])
                       page-ks))}
@@ -36,7 +36,7 @@
   Toplevel pages will be sorted after all toplevel blocks. "
   [internal-representation]
   (let [{blocks true
-         pages  false} (group-by (comp nil? :node/title) internal-representation)
+         pages  false} (group-by (comp nil? :page/title) internal-representation)
         ;; Enhance toplevel blocks as if they had a nil parent.
         ;; The first block will have neither a parent or a previous.
         blocks         (or blocks [])
@@ -53,23 +53,24 @@
 (defn enhanced-internal-representation->atomic-ops
   "Takes the enhanced internal representation and creates :page/new or :block/new and :block/save atomic events.
   Throws if default-position is nil and position cannot be determined."
-  [db default-position {:keys [block/uid block/string node/title previous parent] :as eir}]
+  [db default-position {:keys [block/uid block/string block/open? page/title previous parent] :as eir}]
   (if title
     [(atomic/make-page-new-op title)]
-    (let [{parent-title :node/title
+    (let [{parent-title :page/title
            parent-uid   :block/uid} parent
           previous-uid              (:block/uid previous)
           position                  (cond
                                       ;; There's a block before this one that we can add this one after.
-                                      previous-uid {:ref-uid previous-uid   :relation :after}
+                                      previous-uid {:block/uid previous-uid   :relation :after}
                                       ;; There's no previous block, but we can add it to the end of the parent.
-                                      parent-title {:ref-name parent-title :relation :last}
-                                      parent-uid   {:ref-uid parent-uid     :relation :last}
+                                      parent-title {:page/title parent-title :relation :last}
+                                      parent-uid   {:block/uid parent-uid     :relation :last}
                                       ;; There's a default place where we can drop blocks, use it.
                                       default-position default-position
                                       :else (throw (ex-info "Cannot determine position for enhanced internal representation" eir)))]
-      [(atomic/make-block-new-op uid position)
-       (graph-ops/build-block-save-op db uid string)])))
+      (cond-> [(atomic/make-block-new-op uid position)
+               (graph-ops/build-block-save-op db uid string)]
+        (= open? false) (conj (atomic/make-block-open-op uid false))))))
 
 
 (defn internal-representation->atomic-ops
@@ -114,8 +115,8 @@
                                                 empty-block?          order
                                                 current-block-parent? 0
                                                 :else                 (inc order))
-         default-position                     (common-db/compat-position db {:ref-uid  current-block-parent-uid
-                                                                             :relation new-block-order})
+         default-position                     (common-db/compat-position db {:block/uid current-block-parent-uid
+                                                                             :relation  new-block-order})
          extra-ops                            (if empty-block? [(graph-ops/build-block-remove-op db uid)] [])]
      (composite/make-consequence-op {:op/type :block/paste}
                                     (concat extra-ops (internal-representation->atomic-ops db internal-representation default-position))))))

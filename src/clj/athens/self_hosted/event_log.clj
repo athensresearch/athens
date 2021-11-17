@@ -25,7 +25,7 @@
 
 
 (def initial-events
-  [datoms/welcome-event])
+  datoms/welcome-events)
 
 
 (defn serialize

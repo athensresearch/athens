@@ -9,6 +9,7 @@
     [clojure.pprint        :as pp]
     [clojure.set           :as set]
     [clojure.string        :as string]
+    [clojure.walk          :as walk]
     [datascript.core       :as d]))
 
 
@@ -442,13 +443,22 @@
 
 
 (def block-document-pull-vector-for-copy
-  '[:block/uid :block/string :block/open :block/order {:block/children ...}])
+  '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
-(defn get-block-document-for-copy
+(defn get-internal-representation
+  "Returns internal representation for eid in db."
   [db eid]
-  (->> (d/pull db block-document-pull-vector-for-copy eid)
-       sort-block-children))
+  (let [remove-ks [:block/order]
+        rename-ks {:block/open :block/open?
+                   :node/title :page/title}]
+    (->> (d/pull db block-document-pull-vector-for-copy eid)
+         sort-block-children
+         (walk/prewalk (fn [node]
+                         (if (map? node)
+                           (apply dissoc node remove-ks)
+                           node)))
+         (walk/postwalk-replace rename-ks))))
 
 
 (defn get-linked-refs-by-page-title
@@ -470,30 +480,30 @@
 
 (defn compat-position
   "Build a position by coercing incompatible arguments into compatible ones.
-  ref-uid to a page will instead use that page's title as ref-name.
-  Integer relation will be converted to :first if 0, or :after (with matching ref-uid) if not.
+  uid to a page will instead use that page's title.
+  Integer relation will be converted to :first if 0, or :after (with matching uid) if not.
   Warns when coercion was required."
-  [db {:keys [relation ref-uid ref-name] :as pos}]
+  [db {:keys [relation block/uid page/title] :as pos}]
   (let [[coerced-ref-uid
          coerced-relation] (when (integer? relation)
                              (if (= relation 0)
                                [nil :first]
-                               (let [parent-uid (or ref-uid (get-page-uid db ref-name))
-                                     prev-uid (:block/uid (nth-child db parent-uid (dec relation)))]
+                               (let [parent-uid (or uid (get-page-uid db title))
+                                     prev-uid   (:block/uid (nth-child db parent-uid (dec relation)))]
                                  (if prev-uid
                                    [prev-uid :after]
                                    ;; Can't find the previous block, just put it on last.
                                    [nil :last]))))
-        coerced-ref-name  (when (and (not ref-name)
-                                     (not coerced-ref-uid)
-                                     ref-uid)
-                            (get-page-title db ref-uid))
-        new-pos            (when (or coerced-ref-uid coerced-relation coerced-ref-name)
+        coerced-title      (when (and (not title)
+                                      (not coerced-ref-uid)
+                                      uid)
+                             (get-page-title db uid))
+        new-pos            (when (or coerced-ref-uid coerced-relation coerced-title)
                              (merge
                                {:relation (or coerced-relation relation)}
-                               (if-let [title' (or coerced-ref-name ref-name)]
-                                 {:ref-name title'}
-                                 {:ref-uid (or coerced-ref-uid ref-uid)})))]
+                               (if-let [title' (or coerced-title title)]
+                                 {:page/title title'}
+                                 {:block/uid (or coerced-ref-uid uid)})))]
 
     (when new-pos
       (log/warn "compat-position: coercion required for" (pr-str pos) "to" (pr-str new-pos)))
@@ -501,20 +511,20 @@
 
 
 (defn validate-position
-  [db {:keys [ref-uid ref-name] :as position}]
-  (let [ref-name->uid (get-page-uid db ref-name)
-        ref-uid->title (get-page-title db ref-uid)]
+  [db {:keys [block/uid page/title] :as position}]
+  (let [title->uid (get-page-uid db title)
+        uid->title (get-page-title db uid)]
     ;; Fail on error conditions.
     (when-some [fail-msg (cond
-                           (and ref-uid ref-uid->title)
-                           "Location ref-uid is a page, location must use ref-name instead."
+                           (and uid uid->title)
+                           "Location uid is a page, location must use title instead."
 
                            ;; TODO: this could be idempotent instead and create the page.
-                           (and ref-name (not ref-name->uid))
-                           (str "Location ref-name does not exist:" ref-name)
+                           (and title (not title->uid))
+                           (str "Location title does not exist:" title)
 
-                           (and ref-uid (not (e-by-av db :block/uid ref-uid)))
-                           (str "Location ref-uid does not exist:" ref-uid))]
+                           (and uid (not (e-by-av db :block/uid uid)))
+                           (str "Location uid does not exist:" uid))]
       (throw (ex-info fail-msg position)))))
 
 

@@ -14,23 +14,23 @@
    - `block-uid` - `:block/uid` of new block to be created
    - `position` - new blocks position
       - for siblings: `:before` or `:after` together with `ref-uid`
-      - for children: `:first`, `:last` together with `ref-uid` or `ref-name`"
+      - for children: `:first`, `:last` together with `:block/uid` or `:page/title`"
   [block-uid position]
   {:op/type    :block/new
    :op/atomic? true
-   :op/args    {:block-uid block-uid
-                :position  position}})
+   :op/args    {:block/uid      block-uid
+                :block/position position}})
 
 
 (defn make-block-save-op
   "Creates `:block/save` atomic op.
    - `block-uid` - `:block/uid` of block to be saved
    - `string` - new value of `:block/string` to be saved"
-  [block-uid new-string]
+  [block-uid string]
   {:op/type    :block/save
    :op/atomic? true
-   :op/args    {:block-uid block-uid
-                :string    new-string}})
+   :op/args    {:block/uid    block-uid
+                :block/string string}})
 
 
 (defn make-block-open-op
@@ -40,8 +40,8 @@
   [block-uid open?]
   {:op/type    :block/open
    :op/atomic? true
-   :op/args    {:block-uid block-uid
-                :open?     open?}})
+   :op/args    {:block/uid   block-uid
+                :block/open? open?}})
 
 
 (defn make-block-remove-op
@@ -50,7 +50,7 @@
   [block-uid]
   {:op/type    :block/remove
    :op/atomic? true
-   :op/args    {:block-uid block-uid}})
+   :op/args    {:block/uid block-uid}})
 
 
 (defn make-block-move-op
@@ -58,84 +58,84 @@
    - `block-uid` - `:block/uid` of block to move
   - `position` - new blocks position
       - for siblings: `:before` or `:after` together with `ref-uid`
-      - for children: `:first`, `:last` together with `ref-uid` or `ref-name`"
+      - for children: `:first`, `:last` together with `:block/uid` or `:page/title`"
   [block-uid position]
   {:op/type    :block/move
    :op/atomic? true
-   :op/args    {:block-uid block-uid
-                :position  position}})
+   :op/args    {:block/uid      block-uid
+                :block/position position}})
 
 
 ;; Page Ops
 
 (defn make-page-new-op
   "Creates `:page/new` atomic op.
-   - `name` - Page name to be created "
-  [name]
+   - `title` - Page title to be created "
+  [title]
   {:op/type    :page/new
    :op/atomic? true
-   :op/args    {:name name}})
+   :op/args    {:page/title title}})
 
 
 (defn make-page-rename-op
   "Creates `:page/rename` atomic op.
-   - `old-name` - Page name before rename,
-   - `new-name` - Page should have this name after operation"
-  [old-name new-name]
+   - `title` - Page title before rename,
+   - `new-title` - Page should have this title after operation"
+  [title new-title]
   {:op/type    :page/rename
    :op/atomic? true
-   :op/args    {:old-name old-name
-                :new-name new-name}})
+   :op/args    {:page/title title
+                :target     {:page/title new-title}}})
 
 
 (defn make-page-merge-op
   "Creates `:page/merge` atomic op.
-   - `from-name` - name of page to be merged into `to-name`
-   - `to-name` - name merge to this page"
-  [from-name to-name]
+   - `title` - title of page to be merged into `to-title`
+   - `to-title` - title merge to this page"
+  [title to-title]
   {:op/type    :page/merge
    :op/atomic? true
-   :op/args    {:from-name from-name
-                :to-name   to-name}})
+   :op/args    {:page/title title
+                :target     {:page/title to-title}}})
 
 
 (defn make-page-remove-op
   "Creates `:page/remove` atomic op.
-   - `name` - name of the page to be deleted"
-  [name]
+   - `title` - title of page to be deleted"
+  [title]
   {:op/type    :page/remove
    :op/atomic? true
-   :op/args    {:name name}})
+   :op/args    {:page/title title}})
 
 
 ;; Shortcut
 
 (defn make-shortcut-new-op
   "Creates `:shortcut/new` atomic op.
-   - `name` - name of page to be added to shortcuts"
-  [name]
+   - `title` - title of page to be added to shortcuts"
+  [title]
   {:op/type    :shortcut/new
    :op/atomic? true
-   :op/args    {:name name}})
+   :op/args    {:page/title title}})
 
 
 (defn make-shortcut-remove-op
   "Creates `:shortcut/remove` atomic op.
-   - `name` - name of page to be removed from shortcuts"
-  [name]
+   - `title` - title of page to be removed from shortcuts"
+  [title]
   {:op/type    :shortcut/remove
    :op/atomic? true
-   :op/args    {:name name}})
+   :op/args    {:page/title title}})
 
 
 (defn make-shortcut-move-op
   "Creates `:shortcut/move` atomic op.
-   - `source-name` - name of page to be moved to new position in shortcuts
-   - `ref-position` - new position for source-name shortcut
-      - `ref-name` - name of the page relative to which source page is to be moved
-      - `relation` - move the source-name :above or :below ref"
-  [source-name ref-position]
+   - `title` - title of page to be moved to new position in shortcuts
+   - `position` - new position for shortcut
+      - `:page/title` - title of page relative to which source page is to be moved
+      - `relation` - move the source-name :above or :below title"
+  [title position]
   {:op/type    :shortcut/move
    :op/atomic? true
-   :op/args    {:name              source-name
-                :shortcut-position ref-position}})
+   :op/args    {:page/title        title
+                :shortcut/position position}})

@@ -21,17 +21,24 @@
    :shortcut/move])
 
 
+;; Identity
+
+(def block-id [:block/uid string?])
+
+(def page-id [:page/title string?])
+
+
 ;; Block
 
 (def child-position
   [:or
    [:map
-    [:ref-name string?]
+    page-id
     [:relation [:enum
                 :first
                 :last]]]
    [:map
-    [:ref-uid string?]
+    block-id
     [:relation [:enum
                 :first
                 :last]]]])
@@ -39,13 +46,13 @@
 
 (def sibling-position
   [:map
-   [:ref-uid string?]
+   block-id
    [:relation [:enum
                :before
                :after]]])
 
 
-(def position
+(def block-position
   [:or
    child-position
    sibling-position])
@@ -55,39 +62,39 @@
   [:map
    [:op/args
     [:map
-     [:block-uid string?]
-     [:position position]]]])
+     block-id
+     [:block/position block-position]]]])
 
 
 (def op-block-save
   [:map
    [:op/args
     [:map
-     [:block-uid string?]
-     [:string string?]]]])
+     block-id
+     [:block/string string?]]]])
 
 
 (def op-block-open
   [:map
    [:op/args
     [:map
-     [:block-uid string?]
-     [:open? boolean?]]]])
+     block-id
+     [:block/open? boolean?]]]])
 
 
 (def op-block-remove
   [:map
    [:op/args
     [:map
-     [:block-uid string?]]]])
+     block-id]]])
 
 
 (def op-block-move
   [:map
    [:op/args
     [:map
-     [:block-uid string?]
-     [:position position]]]])
+     block-id
+     [:block/position block-position]]]])
 
 
 ;; Page
@@ -96,37 +103,41 @@
   [:map
    [:op/args
     [:map
-     [:name string?]]]])
+     page-id]]])
 
 
 (def op-page-rename
   [:map
    [:op/args
     [:map
-     [:old-name string?]
-     [:new-name string?]]]])
+     page-id
+     [:target
+      [:map
+       page-id]]]]])
 
 
 (def op-page-merge
   [:map
    [:op/args
     [:map
-     [:from-name string?]
-     [:to-name string?]]]])
+     page-id
+     [:target
+      [:map
+       page-id]]]]])
 
 
 (def op-page-remove
   [:map
    [:op/args
     [:map
-     [:name string?]]]])
+     page-id]]])
 
 
 ;; Shortcut
 
 (def shortcut-position
   [:map
-   [:ref-name string?]
+   page-id
    [:relation [:enum
                :before
                :after]]])
@@ -136,22 +147,22 @@
   [:map
    [:op/args
     [:map
-     [:name string?]]]])
+     page-id]]])
 
 
 (def op-shortcut-remove
   [:map
    [:op/args
     [:map
-     [:name string?]]]])
+     page-id]]])
 
 
 (def op-shortcut-move
   [:map
    [:op/args
     [:map
-     [:name string?]
-     [:shortcut-position shortcut-position]]]])
+     page-id
+     [:shortcut/position shortcut-position]]]])
 
 
 ;; Registry
