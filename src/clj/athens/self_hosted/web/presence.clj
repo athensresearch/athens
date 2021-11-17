@@ -15,15 +15,16 @@
 
 (defn- valid-password
   [conn channel id {:keys [session-intro]}]
-  (let [session-id (str (utils/random-uuid))
+  (let [username   (:username session-intro)
+        session-id (str (utils/random-uuid))
         session    (assoc session-intro :session-id session-id)]
-    (log/info channel "New Client Intro:" session-intro)
+    (log/info "New Client Intro:" session-intro)
     (clients/add-client! channel session)
     (clients/send! channel (common-events/build-presence-session-id-event session-id))
     (let [datoms (map ; Convert Datoms to just vectors.
                   (comp vec seq)
                   (d/datoms @conn :eavt))]
-      (log/debug channel "Sending" (count datoms) "eavt")
+      (log/debug "Sending" (count datoms) "eavt to" (pr-str username))
       (clients/send! channel
                      (common-events/build-db-dump-event datoms)))
     (clients/send! channel
