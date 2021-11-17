@@ -10,7 +10,6 @@
     [athens.util :as util]
     [athens.views.blocks.internal-representation :as internal-representation]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [cljs.pprint :as pp]
     [clojure.edn :as edn]
     [clojure.set :as set]
     [garden.selectors :as selectors]
@@ -297,12 +296,6 @@
         {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
         img-regex           #"(?i)^image/(p?jpeg|gif|png)$"]
 
-
-    (println " Representation with updated uids")
-    (pp/pprint repr-with-new-uids)
-
-    (println "External copied data's internal representation")
-    (pp/pprint text-to-inter)
 
     (cond
       ;; For internal representation

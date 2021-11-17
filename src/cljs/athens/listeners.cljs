@@ -7,7 +7,6 @@
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
     [athens.util :as util]
-    [clojure.pprint :as pp]
     [clojure.string :as string]
     [goog.events :as events]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]])
@@ -190,9 +189,6 @@
             copied-blocks  (mapv
                              #(common-db/get-internal-representation  @db/dsdb [:block/uid %])
                              uids)]
-
-        (println "Copied blocks representation")
-        (pp/pprint copied-blocks)
 
         (doto clipboard-data
           (.setData "text/plain" copy-data)

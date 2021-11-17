@@ -27,7 +27,7 @@
 
 (defn- connect-to-self-hosted!
   [url]
-  (log/info "WSClient Connecting to:" url)
+  (log/info "WSClient Connecting to:" (pr-str url))
   (when url
     (doto (js/WebSocket. url)
       (.addEventListener "open" open-handler)
@@ -43,11 +43,6 @@
 (def ^:private reconnect-counter (atom -1))
 
 
-(defn- await-response!
-  [{:event/keys [id]}]
-  (log/debug "event-id:" (pr-str id) "WSClient awaiting response:"))
-
-
 (defn- reconnecting?
   "Checks if WebSocket is awaiting reconnection."
   []
@@ -59,7 +54,7 @@
    (delayed-reconnect! url 3000))
   ([url delay-ms]
    (swap! reconnect-counter inc)
-   (log/info "WSClient scheduling reconnect in" delay-ms "ms to" url)
+   (log/info "WSClient scheduling reconnect in" (pr-str delay-ms) "ms to" (pr-str url))
    (if (< @reconnect-counter MAX_RECONNECT_TRY)
      (let [timer-id (js/setTimeout (fn []
                                      (reset! reconnect-timer nil)
@@ -67,7 +62,7 @@
                                    delay-ms)]
        (reset! reconnect-timer timer-id))
      (do
-       (log/warn "Reconnect max tries" @reconnect-counter)
+       (log/warn "Reconnect max tries" (pr-str @reconnect-counter) "reached.")
        (rf/dispatch [:remote/connection-failed])))))
 
 
@@ -109,7 +104,6 @@
          (log/debug "event-id:" (pr-str (:event/id data))
                     ", type:" (pr-str (:event/type data))
                     "WSClient sending to server")
-         (await-response! data)
          (.send connection (transit/write (transit/writer :json) data))
          {:result :sent})
        (do
@@ -145,7 +139,7 @@
 
 (defn- open-handler
   [event]
-  (log/info "WSClient Connected:" event)
+  (log/info "WSClient Connected")
   (let [connection             (.-target event)
         username               @(rf/subscribe [:username])
         color                  @(rf/subscribe [:color])
@@ -171,7 +165,7 @@
       (log/info "Successfully connected to Lan-Party.")
       (reset! await-open-event-id nil)
       (when (seq @send-queue)
-        (log/info "WSClient sending queued packets #" (count @send-queue))
+        (log/info "WSClient sending queued packets #" (pr-str (count @send-queue)))
         (doseq [data @send-queue]
           (send! @ws-connection data))
         (log/info "WSClient sent queued packets.")
@@ -210,7 +204,7 @@
           :rejected
           (let [{:reject/keys [reason data]} packet]
             (log/warn "event-id:" (pr-str id)
-                      "rejected, reason:" reason
+                      "rejected, reason:" (pr-str reason)
                       ", rejection-data:" (pr-str data))
             (rf/dispatch [:remote/reject-forwarded-event packet]))))
       (let [explanation (schema/explain-event-response packet)]
@@ -237,14 +231,14 @@
 
 (defn- presence-session-id-handler
   [{:keys [session-id]}]
-  (log/info "Session id:" session-id)
+  (log/info "Session id:" (pr-str session-id))
   (rf/dispatch [:presence/add-session-id session-id]))
 
 
 (defn- presence-online-handler
   [args]
   (let [username (:username args)]
-    (log/info "User online:" username)
+    (log/info "User online:" (pr-str username))
     (rf/dispatch [:presence/add-user args])))
 
 
@@ -257,7 +251,7 @@
 (defn- presence-offline-handler
   [args]
   (let [username (:username args)]
-    (log/info "User offine:" username)
+    (log/info "User offine:" (pr-str username))
     (rf/dispatch [:presence/remove-user args])))
 
 
@@ -269,7 +263,7 @@
 
 (defn- forwarded-event-handler
   [args]
-  (log/debug "Forwarded event:" (pr-str args))
+  (log/debug "Forwarded event-id:" (pr-str (:event/id args)))
   (rf/dispatch [:remote/apply-forwarded-event args]))
 
 
@@ -303,7 +297,7 @@
       forwarded-events        (forwarded-event-handler packet))
 
     (log/warn "event-id:" (pr-str id)
-              ", type:" type
+              ", type:" (pr-str type)
               "WSClient Received invalid server event, explanation:" (pr-str (schema/explain-server-event packet)))))
 
 
@@ -342,7 +336,7 @@
 
 (defn- close-handler
   [event]
-  (log/info "WSClient Disconnected:" event)
+  (log/info "WSClient Disconnected:" (pr-str event))
   (let [connection (.-target event)
         url        (.-url connection)]
     (rf/dispatch [:presence/clear])
