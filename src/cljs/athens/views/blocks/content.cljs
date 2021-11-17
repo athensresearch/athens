@@ -2,7 +2,6 @@
   (:require
     [athens.config :as config]
     [athens.db :as db]
-    [athens.electron.images :as images]
     [athens.events.selection :as select-events]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.style :as style]
@@ -289,13 +288,20 @@
         new-uids            (internal-representation/new-uids-map internal-representation)
         repr-with-new-uids  (into [] (internal-representation/update-uids internal-representation new-uids))
 
-        ;; External to internal representation
-        text-to-inter       (internal-representation/text-to-internal-representation text-data)
-        line-breaks         (re-find #"\r?\n" text-data)
-        no-shift            (-> @state :last-keydown :shift not)
+        ;; For images in clipboard
         items               (array-seq (.. e -clipboardData -items))
         {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
-        img-regex           #"(?i)^image/(p?jpeg|gif|png)$"]
+        img-regex           #"(?i)^image/(p?jpeg|gif|png)$"
+        callback            (fn [new-str]
+                              (js/setTimeout #(swap! state assoc :string/local new-str)
+                                             50))
+
+        ;; External to internal representation
+        text-to-inter       (when-not items
+                              (internal-representation/text-to-internal-representation text-data))
+        line-breaks         (re-find #"\r?\n" text-data)
+        no-shift            (-> @state :last-keydown :shift not)]
+
 
 
     (println " Representation with updated uids")
@@ -303,6 +309,7 @@
 
     (println "External copied data's internal representation")
     (pp/pprint text-to-inter)
+
 
     (cond
       ;; For internal representation
@@ -315,15 +322,11 @@
       (seq (filter (fn [item]
                      (let [datatype (.. item -type)]
                        (re-find img-regex datatype))) items))
-      (mapv (fn [item]
-              (let [datatype (.. item -type)]
-                (cond
-                  (re-find img-regex datatype) (when (util/electron?)
-                                                 (let [new-str (images/save-image head tail item "png")]
-                                                   (js/setTimeout #(swap! state assoc :string/local new-str) 50)))
-                  (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
-            items)
+      ;; Need dispatch-sync because with dispatch we lose the clipboard data context
+      ;; on callee side
+      (rf/dispatch-sync [:paste-image items head tail callback])
 
+      ;; For external copy-paste
       (and line-breaks no-shift)
       (do
         (.. e preventDefault)
