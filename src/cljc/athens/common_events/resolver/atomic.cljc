@@ -265,15 +265,14 @@
         asserts               (->> removed-uid->uid-refs
                                    (mapcat (fn [[removed-uid referenced-uids]]
                                              (let [removed-string (common-db/v-by-ea db [:block/uid removed-uid] :block/string)
-                                                   from-string    (str "((" removed-uid "))")
-                                                   uid->string    (->> referenced-uids
-                                                                       (map (fn [uid]
-                                                                              [uid (common-db/v-by-ea db [:block/uid uid] :block/string)]))
-                                                                       (into {}))]
-                                               (map (fn [[uid original-string]]
-                                                      {:block/uid    uid
-                                                       :block/string (s/replace original-string from-string removed-string)})
-                                                    uid->string)))))
+                                                   from-string    (str "((" removed-uid "))")]
+                                               (map (fn [uid]
+                                                      (let [string (common-db/get-block-string db uid)
+                                                            title  (common-db/get-page-title db uid)]
+                                                        (cond-> {:block/uid uid}
+                                                          string (merge {:block/string (s/replace string from-string removed-string)})
+                                                          title  (merge {:node/title   (s/replace title from-string removed-string)}))))
+                                                    referenced-uids)))))
         has-asserts?          (seq asserts)
         retract-kids          (mapv (fn [uid]
                                       [:db/retractEntity [:block/uid uid]])

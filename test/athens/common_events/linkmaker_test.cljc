@@ -278,9 +278,9 @@
       (transact-with-linkmaker setup-tx)
       (let [{block-backrefs :block/_refs} (get-block test-block-uid)
             {page-backrefs :block/_refs}  (get-page test-page-uid)
-            target-page-new-title             (str "ref to ((" test-block-uid "))")
-            rename-page-event                 (atomic-graph-ops/make-page-rename-op target-page-title target-page-new-title)
-            rename-page-txs                   (atomic-resolver/resolve-to-tx @@fixture/connection rename-page-event)]
+            target-page-new-title         (str "ref to ((" test-block-uid "))")
+            rename-page-event             (atomic-graph-ops/make-page-rename-op target-page-title target-page-new-title)
+            rename-page-txs               (atomic-resolver/resolve-to-tx @@fixture/connection rename-page-event)]
 
         ;; Page should have ref to block, but not to page.
         (t/is (not (seq block-backrefs)))
@@ -391,29 +391,27 @@
                 {target-page-2-refs :block/_refs} (get-page target-page-2-uid)]
             ;; assert that we do have new ref
             (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
-            ;; TODO (RTC): this test is failing right now
             (t/is (= [{:db/id testing-block-2-eid}] target-page-2-refs))))))))
 
 
 (t/deftest b3-block-delete
   (t/testing "Block deleted, with refs to block"
-    ;; The block delete event is not yet migrated to common events.
-    #_(let [target-block-string "Target block"
-          target-block-uid   "target-block-uid"
-          test-block-uid    "test-block-uid"
-          test-page-uid     "test-page-uid"
-         ref-str           (str "ref to ((" target-block-uid "))")
-         setup-tx          [{:block/uid  target-block-uid
-                             :block/string target-block-string}
-                             {:block/uid      test-page-uid
-                              :node/title     ref-str
-                              :block/children [{:block/uid    test-block-uid
-                                                :block/string ref-str
-                                                :block/order  0}]}]]
+    (let [target-block-string "Target block"
+          target-block-uid    "target-block-uid"
+          test-block-uid      "test-block-uid"
+          test-page-uid       "test-page-uid"
+          ref-str             (str "ref to ((" target-block-uid "))")
+          setup-tx            [{:block/uid    target-block-uid
+                                :block/string target-block-string}
+                               {:block/uid      test-page-uid
+                                :node/title     ref-str
+                                :block/children [{:block/uid    test-block-uid
+                                                  :block/string ref-str
+                                                  :block/order  0}]}]]
 
       (transact-with-linkmaker setup-tx)
-      (let [delete-page-event (common-events/build-block-delete-event target-block-uid)
-            delete-page-txs   (resolver/resolve-event-to-tx @@fixture/connection delete-page-event)]
+      (let [delete-page-op  (atomic-graph-ops/make-block-remove-op target-block-uid)
+            delete-page-txs (atomic-resolver/resolve-to-tx @@fixture/connection delete-page-op)]
 
         (transact-with-linkmaker delete-page-txs)
         (let [{block-refs :block/refs} (get-block test-block-uid)
