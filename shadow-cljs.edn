@@ -29,7 +29,9 @@
                                         :output-feature-set :es-next}
                      :dev              {:compiler-options {:closure-defines {re-frame.trace.trace-enabled?        true
                                                                              day8.re-frame.tracing.trace-enabled? true}}}
-                     :release          {:build-options {:ns-aliases {day8.re-frame.tracing day8.re-frame.tracing-stubs}}}
+                     :release          {:build-options {:ns-aliases {day8.re-frame.tracing day8.re-frame.tracing-stubs}}
+                                        :compiler-options {:source-map true
+                                                           :pseudo-names true}}
                      :devtools         {:preloads [devtools.preload
                                                    day8.re-frame-10x.preload]}}
 
