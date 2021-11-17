@@ -1274,12 +1274,10 @@
     (let [local?     (not (db-picker/remote-db? db))
           img-regex  #"(?i)^image/(p?jpeg|gif|png)$"]
       (log/debug ":paste-image : local?" local?)
-      (println "items ->" (pr-str items))
       (if local?
         (do
           (mapv (fn [item]
                   (let [datatype (.. item -type)]
-                    (println "item ->" item "datatype ->" datatype)
                     (cond
                       (re-find img-regex datatype)    (when (util/electron?)
                                                         (let [new-str (images/save-image head tail item "png")]

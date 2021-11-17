@@ -311,7 +311,6 @@
     (pp/pprint text-to-inter)
 
     (js/console.dir (.. e -clipboardData -items))
-    (println "items inside textarea paste" (pr-str items))
 
     (cond
       ;; For internal representation
@@ -327,7 +326,6 @@
       ;; Need dispatch-sync because with dispatch we lose the clipboard data context
       ;; on callee side
       (do
-        (.. e preventDefault)
         (rf/dispatch-sync [:paste-image items head tail callback]))
 
       ;; For external copy-paste
