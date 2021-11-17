@@ -46,23 +46,6 @@
      :event/args {:redo? redo?}}))
 
 
-;; TODO (RTC): profesh cleaning required
-(defn build-split-block-event
-  "Builds `:datascript/split-block` event with:
-  - `uid`: `:block/uid` of block we're splitting
-  - `value`: Current `:block/string` of block splitted
-  - `index`: index of the split
-  - `new-uid`: `:block/uid` of new block"
-  [uid value index new-uid]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/split-block
-     :event/args {:uid     uid
-                  :value   value
-                  :index   index
-                  :new-uid new-uid}}))
-
-
 ;; - presence events
 
 (defn build-presence-hello-event

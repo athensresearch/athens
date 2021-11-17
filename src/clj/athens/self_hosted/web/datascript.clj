@@ -9,15 +9,6 @@
       ExceptionInfo)))
 
 
-(def supported-event-types
-  #{:datascript/add-child
-    :datascript/split-block
-    :datascript/selected-delete
-    :datascript/delete-only-child
-    :datascript/delete-merge-block
-    :datascript/paste-internal})
-
-
 (def supported-atomic-ops
   #{:block/new
     :block/save
@@ -52,33 +43,6 @@
                                                 :data  err-data
                                                 :cause err-cause})))
           (common-events/build-event-rejected id err-msg err-data))))))
-
-
-(defn datascript-handler
-  [conn channel {:event/keys [id type] :as event}]
-  (let [username (clients/get-client-username channel)]
-    (log/info (str "username: " username ", event-id: " id ", type: " (pr-str type)))
-    ;; TODO Check if potentially conflicting event?
-    ;; if so compare tx-id from client with HEAD master DB
-    ;; current -> continue
-    ;; stale -> reject
-    (if (contains? supported-event-types type)
-      (try
-        (exec! conn event)
-        (catch ExceptionInfo ex
-          (let [msg (str "username: " username ", event-id: " id ", Exception during resolving or transacting.")]
-            (log/error ex msg)
-            (common-events/build-event-rejected id
-                                                msg
-                                                (ex-data ex)))))
-      (do
-        (log/error "FAIL Unsupported event type."
-                   "username:" username
-                   ", event-id:" id
-                   ", type:" (pr-str type))
-        (common-events/build-event-rejected id
-                                            (str "Unsupported event type: " type)
-                                            {:unsupported-type type})))))
 
 
 (defn atomic-op-handler

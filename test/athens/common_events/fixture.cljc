@@ -33,11 +33,3 @@
                "\nfrom:" (pr-str txs)
                "\nto:" (pr-str processed-txs))
     (d/transact! @connection processed-txs)))
-
-
-(defn transact-composite-ops-without-middleware
-  [composite-op]
-  (let [atomic-ops (graph-ops/extract-atomics composite-op)]
-    (doseq [atomic-op atomic-ops
-            :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@connection atomic-op)]]
-      (d/transact! @connection atomic-txs))))

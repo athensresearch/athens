@@ -274,14 +274,7 @@
 
 
 (def forwarded-events
-  #{:datascript/add-child
-    :datascript/split-block
-    :datascript/selected-delete
-    :datascript/delete-only-child
-    :datascript/delete-merge-block
-    :datascript/paste-internal
-
-    :op/atomic})
+  #{:op/atomic})
 
 
 (defn- server-event-handler

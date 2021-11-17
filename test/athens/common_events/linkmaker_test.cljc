@@ -370,18 +370,22 @@
         (let [{testing-block-1-eid :db/id}      (get-block testing-block-1-uid)
               {target-page-1-refs :block/_refs} (get-page target-page-1-uid)
               {target-page-2-refs :block/_refs} (get-page target-page-2-uid)
-              split-block-ops                   (graph-ops/build-block-split-op @@fixture/connection
+              split-block-op                    (graph-ops/build-block-split-op @@fixture/connection
                                                                                 {:old-block-uid testing-block-1-uid
                                                                                  :new-block-uid testing-block-2-uid
                                                                                  :string        testing-block-1-string
                                                                                  :index         split-index
-                                                                                 :relation      :after})]
+                                                                                 :relation      :after})
+              block-split-atomics               (graph-ops/extract-atomics split-block-op)]
           ;; assert that target pages has no `:block/refs` to start with
           (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
           (t/is (= [{:db/id testing-block-1-eid}] target-page-2-refs))
 
           ;; apply split-block
-          (fixture/transact-composite-ops-without-middleware split-block-ops)
+          (doseq [atomic-op block-split-atomics
+                  :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+            (transact-with-linkmaker atomic-txs))
+
           (let [{testing-block-2-eid :db/id}      (get-block testing-block-2-uid)
                 {target-page-1-refs :block/_refs} (get-page target-page-1-uid)
                 {target-page-2-refs :block/_refs} (get-page target-page-2-uid)]
