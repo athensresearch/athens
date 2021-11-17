@@ -325,8 +325,7 @@
                        (re-find img-regex datatype))) items))
       ;; Need dispatch-sync because with dispatch we lose the clipboard data context
       ;; on callee side
-      (do
-        (rf/dispatch-sync [:paste-image items head tail callback]))
+      (rf/dispatch-sync [:paste-image items head tail callback])
 
       ;; For external copy-paste
       (and line-breaks no-shift)
