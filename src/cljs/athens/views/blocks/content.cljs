@@ -310,7 +310,6 @@
     (println "External copied data's internal representation")
     (pp/pprint text-to-inter)
 
-    (js/console.dir (.. e -clipboardData -items))
 
     (cond
       ;; For internal representation
