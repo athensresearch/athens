@@ -259,7 +259,6 @@
         (fixture/transact-with-middleware setup-txs)
         (let [position        (common-db/compat-position @@fixture/connection {:block/uid parent-block-uid :relation 1})
               block-new-v2-op (atomic-graph-ops/make-block-new-op block-3-uid position)]
-          (println position)
           (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                                     block-new-v2-op))
           (let [parent  (common-db/get-block @@fixture/connection [:block/uid parent-block-uid])

@@ -21,7 +21,7 @@
     (clients/remove-client! channel)
     ;; Notify clients after removing the one that left.
     (presence/goodbye-handler session)
-    (log/info "username:" username "!! closed connection, status:" status)))
+    (log/info "username:" (pr-str username) "!! closed connection, status:" (pr-str status))))
 
 
 (defn- log-event?
@@ -57,13 +57,13 @@
 
                         :else
                         (do
-                          (log/error username "-> receive-handler, unsupported event:" (pr-str type))
+                          (log/error (pr-str username) "-> receive-handler, unsupported event:" (pr-str type))
                           (common-events/build-event-rejected id
                                                               (str "Unsupported event: " type)
                                                               {:unsupported-type type})))]
         (merge {:event/id id}
                result)
-        (log/error "username:" username ", event-id:" id ", type:" type "No result for `valid-event-handler`")))))
+        (log/error "username:" (pr-str username) ", event-id:" (pr-str id) ", type:" (pr-str type) "No result for `valid-event-handler`")))))
 
 
 (def ^:private forwardable-events
@@ -92,7 +92,7 @@
             ;; forward to everyone if accepted
             (when (and (= :accepted status)
                        (contains? forwardable-events type))
-              (log/debug "Forwarding accepted event, event-id:" id)
+              (log/debug "Forwarding accepted event, event-id:" (pr-str id))
               (clients/broadcast! data))
             ;; acknowledge
             (clients/send! channel result)))))))
@@ -139,8 +139,8 @@
              server-password :password
              in-memory?      :in-memory?}
             (:config config)]
-        (log/info "Starting WebServer with config:" http-conf
-                  "in-memory?" in-memory?
+        (log/info "Starting WebServer with config:" (pr-str http-conf)
+                  "in-memory?" (pr-str in-memory?)
                   "password?" (boolean server-password))
         (assoc component :httpkit
                (http/run-server (make-handler datascript fluree in-memory? server-password) http-conf)))))

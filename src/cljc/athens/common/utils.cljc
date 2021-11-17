@@ -47,5 +47,5 @@
   [prefix expr]
   `(let [start# (now-ms)
          ret# ~expr]
-     (log/debug ~prefix (- (now-ms) start#) "ms")
+     (log/info ~prefix (- (now-ms) start#) "ms")
      ret#))
