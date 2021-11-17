@@ -23,9 +23,6 @@
 
 (def event-type-graph
   [:enum
-   :datascript/delete-page
-   :datascript/block-save
-   :datascript/new-block
    :datascript/add-child
    :datascript/split-block
    :datascript/selected-delete
@@ -217,8 +214,6 @@
   [:multi {:dispatch :event/type}
    (dispatch :presence/hello presence-hello)
    (dispatch :presence/update presence-update)
-   (dispatch :datascript/block-save datascript-block-save)
-   (dispatch :datascript/new-block datascript-new-block)
    (dispatch :datascript/add-child datascript-add-child)
    ;; Same args as `datascript-add-child`
    (dispatch :datascript/split-block datascript-split-block)
@@ -295,8 +290,6 @@
 (def server-event
   [:multi {:dispatch :event/type}
    ;; client forwardable events
-   (dispatch :datascript/block-save datascript-block-save true)
-   (dispatch :datascript/new-block datascript-new-block true)
    (dispatch :datascript/add-child datascript-add-child true)
    ;; Same args as `datascript-add-child`
    (dispatch :datascript/split-block datascript-split-block true)

@@ -12,65 +12,7 @@
   #(:event/type %2))
 
 
-(defmethod resolve-event-to-tx :datascript/delete-page
-  [db {:event/keys [id type args]}]
-  (let [{uid :uid}         args
-        ;; NOTE: common DB query? find page title by page uid?
-        title              (ffirst
-                             (d/q '[:find ?title
-                                    :where
-                                    [?e :node/title ?title]
-                                    [?e :block/uid ?uid]
-                                    :in $ ?uid]
-                                  db uid))
-        retract-blocks     (common-db/retract-uid-recursively-tx db uid)
-        delete-linked-refs (->> (common-db/get-page-uid db title)
-                                (vector :block/uid)
-                                (common-db/get-block db)
-                                vector
-                                (common-db/replace-linked-refs-tx db))
-        tx-data            (concat retract-blocks
-                                   delete-linked-refs)]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
-(defmethod resolve-event-to-tx :datascript/block-save
-  [_db {:event/keys [id type args]}]
-  (let [{:keys [uid
-                new-string
-                add-time?]} args
-        new-block-string     {:db/id        [:block/uid uid]
-                              :block/string new-string}
-        block-with-time      (if add-time?
-                               (assoc new-block-string :edit/time (utils/now-ts))
-                               new-block-string)
-        tx-data              [block-with-time]]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
-(defmethod resolve-event-to-tx :datascript/new-block
-  [db {:event/keys [id type args]}]
-  (let [{:keys [parent-uid
-                block-order
-                new-uid]} args
-        new-block         {:db/id        -1
-                           :block/uid    new-uid
-                           :block/string ""
-                           :block/order  (inc block-order)
-                           :block/open   true}
-        reindex           (concat [new-block]
-                                  (common-db/inc-after db [:block/uid parent-uid] block-order))
-        tx-data           [{:block/uid      parent-uid
-                            :block/children reindex}]]
-    (log/debug "event-id:" id ", type:" type ", args:" (pr-str args)
-               ", resolved-tx:" (pr-str tx-data))
-    tx-data))
-
-
+;; TODO (RTC): profesh cleaning required
 (defmethod resolve-event-to-tx :datascript/add-child
   [db {:event/keys [id type args]}]
   (let [{:keys [parent-uid
@@ -94,6 +36,7 @@
     tx-data))
 
 
+;; TODO (RTC): profesh cleaning required
 (defmethod resolve-event-to-tx :datascript/split-block
   [db {:event/keys [id type args]}]
   (let [{:keys [uid
@@ -128,6 +71,7 @@
     tx-data))
 
 
+;; TODO (RTC): profesh cleaning required
 (defmethod resolve-event-to-tx :datascript/selected-delete
   [db {:event/keys [id type args]}]
   ;; We know that we only need to dec indices after the last block. The former blocks
@@ -218,6 +162,7 @@
       true (concat [[:db/add "new" :from-undo-redo true]]))))
 
 
+;; TODO (RTC): profesh cleaning required
 (defmethod resolve-event-to-tx :datascript/delete-only-child
   [db {:event/keys [id type args]}]
   (let [{:keys [uid]} args
@@ -232,6 +177,7 @@
     tx-data))
 
 
+;; TODO (RTC): profesh cleaning required
 (defmethod resolve-event-to-tx :datascript/delete-merge-block
   [db {:event/keys [id type args]}]
   (let [{:keys [uid value]} args

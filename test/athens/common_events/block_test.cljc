@@ -11,66 +11,6 @@
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
 
 
-(t/deftest block-save-test
-  (t/testing "Saving block string"
-    (let [block-uid   "test-block-uid"
-          string-init "start test string"
-          string-new  "new test string"
-          setup-tx    [{:db/id          -1
-                        :block/uid      block-uid
-                        :block/string   string-init
-                        :block/order    0
-                        :block/children []}]]
-      (d/transact! @fixture/connection setup-tx)
-      (let [block-save-event             (common-events/build-block-save-event block-uid string-new false)
-            block-save-txs               (resolver/resolve-event-to-tx @@fixture/connection
-                                                                       block-save-event)
-            {block-string :block/string} (common-db/get-block @@fixture/connection
-                                                              [:block/uid  block-uid])]
-        (t/is (= string-init block-string))
-        (d/transact! @fixture/connection block-save-txs)
-        (let [{new-block-string :block/string} (common-db/get-block @@fixture/connection
-                                                                    [:block/uid  block-uid])]
-          (t/is (= string-new new-block-string)))))))
-
-
-(t/deftest new-block-tests
-  (t/testing "Adding new block to new page"
-    (let [page-1-uid  "page-1-uid"
-          child-1-uid "child-1-1-uid"
-          child-2-uid "child-1-2-uid"
-          setup-txs   [{:db/id          -1
-                        :block/uid      page-1-uid
-                        :node/title     "test page 1"
-                        :block/children {:db/id          -2
-                                         :block/uid      child-1-uid
-                                         :block/string   ""
-                                         :block/order    0
-                                         :block/children []}}]]
-      (d/transact! @fixture/connection setup-txs)
-      (let [page-1-eid      (common-db/e-by-av @@fixture/connection
-                                               :block/uid page-1-uid)
-            child-1-eid     (common-db/e-by-av @@fixture/connection
-                                               :block/uid child-1-uid)
-            new-block-event (common-events/build-new-block-event page-1-uid 0 child-2-uid)
-            new-block-txs   (resolver/resolve-event-to-tx @@fixture/connection
-                                                          new-block-event)
-            query-children  '[:find ?child
-                              :in $ ?eid
-                              :where [?eid :block/children ?child]]]
-        (t/is (= #{[child-1-eid]} (d/q query-children @@fixture/connection page-1-eid)))
-        (d/transact! @fixture/connection new-block-txs)
-        (let [child-2-eid (common-db/e-by-av @@fixture/connection
-                                             :block/uid child-2-uid)
-              children (d/q query-children @@fixture/connection page-1-eid)]
-          (t/is (seq children))
-          (t/is (= #{[child-1-eid] [child-2-eid]} children)))))))
-
-
-;; TODO more test cases for `:datascript/new-block` event
-
-
-
 (t/deftest split-block-tests
   (t/testing "Simple case, no page links or block refs"
     (let [parent-uid         "test-parent-2-uid"

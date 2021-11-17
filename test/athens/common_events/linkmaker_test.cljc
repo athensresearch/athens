@@ -4,8 +4,10 @@
     [athens.common-events                 :as common-events]
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common.logging :as log]
     [clojure.test                         :as t]
     [datascript.core                      :as d]))
 
@@ -368,23 +370,24 @@
         (let [{testing-block-1-eid :db/id}      (get-block testing-block-1-uid)
               {target-page-1-refs :block/_refs} (get-page target-page-1-uid)
               {target-page-2-refs :block/_refs} (get-page target-page-2-uid)
-              split-block-event                 (common-events/build-split-block-event
-                                                  testing-block-1-uid
-                                                  testing-block-1-string
-                                                  split-index
-                                                  testing-block-2-uid)
-              split-block-tx                    (resolver/resolve-event-to-tx @@fixture/connection split-block-event)]
+              split-block-ops                   (graph-ops/build-block-split-op @@fixture/connection
+                                                                                {:old-block-uid testing-block-1-uid
+                                                                                 :new-block-uid testing-block-2-uid
+                                                                                 :string        testing-block-1-string
+                                                                                 :index         split-index
+                                                                                 :relation      :after})]
           ;; assert that target pages has no `:block/refs` to start with
           (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
           (t/is (= [{:db/id testing-block-1-eid}] target-page-2-refs))
 
           ;; apply split-block
-          (transact-with-linkmaker split-block-tx)
+          (fixture/transact-composite-ops-without-middleware split-block-ops)
           (let [{testing-block-2-eid :db/id}      (get-block testing-block-2-uid)
                 {target-page-1-refs :block/_refs} (get-page target-page-1-uid)
                 {target-page-2-refs :block/_refs} (get-page target-page-2-uid)]
             ;; assert that we do have new ref
             (t/is (= [{:db/id testing-block-1-eid}] target-page-1-refs))
+            ;; TODO (RTC): this test is failing right now
             (t/is (= [{:db/id testing-block-2-eid}] target-page-2-refs))))))))
 
 

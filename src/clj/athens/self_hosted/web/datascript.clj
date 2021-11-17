@@ -10,10 +10,7 @@
 
 
 (def supported-event-types
-  #{:datascript/delete-page
-    :datascript/block-save
-    :datascript/new-block
-    :datascript/add-child
+  #{:datascript/add-child
     :datascript/split-block
     :datascript/selected-delete
     :datascript/delete-only-child
