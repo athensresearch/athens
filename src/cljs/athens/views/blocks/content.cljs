@@ -2,7 +2,6 @@
   (:require
     [athens.config :as config]
     [athens.db :as db]
-    [athens.electron.images :as images]
     [athens.events.selection :as select-events]
     [athens.parse-renderer :refer [parse-and-render]]
     [athens.style :as style]
