@@ -293,6 +293,9 @@
         items               (array-seq (.. e -clipboardData -items))
         {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
         img-regex           #"(?i)^image/(p?jpeg|gif|png)$"
+        callback            (fn [new-str]
+                              (js/setTimeout #(swap! state assoc :string/local new-str)
+                                             50))
 
         ;; External to internal representation
         text-to-inter       (when-not items
@@ -308,6 +311,9 @@
     (println "External copied data's internal representation")
     (pp/pprint text-to-inter)
 
+    (js/console.dir (.. e -clipboardData -items))
+    (println "items inside textarea paste" (pr-str items))
+
     (cond
       ;; For internal representation
       internal?
@@ -319,14 +325,11 @@
       (seq (filter (fn [item]
                      (let [datatype (.. item -type)]
                        (re-find img-regex datatype))) items))
-      (mapv (fn [item]
-              (let [datatype (.. item -type)]
-                (cond
-                  (re-find img-regex datatype) (when (util/electron?)
-                                                 (let [new-str (images/save-image head tail item "png")]
-                                                   (js/setTimeout #(swap! state assoc :string/local new-str) 50)))
-                  (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
-            items)
+      ;; Need dispatch-sync because with dispatch we lose the clipboard data context
+      ;; on callee side
+      (do
+        (.. e preventDefault)
+        (rf/dispatch-sync [:paste-image items head tail callback]))
 
       ;; For external copy-paste
       (and line-breaks no-shift)

@@ -13,6 +13,7 @@
     [athens.dates                         :as dates]
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
+    [athens.electron.images :as images]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.util                          :as util]
@@ -22,7 +23,7 @@
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [goog.dom :refer [getElement]]
-    [re-frame.core :as rf  :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [re-frame.core :as rf :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -1256,19 +1257,37 @@
 
 (reg-event-fx
   :paste-internal
-  (fn [{:keys [db]} [_ uid internal-representation]]
+  (fn [_ [_ uid internal-representation]]
     (println "internal representation is " internal-representation)
-    (let [local? (not (db-picker/remote-db? db))]
-      (log/debug ":paste-internal : local?" local?)
+    (let [[uid]  (db/uid-and-embed-id uid)
+          op     (bfs/build-paste-op @db/dsdb
+                                     uid
+                                     internal-representation)
+          event  (common-events/build-atomic-event op)]
+      (log/debug "paste internal event is" (pr-str event))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+
+
+(reg-event-fx
+  :paste-image
+  (fn [{:keys [db]} [_ items head tail callback]]
+    (let [local?     (not (db-picker/remote-db? db))
+          img-regex  #"(?i)^image/(p?jpeg|gif|png)$"]
+      (log/debug ":paste-image : local?" local?)
+      (println "items ->" (pr-str items))
       (if local?
-        (let [[uid]  (db/uid-and-embed-id uid)
-              op     (bfs/build-paste-op @db/dsdb
-                                         uid
-                                         internal-representation)
-              event  (common-events/build-atomic-event op)]
-          (log/debug "paste internal event is" (pr-str event))
-          {:fx [[:dispatch [:resolve-transact-forward event]]]})
-        {:fx [[:dispatch [:alert/js "Paste not supported in Lan-Party, yet."]]]}))))
+        (do
+          (mapv (fn [item]
+                  (let [datatype (.. item -type)]
+                    (println "item ->" item "datatype ->" datatype)
+                    (cond
+                      (re-find img-regex datatype)    (when (util/electron?)
+                                                        (let [new-str (images/save-image head tail item "png")]
+                                                          (callback new-str)))
+                      (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
+                items)
+          {})
+        {:fx [[:dispatch [:alert/js "Image paste not supported in Lan-Party, yet."]]]}))))
 
 
 (reg-event-fx
