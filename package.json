@@ -11,7 +11,7 @@
     "//repo scripts": "",
     "update:dry": "standard-version --dry-run -p --releaseCommitMessageFormat v{{currentTag}}",
     "update": "standard-version -p --releaseCommitMessageFormat v{{currentTag}}",
-    "clean": "rm -rf resources/public/**/*.js target .shadow-cljs src/gen",
+    "clean": "rimraf resources/public/**/*.js resources/public/**/*.js.map target .shadow-cljs src/gen",
     "lint": "clojure -M:clj-kondo --lint src",
     "style": "clojure -M:cljstyle check",
     "style:fix": "clojure -M:cljstyle fix",
@@ -36,7 +36,7 @@
     "server:test": "clojure -X:test",
     "server:test:only": "clojure -M:test --var",
     "server:repl": "clojure -A:repl",
-    "server:wipe": "rm -rf athens-data/fluree"
+    "server:wipe": "rimraf athens-data/fluree"
   },
   "main": "resources/main.js",
   "build": {
@@ -157,6 +157,7 @@
     "karma-chrome-launcher": "^3.1.0",
     "karma-cljs-test": "^0.1.0",
     "karma-junit-reporter": "^2.0.1",
+    "rimraf": "^3.0.2",
     "shadow-cljs": "^2.15.3",
     "source-map-support": "^0.5.19",
     "standard-version": "^9.3.1",
