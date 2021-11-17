@@ -1,8 +1,10 @@
 (ns athens.common-events.fixture
   (:require
-    [athens.common-db      :as common-db]
-    [athens.common.logging :as log]
-    [datascript.core       :as d]))
+    [athens.common-db                     :as common-db]
+    [athens.common-events.graph.ops       :as graph-ops]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common.logging                :as log]
+    [datascript.core                      :as d]))
 
 
 (def connection (atom nil))

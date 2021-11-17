@@ -304,20 +304,6 @@
           block-refs)))
 
 
-(defn minus-after
-  [db eid order x]
-  (->> (d/q '[:find ?block-uid ?new-o
-              :keys block/uid block/order
-              :in $ % ?p ?at ?x
-              :where (minus-after ?p ?at ?ch ?new-o ?x)
-              [?ch :block/uid ?block-uid]]
-            db
-            rules
-            eid
-            order
-            x)))
-
-
 (defn reindex-blocks-between-bounds
   "Increase/decrease by n all child blocks of parent-eid between
   lower-bound (exclusive) and upper-bound (exclusive)."

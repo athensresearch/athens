@@ -7,7 +7,6 @@
     [athens.self-hosted.event-log      :as event-log]
     [athens.self-hosted.web.datascript :as datascript]
     [athens.self-hosted.web.presence   :as presence]
-    [clojure.set                       :as set]
     [com.stuartsierra.component        :as component]
     [compojure.core                    :as compojure]
     [org.httpkit.server                :as http]))
@@ -26,8 +25,7 @@
 
 (defn- log-event?
   [{:event/keys [type]}]
-  (or (contains? datascript/supported-event-types type)
-      (= :op/atomic type)))
+  (= :op/atomic type))
 
 
 (defn- valid-event-handler
@@ -49,9 +47,6 @@
                         (contains? presence/supported-event-types type)
                         (presence/presence-handler (:conn datascript) server-password channel data)
 
-                        (contains? datascript/supported-event-types type)
-                        (datascript/datascript-handler (:conn datascript) channel data)
-
                         (= :op/atomic type)
                         (datascript/atomic-op-handler (:conn datascript) channel data)
 
@@ -67,9 +62,7 @@
 
 
 (def ^:private forwardable-events
-  (set/union
-    datascript/supported-event-types
-    #{:op/atomic}))
+  #{:op/atomic})
 
 
 (defn- make-receive-handler

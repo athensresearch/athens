@@ -21,19 +21,6 @@
    :presence/update])
 
 
-(def event-type-graph
-  [:enum
-   :datascript/delete-page
-   :datascript/block-save
-   :datascript/new-block
-   :datascript/add-child
-   :datascript/split-block
-   :datascript/selected-delete
-   :datascript/delete-only-child
-   :datascript/delete-merge-block
-   :datascript/paste-internal])
-
-
 (def event-type-graph-server
   [:enum
    :datascript/db-dump])
@@ -49,7 +36,6 @@
    [:event/id uuid?]
    [:event/type [:or
                  event-type-presence-client
-                 event-type-graph
                  event-type-atomic]]])
 
 
@@ -57,7 +43,6 @@
   [:map
    [:event/id uuid?]
    [:event/type [:or
-                 event-type-graph
                  event-type-graph-server
                  event-type-presence-server
                  event-type-atomic]]])
@@ -133,81 +118,6 @@
   presence-online)
 
 
-(def datascript-block-save
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:new-string string?]
-     [:add-time?  boolean?]]]])
-
-
-(def datascript-new-block
-  [:map
-   [:event/args
-    [:map
-     [:parent-uid string?]
-     [:block-order int?]
-     [:new-uid string?]]]])
-
-
-(def datascript-add-child
-  [:map
-   [:event/args
-    [:map
-     [:parent-uid string?]
-     [:new-uid   string?]
-     [:add-time? boolean?]]]])
-
-
-(def datascript-split-block
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:value string?]
-     [:index int?]
-     [:new-uid string?]]]])
-
-
-(def datascript-paste-internal
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:internal-representation [:vector map?]]]]])
-
-
-(def datascript-selected-delete
-  [:map
-   [:event/args
-    [:map
-     [:uids [:vector string?]]]]])
-
-
-(def datascript-block-open
-  [:map
-   [:event/args
-    [:map
-     [:block-uid string?]
-     [:open?     boolean?]]]])
-
-
-(def datascript-delete-only-child
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]]]])
-
-
-(def datascript-delete-merge-block
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:value string?]]]])
-
-
 (def graph-ops-atomic
   [:map
    [:event/op graph-schema/atomic-op]])
@@ -217,16 +127,6 @@
   [:multi {:dispatch :event/type}
    (dispatch :presence/hello presence-hello)
    (dispatch :presence/update presence-update)
-   (dispatch :datascript/block-save datascript-block-save)
-   (dispatch :datascript/new-block datascript-new-block)
-   (dispatch :datascript/add-child datascript-add-child)
-   ;; Same args as `datascript-add-child`
-   (dispatch :datascript/split-block datascript-split-block)
-   ;; same args as `datascript-split-block`
-   (dispatch :datascript/paste-internal datascript-paste-internal)
-   (dispatch :datascript/delete-only-child datascript-delete-only-child)
-   (dispatch :datascript/delete-merge-block datascript-delete-merge-block)
-   (dispatch :datascript/selected-delete datascript-selected-delete)
    (dispatch :op/atomic graph-ops-atomic)])
 
 
@@ -294,18 +194,6 @@
 
 (def server-event
   [:multi {:dispatch :event/type}
-   ;; client forwardable events
-   (dispatch :datascript/block-save datascript-block-save true)
-   (dispatch :datascript/new-block datascript-new-block true)
-   (dispatch :datascript/add-child datascript-add-child true)
-   ;; Same args as `datascript-add-child`
-   (dispatch :datascript/split-block datascript-split-block true)
-   ;; same args as `datascript-split-block`
-   (dispatch :datascript/paste-internal datascript-paste-internal true)
-   (dispatch :datascript/delete-only-child datascript-delete-only-child true)
-   (dispatch :datascript/delete-merge-block datascript-delete-merge-block true)
-   (dispatch :datascript/selected-delete datascript-selected-delete true)
-
    ;; server specific graph events
    (dispatch :datascript/db-dump db-dump true)
    ;; server specific presence events
