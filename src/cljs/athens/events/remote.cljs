@@ -143,6 +143,7 @@
     (log/debug ":remote/reject-forwarded-event event:" (pr-str event))
     (let [db'            (update db :event-sync #(event-sync/remove % :memory id event))
           memory-log     (event-sync/stage-log (:event-sync db') :memory)]
+      (log/info ":remote/reject-forwarded-event memory-log count" (count memory-log))
       {:db db'
        ;; Rollback and reapply all events in the memory stage.
        ;; If there's no events to reapply, just mark as synced.
@@ -162,6 +163,7 @@
           memory-log   (event-sync/stage-log (:event-sync db') :memory)
           page-removes (graph-ops/contains-op? (:event/op event) :page/remove)]
       (log/debug ":remote/apply-forwarded-event new event?:" (pr-str new-event?))
+      (log/info ":remote/apply-forwarded-event memory-log count" (count memory-log))
       {:db db'
        :fx [[:dispatch-n (cond-> []
                            ;; Mark as synced if there's no events left in memory.

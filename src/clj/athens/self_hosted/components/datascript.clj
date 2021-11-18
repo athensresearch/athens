@@ -1,6 +1,7 @@
 (ns athens.self-hosted.components.datascript
   (:require
     [athens.common-db                     :as common-db]
+    [athens.common-events                 :as common-events]
     [athens.common-events.resolver.atomic :as atomic]
     [athens.common.logging                :as log]
     [athens.self-hosted.event-log         :as event-log]
@@ -26,7 +27,7 @@
         (doseq [[id data] (if in-memory?
                             event-log/initial-events
                             (event-log/events fluree-conn))]
-          (log/debug "Processing" (pr-str id) "with" (pr-str data))
+          (log/info "Processing" (pr-str id) "with" (common-events/find-event-or-atomic-op-type data))
           (atomic/resolve-transact! conn data)
           (swap! total inc))
         (log/info "✅ Replayed" @total "events."))

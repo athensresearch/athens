@@ -110,3 +110,20 @@
     {:event/id   event-id
      :event/type :op/atomic
      :event/op   atomic-op}))
+
+
+(defn find-event-or-atomic-op-type
+  "Finds `:event/type` or type of atomic op"
+  [event-or-op]
+  (let [event? (and (contains? event-or-op :event/type)
+                    (not= :op/atomic (:event/type event-or-op)))]
+    (if event?
+      (:event/type event-or-op)
+      (let [op      (or (:event/op event-or-op)
+                        event-or-op)
+            atomic? (:op/atomic? op)]
+        (if atomic?
+          (:op/type op)
+          (let [trigger (:op/trigger op)]
+            (or (:op/type trigger)
+                trigger)))))))

@@ -78,7 +78,7 @@
                                                                      (str "Invalid event: " (pr-str data))
                                                                      explanation)))
         (let [{:event/keys [id type]} data]
-          (log/debug "username:" username ", event-id:" id ", type:" type "received valid event")
+          (log/info "Received valid event" "username:" username ", event-id:" id ", type:" (common-events/find-event-or-atomic-op-type data))
           (let [{:event/keys [status]
                  :as         result} (valid-event-handler datascript fluree in-memory? server-password channel username data)]
             (log/debug "username:" username ", event-id:" id ", processed with status:" status)
