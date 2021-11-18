@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.42](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.41...v1.0.0-alpha.rtc.42) (2021-11-18)
+
+
+### Bug Fixes
+
+* re-enable copy paste ([5936131](https://github.com/athensresearch/athens/commit/5936131bd40531cbeeab37cd899bf50722b20495))
+
 ## [1.0.0-alpha.rtc.41](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.40...v1.0.0-alpha.rtc.41) (2021-11-18)
 
 
