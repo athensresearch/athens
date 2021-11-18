@@ -11,6 +11,7 @@
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.edn :as edn]
     [clojure.set :as set]
+    [clojure.string :as str]
     [garden.selectors :as selectors]
     [goog.events :as goog-events]
     [komponentit.autosize :as autosize]
@@ -294,10 +295,10 @@
                                              50))
 
         ;; External to internal representation
-        text-to-inter (internal-representation/text-to-internal-representation text-data)
+        text-to-inter (when-not (str/blank? text-data)
+                        (internal-representation/text-to-internal-representation text-data))
         line-breaks   (re-find #"\r?\n" text-data)
         no-shift      (-> @state :last-keydown :shift not)]
-
 
 
     (cond
