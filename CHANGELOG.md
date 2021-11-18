@@ -659,6 +659,8 @@ All notable changes to this project will be documented in this file. See [standa
 * remove old alert component ([ac9cc4f](https://github.com/athensresearch/athens/commit/ac9cc4f2bb26d69f205820a520b104799875c597))
 
 
+## [1.0.0](https://github.com/athensresearch/athens/compare/v1.0.0-beta.98...v1.0.0) (2021-11-12)
+
 ## [1.0.0-beta.98](https://github.com/athensresearch/athens/compare/v1.0.0-beta.97...v1.0.0-beta.98) (2021-09-27)
 
 ## [1.0.0-beta.97](https://github.com/athensresearch/athens/compare/v1.0.0-beta.96...v1.0.0-beta.97) (2021-09-21)
