@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.40](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.39...v1.0.0-alpha.rtc.40) (2021-11-18)
+
+
+### Features
+
+* add icon example to button sotry ([85f3e3d](https://github.com/athensresearch/athens/commit/85f3e3d9e6457a780c715170ce71004ddaf0045d))
+* fill out welcome components ([62919c8](https://github.com/athensresearch/athens/commit/62919c8a79653b3a7dcd7fe819fe121830ab6121))
+
+
+### Bug Fixes
+
+* :block/remove should change titles too ([71e6751](https://github.com/athensresearch/athens/commit/71e6751fd842aa923b1af45f1e3dd7e012671dc2))
+* better logging. ([5fedd23](https://github.com/athensresearch/athens/commit/5fedd2363b6bcd61b837e8c2500b0c92be0a77b3))
+* **dbicon:** proper margins for db icon in toolbar ([5b46e28](https://github.com/athensresearch/athens/commit/5b46e28f8658309dc3cc4ba4e297c2ed6fdb53e1))
+* welcome buttons properly styled ([75f1f90](https://github.com/athensresearch/athens/commit/75f1f90ea2ef44b4281e680a1a1f61cd31dfd256))
+* **welcome:** consistent language for database ([aac0798](https://github.com/athensresearch/athens/commit/aac0798e4adf21396dc9796a0d5ed215706e75af))
+
+
+### Refactors
+
+* **button:** reimplement button content spacing ([6f73fdc](https://github.com/athensresearch/athens/commit/6f73fdc2403bd3a5bd823bfddc4d3833dee842e6))
+* remove semantic events support from server ([7e2ad7d](https://github.com/athensresearch/athens/commit/7e2ad7de07517e61b185cb0689e6b3bdb567cafb))
+
+
+### Work in Progress
+
+* cleaner logging ([759270a](https://github.com/athensresearch/athens/commit/759270a6537736f63c5c6ac42e088006415d3a39))
+* logging cleanup round 1. ([e2cbdea](https://github.com/athensresearch/athens/commit/e2cbdeab023a4025524e5ae43a2320e3643d2f0a))
+* things and stuff removed ([7c282e8](https://github.com/athensresearch/athens/commit/7c282e8f2c90f76d644a1e6d31ac57a5b72a9bb4))
+
+
+* add source maps and pseudo names to electron build ([9bc5c26](https://github.com/athensresearch/athens/commit/9bc5c266950d3ebf989c5155250b0e22b5bb81fd))
+* log size of memory-log when replaying. ([ac63e87](https://github.com/athensresearch/athens/commit/ac63e87cff0ef860a34b72b1cd6daef29c94d619))
+* style happier ([ff728aa](https://github.com/athensresearch/athens/commit/ff728aafa5c681d9d29936c67c46f6ac853be594))
+* yarn clean should remove all .js and .js.map, and be crossplatform ([067f64c](https://github.com/athensresearch/athens/commit/067f64c056af4742c58aa008b8dd8cd07410dcbb))
+
 ## [1.0.0-alpha.rtc.39](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.38...v1.0.0-alpha.rtc.39) (2021-11-16)
 
 
