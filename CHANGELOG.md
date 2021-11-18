@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.43](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.42...v1.0.0-alpha.rtc.43) (2021-11-18)
+
 ## [1.0.0-alpha.rtc.42](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.41...v1.0.0-alpha.rtc.42) (2021-11-18)
 
 
