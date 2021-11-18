@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.41](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.40...v1.0.0-alpha.rtc.41) (2021-11-18)
+
+
+### Performance
+
+* don't reset conn if they are the same ([01b9b03](https://github.com/athensresearch/athens/commit/01b9b03e65695acfb28c3056111dc3911b2b073b))
+
+## [1.0.0](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.38...v1.0.0) (2021-11-12)
+
+
+* disallow auto-update to pre-release versions ([af82684](https://github.com/athensresearch/athens/commit/af826845364be2d8cf05618cc06e6fdd86f0e634))
+* remove in-app update setting ([3ed9ee1](https://github.com/athensresearch/athens/commit/3ed9ee1a940209a40d5cc865a6809e8c721c98f0)), closes [/github.com/athensresearch/athens/pull/1803#discussion_r745655213](https://github.com/athensresearch//github.com/athensresearch/athens/pull/1803/issues/discussion_r745655213)
+
 ## [1.0.0-alpha.rtc.40](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.39...v1.0.0-alpha.rtc.40) (2021-11-18)
 
 
