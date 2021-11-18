@@ -276,16 +276,14 @@
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
   [e uid state]
-  (let [data                (.. e -clipboardData)
-        text-data           (.getData data "text/plain")
-        _app-clip           (some-> (.getData data "application/athens")
-                                    edn/read-string)
+  (let [data                    (.. e -clipboardData)
+        text-data               (.getData data "text/plain")
         ;; With internal representation
-        internal-representation  (some-> (.getData data "application/athens-representation")
-                                         edn/read-string)
-        internal?           (seq internal-representation)
-        new-uids            (internal-representation/new-uids-map internal-representation)
-        repr-with-new-uids  (into [] (internal-representation/update-uids internal-representation new-uids))
+        internal-representation (some-> (.getData data "application/athens-representation")
+                                        edn/read-string)
+        internal?               (seq internal-representation)
+        new-uids                (internal-representation/new-uids-map internal-representation)
+        repr-with-new-uids      (into [] (internal-representation/update-uids internal-representation new-uids))
 
         ;; For images in clipboard
         items               (array-seq (.. e -clipboardData -items))
@@ -296,10 +294,9 @@
                                              50))
 
         ;; External to internal representation
-        text-to-inter       (when-not items
-                              (internal-representation/text-to-internal-representation text-data))
-        line-breaks         (re-find #"\r?\n" text-data)
-        no-shift            (-> @state :last-keydown :shift not)]
+        text-to-inter (internal-representation/text-to-internal-representation text-data)
+        line-breaks   (re-find #"\r?\n" text-data)
+        no-shift      (-> @state :last-keydown :shift not)]
 
 
 
