@@ -99,7 +99,13 @@
   :remote/rollback-resolve-transact-snapshot
   (fn [_ [_ event]]
     (log/debug ":remote/rollback-resolve-transact-snapshot rollback db to time" (:max-tx @db/dsdb-snapshot))
-    (d/reset-conn! db/dsdb @db/dsdb-snapshot)
+    (if (= (:max-tx @db/dsdb-snapshot)
+           (:max-tx @db/dsdb))
+      (log/debug ":remote/rollback-resolve-transact-snapshot skipped rollback because snapshot is at the same time")
+      ;; datascript reset-conn! removes all old datoms, then adds all new datoms.
+      ;; This is a rather expensive operation, and anything that is watching the tx-report
+      ;; (e.g. datascript posh) will take a long time to process it.
+      (d/reset-conn! db/dsdb @db/dsdb-snapshot))
     (atomic-resolver/resolve-transact! db/dsdb event)
     (log/debug ":remote/rollback-resolve-transact-snapshot snapshot at time" (:max-tx @db/dsdb))
     (reset! db/dsdb-snapshot @db/dsdb)
