@@ -37,7 +37,7 @@
                       (presence/presence-handler (:conn datascript) server-password channel data)
 
                       (= :op/atomic type)
-                      (datascript/atomic-op-handler (:conn datascript) (:conn fluree) in-memory? channel data)
+                      (datascript/atomic-op-handler (:conn datascript) fluree in-memory? channel data)
 
                       :else
                       (do

@@ -16,9 +16,8 @@
 
   (start
     [component]
-    (let [in-memory?     (-> config :config :in-memory?)
-          fluree-conn    (:conn fluree)
-          conn           (d/create-conn common-db/schema)]
+    (let [in-memory? (-> config :config :in-memory?)
+          conn       (d/create-conn common-db/schema)]
 
       (log/info "Lazily replaying events into empty Datascript conn...")
       (let [total (atom 0)]
@@ -26,7 +25,7 @@
         ;; can't be GC'd as we go and are all kept in memory at once.
         (doseq [[id data] (if in-memory?
                             event-log/initial-events
-                            (event-log/events fluree-conn))]
+                            (event-log/events fluree))]
           (log/info "Processing" (pr-str id) "with" (common-events/find-event-or-atomic-op-type data))
           (atomic/resolve-transact! conn data)
           (swap! total inc))

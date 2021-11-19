@@ -1,6 +1,6 @@
 (ns athens.async
   (:require
-    [cljs.core.async :refer [go alt! timeout]]))
+    [clojure.core.async :refer [go alt! timeout]]))
 
 
 (defn with-timeout

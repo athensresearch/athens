@@ -32,11 +32,11 @@
 
 
 (defn exec!
-  [datascript-conn fluree-conn in-memory? {:event/keys [id] :as event}]
+  [datascript-conn fluree in-memory? {:event/keys [id] :as event}]
   (locking single-writer-guard
     (try
       (when-not in-memory?
-        (event-log/add-event! fluree-conn id event))
+        (event-log/add-event! fluree id event))
       (atomic-resolver/resolve-transact! datascript-conn event)
       (common-events/build-event-accepted id)
       (catch ExceptionInfo ex
@@ -51,14 +51,14 @@
 
 
 (defn atomic-op-handler
-  [datascript-conn fluree-conn in-memory? channel {:event/keys [id op] :as event}]
+  [datascript-conn fluree in-memory? channel {:event/keys [id op] :as event}]
   (let [username          (clients/get-client-username channel)
         {:op/keys [type]} op]
     (log/debug "username:" username
                "event-id:" id
                "-> Received Atomic Op Type:" (pr-str type))
     (if (contains? supported-atomic-ops type)
-      (exec! datascript-conn fluree-conn in-memory? event)
+      (exec! datascript-conn fluree in-memory? event)
       (common-events/build-event-rejected id
                                           (str "Under development event: " type)
                                           {:unsuported-type type}))))
