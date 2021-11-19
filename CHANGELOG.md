@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.44](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.43...v1.0.0-alpha.rtc.44) (2021-11-19)
+
+
+### Features
+
+* handle errors and reconnect on add-event! ([e582c70](https://github.com/athensresearch/athens/commit/e582c70688e5c3fa01df9d445fb979c9d9214d3a))
+
+
+### Bug Fixes
+
+* don't print whole remote-db config ([25a5cd2](https://github.com/athensresearch/athens/commit/25a5cd294526b0bbb4f9274cf414091861aff4ec))
+* save event to log inside the same lock as db transaction ([746a2ae](https://github.com/athensresearch/athens/commit/746a2ae945014cee6050d7b82aebfb58f3e1d60d))
+* timeout on health check ([c1bc1f4](https://github.com/athensresearch/athens/commit/c1bc1f4ce06a555340d03f358f0f4ec2b9bebc60))
+* use new fluree config in defrecord ([9dc5796](https://github.com/athensresearch/athens/commit/9dc57961d63628bba4a764acfbc8d07552eebf37))
+
+
+* add fluree dev script ([f370c44](https://github.com/athensresearch/athens/commit/f370c44b436a5257ce301d822b816c44ddd3d023))
+
 ## [1.0.0-alpha.rtc.43](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.42...v1.0.0-alpha.rtc.43) (2021-11-18)
 
 ## [1.0.0-alpha.rtc.42](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.41...v1.0.0-alpha.rtc.42) (2021-11-18)
