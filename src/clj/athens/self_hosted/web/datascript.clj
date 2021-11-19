@@ -26,7 +26,6 @@
     :composite/consequence})
 
 
-
 ;; We use a lock to ensure the order of event log writes and database transacts matches
 ;; and occurs in order.
 (def single-writer-guard (Object.))

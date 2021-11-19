@@ -162,7 +162,7 @@
 (rf/reg-fx
   :remote/client-connect!
   (fn [{:keys [url ws-url] :as remote-db}]
-    (log/debug ":remote/client-connect!" (pr-str remote-db))
+    (log/debug ":remote/client-connect!" (pr-str (:url remote-db)))
     (when @self-hosted-client
       (log/info ":remote/client-connect! already connected, restarting")
       (component/stop @self-hosted-client))
