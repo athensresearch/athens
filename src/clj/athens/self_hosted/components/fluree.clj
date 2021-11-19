@@ -7,7 +7,7 @@
 
 
 (defrecord Fluree
-  [config conn]
+  [config conn-atom reconnect-fn]
 
   component/Lifecycle
 
@@ -21,18 +21,26 @@
           component)
         (do
           (log/info "Starting Fluree connection, servers" servers)
-          (let [conn (fdb/connect servers)]
+          (let [;; Wrap conn in an atom so we can reconnect without restarting component.
+                conn-atom    (atom nil)
+                reconnect-fn (fn []
+                               (when-some [conn @conn-atom]
+                                 (fdb/close conn))
+                               (reset! conn-atom (fdb/connect servers)))
+                comp         {:conn-atom    conn-atom
+                              :reconnect-fn reconnect-fn}]
+            (reconnect-fn)
             ;; Initialize event log.
-            (event-log/ensure-ledger! conn)
-            (assoc component :conn conn))))))
+            (event-log/ensure-ledger! comp)
+            (merge component comp))))))
 
 
   (stop
     [component]
     (log/info "Closing Fluree connection")
-    (when conn
+    (when-some [conn @conn-atom]
       (fdb/close conn))
-    (dissoc component :conn)))
+    (dissoc component :conn-atom :reconnect-fn)))
 
 
 (defn new-fluree

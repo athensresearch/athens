@@ -32,6 +32,7 @@
     "vercel-build": "yarn storybook",
     "//server scripts": "",
     "server": "clojure -M:athens",
+    "server:fluree": "docker-compose up --detach fluree",
     "server:uberjar": "clojure -T:build uber",
     "server:test": "clojure -X:test",
     "server:test:only": "clojure -M:test --var",

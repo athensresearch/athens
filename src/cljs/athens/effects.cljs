@@ -1,5 +1,6 @@
 (ns athens.effects
   (:require
+    [athens.async                :as async]
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
     [athens.common.logging       :as log]
@@ -7,6 +8,7 @@
     [athens.self-hosted.client   :as client]
     [cljs-http.client            :as http]
     [cljs.core.async             :refer [go <!]]
+    [cljs.core.async.interop     :refer [<p!]]
     [com.stuartsierra.component  :as component]
     [datascript.core             :as d]
     [day8.re-frame.async-flow-fx]
@@ -151,18 +153,22 @@
 
 (defn self-hosted-health-check
   [url success-cb failure-cb]
-  (.. (js/fetch (str "http://" url "/health-check"))
-      (then (fn [response]
-              (if (.-ok response)
-                (success-cb)
-                (failure-cb))))
-      (catch failure-cb)))
+  (go (let [ch  (go (<p! (.. (js/fetch (str "http://" url "/health-check"))
+                             (then (fn [response]
+                                     (if (.-ok response)
+                                       :success
+                                       :failure)))
+                             (catch (fn [_] :failure)))))]
+        (condp = (<! (athens.async/with-timeout ch 5000 :timed-out))
+          :success   (success-cb)
+          :timed-out (failure-cb)
+          :failure   (failure-cb)))))
 
 
 (rf/reg-fx
   :remote/client-connect!
   (fn [{:keys [url ws-url] :as remote-db}]
-    (log/debug ":remote/client-connect!" (pr-str remote-db))
+    (log/debug ":remote/client-connect!" (pr-str (:url remote-db)))
     (when @self-hosted-client
       (log/info ":remote/client-connect! already connected, restarting")
       (component/stop @self-hosted-client))

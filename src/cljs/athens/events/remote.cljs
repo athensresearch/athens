@@ -18,7 +18,7 @@
 (rf/reg-event-fx
   :remote/connect!
   (fn [_ [_ remote-db]]
-    (log/info ":remote/connect!" (pr-str remote-db))
+    (log/info ":remote/connect!" (pr-str (:url remote-db)))
     {:remote/client-connect! remote-db
      :fx                     [[:dispatch [:conn-status :connecting]]]}))
 

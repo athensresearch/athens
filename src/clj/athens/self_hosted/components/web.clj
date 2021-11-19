@@ -4,7 +4,6 @@
     [athens.common-events.schema       :as schema]
     [athens.common.logging             :as log]
     [athens.self-hosted.clients        :as clients]
-    [athens.self-hosted.event-log      :as event-log]
     [athens.self-hosted.web.datascript :as datascript]
     [athens.self-hosted.web.presence   :as presence]
     [com.stuartsierra.component        :as component]
@@ -23,11 +22,6 @@
     (log/info "username:" (pr-str username) "!! closed connection, status:" (pr-str status))))
 
 
-(defn- log-event?
-  [{:event/keys [type]}]
-  (= :op/atomic type))
-
-
 (defn- valid-event-handler
   "Processes valid event received from the client."
   [datascript fluree in-memory? server-password channel username {:event/keys [id type] :as data}]
@@ -38,27 +32,22 @@
       (clients/send! channel (common-events/build-event-rejected id
                                                                  :introduce-yourself
                                                                  {:protocol-error :client-not-introduced})))
-    (do
-      (when (and (not in-memory?)
-                 (log-event? data))
-        (event-log/add-event! (:conn fluree) id data))
+    (if-let [result (cond
+                      (contains? presence/supported-event-types type)
+                      (presence/presence-handler (:conn datascript) server-password channel data)
 
-      (if-let [result (cond
-                        (contains? presence/supported-event-types type)
-                        (presence/presence-handler (:conn datascript) server-password channel data)
+                      (= :op/atomic type)
+                      (datascript/atomic-op-handler (:conn datascript) fluree in-memory? channel data)
 
-                        (= :op/atomic type)
-                        (datascript/atomic-op-handler (:conn datascript) channel data)
-
-                        :else
-                        (do
-                          (log/error (pr-str username) "-> receive-handler, unsupported event:" (pr-str type))
-                          (common-events/build-event-rejected id
-                                                              (str "Unsupported event: " type)
-                                                              {:unsupported-type type})))]
-        (merge {:event/id id}
-               result)
-        (log/error "username:" (pr-str username) ", event-id:" (pr-str id) ", type:" (pr-str type) "No result for `valid-event-handler`")))))
+                      :else
+                      (do
+                        (log/error (pr-str username) "-> receive-handler, unsupported event:" (pr-str type))
+                        (common-events/build-event-rejected id
+                                                            (str "Unsupported event: " type)
+                                                            {:unsupported-type type})))]
+      (merge {:event/id id}
+             result)
+      (log/error "username:" (pr-str username) ", event-id:" (pr-str id) ", type:" (pr-str type) "No result for `valid-event-handler`"))))
 
 
 (def ^:private forwardable-events
