@@ -831,3 +831,26 @@
   ;; 🎶 Sia "Cheap Thrills"
   (d/transact! conn (tx-with-middleware @conn tx-data)))
 
+
+(defn health-check
+  [conn]
+  ;; NB: these could be events as well, and then we wouldn't always rerun them.
+  ;; But rerunning them after replaying all events helps us find events that produce
+  ;; states that need fixing.
+  (log/info "Knowledge graph health check...")
+  (let [linkmaker-txs       (linkmaker @conn)
+        orderkeeper-txs     (orderkeeper @conn)
+        block-nil-eater-txs (block-uid-nil-eater @conn)]
+    (when-not (empty? linkmaker-txs)
+      (log/warn "linkmaker fixes#:" (count linkmaker-txs))
+      (log/info "linkmaker fixes:" (pr-str linkmaker-txs))
+      (d/transact! conn linkmaker-txs))
+    (when-not (empty? orderkeeper-txs)
+      (log/warn "orderkeeper fixes#:" (count orderkeeper-txs))
+      (log/info "orderkeeper fixes:" (pr-str orderkeeper-txs))
+      (d/transact! conn orderkeeper-txs))
+    (when-not (empty? block-nil-eater-txs)
+      (log/warn "block-uid-nil-eater fixes#:" (count block-nil-eater-txs))
+      (log/info "block-uid-nil-eater fixes:" (pr-str block-nil-eater-txs))
+      (d/transact! conn block-nil-eater-txs))
+    (log/info "✅ Knowledge graph health check.")))
