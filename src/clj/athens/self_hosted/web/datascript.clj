@@ -3,7 +3,8 @@
     [athens.common-events                 :as common-events]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging                :as log]
-    [athens.self-hosted.clients           :as clients])
+    [athens.self-hosted.clients           :as clients]
+    [athens.self-hosted.event-log         :as event-log])
   (:import
     (clojure.lang
       ExceptionInfo)))
@@ -25,14 +26,19 @@
     :composite/consequence})
 
 
+
+;; We use a lock to ensure the order of event log writes and database transacts matches
+;; and occurs in order.
 (def single-writer-guard (Object.))
 
 
 (defn exec!
-  [conn {:event/keys [id] :as event}]
+  [datascript-conn fluree-conn in-memory? {:event/keys [id] :as event}]
   (locking single-writer-guard
     (try
-      (atomic-resolver/resolve-transact! conn event)
+      (when-not in-memory?
+        (event-log/add-event! fluree-conn id event))
+      (atomic-resolver/resolve-transact! datascript-conn event)
       (common-events/build-event-accepted id)
       (catch ExceptionInfo ex
         (let [err-msg   (ex-message ex)
@@ -46,14 +52,14 @@
 
 
 (defn atomic-op-handler
-  [conn channel {:event/keys [id op] :as event}]
+  [datascript-conn fluree-conn in-memory? channel {:event/keys [id op] :as event}]
   (let [username          (clients/get-client-username channel)
         {:op/keys [type]} op]
     (log/debug "username:" username
                "event-id:" id
                "-> Received Atomic Op Type:" (pr-str type))
     (if (contains? supported-atomic-ops type)
-      (exec! conn event)
+      (exec! datascript-conn fluree-conn in-memory? event)
       (common-events/build-event-rejected id
                                           (str "Under development event: " type)
                                           {:unsuported-type type}))))
