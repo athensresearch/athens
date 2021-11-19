@@ -7,7 +7,7 @@
 
 
 (defrecord Fluree
-  [config conn]
+  [config conn-atom reconnect-fn]
 
   component/Lifecycle
 
@@ -38,9 +38,9 @@
   (stop
     [component]
     (log/info "Closing Fluree connection")
-    (when conn
+    (when-some [conn @conn-atom]
       (fdb/close conn))
-    (dissoc component :conn)))
+    (dissoc component :conn-atom :reconnect-fn)))
 
 
 (defn new-fluree
