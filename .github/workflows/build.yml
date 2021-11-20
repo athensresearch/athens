@@ -225,6 +225,13 @@ jobs:
        - name: Build server JAR
          run: yarn server:uberjar
 
+       - name: Set up QEMU
+         id: qemu
+         uses: docker/setup-qemu-action@v1
+         with:
+           image: tonistiigi/binfmt:latest
+           platforms: all
+
        - name: Set up Docker Buildx
          uses: docker/setup-buildx-action@v1
 
@@ -255,6 +262,7 @@ jobs:
            context: .
            file: athens.dockerfile
            push: true
+           platforms: linux/amd64,linux/arm64
            tags: ${{ steps.athens-meta.outputs.tags }}
            labels: ${{ steps.athens-meta.outputs.labels }}
            # Use GitHub actions cache.
@@ -268,6 +276,7 @@ jobs:
            context: .
            file: nginx.dockerfile
            push: true
+           platforms: linux/amd64,linux/arm64
            tags: ${{ steps.nginx-meta.outputs.tags }}
            labels: ${{ steps.nginx-meta.outputs.labels }}
            cache-from: type=gha
