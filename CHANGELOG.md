@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.45](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.44...v1.0.0-alpha.rtc.45) (2021-11-21)
+
+
+* added comment on why we need QEMU. ([a742df4](https://github.com/athensresearch/athens/commit/a742df4c691a04d04f8987b16745c55db495f6bb))
+* linux-arm64 target supported and smaller images ([ccb51a7](https://github.com/athensresearch/athens/commit/ccb51a7b6e1a99665e741d8869fb415c05b55c57))
+
 ## [1.0.0-alpha.rtc.44](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.43...v1.0.0-alpha.rtc.44) (2021-11-19)
 
 
