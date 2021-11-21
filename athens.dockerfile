@@ -1,5 +1,5 @@
 # A base, just JVM
-FROM openjdk:16
+FROM openjdk:16-slim
 
 RUN mkdir -p /srv/athens/db
 
