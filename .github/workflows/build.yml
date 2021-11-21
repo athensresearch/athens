@@ -225,6 +225,7 @@ jobs:
        - name: Build server JAR
          run: yarn server:uberjar
 
+       # we need QEMU for multi-arch build
        - name: Set up QEMU
          uses: docker/setup-qemu-action@v1
 
