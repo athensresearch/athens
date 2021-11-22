@@ -4,12 +4,14 @@
     ["@sentry/react" :as Sentry]
     ["@sentry/tracing" :as tracing]
     [athens.coeffects]
+    [athens.common.logging :as log]
     [athens.components]
     [athens.config :as config]
     [athens.db :refer [dsdb]]
     [athens.effects]
-    [athens.electron]
+    [athens.electron.core]
     [athens.events]
+    [athens.interceptors]
     [athens.listeners :as listeners]
     [athens.router :as router]
     [athens.style :as style]
@@ -20,8 +22,7 @@
     [goog.dom :refer [getElement]]
     [goog.object :as gobj]
     [re-frame.core :as rf]
-    [reagent.dom :as r-dom]
-    [stylefy.core :as stylefy]))
+    [reagent.dom :as r-dom]))
 
 
 (goog-define SENTRY_DSN "")
@@ -30,7 +31,7 @@
 (defn dev-setup
   []
   (when config/debug?
-    (println "dev mode")))
+    (log/info "dev mode")))
 
 
 (defn ^:dev/after-load mount-root
@@ -81,20 +82,6 @@
           (.sendSync ipcRenderer "confirm-update"))))))
 
 
-(defn init-windowsize
-  "When the app is initialized, check if we should use the last window size and if so, set the current window size to that value"
-  []
-  (when (util/electron?)
-    (let [curWindow        (.getCurrentWindow athens.electron/remote)
-          [lastx lasty]    (util/get-window-size)]
-      (.setSize curWindow lastx lasty)
-      (.center curWindow)
-      (.on ^js curWindow "close" (fn [e]
-                                   (let [sender (.-sender e)
-                                         [x y] (.getSize ^js sender)]
-                                     (rf/dispatch [:window/set-size [x y]])))))))
-
-
 (defn init-datalog-console
   []
   (js/document.documentElement.setAttribute "__datalog-console-remote-installed__" true)
@@ -111,18 +98,34 @@
                                nil)))))))
 
 
+(defn init-styles
+  []
+  (util/add-body-classes (util/app-classes {:os        (util/get-os)
+                                            :electron? (util/electron?)})))
+
+
+(defn boot-evts
+  []
+  (if (util/electron?)
+    [:boot/desktop]
+    [:boot/web]))
+
+
+(rf/reg-event-fx
+  :boot
+  (fn [_ _]
+    {:dispatch (boot-evts)}))
+
+
 (defn init
   []
   (set-global-alert!)
   (init-sentry)
   (init-ipcRenderer)
-  (init-windowsize)
   (style/init)
-  (stylefy/tag "body" style/app-styles)
+  (init-styles)
   (listeners/init)
   (init-datalog-console)
-  (if (util/electron?)
-    (rf/dispatch-sync [:boot/desktop])
-    (rf/dispatch-sync [:boot/web]))
+  (rf/dispatch-sync (boot-evts))
   (dev-setup)
   (mount-root))

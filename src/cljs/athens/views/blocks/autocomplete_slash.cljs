@@ -1,7 +1,7 @@
 (ns athens.views.blocks.autocomplete-slash
   (:require
+    ["/components/Button/Button" :refer [Button]]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [athens.views.buttons :as buttons]
     [athens.views.dropdown :as dropdown]
     [goog.events :as events]
     [reagent.core :as r]
@@ -39,10 +39,10 @@
                                       [:div#dropdown-menu (merge (stylefy/use-style dropdown/menu-style) {:style {:max-height "8em"}})
                                        (doall
                                          (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
-                                           [buttons/button {:key      text
-                                                            :id       (str "dropdown-item-" i)
-                                                            :active   (= i index)
-                                                            :on-click (fn [_] (slash-item-click state block item))}
+                                           [:> Button {:key      text
+                                                       :id       (str "dropdown-item-" i)
+                                                       :is-pressed (= i index)
+                                                       :on-click (fn [_] (slash-item-click state block item))}
                                             [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
 
 

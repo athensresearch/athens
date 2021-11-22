@@ -31,3 +31,14 @@
 
 # electron build
 dist
+
+# design system static build
+/storybook-static
+/src/gen
+
+# docker compose templating backup
+docker-compose.yml.bk
+
+# dev mode server data
+athens-data/*
+!athens-data/README.md

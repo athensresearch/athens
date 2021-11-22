@@ -1,26 +1,27 @@
 (ns athens.views.blocks.core
   (:require
+    ["/components/Block/components/Anchor"   :refer [Anchor]]
+    ["/components/Block/components/Toggle"   :refer [Toggle]]
+    ["/components/Button/Button"             :refer [Button]]
+    [athens.common.logging                   :as log]
     [athens.db                               :as db]
-    [athens.electron                         :as electron]
+    [athens.electron.images                  :as images]
+    [athens.events.selection                 :as select-events]
+    [athens.router                           :as router]
+    [athens.self-hosted.presence.views       :as presence]
     [athens.style                            :as style]
     [athens.subs.selection                   :as select-subs]
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
-    [athens.views.blocks.autocomplete-slash :as autocomplete-slash]
-    [athens.views.blocks.bullet :as bullet]
-    [athens.views.blocks.content :as content]
-    [athens.views.blocks.context-menu :as context-menu]
+    [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
+    [athens.views.blocks.bullet              :refer [bullet-drag-start bullet-drag-end]]
+    [athens.views.blocks.content             :as content]
+    [athens.views.blocks.context-menu        :as context-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    [athens.views.blocks.toggle :as toggle]
-    [athens.views.blocks.tooltip :as tooltip]
-    [athens.views.buttons :as buttons]
-    [athens.views.presence :as presence]
-    [cljsjs.react]
-    [cljsjs.react.dom]
-    [com.rpl.specter :as s]
-    [re-frame.core :as rf]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy]))
+    [com.rpl.specter                         :as s]
+    [re-frame.core                           :as rf]
+    [reagent.core                            :as r]
+    [stylefy.core                            :as stylefy]))
 
 
 ;; Styles
@@ -31,63 +32,70 @@
 
 
 (def block-container-style
-  {:display "flex"
-   :line-height "2em"
-   :position "relative"
-   :border-radius "0.125rem"
+  {:display         "flex"
+   :line-height     "2em"
+   :position        "relative"
+   :border-radius   "0.125rem"
    :justify-content "flex-start"
-   :flex-direction "column"
-   ::stylefy/manual [[:&.show-tree-indicator:before {:content "''"
-                                                     :position "absolute"
-                                                     :width "1px"
-                                                     :left "calc(1.375em + 1px)"
-                                                     :top "2em"
-                                                     :bottom "0"
-                                                     :transform "translateX(50%)"
+   :flex-direction  "column"
+   ::stylefy/manual [[:&.show-tree-indicator:before {:content    "''"
+                                                     :position   "absolute"
+                                                     :width      "1px"
+                                                     :left       "calc(1.375em + 1px)"
+                                                     :top        "2em"
+                                                     :bottom     "0"
+                                                     :opacity    "0"
+                                                     :transform  "translateX(50%)"
+                                                     :transition "background-color 0.2s ease-in-out, opacity 0.2s ease-in-out"
                                                      :background (style/color :border-color)}]
-                     [:&:after {:content "''"
-                                :z-index -1
-                                :position "absolute"
-                                :top "0.75px"
-                                :right 0
-                                :bottom "0.75px"
-                                :left 0
-                                :opacity 0
+                     [:&:hover
+                      :&:focus-within [:&.show-tree-indicator:before {:opacity "1"}]]
+                     [:&:after {:content        "''"
+                                :z-index        -1
+                                :position       "absolute"
+                                :top            "0.75px"
+                                :right          0
+                                :bottom         "0.75px"
+                                :left           0
+                                :opacity        0
                                 :pointer-events "none"
-                                :border-radius "0.25rem"
-                                :transition "opacity 0.075s ease"
-                                :background (style/color :link-color :opacity-lower)}]
+                                :border-radius  "0.25rem"
+                                :transition     "opacity 0.075s ease"
+                                :background     (style/color :link-color :opacity-lower)}]
                      [:&.is-selected:after {:opacity 1}]
-                     [:.block-body {:display "grid"
+                     [:&.is-presence [:.block-content {:padding-right "1rem"}]]
+                     [:.user-avatar {:position "absolute"
+                                     :left "4px"
+                                     :top "4px"}]
+                     [:.block-body {:display               "grid"
                                     :grid-template-columns "1em 1em 1fr auto"
-                                    :grid-template-rows "0 1fr 0"
-                                    :grid-template-areas "
+                                    :grid-template-rows    "0 1fr 0"
+                                    :grid-template-areas   "
                                       'above above above above'
                                       'toggle bullet content refs'
                                       'below below below below'"
-                                    :border-radius "0.5rem"
-                                    :position "relative"}
-                      [:button.block-edit-toggle {:position "absolute"
+                                    :border-radius         "0.5rem"
+                                    :position              "relative"}
+                      [:&:hover
+                       :&:focus-within ["> .block-toggle" {:opacity "1"}]]
+                      [:button.block-edit-toggle {:position   "absolute"
                                                   :appearance "none"
-                                                  :width "100%"
+                                                  :width      "100%"
                                                   :background "none"
-                                                  :border 0
-                                                  :cursor "text"
-                                                  :display "block"
-                                                  :z-index 1
-                                                  :top 0
-                                                  :right 0
-                                                  :bottom 0
-                                                  :left 0}]]
-                     [:.block-content {:grid-area "content"
+                                                  :border     0
+                                                  :cursor     "text"
+                                                  :display    "block"
+                                                  :z-index    1
+                                                  :top        0
+                                                  :right      0
+                                                  :bottom     0
+                                                  :left       0}]]
+                     [:.block-content {:grid-area  "content"
                                        :min-height "1.5em"}]
-                     ;; [:&:hover {:background (color :background-minus-1)}]]
-                     ;; Darken block body when block editing,
                      [:&.is-linked-ref {:background-color (style/color :background-plus-2)}]
-                     ;; [(selectors/> :.is-editing :.block-body) {:background (color :background-minus-1)}]
                      ;; Inset child blocks
                      [:.block-container {:margin-left "2rem"
-                                         :grid-area "body"}]]})
+                                         :grid-area   "body"}]]})
 
 
 (stylefy/class "block-container" block-container-style)
@@ -108,10 +116,9 @@
                             :grid-area "refs"
                             :z-index (:zindex-dropdown style/ZINDICES)
                             :visibility (when-not (pos? count) "hidden")})
-   [buttons/button {:primary true
-                    :on-click (fn [e]
-                                (.. e stopPropagation)
-                                (rf/dispatch [:right-sidebar/open-item uid]))}
+   [:> Button {:on-click (fn [e]
+                           (.. e stopPropagation)
+                           (rf/dispatch [:right-sidebar/open-item uid]))}
     count]])
 
 
@@ -123,25 +130,78 @@
   [e block state]
   (.. e preventDefault)
   (.. e stopPropagation)
-  (let [{:block/keys [children uid open]} block
-        closest-container (.. e -target (closest ".block-container"))
-        {:keys [x y]} (mouse-offset e closest-container)
-        middle-y          (vertical-center closest-container)
-        dragging-ancestor (.. e -target (closest ".dragging"))
-        dragging?         dragging-ancestor
-        is-selected?      @(rf/subscribe [::select-subs/selected? uid])
-        target            (cond
-                            dragging? nil
-                            is-selected? nil
-                            (or (neg? y) (< y middle-y)) :above
-                            (or (not open) (and (empty? children) (< 50 x))) :child
-                            (< middle-y y) :below)]
+  (let [{:block/keys [children
+                      uid
+                      open]} block
+        closest-container    (.. e -target (closest ".block-container"))
+        {:keys [x y]}        (mouse-offset e closest-container)
+        middle-y             (vertical-center closest-container)
+        dragging-ancestor    (.. e -target (closest ".dragging"))
+        dragging?            dragging-ancestor
+        is-selected?         @(rf/subscribe [::select-subs/selected? uid])
+        target               (cond
+                               dragging?           nil
+                               is-selected?        nil
+                               (or (neg? y)
+                                   (< y middle-y)) :before
+                               (or (not open)
+                                   (and (empty? children)
+                                        (< 50 x))) :first
+                               (< middle-y y)      :after)]
     (when target
       (swap! state assoc :drag-target target))))
 
 
+(defn drop-bullet
+  "Terminology :
+    - source-uid        : The block which is being dropped.
+    - target-uid        : The block on which source is being dropped.
+    - drag-target       : Represents where the block is being dragged. It can be `:first` meaning
+                          dragged as a child, `:before` meaning the source block is dropped above the
+                          target block, `:after` meaning the source block is dropped below the target block.
+    - action-allowed    : There can be 2 types of actions.
+        - `link` action : When a block is DnD by dragging a bullet while
+                         `shift` key is pressed to create a block link.
+        - `move` action : When a block is DnD to other part of Athens page. "
+
+  [source-uid target-uid drag-target action-allowed]
+  (let [move-action? (= action-allowed "move")
+        event         [(if move-action?
+                         :block/move
+                         :block/link)
+                       {:source-uid source-uid
+                        :target-uid target-uid
+                        :target-rel drag-target}]]
+    (log/debug "drop-bullet" (pr-str {:source-uid     source-uid
+                                      :target-uid     target-uid
+                                      :drag-target    drag-target
+                                      :action-allowed action-allowed
+                                      :event          event}))
+    (rf/dispatch event)))
+
+
+(defn drop-bullet-multi
+  "
+  Terminology :
+    - source-uids       : Uids of the blocks which are being dropped
+    - target-uid        : Uid of the block on which source is being dropped"
+  [source-uids target-uid drag-target]
+  (let [source-uids          (mapv (comp first db/uid-and-embed-id) source-uids)
+        target-uid           (first (db/uid-and-embed-id target-uid))
+        event                (if (= drag-target :first)
+                               [:drop-multi/child {:source-uids source-uids
+                                                   :target-uid  target-uid}]
+                               [:drop-multi/sibling {:source-uids source-uids
+                                                     :target-uid  target-uid
+                                                     :drag-target drag-target}])]
+    (rf/dispatch [::select-events/clear])
+    (rf/dispatch event)))
+
+
 (defn block-drop
-  "When a drop occurs: https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
+  "Handle dom drop events, read more about drop events at:
+  : https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
+
   [e block state]
   (.. e stopPropagation)
   (let [{target-uid :block/uid} block
@@ -161,11 +221,11 @@
 
     (cond
       (re-find img-regex datatype) (when (util/electron?)
-                                     (electron/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
+                                     (images/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
-                                           (rf/dispatch [:drop source-uid target-uid drag-target effect-allowed])
-                                           (rf/dispatch [:drop-multi selected-items target-uid drag-target]))))
+                                           (drop-bullet source-uid target-uid drag-target effect-allowed)
+                                           (drop-bullet-multi selected-items target-uid drag-target))))
 
     (rf/dispatch [:mouse-down/unset])
     (swap! state assoc :drag-target nil)))
@@ -182,6 +242,12 @@
     (when-not (= related-uid target-uid)
       ;; (prn target-uid related-uid  "LEAVE")
       (swap! state assoc :drag-target nil))))
+
+
+(defn toggle
+  [block-uid open]
+  (rf/dispatch [:block/open {:block-uid block-uid
+                             :open?     open}]))
 
 
 (defn block-el
@@ -223,7 +289,9 @@
                                      block)
              {:keys [dragging]}    @state
              is-editing            @(rf/subscribe [:editing/is-editing uid])
-             is-selected           @(rf/subscribe [::select-subs/selected? uid])]
+             is-selected           @(rf/subscribe [::select-subs/selected? uid])
+             present-user          @(rf/subscribe [:presence/has-presence uid])
+             is-presence           (seq present-user)]
 
          ;; (prn uid is-selected)
 
@@ -239,7 +307,8 @@
                                (when is-editing "is-editing")
                                (when is-selected "is-selected")
                                (when (and (seq children) open) "show-tree-indicator")
-                               (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")]
+                               (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
+                               (when is-presence "is-presence")]
            :data-uid          uid
            ;; need to know children for selection resolution
            :data-childrenuids children-uids
@@ -254,18 +323,34 @@
            :on-drag-leave     (fn [e] (block-drag-leave e block state))
            :on-drop           (fn [e] (block-drop e block state))}
 
-          [presence/presence-popover-info uid {:inline? true}]
-
-          (when (= (:drag-target @state) :above) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
+          (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
 
           [:div.block-body
            (when (seq children)
-             [toggle/toggle-el uid-sanitized-block state linked-ref])
+             [:> Toggle {:isOpen (if (or (and (true? linked-ref) (:linked-ref/open @state))
+                                         (and (false? linked-ref) open))
+                                   true
+                                   false)
+                         :on-click (fn [e]
+                                     (.. e stopPropagation)
+                                     (if (true? linked-ref)
+                                       (swap! state update :linked-ref/open not)
+                                       (toggle uid (not open))))}])
            (when (:context-menu/show @state)
              [context-menu/context-menu-el uid-sanitized-block state])
-           [bullet/bullet-el block state linked-ref]
-           [tooltip/tooltip-el uid-sanitized-block state]
+           [:> Anchor {:isClosedWithChildren (when (and (seq children)
+                                                        (or (and (true? linked-ref) (not (:linked-ref/open @state)))
+                                                            (and (false? linked-ref) (not open))))
+                                               "closed-with-children")
+                       :block block
+                       :shouldShowDebugDetails (util/re-frame-10x-open?)
+                       :on-click        (fn [e] (router/navigate-uid uid e))
+                       :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
+                       :on-drag-start   (fn [e] (bullet-drag-start e uid state))
+                       :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
            [content/block-content-el block state]
+
+           [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
              [block-refs-count-el (count _refs) uid])]
@@ -283,8 +368,8 @@
                 (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
                 opts]]))
 
-          (when (= (:drag-target @state) :child) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"} :child true}])
-          (when (= (:drag-target @state) :below) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"}}])])))))
+          (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"} :child true}])
+          (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"}}])])))))
 
 
 (defn block-component

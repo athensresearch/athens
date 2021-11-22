@@ -1,9 +1,9 @@
 (ns athens.views.blocks.context-menu
   (:require
+    ["/components/Button/Button" :refer [Button]]
     [athens.db :as db]
     [athens.listeners :as listeners]
     [athens.subs.selection :as select-subs]
-    [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [clojure.string :as string]
     [goog.events :as events]
@@ -76,9 +76,9 @@
                                                            :left     (str x "px")
                                                            :top      (str y "px")}})
                                       [:div (stylefy/use-style menu-style)
-                                       [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
+                                       [:> Button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
                                         (if (empty? selected-items)
                                           "Copy block ref"
                                           "Copy block refs")]
-                                       [button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
+                                       [:> Button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
                                         "Copy unformatted"]]])))})))

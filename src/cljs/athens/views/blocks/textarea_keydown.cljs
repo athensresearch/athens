@@ -6,13 +6,13 @@
     ["@material-ui/icons/Today" :default Today]
     ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
     ["@material-ui/icons/YouTube" :default YouTube]
+    [athens.common.utils :as common.utils]
+    [athens.dates :as dates]
     [athens.db :as db]
     [athens.events.selection :as select-events]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
-    [athens.util :refer [scroll-if-needed get-day get-caret-position shortcut-key? escape-str]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
+    [athens.util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
     [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
@@ -97,15 +97,15 @@
 (def slash-options
   [["Add Todo"      Done "{{[[TODO]]}} " "cmd-enter" nil]
    ["Current Time"  Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
-   ["Today"         Today (fn [] (str "[[" (:title (get-day 0)) "]] ")) nil nil]
-   ["Tomorrow"      Today (fn [] (str "[[" (:title (get-day -1)) "]]")) nil nil]
-   ["Yesterday"     Today (fn [] (str "[[" (:title (get-day 1)) "]]")) nil nil]
+   ["Today"         Today (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
+   ["Tomorrow"      Today (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
+   ["Yesterday"     Today (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
    ["YouTube Embed" YouTube "{{[[youtube]]: }}" nil 2]
    ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
    ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
 
 
-;; [ "Block Embed" #(str "[[" (:title (get-day 1)) "]]")]
+;; [ "Block Embed" #(str "[[" (:title (dates/get-day 1)) "]]")]
 ;; [DateRange "Date Picker"]
 ;; [Attachment "Upload Image or File"]
 ;; [ExposurePlus1 "Word Count"]
@@ -245,7 +245,14 @@
      (when (not (nil? expansion))
        (set-selection target (- end (count query)) end)
        (replace-selection-with expansion))
-     (let [new-cursor-pos (+ end (- (count query)) (count expansion) 2)]
+     (let [new-cursor-pos (+ end
+                             (- (count query))
+                             ;; Add the expansion count if we have it, but if we
+                             ;; don't just add back the query itself so the cursor
+                             ;; doesn't move back.
+                             (count (or expansion
+                                        query))
+                             2)]
        (set-cursor-position target new-cursor-pos))
      (swap! state assoc :search/type nil))))
 
@@ -342,7 +349,8 @@
                                   new-open-state (cond
                                                    up?   false
                                                    down? true)
-                                  event [:transact [[:db/add [:block/uid uid] :block/open new-open-state]]]]
+                                  event          [:block/open {:block-uid uid
+                                                               :open?     new-open-state}]]
                               (.. e preventDefault)
                               (dispatch event)))
 
@@ -378,16 +386,25 @@
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
-  [e _uid _state]
+  [e _uid state]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items                 @(subscribe [::select-subs/items])
         editing-uid                    @(subscribe [:editing/uid])
-        [editing-uid _]         (db/uid-and-embed-id editing-uid)]
+        current-root-uid               @(subscribe [:current-route/uid])
+        [editing-uid embed-id]         (db/uid-and-embed-id editing-uid)
+        local-string                   (:string/local @state)]
     (when (empty? selected-items)
       (if shift
-        (dispatch [:unindent editing-uid d-key-down])
-        (dispatch [:indent editing-uid d-key-down])))))
+        (dispatch [:unindent {:uid              editing-uid
+                              :d-key-down       d-key-down
+                              :context-root-uid current-root-uid
+                              :embed-id         embed-id
+                              :local-string     local-string}])
+        (dispatch [:indent
+                   {:uid           editing-uid
+                    :d-key-down    d-key-down
+                    :local-string  local-string}])))))
 
 
 (defn handle-escape
@@ -487,7 +504,8 @@
                                                               children           (->> (:block/children block)
                                                                                       (sort-by :block/order)
                                                                                       (mapv :block/uid))]
-                                                          (dispatch [:selected/add-items children]))
+                                                          (dispatch [::select-events/set-items children]))
+
       ;; When undo no longer makes changes for local textarea, do datascript undo.
       (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
                                 (when (= local previous)
@@ -526,26 +544,26 @@
                                        (re-find #"(?s)\]\]" tail)
                                        (nil? (re-find #"(?s)\[" link))
                                        (nil? (re-find #"(?s)\]" link)))
-                                  (let [eid (db/e-by-av :node/title link)
-                                        uid (db/v-by-ea eid :block/uid)]
+                                  (let [eid (db/e-by-av :node/title link)]
                                     (if eid
-                                      (router/navigate-uid uid e)
-                                      (let [new-uid (athens.util/gen-block-uid)]
+                                      (router/navigate-page link e)
+                                      (let [block-uid (common.utils/gen-block-uid)]
                                         (.blur target)
-                                        (dispatch [:page/create link new-uid])
-                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+                                        (dispatch [:page/new {:title     link
+                                                              :block-uid block-uid
+                                                              :shift?    shift}]))))
 
                                   ;; same logic as link
                                   (and (re-find #"(?s)#" head)
                                        (re-find #"(?s)\s" tail))
-                                  (let [eid (db/e-by-av :node/title hashtag)
-                                        uid (db/v-by-ea eid :block/uid)]
+                                  (let [eid (db/e-by-av :node/title hashtag)]
                                     (if eid
-                                      (router/navigate-uid uid e)
-                                      (let [new-uid (athens.util/gen-block-uid)]
+                                      (router/navigate-page hashtag e)
+                                      (let [block-uid (common.utils/gen-block-uid)]
                                         (.blur target)
-                                        (dispatch [:page/create link new-uid])
-                                        (js/setTimeout #(router/navigate-uid new-uid e) 50))))
+                                        (dispatch [:page/new {:title     link
+                                                              :block-uid block-uid
+                                                              :shift?    shift}]))))
 
                                   (and (re-find #"(?s)\(\(" head)
                                        (re-find #"(?s)\)\)" tail)

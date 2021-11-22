@@ -2,16 +2,13 @@
   (:require
     ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
     ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
+    [athens.common-db :as common-db]
+    [athens.dates :as dates]
     [athens.db :as db]
-    [athens.router :refer [navigate-uid]]
+    [athens.router :as router]
     [athens.style :as style :refer [color OPACITIES]]
-    [athens.util :refer [date-string]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.string :refer [lower-case]]
-    [datascript.core :as d]
     [garden.selectors :as selectors]
-    [posh.reagent :as p]
     [re-frame.core :as rf :refer [dispatch subscribe]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -129,14 +126,6 @@
 
 ;; Components
 
-(defn- preview-body
-  [block-children]
-  (map (fn [{:keys [db/id block/string]}]
-         ^{:key id}
-         [:span string])
-       block-children))
-
-
 (defn- sortable-header
   ([column-id label]
    (sortable-header column-id label {:date? false}))
@@ -153,30 +142,26 @@
 
 (defn page
   []
-  (let [pages (->> (d/q '[:find [?e ...]
-                          :where
-                          [?e :node/title ?t]]
-                        @db/dsdb)
-                   (p/pull-many db/dsdb '["*" :block/_refs {:block/children [:block/string] :limit 5}]))]
+  (let [all-pages (common-db/get-all-pages @db/dsdb)]
     (fn []
-      (let [sorted-pages @(subscribe [:all-pages/sorted @pages])]
+      (let [sorted-pages @(subscribe [:all-pages/sorted all-pages])]
         [:div (use-style page-style)
          [:table (use-style table-style)
           [:thead
            [:tr
             [sortable-header :title "Title"]
             [sortable-header :links-count "Links"]
-            [:th [:h5 "Body"]]
             [sortable-header :modified "Modified" {:date? true}]
             [sortable-header :created "Created" {:date? true}]]]
           [:tbody
            (doall
-             (for [{:keys [block/uid node/title block/children block/_refs]
+             (for [{:keys    [block/uid node/title block/_refs]
                     modified :edit/time
-                    created :create/time} sorted-pages]
+                    created  :create/time} sorted-pages]
                [:tr {:key uid}
-                [:td {:class "title" :on-click #(navigate-uid uid %)} title]
+                [:td {:class    "title"
+                      :on-click #(router/navigate-page title %)}
+                 title]
                 [:td {:class "links"} (count _refs)]
-                [:td {:class "body-preview"} (preview-body children)]
-                [:td {:class "date"} (date-string modified)]
-                [:td {:class "date"} (date-string created)]]))]]]))))
+                [:td {:class "date"} (dates/date-string modified)]
+                [:td {:class "date"} (dates/date-string created)]]))]]]))))
