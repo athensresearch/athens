@@ -20,7 +20,7 @@ Athens is a knowledge graph for research and notetaking. Athens is open-source, 
 
 ### Private
 
-You can use Athens as a local desktop app that saves data to your filesystem or with a [self-hosted server](https://github.com/athensresearch/athens-backend).
+You can use Athens as a local desktop app that saves data to your filesystem or with a [self-hosted server](https://athensresearch.github.io/docs/developing/self-hosted).
 
 ### Extensible
 
