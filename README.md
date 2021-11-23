@@ -11,7 +11,7 @@ Athens is a knowledge graph for research and notetaking. Athens is open-source, 
 
 # 🚀 [Download the free desktop app](https://github.com/athensresearch/athens/releases) 🚀
 
-**[Sponsor us on Open Collective](https://opencollective.com/athens) until we migrate to Stripe! We are building out a software service for individuals and teams and a [self-hosted/on-premise solution for enterprises](https://github.com/athensresearch/athens-backend).**
+**Check out our beta [self-hosted/on-premise solution] for those looking to collaborate in real-time while owning and being able to modify their own infrastructure: (https://athensresearch.github.io/docs/developing/self-hosted).**
 
 **[Demo Athens in your browser (no changes are saved)](https://athensresearch.github.io/athens)**
 
@@ -20,7 +20,7 @@ Athens is a knowledge graph for research and notetaking. Athens is open-source, 
 
 ### Private
 
-You can use Athens as a local desktop app that saves data to your filesystem or with a [self-hosted server](https://athensresearch.github.io/docs/developing/self-hosted).
+You can use Athens as a local desktop app that saves data to your filesystem or with a [self-hosted server](https://athensresearch.github.io/docs/developing/self-hosted) for multi-device or multi-user access.
 
 ### Extensible
 
