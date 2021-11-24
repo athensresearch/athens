@@ -42,16 +42,18 @@ digraph system_diagram {
         
         wsReceive -> isAGO;
         isAGO -> sAGO [label="Yes, AGO";];
-        sAGO -> sResolution [label="1";];
-        sAGO -> sAck [label="2";];
-        sAGO -> sForward [label="3";];
-        sAGO -> sEventStore [label="4";];
+        sAGO -> sEventStore [label="1";];
+        sAGO -> sResolution [label="2";];
+        sAGO -> sAck [label="3";];
+        sAGO -> sForward [label="4";];
         sResolution -> sTransact;
         sTransact -> sDatascript;
 
         sDatascript -> sResolution [style=dotted; label="Resolved in DB context"; color=blue];
 
         isAGO -> sPresence [label="No, Presences";];
+
+        sEventStore -> sResolution -> sAck -> sForward [style=invis;];
     }
 
     SendIt -> wsReceive;
