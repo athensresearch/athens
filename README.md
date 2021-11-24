@@ -22,9 +22,9 @@ Athens is an open-source knowledge graph that helps individuals and organization
 
 You can use Athens as a local desktop app that saves data to your filesystem or with a [self-hosted server](https://athensresearch.github.io/docs/developing/self-hosted) for multi-device or multi-user access.
 
-### Extensible
+### Collaborative
 
-You can modify Athens's source code. We are also building a plugin system for custom themes, keybindings, and integrations with other data sources.
+You can use the collaborative version of Athens for block-level and page-level presence, or if you want to easily use Athens from multiple computers.
 
 ### Community-Driven
 
