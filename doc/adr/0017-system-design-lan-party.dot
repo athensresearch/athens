@@ -9,7 +9,7 @@ digraph system_diagram {
         "Optimistic Update";
         cResolution [label="AGO Resolution"];
         cTransact [label="AGO Transact"];
-        cDatascript;
+        cDatascript [label="Datascript DB";];
         SendIt [label="Send to Server"];
         cAck [label="Acknowledged AGO";];
 
@@ -21,9 +21,9 @@ digraph system_diagram {
         cTransact -> cDatascript;
 
         cAck -> cDatascript [label="Updates DB, cleaning Optimistic state";];
-        cDatascript -> UI [style=dotted; label="Render based on DB context"; color=blue];
-        cDatascript -> cResolution [style=dotted; label="Resolved in DB context"; color=blue];
-        cDatascript -> cSE [style=dotted; label="Creates AGO in DB context"; color=blue];
+        cDatascript -> UI [style=dotted; color=blue];
+        cDatascript -> cResolution [style=dotted; color=blue];
+        cDatascript -> cSE [style=dotted; color=blue];
     }
 
     subgraph cluster_server {
@@ -49,7 +49,7 @@ digraph system_diagram {
         sResolution -> sTransact;
         sTransact -> sDatascript;
 
-        sDatascript -> sResolution [style=dotted; label="Resolved in DB context"; color=blue];
+        sDatascript -> sResolution [style=dotted; color=blue];
 
         isAGO -> sPresence [label="No, Presences";];
 
@@ -72,8 +72,8 @@ digraph system_diagram {
         { rank=same AGO }
         { rank=same A B }
         { rank=same C D }
-        A->B [label="Invokes"];
-        C->D [style=dotted; color=blue; label="Uses/depends on"]
+        A->B [label="Invokes";];
+        C->D [style=dotted; color=blue; label="Provides Context";];
         AGO -> A -> D [style=invis]
     }
 }

@@ -13,9 +13,9 @@ digraph system_diagram {
     Resolution -> Transact;
     Transact -> Datascript;
 
-    Datascript -> UI [style=dotted; label="Render based on DB context"; color=blue];
-    Datascript -> Resolution [style=dotted; label="Resolved in DB context"; color=blue];
-    Datascript -> "Semantic Events" [style=dotted; label="Creates AGO in DB context"; color=blue];
+    Datascript -> UI [style=dotted; color=blue];
+    Datascript -> Resolution [style=dotted; color=blue];
+    Datascript -> "Semantic Events" [style=dotted; color=blue];
 
     subgraph cluster_legend {
         rank=sink;
@@ -30,8 +30,8 @@ digraph system_diagram {
         { rank=same AGO }
         { rank=same A B }
         { rank=same C D }
-        A->B [label="Invokes"];
-        C->D [style=dotted; color=blue; label="Uses/depends on"]
+        A->B [label="Invokes";];
+        C->D [style=dotted; color=blue; label="Provides Context";];
         AGO -> A -> D [style=invis]
     }
 }
