@@ -7,11 +7,11 @@
 
 # Athens
 
-Athens is a knowledge graph for research and notetaking. Athens is open-source, private, extensible, and community-driven.
+Athens is an open-source knowledge graph that helps individuals and organizations solve complex problems by enabling them to capture, compose, and recombine ideas.
 
 # 🚀 [Download the free desktop app](https://github.com/athensresearch/athens/releases) 🚀
 
-**Check out our beta [self-hosted/on-premise solution] for those looking to collaborate in real-time while owning and being able to modify their own infrastructure: (https://athensresearch.github.io/docs/developing/self-hosted).**
+**Check out our beta [self-hosted solution](https://athensresearch.github.io/docs/developing/self-hosted) for those looking to collaborate in real-time.**
 
 **[Demo Athens in your browser (no changes are saved)](https://athensresearch.github.io/athens)**
 
