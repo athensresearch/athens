@@ -1,4 +1,4 @@
-# 17. Athens Protocol
+# 18. Athens Protocol Principles
 
 Date: 2021-11-23
 
@@ -12,6 +12,9 @@ Accepted.
 
 The Athens Protocol defines the format and semantics for messages between Athens clients.
 These clients can be standalone clients, clients connected to servers, or other future architectures.
+
+Athens as it is today does not have a public protocol and API, but this is the outline of the principles that should guide it.
+The current private protocol and API adheres to these principles.
 
 The protocol aims to support a few key requirements:
   1. longevity: information must be usable for at least a long period of time in the future, e.g. 10+ years
