@@ -1,0 +1,79 @@
+digraph system_diagram {
+    label="Lan Party System Diagram";
+
+    subgraph cluster_client {
+        label="Athens Client";
+
+        UI;
+        cSE [label="Semantic Events";];
+        "Optimistic Update";
+        cResolution [label="AGO Resolution"];
+        cTransact [label="AGO Transact"];
+        cDatascript [label="Datascript DB";];
+        SendIt [label="Send to Server"];
+        cAck [label="Acknowledged AGO";];
+
+        UI -> cSE;
+        cSE -> "Optimistic Update" [label="Apply optimistically";];
+        cSE -> SendIt [label="Send AGO over WS";];
+        "Optimistic Update" -> cResolution [label="Composed of AGO";];
+        cResolution -> cTransact;
+        cTransact -> cDatascript;
+
+        cAck -> cDatascript [label="Updates DB, cleaning Optimistic state";];
+        cDatascript -> UI [style=dotted; color=blue];
+        cDatascript -> cResolution [style=dotted; color=blue];
+        cDatascript -> cSE [style=dotted; color=blue];
+    }
+
+    subgraph cluster_server {
+        label="Athens Lan-Party Server";
+
+        wsReceive [label="WS Receive";];
+        isAGO [shape=diamond; label="AGO?";];
+        sAGO [label="Process AGO";];
+        sResolution [label="AGO Resolution";];
+        sTransact [label="AGO Transact";];
+        sDatascript [label="Server Temporary Datascript";];
+        sAck [label="Acknowledge AGO";];
+        sPresence [label="Forward to all connected clients";];
+        sForward [label="Forward AGO to all connected clients";];
+        sEventStore [label="Event Store";];
+        
+        wsReceive -> isAGO;
+        isAGO -> sAGO [label="Yes, AGO";];
+        sAGO -> sEventStore [label="1";];
+        sAGO -> sResolution [label="2";];
+        sAGO -> sAck [label="3";];
+        sAGO -> sForward [label="4";];
+        sResolution -> sTransact;
+        sTransact -> sDatascript;
+
+        sDatascript -> sResolution [style=dotted; color=blue];
+
+        isAGO -> sPresence [label="No, Presences";];
+
+        sEventStore -> sResolution -> sAck -> sForward [style=invis;];
+    }
+
+    SendIt -> wsReceive;
+    sAck -> cAck;
+    
+    subgraph cluster_legend {
+        
+        label="Legend";
+
+        AGO [label=<AGO = Atomic Graph Operations>; shape=plaintext]
+        A [shape=plaintext];
+        B [shape=plaintext];
+        C [shape=plaintext];
+        D [shape=plaintext];
+
+        { rank=same AGO }
+        { rank=same A B }
+        { rank=same C D }
+        A->B [label="Invokes";];
+        C->D [style=dotted; color=blue; label="Provides Context";];
+        AGO -> A -> D [style=invis]
+    }
+}
