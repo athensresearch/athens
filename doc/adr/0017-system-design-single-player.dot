@@ -1,0 +1,37 @@
+digraph system_diagram {
+    label="Single Player System Diagram";
+
+    UI;
+    "Semantic Events";
+    Resolution [label="AGO Resolution"];
+    Transact [label="AGO Transact"];
+
+    Datascript;
+
+    UI -> "Semantic Events";
+    "Semantic Events" -> Resolution [label="Composed of AGO"];
+    Resolution -> Transact;
+    Transact -> Datascript;
+
+    Datascript -> UI [style=dotted; label="Render based on DB context"; color=blue];
+    Datascript -> Resolution [style=dotted; label="Resolved in DB context"; color=blue];
+    Datascript -> "Semantic Events" [style=dotted; label="Creates AGO in DB context"; color=blue];
+
+    subgraph cluster_legend {
+        rank=sink;
+        label="Legend";
+
+        AGO [label=<AGO = Atomic Graph Operations>; shape=plaintext]
+        A [shape=plaintext];
+        B [shape=plaintext];
+        C [shape=plaintext];
+        D [shape=plaintext];
+
+        { rank=same AGO }
+        { rank=same A B }
+        { rank=same C D }
+        A->B [label="Invokes"];
+        C->D [style=dotted; color=blue; label="Uses/depends on"]
+        AGO -> A -> D [style=invis]
+    }
+}
