@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.rtc.47](https://github.com/athensresearch/athens/compare/v2.0.0-beta.1...v1.0.0-alpha.rtc.47) (2021-11-25)
+
+
+### Bug Fixes
+
+* run health check on client as well ([9161df0](https://github.com/athensresearch/athens/commit/9161df0814b5373452d285addfea881cc72f79cd))
+
+
+### Documentation
+
+* updates for 2.0.0-beta launch ([#1868](https://github.com/athensresearch/athens/issues/1868)) ([87b1e82](https://github.com/athensresearch/athens/commit/87b1e82df539ccf1c756481b67b36f273d5ca243))
+
 ## [1.0.0-alpha.rtc.46](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.45...v1.0.0-alpha.rtc.46) (2021-11-21)
 
 
