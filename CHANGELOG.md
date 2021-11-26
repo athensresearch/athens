@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.2](https://github.com/athensresearch/athens/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2021-11-26)
+
+
+### Bug Fixes
+
+* use same semantics for event replay as processing. ([c301a38](https://github.com/athensresearch/athens/commit/c301a388a527e01f4d1c986a61cbeefb4eb5213b))
+
+
+### Refactors
+
+* rename duplicate ADR 10 to 16 ([feff0c3](https://github.com/athensresearch/athens/commit/feff0c3be7a6f69861edf06c2a4d16bf4baf6d60))
+
+
+### Documentation
+
+* expand and rename event log adr ([23797ab](https://github.com/athensresearch/athens/commit/23797ab04611aed0bee2b56e1729b94c1f2c7414))
+
 ## [2.0.0-beta.1](https://github.com/athensresearch/athens/compare/v2.0.0-beta.1...v2.0.0-beta.1) (2021-11-25)
 
 
