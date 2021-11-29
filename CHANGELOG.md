@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.3](https://github.com/athensresearch/athens/compare/v2.0.0-beta.2...v2.0.0-beta.3) (2021-11-29)
+
+
+### Bug Fixes
+
+* remove nils from inline presence too ([bdb8937](https://github.com/athensresearch/athens/commit/bdb8937dbff54273fdc957aa1f4fb681ca331db0))
+
 ## [2.0.0-beta.2](https://github.com/athensresearch/athens/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2021-11-26)
 
 
