@@ -94,4 +94,8 @@
 
   :athens
   {:extra-paths ["dev/clj"]
-   :main-opts   ["-m" "athens.self-hosted.core"]}}}
+   :main-opts   ["-m" "athens.self-hosted.core"]}
+
+  :athens-cli
+  {:extra-paths ["dev/clj"]
+   :main-opts   ["-m" "athens.self-hosted.save-load"]}}}

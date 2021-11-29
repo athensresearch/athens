@@ -1,40 +1,30 @@
-(ns save-load
+(ns athens.self-hosted.save-load
   (:require
     [clojure.tools.cli :refer [parse-opts]]
     [fluree.db.api :as fdb]
-    [athens.self-hosted.event-log :as event-log])
-  (:import (java.net InetAddress))
+    [athens.self-hosted.event-log :as event-log]
+    [clojure.string :as string])
   (:gen-class))
 
 
 (defn save-log
-  [ args]
+  [args]
   (let [{:keys [fluree-address
                 filename]}      args
-        comp                    {:conn-atom    (atom (fdb/connect fluree-address))
-                                 :reconnect-fn ()}]
-
+        comp                    (event-log/create-fluree-comp fluree-address)]
     ;; Save the ledger on file
     ;; TODO : Who should discover the name for file to save?
-    (-> (event-log/events comp)
-        (spit filename (prn-str (event-log/events comp))))))
+    (spit filename
+         (with-out-str (print-str (event-log/events comp))))
+    (-> comp :conn-atom deref fdb/close)))
 
 
 (defn load-log
   [args]
   (let [{:keys [fluree-address
                 filename]}     args
-        conn-atom              (atom nil)
-        reconnect-fn           (fn []
-                                 (when-some [conn @conn-atom]
-                                   (fdb/close conn))
-                                 (reset! conn-atom (fdb/connect fluree-address)))
-        comp                   {:conn-atom    conn-atom
-                                :reconnect-fn reconnect-fn}
+        comp                   (event-log/create-fluree-comp fluree-address)
         previous-events        (clojure.edn/read-string (slurp filename))]
-
-    ;; Close the connection to current fluree
-    (reconnect-fn)
 
     ;; Delete the current ledger
     @(fdb/delete-ledger (-> comp
@@ -43,21 +33,13 @@
                         (event-log/ledger))
 
     ;; Create the ledger again
-    (event-log/ensure-ledger! comp)
-
-    ;; Add the events from the passed log
-    (doseq [[id data] previous-events]
-      (event-log/add-event! comp id data))))
-
-
-
-
+    (event-log/ensure-ledger! comp previous-events)))
 
 
 (def cli-options
   ;; An option with a required argument
   [["-a" "--fluree-address ADDRESS" "Fluree address"
-    :default "http://fluree:8090"]
+    :default "http://localhost:8090"]
    ["-f" "--filename FILENAME" "Name of the file to be saved or loaded"
     :default []]
    ["-h" "--help"]])
@@ -111,7 +93,3 @@
       (case action
         "save"   (save-log options)
         "load"   (load-log options)))))
-
-
-
-

@@ -11,6 +11,17 @@
 
 (def ledger "events/log")
 
+(defn create-fluree-comp
+  [address]
+  (let [conn-atom    (atom nil)
+        reconnect-fn (fn []
+                       (when-some [conn @conn-atom]
+                         (fdb/close conn))
+                       (reset! conn-atom (fdb/connect address)))
+        comp         {:conn-atom    (fdb/connect address)
+                      :reconnect-fn reconnect-fn}]
+    (reconnect-fn)
+    comp))
 
 (def schema
   [{:_id :_collection
@@ -137,24 +148,26 @@
           :else
           (throw (ex-info "add-event! failed to transact" {:id id :response r})))))))
 
-
 (defn ensure-ledger!
-  [fluree]
-  (let [conn (-> fluree :conn-atom deref)]
-    (when (empty? @(fdb/ledger-info conn ledger))
-      (let [block (atom nil)]
-        (log/info "Fluree ledger for event-log not found, creating" ledger)
-        @(fdb/new-ledger conn ledger)
-        (fdb/wait-for-ledger-ready conn ledger)
-        (reset! block (:block @(fdb/transact conn ledger schema)))
-        (log/info "Populating fresh ledger with initial events...")
-        (doseq [[id data] initial-events]
-          (reset! block (add-event! fluree id data)))
-        (log/info "✅ Populated fresh ledger.")
-        (log/info "Bringing local ledger to to date with latest transactions...")
-        (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
-        (log/info "✅ Fluree local ledger up to date.")
-        (log/info "✅ Fluree ledger for event-log created.")))))
+  ([fluree]
+   (ensure-ledger! fluree initial-events))
+  ([fluree seed-events]
+   (let [conn (-> fluree :conn-atom deref)]
+     (when (empty? @(fdb/ledger-info conn ledger))
+       (let [block (atom nil)]
+         (log/info "Fluree ledger for event-log not found, creating" ledger)
+         @(fdb/new-ledger conn ledger)
+         (fdb/wait-for-ledger-ready conn ledger)
+         (reset! block (:block @(fdb/transact conn ledger schema)))
+         (log/info "Populating fresh ledger with initial events...")
+         (doseq [[id data] seed-events]
+           (reset! block (add-event! fluree id data)))
+         (log/info "✅ Populated fresh ledger.")
+         (log/info "Bringing local ledger to to date with latest transactions...")
+         (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
+         (log/info "✅ Fluree local ledger up to date.")
+         (log/info "✅ Fluree ledger for event-log created."))))))
+
 
 
 #_(defn events-since
@@ -197,7 +210,7 @@
   ((:reconnect-fn comp))
 
   ;; Create ledger if not present.
-  (ensure-ledger! comp)
+  (ensure-ledger! comp )
 
   ;; What are the current events in the ledger?
   (events comp)
