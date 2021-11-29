@@ -1,4 +1,4 @@
-# 10. JS Components
+# 16. JS Components
 
 Date: 2021-08-23
 
