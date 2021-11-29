@@ -10,13 +10,15 @@
 (defn save-log
   [args]
   (let [{:keys [fluree-address
-                filename]}      args
-        comp                    (event-log/create-fluree-comp fluree-address)]
+                filename]} args
+        comp               (event-log/create-fluree-comp fluree-address)
+        events             (event-log/events comp)]
     ;; Save the ledger on file
     ;; TODO : Who should discover the name for file to save?
     (spit filename
-         (with-out-str (print-str (event-log/events comp))))
-    (-> comp :conn-atom deref fdb/close)))
+          (pr-str (doall events)))
+    (-> comp :conn-atom deref fdb/close)
+    (System/exit 0)))
 
 
 (defn load-log

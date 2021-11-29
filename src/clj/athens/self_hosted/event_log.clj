@@ -18,7 +18,7 @@
                        (when-some [conn @conn-atom]
                          (fdb/close conn))
                        (reset! conn-atom (fdb/connect address)))
-        comp         {:conn-atom    (fdb/connect address)
+        comp         {:conn-atom    conn-atom
                       :reconnect-fn reconnect-fn}]
     (reconnect-fn)
     comp))
