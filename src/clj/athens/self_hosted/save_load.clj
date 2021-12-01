@@ -35,7 +35,9 @@
                         (event-log/ledger))
 
     ;; Create the ledger again
-    (event-log/ensure-ledger! comp previous-events)))
+    (event-log/ensure-ledger! comp previous-events)
+    (System/exit 0)))
+
 
 
 (def cli-options

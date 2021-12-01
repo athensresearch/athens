@@ -6,8 +6,9 @@
     [clojure.edn :as edn]
     [clojure.string :as str]
     [clojure.tools.logging :as log]
-    [fluree.db.api :as fdb]))
-
+    [fluree.db.api :as fdb]
+    [clojure.string :as string])
+  (:import [java.util UUID]))
 
 (def ledger "events/log")
 
@@ -52,7 +53,9 @@
 (defn deserialize
   [{id   "event/id"
     data "event/data"}]
-  [id (edn/read-string data)])
+  [(if (string/blank? id)
+     (UUID/randomUUID)
+     (UUID/fromString id)) (edn/read-string data)])
 
 
 ;; Resources on lazy clojure ops.

@@ -168,6 +168,7 @@
   (let [op (bfs/build-paste-op (datascript/empty-db common-db/schema)
                                welcome-page-internal-representation)
         welcome-page (common-events/build-atomic-event op)
+        ;; TODO NOW this is wrong need to wrap in build-atomic-event to create a uuid
         add-sidebar  (atomic-graph-ops/make-shortcut-new-op welcome-page-title)]
     [[(:event/id welcome-page) welcome-page]
      [(:event/id add-sidebar) add-sidebar]]))
