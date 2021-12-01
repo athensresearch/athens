@@ -32,7 +32,7 @@
     @(fdb/delete-ledger (-> comp
                             :conn-atom
                             deref)
-                        (event-log/ledger))
+                        event-log/ledger)
 
     ;; Create the ledger again
     (event-log/ensure-ledger! comp previous-events)
