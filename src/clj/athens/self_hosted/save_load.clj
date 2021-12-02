@@ -3,7 +3,8 @@
     [clojure.tools.cli :refer [parse-opts]]
     [fluree.db.api :as fdb]
     [athens.self-hosted.event-log :as event-log]
-    [clojure.string :as string])
+    [clojure.string :as string]
+    [stylefy.impl.log :as log])
   (:gen-class))
 
 
@@ -17,8 +18,7 @@
     ;; TODO : Who should discover the name for file to save?
     (spit filename
           (pr-str (doall events)))
-    (-> comp :conn-atom deref fdb/close)
-    (System/exit 0)))
+    (-> comp :conn-atom deref fdb/close)))
 
 
 (defn load-log
@@ -26,17 +26,21 @@
   (let [{:keys [fluree-address
                 filename]}     args
         comp                   (event-log/create-fluree-comp fluree-address)
-        previous-events        (clojure.edn/read-string (slurp filename))]
+        conn                    (-> comp
+                                    :conn-atom
+                                    deref)
+        previous-events        (clojure.edn/read-string (slurp filename))
+        ledger-exists?         (seq  @(fdb/ledger-info conn event-log/ledger))]
 
     ;; Delete the current ledger
-    @(fdb/delete-ledger (-> comp
-                            :conn-atom
-                            deref)
-                        event-log/ledger)
+    (if ledger-exists?
+      (do
+        @(fdb/delete-ledger conn
+                            event-log/ledger)
+        (log/warn "Please restart the fluree docker."))
+     ;; Create the ledger again
+     (event-log/ensure-ledger! comp previous-events))))
 
-    ;; Create the ledger again
-    (event-log/ensure-ledger! comp previous-events)
-    (System/exit 0)))
 
 
 
@@ -94,6 +98,8 @@
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
-      (case action
-        "save"   (save-log options)
-        "load"   (load-log options)))))
+      (do
+        (case action
+          "save"   (save-log options)
+          "load"   (load-log options))
+        (System/exit 0)))))
