@@ -6,11 +6,14 @@
     [clojure.edn :as edn]
     [clojure.string :as str]
     [clojure.tools.logging :as log]
-    [fluree.db.api :as fdb]
-    [clojure.string :as string])
-  (:import [java.util UUID]))
+    [fluree.db.api :as fdb])
+  (:import
+    (java.util
+      UUID)))
+
 
 (def ledger "events/log")
+
 
 (defn create-fluree-comp
   [address]
@@ -23,6 +26,7 @@
                       :reconnect-fn reconnect-fn}]
     (reconnect-fn)
     comp))
+
 
 (def schema
   [{:_id :_collection
@@ -53,7 +57,7 @@
 (defn deserialize
   [{id   "event/id"
     data "event/data"}]
-  [(if (string/blank? id)
+  [(if (str/blank? id)
      (UUID/randomUUID)
      (UUID/fromString id)) (edn/read-string data)])
 
@@ -151,6 +155,7 @@
           :else
           (throw (ex-info "add-event! failed to transact" {:id id :response r})))))))
 
+
 (defn ensure-ledger!
   ([fluree]
    (ensure-ledger! fluree initial-events))
@@ -170,7 +175,6 @@
          (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
          (log/info "✅ Fluree local ledger up to date.")
          (log/info "✅ Fluree ledger for event-log created."))))))
-
 
 
 #_(defn events-since

@@ -1,11 +1,12 @@
 (ns athens.self-hosted.save-load
+  (:gen-class)
   (:require
+    [athens.self-hosted.event-log :as event-log]
+    [clojure.edn                :as edn]
+    [clojure.string :as string]
     [clojure.tools.cli :refer [parse-opts]]
     [fluree.db.api :as fdb]
-    [athens.self-hosted.event-log :as event-log]
-    [clojure.string :as string]
-    [stylefy.impl.log :as log])
-  (:gen-class))
+    [stylefy.impl.log :as log]))
 
 
 (defn save-log
@@ -29,7 +30,7 @@
         conn                    (-> comp
                                     :conn-atom
                                     deref)
-        previous-events        (clojure.edn/read-string (slurp filename))
+        previous-events        (edn/read-string (slurp filename))
         ledger-exists?         (seq  @(fdb/ledger-info conn event-log/ledger))]
 
     ;; Delete the current ledger
@@ -38,10 +39,8 @@
         @(fdb/delete-ledger conn
                             event-log/ledger)
         (log/warn "Please restart the fluree docker."))
-     ;; Create the ledger again
-     (event-log/ensure-ledger! comp previous-events))))
-
-
+      ;; Create the ledger again
+      (event-log/ensure-ledger! comp previous-events))))
 
 
 (def cli-options
@@ -52,7 +51,9 @@
     :default []]
    ["-h" "--help"]])
 
-(defn usage [options-summary]
+
+(defn usage
+  [options-summary]
   (->> ["Save or load a ledger"
         ""
         "Usage: program-name [options] action"
@@ -67,7 +68,9 @@
         "Please refer to the manual page for more information."]
        (string/join \newline)))
 
-(defn error-msg [errors]
+
+(defn error-msg
+  [errors]
   (str "The following errors occurred while parsing your command:\n\n"
        (string/join \newline errors)))
 
@@ -79,22 +82,25 @@
   [args]
   (let [{:keys [options arguments errors summary]}  (parse-opts args cli-options)]
     (cond
-      ; help => exit OK with usage summary
+      ;; help => exit OK with usage summary
       (:help options)                               {:exit-message (usage summary) :ok? true}
-      ; errors => exit with description of errors
+      ;; errors => exit with description of errors
       errors                                        {:exit-message (error-msg errors)}
       ;; custom validation on arguments
       (and (= 1 (count arguments))
-           (#{"save" "load" } (first arguments)))   {:action (first arguments) :options options}
-      ; failed custom validation => exit with usage summary
+           (#{"save" "load"} (first arguments)))   {:action (first arguments) :options options}
+      ;; failed custom validation => exit with usage summary
       :else                                         {:exit-message (usage summary)})))
 
 
-(defn exit [status msg]
+(defn exit
+  [status msg]
   (println msg)
   (System/exit status))
 
-(defn -main [& args]
+
+(defn -main
+  [& args]
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
