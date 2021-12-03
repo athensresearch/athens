@@ -1,10 +1,11 @@
 ;; # Hello, Clerk 👋
 ^{:nextjournal.clerk/visibility #{:hide-ns}}
-(ns athens.intro-notebook
-  (:require [nextjournal.clerk :as clerk]
+(ns intro-notebook
+  (:require [clojure.java.io :as io]
+            [nextjournal.clerk :as clerk]
             [nextjournal.clerk.viewer :as v]
             #_[meta-csv.core :as csv])
-  (:import (clojure.java.io file)
+  #_(:import (clojure.java.io file)
            #_(java.net.http HttpRequest HttpClient HttpResponse$BodyHandlers)
            #_(java.net URI)))
 
@@ -38,7 +39,7 @@
 ;; with something like:
 
 ^{:nextjournal.clerk/visibility #{:hide}}
-(clerk/code '(clerk/serve! {:watch-paths ["notebooks" "src"]}))
+(clerk/code '(clerk/serve! {:watch-paths ["dev/notebooks"]}))
 
 
 ;; ... which will automatically reload and re-eval any `clj` or `md`
@@ -63,7 +64,7 @@
 ;; Opaque objects are printed as they would be in the Clojure REPL,
 ;; like so:
 (def notebooks
-  (file "src/clj/athens/notebooks.clj"))
+  (io/file "src/clj/athens"))
 
 
 ;; You can leave a form at the top-level like this to examine the

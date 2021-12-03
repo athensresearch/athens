@@ -97,5 +97,5 @@
    :main-opts   ["-m" "athens.self-hosted.core"]}
 
   :notebooks
-  {:extra-paths ["dev/clj"]
-   :main-opts   ["-m" "athens.notebooks"]}}}
+  {:extra-paths ["dev/clj" "dev/notebooks"]
+   :main-opts   ["-m" "notebooks"]}}}
