@@ -18,6 +18,7 @@
     "carve": "clojure -M:carve --opts '{:paths [\"src\" \"test\"] :report {:format :text}}'",
     "carve:interactive": "clojure -M:carve --opts '{:paths [\"src\" \"test\"]}'",
     "clj:outdated": "clojure -M:outdated",
+    "notebooks": "clojure -M:notebooks",
     "//client scripts": "",
     "dev": "yarn components && concurrently \"yarn components:watch\" \"yarn client:watch\"",
     "client:watch": "shadow-cljs watch main renderer app",
