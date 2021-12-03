@@ -64,7 +64,7 @@
 ;; Opaque objects are printed as they would be in the Clojure REPL,
 ;; like so:
 (def notebooks
-  (io/file "src/clj/athens"))
+  (io/file "dev/notebooks/notebooks.clj"))
 
 
 ;; You can leave a form at the top-level like this to examine the

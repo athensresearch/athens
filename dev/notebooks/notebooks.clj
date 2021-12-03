@@ -5,14 +5,15 @@
 
 (defn -main
   [& _args]
-  ;; Show all files that end with _nodebook.clj in src.
+  ;; Start by showing the intro notebook.
+  (clerk/show! "dev/notebooks/intro_notebook.clj")
+  ;; The watch all files in dev/notebooks, and display the last one that changed.
   ;; Opens the browser automatically.
-  ;; Shows whatever file you last saved.
   ;; See https://github.com/nextjournal/clerk and
   ;; https://github.com/nextjournal/clerk-demo for examples and docs.
   (clerk/serve! {:watch-paths    ["dev/notebooks"]
                  :show-filter-fn (fn [name]
-                                   (println "show-filter-fn:" name)
-                                   (clojure.string/ends-with? name "_notebook.clj"))
-                 :browse?        true})
-  (clerk/show! "dev/notebooks/intro_notebook.clj"))
+                                   (and (clojure.string/starts-with? name "dev/notebooks/")
+                                        ;; Ignore this file though.
+                                        (not (= name "dev/notebooks/notebooks.clj"))))
+                 :browse?        true}))
