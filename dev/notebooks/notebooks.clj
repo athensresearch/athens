@@ -6,7 +6,7 @@
 (defn -main
   [& _args]
   ;; Start by showing the intro notebook.
-  (clerk/show! "dev/notebooks/intro_notebook.clj")
+  (clerk/show! "dev/notebooks/parser_notebook.clj")
   ;; The watch all files in dev/notebooks, and display the last one that changed.
   ;; Opens the browser automatically.
   ;; See https://github.com/nextjournal/clerk and
