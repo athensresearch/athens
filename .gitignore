@@ -44,3 +44,7 @@ docker-compose.yml.bk
 # dev mode server data
 athens-data/*
 !athens-data/README.md
+
+# java AOT classes
+classes/*
+!classes/README.md
