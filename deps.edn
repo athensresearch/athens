@@ -1,4 +1,4 @@
-{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen" "test" "classes"]
+{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen" "test"]
 
  :deps
  {org.clojure/clojure                   #:mvn{:version "1.10.3"}
@@ -78,6 +78,12 @@
   {:replace-deps {uberdeps/uberdeps {:mvn/version "1.1.1"}}
    :replace-paths []
    :main-opts ["-m" "uberdeps.uberjar"]}
+
+  :compiled-classes
+  {;; AOT compilation output, to be used with uberdeps.
+   ;; https://github.com/tonsky/uberdeps#creating-an-executable-jar
+   ;; https://clojure.org/guides/deps_and_cli#aot_compilation
+   :extra-paths ["classes"]}
 
   :test
   {:extra-paths ["dev/clj"]
