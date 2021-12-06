@@ -119,6 +119,7 @@
             KeyCodes.D (router/nav-daily-notes)
             KeyCodes.G (router/navigate :graph)
             KeyCodes.A (router/navigate :pages)
+            KeyCodes.T (dispatch [:theme/toggle])
             nil))))
 
 
