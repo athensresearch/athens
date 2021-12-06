@@ -74,11 +74,16 @@
    ;; Very noisy, due to https://github.com/liquidz/antq/issues/108
    :main-opts  ["-m" "antq.core"]}
 
-  :build
-  {:deps {io.github.clojure/tools.build
-          #:git{:sha "599be6c8c94a6ac6cc02fc9b43536f9052225b60"
-                :tag "v0.5.1"}}
-   :ns-default build}
+  :uberdeps
+  {:replace-deps {uberdeps/uberdeps {:mvn/version "1.1.1"}}
+   :replace-paths []
+   :main-opts ["-m" "uberdeps.uberjar"]}
+
+  :compiled-classes
+  {;; AOT compilation output, to be used with uberdeps.
+   ;; https://github.com/tonsky/uberdeps#creating-an-executable-jar
+   ;; https://clojure.org/guides/deps_and_cli#aot_compilation
+   :extra-paths ["classes"]}
 
   :test
   {:extra-paths ["dev/clj"]
