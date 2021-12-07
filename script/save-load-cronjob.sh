@@ -44,7 +44,7 @@ FOLDER=/var/lib/athens/backups/
 
 # Going with the Timestamp option
 TIMESTAMP=$(date +%F-%H-%M)
-FILENAME="${FOLDER} ${TIMESTAMP}.edn"
+FILENAME="${FOLDER}${TIMESTAMP}.edn"
 
 # command to save ledger
 yarn cli:save -f "$FILENAME"
