@@ -15,18 +15,6 @@
 (def ledger "events/log")
 
 
-(defn create-fluree-comp
-  [address]
-  (let [conn-atom    (atom nil)
-        reconnect-fn (fn []
-                       (when-some [conn @conn-atom]
-                         (fdb/close conn))
-                       (reset! conn-atom (fdb/connect address)))
-        comp         {:conn-atom    conn-atom
-                      :reconnect-fn reconnect-fn}]
-    (reconnect-fn)
-    comp))
-
 
 (def schema
   [{:_id :_collection
@@ -57,6 +45,8 @@
 (defn deserialize
   [{id   "event/id"
     data "event/data"}]
+  ;; In some running ledgers we have "add Welcome page shortcut" that does not have a UUID
+  ;; So we want the backup to be compatible for these previous version of ledgers.
   [(if (str/blank? id)
      (UUID/randomUUID)
      (UUID/fromString id)) (edn/read-string data)])
@@ -217,7 +207,7 @@
   ((:reconnect-fn comp))
 
   ;; Create ledger if not present.
-  (ensure-ledger! comp )
+  (ensure-ledger! comp)
 
   ;; What are the current events in the ledger?
   (events comp)

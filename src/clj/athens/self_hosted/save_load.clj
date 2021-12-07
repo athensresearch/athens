@@ -2,6 +2,7 @@
   (:gen-class)
   (:require
     [athens.self-hosted.event-log :as event-log]
+    [athens.self-hosted.components.fluree :as fluree-comp]
     [clojure.edn                :as edn]
     [clojure.string :as string]
     [clojure.tools.cli :refer [parse-opts]]
@@ -13,7 +14,7 @@
   [args]
   (let [{:keys [fluree-address
                 filename]} args
-        comp               (event-log/create-fluree-comp fluree-address)
+        comp               (fluree-comp/create-fluree-comp fluree-address)
         events             (event-log/events comp)]
     ;; Save the ledger on file
     ;; TODO : Who should discover the name for file to save?
@@ -26,7 +27,7 @@
   [args]
   (let [{:keys [fluree-address
                 filename]}     args
-        comp                   (event-log/create-fluree-comp fluree-address)
+        comp                   (fluree-comp/create-fluree-comp fluree-address)
         conn                    (-> comp
                                     :conn-atom
                                     deref)

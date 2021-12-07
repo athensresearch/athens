@@ -42,11 +42,9 @@ FOLDER=/var/lib/athens/backups
 #  - Monotonically increasing no.
 #  - No. of files in folder + 1
 
-# I am going with the 3rd option because it is the simplest one to follow.
-# Using `find` instead of `ls`: https://github.com/koalaman/shellcheck/wiki/SC2012
-FILENUMBER=$(find $FOLDER | wc -l)
-FILENAME="backup-no-$FILENUMBER"
+# Going with the Timestamp option
+TIMESTAMP=$(date +%F-%H-%M)
+FILENAME="${FOLDER} ${TIMESTAMP} .edn"
 
 # command to save ledger
-
 yarn cli:save -f "$FILENAME"
