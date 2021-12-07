@@ -29,7 +29,7 @@
                  braced-hashtag /
                  naked-hashtag )+
                < double-square-close >
-   naked-hashtag = < hash > #'[\\w_-]+'
+   naked-hashtag = < hash > #'[^\\ \\+\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\?\\\"\\;\\:\\]\\[]+'
    braced-hashtag = < hash double-square-open >
                     ( text-till-double-square-close /
                       page-link /
@@ -79,13 +79,13 @@
 
 (defn naked-hashtag-transform
   [& contents]
-  (apply conj [:naked-hashtag {:from (str "#" (apply string-representation contents))}]
+  (apply conj [:hashtag {:from (str "#" (apply string-representation contents))}]
          contents))
 
 
 (defn braced-hashtag-transform
   [& contents]
-  (apply conj [:braced-hashtag {:from (str "#[[" (apply string-representation contents) "]]")}]
+  (apply conj [:hashtag {:from (str "#[[" (apply string-representation contents) "]]")}]
          contents))
 
 (defn block-ref-transform

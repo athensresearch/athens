@@ -536,17 +536,17 @@
 (defn string->lookup-refs
   "Given string s, compute the set of refs expressed as Datalog lookup refs."
   [s]
-  (let [ast (parser/parse-to-ast s)
-        block-ref-str->uid #(strip-markup % "((" "))")
+  (let [ast                 (parser/structure-parse-to-ast s)
+        block-ref-str->uid  #(strip-markup % "((" "))")
         page-ref-str->title #(or (strip-markup % "#[[" "]]")
                                  (strip-markup % "[[" "]]")
                                  (strip-markup % "#" ""))
-        block-lookups (into #{}
-                            (map (fn [uid] [:block/uid uid]))
-                            (extract-tag-values ast #{:block-ref} identity #(-> % second :from block-ref-str->uid)))
-        page-lookups (into #{}
-                           (map (fn [title] [:node/title title]))
-                           (extract-tag-values ast #{:page-link :hashtag} identity #(-> % second :from page-ref-str->title)))]
+        block-lookups       (into #{}
+                                  (map (fn [uid] [:block/uid uid]))
+                                  (extract-tag-values ast #{:block-ref} identity #(-> % second :from block-ref-str->uid)))
+        page-lookups        (into #{}
+                                  (map (fn [title] [:node/title title]))
+                                  (extract-tag-values ast #{:page-link :hashtag} identity #(-> % second :from page-ref-str->title)))]
     (set/union block-lookups page-lookups)))
 
 

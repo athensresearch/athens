@@ -28,7 +28,7 @@
                  "Page Title"]
                 [:text-run " of text"]]
 
-               ;; But not when surrounded by word
+               ;; Also when surrounded by word (NOTE different from md-parser)
                "abc[[def]]ghi"
                [:paragraph
                 [:text-run "abc"]
@@ -66,18 +66,18 @@
                   "topic"]
                  " subtopic"]]
 
-               "[[abc #hasttag def]]"
+               "[[abc #hashtag def]]"
                [:paragraph          
-                [:page-link {:from "[[abc #hasttag def]]"}
+                [:page-link
+                 {:from "[[abc #hashtag def]]"}
                  "abc "
-                 [:naked-hashtag {:from "#hasttag"}
-                  "hasttag"]
+                 [:hashtag {:from "#hashtag"} "hashtag"]
                  " def"]]
 
                "[[#[[topic]] subtopic]]"
                [:paragraph          
                 [:page-link {:from "[[#[[topic]] subtopic]]"}
-                 [:braced-hashtag {:from "#[[topic]]"} "topic"]
+                 [:hashtag {:from "#[[topic]]"} "topic"]
                  " subtopic"]])))
 
 (t/deftest hashtags-test
@@ -86,50 +86,59 @@
     (parses-to sut/structure-parser->ast
                "#hashtag"
                [:paragraph
-                [:naked-hashtag {:from "#hashtag"}
+                [:hashtag {:from "#hashtag"}
                  "hashtag"]]
 
-               "#hasttag#without#spaces#between"
-               [:paragraph          
-                [:naked-hashtag {:from "#hasttag"} "hasttag"]
-                [:naked-hashtag {:from "#without"} "without"]
-                [:naked-hashtag {:from "#spaces"} "spaces"]
-                [:naked-hashtag {:from "#between"} "between"]]
+               "#can#do#without#spaces#between"
+               [:paragraph
+                [:hashtag {:from "#can"} "can"]
+                [:hashtag {:from "#do"} "do"]
+                [:hashtag {:from "#without"} "without"]
+                [:hashtag {:from "#spaces"} "spaces"]
+                [:hashtag {:from "#between"} "between"]]
 
                "#hash #tags"
                [:paragraph          
-                [:naked-hashtag {:from "#hash"} "hash"]
+                [:hashtag {:from "#hash"} "hash"]
                 [:text-run " "]
-                [:naked-hashtag {:from "#tags"} "tags"]]))
+                [:hashtag {:from "#tags"} "tags"]]))
 
   (t/testing "braced hashtags"
     (parses-to sut/structure-parser->ast
                "#[[hashtag]]"
                [:paragraph
-                [:braced-hashtag {:from "#[[hashtag]]"}
+                [:hashtag {:from "#[[hashtag]]"}
                  "hashtag"]]
 
-               "#[[hasttag]]#[[without]]#[[spaces]]#[[between]]"
+               "#[[hashtag]]#[[without]]#[[spaces]]#[[between]]"
                [:paragraph          
-                [:braced-hashtag {:from "#[[hasttag]]"} "hasttag"]
-                [:braced-hashtag {:from "#[[without]]"} "without"]
-                [:braced-hashtag {:from "#[[spaces]]"} "spaces"]
-                [:braced-hashtag {:from "#[[between]]"} "between"]]
+                [:hashtag {:from "#[[hashtag]]"} "hashtag"]
+                [:hashtag {:from "#[[without]]"} "without"]
+                [:hashtag {:from "#[[spaces]]"} "spaces"]
+                [:hashtag {:from "#[[between]]"} "between"]]
 
                "#[[hash]] #[[tags]]"
                [:paragraph          
-                [:braced-hashtag {:from "#[[hash]]"} "hash"]
+                [:hashtag {:from "#[[hash]]"} "hash"]
                 [:text-run " "]
-                [:braced-hashtag {:from "#[[tags]]"} "tags"]]))
+                [:hashtag {:from "#[[tags]]"} "tags"]]))
 
   (t/testing "mixed hashtags"
     (parses-to sut/structure-parser->ast
                "#[[hashtag #nested-bare]]"
                [:paragraph          
-                [:braced-hashtag {:from "#[[hashtag #nested-bare]]"}
+                [:hashtag {:from "#[[hashtag #nested-bare]]"}
                  "hashtag "
-                 [:naked-hashtag {:from "#nested-bare"}
-                  "nested-bare"]]])))
+                 [:hashtag {:from "#nested-bare"}
+                  "nested-bare"]]]))
+
+  (t/testing "unicode"
+    (parses-to sut/structure-parser->ast
+               "learn #官话?"
+               [:paragraph
+                [:text-run "learn "]
+                [:hashtag {:from "#官话"} "官话"]
+                [:text-run "?"]])))
 
 
 (t/deftest block-ref-test
