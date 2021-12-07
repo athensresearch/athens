@@ -34,11 +34,17 @@
     "//server scripts": "",
     "server": "clojure -M:athens",
     "server:fluree": "docker-compose up --detach fluree",
-    "server:uberjar": "clojure -T:build uber",
+    "server:compile": "clojure -M -e \"(compile 'athens.self-hosted.core)\"",
+    "server:uberjar": "clojure -M:uberdeps --aliases compiled-classes --main-class athens.self-hosted.core --target target/athens-lan-party-standalone.jar",
     "server:test": "clojure -X:test",
     "server:test:only": "clojure -M:test --var",
     "server:repl": "clojure -A:repl",
-    "server:wipe": "rimraf athens-data/fluree"
+    "server:wipe": "rimraf athens-data/fluree",
+    "//cli scripts" : "",
+    "cli:save" : "clojure -M:athens-cli save",
+    "cli:load" : "clojure -M:athens-cli load",
+    "cli:compile": "clojure -M -e \"(compile 'athens.self-hosted.save-load')\"",
+    "cli:uberjar": "clojure -M:uberdeps --main-class athens.self-hosted.save-load --target target/athens-cli.jar"
   },
   "main": "resources/main.js",
   "build": {

@@ -6,7 +6,10 @@
     [clojure.edn :as edn]
     [clojure.string :as str]
     [clojure.tools.logging :as log]
-    [fluree.db.api :as fdb]))
+    [fluree.db.api :as fdb])
+  (:import
+    (java.util
+      UUID)))
 
 
 (def ledger "events/log")
@@ -41,7 +44,11 @@
 (defn deserialize
   [{id   "event/id"
     data "event/data"}]
-  [id (edn/read-string data)])
+  ;; In some running ledgers we have "add Welcome page shortcut" that does not have a UUID
+  ;; So we want the backup to be compatible for these previous version of ledgers.
+  [(if (str/blank? id)
+     (UUID/randomUUID)
+     (UUID/fromString id)) (edn/read-string data)])
 
 
 ;; Resources on lazy clojure ops.
@@ -139,22 +146,24 @@
 
 
 (defn ensure-ledger!
-  [fluree]
-  (let [conn (-> fluree :conn-atom deref)]
-    (when (empty? @(fdb/ledger-info conn ledger))
-      (let [block (atom nil)]
-        (log/info "Fluree ledger for event-log not found, creating" ledger)
-        @(fdb/new-ledger conn ledger)
-        (fdb/wait-for-ledger-ready conn ledger)
-        (reset! block (:block @(fdb/transact conn ledger schema)))
-        (log/info "Populating fresh ledger with initial events...")
-        (doseq [[id data] initial-events]
-          (reset! block (add-event! fluree id data)))
-        (log/info "✅ Populated fresh ledger.")
-        (log/info "Bringing local ledger to to date with latest transactions...")
-        (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
-        (log/info "✅ Fluree local ledger up to date.")
-        (log/info "✅ Fluree ledger for event-log created.")))))
+  ([fluree]
+   (ensure-ledger! fluree initial-events))
+  ([fluree seed-events]
+   (let [conn (-> fluree :conn-atom deref)]
+     (when (empty? @(fdb/ledger-info conn ledger))
+       (let [block (atom nil)]
+         (log/info "Fluree ledger for event-log not found, creating" ledger)
+         @(fdb/new-ledger conn ledger)
+         (fdb/wait-for-ledger-ready conn ledger)
+         (reset! block (:block @(fdb/transact conn ledger schema)))
+         (log/info "Populating fresh ledger with initial events...")
+         (doseq [[id data] seed-events]
+           (reset! block (add-event! fluree id data)))
+         (log/info "✅ Populated fresh ledger.")
+         (log/info "Bringing local ledger to to date with latest transactions...")
+         (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
+         (log/info "✅ Fluree local ledger up to date.")
+         (log/info "✅ Fluree ledger for event-log created."))))))
 
 
 #_(defn events-since
