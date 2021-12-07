@@ -100,6 +100,7 @@
                   :background "var(--background-color)"}}]
         (->> @users
              (map user->person)
+             (remove nil?)
              (map (fn [{:keys [personId] :as person}]
                     [:> Avatar (merge {:showTooltip false :key personId} person)])))))))
 
