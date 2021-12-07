@@ -1,8 +1,8 @@
 (ns athens.self-hosted.save-load
   (:gen-class)
   (:require
-    [athens.self-hosted.event-log :as event-log]
     [athens.self-hosted.components.fluree :as fluree-comp]
+    [athens.self-hosted.event-log :as event-log]
     [clojure.edn                :as edn]
     [clojure.string :as string]
     [clojure.tools.cli :refer [parse-opts]]

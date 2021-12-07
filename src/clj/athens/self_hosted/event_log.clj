@@ -15,7 +15,6 @@
 (def ledger "events/log")
 
 
-
 (def schema
   [{:_id :_collection
     :_collection/name :event
