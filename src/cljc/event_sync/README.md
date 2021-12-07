@@ -10,7 +10,22 @@ It does not give you a way to represent any state besides the event logs being s
 
 ## The problem, and the approach
 
-TODO: event archs, sync, local state, offline first
+[Athens](https://github.com/athensresearch/athens) works as client app where you can take notes structured as a graph, backed by an in-memory graph database.
+A lot of the rich functionality and responsiveness comes from having direct access to this in-memory database.
+
+Athens supports multi-user functionality, as well as queries over a server.
+Synchronization between all participants is a necessity.
+Athens settled on an [event log as source of truth](0018-athens-protocol-principles.md), where state changes deterministically via operations.
+
+Given such an event log, it is straightforward enough to update clients.
+But effecting operations from clients in a responsive manner is not so straightforward due to the distributed nature of the system.
+There's many tradeoffs around responsiveness, staleness of data, user flows, user expectations, and data integrity to be made in this space.
+It would be ideal if each client could largely operate as standalone.
+
+EventSync aims to simplify such systems by modelling their state as a event log with a mutable tip.
+There is a known set of events that will not change in order, but beyond that point there is an optimistic set of events that might change.
+A deterministic state can be obtained on each client by applying both set of events.
+By having a way to know when the order changed, the client can decide how to react to go back to a correct state.
 
 
 ## Model

@@ -222,7 +222,10 @@ jobs:
 
        - uses: ./.github/custom-actions/clojure-env
 
-       - name: Build server JAR
+       - name: Compile server code
+         run: yarn server:compile
+
+       - name: Build server executable uberjar
          run: yarn server:uberjar
 
        # we need QEMU for multi-arch build
