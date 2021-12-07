@@ -104,7 +104,7 @@
 
   :athens-cli
   {:extra-paths ["dev/clj"]
-   :main-opts   ["-m" "athens.self-hosted.save-load"]}}}
+   :main-opts   ["-m" "athens.self-hosted.save-load"]}
 
   :notebooks
   {:extra-paths ["dev/clj" "dev/notebooks"]
