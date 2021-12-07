@@ -3,6 +3,7 @@
  :deps
  {org.clojure/clojure                   #:mvn{:version "1.10.3"}
   org.clojure/clojurescript             #:mvn{:version "1.10.879"}
+  org.clojure/tools.cli                 #:mvn{:version "1.0.206"}
   thheller/shadow-cljs                  #:mvn{:version "2.15.3"}
   reagent/reagent                       #:mvn{:version "1.0.0"}
   re-frame/re-frame                     #:mvn{:version "1.2.0"}
@@ -100,6 +101,10 @@
   :athens
   {:extra-paths ["dev/clj"]
    :main-opts   ["-m" "athens.self-hosted.core"]}
+
+  :athens-cli
+  {:extra-paths ["dev/clj"]
+   :main-opts   ["-m" "athens.self-hosted.save-load"]}
 
   :notebooks
   {:extra-paths ["dev/clj" "dev/notebooks"]
