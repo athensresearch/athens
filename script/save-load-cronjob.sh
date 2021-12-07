@@ -34,7 +34,7 @@ END_COMMENT
 # Filesystem Hierarchy https://www.pathname.com/fhs/pub/fhs-2.3.html
 
 
-FOLDER=/var/lib/athens/backups
+FOLDER=/var/lib/athens/backups/
 
 
 # Some of the strategies to calculate the filename
@@ -44,7 +44,7 @@ FOLDER=/var/lib/athens/backups
 
 # Going with the Timestamp option
 TIMESTAMP=$(date +%F-%H-%M)
-FILENAME="${FOLDER} ${TIMESTAMP} .edn"
+FILENAME="${FOLDER} ${TIMESTAMP}.edn"
 
 # command to save ledger
 yarn cli:save -f "$FILENAME"
