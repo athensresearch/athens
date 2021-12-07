@@ -1,16 +1,15 @@
 (ns athens.parser.structure
   "Graph Structure Parser.
 
-  Discover:
-  * `[[...]]` page links
-  * `#...` naked hashtags
-  * `#[[...]] braced hashtags
-  * `((...)) block refs
-  * `{{type: ((...))}}` typed block refs
-  * `{{type: ((...)), atr1: val1}}` typed block refs with optional attributes"
+  Discovers following structure references:
+  * [x] `[[...]]` page links
+  * [x] `#...` naked hashtags
+  * [x] `#[[...]] braced hashtags
+  * [x] `((...)) block refs
+  * [x] `{{type: ((...))}}` typed block refs
+  * [ ] `{{type: ((...)), atr1: val1}}` typed block refs with optional attributes"
   (:require
-    [athens.common.logging    :as log]
-    [clojure.string :as string]
+   [clojure.string            :as string]
     #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
        :clj [instaparse.core  :as insta :refer [defparser]])))
 
@@ -20,6 +19,7 @@
                braced-hashtag /
                naked-hashtag /
                block-ref /
+               typed-block-ref /
                text-run )*
    (* below we need to list all significant groups in lookbehind + $ *)
    text-run = #'.+?(?=(\\[\\[|\\]\\]|#|\\(\\(|\\)\\)|$))\\n?'
@@ -29,7 +29,7 @@
                  braced-hashtag /
                  naked-hashtag )+
                < double-square-close >
-   naked-hashtag = < hash > #'\\w+'
+   naked-hashtag = < hash > #'[\\w_-]+'
    braced-hashtag = < hash double-square-open >
                     ( text-till-double-square-close /
                       page-link /
@@ -41,11 +41,17 @@
                < double-paren-close >
    < text-till-double-square-close > = #'[^\\n$]*?(?=(\\]\\]|\\[\\[|#))'
    < text-till-double-paren-close > = #'[^\\s]*?(?=(\\)\\)))'
+   typed-block-ref = < double-curly-open >
+                     ref-type < #':\\s*' > block-ref
+                     < double-curly-close >
+   ref-type = #'[^:]+'
    hash = '#'
    double-square-open = '[['
    double-square-close = ']]'
    double-paren-open = '(('
-   double-paren-close = '))'")
+   double-paren-close = '))'
+   double-curly-open = '{{'
+   double-curly-close = '}}'")
 
 
 (defn- string-representation
@@ -82,18 +88,30 @@
   (apply conj [:braced-hashtag {:from (str "#[[" (apply string-representation contents) "]]")}]
          contents))
 
+(defn block-ref-transform
+  [block-ref-str]
+  [:block-ref {:from (str "((" block-ref-str "))")}
+   block-ref-str])
+
+(defn typed-block-ref-transform
+  [ref-type-el block-ref-el]
+  (let [ref-type       (second ref-type-el)
+        block-ref-from (-> block-ref-el second :from)]
+    [:typed-block-ref {:from (str "{{" ref-type ": " block-ref-from "}}")}
+     ref-type-el
+     block-ref-el]))
 
 (def transformations
-  {:text-or        text-or-transform
-   :page-link      page-link-transform
-   :naked-hashtag  naked-hashtag-transform
-   :braced-hashtag braced-hashtag-transform})
+  {:text-or         text-or-transform
+   :page-link       page-link-transform
+   :naked-hashtag   naked-hashtag-transform
+   :braced-hashtag  braced-hashtag-transform
+   :block-ref       block-ref-transform
+   :typed-block-ref typed-block-ref-transform})
 
 
 (defn structure-parser->ast
   [in]
-  (let [parse-result (insta/parse structure-parser in)]
-    (if-not (insta/failure? parse-result)
-      (insta/transform transformations parse-result)
-      (insta/get-failure parse-result))))
+  (let [parse-result (insta/parse structure-parser in :total true)]
+    (insta/transform transformations parse-result)))
 
