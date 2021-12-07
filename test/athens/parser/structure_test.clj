@@ -67,7 +67,7 @@
                  " subtopic"]]
 
                "[[abc #hashtag def]]"
-               [:paragraph          
+               [:paragraph
                 [:page-link
                  {:from "[[abc #hashtag def]]"}
                  "abc "
@@ -75,10 +75,11 @@
                  " def"]]
 
                "[[#[[topic]] subtopic]]"
-               [:paragraph          
+               [:paragraph
                 [:page-link {:from "[[#[[topic]] subtopic]]"}
                  [:hashtag {:from "#[[topic]]"} "topic"]
                  " subtopic"]])))
+
 
 (t/deftest hashtags-test
 
@@ -98,7 +99,7 @@
                 [:hashtag {:from "#between"} "between"]]
 
                "#hash #tags"
-               [:paragraph          
+               [:paragraph
                 [:hashtag {:from "#hash"} "hash"]
                 [:text-run " "]
                 [:hashtag {:from "#tags"} "tags"]]))
@@ -111,14 +112,14 @@
                  "hashtag"]]
 
                "#[[hashtag]]#[[without]]#[[spaces]]#[[between]]"
-               [:paragraph          
+               [:paragraph
                 [:hashtag {:from "#[[hashtag]]"} "hashtag"]
                 [:hashtag {:from "#[[without]]"} "without"]
                 [:hashtag {:from "#[[spaces]]"} "spaces"]
                 [:hashtag {:from "#[[between]]"} "between"]]
 
                "#[[hash]] #[[tags]]"
-               [:paragraph          
+               [:paragraph
                 [:hashtag {:from "#[[hash]]"} "hash"]
                 [:text-run " "]
                 [:hashtag {:from "#[[tags]]"} "tags"]]))
@@ -126,7 +127,7 @@
   (t/testing "mixed hashtags"
     (parses-to sut/structure-parser->ast
                "#[[hashtag #nested-bare]]"
-               [:paragraph          
+               [:paragraph
                 [:hashtag {:from "#[[hashtag #nested-bare]]"}
                  "hashtag "
                  [:hashtag {:from "#nested-bare"}
@@ -148,15 +149,16 @@
               [:block-ref {:from "((abc))"}
                "abc"]]
 
-             "((a b c))" ;; no spaces in block refs
+             "((a b c))" ; no spaces in block refs
              [:paragraph
               [:text-run "((a b c"]
               [:text-run "))"]]))
 
+
 (t/deftest typed-block-ref-test
   (parses-to sut/structure-parser->ast
              "{{embed: ((yeah))}}"
-             [:paragraph          
+             [:paragraph
               [:typed-block-ref
                {:from "{{embed: ((yeah))}}"}
                [:ref-type "embed"]

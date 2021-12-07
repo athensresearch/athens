@@ -9,7 +9,7 @@
   * [x] `{{type: ((...))}}` typed block refs
   * [ ] `{{type: ((...)), atr1: val1}}` typed block refs with optional attributes"
   (:require
-   [clojure.string            :as string]
+    [clojure.string            :as string]
     #?(:cljs [instaparse.core :as insta :refer-macros [defparser]]
        :clj [instaparse.core  :as insta :refer [defparser]])))
 
@@ -88,10 +88,12 @@
   (apply conj [:hashtag {:from (str "#[[" (apply string-representation contents) "]]")}]
          contents))
 
+
 (defn block-ref-transform
   [block-ref-str]
   [:block-ref {:from (str "((" block-ref-str "))")}
    block-ref-str])
+
 
 (defn typed-block-ref-transform
   [ref-type-el block-ref-el]
@@ -100,6 +102,7 @@
     [:typed-block-ref {:from (str "{{" ref-type ": " block-ref-from "}}")}
      ref-type-el
      block-ref-el]))
+
 
 (def transformations
   {:text-or         text-or-transform
