@@ -1,5 +1,6 @@
 (ns notebooks
   (:require
+    [clojure.java.io :as io]
     [nextjournal.clerk :as clerk]))
 
 
@@ -17,3 +18,15 @@
                                         ;; Ignore this file though.
                                         (not (= name "dev/notebooks/notebooks.clj"))))
                  :browse?        true}))
+
+
+(defn build-static-app!
+  [& _args]
+  (clerk/build-static-app!
+    {:out-path "vercel-static/clerk"
+     :paths (->> "dev/notebooks"
+                 io/file
+                 file-seq
+                 (filter #(.isFile %))
+                 (map io/as-relative-path)
+                 (filter #(not= % "dev/notebooks/notebooks.clj")))}))

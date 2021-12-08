@@ -255,3 +255,27 @@ jobs:
            allowUpdates: true
            prerelease: true
            draft: true
+
+
+   release-devtools:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v2
+       - uses: ./.github/custom-actions/clojure-env
+       - uses: ./.github/custom-actions/node-env
+
+       - name: Build static Storybook site
+         run: yarn storybook:static
+
+       - name: Build static Clerk site
+         run: yarn notebooks:static
+
+       - uses: amondnet/vercel-action@v20
+         with:
+           vercel-token: ${{ secrets.VERCEL_TOKEN }}
+           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+           github-token: ${{ secrets.GITHUB_TOKEN }}
+           # deploy files in vercel-static/
+           # prod build for pushes to main
+           vercel-args: vercel-static/ ${{ github.ref != 'refs/heads/main' && '--prod' || '' }}
