@@ -256,11 +256,11 @@
    [block-el block {:linked-ref false} {}])
   ([block linked-ref-data]
    [block-el block linked-ref-data {}])
-  ([_block linked-ref-data _opts]
+  ([block linked-ref-data _opts]
    (let [{:keys [linked-ref initial-open linked-ref-uid parent-uids]} linked-ref-data
          state (r/atom {:string/local      nil
                         :string/previous   nil
-                        ;; one of #{:page :block :slash :hashtag}
+                        ;; one of #{:page :block :slash :hashtag :template}
                         :search/type       nil
                         :search/results    nil
                         :search/query      nil
@@ -273,7 +273,8 @@
                         :context-menu/show false
                         :caret-position    nil
                         :show-editable-dom false
-                        :linked-ref/open   (or (false? linked-ref) initial-open)})]
+                        :linked-ref/open   (or (false? linked-ref) initial-open)
+                        :block/uid         (:block/uid block)})]
 
      (fn [block linked-ref-data opts]
        (let [{:block/keys [uid
