@@ -19,6 +19,7 @@
     "carve:interactive": "clojure -M:carve --opts '{:paths [\"src\" \"test\"]}'",
     "clj:outdated": "clojure -M:outdated",
     "notebooks": "clojure -M:notebooks",
+    "notebooks:static": "clojure -X:notebooks-static",
     "//client scripts": "",
     "dev": "yarn components && concurrently \"yarn components:watch\" \"yarn client:watch\"",
     "client:watch": "shadow-cljs watch main renderer app",
@@ -28,9 +29,8 @@
     "components:watch": "yarn components --watch",
     "prod": "yarn components && shadow-cljs release main renderer app",
     "dist": "electron-builder -p always",
-    "storybook:watch": "start-storybook -p 6006",
-    "storybook": "build-storybook",
-    "vercel-build": "yarn storybook",
+    "storybook": "start-storybook -p 6006",
+    "storybook:static": "build-storybook --output-dir vercel-static/storybook --quiet",
     "//server scripts": "",
     "server": "clojure -M:athens",
     "server:fluree": "docker-compose up --detach fluree",
@@ -172,7 +172,8 @@
     "standard-version": "^9.3.1",
     "storybook-dark-mode": "^1.0.8",
     "tsconfig-paths-webpack-plugin": "^3.5.1",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "vercel": "^23.1.2"
   },
   "resolutions-comments": {
     "ua-parser-js": "See https://github.com/faisalman/ua-parser-js/issues/536"
