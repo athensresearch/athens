@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.4](https://github.com/athensresearch/athens/compare/v2.0.0-beta.3...v2.0.0-beta.4) (2021-12-09)
+
+
+### Features
+
+* templates ([07733fc](https://github.com/athensresearch/athens/commit/07733fc42d9011633b064f4f538628cd266d0bff))
+
+
+### Bug Fixes
+
+* don't add classes to default paths ([39cb81d](https://github.com/athensresearch/athens/commit/39cb81d17ead2745ede257afcc6c6bb41b66af68))
+* handle big blocks ([599cf6a](https://github.com/athensresearch/athens/commit/599cf6a72c205287d161a4ee726f82856f8a1f71))
+* make clerk start ([d8cfd8c](https://github.com/athensresearch/athens/commit/d8cfd8cc6fb9d7743db9ac365d09797574f6c011))
+* make it save and exit. ([9c840b4](https://github.com/athensresearch/athens/commit/9c840b476d39d5eb54f04dcf6b6b850250d185b8))
+
+
+### Documentation
+
+* add rollback optimizations ADR proposal ([bbe75cb](https://github.com/athensresearch/athens/commit/bbe75cb680ab6711e44444dcf5478b1af791e785))
+
+
+### Work in Progress
+
+* Structure parser ([e1cac48](https://github.com/athensresearch/athens/commit/e1cac48438f5934b0d06c067609fac6f2aebf99c))
+* structure parser with typed-refs (just for `embed`) ([3525637](https://github.com/athensresearch/athens/commit/3525637e7d46eb5ab547135c11513cdeafd1d8f5))
+
+
+* ignore the notebooks build file, but watch others there ([b0197ed](https://github.com/athensresearch/athens/commit/b0197ed82d10381f86c319dc5a79490ad1c2526d))
+* style happy ([27490e4](https://github.com/athensresearch/athens/commit/27490e4edf225a3c5dcba0e539a2f6a5b5185c48))
+* support clerk notebooks ([7253a49](https://github.com/athensresearch/athens/commit/7253a4925ec9f0619fe6971ab5532aedd78220ae))
+* use uberdeps to create parametrized executable uberjars ([e4bcce6](https://github.com/athensresearch/athens/commit/e4bcce653c707462ad3ec347c376e059aa9160d1))
+
+
+### Refactors
+
+* move macro to utils. ([3f91ffb](https://github.com/athensresearch/athens/commit/3f91ffb42dd058390a925915d526cc6a6913af91))
+
 ## [2.0.0-beta.3](https://github.com/athensresearch/athens/compare/v2.0.0-beta.2...v2.0.0-beta.3) (2021-11-29)
 
 
