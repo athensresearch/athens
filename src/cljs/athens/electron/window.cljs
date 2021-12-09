@@ -42,6 +42,13 @@
 
 
 (rf/reg-event-fx
+  :minimize-win
+  (fn [_ _]
+    {:invoke-win! {:channel (:toggle-max-or-min-win-channel util/ipcMainChannels)
+                   :arg (clj->js true)}}))
+
+
+(rf/reg-event-fx
   :bind-win-listeners
   (fn [_ _]
     {:bind-win-listeners! {}}))
