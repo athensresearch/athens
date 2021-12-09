@@ -49,3 +49,11 @@
          ret# ~expr]
      (log/info ~prefix (- (now-ms) start#) "ms")
      ret#))
+
+
+(defmacro parses-to
+  [parser & tests]
+  `(t/are [in# out#] (= out# (do
+                               (println in#)
+                               (time (~parser in#))))
+     ~@tests))

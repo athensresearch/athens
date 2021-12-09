@@ -34,8 +34,7 @@
 # electron build
 dist
 
-# design system static build
-/storybook-static
+# design system output
 /src/gen
 
 # docker compose templating backup
@@ -48,3 +47,8 @@ athens-data/*
 # java AOT classes
 classes/*
 !classes/README.md
+
+# vercel static site deployment
+vercel-static/*
+!vercel-static/index.html
+.vercel
