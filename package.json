@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "2.0.0-beta.3",
+  "version": "2.0.0-beta.4",
   "description": "An open-source knowledege graph for research and notetaking",
   "repository": {
     "type": "git",
@@ -40,9 +40,9 @@
     "server:test:only": "clojure -M:test --var",
     "server:repl": "clojure -A:repl",
     "server:wipe": "rimraf athens-data/fluree",
-    "//cli scripts" : "",
-    "cli:save" : "clojure -M:athens-cli save",
-    "cli:load" : "clojure -M:athens-cli load",
+    "//cli scripts": "",
+    "cli:save": "clojure -M:athens-cli save",
+    "cli:load": "clojure -M:athens-cli load",
     "cli:compile": "clojure -M -e \"(compile 'athens.self-hosted.save-load')\"",
     "cli:uberjar": "clojure -M:uberdeps --main-class athens.self-hosted.save-load --target target/athens-cli.jar"
   },
@@ -159,7 +159,7 @@
     "babel-plugin-transform-imports": "^2.0.0",
     "concurrently": "^6.2.1",
     "electron": "^12.0.4",
-    "electron-builder": "22.10",
+    "electron-builder": "22.14",
     "electron-builder-notarize": "^1.2.0",
     "gh-pages": "^2.2.0",
     "karma": "^6.3.3",
