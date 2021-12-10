@@ -46,7 +46,7 @@
     "cli:save": "clojure -M:athens-cli save",
     "cli:load": "clojure -M:athens-cli load",
     "cli:recover": "clojure -M:athens-cli recover",
-    "cli:compile": "clojure -M -e \"(compile 'athens.self-hosted.save-load')\"",
+    "cli:compile": "clojure -M -e \"(compile 'athens.self-hosted.save-load)\"",
     "cli:uberjar": "clojure -M:uberdeps --main-class athens.self-hosted.save-load --target target/athens-cli.jar"
   },
   "main": "resources/main.js",
