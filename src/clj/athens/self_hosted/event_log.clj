@@ -4,6 +4,7 @@
     [athens.athens-datoms :as datoms]
     [athens.common.utils :as utils]
     [clojure.core.async :refer [<!!]]
+    [clojure.data :as data]
     [clojure.data.json :as json]
     [clojure.edn :as edn]
     [clojure.string :as str]
@@ -166,24 +167,67 @@
   [_conn _k])
 
 
+;; Recovery fns
+
+(defn- get-asserted-txs
+  [asserted]
+  (->> asserted
+       (map #(get % "_tx/tx"))
+       (remove nil?)
+       (map json/read-str)
+       (mapcat #(get % "tx"))
+       (filter #(get % "event/data"))))
+
+
+(defn- get-block-txs
+  [blocks]
+  (->> blocks
+       (map :asserted)
+       (mapcat get-asserted-txs)
+       (remove nil?)))
+
+
+(defn- recover-block-events
+  "Returns a seq of recovered events in conn for block=idx+1 in conn."
+  [conn idx]
+  (let [res @(fdb/block-query conn ledger {:block (inc idx) :pretty-print true})
+        ex-msg (ex-message res)]
+    ;; If the query because the is higher than the total blocks,
+    ;; result will be an error map instead of seq.
+    ;; Used with range-mapcat-while so we return ::stop to stop the iteration instead.
+    (if (and ex-msg (str/starts-with? ex-msg "Start block is out of range for this ledger."))
+      ::stop
+      (get-block-txs res))))
+
+
+(defn recovered-events
+  "Returns a lazy-seq of all recovered events in conn up to now.
+  Recovered events include events from failed transactions, as well as ones that succeed.
+  Can potentially be very large, so don't hold on to the seq head while
+  processing, and don't use fns that realize the whole coll (e.g. count)."
+  [fluree]
+  (let [f (partial recover-block-events (-> fluree :conn-atom deref))]
+    (map deserialize (utils/range-mapcat-while f #(= % ::stop)))))
+
+
 (comment
 
-  (def comp
+  (def fluree-comp
     (let [conn-atom    (atom nil)
           reconnect-fn (fn []
                          (when-some [conn @conn-atom]
                            (fdb/close conn))
                          (reset! conn-atom (fdb/connect "http://localhost:8090")))
-          comp         {:conn-atom    conn-atom
-                        :reconnect-fn reconnect-fn}]
-      comp))
-  ((:reconnect-fn comp))
+          fluree-comp         {:conn-atom    conn-atom
+                               :reconnect-fn reconnect-fn}]
+      fluree-comp))
+  ((:reconnect-fn fluree-comp))
 
   ;; Create ledger if not present.
-  (ensure-ledger! comp)
+  (ensure-ledger! fluree-comp)
 
   ;; What are the current events in the ledger?
-  (events comp)
+  (events fluree-comp)
 
   ;; Add a few events.
   (def my-events [["uuid-2" [1 2 3]]
@@ -191,12 +235,28 @@
                   ["uuid-3" [7 8 9]]])
 
   (doseq [[id data] my-events]
-    (add-event! comp id data))
+    (add-event! fluree-comp id data))
 
   ;; Add the same event multiple times, or with large sizes.
-  (add-event! comp "uuid-4" (apply str (repeat 1000 "a")))
+  (add-event! fluree-comp "uuid-4" (apply str (repeat 1000 "a")))
 
   ;; Check the events again.
-  (events comp)
+  (events fluree-comp)
 
-  @(fdb/delete-ledger (-> comp :conn-atom deref) ledger))
+  ;; How many events do we have total?
+  (count (events fluree-comp))
+  ;; How many events do we have if we count failed ones?
+  (count (recovered-events fluree-comp))
+
+  ;; Debug event recovery
+  (events-page (fdb/db (-> fluree-comp :conn-atom deref) ledger) 1 1)
+  (recover-block-events (-> fluree-comp :conn-atom deref) 3)
+  (take 3 (recovered-events fluree-comp))
+  (take 3 (events fluree-comp))
+
+  ;; This should be the same (e.g. [nil nil _]) for new graphs.
+  (data/diff (take 3 (recovered-events fluree-comp))
+             (take 3 (events fluree-comp)))
+
+  ;; Delete ledger.
+  @(fdb/delete-ledger (-> fluree-comp :conn-atom deref) ledger))
