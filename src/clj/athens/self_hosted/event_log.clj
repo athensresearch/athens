@@ -3,7 +3,7 @@
     [athens.async :as athens.async]
     [athens.athens-datoms :as datoms]
     [athens.common.utils :as utils]
-    [clojure.core.async :refer [<!!]]
+    [clojure.core.async :as async]
     [clojure.data :as data]
     [clojure.data.json :as json]
     [clojure.edn :as edn]
@@ -93,31 +93,39 @@
 
 (defn add-event!
   "Returns the block the event guaranteed to be present in."
-  [fluree id data]
-  (loop [retries-left 3]
-    (if (= retries-left 0)
-      (throw (ex-info "add-event! timed-out 3 times" {:id id}))
-      (let [conn                (-> fluree :conn-atom deref)
-            ch                  (fdb/transact-async conn ledger [(serialize id data)])
-            {:keys [status block]
-             :as   r}           (<!! (athens.async/with-timeout ch 5000 :timed-out))]
-        (cond
-          ;; NB: payloads that are too large will time out without an error message.
-          ;; The ledger will show `[server-loop] WARN - Max payload length 4m, get: 100000150`.
-          (= :timed-out r)
-          (do
-            (log/warn "fluree connection timed-out, reconnecting")
-            ((:reconnect-fn fluree))
-            (recur (dec retries-left)))
+  ([fluree id data]
+   (add-event! fluree id data 5000 1000))
+  ([fluree id data timeout backoff]
+   (loop [retries-left 3]
+     (if (= retries-left 0)
+       (throw (ex-info (str "add-event! timed-out 3 times on " id)
+                       {:id id}))
+       (let [conn                (-> fluree :conn-atom deref)
+             ch                  (fdb/transact-async conn ledger [(serialize id data)])
+             {:keys [status block]
+              :as   r}           (async/<!! (athens.async/with-timeout ch timeout :timed-out))]
+         (cond
+           ;; NB: payloads that are too large will time out without an error message.
+           ;; The ledger will show `[server-loop] WARN - Max payload length 4m, get: 100000150`.
+           (= :timed-out r)
+           (let [s (str "fluree connection timeout on " id " " retries-left " retries left")
+                 current-retry (- 4 retries-left)
+                 exponential-backoff (* current-retry current-retry backoff)]
+             (log/warn s "backing off" backoff "ms")
+             (async/<!! (async/timeout exponential-backoff))
+             (log/warn s "reconnecting")
+             ((:reconnect-fn fluree))
+             (recur (dec retries-left)))
 
-          (and (= status 200) block)
-          block
+           (and (= status 200) block)
+           block
 
-          (double-write? r)
-          (-> r ex-data :meta :block)
+           (double-write? r)
+           (-> r ex-data :meta :block)
 
-          :else
-          (throw (ex-info "add-event! failed to transact" {:id id :response r})))))))
+           :else
+           (throw (ex-info (str "add-event! failed to transact on " id)
+                           {:id id :response r}))))))))
 
 
 (defn ensure-ledger!
