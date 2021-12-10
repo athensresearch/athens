@@ -2,7 +2,9 @@
   (:require
     [athens.async :as athens.async]
     [athens.athens-datoms :as datoms]
+    [athens.common.utils :as utils]
     [clojure.core.async :refer [<!!]]
+    [clojure.data.json :as json]
     [clojure.edn :as edn]
     [clojure.string :as str]
     [clojure.tools.logging :as log]
@@ -51,34 +53,6 @@
      (UUID/fromString id)) (edn/read-string data)])
 
 
-;; Resources on lazy clojure ops.
-;; https://clojuredocs.org/clojure.core/lazy-seq
-;; https://clojuredocs.org/clojure.core/lazy-cat
-;; http://clojure-doc.org/articles/language/laziness.html
-;; https://stackoverflow.com/a/44102122/2116927
-;; The lazy-* fns aren't explicitly used here, but all fns used here are lazy,
-;; so the end result is lazy as well.
-(defn lazy-cat-while
-  "Returns a lazy concatenation of (f i), where i starts at 0 and increases by 1 each iteration.
-   Stops when (f i) is an empty seq."
-  [f]
-  (transduce (comp (map f)
-                   (take-while seq))
-             concat
-             (range)))
-
-
-(comment
-  (defn get-page [i]
-    (println "get-page" i)
-    (when (< i 3)
-      [1 2 3]))
-
-  (get-page 2)
-
-  (lazy-cat-while get-page))
-
-
 (defn- events-page
   "Returns a seq of events in page-number for all events in db split by page-size."
   [db page-size page-number]
@@ -98,7 +72,7 @@
   processing, and don't use fns that realize the whole coll (e.g. count)."
   [fluree]
   (let [f (partial events-page (fdb/db (-> fluree :conn-atom deref) ledger) 100)]
-    (map deserialize (lazy-cat-while f))))
+    (map deserialize (utils/range-mapcat-while f empty?))))
 
 
 (defn double-write?
