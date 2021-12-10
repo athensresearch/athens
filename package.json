@@ -35,6 +35,7 @@
     "server": "clojure -M:athens",
     "server:fluree": "docker-compose up --detach fluree",
     "server:fluree:down": "docker-compose down",
+    "server:fluree:clean": "rm -rf athens-data/fluree",
     "server:compile": "clojure -M -e \"(compile 'athens.self-hosted.core)\"",
     "server:uberjar": "clojure -M:uberdeps --aliases compiled-classes --main-class athens.self-hosted.core --target target/athens-lan-party-standalone.jar",
     "server:test": "clojure -X:test",
