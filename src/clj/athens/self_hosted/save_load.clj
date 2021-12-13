@@ -1,13 +1,14 @@
 (ns athens.self-hosted.save-load
   (:gen-class)
   (:require
+    [athens.common.logging :as log]
     [athens.self-hosted.components.fluree :as fluree-comp]
     [athens.self-hosted.event-log :as event-log]
-    [clojure.edn                :as edn]
+    [clojure.core.async :as async]
+    [clojure.edn :as edn]
     [clojure.string :as string]
     [clojure.tools.cli :refer [parse-opts]]
-    [fluree.db.api :as fdb]
-    [stylefy.impl.log :as log]))
+    [fluree.db.api :as fdb]))
 
 
 (defn save-log
@@ -23,6 +24,17 @@
     (-> comp :conn-atom deref fdb/close)))
 
 
+(defn recover-log
+  [args]
+  (let [{:keys [fluree-address
+                filename]} args
+        comp               (fluree-comp/create-fluree-comp fluree-address)
+        events             (event-log/recovered-events comp)]
+    (spit filename
+          (pr-str (doall events)))
+    (-> comp :conn-atom deref fdb/close)))
+
+
 (defn load-log
   [args]
   (let [{:keys [fluree-address
@@ -32,7 +44,8 @@
                                     :conn-atom
                                     deref)
         previous-events        (edn/read-string (slurp filename))
-        ledger-exists?         (seq  @(fdb/ledger-info conn event-log/ledger))]
+        ledger-exists?         (seq  @(fdb/ledger-info conn event-log/ledger))
+        progress               (atom 0)]
 
     ;; Delete the current ledger
     (if ledger-exists?
@@ -41,7 +54,16 @@
                             event-log/ledger)
         (log/warn "Please restart the fluree docker."))
       ;; Create the ledger again
-      (event-log/ensure-ledger! comp previous-events))))
+      (do
+        (event-log/ensure-ledger! comp [])
+        (doseq [[id data] previous-events]
+          (swap! progress inc)
+          (log/info "Processing" (str "#" @progress) id)
+          (event-log/add-event! comp id data 5000 10000)
+          (if (= 0 (rem @progress 1000))
+            (do (log/info "Pausing for 15s after 1000 events")
+                (async/<!! (async/timeout 15000)))
+            (async/<!! (async/timeout 50))))))))
 
 
 (def cli-options
@@ -65,6 +87,7 @@
         "Actions:"
         "  save     Save the current ledger"
         "  load     Load the passed ledger"
+        "  recover  Recover failed transactions from the current ledger"
         ""
         "Please refer to the manual page for more information."]
        (string/join \newline)))
@@ -81,17 +104,18 @@
   should exit (with an error message, and optional ok status), or a map
   indicating the action the program should take and the options provided."
   [args]
-  (let [{:keys [options arguments errors summary]}  (parse-opts args cli-options)]
+  (let [{:keys [options arguments errors summary]} (parse-opts args cli-options)]
     (cond
       ;; help => exit OK with usage summary
-      (:help options)                               {:exit-message (usage summary) :ok? true}
+      (:help options)           {:exit-message (usage summary) :ok? true}
       ;; errors => exit with description of errors
-      errors                                        {:exit-message (error-msg errors)}
+      errors                    {:exit-message (error-msg errors)}
       ;; custom validation on arguments
       (and (= 1 (count arguments))
-           (#{"save" "load"} (first arguments)))   {:action (first arguments) :options options}
+           (#{"save" "load" "recover"}
+            (first arguments))) {:action (first arguments) :options options}
       ;; failed custom validation => exit with usage summary
-      :else                                         {:exit-message (usage summary)})))
+      :else                     {:exit-message (usage summary)})))
 
 
 (defn exit
@@ -107,6 +131,7 @@
       (exit (if ok? 0 1) exit-message)
       (do
         (case action
-          "save"   (save-log options)
-          "load"   (load-log options))
+          "save"    (save-log options)
+          "load"    (load-log options)
+          "recover" (recover-log options))
         (System/exit 0)))))

@@ -1,4 +1,8 @@
 {:deps   true
+ ;; Don't install npm-deps declared in dependencies.
+ ;; If we need them, we install them manually.
+ ;; https://github.com/thheller/shadow-cljs/issues/800#issuecomment-725716087
+ :npm-deps {:install false}
  :nrepl  {:port 8777}
  :builds {
           ;; pure browser https://athensresearch.github.io/athens
