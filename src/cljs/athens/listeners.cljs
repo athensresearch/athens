@@ -220,9 +220,11 @@
     EventType.BEFOREUNLOAD
     (fn [e]
       (let [synced? @(subscribe [:db/synced])
+            idEditing? @(subscribe [:editing/uid])
             remote? (electron-utils/remote-db? @(subscribe [:db-picker/selected-db]))]
         (cond
-          (and (not synced?)
+          (and (or (not synced?)
+                   (not (= nil idEditing?)))
                (not @force-leave))
           (do
             ;; The browser blocks the confirm window during beforeunload, so
@@ -230,7 +232,7 @@
             ;; that allows closing the window.
             (dispatch [:confirm/js
                        (str "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. "
-                            "Try refreshing or quitting again once the sync is complete. "
+                            "Try refreshing or quitting again once the sync is complete. Make sure you exit out of any block you may be editing"
                             "Press OK to wait, or Cancel to leave without saving (will cause data loss!).")
                        #()
                        (fn []
