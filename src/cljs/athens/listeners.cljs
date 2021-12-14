@@ -220,11 +220,11 @@
     EventType.BEFOREUNLOAD
     (fn [e]
       (let [synced? @(subscribe [:db/synced])
-            isEditing? @(subscribe [:editing/uid])
+            editing? @(subscribe [:editing/uid])
             remote? (electron-utils/remote-db? @(subscribe [:db-picker/selected-db]))]
         (cond
           (and (or (not synced?)
-                   (not (= nil isEditing?)))
+                   (not (= nil editing?)))
                (not @force-leave))
           (do
             ;; The browser blocks the confirm window during beforeunload, so
