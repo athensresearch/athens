@@ -48,7 +48,13 @@
                        "one"]
                       [:text-run " and "]
                       [:page-link {:from "[[two]]"}
-                       "two"]]))
+                       "two"]]
+
+                     ;; empty links should not be links
+                     "[[]]"
+                     [:paragraph
+                      [:text-run "[["]
+                      [:text-run "]]"]]))
 
   (t/testing "nested page links"
     (utils/parses-to sut/structure-parser->ast
@@ -162,3 +168,32 @@
 
                    "{{neither: this}}"
                    [:paragraph [:text-run "{{neither: this}}"]]))
+
+
+(t/deftest ignore-structure-when-in-code-blocks
+  (utils/parses-to sut/structure-parser->ast
+                   "`[[not a link]]`"
+                   [:paragraph
+                    [:code-span]]
+
+                   "```clojure
+[[\"vector contents\"]]```"
+                   [:paragraph
+                    [:code-block]]
+
+                   "```clojure
+[[\"vector contents\"]]
+```"
+                   [:paragraph
+                    [:code-block]]
+
+                   "```
+[[\"vector contents\"]]```"
+                   [:paragraph
+                    [:code-block]]
+
+                   "```
+[[\"vector contents\"]]
+```"
+                   [:paragraph
+                    [:code-block]]))
