@@ -79,13 +79,13 @@
 
 
 (defn code-span-transform
-  [& contents]
+  [& _contents]
   ;; simply ignore code contents for structure
   [:code-span])
 
 
 (defn code-block-transform
-  [& contents]
+  [& _contents]
   ;; simply ignore code contents for structure
   [:code-block])
 
