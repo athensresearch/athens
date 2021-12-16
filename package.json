@@ -20,6 +20,8 @@
     "clj:outdated": "clojure -M:outdated",
     "notebooks": "clojure -M:notebooks",
     "notebooks:static": "clojure -X:notebooks-static",
+    "vercel:install": "./script/vercel-setup.sh && yarn && clojure -P",
+    "vercel:build": "yarn notebooks:static && yarn storybook:static",
     "//client scripts": "",
     "dev": "yarn components && concurrently \"yarn components:watch\" \"yarn client:watch\"",
     "client:watch": "shadow-cljs watch main renderer app",
