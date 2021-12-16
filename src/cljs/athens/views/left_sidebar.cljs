@@ -1,12 +1,9 @@
 (ns athens.views.left-sidebar
   (:require
     [athens.db :as db]
-    [athens.router :refer [navigate-uid]]
+    [athens.router :as router]
     [athens.style :refer [color OPACITIES]]
     [athens.util :refer [mouse-offset vertical-center]]
-    ;; [athens.views.buttons :refer [button]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [posh.reagent :refer [q]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -110,14 +107,15 @@
 (defn shortcut-component
   [[_ _ _]]
   (let [drag (r/atom nil)]
-    (fn [[order title uid]]
+    (fn [[order title]]
       [:li
        [:a (use-style (merge shortcut-style
                              (case @drag
                                :above {:border-top [["1px" "solid" (color :link-color)]]}
                                :below {:border-bottom [["1px" "solid" (color :link-color)]]}
                                {}))
-                      {:on-click      (fn [e] (navigate-uid uid e))
+                      {:on-click      (fn [e]
+                                        (router/navigate-page title e))
                        :draggable     true
                        :on-drag-over  (fn [e]
                                         (.. e preventDefault)
@@ -141,9 +139,11 @@
                                           (prn source-order order)
                                           (cond
                                             (= source-order order) nil
-                                            (and (= source-order (dec order)) (= @drag :above)) nil
-                                            (= @drag :below) (dispatch [:left-sidebar/drop-below source-order order])
-                                            :else (dispatch [:left-sidebar/drop-above source-order order])))
+                                            (and (= source-order
+                                                    (dec order))
+                                                 (= @drag :above)) nil
+                                            (= @drag :below)       (dispatch [:left-sidebar/drop source-order order :after])
+                                            :else                  (dispatch [:left-sidebar/drop source-order order :before])))
                                         (reset! drag nil))})
         title]])))
 

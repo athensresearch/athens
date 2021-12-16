@@ -4,24 +4,24 @@
     ["@sentry/react" :as Sentry]
     ["@sentry/tracing" :as tracing]
     [athens.coeffects]
+    [athens.common.logging :as log]
     [athens.components]
     [athens.config :as config]
     [athens.db :refer [dsdb]]
     [athens.effects]
-    [athens.electron]
+    [athens.electron.core]
     [athens.events]
+    [athens.interceptors]
     [athens.listeners :as listeners]
     [athens.router :as router]
     [athens.style :as style]
     [athens.subs]
     [athens.util :as util]
     [athens.views :as views]
-    [cljs.reader :refer [read-string]]
+    [datalog-console.integrations.datascript :as datalog-console]
     [goog.dom :refer [getElement]]
-    [goog.object :as gobj]
     [re-frame.core :as rf]
-    [reagent.dom :as r-dom]
-    [stylefy.core :as stylefy]))
+    [reagent.dom :as r-dom]))
 
 
 (goog-define SENTRY_DSN "")
@@ -30,7 +30,7 @@
 (defn dev-setup
   []
   (when config/debug?
-    (println "dev mode")))
+    (log/info "dev mode")))
 
 
 (defn ^:dev/after-load mount-root
@@ -54,7 +54,10 @@
     (.init Sentry (clj->js {:dsn SENTRY_DSN
                             :release          (str "athens@" (util/athens-version))
                             :integrations     [(new (.. tracing -Integrations -BrowserTracing))
-                                               (new (.. integrations -CaptureConsole) (clj->js {:levels ["warn" "error" "debug" "assert"]}))]
+                                               (new (.. integrations -CaptureConsole)
+                                                    (clj->js {:levels ["error" "assert"]}))
+                                               (new (.. integrations -ReportingObserver)
+                                                    (clj->js {:types ["crash"]}))]
                             :environment      (if config/debug? "development" "production")
                             :beforeSend       #(when (sentry-on?) %)
                             :tracesSampleRate 1.0}))))
@@ -78,34 +81,23 @@
           (.sendSync ipcRenderer "confirm-update"))))))
 
 
-(defn init-windowsize
-  "When the app is initialized, check if we should use the last window size and if so, set the current window size to that value"
+(defn init-styles
   []
-  (when (util/electron?)
-    (let [curWindow        (.getCurrentWindow athens.electron/remote)
-          [lastx lasty]    (util/get-window-size)]
-      (.setSize curWindow lastx lasty)
-      (.center curWindow)
-      (.on ^js curWindow "close" (fn [e]
-                                   (let [sender (.-sender e)
-                                         [x y] (.getSize ^js sender)]
-                                     (rf/dispatch [:window/set-size [x y]])))))))
+  (util/add-body-classes (util/app-classes {:os        (util/get-os)
+                                            :electron? (util/electron?)})))
 
 
-(defn init-datalog-console
+(defn boot-evts
   []
-  (js/document.documentElement.setAttribute "__datalog-console-remote-installed__" true)
-  (let [conn dsdb]
-    (.addEventListener js/window "message"
-                       (fn [event]
-                         (when-let [devtool-message (gobj/getValueByKeys event "data" ":datalog-console.client/devtool-message")]
-                           (let [msg-type (:type (read-string devtool-message))]
-                             (case msg-type
+  (if (util/electron?)
+    [:boot/desktop]
+    [:boot/web]))
 
-                               :datalog-console.client/request-whole-database-as-string
-                               (.postMessage js/window #js {":datalog-console.remote/remote-message" (pr-str @conn)} "*")
 
-                               nil)))))))
+(rf/reg-event-fx
+  :boot
+  (fn [_ _]
+    {:dispatch (boot-evts)}))
 
 
 (defn init
@@ -113,13 +105,11 @@
   (set-global-alert!)
   (init-sentry)
   (init-ipcRenderer)
-  (init-windowsize)
   (style/init)
-  (stylefy/tag "body" style/app-styles)
+  (init-styles)
   (listeners/init)
-  (init-datalog-console)
-  (if (util/electron?)
-    (rf/dispatch-sync [:boot/desktop])
-    (rf/dispatch-sync [:boot/web]))
+  (when config/debug?
+    (datalog-console/enable! {:conn dsdb}))
+  (rf/dispatch-sync (boot-evts))
   (dev-setup)
   (mount-root))

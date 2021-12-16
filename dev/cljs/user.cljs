@@ -1,3 +1,7 @@
+#_{:clj-kondo/ignore [:unused-namespace
+                      :unused-referred-var]}
+
+
 (ns cljs.user
   "Commonly used symbols for easy access in the ClojureScript REPL during
   development."
@@ -6,3 +10,4 @@
                                   find-doc print-doc pst source)]
     [clojure.pprint :refer (pprint)]
     [clojure.string :as str]))
+

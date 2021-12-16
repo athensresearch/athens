@@ -1,18 +1,22 @@
 (ns athens.views.blocks.content
   (:require
-    [athens.config                        :as config]
-    [athens.db                            :as db]
-    [athens.electron                      :as electron]
-    [athens.parse-renderer                :refer [parse-and-render]]
-    [athens.style                         :as style]
-    [athens.util                          :as util]
+    [athens.config :as config]
+    [athens.db :as db]
+    [athens.events.selection :as select-events]
+    [athens.parse-renderer :refer [parse-and-render]]
+    [athens.style :as style]
+    [athens.subs.selection :as select-subs]
+    [athens.util :as util]
+    [athens.views.blocks.internal-representation :as internal-representation]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [clojure.set                          :as set]
-    [garden.selectors                     :as selectors]
-    [goog.events                          :as goog-events]
-    [komponentit.autosize                 :as autosize]
-    [re-frame.core                        :as rf]
-    [stylefy.core                         :as stylefy])
+    [clojure.edn :as edn]
+    [clojure.set :as set]
+    [clojure.string :as str]
+    [garden.selectors :as selectors]
+    [goog.events :as goog-events]
+    [komponentit.autosize :as autosize]
+    [re-frame.core :as rf]
+    [stylefy.core :as stylefy])
   (:import
     (goog.events
       EventType)))
@@ -213,37 +217,47 @@
                                  (filter (fn [[_idx uid]]
                                            (= target-uid uid)))
                                  ffirst)
-        selected-uids       @(rf/subscribe [:selected/items])
+        selected-uids       (set @(rf/subscribe [::select-subs/items]))
         candidate-uids      (->> indexed-uids
                                  (filter (fn [[idx _uid]]
                                            (<= (min start-index end-index)
                                                idx
                                                (max start-index end-index))))
                                  (map second)
-                                 (into (or selected-uids #{})))
+                                 (into #{}))
         descendants-uids    (loop [descendants    #{}
                                    ancestors-uids candidate-uids]
                               (if (seq ancestors-uids)
                                 (let [ancestors-children (->> ancestors-uids
                                                               (mapcat #(get uids->children-uids %))
                                                               (into #{}))]
-                                  (recur (apply conj descendants ancestors-children)
+                                  (recur (set/union descendants ancestors-children)
                                          ancestors-children))
                                 descendants))
         to-remove-uids      (set/intersection selected-uids descendants-uids)
-        selection-new-uids  (set/difference candidate-uids descendants-uids)]
+        selection-new-uids  (set/difference candidate-uids descendants-uids)
+        new-selected-uids   (-> selected-uids
+                                (set/difference to-remove-uids)
+                                (set/union selection-new-uids))
+        selection-order     (->> indexed-uids
+                                 (filter (fn [[_k v]]
+                                           (contains? new-selected-uids v)))
+                                 (mapv second))]
     (when config/debug?
       (js/console.debug (str "selection: " (pr-str selected-uids)
                              ", candidates: " (pr-str candidate-uids)
                              ", descendants: " (pr-str descendants-uids)
                              ", rm: " (pr-str to-remove-uids)
-                             ", add: " (pr-str selection-new-uids))))
+                             ", add: " (pr-str selection-new-uids)))
+      (js/console.debug :find-selected-items (pr-str {:source-uid      source-uid
+                                                      :target-uid      target-uid
+                                                      :selection-order selection-order})))
     (when (and start-index end-index)
-      (rf/dispatch [:selected/remove-items to-remove-uids])
-      (rf/dispatch [:selected/add-items selection-new-uids]))))
+      (rf/dispatch [::select-events/set-items selection-order]))))
 
 
 ;; Event Handlers
+
 
 (defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
@@ -263,30 +277,50 @@
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
   [e uid state]
-  (let [data        (.. e -clipboardData)
-        text-data   (.. data (getData "text"))
-        line-breaks (re-find #"\r?\n" text-data)
-        no-shift    (-> @state :last-keydown :shift not)
-        items       (array-seq (.. e -clipboardData -items))
+  (let [data                    (.. e -clipboardData)
+        text-data               (.getData data "text/plain")
+        ;; With internal representation
+        internal-representation (some-> (.getData data "application/athens-representation")
+                                        edn/read-string)
+        internal?               (seq internal-representation)
+        new-uids                (internal-representation/new-uids-map internal-representation)
+        repr-with-new-uids      (into [] (internal-representation/update-uids internal-representation new-uids))
+
+        ;; For images in clipboard
+        items               (array-seq (.. e -clipboardData -items))
         {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
-        img-regex   #"(?i)^image/(p?jpeg|gif|png)$"]
+        img-regex           #"(?i)^image/(p?jpeg|gif|png)$"
+        callback            (fn [new-str]
+                              (js/setTimeout #(swap! state assoc :string/local new-str)
+                                             50))
+
+        ;; External to internal representation
+        text-to-inter (when-not (str/blank? text-data)
+                        (internal-representation/text-to-internal-representation text-data))
+        line-breaks   (re-find #"\r?\n" text-data)
+        no-shift      (-> @state :last-keydown :shift not)]
+
+
     (cond
+      ;; For internal representation
+      internal?
+      (do
+        (.. e preventDefault)
+        (rf/dispatch [:paste-internal uid repr-with-new-uids]))
+
+      ;; For images
       (seq (filter (fn [item]
                      (let [datatype (.. item -type)]
                        (re-find img-regex datatype))) items))
-      (mapv (fn [item]
-              (let [datatype (.. item -type)]
-                (cond
-                  (re-find img-regex datatype) (when (util/electron?)
-                                                 (let [new-str (electron/save-image head tail item "png")]
-                                                   (js/setTimeout #(swap! state assoc :string/local new-str) 50)))
-                  (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
-            items)
+      ;; Need dispatch-sync because with dispatch we lose the clipboard data context
+      ;; on callee side
+      (rf/dispatch-sync [:paste-image items head tail callback])
 
+      ;; For external copy-paste
       (and line-breaks no-shift)
       (do
         (.. e preventDefault)
-        (rf/dispatch [:paste uid text-data]))
+        (rf/dispatch [:paste-internal uid text-to-inter]))
 
       (not no-shift)
       (do
@@ -313,7 +347,7 @@
              target-uid
              (not= source-uid target-uid))
       (find-selected-items e source-uid target-uid)
-      (rf/dispatch [:selected/clear-items]))))
+      (rf/dispatch [::select-events/clear]))))
 
 
 (defn global-mouseup
@@ -343,7 +377,7 @@
   (let [source-uid @(rf/subscribe [:editing/uid])
         mouse-down @(rf/subscribe [:mouse-down])]
     (when mouse-down
-      (rf/dispatch [:selected/clear-items])
+      (rf/dispatch [::select-events/clear])
       (find-selected-items e source-uid target-uid))))
 
 
@@ -357,14 +391,15 @@
   [block state]
   (let [{:block/keys [uid original-uid header]} block
         editing? (rf/subscribe [:editing/is-editing uid])
-        selected-items (rf/subscribe [:selected/items])]
+        selected-items (rf/subscribe [::select-subs/items])]
     (fn [_block _state]
       (let [font-size (case header
                         1 "2.1em"
                         2 "1.7em"
                         3 "1.3em"
                         "1em")]
-        [:div {:class "block-content" :style {:font-size font-size}}
+        [:div {:class ["block-content"]
+               :style {:font-size font-size}}
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
          ;; When block is in editing mode or the editing DOM elements are rendered
          (when (or (:show-editable-dom @state) editing?)

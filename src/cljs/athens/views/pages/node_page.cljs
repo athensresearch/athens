@@ -1,5 +1,8 @@
 (ns athens.views.pages.node-page
   (:require
+    ["/components/Block/components/Anchor" :refer [Anchor]]
+    ["/components/Button/Button" :refer [Button]]
+    ["/components/Dialog/Dialog" :refer [Dialog]]
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
@@ -9,21 +12,18 @@
     ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
     ["@material-ui/icons/Link" :default Link]
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
+    [athens.common-db :as common-db]
+    [athens.common.utils :as utils]
+    [athens.dates :as dates]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
-    [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
-    [athens.patterns :as patterns]
-    [athens.router :refer [navigate-uid navigate]]
+    [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+    [athens.router :as router]
     [athens.style :refer [color DEPTH-SHADOWS]]
-    [athens.util :refer [now-ts gen-block-uid escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
-    [athens.views.alerts :refer [alert-component]]
-    [athens.views.blocks.bullet :as bullet]
+    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-    [athens.views.buttons :refer [button]]
     [athens.views.dropdown :refer [menu-style menu-separator-style]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
@@ -55,6 +55,7 @@
 
 (def dropdown-style
   {::stylefy/manual [[:.menu {:background (color :background-plus-2)
+                              :color (color :body-text-color)
                               :border-radius "calc(0.25rem + 0.25rem)" ; Button corner radius + container padding makes "concentric" container radius
                               :padding "0.25rem"
                               :display "inline-flex"
@@ -165,25 +166,30 @@
 
 (defn handle-new-first-child-block-click
   [parent-uid]
-  (let [new-uid   (gen-block-uid)
-        now       (now-ts)]
-    (dispatch [:transact [{:block/uid       parent-uid
-                           :edit/time       now
-                           :block/children  [{:block/order  0
-                                              :block/uid    new-uid
-                                              :block/open   true
-                                              :block/string ""}]}]])
+  (let [new-uid               (utils/gen-block-uid)
+        [parent-uid embed-id] (db/uid-and-embed-id parent-uid)
+        parent-block          (db/get-block [:block/uid parent-uid])]
+    (dispatch [:enter/add-child {:block     parent-block
+                                 :new-uid   new-uid
+                                 :embed-id  embed-id}])
     (dispatch [:editing/uid new-uid])))
 
 
 (defn handle-enter
   [e uid _state children]
   (.. e preventDefault)
-  (let [node-page  (.. e -target (closest ".node-page"))
-        block-page (.. e -target (closest ".block-page"))
+  (let [node-page             (.. e -target (closest ".node-page"))
+        block-page            (.. e -target (closest ".block-page"))
+        [uid embed-id]        (common-db/uid-and-embed-id uid)
+        new-uid               (utils/gen-block-uid)
         {:keys [start value]} (textarea-keydown/destruct-key-down e)]
     (cond
-      block-page (dispatch [:split-block-to-children uid value start])
+      block-page (dispatch [:enter/split-block {:uid        uid
+                                                :value      value
+                                                :index      start
+                                                :new-uid    new-uid
+                                                :embed-id   embed-id
+                                                :relation   :first}])
       node-page (if (empty? children)
                   (handle-new-first-child-block-click uid)
                   (dispatch [:down uid])))))
@@ -243,40 +249,6 @@
     (swap! state assoc :title/local value)))
 
 
-(defn map-new-refs
-  "Find and replace linked ref with new linked ref, based on title change."
-  [linked-refs old-title new-title]
-  (map (fn [{:block/keys [uid string]}]
-         (let [new-str (str/replace string
-                                    (patterns/linked old-title)
-                                    (str "$1$3$4" new-title "$2$5"))]
-           {:db/id [:block/uid uid]
-            :block/string new-str}))
-       linked-refs))
-
-
-(defn get-existing-page
-  "?uid used for navigate-uid. Go to existing page following the merge."
-  [local-title]
-  (d/q '[:find ?uid .
-         :in $ ?t
-         :where
-         [?e :node/title ?t]
-         [?e :block/uid ?uid]]
-       @db/dsdb local-title))
-
-
-(defn existing-block-count
-  "Count is used to reindex blocks after merge."
-  [local-title]
-  (count (d/q '[:find [?ch ...]
-                :in $ ?t
-                :where
-                [?e :node/title ?t]
-                [?e :block/children ?ch]]
-              @db/dsdb local-title)))
-
-
 (declare init-state)
 
 
@@ -287,34 +259,33 @@
      - confirm-fn: delete current page, rewrite linked refs, merge blocks, and navigate to existing page
      - cancel-fn: reset state
   The current blocks will be at the end of the existing page."
-  [node state linked-refs]
-  (let [{dbid :db/id children :block/children} node
-        {:keys [title/initial title/local]} @state]
-    (when (not= initial local)
-      (let [existing-page     (get-existing-page local)
-            linked-ref-blocks (mapcat second linked-refs)
-            new-linked-refs   (map-new-refs linked-ref-blocks initial local)]
-        (if (empty? existing-page)
-          (let [new-page   {:db/id dbid :node/title local}
-                new-datoms (concat [new-page] new-linked-refs)]
-            (swap! state assoc :title/initial local)
-            (dispatch [:transact new-datoms]))
-          (let [new-parent-uid            existing-page
-                existing-page-block-count (existing-block-count local)
-                reindex                   (map (fn [{:block/keys [order uid]}]
-                                                 {:db/id           [:block/uid uid]
-                                                  :block/order     (+ order existing-page-block-count)
-                                                  :block/_children [:block/uid new-parent-uid]})
-                                               children)
-                delete-page               [:db/retractEntity dbid]
-                new-datoms                (concat [delete-page]
-                                                  new-linked-refs
-                                                  reindex)
-                cancel-fn                 #(swap! state merge init-state)
-                confirm-fn                (fn []
-                                            (navigate-uid new-parent-uid)
-                                            (dispatch [:transact new-datoms])
-                                            (cancel-fn))]
+  [node state]
+  (let [{page-uid :block/uid} node
+        {:title/keys [initial
+                      local]} @state
+        do-nothing?           (= initial local)]
+    (js/console.debug "handle-blur: do-nothing?" do-nothing?
+                      ", local:" (pr-str local)
+                      ", page-uid:" page-uid)
+    (when-not do-nothing?
+      (let [existing-page-uid (common-db/get-page-uid @db/dsdb local)
+            merge?            (not (nil?  existing-page-uid))]
+        (js/console.debug "new-page-name:" (pr-str local)
+                          ", existing-page-uid:" (pr-str existing-page-uid))
+        (if-not merge?
+          (dispatch [:page/rename {:page-uid page-uid
+                                   :old-name initial
+                                   :new-name local
+                                   :callback #(swap! state assoc :title/initial local)}])
+
+          (let [cancel-fn  #(swap! state merge init-state)
+                confirm-fn (fn []
+                             (router/navigate-page local)
+                             (dispatch [:page/merge {:from-name initial
+                                                     :to-name   local
+                                                     :callback  cancel-fn}]))]
+            ;; display alert
+            ;; NOTE: alert should be global reusable component, not local to node_page
             (swap! state assoc
                    :alert/show true
                    :alert/message (str "\"" local "\"" " already exists, merge pages?")
@@ -328,7 +299,7 @@
   [parent-uid]
   [:div {:class "block-container"}
    [:div {:style {:display "flex"}}
-    [:span (use-style bullet/bullet-style)]
+    [:> Anchor]
     [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
 
 
@@ -360,14 +331,14 @@
   (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node]
     (r/with-let [ele (r/atom nil)]
                 [:<>
-                 [button {:class    [(when @ele "is-active")]
-                          :on-click #(reset! ele (.-currentTarget %))
-                          :style    page-menu-toggle-style}
+                 [:> Button {:class    [(when @ele "is-active")]
+                             :on-click #(reset! ele (.-currentTarget %))
+                             :style    page-menu-toggle-style}
                   [:> MoreHoriz]]
                  [m-popover
                   (merge (use-style dropdown-style)
                          {:style {:font-size "14px"}
-                          :open            @ele
+                          :open            (boolean @ele)
                           :anchorEl        @ele
                           :onClose         #(reset! ele nil)
                           :anchorOrigin    #js{:vertical   "bottom"
@@ -380,31 +351,28 @@
                   [:div (use-style menu-style)
                    [:<>
                     (if sidebar
-                      [button {:on-click #(dispatch [:page/remove-shortcut uid])}
-                       [:<>
-                        [:> BookmarkBorder]
-                        [:span "Remove Shortcut"]]]
-                      [button {:on-click #(dispatch [:page/add-shortcut uid])}
-                       [:<>
-                        [:> Bookmark]
-                        [:span "Add Shortcut"]]])
-                    [button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
-                     [:<>
-                      [:> BubbleChart]
-                      [:span "Show Local Graph"]]]]
+                      [:> Button {:on-click #(dispatch [:left-sidebar/remove-shortcut title])}
+                       [:> BookmarkBorder]
+                       [:span "Remove Shortcut"]]
+                      [:> Button {:on-click #(dispatch [:left-sidebar/add-shortcut title])}
+                       [:> Bookmark]
+                       [:span "Add Shortcut"]])
+                    [:> Button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
+                     [:> BubbleChart]
+                     [:span "Show Local Graph"]]]
                    [:hr (use-style menu-separator-style)]
-                   [button {:on-click (fn []
-                                        ;; if page being deleted is in right sidebar, remove from right sidebar
-                                        (when (contains? @(subscribe [:right-sidebar/items]) uid)
-                                          (dispatch [:right-sidebar/close-item uid]))
-                                        ;; if page being deleted is open, navigate to all pages
-                                        (when (= @(subscribe [:current-route/uid]) uid)
-                                          (navigate :pages))
-                                        ;; if daily note, delete page and remove from daily notes, otherwise just delete page
-                                        (if daily-note?
-                                          (dispatch [:daily-note/delete uid title])
-                                          (dispatch [:page/delete uid title])))}
-                    [:<> [:> Delete] [:span "Delete Page"]]]]]])))
+                   [:> Button {:on-click (fn []
+                                           ;; if page being deleted is in right sidebar, remove from right sidebar
+                                           (when (contains? @(subscribe [:right-sidebar/items]) uid)
+                                             (dispatch [:right-sidebar/close-item uid]))
+                                           ;; if page being deleted is open, navigate to all pages
+                                           (when (= @(subscribe [:current-route/uid]) uid)
+                                             (router/navigate :pages))
+                                           ;; if daily note, delete page and remove from daily notes, otherwise just delete page
+                                           (if daily-note?
+                                             (dispatch [:daily-note/delete uid title])
+                                             (dispatch [:page/delete uid title])))}
+                    [:> Delete] [:span "Delete Page"]]]]])))
 
 
 (defn ref-comp
@@ -442,7 +410,7 @@
               (not daily-notes?))
       [:section (use-style references-style)
        [:h4 (use-style references-heading-style)
-        [button {:on-click (fn [] (swap! state update linked? not))}
+        [:> Button {:on-click (fn [] (swap! state update linked? not))}
          (if (get @state linked?)
            [:> KeyboardArrowDown]
            [:> ChevronRight])]
@@ -457,7 +425,8 @@
             (for [[group-title group] linked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
+                [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title) %)}
+                 group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
@@ -475,12 +444,12 @@
     (when (not daily-notes?)
       [:section (use-style references-style)
        [:h4 (use-style references-heading-style)
-        [button {:on-click (fn []
-                             (if (get @state unlinked?)
-                               (swap! state assoc unlinked? false)
-                               (let [un-refs (get-unlinked-references (escape-str title))]
-                                 (swap! state assoc unlinked? true)
-                                 (reset! unlinked-refs un-refs))))}
+        [:> Button {:on-click (fn []
+                                (if (get @state unlinked?)
+                                  (swap! state assoc unlinked? false)
+                                  (let [un-refs (get-unlinked-references (escape-str title))]
+                                    (swap! state assoc unlinked? true)
+                                    (reset! unlinked-refs un-refs))))}
          (if (get @state unlinked?)
            [:> KeyboardArrowDown]
            [:> ChevronRight])]
@@ -490,19 +459,25 @@
                        :width "100%"}}
          [:span unlinked?]
          (when (and unlinked? (not-empty @unlinked-refs))
-           [button {:style    {:font-size "14px"}
-                    :on-click (fn []
-                                (dispatch [:unlinked-references/link-all @unlinked-refs title])
-                                (swap! state assoc unlinked? false)
-                                (reset! unlinked-refs []))}
+           [:> Button {:style    {:font-size "14px"}
+                       :on-click (fn []
+                                   (let [unlinked-str-ids (->> @unlinked-refs
+                                                               (mapcat second)
+                                                               (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
+                                     (dispatch [:unlinked-references/link-all unlinked-str-ids title]))
+
+                                   (swap! state assoc unlinked? false)
+
+                                   (reset! unlinked-refs []))}
             "Link All"])]]
        (when (get @state unlinked?)
          [:div (use-style references-list-style)
           (doall
-            (for [[group-title group] @unlinked-refs]
+            (for [[[group-title] group] @unlinked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
+                [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title) %)}
+                 group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
@@ -514,16 +489,16 @@
                             {:style {:max-width "90%"}})
                      [ref-comp block]]
                     (when unlinked?
-                      [button {:style    {:margin-top "1.5em"}
-                               :on-click (fn []
-                                           (let [hm                (into (hash-map) @unlinked-refs)
-                                                 new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
-                                                                                                               (= uid (:block/uid block)))
-                                                                                                             %))
-                                                                        seq)]
-                                             ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
-                                             (reset! unlinked-refs new-unlinked-refs)
-                                             (dispatch [:unlinked-references/link block title])))}
+                      [:> Button {:style    {:margin-top "1.5em"}
+                                  :on-click (fn []
+                                              (let [hm                (into (hash-map) @unlinked-refs)
+                                                    new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
+                                                                                                                  (= uid (:block/uid block)))
+                                                                                                                %))
+                                                                           seq)]
+                                                ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
+                                                (reset! unlinked-refs new-unlinked-refs)
+                                                (dispatch [:unlinked-references/link block title])))}
                        "Link"])]))]))])])))
 
 
@@ -544,7 +519,7 @@
         (reset! block-uid (:block/uid node)))
       (let [{:block/keys [children uid] title :node/title} node
             {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
-            daily-note?  (is-daily-note uid)
+            daily-note?  (dates/is-daily-note uid)
             on-daily-notes? (= :home @(subscribe [:current-route/name]))]
 
 
@@ -554,10 +529,10 @@
                                      :data-uid uid})
 
          (when alert-show
-           [:div (use-style {:position "absolute"
-                             :top      "50px"
-                             :left     "35%"})
-            [alert-component message confirm-fn cancel-fn]])
+           [:> Dialog {:isOpen true
+                       :title message
+                       :onConfirm confirm-fn
+                       :onDismiss cancel-fn}])
 
 
          ;; Header
@@ -572,7 +547,7 @@
                            :on-click (fn [e]
                                        (.. e preventDefault)
                                        (if (or daily-note? (.. e -shiftKey))
-                                         (navigate-uid uid e)
+                                         (router/navigate-uid uid e)
                                          (dispatch [:editing/uid uid])))})
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
@@ -587,7 +562,7 @@
                               ;; add title Untitled-n for empty titles
                               (when (empty? (:title/local @state))
                                 (swap! state assoc :title/local (auto-inc-untitled)))
-                              (handle-blur node state linked-refs))
+                              (handle-blur node state))
                :on-key-down (fn [e] (handle-key-down e uid state children))
                :on-change   (fn [e] (handle-change e state))}])
            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)

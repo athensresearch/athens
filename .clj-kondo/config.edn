@@ -1,7 +1,5 @@
 {:linters {:unresolved-namespace         {:exclude [clojure.string]}
-           :unresolved-symbol            {:exclude [(devcards.core/defcard)
-                                                    (devcards.core/defcard-rg)
-                                                    random-uuid
+           :unresolved-symbol            {:exclude [random-uuid
                                                     goog.DEBUG
                                                     (com.rpl.specter/recursive-path)]}
            :unused-referred-var          {:exclude {clojure.test [is deftest testing]}}

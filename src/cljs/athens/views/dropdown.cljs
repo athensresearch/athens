@@ -2,8 +2,6 @@
   (:require
     [athens.db]
     [athens.style :refer [color DEPTH-SHADOWS ZINDICES]]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [garden.selectors :as selectors]
     [stylefy.core :as stylefy]))
 
@@ -20,6 +18,7 @@
 
 (def dropdown-style
   {:display "inline-flex"
+   :color (color :body-text-color)
    :z-index (:zindex-dropdown ZINDICES)
    :padding "0.25rem"
    :border-radius "calc(0.25rem + 0.25rem)" ; Button corner radius + container padding makes "concentric" container radius
@@ -41,10 +40,7 @@
    :overflow "auto"
    ::stylefy/manual [[(selectors/& (selectors/not (selectors/first-child))) {:margin-block-start "0.25rem"}]
                      [(selectors/& (selectors/not (selectors/last-child))) {:margin-block-end "0.25rem"}]
-                     [:button {:min-height "1.5rem"}
-                      [:svg:first-child {:font-size "16px"
-                                         :margin-inline-start "0"
-                                         :margin-inline-end "0.5rem"}]]]})
+                     [:button {:min-height "1.5rem"}]]})
 
 
 #_(def menu-heading-style
@@ -90,20 +86,20 @@
 ;;                    [:<>
 ;;                     ;;  [menu-heading "Modify Block 'Day of Datomic On-Prem 2016'"]
 ;;                     ;;  [textinput {:icon [:> Face] :placeholder "Type to filter"}]
-;;                     [button [:<> [:> Link] [:span "Copy Page Reference"]]]
-;;                     [button [:<> [:> Star] [:span "Add to Shortcuts"]]]
-;;                     [button [:<> [:> Face] [:span "Add Reaction"] [submenu-indicator]]]
+;;                     [:> Button [:<> [:> Link] [:span "Copy Page Reference"]]]
+;;                     [:> Button [:<> [:> Star] [:span "Add to Shortcuts"]]]
+;;                     [:> Button [:<> [:> Face] [:span "Add Reaction"] [submenu-indicator]]]
 ;;                     [menu-separator]
-;;                     [button [:<> [:> LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]]
-;;                     [button [:<> [:> Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]]
-;;                     [button [:<> [:> UnfoldMore] [:span "Expand All"]]]
-;;                     [button [:<> [:> UnfoldLess] [:span "Collapse All"]]]
-;;                     [button [:<> [:> Slideshow] [:span "View As"] [submenu-indicator]]]
+;;                     [:> Button [:<> [:> LastPage] [:span "Open in Sidebar"] [:kbd "shift-click"]]]
+;;                     [:> Button [:<> [:> Launch] [:span "Open in New Window"] [:kbd "ctrl-o"]]]
+;;                     [:> Button [:<> [:> UnfoldMore] [:span "Expand All"]]]
+;;                     [:> Button [:<> [:> UnfoldLess] [:span "Collapse All"]]]
+;;                     [:> Button [:<> [:> Slideshow] [:span "View As"] [submenu-indicator]]]
 ;;                     [menu-separator]
-;;                     [button [:<> [:> FileCopy] [:span "Duplicate and Break Links"]]]
-;;                     [button [:<> [:> LibraryAdd] [:span "Save as Template"]]]
-;;                     [button [:<> [:> History] [:span "Browse Versions"]]]
-;;                     [button [:<> [:> CloudDownload] [:span "Export As"]]]]}]}])
+;;                     [:> Button [:<> [:> FileCopy] [:span "Duplicate and Break Links"]]]
+;;                     [:> Button [:<> [:> LibraryAdd] [:span "Save as Template"]]]
+;;                     [:> Button [:<> [:> History] [:span "Browse Versions"]]]
+;;                     [:> Button [:<> [:> CloudDownload] [:span "Export As"]]]]}]}])
 ;;
 ;;
 ;; (def items

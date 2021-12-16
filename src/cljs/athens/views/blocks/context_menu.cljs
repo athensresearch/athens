@@ -1,8 +1,9 @@
 (ns athens.views.blocks.context-menu
   (:require
+    ["/components/Button/Button" :refer [Button]]
     [athens.db :as db]
     [athens.listeners :as listeners]
-    [athens.views.buttons :refer [button]]
+    [athens.subs.selection :as select-subs]
     [athens.views.dropdown :refer [menu-style dropdown-style]]
     [clojure.string :as string]
     [goog.events :as events]
@@ -13,7 +14,7 @@
 
 (defn copy-refs-mouse-down
   [_ uid state]
-  (let [selected-items @(rf/subscribe [:selected/items])
+  (let [selected-items @(rf/subscribe [::select-subs/items])
         ;; use this when using datascript-transit
         ;; uids (map (fn [x] [:block/uid x]) selected-items)
         ;; blocks (d/pull-many @db/dsdb '[*] ids)
@@ -39,7 +40,7 @@
 (defn handle-copy-unformatted
   "If copying only a single block, dissoc children to not copy subtree."
   [^js e uid state]
-  (let [uids @(rf/subscribe [:selected/items])]
+  (let [uids @(rf/subscribe [::select-subs/items])]
     (if (empty? uids)
       (let [block (dissoc (db/get-block-document [:block/uid uid]) :block/children)
             data  (listeners/blocks-to-clipboard-data 0 block true)]
@@ -67,7 +68,7 @@
        :reagent-render         (fn [block state]
                                  (let [{:block/keys [uid]} block
                                        {:context-menu/keys [x y show]} @state
-                                       selected-items @(rf/subscribe [:selected/items])]
+                                       selected-items @(rf/subscribe [::select-subs/items])]
                                    (when show
                                      [:div (merge (stylefy/use-style dropdown-style
                                                                      {:ref #(reset! ref %)})
@@ -75,9 +76,9 @@
                                                            :left     (str x "px")
                                                            :top      (str y "px")}})
                                       [:div (stylefy/use-style menu-style)
-                                       [button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
+                                       [:> Button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
                                         (if (empty? selected-items)
                                           "Copy block ref"
                                           "Copy block refs")]
-                                       [button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
+                                       [:> Button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
                                         "Copy unformatted"]]])))})))

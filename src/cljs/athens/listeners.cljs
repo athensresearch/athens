@@ -1,13 +1,15 @@
 (ns athens.listeners
   (:require
+    [athens.common-db :as common-db]
     [athens.db :as db]
+    [athens.electron.utils :as electron-utils]
+    [athens.events.selection :as select-events]
     [athens.router :as router]
+    [athens.subs.selection :as select-subs]
     [athens.util :as util]
-    [cljsjs.react]
-    [cljsjs.react.dom]
     [clojure.string :as string]
     [goog.events :as events]
-    [re-frame.core :refer [dispatch subscribe]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       EventType
@@ -23,7 +25,7 @@
   - tab: indent/unindent blocks
   Can't use textarea-key-down from keybindings.cljs because textarea is no longer focused."
   [e]
-  (let [selected-items @(subscribe [:selected/items])]
+  (let [selected-items @(subscribe [::select-subs/items])]
     (when (not-empty selected-items)
       (let [shift    (.. e -shiftKey)
             key-code (.. e -keyCode)
@@ -36,18 +38,20 @@
         (cond
           enter? (do
                    (dispatch [:editing/uid (first selected-items)])
-                   (dispatch [:selected/clear-items]))
-          (or bksp? delete?) (dispatch [:selected/delete selected-items])
+                   (dispatch [::select-events/clear]))
+          (or bksp? delete?)  (do
+                                (dispatch [::select-events/delete])
+                                (dispatch [::select-events/clear]))
           tab? (do
                  (.preventDefault e)
                  (if shift
-                   (dispatch [:unindent/multi selected-items])
-                   (dispatch [:indent/multi selected-items])))
+                   (dispatch [:unindent/multi {:uids selected-items}])
+                   (dispatch [:indent/multi {:uids selected-items}])))
           (and shift up?) (dispatch [:selected/up selected-items])
           (and shift down?) (dispatch [:selected/down selected-items])
           (or up? down?) (do
                            (.preventDefault e)
-                           (dispatch [:selected/clear-items])
+                           (dispatch [::select-events/clear])
                            (if up?
                              (dispatch [:up (first selected-items) e])
                              (dispatch [:down (last selected-items) e]))))))))
@@ -57,7 +61,7 @@
   "Clears editing/uid when user clicks anywhere besides bullets, header, or on a block.
   Clears selected/items when user clicks somewhere besides a bullet point."
   [e]
-  (let [selected-items?      (not-empty @(subscribe [:selected/items]))
+  (let [selected-items?      (not-empty @(subscribe [::select-subs/items]))
         editing-uid          @(subscribe [:editing/uid])
         closest-block        (.. e -target (closest ".block-content"))
         closest-block-header (.. e -target (closest ".block-header"))
@@ -67,7 +71,7 @@
         closest              (or closest-block closest-block-header closest-page-header closest-dropdown)]
     (when (and selected-items?
                (nil? closest-bullet))
-      (dispatch [:selected/clear-items]))
+      (dispatch [::select-events/clear]))
     (when (and (nil? closest)
                editing-uid)
       (dispatch [:editing/uid nil]))))
@@ -93,7 +97,7 @@
                                        KeyCodes.G (dispatch [:devtool/toggle])
 
                                        KeyCodes.Z (let [editing-uid    @(subscribe [:editing/uid])
-                                                        selected-items @(subscribe [:selected/items])]
+                                                        selected-items @(subscribe [::select-subs/items])]
                                                     ;; editing/uid must be nil or selected-items must be non-empty
                                                     (when (or (nil? editing-uid)
                                                               (not-empty selected-items))
@@ -115,6 +119,7 @@
             KeyCodes.D (router/nav-daily-notes)
             KeyCodes.G (router/navigate :graph)
             KeyCodes.A (router/navigate :pages)
+            KeyCodes.T (dispatch [:theme/toggle])
             nil))))
 
 
@@ -140,12 +145,11 @@
                           (map (fn [[orig-str match-str]]
                                  (let [eid (db/e-by-av :block/uid match-str)]
                                    (if eid
-                                     [orig-str (db/v-by-ea eid :block/string)]
+                                     [orig-str (str "((" (db/v-by-ea eid :block/string) "))")]
                                      [orig-str (str "((" match-str "))")])))))]
     (loop [replacements replacements
            s            s]
-      (let [orig-str    (first (first replacements))
-            replace-str (second (first replacements))]
+      (let [[orig-str replace-str] (first replacements)]
         (if (empty? replacements)
           s
           (recur (rest replacements)
@@ -157,19 +161,18 @@
   ([depth node]
    (blocks-to-clipboard-data depth node false))
   ([depth node unformat?]
-   (let [{:block/keys [string children header]} node
-         left-offset   (apply str (repeat depth "    "))
-         walk-children (apply str (map #(blocks-to-clipboard-data (inc depth) % unformat?) children))
-         string (let [header-to-str (case header
-                                      1 "# "
-                                      2 "## "
-                                      3 "### "
-                                      "")]
-                  (str header-to-str string))
-         string (if unformat?
-                  (-> string unformat-double-brackets athens.listeners/block-refs-to-plain-text)
-                  string)
-         dash (if unformat? "" "- ")]
+   (let [{:block/keys [string
+                       children
+                       _header]} node
+         left-offset             (apply str (repeat depth "    "))
+         walk-children           (apply str (map #(blocks-to-clipboard-data (inc depth) % unformat?)
+                                                 children))
+         string                  (if unformat?
+                                   (-> string
+                                       unformat-double-brackets
+                                       block-refs-to-plain-text)
+                                   (block-refs-to-plain-text string))
+         dash                    (if unformat? "" "- ")]
      (str left-offset dash string "\n" walk-children))))
 
 
@@ -177,26 +180,34 @@
   "If blocks are selected, copy blocks as markdown list.
   Use -event_ because goog events quirk "
   [^js e]
-  (let [uids @(subscribe [:selected/items])]
+  (let [uids @(subscribe [::select-subs/items])]
     (when (not-empty uids)
-      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
-                           (map #(blocks-to-clipboard-data 0 %))
-                           (apply str))]
-        (.. e preventDefault)
-        (.. e -event_ -clipboardData (setData "text/plain" copy-data))))))
+      (let [copy-data      (->> uids
+                                (map #(db/get-block-document [:block/uid %]))
+                                (map #(blocks-to-clipboard-data 0 %))
+                                (apply str))
+            clipboard-data (.. e -event_ -clipboardData)
+            copied-blocks  (mapv
+                             #(common-db/get-internal-representation  @db/dsdb [:block/uid %])
+                             uids)]
+
+        (doto clipboard-data
+          (.setData "text/plain" copy-data)
+          (.setData "application/athens-representation" (pr-str copied-blocks))
+          (.setData "application/athens" (pr-str {:uids uids})))
+        (.preventDefault e)))))
 
 
 (defn cut
   "Cut is essentially copy AND delete selected blocks"
   [^js e]
-  (let [uids @(subscribe [:selected/items])]
+  (let [uids @(subscribe [::select-subs/items])]
     (when (not-empty uids)
-      (let [copy-data (->> (map #(db/get-block-document [:block/uid %]) uids)
-                           (map #(blocks-to-clipboard-data 0 %))
-                           (apply str))]
-        (.. e preventDefault)
-        (.. e -event_ -clipboardData (setData "text/plain" copy-data))
-        (dispatch [:selected/delete uids])))))
+      (copy e)
+      (dispatch [::select-events/delete]))))
+
+
+(def force-leave (atom false))
 
 
 (defn prevent-save
@@ -208,13 +219,31 @@
   (js/window.addEventListener
     EventType.BEFOREUNLOAD
     (fn [e]
-      (let [synced? (or @(subscribe [:db/synced])
-                        (:default? @(subscribe [:db/remote-graph-conf])))]
-        (when-not synced?
-          (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. Try refreshing or quitting again once the sync is complete."])
-          (.. e preventDefault)
-          (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
-          "Returning a string also prevents exit on other browsers.")))))
+      (let [synced? @(subscribe [:db/synced])
+            editing? @(subscribe [:editing/uid])
+            remote? (electron-utils/remote-db? @(subscribe [:db-picker/selected-db]))]
+        (cond
+          (and (or (not synced?)
+                   (not (= nil editing?)))
+               (not @force-leave))
+          (do
+            ;; The browser blocks the confirm window during beforeunload, so
+            ;; instead we always cancel unload and separately show a confirm window
+            ;; that allows closing the window.
+            (dispatch [:confirm/js
+                       (str "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. "
+                            "Try refreshing or quitting again once the sync is complete. Make sure you exit out of any block you may be editing"
+                            "Press OK to wait, or Cancel to leave without saving (will cause data loss!).")
+                       #()
+                       (fn []
+                         (reset! force-leave true)
+                         (js/window.close))])
+            (.. e preventDefault)
+            (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
+            "Returning a string also prevents exit on other browsers.")
+
+          remote?
+          (dispatch-sync [:remote/disconnect!]))))))
 
 
 (defn init
