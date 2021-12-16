@@ -765,7 +765,9 @@
       (let [next-block (db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
         (dispatch [:backspace (cond-> next-block-uid
                                 embed-id (str "-embed-" embed-id))
-                   (str (:block/string state) (:block/string next-block))])))))
+                   (str (or (:string/local @state)
+                            (:block/string @state))
+                        (:block/string next-block))])))))
 
 
 (defn textarea-key-down
