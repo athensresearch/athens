@@ -14,11 +14,12 @@
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
     [athens.common-db :as common-db]
     [athens.common.utils :as utils]
+    [athens.dates :as dates]
     [athens.db :as db :refer [get-linked-references get-unlinked-references]]
-    [athens.parse-renderer :as parse-renderer :refer [pull-node-from-string parse-and-render]]
-    [athens.router :refer [navigate-uid navigate]]
+    [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+    [athens.router :as router]
     [athens.style :refer [color DEPTH-SHADOWS]]
-    [athens.util :refer [escape-str is-daily-note get-caret-position recursively-modify-block-for-embed]]
+    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -170,19 +171,25 @@
         parent-block          (db/get-block [:block/uid parent-uid])]
     (dispatch [:enter/add-child {:block     parent-block
                                  :new-uid   new-uid
-                                 :embed-id  embed-id
-                                 :add-time? true}])
+                                 :embed-id  embed-id}])
     (dispatch [:editing/uid new-uid])))
 
 
 (defn handle-enter
   [e uid _state children]
   (.. e preventDefault)
-  (let [node-page  (.. e -target (closest ".node-page"))
-        block-page (.. e -target (closest ".block-page"))
+  (let [node-page             (.. e -target (closest ".node-page"))
+        block-page            (.. e -target (closest ".block-page"))
+        [uid embed-id]        (common-db/uid-and-embed-id uid)
+        new-uid               (utils/gen-block-uid)
         {:keys [start value]} (textarea-keydown/destruct-key-down e)]
     (cond
-      block-page (dispatch [:split-block-to-children uid value start])
+      block-page (dispatch [:enter/split-block {:uid        uid
+                                                :value      value
+                                                :index      start
+                                                :new-uid    new-uid
+                                                :embed-id   embed-id
+                                                :relation   :first}])
       node-page (if (empty? children)
                   (handle-new-first-child-block-click uid)
                   (dispatch [:down uid])))))
@@ -261,7 +268,7 @@
                       ", local:" (pr-str local)
                       ", page-uid:" page-uid)
     (when-not do-nothing?
-      (let [existing-page-uid (common-db/get-page-uid-by-title @db/dsdb local)
+      (let [existing-page-uid (common-db/get-page-uid @db/dsdb local)
             merge?            (not (nil?  existing-page-uid))]
         (js/console.debug "new-page-name:" (pr-str local)
                           ", existing-page-uid:" (pr-str existing-page-uid))
@@ -273,11 +280,10 @@
 
           (let [cancel-fn  #(swap! state merge init-state)
                 confirm-fn (fn []
-                             (navigate-uid existing-page-uid)
-                             (dispatch [:page/merge {:page-uid page-uid
-                                                     :old-name initial
-                                                     :new-name local
-                                                     :callback cancel-fn}]))]
+                             (router/navigate-page local)
+                             (dispatch [:page/merge {:from-name initial
+                                                     :to-name   local
+                                                     :callback  cancel-fn}]))]
             ;; display alert
             ;; NOTE: alert should be global reusable component, not local to node_page
             (swap! state assoc
@@ -345,10 +351,10 @@
                   [:div (use-style menu-style)
                    [:<>
                     (if sidebar
-                      [:> Button {:on-click #(dispatch [:page/remove-shortcut uid])}
+                      [:> Button {:on-click #(dispatch [:left-sidebar/remove-shortcut title])}
                        [:> BookmarkBorder]
                        [:span "Remove Shortcut"]]
-                      [:> Button {:on-click #(dispatch [:page/add-shortcut uid])}
+                      [:> Button {:on-click #(dispatch [:left-sidebar/add-shortcut title])}
                        [:> Bookmark]
                        [:span "Add Shortcut"]])
                     [:> Button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
@@ -358,8 +364,8 @@
                    [:> Button {:on-click #(do
                                             (if daily-note?
                                               (dispatch [:daily-note/delete uid title])
-                                              (dispatch [:page/delete uid title]))
-                                            (navigate :pages))}
+                                              (dispatch [:page/delete title]))
+                                            (router/navigate :pages))}
                     [:> Delete] [:span "Delete Page"]]]]])))
 
 
@@ -413,7 +419,8 @@
             (for [[group-title group] linked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
+                [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title) %)}
+                 group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
@@ -460,10 +467,11 @@
        (when (get @state unlinked?)
          [:div (use-style references-list-style)
           (doall
-            (for [[group-title group] @unlinked-refs]
+            (for [[[group-title] group] @unlinked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(navigate-uid (:block/uid @(pull-node-from-string group-title)) %)} group-title]]
+                [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title) %)}
+                 group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
@@ -505,7 +513,7 @@
         (reset! block-uid (:block/uid node)))
       (let [{:block/keys [children uid] title :node/title} node
             {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
-            daily-note?  (is-daily-note uid)
+            daily-note?  (dates/is-daily-note uid)
             on-daily-notes? (= :home @(subscribe [:current-route/name]))]
 
 
@@ -533,7 +541,7 @@
                            :on-click (fn [e]
                                        (.. e preventDefault)
                                        (if (or daily-note? (.. e -shiftKey))
-                                         (navigate-uid uid e)
+                                         (router/navigate-uid uid e)
                                          (dispatch [:editing/uid uid])))})
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.

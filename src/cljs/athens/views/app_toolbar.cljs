@@ -44,6 +44,7 @@
                        :isWinFullscreen @win-fullscreen?
                        :isWinMaximized @win-maximized?
                        :isWinFocused @win-focused?
+                       :isHelpOpen @(subscribe [:help/open?])
                        :isThemeDark @theme-dark
                        :isLeftSidebarOpen @left-open?
                        :isRightSidebarOpen @right-open?
@@ -55,6 +56,7 @@
                        :onPressAllPages #(router/navigate :pages)
                        :onPressGraph #(router/navigate :graph)
                        :onPressCommandBar #(dispatch [:athena/toggle])
+                       :onPressHelp #(dispatch [:help/toggle])
                        :onPressThemeToggle #(dispatch [:theme/toggle])
                        :onPressSettings #(router/navigate :settings)
                        :onPressMerge #(swap! merge-open? not)

@@ -19,30 +19,20 @@ jobs:
    test:
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - uses: actions/checkout@v2
        - uses: ./.github/custom-actions/clojure-env
        - uses: ./.github/custom-actions/node-env
 
        - name: Run JVM tests
          run: yarn server:test
 
-       # TODO: re-enable once web build is fixed
-       # - name: Run Karma tests
-       #   run: yarn client:test
+       - name: Run Karma tests
+         run: yarn client:test
 
    lint:
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
+       - uses: actions/checkout@v2
 
        # We don't use yarn lint here in order to have faster CI.
        # Keep version and script up to date!
@@ -56,26 +46,16 @@ jobs:
    style:
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - uses: actions/checkout@v2
        - uses: ./.github/custom-actions/clojure-env
 
        - name: Style
-         run: yarn lint
+         run: yarn style
 
    carve:
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - uses: actions/checkout@v2
        - uses: ./.github/custom-actions/clojure-env
 
        - name: Carve unused vars
@@ -86,12 +66,7 @@ jobs:
      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - uses: actions/checkout@v2
        - uses: ./.github/custom-actions/clojure-env
        - uses: ./.github/custom-actions/node-env
 
@@ -99,8 +74,10 @@ jobs:
          run: yarn prod --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\" athens.main.core/AUTO_UPDATE ${AUTO_UPDATE}}}"
          env:
            SENTRY_DSN: ${{ secrets.sentry_dsn }}
-           AUTO_UPDATE: ${{ github.ref == 'refs/heads/main' }}
            COMMIT_URL: "https://github.com/${{github.repository}}/commit/${{github.sha}}"
+           # See athens.main.core/AUTO_UPDATE for more details.
+           # TODO: set to true when publishing auto-update information for 2.0.0-beta.
+           AUTO_UPDATE: false
 
        - name: Upload built app for release-web, release-electron
          uses: actions/upload-artifact@v2
@@ -110,16 +87,12 @@ jobs:
 
    release-web:
      needs: [build-app]
-     # Only deploy on tag pushes to the default branch (main). GH pages is effectively a singleton deploy env for main.
-     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/main'
+     # Only deploy on v1.* tag pushes to the default branch (main).
+     # GH pages is effectively a singleton deploy env for main, and we only want v1 stable to be deployed there for now.
+     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v1.') && github.ref == 'refs/heads/main'
      runs-on: ubuntu-latest
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - uses: actions/checkout@v2
        - uses: ./.github/custom-actions/node-env
 
        - name: Download built app
@@ -145,15 +118,18 @@ jobs:
 
      strategy:
        matrix:
-         os: [ubuntu-latest, macos-latest, windows-latest]
+         os: [ubuntu-latest, windows-latest]
+         electron-arch-overrides: [""]
+         # Separate out the arm64 macos build, those are the longest builds.
+         # package.json still includes configuration to build both targets.
+         include:
+           - os: macos-latest
+             electron-arch-overrides: "-c.mac.target.target=dmg -c.mac.target.arch=x64"
+           - os: macos-latest
+             electron-arch-overrides: "-c.mac.target.target=dmg -c.mac.target.arch=arm64"
 
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - uses: actions/checkout@v2
        - uses: ./.github/custom-actions/node-env
 
        - name: Prepare for app notarization (macOS)
@@ -188,12 +164,9 @@ jobs:
            # release the app after building
            release: ${{ startsWith(github.ref, 'refs/tags/v') }}
 
-           # Skip auto-update files on branches other than main.
-           # Ideally we could use electron-builder release channels, but they don't work for github publishing.
-           # Auto-update is also disabled in code inside athens.main.core.
-           # NB: GH actions doesn't have ternary operator, but can workaround using AND/OR logic.
-           # see https://github.com/actions/runner/issues/409#issuecomment-752775072
-           args: ${{ github.ref != 'refs/heads/main' && '-c.publish.publishAutoUpdate=false' || '' }}
+           # TODO: remove publishAutoUpdate setting when we think enough 1.0.0-beta
+           # users have updated to 1.0.0, otherwise they will be auto-updated to 2.0.0-beta.
+           args: -c.publish.publishAutoUpdate=false ${{ matrix.electron-arch-overrides }}
 
          env:
            # macOS notarization API key
@@ -207,16 +180,18 @@ jobs:
      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
 
      steps:
-       - name: Git checkout
-         uses: actions/checkout@v1
-         with:
-           fetch-depth: 1
-           submodules: 'true'
-
+       - uses: actions/checkout@v2
        - uses: ./.github/custom-actions/clojure-env
 
-       - name: Build server JAR
+       - name: Compile server code
+         run: yarn server:compile
+
+       - name: Build server executable uberjar
          run: yarn server:uberjar
+
+       # we need QEMU for multi-arch build
+       - name: Set up QEMU
+         uses: docker/setup-qemu-action@v1
 
        - name: Set up Docker Buildx
          uses: docker/setup-buildx-action@v1
@@ -238,7 +213,7 @@ jobs:
          id: nginx-meta
          uses: docker/metadata-action@v3
          with:
-           images: ${{ env.REGISTRY }}/${{ github.repository }}-nginx
+           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/nginx
 
        - name: Build and push athens
          uses: docker/build-push-action@v2
@@ -246,6 +221,7 @@ jobs:
            # Use the current folder as context instead of the branch.
            # Needed to use artifacts like the server jar.
            context: .
+           platforms: linux/amd64,linux/arm64
            file: athens.dockerfile
            push: true
            tags: ${{ steps.athens-meta.outputs.tags }}
@@ -259,6 +235,7 @@ jobs:
          uses: docker/build-push-action@v2
          with:
            context: .
+           platforms: linux/amd64,linux/arm64
            file: nginx.dockerfile
            push: true
            tags: ${{ steps.nginx-meta.outputs.tags }}
@@ -280,4 +257,25 @@ jobs:
            draft: true
 
 
+   release-devtools:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v2
+       - uses: ./.github/custom-actions/clojure-env
+       - uses: ./.github/custom-actions/node-env
 
+       - name: Build static Storybook site
+         run: yarn storybook:static
+
+       - name: Build static Clerk site
+         run: yarn notebooks:static
+
+       - uses: amondnet/vercel-action@v20
+         with:
+           vercel-token: ${{ secrets.VERCEL_TOKEN }}
+           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+           github-token: ${{ secrets.GITHUB_TOKEN }}
+           # deploy files in vercel-static/
+           # prod build for pushes to main
+           vercel-args: vercel-static/ ${{ github.ref != 'refs/heads/main' && '--prod' || '' }}

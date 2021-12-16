@@ -8,6 +8,8 @@ Draft
 
 Supercedes [7. Lan-Party Datascript Events](0007-lan-party-datascript-events.md)
 
+Amended by [14. Atomic Graph Operations transacting](0014-atomic-graph-operations-transacting.md)
+
 ## Context
 
 We've made an effort to support remote execution of Semantic Events.

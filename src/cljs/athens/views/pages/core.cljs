@@ -41,6 +41,7 @@
      :settings settings/page
      :pages all-pages/page
      :page page/page
+     :page-by-title page/page-by-title
      :graph graph/page
      :home daily-notes/page
      daily-notes/page)])

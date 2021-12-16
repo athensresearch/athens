@@ -2,15 +2,28 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
-    [athens.common.logging         :as log]
-    [athens.parser                 :as parser]
-    [athens.patterns               :as patterns]
-    [clojure.data                  :as data]
-    [clojure.pprint                :as pp]
-    [clojure.set                   :as set]
-    [clojure.string                :as string]
-    #?(:clj  [datahike.api         :as d]
-       :cljs [datascript.core      :as d])))
+    [athens.common.logging :as log]
+    [athens.parser         :as parser]
+    [athens.patterns       :as patterns]
+    [clojure.data          :as data]
+    [clojure.pprint        :as pp]
+    [clojure.set           :as set]
+    [clojure.string        :as string]
+    [clojure.walk          :as walk]
+    [datascript.core       :as d]))
+
+
+(def schema
+  {:schema/version      {}
+   :block/uid           {:db/unique :db.unique/identity}
+   :node/title          {:db/unique :db.unique/identity}
+   :attrs/lookup        {:db/cardinality :db.cardinality/many}
+   :block/children      {:db/cardinality :db.cardinality/many
+                         :db/valueType   :db.type/ref}
+   :block/refs          {:db/cardinality :db.cardinality/many
+                         :db/valueType   :db.type/ref}
+   ;; TODO: do we really still use it?
+   :block/remote-id     {:db/unique :db.unique/identity}})
 
 
 (defn e-by-av
@@ -22,9 +35,7 @@
 
 (defn v-by-ea
   [db e a]
-  (-> (d/datoms db :eavt e a)
-      first
-      :v))
+  (get (d/entity db e) a))
 
 
 (def rules
@@ -53,6 +64,74 @@
      [?e :block/uid ?uid]
      [?p :block/children ?e]
      [?p :block/children ?sib-e]]])
+
+
+(defn get-sidebar-elements
+  [db]
+  (d/q '[:find [(pull ?e [*]) ...]
+         :where
+         [?e :page/sidebar _]]
+       db))
+
+
+(defn find-title-from-order
+  [sidebar-elements order]
+  (-> (filter (fn [el]
+                (= (:page/sidebar el)
+                   order))
+              sidebar-elements)
+      (first)
+      (:node/title)))
+
+
+(defn find-source-target-title
+  [db source-order target-order]
+  (let [sidebar-elements   (get-sidebar-elements db)
+        source-title (find-title-from-order sidebar-elements source-order)
+        target-title (find-title-from-order sidebar-elements target-order)]
+    [source-title target-title]))
+
+
+(defn find-order-from-title
+  [sidebar-elements title]
+  (-> (filter (fn [el]
+                (= (:node/title el)
+                   title))
+              sidebar-elements)
+      (first)
+      (:page/sidebar)))
+
+
+(defn find-source-target-order
+  [db source-title target-title]
+  (let [sidebar-elements   (get-sidebar-elements db)
+        source-order (find-order-from-title sidebar-elements source-title)
+        target-order (find-order-from-title sidebar-elements target-title)]
+    [source-order target-order]))
+
+
+(defn between
+  "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
+  [s t x]
+  (if (< s t)
+    (and (< s x) (< x t))
+    (and (< t x) (< x s))))
+
+
+(defn reindex-sidebar-after-move
+  [db source-order target-order between inc-or-dec]
+  (d/q '[:find ?shortcut ?new-order
+         :keys db/id page/sidebar
+         :in $ ?source-order ?target-order ?between ?inc-or-dec
+         :where
+         [?shortcut :page/sidebar ?order]
+         [(?between ?source-order ?target-order ?order)]
+         [(?inc-or-dec ?order) ?new-order]]
+       db
+       source-order
+       target-order
+       between
+       inc-or-dec))
 
 
 (defn inc-after
@@ -154,24 +233,6 @@
        db rules uid prev-sib-order))
 
 
-(defn get-older-sib
-  [db uid]
-  (let [sib-uid   (d/q '[:find ?uid .
-                         :in $ % ?target-uid
-                         :where
-                         (siblings ?target-uid ?sib)
-                         [?target-e :block/uid ?target-uid]
-                         [?target-e :block/order ?target-o]
-                         [(dec ?target-o) ?prev-sib-order]
-                         [?sib :block/order ?prev-sib-order]
-                         [?sib :block/uid ?uid]]
-                       db
-                       rules
-                       uid)
-        older-sib (get-block db [:block/uid sib-uid])]
-    older-sib))
-
-
 (defn sort-block-children
   [block]
   (if-let [children (seq (:block/children block))]
@@ -189,16 +250,12 @@
       (conj :node/title :page/sidebar)))
 
 
-(defn get-page-uid-by-title
+(defn get-page-uid
   "Finds page `:block/uid` by `page-title`."
   [db page-title]
-  (d/q '[:find ?uid .
-         :in $ ?title
-         :where
-         [?eid :node/title ?title]
-         [?eid :block/uid ?uid]]
-       db
-       page-title))
+  (-> db
+      (d/entity [:node/title page-title])
+      :block/uid))
 
 
 (defn existing-block-count
@@ -227,35 +284,29 @@
        linked-refs))
 
 
-(defn minus-after
-  [db eid order x]
-  (->> (d/q '[:find ?block-uid ?new-o
-              :keys block/uid block/order
-              :in $ % ?p ?at ?x
-              :where (minus-after ?p ?at ?ch ?new-o ?x)
-              [?ch :block/uid ?block-uid]]
-            db
-            rules
-            eid
-            order
-            x)))
-
-
-(defn plus-after
-  [db eid order x]
-  (->> (d/q '[:find ?block-uid ?new-o
-              :keys block/uid block/order
-              :in $ % ?p ?at ?x
-              :where (plus-after ?p ?at ?ch ?new-o ?x)
-              [?ch :block/uid ?block-uid]]
-            db
-            rules
-            eid
-            order
-            x)))
+(defn replace-linked-refs-tx
+  "For a given block, unlinks [[brackets]], #[[brackets]], #brackets, or ((brackets))."
+  [db blocks]
+  (let [deleted-blocks (sequence (map #(assoc % :block/pattern (patterns/linked (or (:node/title %) (:block/uid %)))))
+                                 blocks)
+        block-refs-ids (sequence (comp (map #(:block/pattern %))
+                                       (mapcat #(get-ref-ids db %))
+                                       (distinct))
+                                 deleted-blocks)
+        block-refs     (d/pull-many db [:db/id :block/string] block-refs-ids)]
+    (into []
+          (map (fn [block-ref]
+                 (let [updated-content (reduce (fn [content {:keys [block/pattern block/string node/title]}]
+                                                 (string/replace content pattern (or title string)))
+                                               (:block/string block-ref)
+                                               deleted-blocks)]
+                   (assoc block-ref :block/string updated-content))))
+          block-refs)))
 
 
 (defn reindex-blocks-between-bounds
+  "Increase/decrease by n all child blocks of parent-eid between
+  lower-bound (exclusive) and upper-bound (exclusive)."
   [db inc-or-dec parent-eid lower-bound upper-bound n]
   #_(log/debug "reindex block")
   (d/q '[:find ?block-uid ?new-order
@@ -306,6 +357,32 @@
          db rules uid find-order)))
 
 
+(defn nth-child
+  "Find child that has order n in parent."
+  [db parent-uid order]
+  (d/q '[:find (pull ?child [*]) .
+         :in $ ?parent-uid ?order
+         :where
+         [?parent :block/uid ?parent-uid]
+         [?parent :block/children ?child]
+         [?child :block/order ?order]]
+       db parent-uid order))
+
+
+(defn get-page-title
+  [db uid]
+  (-> db
+      (d/entity [:block/uid uid])
+      :node/title))
+
+
+(defn get-block-string
+  [db uid]
+  (-> db
+      (d/entity [:block/uid uid])
+      :block/string))
+
+
 (defn deepest-child-block
   [db id]
   (let [document (->> (d/pull db '[:block/order :block/uid {:block/children ...}] id)
@@ -351,62 +428,23 @@
     (= (count parents) 1)))
 
 
-(defn- shape-parent-query
-  "Normalize path from deeply nested block to root node."
-  [pull-results]
-  (->> (loop [b   pull-results
-              res []]
-         (if (:node/title b)
-           (conj res b)
-           (recur (first (:block/_children b))
-                  (conj res (dissoc b :block/_children)))))
-       rest
-       reverse
-       vec))
-
-
-(defn get-block-document
-  [db id]
-  (->> (d/pull db block-document-pull-vector id)
-       sort-block-children))
-
-
 (def block-document-pull-vector-for-copy
-  '[:block/uid :block/string :block/open :block/order {:block/children ...}])
+  '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
-(defn get-block-document-for-copy
+(defn get-internal-representation
+  "Returns internal representation for eid in db."
   [db eid]
-  (->> (d/pull db block-document-pull-vector-for-copy eid)
-       sort-block-children))
-
-
-(defn get-parents-recursively
-  [db eid]
-  (->> (d/pull db '[:db/id :node/title :block/uid :block/string {:block/_children ...}] eid)
-       shape-parent-query))
-
-
-(defn merge-parents-and-block
-  [db ref-ids]
-  (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively db v)))
-                           {}
-                           ref-ids)
-        blocks (map (fn [id] (get-block-document db id)) ref-ids)]
-    (mapv
-      (fn [block]
-        (merge block {:block/parents (get parents (:db/id block))}))
-      blocks)))
-
-
-(defn group-by-parent
-  [blocks]
-  (group-by (fn [x]
-              (-> x
-                  :block/parents
-                  first
-                  :node/title))
-            blocks))
+  (let [remove-ks [:block/order]
+        rename-ks {:block/open :block/open?
+                   :node/title :page/title}]
+    (->> (d/pull db block-document-pull-vector-for-copy eid)
+         sort-block-children
+         (walk/prewalk (fn [node]
+                         (if (map? node)
+                           (apply dissoc node remove-ks)
+                           node)))
+         (walk/postwalk-replace rename-ks))))
 
 
 (defn get-linked-refs-by-page-title
@@ -415,23 +453,6 @@
        :block/_refs
        (mapv :db/id)
        (mapv #(d/pull db '[:db/id :node/title :block/uid :block/string] %))))
-
-
-(defn get-data
-  [db pattern]
-  (->> pattern
-       (get-ref-ids db)
-       (merge-parents-and-block db)
-       group-by-parent
-       seq))
-
-
-(defn get-unlinked-references
-  "For node-page references UI."
-  [db title]
-  (->> title
-       patterns/unlinked
-       (get-data db)))
 
 
 (defn get-all-pages
@@ -443,28 +464,57 @@
        (d/pull-many db '[* :block/_refs])))
 
 
-(defn not-contains?
-  [coll v]
-  (not (contains? coll v)))
+(defn compat-position
+  "Build a position by coercing incompatible arguments into compatible ones.
+  uid to a page will instead use that page's title.
+  Integer relation will be converted to :first if 0, or :after (with matching uid) if not.
+  Warns when coercion was required."
+  [db {:keys [relation block/uid page/title] :as pos}]
+  (let [[coerced-ref-uid
+         coerced-relation] (when (integer? relation)
+                             (if (= relation 0)
+                               [nil :first]
+                               (let [parent-uid (or uid (get-page-uid db title))
+                                     prev-uid   (:block/uid (nth-child db parent-uid (dec relation)))]
+                                 (if prev-uid
+                                   [prev-uid :after]
+                                   ;; Can't find the previous block, just put it on last.
+                                   [nil :last]))))
+        coerced-title      (when (and (not title)
+                                      (not coerced-ref-uid)
+                                      uid)
+                             (get-page-title db uid))
+        new-pos            (when (or coerced-ref-uid coerced-relation coerced-title)
+                             (merge
+                               {:relation (or coerced-relation relation)}
+                               (if-let [title' (or coerced-title title)]
+                                 {:page/title title'}
+                                 {:block/uid (or coerced-ref-uid uid)})))]
+
+    (when new-pos
+      (log/warn "compat-position: coercion required for" (pr-str pos) "to" (pr-str new-pos)))
+    (or new-pos pos)))
 
 
-(defn get-children-not-in-selected-uids
-  [db target-block-uid selected-uids]
-  (d/q '[:find ?children-uid ?o
-         :keys block/uid block/order
-         :in $ % ?target-uid ?not-contains? ?source-uids
-         :where
-         (siblings ?target-uid ?children-e)
-         [?children-e :block/uid ?children-uid]
-         [(?not-contains? ?source-uids ?children-uid)]
-         [?children-e :block/order ?o]]
-       db
-       rules
-       target-block-uid
-       not-contains? (set selected-uids)))
+(defn validate-position
+  [db {:keys [block/uid page/title] :as position}]
+  (let [title->uid (get-page-uid db title)
+        uid->title (get-page-title db uid)]
+    ;; Fail on error conditions.
+    (when-some [fail-msg (cond
+                           (and uid uid->title)
+                           "Location uid is a page, location must use title instead."
+
+                           ;; TODO: this could be idempotent instead and create the page.
+                           (and title (not title->uid))
+                           (str "Location title does not exist:" title)
+
+                           (and uid (not (e-by-av db :block/uid uid)))
+                           (str "Location uid does not exist:" uid))]
+      (throw (ex-info fail-msg position)))))
 
 
-(defn- extract-tag-values
+(defn extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]
   (->> (tree-seq vector? children-fn ast)
@@ -486,17 +536,17 @@
 (defn string->lookup-refs
   "Given string s, compute the set of refs expressed as Datalog lookup refs."
   [s]
-  (let [ast (parser/parse-to-ast s)
-        block-ref-str->uid #(strip-markup % "((" "))")
+  (let [ast                 (parser/structure-parse-to-ast s)
+        block-ref-str->uid  #(strip-markup % "((" "))")
         page-ref-str->title #(or (strip-markup % "#[[" "]]")
                                  (strip-markup % "[[" "]]")
                                  (strip-markup % "#" ""))
-        block-lookups (into #{}
-                            (map (fn [uid] [:block/uid uid]))
-                            (extract-tag-values ast #{:block-ref} identity #(-> % second :from block-ref-str->uid)))
-        page-lookups (into #{}
-                           (map (fn [title] [:node/title title]))
-                           (extract-tag-values ast #{:page-link :hashtag} identity #(-> % second :from page-ref-str->title)))]
+        block-lookups       (into #{}
+                                  (map (fn [uid] [:block/uid uid]))
+                                  (extract-tag-values ast #{:block-ref} identity #(-> % second :from block-ref-str->uid)))
+        page-lookups        (into #{}
+                                  (map (fn [title] [:node/title title]))
+                                  (extract-tag-values ast #{:page-link :hashtag} identity #(-> % second :from page-ref-str->title)))]
     (set/union block-lookups page-lookups)))
 
 
@@ -545,9 +595,17 @@
 
 
 (defn- parseable-string-datom
-  [[eid attr value]]
-  (when (#{:block/string :node/title} attr)
+  [[eid attr value _time added?]]
+  (when (and added? (#{:block/string :node/title} attr))
     [eid value]))
+
+
+(defn find-page-links
+  [s]
+  (->> (string->lookup-refs s)
+       (filter #(= :node/title (first %)))
+       (map second)
+       (into #{})))
 
 
 (defn linkmaker-error-handler
@@ -577,7 +635,7 @@
   Returns Datascript transactions to be transacted in order to maintain links.
 
   Arguments:
-  - `db`: Current Datascript/Datahike DB value
+  - `db`: Current Datascript DB value
   - `input-tx` (optional): Graph structure modifying TX, analyzed for link updates
 
   If `input-tx` is provided, linkmaker will only update links related to that tx.
@@ -660,6 +718,7 @@
         old-parents    (when db-before
                          (->> mod-eids
                               (map #(get-parent-eid db-before %))
+                              (remove #(string/blank? (v-by-ea db-after % :block/uid)))
                               set))
         new-parents    (->> mod-eids
                             (map #(get-parent-eid db-after %))
@@ -698,7 +757,7 @@
   Returns Datascript transactions to be transacted in order to maintain order.
 
   Arguments:
-  - `db`: Current Datascript/Datahike DB value
+  - `db`: Current Datascript DB value
   - `input-tx`: (optional): Graph structure modifying TX, analyzed for `:block/order` mistakes
 
   If `input-tx` is provided, orderkeeper will only update `:block/order` related to that TX.
@@ -756,3 +815,42 @@
      (catch #?(:cljs :default
                :clj Exception) e
        (block-uid-nil-eater-error e input-tx)))))
+
+
+(defn tx-with-middleware
+  [db tx-data]
+  (->> tx-data
+       (block-uid-nil-eater db)
+       (linkmaker db)
+       (orderkeeper db)))
+
+
+(defn transact-with-middleware!
+  "Transact tx-data enriched with middleware txs into conn."
+  [conn tx-data]
+  ;; 🎶 Sia "Cheap Thrills"
+  (d/transact! conn (tx-with-middleware @conn tx-data)))
+
+
+(defn health-check
+  [conn]
+  ;; NB: these could be events as well, and then we wouldn't always rerun them.
+  ;; But rerunning them after replaying all events helps us find events that produce
+  ;; states that need fixing.
+  (log/info "Knowledge graph health check...")
+  (let [linkmaker-txs       (linkmaker @conn)
+        orderkeeper-txs     (orderkeeper @conn)
+        block-nil-eater-txs (block-uid-nil-eater @conn)]
+    (when-not (empty? linkmaker-txs)
+      (log/warn "linkmaker fixes#:" (count linkmaker-txs))
+      (log/info "linkmaker fixes:" (pr-str linkmaker-txs))
+      (d/transact! conn linkmaker-txs))
+    (when-not (empty? orderkeeper-txs)
+      (log/warn "orderkeeper fixes#:" (count orderkeeper-txs))
+      (log/info "orderkeeper fixes:" (pr-str orderkeeper-txs))
+      (d/transact! conn orderkeeper-txs))
+    (when-not (empty? block-nil-eater-txs)
+      (log/warn "block-uid-nil-eater fixes#:" (count block-nil-eater-txs))
+      (log/info "block-uid-nil-eater fixes:" (pr-str block-nil-eater-txs))
+      (d/transact! conn block-nil-eater-txs))
+    (log/info "✅ Knowledge graph health check.")))

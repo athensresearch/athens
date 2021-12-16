@@ -2,6 +2,7 @@ import styled from 'styled-components';
 
 import { Button } from '@/Button';
 import { BADGE, Storybook } from '@/utils/storybook';
+import { CheckCircledOutline } from 'iconoir-react';
 
 const Wrapper = styled.div`
   display: flex;
@@ -60,20 +61,24 @@ export const Variants = () => <>
       <Button variant="gray">Gray</Button>
       <Button variant="tinted">Tinted</Button>
       <Button variant="filled">Filled</Button>
+      <Button variant="filled"><CheckCircledOutline /> Icon</Button>
       <Button shape="round" variant="plain">Plain</Button>
       <Button shape="round" variant="gray">Gray</Button>
       <Button shape="round" variant="tinted">Tinted</Button>
       <Button shape="round" variant="filled">Filled</Button>
+      <Button shape="round" variant="filled"><CheckCircledOutline /> Icon</Button>
     </Wrapper>
     <Wrapper>
       <Button isPressed={true} variant="plain">Plain</Button>
       <Button isPressed={true} variant="gray">Gray</Button>
       <Button isPressed={true} variant="tinted">Tinted</Button>
       <Button isPressed={true} variant="filled">Filled</Button>
+      <Button isPressed={true} variant="filled"><CheckCircledOutline /> Icon</Button>
       <Button isPressed={true} shape="round" variant="plain">Plain</Button>
       <Button isPressed={true} shape="round" variant="gray">Gray</Button>
       <Button isPressed={true} shape="round" variant="tinted">Tinted</Button>
       <Button isPressed={true} shape="round" variant="filled">Filled</Button>
+      <Button isPressed={true} shape="round" variant="filled"><CheckCircledOutline /> Icon</Button>
     </Wrapper>
   </ThemeWrapper>
   <ThemeWrapper className="is-theme-dark">
@@ -82,20 +87,24 @@ export const Variants = () => <>
       <Button variant="gray">Gray</Button>
       <Button variant="tinted">Tinted</Button>
       <Button variant="filled">Filled</Button>
+      <Button variant="filled"><CheckCircledOutline /> Icon</Button>
       <Button shape="round" variant="plain">Plain</Button>
       <Button shape="round" variant="gray">Gray</Button>
       <Button shape="round" variant="tinted">Tinted</Button>
       <Button shape="round" variant="filled">Filled</Button>
+      <Button shape="round" variant="filled"><CheckCircledOutline /> Icon</Button>
     </Wrapper>
     <Wrapper>
       <Button isPressed={true} variant="plain">Plain</Button>
       <Button isPressed={true} variant="gray">Gray</Button>
       <Button isPressed={true} variant="tinted">Tinted</Button>
       <Button isPressed={true} variant="filled">Filled</Button>
+      <Button isPressed={true} variant="filled"><CheckCircledOutline /> Icon</Button>
       <Button isPressed={true} shape="round" variant="plain">Plain</Button>
       <Button isPressed={true} shape="round" variant="gray">Gray</Button>
       <Button isPressed={true} shape="round" variant="tinted">Tinted</Button>
       <Button isPressed={true} shape="round" variant="filled">Filled</Button>
+      <Button isPressed={true} shape="round" variant="filled"><CheckCircledOutline /> Icon</Button>
     </Wrapper>
   </ThemeWrapper></>;
 

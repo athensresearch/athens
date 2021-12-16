@@ -2,37 +2,41 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
+    [athens.common-events.bfs :as bfs]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.graph.composite :as composite-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging                :as log]
     [athens.common.utils                  :as common.utils]
+    [athens.dates                         :as dates]
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
-    [athens.electron.utils                :as electron.utils]
+    [athens.electron.images :as images]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
-    [athens.self-hosted.client            :as client]
     [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
-    [day8.re-frame.tracing                :refer-macros [fn-traced]]
-    [goog.dom                             :refer [getElement]]
-    [re-frame.core                        :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [day8.re-frame.tracing :refer-macros [fn-traced]]
+    [goog.dom :refer [getElement]]
+    [re-frame.core :as rf :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
 
+;; TODO: boot/web should be rolled into boot/desktop to have a central boot
+;; cycle that works with RTC.
 (reg-event-fx
   :boot/web
   [(inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
     {:db         (db/init-app-db local-storage)
-     :dispatch-n [[:loading/unset]
-                  [:theme/set]]}))
+     :dispatch-n [[:theme/set]
+                  [:loading/unset]]}))
 
 
 (reg-event-db
@@ -74,7 +78,7 @@
         athens-child-count       (-> page-athens :block/children count)
         roam-child-count         (-> page-roam :block/children count)
         new-uid                  (common.utils/gen-block-uid)
-        today-date-page          (:title (athens.util/get-day))
+        today-date-page          (:title (dates/get-day))
         new-children             (conj (:block/children page-athens)
                                        {:block/string   (str "[[Roam Import]] "
                                                              "[[" today-date-page "]] "
@@ -171,6 +175,8 @@
           merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
                               (map (fn [x] (db/get-roam-node-document [:node/title x] transformed-dates-roam-db))))
           tx-data        (concat merge-shared merge-unshared)]
+      ;; TODO: this functionality needs to create a internal representation event instead.
+      ;; That will cause it to work in RTC and remove the need to transact directly to the in-memory db.
       {:dispatch [:transact tx-data]})))
 
 
@@ -191,6 +197,12 @@
   :devtool/toggle
   (fn [db _]
     (update db :devtool/open not)))
+
+
+(reg-event-db
+  :help/toggle
+  (fn [db _]
+    (update db :help/open? not)))
 
 
 (reg-event-db
@@ -282,6 +294,29 @@
 
 
 (reg-event-fx
+  :right-sidebar/open-page
+  (fn [{:keys [db]} [_ page-title is-graph?]]
+    (let [{:keys [:block/uid]
+           :as   block} (d/pull @db/dsdb '[:block/uid :node/title :block/string] [:node/title page-title])
+          new-item      (merge block {:open true :index -1 :is-graph? is-graph?})
+          ;; Avoid a memory leak by forgetting the comparison function
+          ;; that is stored in the sorted map
+          ;; `(assoc (:right-sidebar/items db) uid new-item)`
+          new-items     (into {}
+                              (assoc (:right-sidebar/items db) uid new-item))
+          inc-items     (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
+                                   {}
+                                   new-items)
+          sorted-items  (into (sorted-map-by (fn [k1 k2]
+                                               (compare
+                                                 [(get-in inc-items [k1 :index]) k2]
+                                                 [(get-in inc-items [k2 :index]) k1]))) inc-items)]
+      {:db         (assoc db :right-sidebar/items sorted-items)
+       :dispatch-n [(when (not (:right-sidebar/open db)) [:right-sidebar/toggle])
+                    [:right-sidebar/scroll-top]]})))
+
+
+(reg-event-fx
   :right-sidebar/scroll-top
   (fn []
     {:right-sidebar/scroll-top nil}))
@@ -290,20 +325,20 @@
 (reg-event-fx
   :editing/uid
   (fn [{:keys [db]} [_ uid index]]
-    (let [remote? (client/open?)]
-      (cond->
-        {:db                    (assoc db :editing/uid uid)
-         :editing/focus         [uid index]}
-        (and uid remote?) (assoc :presence/send-editing uid)))))
+    (let [remote? (db-picker/remote-db? db)]
+      {:db            (assoc db :editing/uid uid)
+       :editing/focus [uid index]
+       :dispatch-n    [(when (and uid remote?)
+                         [:presence/send-update {:block-uid (util/embed-uid->original-uid uid)}])]})))
 
 
 (reg-event-fx
   :editing/target
-  (fn [{:keys [db]} [_ target]]
+  (fn [_ [_ target]]
     (let [uid (-> (.. target -id)
                   (string/split "editable-uid-")
                   second)]
-      {:db (assoc db :editing/uid uid)})))
+      {:dispatch [:editing/uid uid]})))
 
 
 (reg-event-fx
@@ -364,8 +399,8 @@
   (fn [db [_ selected-items]]
     (let [last-item         (last selected-items)
           next-block-uid    (db/next-block-uid last-item true)
-          ordered-selection (-> (into [] selected-items)
-                                (into [next-block-uid]))]
+          ordered-selection (cond-> (into [] selected-items)
+                              next-block-uid (into [next-block-uid]))]
       (log/debug ":selected/down, new-selection:" (pr-str ordered-selection))
       (assoc-in db [:selection :items] ordered-selection))))
 
@@ -389,6 +424,12 @@
   :alert/js
   (fn [_ [_ message]]
     {:alert/js! message}))
+
+
+(reg-event-fx
+  :confirm/js
+  (fn [_ [_ message true-cb false-cb]]
+    {:confirm/js! [message true-cb false-cb]}))
 
 
 ;; Modal
@@ -446,9 +487,8 @@
   :daily-note/ensure-day
   (fn [_ [_ {:keys [uid title]}]]
     (when-not (db/e-by-av :block/uid uid)
-      {:dispatch [:page/create {:title     title
-                                :page-uid  uid
-                                :block-uid (common.utils/gen-block-uid)}]})))
+      {:dispatch [:page/new {:title     title
+                             :block-uid (common.utils/gen-block-uid)}]})))
 
 
 (reg-event-fx
@@ -472,7 +512,7 @@
   (fn [{:keys [db]} [_ uid title]]
     (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ; Filter current date from daily note vec
           new-db (assoc db :daily-notes/items filtered-dn)]
-      {:fx [[:dispatch [:page/delete uid title]]]
+      {:fx [[:dispatch [:page/delete title]]]
        :db new-db})))
 
 
@@ -491,40 +531,19 @@
       ;; Don't allow user to scroll up for now.
       (cond
         (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
-        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (util/get-day (util/uid-to-date (last daily-notes)) 1)]]]}))))
+        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))
 
 
 ;; -- event-fx and Datascript Transactions -------------------------------
 
 ;; Import/Export
 
-(reg-event-fx
-  :get-db/init
-  (fn [{rfdb :db} _]
-    {:db         (assoc db/rfdb :loading? true)
-     :async-flow {:first-dispatch [:http/get-db]
-                  :rules          [{:when :seen?
-                                    :events :reset-conn
-                                    :dispatch-n [[:loading/unset]
-                                                 [:navigate (-> rfdb :current-route :data :name)]]
-                                    :halt? true}]}}))
-
-
-(reg-event-fx
-  :http/get-db
-  (fn [_ _]
-    {:http {:method :get
-            :url db/athens-url
-            :opts {:with-credentials? false}
-            :on-success [:http-success/get-db]
-            :on-failure [:alert/set]}}))
-
 
 (reg-event-fx
   :http-success/get-db
   (fn [_ [_ json-str]]
     (let [datoms (db/str-to-db-tx json-str)
-          new-db (d/db-with (d/empty-db db/schema) datoms)]
+          new-db (d/db-with (d/empty-db common-db/schema) datoms)]
       {:dispatch [:reset-conn new-db]})))
 
 
@@ -548,6 +567,12 @@
 
 
 
+;; TODO: remove this event and also :transact! when the following are converted to events:
+;; - athens.electron.images/dnd-image (needs file upload)
+;; - :upload/roam-edn (needs internal representation)
+;; - athens.self-hosted.client/db-dump-handler (needs internal representation)
+;; - :undo / :redo
+;; No other reframe events should be calling this event.
 (reg-event-fx
   :transact
   (fn [_ [_ tx-data]]
@@ -566,119 +591,93 @@
     {:reset-conn! db}))
 
 
+(reg-event-fx
+  :electron-sync
+  (fn [_ _]
+    (let [synced?   @(subscribe [:db/synced])
+          electron? (athens.util/electron?)]
+      (merge {}
+             (when (and synced? electron?)
+               {:fx [[:dispatch [:db/not-synced]]
+                     [:dispatch [:save]]]})))))
+
+
 ;; Resolves events when the event-fx is resolved, instead of taking a resolution.
 ;; This is useful for when you want to apply events one after the other, using
 ;; the resulting db to resolve to next one.
 (reg-event-fx
   :resolve-transact
   (fn [_ [_ event]]
-    (let [txs (atomic-resolver/resolve-to-tx @db/dsdb event)]
-      (log/debug ":resolve-transact resolved" (:event/type event) "to txs:" txs)
-      {:fx [[:dispatch [:transact txs]]]})))
+    (log/debug "events/resolve-transact, event:" (pr-str event))
+    (atomic-resolver/resolve-transact! db/dsdb event)
+    {:fx [[:dispatch [:electron-sync]]]}))
 
 
+;; Same as above, but also forwards the event.
+;; Anything that uses atomic-resolver/resolve-transact! must duplicate the code
+;; to ensure db/dsdb is synchronized and cannot just reuse the existing :resolve* events.
 (reg-event-fx
   :resolve-transact-forward
   (fn [{:keys [db]} [_ event]]
-    (let [selected-db (db-picker/selected-db db)
-          forward? (electron.utils/remote-db? selected-db)]
-      (log/debug ":resolve-transact-forward forward?" forward?)
-      {:fx [[:dispatch-n [[:resolve-transact event]
-                          ;; TODO: this isn't right, we want to know if we're in RTC
-                          ;; and not if the RTC conn is open right now.
-                          ;; e.g. can be temporarily offline, but still want to queue up events.
+    (let [forward? (db-picker/remote-db? db)]
+      (log/debug ":resolve-transact-forward event:" (pr-str event) "forward?" (pr-str forward?))
+      (atomic-resolver/resolve-transact! db/dsdb event)
+      {:fx [[:dispatch-n [[:electron-sync]
                           (when forward? [:remote/forward-event event])]]]})))
 
 
 (reg-event-fx
-  :page/create
-  (fn [{:keys [db]} [_ {:keys [title page-uid block-uid shift?] :or {shift? false} :as args}]]
-    (log/debug ":page/create args" (pr-str args))
-    (let [event (common-events/build-atomic-event (:remote/last-seen-tx db)
-                                                  (graph-ops/build-page-new-op @db/dsdb
-                                                                               title
-                                                                               page-uid
-                                                                               block-uid))]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                          (cond
-                            shift?
-                            [:right-sidebar/open-item page-uid]
-
-                            (not (util/is-daily-note page-uid))
-                            [:navigate :page {:id page-uid}]
-
-                            (util/is-daily-note page-uid)
-                            [:daily-note/add page-uid])
-
-                          [:editing/uid block-uid]]]]})))
-
-
-(reg-event-fx
-  :page/rename
-  (fn [{:keys [db]} [_ {:keys [page-uid old-name new-name callback] :as args}]]
-    (log/debug ":page/rename args:" (pr-str (select-keys args [:page-uid
-                                                               :old-name
-                                                               :new-name])))
-    (let [event (common-events/build-page-rename-event (:remote/last-seen-tx db)
-                                                       page-uid
-                                                       old-name
-                                                       new-name)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]
-            [:invoke-callback callback]]})))
-
-
-(reg-event-fx
-  :page/merge
-  (fn [{:keys [db]} [_ {:keys [page-uid old-name new-name callback] :as args}]]
-    (log/debug ":page/merge args:" (pr-str (select-keys args [:page-uid
-                                                              :old-name
-                                                              :new-name])))
-    (let [event (common-events/build-page-merge-event (:remote/last-seen-tx db)
-                                                      page-uid
-                                                      old-name
-                                                      new-name)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]
-            [:invoke-callback callback]]})))
-
-
-(reg-event-fx
   :page/delete
-  (fn [{:keys [db]} [_ uid _title]]
-    (log/debug ":page/delete:" uid)
-    (let [event (common-events/build-page-delete-event (:remote/last-seen-tx db)
-                                                       uid)]
+  (fn [_ [_ title]]
+    (log/debug ":page/delete:" title)
+    (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-remove-op title))]
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+
+
+(rf/reg-event-fx
+  :page/removed
+  (fn [{:keys [db]} [_ title]]
+    (let [route-template     (get-in db [:current-route :template])
+          page-title?        (string/starts-with? route-template "/page-t/")
+          current-page-title (if page-title?
+                               (get-in db [:current-route :path-params :title])
+                               (when-let [block-uid (get-in db [:current-route :path-params :id])]
+                                 (loop [block (common-db/get-block @db/dsdb [:block/uid block-uid])]
+                                   (if (:node/title block)
+                                     (:node/title block)
+                                     (recur (common-db/get-parent @db/dsdb [:block/uid (:block/uid block)]))))))]
+      (when (= current-page-title title)
+        (log/debug ":page/removed" title)
+        {:fx [[:dispatch-n [[:alert/js (str "This page \"" title "\" has being deleted by other player.")]
+                            [:navigate :home]]]]}))))
+
+
+(reg-event-fx
+  :left-sidebar/add-shortcut
+  (fn [_ [_ name]]
+    (log/debug ":page/add-shortcut:" name)
+    (let [add-shortcut-op (atomic-graph-ops/make-shortcut-new-op name)
+          event           (common-events/build-atomic-event add-shortcut-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
-  :page/add-shortcut
-  (fn [{:keys [db]} [_ uid]]
-    (log/debug ":page/add-shortcut:" uid)
-    (let [event (common-events/build-page-add-shortcut (:remote/last-seen-tx db) uid)]
+  :left-sidebar/remove-shortcut
+  (fn [_ [_ name]]
+    (log/debug ":page/remove-shortcut:" name)
+    (let [remove-shortcut-op (atomic-graph-ops/make-shortcut-remove-op name)
+          event              (common-events/build-atomic-event remove-shortcut-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
-  :page/remove-shortcut
-  (fn [{:keys [db]} [_ uid]]
-    (log/debug ":page/remove-shortcut:" uid)
-    (let [event (common-events/build-page-remove-shortcut (:remote/last-seen-tx db) uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :left-sidebar/drop-above
-  (fn [{:keys [db]} [_ source-order target-order]]
-    (log/debug ":left-sidebar/drop-above" ", source-order:" source-order ", target-order:" target-order)
-    (let [event (common-events/build-left-sidebar-drop-above (:remote/last-seen-tx db) source-order target-order)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :left-sidebar/drop-below
-  (fn [{:keys [db]} [_ source-order target-order]]
-    (log/debug ":left-sidebar/drop-below" ", source-order:" source-order ", target-order:" target-order)
-    (let [event (common-events/build-left-sidebar-drop-below (:remote/last-seen-tx db) source-order target-order)]
+  :left-sidebar/drop
+  (fn [_ [_ source-order target-order relation]]
+    (let [[source-name target-name] (common-db/find-source-target-title @db/dsdb source-order target-order)
+          drop-op                   (atomic-graph-ops/make-shortcut-move-op source-name
+                                                                            {:page/title target-name
+                                                                             :relation relation})
+          event (common-events/build-atomic-event drop-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
@@ -692,10 +691,10 @@
   :undo
   (fn [{:keys [db]} _]
     (log/debug ":undo")
-    (let [local? (not (client/open?))]
+    (let [local? (not (db-picker/remote-db? db))]
       (log/debug ":undo: local?" local?)
       (if local?
-        (let [undo-event (common-events/build-undo-redo-event (:remote/last-seen-tx db) false)
+        (let [undo-event (common-events/build-undo-redo-event  false)
               tx-data    (resolver/resolve-event-to-tx db/history undo-event)]
           {:fx [[:dispatch [:transact tx-data]]]})
         {:fx [[:dispatch [:alert/js "Undo not supported in Lan-Party, yet."]]]}))))
@@ -705,10 +704,10 @@
   :redo
   (fn [{:keys [db]} _]
     (log/debug ":redo")
-    (let [local? (not (client/open?))]
+    (let [local? (not (db-picker/remote-db? db))]
       (log/debug ":redo: local?" local?)
       (if local?
-        (let [redo-event (common-events/build-undo-redo-event (:remote/last-seen-tx db) true)
+        (let [redo-event (common-events/build-undo-redo-event  true)
               tx-data    (resolver/resolve-event-to-tx db/history redo-event)]
           {:fx [[:dispatch [:transact tx-data]]]})
         {:fx [[:dispatch [:alert/js "Redo not supported in Lan-Party, yet."]]]}))))
@@ -786,49 +785,23 @@
 
 (reg-event-fx
   :backspace/delete-only-child
-  (fn [{:keys [db]} [_ uid]]
+  (fn [_ [_ uid]]
     (log/debug ":backspace/delete-only-child:" (pr-str uid))
-    (let [event (common-events/build-delete-only-child-event (:remote/last-seen-tx db) uid)]
+    (let [op    (graph-ops/build-block-remove-op @db/dsdb uid)
+          event (common-events/build-atomic-event op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]
             [:dispatch [:editing/uid nil]]]})))
-
-
-(reg-event-fx
-  :backspace/delete-merge-block
-  (fn [{:keys [db]} [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
-    (log/debug ":backspace/delete-merge-block args:" (pr-str args))
-    (let [event (common-events/build-delete-merge-block-event (:remote/last-seen-tx db) uid value)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]
-            [:dispatch [:editing/uid
-                        (cond-> prev-block-uid
-                          embed-id (str "-embed-" embed-id))
-                        (count (:block/string prev-block))]]]})))
-
-
-(reg-event-fx
-  :split-block-to-children
-  (fn [{:keys [db]} [_ {:keys [uid value index new-uid embed-id] :as args}]]
-    (log/debug ":split-block-to-children" (pr-str args))
-    (let [event (common-events/build-split-block-to-children-event (:remote/last-seen-tx db)
-                                                                   uid
-                                                                   value
-                                                                   index
-                                                                   new-uid)]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                          [:editing/uid (str new-uid (when embed-id
-                                                       (str "-embed-" embed-id)))]]]]})))
 
 
 ;; Atomic events start ==========
 
 (reg-event-fx
   :enter/new-block
-  (fn [{:keys [db]} [_ {:keys [block parent new-uid embed-id]}]]
+  (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
     (log/debug ":enter/new-block" (pr-str block) (pr-str parent) (pr-str new-uid))
-    (let [op    (atomic-graph-ops/make-block-new-op (:block/uid parent)
-                                                    new-uid
-                                                    (inc (:block/order block)))
-          event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
+    (let [op    (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
+                                                             :relation :after})
+          event (common-events/build-atomic-event op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
@@ -836,14 +809,14 @@
 
 (reg-event-fx
   :block/save
-  (fn [{:keys [db]} [_ {:keys [uid old-string new-string callback] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid string callback] :as args}]]
     (log/debug ":block/save args" (pr-str args))
-    (let [local?      (not (client/open?))
+    (let [local?      (not (db-picker/remote-db? db))
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
           do-nothing? (or (not block-eid)
-                          (= old-string new-string))
-          op          (graph-ops/build-block-save-op @db/dsdb uid old-string new-string)
-          event       (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
+                          (= string (->> block-eid (d/entity @db/dsdb) :block/string)))
+          op          (graph-ops/build-block-save-op @db/dsdb uid string)
+          event       (common-events/build-atomic-event op)]
       (log/debug ":block/save local?" local?
                  ", do-nothing?" do-nothing?)
       (when-not do-nothing?
@@ -853,15 +826,64 @@
 
 (reg-event-fx
   :page/new
-  (fn [{:keys [db]} [_ {:keys [title page-uid block-uid] :as args}]]
+  (fn [_ [_ {:keys [title block-uid shift?] :or {shift? false} :as args}]]
     (log/debug ":page/new args" (pr-str args))
-    (let [op    (graph-ops/build-page-new-op @db/dsdb
-                                             title
-                                             page-uid
-                                             block-uid)
-          event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
+    (let [event (common-events/build-atomic-event (graph-ops/build-page-new-op @db/dsdb
+                                                                               title
+                                                                               block-uid))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
+                          [:page/new-followup title shift?]
                           [:editing/uid block-uid]]]]})))
+
+
+(reg-event-fx
+  :page/rename
+  (fn [_ [_ {:keys [old-name new-name callback] :as args}]]
+    (log/debug ":page/rename args:" (pr-str (select-keys args [:old-name :new-name])))
+    (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-rename-op old-name new-name))]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:invoke-callback callback]]})))
+
+
+(reg-event-fx
+  :page/merge
+  (fn [_ [_ {:keys [from-name to-name callback] :as args}]]
+    (log/debug ":page/merge args:" (pr-str (select-keys args [:from-name :to-name])))
+    (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-merge-op from-name to-name))]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:invoke-callback callback]]})))
+
+
+(reg-event-fx
+  :page/new-followup
+  (fn [_ [_ title shift?]]
+    (log/debug ":page/new-followup title" title "shift?" shift?)
+    (let [page-uid (common-db/get-page-uid @db/dsdb title)]
+      {:fx [[:dispatch-n [(cond
+                            shift?
+                            [:right-sidebar/open-item page-uid]
+
+                            (not (dates/is-daily-note page-uid))
+                            [:navigate :page {:id page-uid}]
+
+                            (dates/is-daily-note page-uid)
+                            [:daily-note/add page-uid])]]]})))
+
+
+(reg-event-fx
+  :backspace/delete-merge-block
+  (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
+    (log/debug ":backspace/delete-merge-block args:" (pr-str args))
+    (let [op    (graph-ops/build-block-remove-merge-op @db/dsdb
+                                                       uid
+                                                       prev-block-uid
+                                                       value)
+          event (common-events/build-atomic-event  op)]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
+                          [:editing/uid
+                           (cond-> prev-block-uid
+                             embed-id (str "-embed-" embed-id))
+                           (count (:block/string prev-block))]]]]})))
 
 
 ;; Atomic events end ==========
@@ -869,14 +891,11 @@
 
 (reg-event-fx
   :enter/add-child
-  (fn [{:keys [db]} [_ {:keys [block new-uid embed-id add-time?]
-                        :or {add-time? false}
-                        :as args}]]
+  (fn [_ [_ {:keys [block new-uid embed-id] :as args}]]
     (log/debug ":enter/add-child args:" (pr-str args))
-    (let [event (common-events/build-add-child-event (:remote/last-seen-tx db)
-                                                     (:block/uid block)
-                                                     new-uid
-                                                     add-time?)]
+    (let [position (common-db/compat-position @db/dsdb {:block/uid  (:block/uid block)
+                                                        :relation :first})
+          event    (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
@@ -884,17 +903,15 @@
 
 (reg-event-fx
   :enter/split-block
-  (fn [{:keys [db]} [_ {:keys [parent-uid uid new-uid new-order old-string value index embed-id] :as args}]]
+  (fn [_ [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
     (let [op    (graph-ops/build-block-split-op @db/dsdb
-                                                {:parent-uid      parent-uid
-                                                 :old-block-uid   uid
-                                                 :new-block-uid   new-uid
-                                                 :new-block-order new-order
-                                                 :old-string      old-string
-                                                 :new-string      value
-                                                 :index           index})
-          event (common-events/build-atomic-event (:remote/last-seen-tx db) op)]
+                                                {:old-block-uid uid
+                                                 :new-block-uid new-uid
+                                                 :string        value
+                                                 :index         index
+                                                 :relation      relation})
+          event (common-events/build-atomic-event op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
@@ -902,11 +919,11 @@
 
 (reg-event-fx
   :enter/bump-up
-  (fn [{:keys [db]} [_ {:keys [uid new-uid embed-id] :as args}]]
+  (fn [_ [_ {:keys [uid new-uid embed-id] :as args}]]
     (log/debug ":enter/bump-up args" (pr-str args))
-    (let [event (common-events/build-bump-up-event (:remote/last-seen-tx db)
-                                                   uid
-                                                   new-uid)]
+    (let [position (common-db/compat-position @db/dsdb {:block/uid  uid
+                                                        :relation :before})
+          event    (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
@@ -914,12 +931,20 @@
 
 (reg-event-fx
   :enter/open-block-add-child
-  (fn [{:keys [db]} [_ {:keys [block new-uid embed-id]}]]
+  (fn [_ [_ {:keys [block new-uid embed-id]}]]
+    ;; Triggered when there is a closed embeded block with no content in the top level block
+    ;; and then one presses enter in the embeded block.
     (log/debug ":enter/open-block-add-child" (pr-str block) (pr-str new-uid))
     (let [block-uid                  (:block/uid block)
-          event (common-events/build-open-block-add-child-event (:remote/last-seen-tx db)
-                                                                block-uid
-                                                                new-uid)]
+          block-open-op           (atomic-graph-ops/make-block-open-op block-uid
+                                                                       true)
+          position                (common-db/compat-position @db/dsdb {:block/uid  (:block/uid block)
+                                                                       :relation :first})
+          add-child-op            (atomic-graph-ops/make-block-new-op new-uid position)
+          open-block-add-child-op (composite-ops/make-consequence-op {:op/type :open-block-add-child}
+                                                                     [block-open-op
+                                                                      add-child-op])
+          event                   (common-events/build-atomic-event open-block-add-child-op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
@@ -941,8 +966,7 @@
                                          (.getAttribute "data-uid"))
                                  uid)
         [uid embed-id]        (db/uid-and-embed-id uid)
-        {:block/keys [string order]
-         :as         block}   (db/get-block [:block/uid uid])
+        block                 (db/get-block [:block/uid uid])
         {parent-uid :block/uid
          :as        parent}   (db/get-parent [:block/uid uid])
         is-parent-root-embed? (= (some-> d-key-down :target
@@ -953,6 +977,7 @@
         root-block?           (boolean (:node/title parent))
         context-root-uid      (get-in rfdb [:current-route :path-params :id])
         new-uid               (common.utils/gen-block-uid)
+
         {:keys [value start]} d-key-down
         event                 (cond
                                 (and (:block/open block)
@@ -987,16 +1012,19 @@
                                 (and (:block/open block)
                                      embed-id root-embed?
                                      (not= start (count value)))
-                                [:split-block-to-children {:uid     uid
-                                                           :value   value
-                                                           :index   start
-                                                           :new-uid new-uid}]
+                                [:enter/split-block {:uid        uid
+                                                     :value      value
+                                                     :index      start
+                                                     :new-uid    new-uid
+                                                     :embed-id   embed-id
+                                                     :relation   :first}]
 
                                 (and (empty? value) embed-id (not is-parent-root-embed?))
                                 [:unindent {:uid              uid
                                             :d-key-down       d-key-down
                                             :context-root-uid context-root-uid
-                                            :embed-id         embed-id}]
+                                            :embed-id         embed-id
+                                            :local-string     ""}]
 
                                 (and (empty? value) embed-id is-parent-root-embed?)
                                 [:enter/new-block {:block    block
@@ -1006,19 +1034,18 @@
 
                                 (not (zero? start))
                                 [:enter/split-block {:uid        uid
-                                                     :old-string string
-                                                     :parent-uid parent-uid
                                                      :value      value
                                                      :index      start
                                                      :new-uid    new-uid
-                                                     :new-order  (inc order)
-                                                     :embed-id   embed-id}]
+                                                     :embed-id   embed-id
+                                                     :relation   :after}]
 
                                 (empty? value)
                                 [:unindent {:uid              uid
                                             :d-key-down       d-key-down
                                             :context-root-uid context-root-uid
-                                            :embed-id         embed-id}]
+                                            :embed-id         embed-id
+                                            :local-string     ""}]
 
                                 (and (zero? start) value)
                                 [:enter/bump-up {:uid      uid
@@ -1035,48 +1062,81 @@
     (enter rfdb uid d-event)))
 
 
+(defn get-prev-block-uid-and-target-rel
+  [uid]
+  (let [prev-block-uid            (:block/uid (common-db/nth-sibling @db/dsdb uid -1))
+        prev-block-children?      (if prev-block-uid
+                                    (seq (:block/children (common-db/get-block @db/dsdb [:block/uid prev-block-uid])))
+                                    nil)
+        target-rel                (if prev-block-children?
+                                    :last
+                                    :first)]
+    [prev-block-uid target-rel]))
+
+
+(defn block-save-block-move-composite-op
+  [source-uid ref-uid relation string]
+  (let [block-save-op             (graph-ops/build-block-save-op @db/dsdb source-uid string)
+        location                  (common-db/compat-position @db/dsdb {:block/uid ref-uid
+                                                                       :relation relation})
+        block-move-op             (atomic-graph-ops/make-block-move-op source-uid
+                                                                       location)
+        block-save-block-move-op  (composite-ops/make-consequence-op {:op/type :block-save-block-move}
+                                                                     [block-save-op
+                                                                      block-move-op])]
+    block-save-block-move-op))
+
+
 (reg-event-fx
   :indent
-  (fn [{:keys [db]} [_ {:keys [uid d-key-down] :as args}]]
+  (fn [{:keys [_db]} [_ {:keys [uid d-key-down local-string] :as args}]]
     ;; - `block-zero`: The first block in a page
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-    (let [local?                    (not (client/open?))
-          block                     (common-db/get-block @db/dsdb [:block/uid uid])
-          block-zero?               (zero? (:block/order block))
-          {:keys [value start end]} d-key-down]
-      (log/debug ":indent local?" local?
+    (let [block                        (common-db/get-block @db/dsdb [:block/uid uid])
+          block-zero?                  (zero? (:block/order block))
+          [prev-block-uid target-rel]  (get-prev-block-uid-and-target-rel uid)
+          {:keys [start end]}          d-key-down
+          block-save-block-move-op     (block-save-block-move-composite-op uid
+                                                                           prev-block-uid
+                                                                           target-rel
+                                                                           local-string)
+          event                        (common-events/build-atomic-event block-save-block-move-op)]
+
+      (log/debug "null-sib-uid" (and block-zero?
+                                     prev-block-uid)
                  ", args:" (pr-str args)
                  ", block-zero?" block-zero?)
-      (when-not block-zero?
-        (let [event (common-events/build-indent-event (:remote/last-seen-tx db)
-                                                      uid
-                                                      value)]
-          {:fx [[:dispatch            [:resolve-transact-forward event]]
-                [:set-cursor-position [uid start end]]]})))))
+      (when (and prev-block-uid
+                 (not block-zero?))
+        {:fx [[:dispatch            [:resolve-transact-forward event]]
+              [:set-cursor-position [uid start end]]]}))))
 
 
 (reg-event-fx
   :indent/multi
-  (fn [{:keys [db]} [_ {:keys [uids]}]]
+  (fn [_ [_ {:keys [uids]}]]
     (log/debug ":indent/multi" (pr-str uids))
     (let [sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
+          f-uid                    (first sanitized-selected-uids)
           dsdb                     @db/dsdb
+          [prev-block-uid
+           target-rel]             (get-prev-block-uid-and-target-rel f-uid)
           same-parent?             (common-db/same-parent? dsdb sanitized-selected-uids)
-          first-block-order        (:block/order (common-db/get-block dsdb [:block/uid (first sanitized-selected-uids)]))
+          first-block-order        (:block/order (common-db/get-block dsdb [:block/uid f-uid]))
           block-zero?              (zero? first-block-order)]
       (log/debug ":indent/multi same-parent?" same-parent?
                  ", not block-zero?" (not  block-zero?))
       (when (and same-parent? (not block-zero?))
-        (let [event  (common-events/build-indent-multi-event (:remote/last-seen-tx db)
-                                                             sanitized-selected-uids)]
-          {:fx [[:dispatch [:resolve-transact-forward event]]]})))))
+        {:fx [[:dispatch [:drop-multi/sibling {:source-uids sanitized-selected-uids
+                                               :target-uid  prev-block-uid
+                                               :drag-target target-rel}]]]}))))
 
 
 (reg-event-fx
   :unindent
-  (fn [{:keys [db]} [_ {:keys [uid d-key-down context-root-uid embed-id] :as args}]]
+  (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
     (log/debug ":unindent args" (pr-str args))
     (let [parent                    (common-db/get-parent @db/dsdb
                                                           (common-db/e-by-av @db/dsdb :block/uid uid))
@@ -1089,16 +1149,19 @@
           do-nothing?               (or is-parent-root-embed?
                                         (:node/title parent)
                                         (= context-root-uid (:block/uid parent)))
-          {:keys [value start end]} d-key-down]
+          {:keys [start end]}       d-key-down
+          block-save-block-move-op  (block-save-block-move-composite-op uid
+                                                                        (:block/uid parent)
+                                                                        :after
+                                                                        local-string)
+          event                     (common-events/build-atomic-event block-save-block-move-op)]
+
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
-        (let [event (common-events/build-unindent-event (:remote/last-seen-tx db)
-                                                        uid
-                                                        value)]
-          {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                              [:editing/uid (str uid (when embed-id
-                                                       (str "-embed-" embed-id)))]]]
-                [:set-cursor-position [uid start end]]]})))))
+        {:fx [[:dispatch-n [[:resolve-transact-forward event]
+                            [:editing/uid (str uid (when embed-id
+                                                     (str "-embed-" embed-id)))]]]
+              [:set-cursor-position [uid start end]]]}))))
 
 
 (reg-event-fx
@@ -1127,212 +1190,159 @@
                                           (= parent-uid context-root-uid))]
       (log/debug ":unindent/multi do-nothing?" do-nothing?)
       (when-not do-nothing?
-        (let [event (common-events/build-unindent-multi-event (:remote/last-seen-tx db)
-                                                              sanitized-selected-uids)]
-          {:fx [[:dispatch [:resolve-transact-forward event]]]})))))
+        {:fx [[:dispatch [:drop-multi/sibling {:source-uids  sanitized-selected-uids
+                                               :target-uid   parent-uid
+                                               :drag-target  :after}]]]}))))
 
 
 (reg-event-fx
-  :drop/child
-  (fn [{:keys [db]} [_ {:keys [source-uid target-uid] :as args}]]
-    (log/debug ":drop/child args" (pr-str args))
-    (let [event (common-events/build-drop-child-event (:remote/last-seen-tx db)
-                                                      source-uid
-                                                      target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+  :block/move
+  (fn [_ [_ {:keys [source-uid target-uid target-rel] :as args}]]
+    (log/debug ":block/move args" (pr-str args))
+    (let [atomic-event (common-events/build-atomic-event
+                         (atomic-graph-ops/make-block-move-op source-uid
+                                                              {:block/uid target-uid
+                                                               :relation target-rel}))]
+      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+
+
+(reg-event-fx
+  :block/link
+  (fn [_ [_ {:keys [source-uid target-uid target-rel] :as args}]]
+    (log/debug ":block/link args" (pr-str args))
+    (let [block-uid    (common.utils/gen-block-uid)
+          atomic-event (common-events/build-atomic-event
+                         (composite-ops/make-consequence-op {:op/type :block/link}
+                                                            [(atomic-graph-ops/make-block-new-op block-uid
+                                                                                                 {:block/uid target-uid
+                                                                                                  :relation target-rel})
+                                                             (atomic-graph-ops/make-block-save-op block-uid
+                                                                                                  (str "((" source-uid "))"))]))]
+      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+
+
+(defn- block-move-chain
+  [target-uid source-uids first-rel]
+  (composite-ops/make-consequence-op {:op/type :block/move-chain}
+                                     (concat [(atomic-graph-ops/make-block-move-op (first source-uids)
+                                                                                   {:block/uid target-uid
+                                                                                    :relation first-rel})]
+                                             (doall
+                                               (for [[one two] (partition 2 1 source-uids)]
+                                                 (atomic-graph-ops/make-block-move-op two
+                                                                                      {:block/uid one
+                                                                                       :relation :after}))))))
 
 
 (reg-event-fx
   :drop-multi/child
-  (fn [{:keys [db]} [_ {:keys [source-uids target-uid] :as args}]]
+  (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
     (log/debug ":drop-multi/child args" (pr-str args))
-    (let [event (common-events/build-drop-multi-child-event (:remote/last-seen-tx db)
-                                                            source-uids
-                                                            target-uid)]
+    (let [atomic-op (block-move-chain target-uid source-uids :first)
+          event     (common-events/build-atomic-event atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
-  :drop-link/child
-  (fn [{:keys [db]} [_ {:keys [source-uid target-uid] :as args}]]
-    (log/debug ":drop-link/child args" (pr-str args))
-    (let [event (common-events/build-drop-link-child-event (:remote/last-seen-tx db)
-                                                           source-uid
-                                                           target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop/diff-parent
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop/diff-parent args" args)
-    (let [event (common-events/build-drop-diff-parent-event (:remote/last-seen-tx db)
-                                                            drag-target
-                                                            source-uid
-                                                            target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-link/diff-parent
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop-link/diff-parent args" args)
-    (let [event (common-events/build-drop-link-diff-parent-event (:remote/last-seen-tx db)
-                                                                 drag-target
-                                                                 source-uid
-                                                                 target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop/same
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop/same args" args)
-    (let [event (common-events/build-drop-same-event (:remote/last-seen-tx db)
-                                                     drag-target
-                                                     source-uid
-                                                     target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-multi/same-source
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    ;; When the selected blocks have same parent and are DnD under some other block this event is fired.
-    (log/debug ":drop-multi/same-source args" args)
-    (let [event (common-events/build-drop-multi-same-source-event (:remote/last-seen-tx db)
-                                                                  drag-target
-                                                                  source-uids
-                                                                  target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-multi/same-all
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
+  :drop-multi/sibling
+  (fn [_ [_ {:keys [source-uids target-uid drag-target] :as args}]]
     ;; When the selected blocks have same parent and are DnD under the same parent this event is fired.
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
-    (log/debug ":drop-multi/same-all args" args)
-    (let [event (common-events/build-drop-multi-same-all-event (:remote/last-seen-tx db)
-                                                               drag-target
-                                                               source-uids
-                                                               target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-link/same-parent
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uid target-uid] :as args}]]
-    (log/debug ":drop-link/same-parent args" args)
-    (let [event (common-events/build-drop-link-same-parent-event (:remote/last-seen-tx db)
-                                                                 drag-target
-                                                                 source-uid
-                                                                 target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-multi/diff-source-same-parents
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    (log/debug ":drop-multi/diff-source-same-parents args" args)
-    (let [event (common-events/build-drop-multi-diff-source-same-parents-event (:remote/last-seen-tx db)
-                                                                               drag-target
-                                                                               source-uids
-                                                                               target-uid)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :drop-multi/diff-source-diff-parents
-  (fn [{:keys [db]} [_ {:keys [drag-target source-uids target-uid] :as args}]]
-    (log/debug ":drop-multi/diff-source-diff-parents args" args)
-    (let [event (common-events/build-drop-multi-diff-source-diff-parents-event (:remote/last-seen-tx db)
-                                                                               drag-target
-                                                                               source-uids
-                                                                               target-uid)]
+    (log/debug ":drop-multi/sibling args" (pr-str args))
+    (let [rel-position drag-target
+          atomic-op    (block-move-chain target-uid source-uids rel-position)
+          event        (common-events/build-atomic-event atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
   :paste-internal
   (fn [_ [_ uid internal-representation]]
-    (println "internal representation is " internal-representation)
     (let [[uid]  (db/uid-and-embed-id uid)
-          paste-internal-event (common-events/build-paste-internal-event -1
-                                                                         uid
-                                                                         internal-representation)]
-      {:fx [[:dispatch [:resolve-transact-forward paste-internal-event]]]})))
+          op     (bfs/build-paste-op @db/dsdb
+                                     uid
+                                     internal-representation)
+          event  (common-events/build-atomic-event op)]
+      (log/debug "paste internal event is" (pr-str event))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
-  :paste
-  (fn [{:keys [db]} [_ uid text :as args]]
-    (log/debug ":paste args" args)
-    (let [local?          (not (client/open?))
-          [uid embed-id]  (db/uid-and-embed-id uid)
-          {:keys [start
-                  value]} (textarea-keydown/destruct-target js/document.activeElement)
-          block-start?    (zero? start)]
-      (log/debug ":paste local?" local?
-                 ", args:" (pr-str args))
+  :paste-image
+  (fn [{:keys [db]} [_ items head tail callback]]
+    (let [local?     (not (db-picker/remote-db? db))
+          img-regex  #"(?i)^image/(p?jpeg|gif|png)$"]
+      (log/debug ":paste-image : local?" local?)
       (if local?
-        (let [paste-event (common-events/build-paste-event (:remote/last-seen-tx db)
-                                                           uid
-                                                           text
-                                                           start
-                                                           value)
-              tx          (resolver/resolve-event-to-tx @db/dsdb paste-event)]
-          (log/debug ":paste tx" tx)
-          {:fx [[:dispatch [:transact tx]]
-                (when block-start?
-                  (let [block                  (-> tx first :block/children)
-                        {:block/keys [uid
-                                      string]} block
-                        n                      (count string)]
-                    [:editing/uid
-                     (cond-> uid
-                       embed-id (str "-embed-" embed-id))
-                     n]))]})
-        {:fx [[:dispatch
-               [:alert/js "Sorry, Paste event isn't ported to remote setup, yet."]
-               #_[:remote/paste {:uid   uid
-                                 :text  text
-                                 :start start
-                                 :value value}]]]}))))
+        (do
+          (mapv (fn [item]
+                  (let [datatype (.. item -type)]
+                    (cond
+                      (re-find img-regex datatype)    (when (util/electron?)
+                                                        (let [new-str (images/save-image head tail item "png")]
+                                                          (callback new-str)))
+                      (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
+                items)
+          {})
+        {:fx [[:dispatch [:alert/js "Image paste not supported in Lan-Party, yet."]]]}))))
 
 
 (reg-event-fx
   :paste-verbatim
-  (fn [{:keys [db]} [_ uid text]]
+  (fn [_ [_ uid text]]
     ;; NOTE: use of `value` is questionable, it's the DOM so it's what users sees,
     ;; but what users sees should taken from DB. How would `value` behave with multiple editors?
     (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
-          event                 (common-events/build-paste-verbatim-event (:remote/last-seen-tx db) uid text start value)]
+          block-empty? (string/blank? value)
+          block-start? (zero? start)
+          new-string   (cond
+                         block-empty?       text
+                         (and (not block-empty?)
+                              block-start?) (str text value)
+                         :else              (str (subs value 0 start)
+                                                 text
+                                                 (subs value start)))
+          op          (graph-ops/build-block-save-op @db/dsdb uid new-string)
+          event       (common-events/build-atomic-event op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
   :unlinked-references/link
-  (fn [{:keys [db]} [_ {:block/keys [string uid]} title]]
+  (fn [_ [_ {:block/keys [string uid]} title]]
     (log/debug ":unlinked-references/link:" uid)
-    (let [event (common-events/build-unlinked-references-link (:remote/last-seen-tx db) uid string title)]
+    (let [ignore-case-title  (re-pattern (str "(?i)" title))
+          new-str            (string/replace string ignore-case-title (str "[[" title "]]"))
+          op                 (graph-ops/build-block-save-op @db/dsdb
+                                                            uid
+                                                            new-str)
+          event              (common-events/build-atomic-event op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
   :unlinked-references/link-all
-  (fn [{:keys [db]} [_ unlinked-refs title]]
+  (fn [_ [_ unlinked-refs title]]
     (log/debug ":unlinked-references/link:" title)
-    (let [event (common-events/build-unlinked-references-link-all (:remote/last-seen-tx db) unlinked-refs title)]
+    (let [block-save-ops      (mapv
+                                (fn [{:block/keys [string uid]}]
+                                  (let [ignore-case-title (re-pattern (str "(?i)" title))
+                                        new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
+                                    (graph-ops/build-block-save-op @db/dsdb
+                                                                   uid
+                                                                   new-str)))
+                                unlinked-refs)
+          link-all-op         (composite-ops/make-consequence-op {:op/type :block/unlinked-refs-link-all}
+                                                                 block-save-ops)
+          event              (common-events/build-atomic-event link-all-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
-(reg-event-fx
+(rf/reg-event-fx
   :block/open
-  (fn [{:keys [db]} [_ {:keys [block-uid open?] :as args}]]
+  (fn [_ [_ {:keys [block-uid open?] :as args}]]
     (log/debug ":block/open args" args)
-    (let [event (common-events/build-block-open-event (:remote/last-seen-tx db)
-                                                      block-uid
-                                                      open?)]
+    (let [event (common-events/build-atomic-event
+                  (atomic-graph-ops/make-block-open-op block-uid open?))]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 

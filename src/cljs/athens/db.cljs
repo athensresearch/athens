@@ -1,5 +1,7 @@
 (ns athens.db
   (:require
+    [athens.common-db :as common-db]
+    [athens.common.logging :as log]
     [athens.patterns :as patterns]
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
@@ -11,7 +13,6 @@
 
 ;; -- Example Roam DBs ---------------------------------------------------
 
-(def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
 (def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
 (def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
 
@@ -27,6 +28,15 @@
    :root-links-only? false
    :orphans?         true
    :daily-notes?     true})
+
+
+(def default-pallete
+  #{"#DDA74C"
+    "#C45042"
+    "#611A58"
+    "#21A469"
+    "#009FB8"
+    "#0062BE"})
 
 
 (def greek-pantheon
@@ -52,12 +62,14 @@
 (def default-settings
   {:email       nil
    :username    (rand-nth (vec greek-pantheon))
+   :color       (rand-nth (vec default-pallete))
    :monitoring  true
    :backup-time 15})
 
 
 (def default-athens-persist
-  {:persist/version 1
+  {;; Increase this number when making breaking changes to the persistence format.
+   :persist/version 2
    :theme/dark      false
    :graph-conf      default-graph-conf
    :settings        default-settings})
@@ -86,22 +98,29 @@
         (update-when-found [:graph-conf] "graph-conf" edn/read-string))))
 
 
+(defn update-v1-to-v2
+  [persisted]
+  (-> persisted
+      (assoc-in [:settings :color] (:color default-settings))
+      (assoc :persist/version 2)))
+
+
 (defn update-persisted
   "Updates persisted to the latest format."
   [{:keys [:persist/version] :as persisted}]
   ;; Anything saved under the :athens/persist key will be automatically
   ;; persisted and loaded between sessions.
-  {:athens/persist
-   (if-not version
-     (update-legacy-to-latest default-athens-persist)
-     ;; Ignore the clj-kondo warning for v<, it'll go away once we have updates.
-     #_:clj-kondo/ignore
-     (let [v< #(< version %)]
-       (cond-> persisted
-               ;; Update persisted by applying each update fn incrementally.
-               ;; (v< 2) update-v1-to-v2
-               ;; (v< 3) update-v2-to-v3
-               )))})
+  (if-not version
+    ;; Legacy is updated to latest directly by cherry-picking data
+    ;; from local storage into the latest format.
+    (update-legacy-to-latest default-athens-persist)
+    ;; Data saved in previous versions of the current format need to be updated.
+    (let [v< #(< version %)]
+      (cond-> persisted
+        ;; Update persisted by applying each update fn incrementally.
+        (v< 2) update-v1-to-v2
+        ;; (v< 3) update-v2-to-v3
+        ))))
 
 
 ;; -- re-frame -----------------------------------------------------------
@@ -125,7 +144,7 @@
                :mouse-down          false
                :daily-notes/items   []
                :selection           {:items []}
-               :theme/dark          false
+               :help/open?          false
                :zoom-level          0
                :fs/watcher          nil
                :presence            {}
@@ -134,7 +153,7 @@
 
 (defn init-app-db
   [persisted]
-  (merge rfdb (update-persisted persisted)))
+  (merge rfdb {:athens/persist (update-persisted persisted)}))
 
 
 ;; -- JSON Parsing ----------------------------------------------------
@@ -205,20 +224,7 @@
 
 ;; -- Datascript and Posh ------------------------------------------------
 
-(def schema
-  {:schema/version      {}
-   :block/uid           {:db/unique :db.unique/identity}
-   :node/title          {:db/unique :db.unique/identity}
-   :attrs/lookup        {:db/cardinality :db.cardinality/many}
-   :block/children      {:db/cardinality :db.cardinality/many
-                         :db/valueType   :db.type/ref}
-   :block/refs          {:db/cardinality :db.cardinality/many
-                         :db/valueType   :db.type/ref}
-   ;; TODO: do we really still use it?
-   :block/remote-id     {:db/unique :db.unique/identity}})
-
-
-(defonce dsdb (d/create-conn schema))
+(defonce dsdb (d/create-conn common-db/schema))
 (defonce dsdb-snapshot (atom nil))
 
 
@@ -335,10 +341,16 @@
   [pull-results]
   (->> (loop [b   pull-results
               res []]
-         (if (:node/title b)
-           (conj res b)
-           (recur (first (:block/_children b))
-                  (conj res (dissoc b :block/_children)))))
+         (cond
+           ;; There's no page in these pull results, log and exit.
+           (nil? b)        (do
+                             (log/warn "No parent found in" (pr-str pull-results))
+                             [])
+           ;; Found the page.
+           (:node/title b) (conj res b)
+           ;; Recur with the parent.
+           :else           (recur (first (:block/_children b))
+                                  (conj res (dissoc b :block/_children)))))
        (rest)
        (reverse)
        vec))
@@ -373,20 +385,6 @@
       get-block))
 
 
-(defn same-parent?
-  "Given a coll of uids, determine if uids are all direct children of the same parent."
-  [uids]
-  (let [parents (->> uids
-                     (mapv (comp first uid-and-embed-id))
-                     (d/q '[:find ?parents
-                            :in $ [?uids ...]
-                            :where
-                            [?e :block/uid ?uids]
-                            [?parents :block/children ?e]]
-                          @dsdb))]
-    (= (count parents) 1)))
-
-
 (defn deepest-child-block
   [id]
   (let [document (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] id)
@@ -397,27 +395,6 @@
         (if (zero? n)
           block
           (recur (get children (dec n))))))))
-
-
-(defn get-children-recursively
-  "Get list of children UIDs for given block ID (including the root block's UID)"
-  [uid]
-  (when-let [eid (e-by-av :block/uid uid)]
-    (->> eid
-         (d/pull @dsdb '[:block/order :block/uid {:block/children ...}])
-         (tree-seq :block/children :block/children)
-         (map :block/uid))))
-
-
-(defn retract-page-recursively
-  "Retract all blocks of a page, excluding the page. Used to reset athens/Welcome page.
-  Page is excluded because block/uid will be generated by walk-string if [[athens/Welcome]] doesn't already exist."
-  [title]
-  (let [eid (e-by-av :node/title title)
-        uid (v-by-ea eid :block/uid)]
-    (->> (get-children-recursively uid)
-         (mapv (fn [uid] [:db/retractEntity [:block/uid uid]]))
-         next)))
 
 
 (defn re-case-insensitive
@@ -677,10 +654,8 @@
   "uid -> Current block
    state -> Look at state atom in block-el"
   [uid state]
-  (let [{:string/keys [local
-                       previous]} @state
-        callback                  #(swap! state assoc :string/previous local)]
-    (dispatch [:block/save {:uid        uid
-                            :old-string previous
-                            :new-string local
-                            :callback   callback}])))
+  (let [{:string/keys [local]} @state
+        callback               #(swap! state assoc :string/previous local)]
+    (dispatch [:block/save {:uid      uid
+                            :string   local
+                            :callback callback}])))

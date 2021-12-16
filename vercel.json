@@ -1,0 +1,8 @@
+{
+  "github": {
+    "enabled": false
+  },
+  "builds": [
+    { "src": "./**", "use": "@now/static" }
+  ]
+}

@@ -3,40 +3,10 @@
   (:require
     ["katex" :as katex]
     ["katex/dist/contrib/mhchem"]
-    #_["codemirror/addon/edit/closebrackets"]
-    #_["codemirror/addon/edit/matchbrackets"]
-    #_["codemirror/mode/clike/clike"]
-    #_["codemirror/mode/clojure/clojure"]
-    #_["codemirror/mode/coffeescript/coffeescript"]
-    #_["codemirror/mode/commonlisp/commonlisp"]
-    #_["codemirror/mode/css/css"]
-    #_["codemirror/mode/dart/dart"]
-    #_["codemirror/mode/dockerfile/dockerfile"]
-    #_["codemirror/mode/elm/elm"]
-    #_["codemirror/mode/erlang/erlang"]
-    #_["codemirror/mode/go/go"]
-    #_["codemirror/mode/haskell/haskell"]
-    #_["codemirror/mode/javascript/javascript"]
-    #_["codemirror/mode/lua/lua"]
-    #_["codemirror/mode/mathematica/mathematica"]
-    #_["codemirror/mode/perl/perl"]
-    #_["codemirror/mode/php/php"]
-    #_["codemirror/mode/powershell/powershell"]
-    #_["codemirror/mode/python/python"]
-    #_["codemirror/mode/ruby/ruby"]
-    #_["codemirror/mode/rust/rust"]
-    #_["codemirror/mode/scheme/scheme"]
-    #_["codemirror/mode/shell/shell"]
-    #_["codemirror/mode/smalltalk/smalltalk"]
-    #_["codemirror/mode/sql/sql"]
-    #_["codemirror/mode/swift/swift"]
-    #_["codemirror/mode/vue/vue"]
-    #_["codemirror/mode/xml/xml"]
-    #_["react-codemirror2" :rename {UnControlled CodeMirror}]
     [athens.config :as config]
     [athens.db :as db]
     [athens.parser.impl :as parser-impl]
-    [athens.router :refer [navigate-uid]]
+    [athens.router :as router]
     [athens.style :refer [color OPACITIES]]
     [clojure.string :as str]
     [instaparse.core :as insta]
@@ -106,25 +76,16 @@
        (str/join "")))
 
 
-;; Helper functions for recursive link rendering
-(defn pull-node-from-string
-  "Gets a block's node from the display string name (or partially parsed string tree)"
-  [title-coll]
-  (let [title (parse-title title-coll)]
-    (pull db/dsdb '[*] [:node/title title])))
-
-
 (defn render-page-link
   "Renders a page link given the title of the page."
   [title]
-  (let [node (pull-node-from-string title)]
-    [:span (use-style page-link {:class "page-link"})
-     [:span {:class "formatting"} "[["]
-     (into [:span {:on-click (fn [e]
-                               (.. e stopPropagation) ; prevent bubbling up click handler for nested links
-                               (navigate-uid (:block/uid @node) e))}]
-           title)
-     [:span {:class "formatting"} "]]"]]))
+  [:span (use-style page-link {:class "page-link"})
+   [:span {:class "formatting"} "[["]
+   (into [:span {:on-click (fn [e]
+                             (.. e stopPropagation) ; prevent bubbling up click handler for nested links
+                             (router/navigate-page (parse-title title) e))}]
+         title)
+   [:span {:class "formatting"} "]]"]])
 
 
 ;; -- Component ---
@@ -188,16 +149,15 @@
                              (component (first contents) uid))
      :page-link            (fn [{_from :from} & title-coll] (render-page-link title-coll))
      :hashtag              (fn [{_from :from} & title-coll]
-                             (let [node (pull-node-from-string title-coll)]
-                               [:span (use-style hashtag {:class    "hashtag"
-                                                          :on-click #(navigate-uid (:block/uid @node) %)})
-                                [:span {:class "formatting"} "#"]
-                                [:span {:class "contents"} title-coll]]))
+                             [:span (use-style hashtag {:class    "hashtag"
+                                                        :on-click #(router/navigate-page (parse-title title-coll) %)})
+                              [:span {:class "formatting"} "#"]
+                              [:span {:class "contents"} title-coll]])
      :block-ref            (fn [{_from :from} ref-uid]
                              (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
                                (if @block
                                  [:span (use-style block-ref {:class "block-ref"})
-                                  [:span {:class "contents" :on-click #(navigate-uid ref-uid %)}
+                                  [:span {:class "contents" :on-click #(router/navigate-uid ref-uid %)}
                                    (if (= uid ref-uid)
                                      [parse-and-render "{{SELF}}"]
                                      [parse-and-render (:block/string @block) ref-uid])]]

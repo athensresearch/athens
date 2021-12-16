@@ -158,7 +158,7 @@ const connectionStatusHelpText = {
 
 export interface PresenceDetailsProps {
   hostAddress: HostAddress;
-  currentUser: Person;
+  currentUser?: Person;
   currentPageMembers: Person[];
   differentPageMembers: Person[];
   handleUpdateProfile(person: Person): void;
@@ -265,15 +265,18 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
 
         {connectionStatus === "connected" && (
           <>
-            <Avatar
-              key={currentUser.personId}
-              username={currentUser.username}
-              color={currentUser.color}
-              personId={currentUser.personId}
-              showTooltip={false}
-              isOutlined={true}
-              size="1.25rem"
-            />
+            {currentUser && (
+              <Avatar
+                key={currentUser.personId}
+                username={currentUser.username}
+                color={currentUser.color}
+                personId={currentUser.personId}
+                showTooltip={false}
+                isOutlined={true}
+                size="1.25rem"
+              />
+            )}
+
             {showablePersons.length > 0 && (
               <Avatar.Stack
                 size="1.25rem"
@@ -310,27 +313,32 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
                     >Copy
                     </Button>
                   </Host>
-                  <Menu.Separator />
                 </>
               )}
-              <Profile>
-                <Menu.Heading>You appear as</Menu.Heading>
-                <PersonWrap>
-                  <Avatar
-                    username={currentUser.username}
-                    personId={currentUser.personId}
-                    color={currentUser.color}
-                    showTooltip={false}
-                  />
-                  <span>{currentUser.username}</span>
-                </PersonWrap>
-                <Button
-                  onClick={profileSettingsState.open}
-                  key={currentUser.personId}
-                >
-                  Edit
-                </Button>
-              </Profile>
+
+              {currentUser && (
+                <>
+                  <Menu.Separator />
+                  <Profile>
+                    <Menu.Heading>You appear as</Menu.Heading>
+                    <PersonWrap>
+                      <Avatar
+                        username={currentUser.username}
+                        personId={currentUser.personId}
+                        color={currentUser.color}
+                        showTooltip={false}
+                      />
+                      <span>{currentUser.username}</span>
+                    </PersonWrap>
+                    <Button
+                      onClick={profileSettingsState.open}
+                      key={currentUser.personId}
+                    >
+                      Edit
+                    </Button>
+                  </Profile>
+                </>
+              )}
 
               {currentPageMembers.length > 0 && (
                 <>
@@ -382,15 +390,19 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
       )
       }
 
-      <ProfileSettingsDialog
-        person={{ ...currentUser }}
-        isOpen={profileSettingsState.isOpen}
-        onClose={profileSettingsState.close}
-        onUpdatePerson={(person) => {
-          handleUpdateProfile(person);
-          profileSettingsState.close();
-        }}
-      />
+      {currentUser && (
+        <>
+          <ProfileSettingsDialog
+            person={{ ...currentUser }}
+            isOpen={profileSettingsState.isOpen}
+            onClose={profileSettingsState.close}
+            onUpdatePerson={(person) => {
+              handleUpdateProfile(person);
+              profileSettingsState.close();
+            }}
+          />
+        </>
+      )}
     </>
   );
 };

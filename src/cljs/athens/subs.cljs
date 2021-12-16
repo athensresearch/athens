@@ -11,6 +11,12 @@
 
 
 (rf/reg-sub
+  :color
+  (fn [db _]
+    (-> db :athens/persist :settings :color)))
+
+
+(rf/reg-sub
   :password
   :<- [:db-picker/selected-db]
   (fn [selected-db _]
@@ -134,12 +140,13 @@
 
 
 (rf/reg-sub
-  :remote/last-seen-tx
-  (fn [db _]
-    (:remote/last-seen-tx db -1)))
-
-
-(rf/reg-sub
   :connection-status
   (fn [db _]
     (:connection-status db)))
+
+
+(rf/reg-sub
+  :help/open?
+  (fn [db _]
+    (:help/open? db)))
+

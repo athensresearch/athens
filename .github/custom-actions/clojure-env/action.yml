@@ -31,18 +31,9 @@ runs:
       with:
         cli: 1.10.3.986
 
-    - name: Fetch maven dependencies
-      shell: bash
-      # 'if' not supported yet, workaround in bash
-      # https://github.com/actions/runner/issues/834
-      # if: steps.restore-maven.outputs.cache-hit != 'true'
-      # run: clj -P
-      run: |
-        if echo ${{ steps.restore-maven.outputs.cache-hit }} | grep -c "true"
-        then
-          echo "Cache hit - skipping dependency installation"
-        else
-          ${{ runner.os != 'Windows' && 'clojure -P' || 'pwsh -c "clojure -P"' }}
-        fi
-
-     
+    - name: Fetch dependencies
+      # Clojure on windows needs to be run on powershell.
+      # Powershell is also present on other platforms so we can use it for all.
+      shell: pwsh
+      if: steps.restore-maven.outputs.cache-hit != 'true'
+      run: clojure -P

@@ -3,8 +3,6 @@
     [athens.db :as db]
     [athens.electron.db-picker :as db-picker]
     [athens.electron.utils :as utils]
-    [athens.patterns :as patterns]
-    [datascript.core :as d]
     [re-frame.core :as rf]))
 
 
@@ -54,6 +52,8 @@
       ;; output => [:reset-conn] OR [:fs/create-and-watch]
 
       {:db         init-app-db
+       :dispatch-n [[:theme/set]
+                    [:loading/set]]
        :async-flow {:first-dispatch first-event
                     :rules          [;; if first time, go to Daily Pages and open left-sidebar
                                      {:when       :seen?
@@ -65,7 +65,18 @@
                                      {:when       :seen?
                                       :events     :reset-conn
                                       :dispatch-n [[:fs/update-write-db]
-                                                   [:restore-navigation]]}
+                                                   [:db/sync]
+                                                   [:restore-navigation]
+                                                   [:loading/unset]]
+                                      ;; This event ends the async flow successfully.
+                                      :halt?      true}
+
+                                     {:when       :seen?
+                                      :events     :remote/connection-failed
+                                      :dispatch   [:db-picker/remove-selection]
+                                      ;; This event ends the async flow unsuccessfully
+                                      ;; and tries to reboot on a different db.
+                                      :halt?      true}
 
                                      ;; whether first or nth time, update athens pages
                                      #_{:when       :seen-any-of?
@@ -76,49 +87,6 @@
                                      ;; bind windows toolbar electron buttons
                                      #_{:when     :seen-any-of?
                                         :events   [:fs/create-and-watch :reset-conn]
-                                        :dispatch [:bind-win-listeners]}
-
-
-                                     {:when        :seen-any-of?
-                                      :events      [:fs/create-and-watch :reset-conn]
-                                      ;; if schema is nil, update to 1 and reparse all block/string's for links
-                                      :dispatch-fn (fn [_]
-                                                     (when-not (utils/remote-db? selected-db)
-                                                       (let [schemas    (d/q '[:find ?e ?v
-                                                                               :where [?e :schema/version ?v]]
-                                                                             @db/dsdb)
-                                                             schema-cnt (count schemas)]
-                                                         (cond
-                                                           (= 0 schema-cnt) (let [linked-ref-pattern      (patterns/linked ".*")
-                                                                                  blocks-with-plain-links (d/q '[:find ?u ?s
-                                                                                                                 :keys block/uid block/string
-                                                                                                                 :in $ ?pattern
-                                                                                                                 :where
-                                                                                                                 [?e :block/uid ?u]
-                                                                                                                 [?e :block/string ?s]
-                                                                                                                 [(re-find ?pattern ?s)]]
-                                                                                                               @db/dsdb
-                                                                                                               linked-ref-pattern)
-                                                                                  blocks-orig             (map (fn [{:block/keys [uid string]}]
-                                                                                                                 {:db/id [:block/uid uid] :block/string string})
-                                                                                                               blocks-with-plain-links)
-                                                                                  blocks-temp             (map (fn [{:block/keys [uid]}]
-                                                                                                                 {:db/id [:block/uid uid] :block/string ""})
-                                                                                                               blocks-with-plain-links)]
-                                                                              ;; give all blocks empty string - clears refs
-                                                                              ;; give all blocks their original string - adds refs (for the period of time where block/refs were not added to db
-                                                                              ;; update schema version, so this doesn't need to happen again
-                                                                              (rf/dispatch [:transact blocks-temp])
-                                                                              (rf/dispatch [:transact blocks-orig])
-                                                                              (rf/dispatch [:transact [[:db/add -1 :schema/version 1]]]))
-                                                           (= 1 schema-cnt) (let [schema-version (-> schemas first second)]
-                                                                              (case schema-version
-                                                                                1 (prn (str "Schema version " schema-version))
-                                                                                (js/alert (js/Error (str "No matching case clause for schema version: " schema-version)))))
-                                                           (< 1 schema-cnt)
-                                                           (js/alert (js/Error (str "Multiple schema versions: " schemas))))
-
-                                                         (rf/dispatch [:loading/unset]))))
-                                      :halt? true}]}})))
+                                        :dispatch [:bind-win-listeners]}]}})))
 
 

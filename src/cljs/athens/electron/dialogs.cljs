@@ -92,8 +92,9 @@
 (defn delete-dialog!
   "Delete an existing database and select the first db of the remaining ones."
   [{:keys [name base-dir] :as db}]
-  (when (.confirm js/window (str "Do you really want to delete " name "?"))
-    (when (utils/local-db? db)
-      (.rmSync fs base-dir #js {:recursive true :force true}))
+  (when (.confirm js/window (str "Do you really want to delete " name "from the list?"
+                                 "The files will still remain on disk in" base-dir "."))
+    (when (utils/remote-db? db)
+      (rf/dispatch [:remote/disconnect!]))
     (rf/dispatch [:db-picker/remove-db db])
     (rf/dispatch [:db-picker/select-most-recent-db])))

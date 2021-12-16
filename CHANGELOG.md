@@ -2,6 +2,571 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.4](https://github.com/athensresearch/athens/compare/v2.0.0-beta.3...v2.0.0-beta.4) (2021-12-09)
+
+
+### Features
+
+* templates ([07733fc](https://github.com/athensresearch/athens/commit/07733fc42d9011633b064f4f538628cd266d0bff))
+
+
+### Bug Fixes
+
+* don't add classes to default paths ([39cb81d](https://github.com/athensresearch/athens/commit/39cb81d17ead2745ede257afcc6c6bb41b66af68))
+* handle big blocks ([599cf6a](https://github.com/athensresearch/athens/commit/599cf6a72c205287d161a4ee726f82856f8a1f71))
+* make clerk start ([d8cfd8c](https://github.com/athensresearch/athens/commit/d8cfd8cc6fb9d7743db9ac365d09797574f6c011))
+* make it save and exit. ([9c840b4](https://github.com/athensresearch/athens/commit/9c840b476d39d5eb54f04dcf6b6b850250d185b8))
+
+
+### Documentation
+
+* add rollback optimizations ADR proposal ([bbe75cb](https://github.com/athensresearch/athens/commit/bbe75cb680ab6711e44444dcf5478b1af791e785))
+
+
+### Work in Progress
+
+* Structure parser ([e1cac48](https://github.com/athensresearch/athens/commit/e1cac48438f5934b0d06c067609fac6f2aebf99c))
+* structure parser with typed-refs (just for `embed`) ([3525637](https://github.com/athensresearch/athens/commit/3525637e7d46eb5ab547135c11513cdeafd1d8f5))
+
+
+* ignore the notebooks build file, but watch others there ([b0197ed](https://github.com/athensresearch/athens/commit/b0197ed82d10381f86c319dc5a79490ad1c2526d))
+* style happy ([27490e4](https://github.com/athensresearch/athens/commit/27490e4edf225a3c5dcba0e539a2f6a5b5185c48))
+* support clerk notebooks ([7253a49](https://github.com/athensresearch/athens/commit/7253a4925ec9f0619fe6971ab5532aedd78220ae))
+* use uberdeps to create parametrized executable uberjars ([e4bcce6](https://github.com/athensresearch/athens/commit/e4bcce653c707462ad3ec347c376e059aa9160d1))
+
+
+### Refactors
+
+* move macro to utils. ([3f91ffb](https://github.com/athensresearch/athens/commit/3f91ffb42dd058390a925915d526cc6a6913af91))
+
+## [2.0.0-beta.3](https://github.com/athensresearch/athens/compare/v2.0.0-beta.2...v2.0.0-beta.3) (2021-11-29)
+
+
+### Bug Fixes
+
+* remove nils from inline presence too ([bdb8937](https://github.com/athensresearch/athens/commit/bdb8937dbff54273fdc957aa1f4fb681ca331db0))
+
+## [2.0.0-beta.2](https://github.com/athensresearch/athens/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2021-11-26)
+
+
+### Bug Fixes
+
+* use same semantics for event replay as processing. ([c301a38](https://github.com/athensresearch/athens/commit/c301a388a527e01f4d1c986a61cbeefb4eb5213b))
+
+
+### Refactors
+
+* rename duplicate ADR 10 to 16 ([feff0c3](https://github.com/athensresearch/athens/commit/feff0c3be7a6f69861edf06c2a4d16bf4baf6d60))
+
+
+### Documentation
+
+* expand and rename event log adr ([23797ab](https://github.com/athensresearch/athens/commit/23797ab04611aed0bee2b56e1729b94c1f2c7414))
+
+## [2.0.0-beta.1](https://github.com/athensresearch/athens/compare/v2.0.0-beta.1...v2.0.0-beta.1) (2021-11-25)
+
+
+### Bug Fixes
+
+* run health check on client as well ([9161df0](https://github.com/athensresearch/athens/commit/9161df0814b5373452d285addfea881cc72f79cd))
+
+
+### Documentation
+
+* updates for 2.0.0-beta launch ([#1868](https://github.com/athensresearch/athens/issues/1868)) ([87b1e82](https://github.com/athensresearch/athens/commit/87b1e82df539ccf1c756481b67b36f273d5ca243))
+
+## [1.0.0-alpha.rtc.46](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.45...v1.0.0-alpha.rtc.46) (2021-11-21)
+
+
+### Bug Fixes
+
+* this docker images was to skinny ([a209a28](https://github.com/athensresearch/athens/commit/a209a28c3e0a091a70e1ac18f7cb0c39b0fbc13e))
+
+## [1.0.0-alpha.rtc.45](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.44...v1.0.0-alpha.rtc.45) (2021-11-21)
+
+
+* added comment on why we need QEMU. ([a742df4](https://github.com/athensresearch/athens/commit/a742df4c691a04d04f8987b16745c55db495f6bb))
+* linux-arm64 target supported and smaller images ([ccb51a7](https://github.com/athensresearch/athens/commit/ccb51a7b6e1a99665e741d8869fb415c05b55c57))
+
+## [1.0.0-alpha.rtc.44](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.43...v1.0.0-alpha.rtc.44) (2021-11-19)
+
+
+### Features
+
+* handle errors and reconnect on add-event! ([e582c70](https://github.com/athensresearch/athens/commit/e582c70688e5c3fa01df9d445fb979c9d9214d3a))
+
+
+### Bug Fixes
+
+* don't print whole remote-db config ([25a5cd2](https://github.com/athensresearch/athens/commit/25a5cd294526b0bbb4f9274cf414091861aff4ec))
+* save event to log inside the same lock as db transaction ([746a2ae](https://github.com/athensresearch/athens/commit/746a2ae945014cee6050d7b82aebfb58f3e1d60d))
+* timeout on health check ([c1bc1f4](https://github.com/athensresearch/athens/commit/c1bc1f4ce06a555340d03f358f0f4ec2b9bebc60))
+* use new fluree config in defrecord ([9dc5796](https://github.com/athensresearch/athens/commit/9dc57961d63628bba4a764acfbc8d07552eebf37))
+
+
+* add fluree dev script ([f370c44](https://github.com/athensresearch/athens/commit/f370c44b436a5257ce301d822b816c44ddd3d023))
+
+## [1.0.0-alpha.rtc.43](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.42...v1.0.0-alpha.rtc.43) (2021-11-18)
+
+## [1.0.0-alpha.rtc.42](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.41...v1.0.0-alpha.rtc.42) (2021-11-18)
+
+
+### Bug Fixes
+
+* re-enable copy paste ([5936131](https://github.com/athensresearch/athens/commit/5936131bd40531cbeeab37cd899bf50722b20495))
+
+## [1.0.0-alpha.rtc.41](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.40...v1.0.0-alpha.rtc.41) (2021-11-18)
+
+
+### Performance
+
+* don't reset conn if they are the same ([01b9b03](https://github.com/athensresearch/athens/commit/01b9b03e65695acfb28c3056111dc3911b2b073b))
+
+## [1.0.0](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.38...v1.0.0) (2021-11-12)
+
+
+* disallow auto-update to pre-release versions ([af82684](https://github.com/athensresearch/athens/commit/af826845364be2d8cf05618cc06e6fdd86f0e634))
+* remove in-app update setting ([3ed9ee1](https://github.com/athensresearch/athens/commit/3ed9ee1a940209a40d5cc865a6809e8c721c98f0)), closes [/github.com/athensresearch/athens/pull/1803#discussion_r745655213](https://github.com/athensresearch//github.com/athensresearch/athens/pull/1803/issues/discussion_r745655213)
+
+## [1.0.0-alpha.rtc.40](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.39...v1.0.0-alpha.rtc.40) (2021-11-18)
+
+
+### Features
+
+* add icon example to button sotry ([85f3e3d](https://github.com/athensresearch/athens/commit/85f3e3d9e6457a780c715170ce71004ddaf0045d))
+* fill out welcome components ([62919c8](https://github.com/athensresearch/athens/commit/62919c8a79653b3a7dcd7fe819fe121830ab6121))
+
+
+### Bug Fixes
+
+* :block/remove should change titles too ([71e6751](https://github.com/athensresearch/athens/commit/71e6751fd842aa923b1af45f1e3dd7e012671dc2))
+* better logging. ([5fedd23](https://github.com/athensresearch/athens/commit/5fedd2363b6bcd61b837e8c2500b0c92be0a77b3))
+* **dbicon:** proper margins for db icon in toolbar ([5b46e28](https://github.com/athensresearch/athens/commit/5b46e28f8658309dc3cc4ba4e297c2ed6fdb53e1))
+* welcome buttons properly styled ([75f1f90](https://github.com/athensresearch/athens/commit/75f1f90ea2ef44b4281e680a1a1f61cd31dfd256))
+* **welcome:** consistent language for database ([aac0798](https://github.com/athensresearch/athens/commit/aac0798e4adf21396dc9796a0d5ed215706e75af))
+
+
+### Refactors
+
+* **button:** reimplement button content spacing ([6f73fdc](https://github.com/athensresearch/athens/commit/6f73fdc2403bd3a5bd823bfddc4d3833dee842e6))
+* remove semantic events support from server ([7e2ad7d](https://github.com/athensresearch/athens/commit/7e2ad7de07517e61b185cb0689e6b3bdb567cafb))
+
+
+### Work in Progress
+
+* cleaner logging ([759270a](https://github.com/athensresearch/athens/commit/759270a6537736f63c5c6ac42e088006415d3a39))
+* logging cleanup round 1. ([e2cbdea](https://github.com/athensresearch/athens/commit/e2cbdeab023a4025524e5ae43a2320e3643d2f0a))
+* things and stuff removed ([7c282e8](https://github.com/athensresearch/athens/commit/7c282e8f2c90f76d644a1e6d31ac57a5b72a9bb4))
+
+
+* add source maps and pseudo names to electron build ([9bc5c26](https://github.com/athensresearch/athens/commit/9bc5c266950d3ebf989c5155250b0e22b5bb81fd))
+* log size of memory-log when replaying. ([ac63e87](https://github.com/athensresearch/athens/commit/ac63e87cff0ef860a34b72b1cd6daef29c94d619))
+* style happier ([ff728aa](https://github.com/athensresearch/athens/commit/ff728aafa5c681d9d29936c67c46f6ac853be594))
+* yarn clean should remove all .js and .js.map, and be crossplatform ([067f64c](https://github.com/athensresearch/athens/commit/067f64c056af4742c58aa008b8dd8cd07410dcbb))
+
+## [1.0.0-alpha.rtc.39](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.38...v1.0.0-alpha.rtc.39) (2021-11-16)
+
+
+### Features
+
+* **help-popup:** Add help popup with content. ([178eb09](https://github.com/athensresearch/athens/commit/178eb0954f15ad6a66ab7fa4c293d75017b70cad))
+* **help-popup:** Add tooltip to help icon ([c3e1d0b](https://github.com/athensresearch/athens/commit/c3e1d0b5885466c77550e3739d8ce8f5b2f32bd4))
+* **help-popup:** Comment out help links until we have ([fcc6c4c](https://github.com/athensresearch/athens/commit/fcc6c4cf416ffb491a5800c0a9edae9c1e0d609d))
+* **help-popup:** Fix a few shortcuts ([c96ace5](https://github.com/athensresearch/athens/commit/c96ace58d50f46fa5eb0386d12c86c7edea0f3a9))
+* **help-popup:** Fix border mismatches ([17b1f45](https://github.com/athensresearch/athens/commit/17b1f45cffcfa777b7b1d7b1e2880b9d7cbafe26))
+* **help-popup:** Fix closing of modal using escape. ([1e6c8f8](https://github.com/athensresearch/athens/commit/1e6c8f8e41dcabffe1a08fab5830e813c44ec605))
+* **help-popup:** Fix copy and remove  a shortcut that ([c706c89](https://github.com/athensresearch/athens/commit/c706c89fc4c9ba5761fb9ec44085f4a0a696d4dd))
+* **help-popup:** Fix issue with scroll-bar and move ([5b27673](https://github.com/athensresearch/athens/commit/5b27673f207d2458cce81c7e57aa4299cb39a9af))
+* **help-popup:** Fix scroll behaviour ([3f77421](https://github.com/athensresearch/athens/commit/3f774210affadf7b01a2ec8fb672708f1b4122bf))
+* **help-popup:** Fix spacing ([6924941](https://github.com/athensresearch/athens/commit/6924941a5a41a90564b7c69f0226f6913325ddf4))
+* **help-popup:** Remove "code block" from Help. ([55042ae](https://github.com/athensresearch/athens/commit/55042ae560a143a3bf7049cc03601644158619d0))
+* notify user of page being removed from beneath. ([bbb0bd9](https://github.com/athensresearch/athens/commit/bbb0bd98f12fc301afe064ec497b15d2d3c9fea6))
+* use athens protocol for initial events in local ([1d3ba34](https://github.com/athensresearch/athens/commit/1d3ba34029444b0fe5c5f9f2db4d74d5f9d55f0c))
+
+
+### Bug Fixes
+
+* all the warnings and errors in help POPUP ([be59fe2](https://github.com/athensresearch/athens/commit/be59fe26984e1573949805c5094649b71076af21))
+* better current page title detection ([2c10096](https://github.com/athensresearch/athens/commit/2c1009612ccf3f9f28a5d492502d55a6b6f41f78))
+* don't delete dbs from disk in db-picker ([0ce8eee](https://github.com/athensresearch/athens/commit/0ce8eee4c104b62745ee885a8cff282ad92d120a))
+* editing/target should delegate to editing/uid ([179bc64](https://github.com/athensresearch/athens/commit/179bc64a9b38ae6264c1beca83fa03a3eb9a2a60))
+* embeds show presence as well as the original block ([679c1e1](https://github.com/athensresearch/athens/commit/679c1e1cf13abdb0cfd44e386d571e6ebbfe4ee9))
+* enable `shortcut/move` atomic op on server. ([33ab6b7](https://github.com/athensresearch/athens/commit/33ab6b7940a566d728fd9cf7cd4e6d73549846bf))
+* go to default db after connection failure ([d503b28](https://github.com/athensresearch/athens/commit/d503b287f43daee6cc83040a7f40cc6676ee5a3f))
+* group-title is now nested in a vector ([76d2b05](https://github.com/athensresearch/athens/commit/76d2b054b842d74eddc39c3f005e4d60af986b0a))
+* health-check server before connecting to websocket ([8bd701c](https://github.com/athensresearch/athens/commit/8bd701cf999f220953623e67975af513432bf880))
+* locally determine old string for do nothing check ([e996564](https://github.com/athensresearch/athens/commit/e996564a3f70b450420737e4a6957c06f2d5a163))
+* remove block/order from IR ([ae50ec5](https://github.com/athensresearch/athens/commit/ae50ec5321387a49fce1f765efad59ecefec91dc))
+* we this argument `page/title` not `name` anymore ([fabe834](https://github.com/athensresearch/athens/commit/fabe8349e3d57ebf7d608806d832a24e3464300e))
+
+
+### Work in Progress
+
+* help-popup ([ec3c304](https://github.com/athensresearch/athens/commit/ec3c30425225d8558d531cecedbb6d251ea1dbb3))
+
+
+### Documentation
+
+* add digitalocean instruction and better permissions instructions ([8f1a793](https://github.com/athensresearch/athens/commit/8f1a793e954c49c0cae2cb341b28ce2cc6e28f25))
+* Fix links to Athens Research Blog ([#1666](https://github.com/athensresearch/athens/issues/1666)) ([f7fccce](https://github.com/athensresearch/athens/commit/f7fccce389eab664a3a815d1627b976ad2e5a7d0))
+
+
+* auto update all builds except on v2 ([fa7d7c9](https://github.com/athensresearch/athens/commit/fa7d7c97d60442f0631ace1bae196f8c15f92949))
+* style, lint, carve ([d686d5e](https://github.com/athensresearch/athens/commit/d686d5ead9e38f49eafe51bd2104dd27b326503e))
+
+
+### Refactors
+
+* reduce log noise on non-verbose settings ([9ddf93e](https://github.com/athensresearch/athens/commit/9ddf93e84812adf7f62238adb4557a78c2b03220))
+* review athens protocol ([dd64548](https://github.com/athensresearch/athens/commit/dd6454891976dbfa7d7fba6dfdba68ab9629322f))
+* review internal representation names ([909ad57](https://github.com/athensresearch/athens/commit/909ad57364872c892b59498a05f2b06838a7e310))
+* style happy ([e8135ed](https://github.com/athensresearch/athens/commit/e8135ed111dc457a9b4712dae770d819b1fcb310))
+* style happy. ([b0cf925](https://github.com/athensresearch/athens/commit/b0cf925037abfe272504b43120cef3c60623e319))
+* use button tooltip instead ([a2c36b7](https://github.com/athensresearch/athens/commit/a2c36b776a3fbd11fcee19623a3d9f8902defcd0))
+
+## [1.0.0-alpha.rtc.38](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.37...v1.0.0-alpha.rtc.38) (2021-11-11)
+
+## [1.0.0-alpha.rtc.37](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.36...v1.0.0-alpha.rtc.37) (2021-11-11)
+
+## [1.0.0-alpha.rtc.36](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.35...v1.0.0-alpha.rtc.36) (2021-11-11)
+
+
+### Bug Fixes
+
+* shortcut op is new, not add ([13ccb04](https://github.com/athensresearch/athens/commit/13ccb042b47609d007b4c73df0d26c575cc67e47))
+
+## [1.0.0-alpha.rtc.35](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.34...v1.0.0-alpha.rtc.35) (2021-11-11)
+
+
+### Bug Fixes
+
+* re-enable `:page/merge` ([a5a3b76](https://github.com/athensresearch/athens/commit/a5a3b76fd9d8d18ce63710ea712f03eb89a25dc9))
+
+## [1.0.0-alpha.rtc.34](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.33...v1.0.0-alpha.rtc.34) (2021-11-11)
+
+
+### Features
+
+* `:page/delete` is atomic. ([1b00805](https://github.com/athensresearch/athens/commit/1b00805022eb5e4ad71c5ea6af07762fec7af460))
+* `:page/merge` is atomic, so atomic. ([8f09340](https://github.com/athensresearch/athens/commit/8f09340214633f48f8e090991e65f6324219e157))
+* add schema for shortcut atomic operations ([95d8d40](https://github.com/athensresearch/athens/commit/95d8d40f3e04601694b912a719ea82fee7e565d1))
+* atomic `:page/rename` ([1a41e07](https://github.com/athensresearch/athens/commit/1a41e072819c1d8a83d45da5cc0692a6431a8366))
+
+
+### Bug Fixes
+
+* `:block/indent` positioning ([13d7f20](https://github.com/athensresearch/athens/commit/13d7f2087caa20beb9efb18edbb9eaa5a5fa4def))
+* `:page/merge` throwing exceptions in `orderkeeper` no more. ([bf82419](https://github.com/athensresearch/athens/commit/bf82419731e3fecfed90b07e9e0a3b5e722b96f5))
+* enable atomic `:page/rename` on protocol. ([1cb5a0f](https://github.com/athensresearch/athens/commit/1cb5a0f6bd2c4de43ba9f1818e47c7bca3b6e6df))
+* make `:page/remove` idempotent. ([e67806b](https://github.com/athensresearch/athens/commit/e67806b7da51450375912ee21304a7e21a504d34))
+* these tests should not expect exceptions anymore. ([a123490](https://github.com/athensresearch/athens/commit/a123490d1ca78cb78643edea5399add467b8a5ee))
+
+
+### Refactors
+
+* use name instead of title to identify pages in protocol ([9bc0e95](https://github.com/athensresearch/athens/commit/9bc0e95a425fc027fa31bb59640ff5babdb8f3ed))
+* use startsWith boolean output as string ([c7cb73e](https://github.com/athensresearch/athens/commit/c7cb73eafe9704e659a9fdebe2dea0c26b0b7dc4))
+
+
+* gh pages, auto-updates only for v1.* ([f07ea50](https://github.com/athensresearch/athens/commit/f07ea503f89febb57180d6964adb77ff56b13d7b))
+* remove in-app update setting ([bdd15a8](https://github.com/athensresearch/athens/commit/bdd15a85e5eebf50f2221ab8c28ba0d747179d70)), closes [/github.com/athensresearch/athens/pull/1803#discussion_r745655213](https://github.com/athensresearch//github.com/athensresearch/athens/pull/1803/issues/discussion_r745655213)
+* use if condition on composite action ([4d708e5](https://github.com/athensresearch/athens/commit/4d708e53f05d72cb01efd29ac9d5a2d9496913aa))
+
+## [1.0.0-alpha.rtc.33](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.32...v1.0.0-alpha.rtc.33) (2021-11-08)
+
+
+### Bug Fixes
+
+* page navigation by title including nested cases. ([7e37201](https://github.com/athensresearch/athens/commit/7e3720102b1aa016faf73fd48d08a2343415fa60))
+* use right bindings in :block/save event ([e301070](https://github.com/athensresearch/athens/commit/e301070ba0e956cf7a0e8659b7839eb75c82d1e4))
+
+
+### Refactors
+
+* remove unused require. ([76a9db6](https://github.com/athensresearch/athens/commit/76a9db686885bffdeaf5deefd94a9b7ce496b54f))
+
+## [1.0.0-alpha.rtc.32](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.31...v1.0.0-alpha.rtc.32) (2021-11-08)
+
+
+### Bug Fixes
+
+* cleaner `page/page-by-title` ([a446a58](https://github.com/athensresearch/athens/commit/a446a5873c69efc7b29b9d204e43497340c050c0))
+* don't dispatch nil, reframe does not accept it. ([72a8272](https://github.com/athensresearch/athens/commit/72a8272d2faa0dbe3f6334b943e3168b8fa63479))
+* don't infinite loop during `:block/remove` ([e9b5180](https://github.com/athensresearch/athens/commit/e9b518098fcfff146fa0b31d3e34af3447168db0))
+* fix wrong refactor ([5dfa574](https://github.com/athensresearch/athens/commit/5dfa5744de9d543d89a836b74b2f25f5be489d81))
+* make nested page links work again. ([6e1f0e1](https://github.com/athensresearch/athens/commit/6e1f0e182e56d77a0252e003b2ac57a6717e9fc8))
+* style/carve happy ([aa54c78](https://github.com/athensresearch/athens/commit/aa54c78534dd42bc591b1694de5cebc83c9df0b0))
+* update own presence optimistically ([94ab5fb](https://github.com/athensresearch/athens/commit/94ab5fb4f1d8670a80b522555e017161fbfe73db))
+* use compat-position for child and bump up ([308356c](https://github.com/athensresearch/athens/commit/308356c327728bc017e069881235387ad6460635))
+
+
+### Enhancements
+
+* more informant 404 page. ([880133d](https://github.com/athensresearch/athens/commit/880133dfb97d8b256f324227455bfe7263516b2e))
+* navigate to pages by page title, not uid. ([66e3bf2](https://github.com/athensresearch/athens/commit/66e3bf2ba89013ec70805c5330575e0845710573))
+
+
+* bump fluree ([d749d88](https://github.com/athensresearch/athens/commit/d749d88a427981a1c1792a61bd7671f1ef374966))
+* separate arm64 ci build ([46da69c](https://github.com/athensresearch/athens/commit/46da69cab4255ba90a54089c5e3a420065c2ad2a))
+* this would infinite loop, but isn't anymore. ([dc36450](https://github.com/athensresearch/athens/commit/dc36450832451019fe253c9451d477f5eea5671b))
+
+
+### Refactors
+
+* remove last-tx ([cd56dde](https://github.com/athensresearch/athens/commit/cd56dde8643e4c92b8535ee367c43db84d745db4))
+* remove old-string from :block/save event ([9cea456](https://github.com/athensresearch/athens/commit/9cea456de456589aa36bb4df85954804678aedde))
+* remove response-accepted schema ([e9267c9](https://github.com/athensresearch/athens/commit/e9267c9a9ba11aa6f3660e49075751bc04afcc05))
+
+## [1.0.0-alpha.rtc.31](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.30...v1.0.0-alpha.rtc.31) (2021-11-04)
+
+
+### Features
+
+* log resolve-transact! total time ([bda3449](https://github.com/athensresearch/athens/commit/bda34494c1b9fa9a4dff99866b7fdfbe6207bbb6))
+* remove page-uid, absolute block order use in protocol ([682c24d](https://github.com/athensresearch/athens/commit/682c24d717f19ebbf0b5a7a3c75b82f38af63aa7))
+
+
+### Bug Fixes
+
+* `:block/move` allowed to go places. ([bf2a17e](https://github.com/athensresearch/athens/commit/bf2a17efdaf2a4e85898a4b531273af4c443b2ea))
+* block internal state `drag-target` compatible with block move relative positioning. ([e8832e9](https://github.com/athensresearch/athens/commit/e8832e9ac42b3d8f246fadbdf9c29d58d54ebd58))
+* clear session list on reconnect ([114cdbc](https://github.com/athensresearch/athens/commit/114cdbcb941002b8d2c785d8867ef01528884003))
+* improve compat-position warning ([a529de4](https://github.com/athensresearch/athens/commit/a529de4ab2efd5544369565f45a3e762ccb48220))
+* improve logging for paste ([e337145](https://github.com/athensresearch/athens/commit/e33714548391060b67ce9b03b44fac89412fe83c))
+* last block on an empty page should not be 1 ([2322689](https://github.com/athensresearch/athens/commit/2322689995c06a94a078a5b27cfdaf93de6bde68))
+* position ref-uid is string ([6f3a898](https://github.com/athensresearch/athens/commit/6f3a898a60da16dc28e57ca277eaa424f2e03508))
+* style ([6f71e7a](https://github.com/athensresearch/athens/commit/6f71e7a0ffee0abf5f09f78a650d5a1ca0879446))
+* style fix. ([08dbf26](https://github.com/athensresearch/athens/commit/08dbf26d95475ca24ad298d2a8c3f8eaa486251a))
+
+
+### Refactors
+
+* faster page lookups ([74d7ecc](https://github.com/athensresearch/athens/commit/74d7ecc6745dfe546bb13c5b1e3dbf7b0ec6ca58))
+
+
+* all ([9159f48](https://github.com/athensresearch/athens/commit/9159f489e11f95a60226093eeed38c3b41e93cf4))
+
+## [1.0.0-alpha.rtc.30](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.29...v1.0.0-alpha.rtc.30) (2021-11-02)
+
+
+### Bug Fixes
+
+* :block/move to new parent. ([c9da42b](https://github.com/athensresearch/athens/commit/c9da42bf3a049aa8b98b9122002813caeb2108a0))
+* take same-page/up into account when computing new-block-order ([ccac6dd](https://github.com/athensresearch/athens/commit/ccac6dd4918bda9b811d93d8e87e632238973874))
+
+
+### Work in Progress
+
+* 1st drop event moved to `:block/move` ([a0de566](https://github.com/athensresearch/athens/commit/a0de566607cf380b5f8c7564705e33ec85644556))
+* cleanup of drop blocks ([ed8dc57](https://github.com/athensresearch/athens/commit/ed8dc57c2f882b53d5696432b15e2d44033b43e4))
+* cleanup, x-mas came early this year. ([3366d4b](https://github.com/athensresearch/athens/commit/3366d4bd2b75356a38852c4c9e98ebd159bc5e0e))
+* drop diff parent using `:block/move` ([a07ef16](https://github.com/athensresearch/athens/commit/a07ef168ee706e67b472b7439ec36ffe2a2e76b1))
+* drop same parent using `:block/move` ([3ce1174](https://github.com/athensresearch/athens/commit/3ce1174397e76bc76703f5c62fc11295f2daf4ba))
+* drop semantic events cleanup. ([1a22f1b](https://github.com/athensresearch/athens/commit/1a22f1b2dd2fb8ed53ce18d51734f827cecc8292))
+* drop-multi different source parents cases using `:block/move`. ([de0c9a8](https://github.com/athensresearch/athens/commit/de0c9a833714cac0b68c384ef4100c408be31adf))
+* drop-multi/same-all using block/move-chain ([bf310bc](https://github.com/athensresearch/athens/commit/bf310bc5260f64d7e758fee57dff22520834b988))
+* failing tests. ([7472553](https://github.com/athensresearch/athens/commit/7472553867dc6a955cba882d65f960683bfe79df))
+* introduced `:block/link` re-frame event to drop links to blocks. ([b600f4c](https://github.com/athensresearch/athens/commit/b600f4c12bbfa395a47137eb5298435d09387b47))
+* last drop-multi migrated to `:block/move` ([4407534](https://github.com/athensresearch/athens/commit/4407534b5bfb955b6c4d4394c4acd1aadb4154d4))
+* moving blocks like a boss, well not really just yet. ([b9a05ed](https://github.com/athensresearch/athens/commit/b9a05edc5f261988c8862a87f72afe5c9b196b7c))
+* removed dead coda around drop events. ([60fcdbf](https://github.com/athensresearch/athens/commit/60fcdbf5f13291f700e1693856894e507bb7a0a5))
+* simple drop multi using chain of `:block/move` ([7226bd5](https://github.com/athensresearch/athens/commit/7226bd52f40d6c1d53204bf5c9a3be28ccd25c4e))
+
+## [1.0.0-alpha.rtc.29](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.28...v1.0.0-alpha.rtc.29) (2021-10-28)
+
+
+### Bug Fixes
+
+* bring local ledger up to date during ensure-ledger! ([a15ecea](https://github.com/athensresearch/athens/commit/a15ecea8e207d7b835d848de739870b97c798cde)), closes [/github.com/fluree/db/issues/126#issuecomment-953903963](https://github.com/athensresearch//github.com/fluree/db/issues/126/issues/issuecomment-953903963)
+* don't include a link to Welcome in mini-datoms ([00ba659](https://github.com/athensresearch/athens/commit/00ba6594f49c2f800ec0242268b9b6c2fd91fdc3))
+* load theme earlier in the boot sequence ([5297d0c](https://github.com/athensresearch/athens/commit/5297d0cec193db3e5beadaecda2a8b92f25fb9ff))
+* use initial datoms, but without any page links ([e1e23d6](https://github.com/athensresearch/athens/commit/e1e23d6e3675489125c0d243e81efb85ae5c0a0e))
+* workaround for fluree tx limit ([45b6877](https://github.com/athensresearch/athens/commit/45b6877554eff88a01db9334f6036f8b90e0989e))
+* workaround query delay ([0ae6ca8](https://github.com/athensresearch/athens/commit/0ae6ca83fc9e56a0966c74463859582fa0ea20d0))
+
+
+* don't build dmg zip ([92ca6b4](https://github.com/athensresearch/athens/commit/92ca6b41e604d5c038c247430f7270b69fb2c8ba))
+
+## [1.0.0-alpha.rtc.28](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.27...v1.0.0-alpha.rtc.28) (2021-10-27)
+
+
+### Features
+
+* store user color between sessions ([994acf0](https://github.com/athensresearch/athens/commit/994acf0bb096e6feeb3930e4c52b8bdf4cfa4f48))
+
+
+### Bug Fixes
+
+* break shape-parent-query loop if there's no parent ([bc2d170](https://github.com/athensresearch/athens/commit/bc2d170f8d06e0050ca04e299bdb3c2407f808d8))
+* fix inline presence, go to user page ([37a5507](https://github.com/athensresearch/athens/commit/37a550789b17a5c2d20b52a05fb541074e0447cc))
+* throw on recreating page with different uid, mismatched daily page title/uid ([7cce9eb](https://github.com/athensresearch/athens/commit/7cce9eb7f952ae647b0757686ac57d7c00f8812b))
+* use daily note uid for daily note title on page create ([e26b917](https://github.com/athensresearch/athens/commit/e26b91745c87b1ffa2ee67bad17f20c88b4ceb00))
+* use daily notes uid for new pages on :block/save ([5fce285](https://github.com/athensresearch/athens/commit/5fce285eb05716fa2dbb60fb415edb222691d469))
+* use resolve-transact! in all locations, mark :transact event for removal ([d11125b](https://github.com/athensresearch/athens/commit/d11125baf527e6770a112c9d939194dccc0cc307))
+
+
+### Refactors
+
+* move date utils into cljc ns ([615ae86](https://github.com/athensresearch/athens/commit/615ae86e2e4c1948f2ef5ab60dc91a516bdaa72d))
+* use date-to-day to simplify logic ([6853a5c](https://github.com/athensresearch/athens/commit/6853a5c68e28718e176690ee497810063ee4a33e))
+
+
+### Work in Progress
+
+* cleaned requires. ([c171845](https://github.com/athensresearch/athens/commit/c171845f523388f1edf1db9edf88d5ed5f489848))
+* fixing wrong resolution and fallout ([c7c156b](https://github.com/athensresearch/athens/commit/c7c156bf0bfc35cdbf41f98cc1933e63e08c9962))
+* Marked locations to make new atomic transactions be possible. ([d2e4580](https://github.com/athensresearch/athens/commit/d2e4580034b9ddebf894d6a3edf99c2c0627792b))
+* Moving to 1 transaction per each atomic graph op. ([51225fe](https://github.com/athensresearch/athens/commit/51225fe9dae733f5ac443ed215e0eefb78309753))
+
+
+* add disabled test for missing block new ref ([e750d53](https://github.com/athensresearch/athens/commit/e750d53a51535317a5b6646b31de64e79ef38a95))
+* add server:wipe script ([f87d458](https://github.com/athensresearch/athens/commit/f87d4581b4263f58f3759f60fe63d93052b6bc40))
+* enable `:block/new` test that checks for existence of rel block. ([fe7b8a7](https://github.com/athensresearch/athens/commit/fe7b8a744bd992210f1b88c3c8874e1914863858))
+* pin ua-parser-js to an uncompromised version ([2d18345](https://github.com/athensresearch/athens/commit/2d1834542a9ad6608d5612036d01ec92e8d2283b))
+* style happy. ([a3c2163](https://github.com/athensresearch/athens/commit/a3c2163487373b2806de663d28244944db3a35e6))
+* update v1-to-v2 test ([ee45e99](https://github.com/athensresearch/athens/commit/ee45e99d9d5c16c44dc8ae3c662088136f656846))
+
+## [1.0.0-alpha.rtc.27](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.26...v1.0.0-alpha.rtc.27) (2021-10-21)
+
+
+### Bug Fixes
+
+* don't fire db events on navigated while still loading ([a8122b6](https://github.com/athensresearch/athens/commit/a8122b62f0d5d9fe86d738957ddb79641cad7593))
+* let boot control loading status ([2957bca](https://github.com/athensresearch/athens/commit/2957bcae4b3a484e243655b47fd472c74292b144))
+* remove selected db on connection failure ([ef025e4](https://github.com/athensresearch/athens/commit/ef025e4eb343c5b6b5f340122e5ca3c1cdf9f47f))
+* use single exit point on reset-conn for async-flow ([b04a9b7](https://github.com/athensresearch/athens/commit/b04a9b75094aab7e2882795ca85796b284c3d22f))
+
+
+### Refactors
+
+* remove unused get-db events ([3f6fcc3](https://github.com/athensresearch/athens/commit/3f6fcc32bf49e39a22d6712befd180b1e1e36373))
+
+
+* style, lint, carve ([a669ffc](https://github.com/athensresearch/athens/commit/a669ffcbd5e9e53da5aeb2a1a3e87069f0bb86a9))
+
+## [1.0.0-alpha.rtc.26](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.25...v1.0.0-alpha.rtc.26) (2021-10-20)
+
+
+### Documentation
+
+* ADR for Atomic Graph Operations and Transacting. ([23022fb](https://github.com/athensresearch/athens/commit/23022fbe05f81e676f4e4edfc91046c1fb92e14e))
+
+
+* update fluree ledger to 1.0 ([1db7a24](https://github.com/athensresearch/athens/commit/1db7a241a520bfd757b965060c19e0f19b0e4e2d))
+
+## [1.0.0-alpha.rtc.25](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.24...v1.0.0-alpha.rtc.25) (2021-10-20)
+
+
+### Features
+
+* `:block/remove` delete also subtree ([9a82163](https://github.com/athensresearch/athens/commit/9a821631bb0003cb67b4316db74bd40252714b87))
+* `:block/remove` taking care of block refs too. ([b343572](https://github.com/athensresearch/athens/commit/b343572766df6284293096202129609a8ad364a9))
+* allow leaving even with unsynced changes ([31f107d](https://github.com/athensresearch/athens/commit/31f107d7a3771244ee994d9178e71c88c1eb024a))
+* basic delete works on atomics ([3fb4036](https://github.com/athensresearch/athens/commit/3fb4036ef21c8b8129e29e9441b0c322cc9ed5e1))
+* pass page title on to avatar/presence details ([240a9e7](https://github.com/athensresearch/athens/commit/240a9e7b2dccf89329201250aa06f62efdd47433))
+
+
+### Bug Fixes
+
+* disconnect rtc client when deleting db ([c9a6621](https://github.com/athensresearch/athens/commit/c9a6621f626fc0e6c0504a87f8759d6c499b6f56))
+* don't move back cursor when there's no expansion ([98cfb24](https://github.com/athensresearch/athens/commit/98cfb24cd1bb2e95932b249282714748e2488b45))
+* map user to person in inline presence ([f7fb663](https://github.com/athensresearch/athens/commit/f7fb66306c6c11cdaca90d864115c8ec57eda4ea))
+* print uuid as string ([f38121a](https://github.com/athensresearch/athens/commit/f38121a6b68309f98cbea3927b824f7f660f0e22))
+* rollback-tx-snapshot atomically ([bcb334b](https://github.com/athensresearch/athens/commit/bcb334bb3c4773d79b0840936a945b9227eb7d43))
+* use db-picker instead of client connection to determine if db is remote ([29e8d5b](https://github.com/athensresearch/athens/commit/29e8d5b1e5f22e4686351050987bd85b7e00effa))
+* use right key for block/uid on initial presence ([c140340](https://github.com/athensresearch/athens/commit/c140340ee85acf43036b486c6869ad95fb0b7a14))
+* user editing log should be debug level ([1c0b775](https://github.com/athensresearch/athens/commit/1c0b7750b34878a960effdd041be0de82e0fe040))
+
+
+* commit deps added by fluree to shadow-cljs builds ([d567fca](https://github.com/athensresearch/athens/commit/d567fcad3fbdd21f6bcb48e339cba99cd6ce317d))
+* fix ([fe9df20](https://github.com/athensresearch/athens/commit/fe9df20871a645109e3cb2e81cbec97bed297eb2))
+* re-enable cljs tests, except the one that needs full web build fix ([79da717](https://github.com/athensresearch/athens/commit/79da7177560250faca8aa165ae3a03493a9362ef))
+* remove unused ns ([cef5bc7](https://github.com/athensresearch/athens/commit/cef5bc78e4bfdf370b575eac4ef9d44a84f30fe4))
+* run more tests in cljs ([6a0b035](https://github.com/athensresearch/athens/commit/6a0b035cb911cfcf1890b1eca61564b9f09d5d25))
+* style happy ([ea39d0e](https://github.com/athensresearch/athens/commit/ea39d0e211a6234645c743702ad75f86a627a687))
+* style job should run style, not lint ([bdeae79](https://github.com/athensresearch/athens/commit/bdeae79f52e929669ff9ce3d4de72f20f316925e))
+* these tests need to pass ([d0981c9](https://github.com/athensresearch/athens/commit/d0981c97950deac1f4e38415da98163bc938091e))
+* use atomic `:block/remove` to remove blocks. ([9425330](https://github.com/athensresearch/athens/commit/9425330c366029b44cbeee9ff535ce34be7b72fa))
+* user docker compose server settings as default ([5b9e3da](https://github.com/athensresearch/athens/commit/5b9e3da9ae34460081e5d36a92a1b8f4f10a5adf))
+
+## [1.0.0-alpha.rtc.24](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.23...v1.0.0-alpha.rtc.24) (2021-10-14)
+
+
+### Bug Fixes
+
+* fetch all events on startup ([42e21d6](https://github.com/athensresearch/athens/commit/42e21d6344ec0f7394499766f314720e18ba6956))
+
+## [1.0.0-alpha.rtc.23](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.22...v1.0.0-alpha.rtc.23) (2021-10-13)
+
+
+* more generous docker health checks ([eb1eba3](https://github.com/athensresearch/athens/commit/eb1eba30640d444b588b5161ebc10c50c740d3a3))
+
+## [1.0.0-alpha.rtc.22](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.21...v1.0.0-alpha.rtc.22) (2021-10-13)
+
+
+### Bug Fixes
+
+* use updated schema ns ([e27860d](https://github.com/athensresearch/athens/commit/e27860dd1f3596b01ff8e7d9e67eff19081f6095))
+
+
+* add health checks to docker compose, fix fluree server address ([7fa21b2](https://github.com/athensresearch/athens/commit/7fa21b20ea24e6cb16b6879bb1b5e1982d881049))
+* fixit ([79e9aa1](https://github.com/athensresearch/athens/commit/79e9aa1cbafafa6ae1514fd9d3a57e595acd141e))
+
+## [1.0.0-alpha.rtc.21](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.20...v1.0.0-alpha.rtc.21) (2021-10-13)
+
+
+* increase max memory for athens server ([44e9672](https://github.com/athensresearch/athens/commit/44e9672004561fa5c10fb493b453ba644ad23ba3))
+
+## [1.0.0-alpha.rtc.20](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.19...v1.0.0-alpha.rtc.20) (2021-10-13)
+
+
+### Bug Fixes
+
+* include default.config.edn in uberjar, only use config.edn in dev ([8a5ef89](https://github.com/athensresearch/athens/commit/8a5ef89208144a3620949874b1e68ed29fbabf05))
+* remove cljstyle workaround ([fce927e](https://github.com/athensresearch/athens/commit/fce927e99d2591c497352a83351c427510ecbdce))
+
+## [1.0.0-alpha.rtc.19](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.18...v1.0.0-alpha.rtc.19) (2021-10-13)
+
+
+### Features
+
+* use fluree as an event-log with a datascript db ([e558ba0](https://github.com/athensresearch/athens/commit/e558ba044acab4134be16e31fa9d25d412e496f0))
+
+
+### Bug Fixes
+
+* datascript comp transacts using web transact fn ([d1e00f3](https://github.com/athensresearch/athens/commit/d1e00f3bccefb65e2969284c4b1c0f2550dfd455))
+
+
+* don't use prefix for docker services ([6de4ff8](https://github.com/athensresearch/athens/commit/6de4ff87016ed18eaad856bf111c955188196c5c))
+* include test in default source paths ([8cf2012](https://github.com/athensresearch/athens/commit/8cf2012f2510f3263839441bfe2ea3cd71ca83a2))
+* use immutable tag for fluree docker ref ([6013ae0](https://github.com/athensresearch/athens/commit/6013ae0e972a490f4f75b06420ebaa753f0889ea))
+
+## [1.0.0-alpha.rtc.18](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.17...v1.0.0-alpha.rtc.18) (2021-10-12)
+
+
+### Features
+
+* `:page/new` can be composite op. ([d5635a7](https://github.com/athensresearch/athens/commit/d5635a7b1195b414b803420c9bd4b1eece22da35))
+* reject optimistically transacted events ([fc7b4be](https://github.com/athensresearch/athens/commit/fc7b4be7356891592dfc4f500c916529e67eb823))
+
+
+### Bug Fixes
+
+* :git/sha issue and ordered was released. ([e6237d8](https://github.com/athensresearch/athens/commit/e6237d8b56daf13365624d901f5f38eabec66fc8))
+* cljs log converts args to js ([7d2b29f](https://github.com/athensresearch/athens/commit/7d2b29fef5490e87c456c2c764a6e70e5705bff8))
+* update carve to fix report bug ([fb36b0c](https://github.com/athensresearch/athens/commit/fb36b0cb2c9c951d1396b0d2b1f71f31aea98f28))
+
+
+### Refactors
+
+* remove unused old event tracking subs ([118e61d](https://github.com/athensresearch/athens/commit/118e61d94a9eb2c135e9ab7e6d8e2119849f61d0))
+* yarn server runs server, yarn server:uberjar builds uberjar ([1a44b48](https://github.com/athensresearch/athens/commit/1a44b4836bf67cb2e28f4bfb8727520bec7a9423))
+
+
+* concurrency compatible `:block/new-v2` op with tests. ([caabff8](https://github.com/athensresearch/athens/commit/caabff840c2c0b43cac26e979424f300240352f9))
+* move from lein to clj+deps.edn ([af01e2a](https://github.com/athensresearch/athens/commit/af01e2a0d0921ac740d19b7583ff904ded2f7bc3))
+
 ## [1.0.0-alpha.rtc.17](https://github.com/athensresearch/athens/compare/v1.0.0-alpha.rtc.16...v1.0.0-alpha.rtc.17) (2021-10-07)
 
 
@@ -219,6 +784,8 @@ All notable changes to this project will be documented in this file. See [standa
 
 * remove old alert component ([ac9cc4f](https://github.com/athensresearch/athens/commit/ac9cc4f2bb26d69f205820a520b104799875c597))
 
+
+## [1.0.0](https://github.com/athensresearch/athens/compare/v1.0.0-beta.98...v1.0.0) (2021-11-12)
 
 ## [1.0.0-beta.98](https://github.com/athensresearch/athens/compare/v1.0.0-beta.97...v1.0.0-beta.98) (2021-09-27)
 

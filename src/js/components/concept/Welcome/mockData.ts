@@ -1,4 +1,3 @@
-
 export const synced = false;
 
 export const mockDatabases = [{

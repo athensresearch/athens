@@ -1,8 +1,10 @@
 (ns athens.events.selection
   (:require
-    [athens.common-events          :as common-events]
-    [athens.db                     :as db]
-    [re-frame.core                 :as rf]))
+    [athens.common-events                 :as common-events]
+    [athens.common-events.graph.composite :as composite-ops]
+    [athens.common-events.graph.ops       :as graph-ops]
+    [athens.db                            :as db]
+    [re-frame.core                        :as rf]))
 
 
 (rf/reg-event-db
@@ -46,10 +48,11 @@
     (let [selected-uids  (get-in db [:selection :items])
           sanitized-uids (map (comp first db/uid-and-embed-id) selected-uids)]
       (js/console.debug ::delete "args" selected-uids)
-      (let [event (common-events/build-selected-delete-event (:remote/last-seen-tx db)
-                                                             sanitized-uids)]
-        {:fx [[:dispatch-n [[:transact-and-forward event]
-                            [:editing/uid          nil]]]]
+      (let [ops          (map #(graph-ops/build-block-remove-op @db/dsdb %) sanitized-uids)
+            composite-op (composite-ops/make-consequence-op {:op/type :selection/delete} ops)
+            event        (common-events/build-atomic-event composite-op)]
+        {:fx [[:dispatch-n [[:resolve-transact-forward event]
+                            [:editing/uid nil]]]]
          :db (assoc-in db [:selection :items] [])}))))
 
 

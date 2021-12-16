@@ -127,6 +127,5 @@
   (listeners/init)
   (init-datalog-console)
   (rf/dispatch-sync (boot-evts))
-  (rf/dispatch [:theme/set])
   (dev-setup)
   (mount-root))
