@@ -221,11 +221,14 @@
     (fn [e]
       (let [synced? @(subscribe [:db/synced])
             editing? @(subscribe [:editing/uid])
+            ;; See test/e2e/electron-test.ts for details about this flag.
+            e2e-ignore-save-check? (= (js/localStorage.getItem "E2E_IGNORE_SAVE_CHECK") "true")
             remote? (electron-utils/remote-db? @(subscribe [:db-picker/selected-db]))]
         (cond
           (and (or (not synced?)
                    (not (= nil editing?)))
-               (not @force-leave))
+               (not @force-leave)
+               (not e2e-ignore-save-check?))
           (do
             ;; The browser blocks the confirm window during beforeunload, so
             ;; instead we always cancel unload and separately show a confirm window
