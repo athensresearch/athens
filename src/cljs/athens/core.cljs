@@ -18,9 +18,8 @@
     [athens.subs]
     [athens.util :as util]
     [athens.views :as views]
-    [cljs.reader :refer [read-string]]
+    [datalog-console.integrations.datascript :as datalog-console]
     [goog.dom :refer [getElement]]
-    [goog.object :as gobj]
     [re-frame.core :as rf]
     [reagent.dom :as r-dom]))
 
@@ -82,22 +81,6 @@
           (.sendSync ipcRenderer "confirm-update"))))))
 
 
-(defn init-datalog-console
-  []
-  (js/document.documentElement.setAttribute "__datalog-console-remote-installed__" true)
-  (let [conn dsdb]
-    (.addEventListener js/window "message"
-                       (fn [event]
-                         (when-let [devtool-message (gobj/getValueByKeys event "data" ":datalog-console.client/devtool-message")]
-                           (let [msg-type (:type (read-string devtool-message))]
-                             (case msg-type
-
-                               :datalog-console.client/request-whole-database-as-string
-                               (.postMessage js/window #js {":datalog-console.remote/remote-message" (pr-str @conn)} "*")
-
-                               nil)))))))
-
-
 (defn init-styles
   []
   (util/add-body-classes (util/app-classes {:os        (util/get-os)
@@ -125,7 +108,8 @@
   (style/init)
   (init-styles)
   (listeners/init)
-  (init-datalog-console)
+  (when config/debug?
+    (datalog-console/enable! {:conn dsdb}))
   (rf/dispatch-sync (boot-evts))
   (dev-setup)
   (mount-root))
