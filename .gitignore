@@ -16,8 +16,10 @@
 /.shadow-cljs/
 .idea/
 
+# local caches
 .clj-kondo/.cache
 .lsp/
+.cache/
 
 # cache directory for dependencies installed with deps.edn
 .cpcache
@@ -31,3 +33,22 @@
 
 # electron build
 dist
+
+# design system output
+/src/gen
+
+# docker compose templating backup
+docker-compose.yml.bk
+
+# dev mode server data
+athens-data/*
+!athens-data/README.md
+
+# java AOT classes
+classes/*
+!classes/README.md
+
+# vercel static site deployment
+vercel-static/*
+!vercel-static/index.html
+.vercel

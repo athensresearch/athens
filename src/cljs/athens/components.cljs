@@ -4,7 +4,7 @@
     [athens.db :as db]
     [athens.parse-renderer :refer [component]]
     [athens.style :refer [color]]
-    [athens.util :refer [now-ts recursively-modify-block-for-embed]]
+    [athens.util :refer [recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -14,13 +14,14 @@
 
 (defn todo-on-click
   [uid from-str to-str]
-  (let [current-block-content (:block/string (db/get-block [:block/uid uid]))]
-    (dispatch [:transact [{:block/uid    uid
-                           :block/string (clojure.string/replace
-                                           current-block-content
-                                           from-str
-                                           to-str)
-                           :edit/time    (now-ts)}]])))
+  (let [current-block-content (:block/string (db/get-block [:block/uid uid]))
+        new-block-content     (clojure.string/replace current-block-content
+                                                      from-str
+                                                      to-str)]
+    (dispatch [:block/save {:uid       uid
+                            :string    new-block-content
+                            :callback  #()
+                            :add-time? true}])))
 
 
 (defn span-click-stop
@@ -53,7 +54,8 @@
   [content _uid]
   [span-click-stop
    [:div.media-16-9
-    [:iframe {:src   (str "https://www.youtube.com/embed/" (get (re-find #".*v=([a-zA-Z0-9_\-]+)" content) 1))
+    [:iframe {:src   (str "https://www.youtube.com/
+                          /" (get (re-find #".*v=([a-zA-Z0-9_\-]+)" content) 1))
               :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"}]]])
 
 
@@ -76,6 +78,7 @@
   {:background (color :background-minus-2 :opacity-med)
    :position   "relative"
    ::stylefy/manual [[:>.block-container {:margin-left "0"
+                                          :padding-right "1.3rem"
                                           ::stylefy/manual [[:textarea {:background "transparent"}]]}]
                      [:>svg              {:position   "absolute"
                                           :right      "5px"

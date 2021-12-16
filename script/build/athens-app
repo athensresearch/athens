@@ -6,7 +6,7 @@ set -eo pipefail
 yarn
 
 # Build app (see shadow-cljs.edn config)
-lein prod
+yarn prod
 
 RELEASE_NAME=${RELEASE_NAME:-"athens-app"}
 
