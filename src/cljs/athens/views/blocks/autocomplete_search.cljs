@@ -13,10 +13,12 @@
 (defn inline-item-click
   [state uid expansion]
   (let [id     (str "#editable-uid-" uid)
-        target (.. js/document (querySelector id))]
-    (case (:search/type @state)
-      :hashtag (textarea-keydown/auto-complete-hashtag state target expansion)
-      (textarea-keydown/auto-complete-inline state target expansion))))
+        target (.. js/document (querySelector id))
+        f      (case (:search/type @state)
+                 :hashtag  textarea-keydown/auto-complete-hashtag
+                 :template textarea-keydown/auto-complete-template
+                 textarea-keydown/auto-complete-inline)]
+    (f state target expansion)))
 
 
 (defn inline-search-el
@@ -24,7 +26,7 @@
   (let [ref                  (atom nil)
         handle-click-outside (fn [e]
                                (let [{:search/keys [type]} @state]
-                                 (when (and (or (= type :page) (= type :block) (= type :hashtag))
+                                 (when (and (#{:page :block :hashtag :template} type)
                                             (not (.. @ref (contains (.. e -target)))))
                                    (swap! state assoc :search/type false))))]
     (r/create-class
@@ -34,7 +36,7 @@
        :reagent-render         (fn [block state]
                                  (let [{:search/keys [query results index type] caret-position :caret-position} @state
                                        {:keys [left top]} caret-position]
-                                   (when (some #(= % type) [:page :block :hashtag])
+                                   (when (some #(= % type) [:page :block :hashtag :template])
                                      [:div (merge (stylefy/use-style dropdown/dropdown-style
                                                                      {:ref           #(reset! ref %)
                                                                       ;; don't blur textarea when clicking to auto-complete

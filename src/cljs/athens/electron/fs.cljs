@@ -1,6 +1,8 @@
 (ns athens.electron.fs
   (:require
     [athens.athens-datoms :as athens-datoms]
+    [athens.common-db :as common-db]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.db :as db]
     [athens.electron.utils :as utils]
     [datascript.core :as d]
@@ -65,10 +67,12 @@
 (rf/reg-event-fx
   :fs/create-and-watch
   (fn [_ [_ {:keys [base-dir images-dir db-path] :as local-db}]]
-    (let [new-db (d/db-with (d/empty-db db/schema) athens-datoms/datoms)]
+    (let [conn (d/create-conn common-db/schema)]
+      (doseq [[_id data] athens-datoms/welcome-events]
+        (atomic-resolver/resolve-transact! conn data))
       (utils/create-dir-if-needed! base-dir)
       (utils/create-dir-if-needed! images-dir)
-      (.writeFileSync fs db-path (dt/write-transit-str new-db))
+      (.writeFileSync fs db-path (dt/write-transit-str @conn))
       {:dispatch [:db-picker/add-and-select-db local-db]})))
 
 

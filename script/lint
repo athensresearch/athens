@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-set -eo pipefail
-
-# This script depends on clj-kondo. Installation instructions for clj-kondo are linked to in CONTRIBUTING.md.
-
-clj-kondo --lint src

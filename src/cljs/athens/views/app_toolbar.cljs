@@ -4,6 +4,7 @@
     [athens.electron.db-menu.core :refer [db-menu]]
     [athens.electron.db-modal :as db-modal]
     [athens.electron.utils :as electron.utils]
+    [athens.electron.window]
     [athens.router :as router]
     [athens.self-hosted.presence.views :refer [toolbar-presence-el]]
     [athens.style :refer [unzoom]]
@@ -44,6 +45,7 @@
                        :isWinFullscreen @win-fullscreen?
                        :isWinMaximized @win-maximized?
                        :isWinFocused @win-focused?
+                       :isHelpOpen @(subscribe [:help/open?])
                        :isThemeDark @theme-dark
                        :isLeftSidebarOpen @left-open?
                        :isRightSidebarOpen @right-open?
@@ -55,10 +57,14 @@
                        :onPressAllPages #(router/navigate :pages)
                        :onPressGraph #(router/navigate :graph)
                        :onPressCommandBar #(dispatch [:athena/toggle])
+                       :onPressHelp #(dispatch [:help/toggle])
                        :onPressThemeToggle #(dispatch [:theme/toggle])
                        :onPressSettings #(router/navigate :settings)
                        :onPressMerge #(swap! merge-open? not)
                        :onPressRightSidebarToggle #(dispatch [:right-sidebar/toggle])
+                       :onPressMaximizeRestore #(dispatch [:toggle-max-min-win])
+                       :onPressMinimize #(dispatch [:minimize-win])
+                       :onPressClose #(dispatch [:close-win])
                        :databaseMenu (r/as-element [db-menu])
                        :presenceDetails (when (electron.utils/remote-db? @selected-db)
                                           (r/as-element [toolbar-presence-el]))}]])))

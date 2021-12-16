@@ -1,12 +1,11 @@
 (ns athens.self-hosted.client
   "Self-Hosted Mode connector."
   (:require
+    [athens.common-db                  :as common-db]
     [athens.common-events              :as common-events]
     [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events.schema       :as schema]
     [athens.common.logging             :as log]
-    [athens.db                         :as db]
-    [clojure.pprint                    :as pp]
     [cognitect.transit                 :as transit]
     [com.cognitect.transit.types       :as ty]
     [com.stuartsierra.component        :as component]
@@ -28,7 +27,7 @@
 
 (defn- connect-to-self-hosted!
   [url]
-  (log/info "WSClient Connecting to:" url)
+  (log/info "WSClient Connecting to:" (pr-str url))
   (when url
     (doto (js/WebSocket. url)
       (.addEventListener "open" open-handler)
@@ -44,11 +43,6 @@
 (def ^:private reconnect-counter (atom -1))
 
 
-(defn- await-response!
-  [{:event/keys [id]}]
-  (log/debug "event-id:" (pr-str id) "WSClient awaiting response:"))
-
-
 (defn- reconnecting?
   "Checks if WebSocket is awaiting reconnection."
   []
@@ -60,7 +54,7 @@
    (delayed-reconnect! url 3000))
   ([url delay-ms]
    (swap! reconnect-counter inc)
-   (log/info "WSClient scheduling reconnect in" delay-ms "ms to" url)
+   (log/info "WSClient scheduling reconnect in" (pr-str delay-ms) "ms to" (pr-str url))
    (if (< @reconnect-counter MAX_RECONNECT_TRY)
      (let [timer-id (js/setTimeout (fn []
                                      (reset! reconnect-timer nil)
@@ -68,7 +62,7 @@
                                    delay-ms)]
        (reset! reconnect-timer timer-id))
      (do
-       (log/warn "Reconnect max tries" @reconnect-counter)
+       (log/warn "Reconnect max tries" (pr-str @reconnect-counter) "reached.")
        (rf/dispatch [:remote/connection-failed])))))
 
 
@@ -110,7 +104,6 @@
          (log/debug "event-id:" (pr-str (:event/id data))
                     ", type:" (pr-str (:event/type data))
                     "WSClient sending to server")
-         (await-response! data)
          (.send connection (transit/write (transit/writer :json) data))
          {:result :sent})
        (do
@@ -146,15 +139,15 @@
 
 (defn- open-handler
   [event]
-  (log/info "WSClient Connected:" event)
+  (log/info "WSClient Connected")
   (let [connection             (.-target event)
-        last-tx                @(rf/subscribe [:remote/last-seen-tx])
         username               @(rf/subscribe [:username])
+        color                  @(rf/subscribe [:color])
         password               @(rf/subscribe [:password])
+        session-intro          {:username username
+                                :color    color}
         {event-id :event/id
-         :as      hello-event} (common-events/build-presence-hello-event last-tx
-                                                                         username
-                                                                         password)]
+         :as      hello-event} (common-events/build-presence-hello-event session-intro password)]
     (reset! ws-connection connection)
     (reset! reconnect-timer nil)
     (reset! reconnect-counter -1)
@@ -172,7 +165,7 @@
       (log/info "Successfully connected to Lan-Party.")
       (reset! await-open-event-id nil)
       (when (seq @send-queue)
-        (log/info "WSClient sending queued packets #" (count @send-queue))
+        (log/info "WSClient sending queued packets #" (pr-str (count @send-queue)))
         (doseq [data @send-queue]
           (send! @ws-connection data))
         (log/info "WSClient sent queued packets.")
@@ -194,8 +187,8 @@
 
 (defn- awaited-response-handler
   [{:event/keys [id status] :as packet}]
-  (log/info "event-id:" (pr-str id)
-            "WSClient: response status:" (pr-str status))
+  (log/debug "event-id:" (pr-str id)
+             "WSClient: response status:" (pr-str status))
   ;; is it hello confirmation?
   (if (= @await-open-event-id id)
     (finished-open-handler packet)
@@ -207,69 +200,45 @@
         (condp = status
           :accepted
           (let [{:accepted/keys [tx-id]} packet]
-            (log/info "event-id:" id "accepted in tx" tx-id))
+            (log/debug "event-id:" (pr-str id) "accepted in tx" tx-id))
           :rejected
           (let [{:reject/keys [reason data]} packet]
             (log/warn "event-id:" (pr-str id)
-                      "rejected, reason:" reason
+                      "rejected, reason:" (pr-str reason)
                       ", rejection-data:" (pr-str data))
             (rf/dispatch [:remote/reject-forwarded-event packet]))))
       (let [explanation (schema/explain-event-response packet)]
         (log/warn "Received invalid response:" (pr-str explanation))))))
 
 
-(defn- reconstruct-entities-from-db-dump
-  [datoms]
-  (log/debug "Reconstructing tx from db dump of" (count datoms) "datoms")
-  (let [insert-id (comp - inc)]
-    (->> datoms
-         ;; NOTE: removing schema, should re apply Datahike schema to Datascript?
-         (remove #(contains? #{:db/txInstant
-                               :db/ident
-                               :db/cardinality
-                               :db/valueType
-                               :db/unique}
-                             ;; attribute
-                             (:a %)))
-         ;; group by entity id
-         (group-by :e)
-         ;; reduce datoms to entities
-         (reduce (fn [acc [entity-id datoms]]
-                   (assoc acc entity-id
-                          (reduce (fn [entity {:keys [a v]}]
-                                    (assoc entity a
-                                           (if (= :block/children a)
-                                             (conj (:block/children entity #{})
-                                                   (insert-id v))
-                                             v)))
-                                  {:db/id (insert-id entity-id)}
-                                  datoms)))
-                 {})
-         ;; only entities
-         vals)))
+(defn datom->tx-entry
+  [[e a v]]
+  [:db/add e a v])
 
 
 (defn- db-dump-handler
-  [last-tx {:keys [datoms]}]
+  [{:keys [datoms]}]
   (log/debug "Received DB Dump")
-  (let [entities (reconstruct-entities-from-db-dump datoms)]
-    (log/info "Reconstructed" (count entities) "entities")
-    (log/debug "Reconstructed entities:" (with-out-str
-                                           (pp/pprint entities)))
-    (rf/dispatch [:reset-conn (d/empty-db db/schema)])
-    (rf/dispatch [:transact entities])
-    (rf/dispatch [:remote/snapshot-dsdb])
-    (rf/dispatch [:remote/start-event-sync])
-    (rf/dispatch [:remote/last-seen-tx! last-tx])
-    (rf/dispatch [:db/sync])
-    (rf/dispatch [:remote/connected])
-    (log/info "✅ Transacted DB dump. last-seen-tx" last-tx)))
+  (rf/dispatch [:reset-conn (d/empty-db common-db/schema)])
+  ;; TODO: this transact should be a internal representation event instead.
+  (rf/dispatch [:transact (into [] (map datom->tx-entry) datoms)])
+  (rf/dispatch [:remote/snapshot-dsdb])
+  (rf/dispatch [:remote/start-event-sync])
+  (rf/dispatch [:db/sync])
+  (rf/dispatch [:remote/connected])
+  (log/info "✅ Transacted DB dump."))
+
+
+(defn- presence-session-id-handler
+  [{:keys [session-id]}]
+  (log/info "Session id:" (pr-str session-id))
+  (rf/dispatch [:presence/add-session-id session-id]))
 
 
 (defn- presence-online-handler
   [args]
   (let [username (:username args)]
-    (log/info "User online:" username)
+    (log/info "User online:" (pr-str username))
     (rf/dispatch [:presence/add-user args])))
 
 
@@ -282,89 +251,43 @@
 (defn- presence-offline-handler
   [args]
   (let [username (:username args)]
-    (log/info "User offine:" username)
+    (log/info "User offine:" (pr-str username))
     (rf/dispatch [:presence/remove-user args])))
 
 
-(defn- presence-receive-editing
+(defn- presence-update
   [args]
-  (log/info "User editing:" (pr-str args))
-  (rf/dispatch [:presence/update-editing args]))
-
-
-(defn- presence-receive-rename
-  [args]
-  (log/info "User rename:" (pr-str args))
-  (rf/dispatch [:presence/update-rename args]))
+  (log/debug "User update:" (pr-str args))
+  (rf/dispatch [:presence/update args]))
 
 
 (defn- forwarded-event-handler
   [args]
-  (log/info "Forwarded event:" (pr-str args))
+  (log/debug "Forwarded event-id:" (pr-str (:event/id args)))
   (rf/dispatch [:remote/apply-forwarded-event args]))
 
 
 (def forwarded-events
-  #{:datascript/rename-page
-    :datascript/merge-page
-    :datascript/delete-page
-    :datascript/block-save
-    :datascript/new-block
-    :datascript/add-child
-    :datascript/open-block-add-child
-    :datascript/split-block
-    :datascript/split-block-to-children
-    :datascript/unindent
-    :datascript/indent
-    :datascript/indent-multi
-    :datascript/unindent-multi
-    :datascript/page-add-shortcut
-    :datascript/page-remove-shortcut
-    :datascript/drop-child
-    :datascript/drop-multi-child
-    :datascript/drop-link-child
-    :datascript/drop-diff-parent
-    :datascript/drop-multi-diff-source-same-parents
-    :datascript/drop-multi-diff-source-diff-parents
-    :datascript/drop-link-diff-parent
-    :datascript/drop-same
-    :datascript/drop-multi-same-source
-    :datascript/drop-multi-same-all
-    :datascript/drop-link-same-parent
-    :datascript/left-sidebar-drop-above
-    :datascript/left-sidebar-drop-below
-    :datascript/unlinked-references-link
-    :datascript/unlinked-references-link-all
-    :datascript/selected-delete
-    :datascript/block-open
-    :datascript/paste
-    :datascript/paste-verbatim
-    :datascript/delete-only-child
-    :datascript/delete-merge-block
-    :datascript/bump-up
-    :datascript/paste-internal
-
-    :op/atomic})
+  #{:op/atomic})
 
 
 (defn- server-event-handler
-  [{:event/keys [id last-tx type args] :as packet}]
-  (log/debug "event-id:" (pr-str id)
-             ", type:" type
-             "WSClient received from server")
+  [{:event/keys [id type args] :as packet}]
+  (log/debug "WSClient received from server."
+             "event-id:" (pr-str id) ", type:" (pr-str type))
   (if (schema/valid-server-event? packet)
 
     (condp contains? type
-      #{:datascript/db-dump} (db-dump-handler last-tx args)
-      #{:presence/online} (presence-online-handler args)
+      #{:datascript/db-dump}  (db-dump-handler args)
+      #{:presence/session-id} (presence-session-id-handler args)
+      #{:presence/online}     (presence-online-handler args)
       #{:presence/all-online} (presence-all-online-handler args)
-      #{:presence/offline} (presence-offline-handler args)
-      #{:presence/broadcast-editing} (presence-receive-editing args)
-      #{:presence/broadcast-rename} (presence-receive-rename args)
-      forwarded-events (forwarded-event-handler packet))
+      #{:presence/offline}    (presence-offline-handler args)
+      #{:presence/update}     (presence-update args)
+      forwarded-events        (forwarded-event-handler packet))
 
     (log/warn "event-id:" (pr-str id)
-              ", type:" type
+              ", type:" (pr-str type)
               "WSClient Received invalid server event, explanation:" (pr-str (schema/explain-server-event packet)))))
 
 
@@ -403,9 +326,10 @@
 
 (defn- close-handler
   [event]
-  (log/info "WSClient Disconnected:" event)
+  (log/info "WSClient Disconnected:" (pr-str event))
   (let [connection (.-target event)
         url        (.-url connection)]
+    (rf/dispatch [:presence/clear])
     (rf/dispatch [:conn-status :reconnecting])
     (remove-listeners! connection)
     (delayed-reconnect! url)))
@@ -463,31 +387,16 @@
 
   ;; send a `:presence/hello` event
   (send! {:event/id      "test-id"
-          :event/last-tx 0
           :event/type    :presence/hello
           :event/args    {:username "Bob's your uncle"}})
   ;; => {:result :sent}
 
-  ;; send a `:datascript/paste-verbatim` event
-  (send! {:event/id      "test-id2"
-          :event/last-tx 1
-          :event/type    :datascript/paste-verbatim
-          :event/args    {:uid   "invalid-uid"
-                          :text  "pasted text"
-                          :start 0
-                          :value ""}})
-
   ;; test atomic op
   (send! {:event/id (random-uuid)
-          :event/last-tx 1
           :event/type :op/atomic
           :event/args #:op{:type :block/new,
                            :atomic? true,
                            :args {:parent-uid "test1", :block-uid "test2", :block-order 2}}})
 
   (send! (common-events/build-atomic-event
-          1
-          (atomic-graph-ops/make-page-new-op "test title"
-                                             "page-uid-1"))))
-
-
+          (atomic-graph-ops/make-page-new-op "test title"))))

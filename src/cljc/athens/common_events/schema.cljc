@@ -1,69 +1,24 @@
 (ns athens.common-events.schema
   (:require
     [athens.common-events.graph.schema :as graph-schema]
-    #?(:clj
-       [datahike.datom                 :as datom])
     [malli.core                        :as m]
     [malli.error                       :as me]
     [malli.util                        :as mu]))
 
 
-(def event-type-presence
+(def event-type-presence-client
   [:enum
    :presence/hello
-   :presence/editing
-   :presence/rename])
+   :presence/update])
 
 
 (def event-type-presence-server
   [:enum
+   :presence/session-id
    :presence/online
    :presence/all-online
    :presence/offline
-   :presence/broadcast-editing
-   :presence/broadcast-rename])
-
-
-(def event-type-graph
-  [:enum
-   :datascript/rename-page
-   :datascript/merge-page
-   :datascript/delete-page
-   :datascript/block-save
-   :datascript/new-block
-   :datascript/add-child
-   :datascript/open-block-add-child
-   :datascript/split-block
-   :datascript/split-block-to-children
-   :datascript/unindent
-   :datascript/indent
-   :datascript/indent-multi
-   :datascript/unindent-multi
-   :datascript/page-add-shortcut
-   :datascript/page-remove-shortcut
-   :datascript/drop-child
-   :datascript/drop-multi-child
-   :datascript/drop-link-child
-   :datascript/drop-diff-parent
-   :datascript/drop-multi-diff-source-same-parents
-   :datascript/drop-multi-diff-source-diff-parents
-   :datascript/drop-link-diff-parent
-   :datascript/drop-same
-   :datascript/drop-multi-same-source
-   :datascript/drop-multi-same-all
-   :datascript/drop-link-same-parent
-   :datascript/left-sidebar-drop-above
-   :datascript/left-sidebar-drop-below
-   :datascript/unlinked-references-link
-   :datascript/unlinked-references-link-all
-   :datascript/selected-delete
-   :datascript/block-open
-   :datascript/paste
-   :datascript/paste-verbatim
-   :datascript/delete-only-child
-   :datascript/delete-merge-block
-   :datascript/bump-up
-   :datascript/paste-internal])
+   :presence/update])
 
 
 (def event-type-graph-server
@@ -79,19 +34,15 @@
 (def event-common
   [:map
    [:event/id uuid?]
-   [:event/last-tx int?]
    [:event/type [:or
-                 event-type-presence
-                 event-type-graph
+                 event-type-presence-client
                  event-type-atomic]]])
 
 
 (def event-common-server
   [:map
    [:event/id uuid?]
-   [:event/last-tx int?]
    [:event/type [:or
-                 event-type-graph
                  event-type-graph-server
                  event-type-presence-server
                  event-type-atomic]]])
@@ -108,357 +59,63 @@
            args)]))
 
 
-(def presence-hello-args
+(def session-id
+  [:session-id string?])
+
+
+;; Having all keys optional enables us to have
+;; anonymous or third party clients.
+;; These are the keys our client uses, if present.
+(def session-intro
+  [:map
+   [:username {:optional true} string?]
+   [:color {:optional true} string?]
+   [:block-uid {:optional true} string?]])
+
+
+(def session
+  (mu/merge
+    session-intro
+    [:map
+     session-id]))
+
+
+(def presence-hello
   [:map
    [:event/args
     [:map
-     [:username string?]
+     [:session-intro session-intro]
      [:password {:optional true} string?]]]])
 
 
-(def presence-editing
+(def presence-session-id
   [:map
    [:event/args
     [:map
-     [:username string?]
-     [:block-uid string?]]]])
+     session-id]]])
 
 
-(def presence-rename
+(def presence-update
   [:map
    [:event/args
-    [:map
-     [:current-username string?]
-     [:new-username string?]]]])
+    session]])
 
 
-(def datascript-delete-page
+(def presence-online
   [:map
    [:event/args
-    [:map
-     [:uid string?]]]])
+    session]])
 
 
-(def datascript-rename-page
+(def presence-all-online
   [:map
    [:event/args
-    [:map
-     [:uid string?]
-     [:old-name string?]
-     [:new-name string?]]]])
+    [:vector
+     session]]])
 
 
-(def datascript-block-save
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:new-string string?]
-     [:add-time?  boolean?]]]])
-
-
-(def datascript-new-block
-  [:map
-   [:event/args
-    [:map
-     [:parent-uid string?]
-     [:block-order int?]
-     [:new-uid string?]]]])
-
-
-(def datascript-add-child
-  [:map
-   [:event/args
-    [:map
-     [:parent-uid string?]
-     [:new-uid   string?]
-     [:add-time? boolean?]]]])
-
-
-(def datascript-open-block-add-child
-  [:map
-   [:event/args
-    [:map
-     [:parent-uid string?]
-     [:new-uid   string?]]]])
-
-
-(def datascript-split-block
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:value string?]
-     [:index int?]
-     [:new-uid string?]]]])
-
-
-(def datascript-indent
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:value string?]]]])
-
-
-(def datascript-indent-multi
-  [:map
-   [:event/args
-    [:map
-     [:uids [:vector string?]]]]])
-
-
-(def datascript-unindent
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:value string?]]]])
-
-
-(def datascript-unindent-multi
-  [:map
-   [:event/args
-    [:map
-     [:uids [:vector string?]]]]])
-
-
-(def datascript-paste-internal
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:internal-representation [:vector map?]]]]])
-
-
-(def datascript-paste-verbatim
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:text string?]
-     [:start nat-int?]
-     [:value string?]]]])
-
-
-(def datascript-page-add-shortcut
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]]]])
-
-
-(def datascript-page-remove-shortcut
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]]]])
-
-
-(def datascript-drop-child
-  [:map
-   [:event/args
-    [:map
-     [:source-uid string?]
-     [:target-uid string?]]]])
-
-
-(def datascript-drop-multi-child
-  [:map
-   [:event/args
-    [:map
-     [:source-uids [:vector string?]]
-     [:target-uid  string?]]]])
-
-
-(def datascript-drop-link-child
-  [:map
-   [:event/args
-    [:map
-     [:source-uid string?]
-     [:target-uid string?]]]])
-
-
-(def datascript-drop-diff-parent
-  [:map
-   [:event/args
-    [:map
-     [:drag-target [:enum
-                    :above
-                    :below]]
-     [:source-uid  string?]
-     [:target-uid  string?]]]])
-
-
-(def datascript-drop-multi-diff-source-same-parents
-  [:map
-   [:event/args
-    [:map
-     [:drag-target [:enum
-                    :above
-                    :below]]
-     [:source-uids [:vector string?]]
-     [:target-uid  string?]]]])
-
-
-(def datascript-drop-multi-diff-source-diff-parents
-  [:map
-   [:event/args
-    [:map
-     [:drag-target [:enum
-                    :above
-                    :below]]
-     [:source-uids [:vector string?]]
-     [:target-uid  string?]]]])
-
-
-(def datascript-drop-link-diff-parent
-  [:map
-   [:event/args
-    [:map
-     [:drag-target [:enum
-                    :above
-                    :below]]
-     [:source-uid  string?]
-     [:target-uid  string?]]]])
-
-
-(def datascript-drop-same
-  [:map
-   [:event/args
-    [:map
-     [:drag-target [:enum
-                    :above
-                    :below]]
-     [:source-uid  string?]
-     [:target-uid  string?]]]])
-
-
-(def datascript-drop-multi-same-source
-  [:map
-   [:event/args
-    [:map
-     [:drag-target [:enum
-                    :above
-                    :below]]
-     [:source-uids [:vector string?]]
-     [:target-uid  string?]]]])
-
-
-(def datascript-drop-multi-same-all
-  [:map
-   [:event/args
-    [:map
-     [:drag-target [:enum
-                    :above
-                    :below]]
-     [:source-uids [:vector string?]]
-     [:target-uid  string?]]]])
-
-
-(def datascript-drop-link-same-parent
-  [:map
-   [:event/args
-    [:map
-     [:source-uid string?]
-     [:target-uid string?]
-     [:drag-target [:enum
-                    :above
-                    :below]]]]])
-
-
-(def datascript-link-same
-  [:map
-   [:event/args
-    [:map
-     [:drag-target [:enum
-                    :above
-                    :below]]
-     [:source-uid  string?]
-     [:target-uid  string?]]]])
-
-
-(def datascript-left-sidebar-drop-above
-  [:map
-   [:event/args
-    [:map
-     [:source-order int?]
-     [:target-order int?]]]])
-
-
-(def datascript-left-sidebar-drop-below
-  [:map
-   [:event/args
-    [:map
-     [:source-order int?]
-     [:target-order int?]]]])
-
-
-(def datascript-unlinked-references-link
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:string string?]
-     [:title string?]]]])
-
-
-(def datascript-unlinked-references-link-all
-  [:map
-   [:event/args
-    [:map
-     [:unlinked-refs
-      [:sequential
-       [:map
-        [:block/string string?]
-        [:block/uid string?]]]]
-     [:title string?]]]])
-
-
-(def datascript-selected-delete
-  [:map
-   [:event/args
-    [:map
-     [:uids [:vector string?]]]]])
-
-
-(def datascript-block-open
-  [:map
-   [:event/args
-    [:map
-     [:block-uid string?]
-     [:open?     boolean?]]]])
-
-
-(def datascript-paste
-  [:map
-   [:event/args
-    [:map
-     [:uid  string?
-      :text string?]]]])
-
-
-(def datascript-delete-only-child
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]]]])
-
-
-(def datascript-delete-merge-block
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:value string?]]]])
-
-
-(def datascript-bump-up
-  [:map
-   [:event/args
-    [:map
-     [:uid string?]
-     [:new-uid string?]]]])
+(def presence-offline
+  presence-online)
 
 
 (def graph-ops-atomic
@@ -468,50 +125,8 @@
 
 (def event
   [:multi {:dispatch :event/type}
-   (dispatch :presence/hello presence-hello-args)
-   (dispatch :presence/editing presence-editing)
-   (dispatch :presence/rename presence-rename)
-   (dispatch :datascript/rename-page datascript-rename-page)
-   ;; Same args as `datascript-rename-page`
-   (dispatch :datascript/merge-page datascript-rename-page)
-   (dispatch :datascript/delete-page datascript-delete-page)
-   (dispatch :datascript/block-save datascript-block-save)
-   (dispatch :datascript/new-block datascript-new-block)
-   (dispatch :datascript/add-child datascript-add-child)
-   ;; Same args as `datascript-add-child`
-   (dispatch :datascript/open-block-add-child datascript-open-block-add-child)
-   (dispatch :datascript/split-block datascript-split-block)
-   ;; same args as `datascript-split-block`
-   (dispatch :datascript/split-block-to-children datascript-split-block)
-   (dispatch :datascript/indent datascript-indent)
-   (dispatch :datascript/indent-multi datascript-indent-multi)
-   (dispatch :datascript/unindent datascript-unindent)
-   (dispatch :datascript/unindent-multi datascript-unindent-multi)
-   (dispatch :datascript/paste-verbatim datascript-paste-verbatim)
-   (dispatch :datascript/paste-internal datascript-paste-internal)
-   (dispatch :datascript/paste datascript-paste)
-   (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut)
-   (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut)
-   (dispatch :datascript/drop-child datascript-drop-child)
-   (dispatch :datascript/drop-multi-child datascript-drop-multi-child)
-   (dispatch :datascript/drop-link-child datascript-drop-link-child)
-   (dispatch :datascript/drop-diff-parent datascript-drop-diff-parent)
-   (dispatch :datascript/drop-multi-diff-source-same-parents datascript-drop-multi-diff-source-same-parents)
-   (dispatch :datascript/drop-multi-diff-source-diff-parents datascript-drop-multi-diff-source-diff-parents)
-   (dispatch :datascript/drop-link-diff-parent datascript-drop-link-diff-parent)
-   (dispatch :datascript/drop-same datascript-drop-same)
-   (dispatch :datascript/drop-multi-same-source datascript-drop-multi-same-source)
-   (dispatch :datascript/drop-multi-same-all datascript-drop-multi-same-all)
-   (dispatch :datascript/drop-link-same-parent datascript-drop-link-same-parent)
-   (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above)
-   (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below)
-   (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link)
-   (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all)
-   (dispatch :datascript/delete-only-child datascript-delete-only-child)
-   (dispatch :datascript/delete-merge-block datascript-delete-merge-block)
-   (dispatch :datascript/bump-up datascript-bump-up)
-   (dispatch :datascript/block-open datascript-block-open)
-   (dispatch :datascript/selected-delete datascript-selected-delete)
+   (dispatch :presence/hello presence-hello)
+   (dispatch :presence/update presence-update)
    (dispatch :op/atomic graph-ops-atomic)])
 
 
@@ -536,11 +151,6 @@
    [:event/status event-status]])
 
 
-(def response-accepted
-  [:map
-   [:accepted/tx-id int?]])
-
-
 (def rejection-reason
   [:enum :introduce-yourself :stale-client])
 
@@ -553,8 +163,7 @@
 
 (def event-response
   [:multi {:dispatch :event/status}
-   [:accepted (mu/merge event-response-common
-                        response-accepted)]
+   [:accepted event-response-common]
    [:rejected (mu/merge event-response-common
                         response-rejected)]])
 
@@ -571,12 +180,7 @@
 
 
 (def datom
-  [:map
-   [:e pos-int?]
-   [:a keyword?]
-   [:v any?]
-   [:tx int?]
-   [:added {:optional true} boolean?]])
+  [:vector any?])
 
 
 (def db-dump
@@ -585,101 +189,19 @@
     [:map
      [:datoms
       ;; NOTE: this is because after serialization & deserialization data is represented differently
-      [:sequential #?(:clj  [:fn datom/datom?]
-                      :cljs datom)]]]]])
-
-
-(def user
-  [:map
-   [:username string?]])
-
-
-(def presence-online
-  [:map
-   [:event/args
-    user]])
-
-
-(def presence-all-online
-  [:map
-   [:event/args
-    [:vector
-     user]]])
-
-
-(def presence-offline
-  presence-online)
-
-
-(def presence-broadcast-editing
-  [:map
-   [:event/args
-    [:map
-     [:username string?]
-     [:block-uid string?]]]])
-
-
-(def presence-broadcast-rename
-  [:map
-   [:event/args
-    [:map
-     [:current-username string?]
-     [:new-username string?]]]])
+      [:sequential datom]]]]])
 
 
 (def server-event
   [:multi {:dispatch :event/type}
-   ;; client forwardable events
-   (dispatch :datascript/rename-page datascript-rename-page true)
-   ;; Same args as `datascript-rename-page`
-   (dispatch :datascript/merge-page datascript-rename-page true)
-   (dispatch :datascript/delete-page datascript-delete-page true)
-   (dispatch :datascript/block-save datascript-block-save true)
-   (dispatch :datascript/new-block datascript-new-block true)
-   (dispatch :datascript/add-child datascript-add-child true)
-   ;; Same args as `datascript-add-child`
-   (dispatch :datascript/open-block-add-child datascript-open-block-add-child true)
-   (dispatch :datascript/split-block datascript-split-block true)
-   ;; same args as `datascript-split-block`
-   (dispatch :datascript/split-block-to-children datascript-split-block true)
-   (dispatch :datascript/indent datascript-indent true)
-   (dispatch :datascript/indent-multi datascript-indent-multi true)
-   (dispatch :datascript/unindent datascript-unindent true)
-   (dispatch :datascript/unindent-multi datascript-unindent-multi true)
-   (dispatch :datascript/paste-verbatim datascript-paste-verbatim true)
-   (dispatch :datascript/paste-internal datascript-paste-internal true)
-   (dispatch :datascript/paste datascript-paste true)
-   (dispatch :datascript/page-add-shortcut datascript-page-add-shortcut true)
-   (dispatch :datascript/page-remove-shortcut datascript-page-remove-shortcut true)
-   (dispatch :datascript/drop-child datascript-drop-child true)
-   (dispatch :datascript/drop-multi-child datascript-drop-multi-child true)
-   (dispatch :datascript/drop-link-child datascript-drop-link-child true)
-   (dispatch :datascript/drop-diff-parent datascript-drop-diff-parent true)
-   (dispatch :datascript/drop-multi-diff-source-same-parents datascript-drop-multi-diff-source-same-parents true)
-   (dispatch :datascript/drop-multi-diff-source-diff-parents datascript-drop-multi-diff-source-diff-parents true)
-   (dispatch :datascript/drop-link-diff-parent datascript-drop-link-diff-parent true)
-   (dispatch :datascript/drop-same datascript-drop-same true)
-   (dispatch :datascript/drop-multi-same-source datascript-drop-multi-same-source true)
-   (dispatch :datascript/drop-multi-same-all datascript-drop-multi-same-all true)
-   (dispatch :datascript/drop-link-same-parent datascript-drop-link-same-parent true)
-   (dispatch :datascript/left-sidebar-drop-above datascript-left-sidebar-drop-above true)
-   (dispatch :datascript/left-sidebar-drop-below datascript-left-sidebar-drop-below true)
-   (dispatch :datascript/unlinked-references-link datascript-unlinked-references-link true)
-   (dispatch :datascript/unlinked-references-link-all datascript-unlinked-references-link-all true)
-   (dispatch :datascript/delete-only-child datascript-delete-only-child true)
-   (dispatch :datascript/delete-merge-block datascript-delete-merge-block true)
-   (dispatch :datascript/bump-up datascript-bump-up true)
-   (dispatch :datascript/block-open datascript-block-open true)
-   (dispatch :datascript/selected-delete datascript-selected-delete true)
-
    ;; server specific graph events
    (dispatch :datascript/db-dump db-dump true)
    ;; server specific presence events
+   (dispatch :presence/session-id presence-session-id true)
    (dispatch :presence/online presence-online true)
    (dispatch :presence/all-online presence-all-online true)
    (dispatch :presence/offline presence-offline true)
-   (dispatch :presence/broadcast-editing presence-broadcast-editing true)
-   (dispatch :presence/broadcast-rename presence-broadcast-rename true)
+   (dispatch :presence/update presence-update true)
 
    ;; ⚛️ Atomic Graph Ops
    (dispatch :op/atomic graph-ops-atomic true)])

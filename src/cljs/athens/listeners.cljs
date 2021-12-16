@@ -7,7 +7,6 @@
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
     [athens.util :as util]
-    [clojure.pprint :as pp]
     [clojure.string :as string]
     [goog.events :as events]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]])
@@ -120,6 +119,7 @@
             KeyCodes.D (router/nav-daily-notes)
             KeyCodes.G (router/navigate :graph)
             KeyCodes.A (router/navigate :pages)
+            KeyCodes.T (dispatch [:theme/toggle])
             nil))))
 
 
@@ -188,11 +188,8 @@
                                 (apply str))
             clipboard-data (.. e -event_ -clipboardData)
             copied-blocks  (mapv
-                             #(common-db/get-block-document-for-copy  @db/dsdb [:block/uid %])
+                             #(common-db/get-internal-representation  @db/dsdb [:block/uid %])
                              uids)]
-
-        (println "Copied blocks representation")
-        (pp/pprint copied-blocks)
 
         (doto clipboard-data
           (.setData "text/plain" copy-data)
@@ -210,6 +207,9 @@
       (dispatch [::select-events/delete]))))
 
 
+(def force-leave (atom false))
+
+
 (defn prevent-save
   "Google Closure's events/listen isn't working for some reason anymore.
 
@@ -220,12 +220,24 @@
     EventType.BEFOREUNLOAD
     (fn [e]
       (let [synced? @(subscribe [:db/synced])
+            editing? @(subscribe [:editing/uid])
             remote? (electron-utils/remote-db? @(subscribe [:db-picker/selected-db]))]
-        ;; disconnect the
         (cond
-          (not synced?)
+          (and (or (not synced?)
+                   (not (= nil editing?)))
+               (not @force-leave))
           (do
-            (dispatch [:alert/js "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. Try refreshing or quitting again once the sync is complete."])
+            ;; The browser blocks the confirm window during beforeunload, so
+            ;; instead we always cancel unload and separately show a confirm window
+            ;; that allows closing the window.
+            (dispatch [:confirm/js
+                       (str "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. "
+                            "Try refreshing or quitting again once the sync is complete. Make sure you exit out of any block you may be editing"
+                            "Press OK to wait, or Cancel to leave without saving (will cause data loss!).")
+                       #()
+                       (fn []
+                         (reset! force-leave true)
+                         (js/window.close))])
             (.. e preventDefault)
             (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
             "Returning a string also prevents exit on other browsers.")

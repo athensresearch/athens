@@ -1,7 +1,7 @@
 (ns athens.self-hosted.presence.subs
   (:require
+    [athens.dates :as dates]
     [athens.db :as db]
-    [athens.util :as util]
     [re-frame.core :as rf]))
 
 
@@ -11,29 +11,33 @@
     (-> db :presence :users)))
 
 
+(rf/reg-sub
+  :presence/session-id
+  (fn [db _]
+    (-> db :presence :session-id)))
+
+
 ;; "From :block/uid, derive :page/uid and :page/title. If no :block/uid, give nil"
 (rf/reg-sub
   :presence/users-with-page-data
   :<- [:presence/users]
   (fn [users _]
-    (into {} (mapv (fn [[username {:keys [_username  block/uid] :as user}]]
-                     (let [{page-title :node/title page-uid :block/uid} (db/get-root-parent-page uid)]
-                       [username (assoc user :page/uid page-uid :page/title page-title :block/uid uid)]))
+    (into {} (mapv (fn [[session-id {:keys [block-uid] :as user}]]
+                     (let [{page-title :node/title page-uid :block/uid} (db/get-root-parent-page block-uid)]
+                       [session-id (assoc user :page/uid page-uid :page/title page-title :block/uid block-uid)]))
                    users))))
 
 
 (rf/reg-sub
   :presence/current-user
   :<- [:presence/users-with-page-data]
-  :<- [:settings]
-  (fn [[users settings] [_]]
-    (let [user-in-presence (-> (filter (fn [[_ user]]
-                                         (= (:username settings) (:username user)))
-                                       users)
-                               first
-                               second)]
-      (or user-in-presence
-          (select-keys settings [:username :color])))))
+  :<- [:presence/session-id]
+  (fn [[users session-id] [_]]
+    (-> (filter (fn [[_ user]]
+                  (= session-id (:session-id user)))
+                users)
+        first
+        second)))
 
 
 (defn on-page-uid?
@@ -43,7 +47,7 @@
 
 (defn on-daily-page?
   [[_username user]]
-  (util/is-daily-note (:page/uid user)))
+  (dates/is-daily-note (:page/uid user)))
 
 
 (rf/reg-sub

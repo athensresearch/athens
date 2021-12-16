@@ -11,7 +11,7 @@
   {:background (color :background-minus-2)
    :border-radius "100%"
    :padding 0
-   :margin 0
+   :margin "0 !important"
    :height "12px !important"
    :width "12px !important"
    :position "absolute"

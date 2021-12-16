@@ -14,7 +14,8 @@
 (defn db-icon
   [{:keys [db status]}]
   [:div.icon (use-style db-icon-style)
-   [:svg {:viewBox "0 0 24 24"}
+   [:svg {:viewBox "0 0 24 24"
+          :style {:margin 0}}
     [:rect
      {:fill "var(--link-color)"
       :height "24"

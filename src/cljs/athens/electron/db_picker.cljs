@@ -17,6 +17,13 @@
     (get-in db [:athens/persist :db-picker/all-dbs selected-db-id])))
 
 
+(defn remote-db?
+  [rfdb]
+  (-> rfdb
+      selected-db
+      utils/remote-db?))
+
+
 (rf/reg-sub
   :db-picker/all-dbs
   (fn [db _]
@@ -30,7 +37,7 @@
 
 
 ;; Add a db to the db picker list and select it as the current db.
-;; Adding a db with the same base-dir will show an alert.
+;; Adding a db with the same id will overwrite the previous one.
 (rf/reg-event-fx
   :db-picker/add-and-select-db
   (fn [{:keys [db]} [_ {:keys [id] :as added-db}]]
@@ -75,6 +82,12 @@
                    [:fs/open-dialog])})))
 
 
+(rf/reg-event-fx
+  :db-picker/select-default-db
+  (fn [_ [_]]
+    {:dispatch [:db-picker/add-and-select-db (utils/local-db (utils/default-base-dir))]}))
+
+
 ;; Delete a db from the db-picker.
 (rf/reg-event-fx
   :db-picker/remove-db
@@ -84,3 +97,10 @@
        ;; reboot, and run default bd logic, when removing the db leaves db picker empty
        :dispatch-n [(when (empty? (all-dbs new-db)) [:boot])]})))
 
+
+;; Select no db, leave it to the boot sequence to decide what to do.
+(rf/reg-event-fx
+  :db-picker/remove-selection
+  (fn [{:keys [db]} [_]]
+    {:db       (update-in db [:athens/persist] dissoc :db-picker/selected-db-id)
+     :dispatch [:boot]}))

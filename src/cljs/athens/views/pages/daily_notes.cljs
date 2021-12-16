@@ -1,9 +1,9 @@
 (ns athens.views.pages.daily-notes
   (:require
     [athens.common-db :as common-db]
+    [athens.dates :as dates]
     [athens.db :as db]
     [athens.style :refer [DEPTH-SHADOWS]]
-    [athens.util :refer [get-day]]
     [athens.views.pages.node-page :as node-page]
     [re-frame.core :refer [dispatch subscribe]]
     [stylefy.core :refer [use-style]]))
@@ -39,7 +39,7 @@
 
 (defn safe-pull-many
   "Need a safe pull because block/uid doesn't exist yet in datascript, but is found in :daily-notes/items.
-  This happens because (dispatch [:daily-note/next (get-day)]) updates re-frame faster than the datascript tx can happen
+  This happens because (dispatch [:daily-note/next (dates/get-day)]) updates re-frame faster than the datascript tx can happen
 
   Bug: It's still possible for a day to not get created. The UI for this just shows an empty page without a title. Acceptable bug :)"
   [ids]
@@ -58,7 +58,7 @@
   (let [note-refs (subscribe [:daily-notes/items])]
     (fn []
       (if (empty? @note-refs)
-        (dispatch [:daily-note/next (get-day)])
+        (dispatch [:daily-note/next (dates/get-day)])
         (let [notes (safe-pull-many @note-refs)]
           [:div#daily-notes (use-style daily-notes-scroll-area-style)
            (doall

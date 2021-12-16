@@ -1,5 +1,6 @@
 (ns athens.effects
   (:require
+    [athens.async                :as async]
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
     [athens.common.logging       :as log]
@@ -7,6 +8,7 @@
     [athens.self-hosted.client   :as client]
     [cljs-http.client            :as http]
     [cljs.core.async             :refer [go <!]]
+    [cljs.core.async.interop     :refer [<p!]]
     [com.stuartsierra.component  :as component]
     [datascript.core             :as d]
     [day8.re-frame.async-flow-fx]
@@ -19,20 +21,19 @@
 
 ;; Effects
 
+
+;; TODO: remove this effect when :transact is removed.
 (rf/reg-fx
   :transact!
   (fn [tx-data]
-    ;; 🎶 Sia "Cheap Thrills"
-    (d/transact! db/dsdb (->> tx-data
-                              (common-db/block-uid-nil-eater @db/dsdb)
-                              (common-db/linkmaker @db/dsdb)
-                              (common-db/orderkeeper @db/dsdb)))))
+    (common-db/transact-with-middleware! db/dsdb tx-data)))
 
 
 (rf/reg-fx
   :reset-conn!
   (fn [new-db]
-    (d/reset-conn! db/dsdb new-db)))
+    (d/reset-conn! db/dsdb new-db)
+    (common-db/health-check db/dsdb)))
 
 
 (rf/reg-fx
@@ -132,6 +133,14 @@
 
 
 (rf/reg-fx
+  :confirm/js!
+  (fn [[message true-cb false-cb]]
+    (if (js/window.confirm message)
+      (true-cb)
+      (false-cb))))
+
+
+(rf/reg-fx
   :right-sidebar/scroll-top
   (fn []
     (let [right-sidebar (js/document.querySelector ".right-sidebar-content")]
@@ -143,17 +152,39 @@
 (def self-hosted-client (atom nil))
 
 
+(defn self-hosted-health-check
+  [url success-cb failure-cb]
+  (go (let [ch  (go (<p! (.. (js/fetch (str "http://" url "/health-check"))
+                             (then (fn [response]
+                                     (if (.-ok response)
+                                       :success
+                                       :failure)))
+                             (catch (fn [_] :failure)))))]
+        (condp = (<! (athens.async/with-timeout ch 5000 :timed-out))
+          :success   (success-cb)
+          :timed-out (failure-cb)
+          :failure   (failure-cb)))))
+
+
 (rf/reg-fx
   :remote/client-connect!
-  (fn [{:keys [ws-url] :as remote-db}]
-    (log/debug ":remote/client-connect!" (pr-str remote-db))
+  (fn [{:keys [url ws-url] :as remote-db}]
+    (log/debug ":remote/client-connect!" (pr-str (:url remote-db)))
     (when @self-hosted-client
       (log/info ":remote/client-connect! already connected, restarting")
       (component/stop @self-hosted-client))
-    (log/info ":remote/client-connect! connecting")
-    (reset! self-hosted-client (-> ws-url
-                                   client/new-ws-client
-                                   component/start))))
+    (log/info ":remote/client-connect! health-check")
+    (self-hosted-health-check
+      url
+      (fn []
+        (log/info ":remote/client-connect! health-check success")
+        (log/info ":remote/client-connect! connecting")
+        (reset! self-hosted-client (-> ws-url
+                                       client/new-ws-client
+                                       component/start)))
+      (fn []
+        (log/warn ":remote/client-connect! health-check failure")
+        (rf/dispatch [:remote/connection-failed])))))
 
 
 (rf/reg-fx
@@ -171,7 +202,7 @@
     (if (schema/valid-event? event)
       ;; valid event let's send it
       (do
-        (log/info "Sending event:" (pr-str event))
+        (log/debug "Sending event:" (pr-str event))
         (client/send! event))
       (let [explanation (-> schema/event
                             (m/explain event)

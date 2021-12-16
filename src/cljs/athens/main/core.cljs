@@ -8,15 +8,28 @@
     [athens.util :refer [ipcMainChannels]]))
 
 
+;; This flag controls whether we check for updates on startup.
+;; We use electron-updater with github releases for updates.
+;; This setup does not support the use of electron-updater release channels,
+;; and instead supports only the release/prerelease distinction.
+;;
+;; If AUTO_UPDATE is false, the app will never check for updates.
+;; If AUTO_UPDATE is true:
+;; - if the app version contains prerelease components (e.g. 1.0.0-beta.20, where beta.20
+;;   is the prerelease component), electron-updater will check github releases+prereleases,
+;;   otherwise it will just check releases.
+;; - releases without latest*.yml files are ignored (these files are controlled via the
+;;   electron-builder -c.publish.publishAutoUpdate=true arg).
+;; - if there's a bigger (according to semver) release, show an update prompt.
+;;
+;; These flags can be set on .github/workflows/build.yml:
+;; - AUTO_UPDATE can be set on the build-app job together with other defines
+;; - -c.publish.publishAutoUpdate=true can be set on the release-electron job on the
+;;   action-electron-builder args
 (goog-define AUTO_UPDATE true)
 
 (def log (js/require "electron-log"))
 
-
-;; NB: channels don't work on github releases, instead use use prereleases.
-;; https://github.com/electron-userland/electron-builder/issues/1722#issuecomment-310468372
-;; https://github.com/electron-userland/electron-builder/issues/4988
-(set! (.. autoUpdater -channel) "beta")
 (set! (.. autoUpdater -logger) log)
 (set! (.. autoUpdater -logger -transports -file -level) "info")
 (set! (.. autoUpdater -autoDownload) false)

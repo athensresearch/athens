@@ -1,6 +1,5 @@
 (ns athens.electron.core
   (:require
-    [athens.db :as db]
     [athens.electron.boot]
     [athens.electron.db-picker]
     [athens.electron.fs]
@@ -21,8 +20,9 @@
     (fn [db _]
       (:db/mtime db)))
 
-
-  (rf/reg-event-fx
+  ;; This event isn't used at the moment in boot. Figure out if it's still needed next
+  ;; time boot is revisited.
+  #_(rf/reg-event-fx
     :db/retract-athens-pages
     (fn []
       {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")

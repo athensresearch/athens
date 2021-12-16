@@ -202,7 +202,7 @@
 ;; TODO add truncation of long strings here
 (defn edn-viewer
   [data _]
-  [:pre (use-style edn-viewer-style) [:code (with-out-str (cljs.pprint/pprint data))]])
+  [:pre (use-style edn-viewer-style) [:code (with-out-str (pp/pprint data))]])
 
 
 (defn coll-viewer

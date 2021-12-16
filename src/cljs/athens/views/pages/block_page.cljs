@@ -3,7 +3,7 @@
     ["@material-ui/icons/Link" :default Link]
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
-    [athens.router :refer [navigate-uid]]
+    [athens.router :as router]
     [athens.style :refer [color]]
     [athens.views.blocks.core :as blocks]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
@@ -63,13 +63,10 @@
   "A helper fn that takes `state` containing textarea changes and when user has made a text change dispatches `transact-string`.
    Used in `block-page-el` function to log when there is a diff and `on-blur`"
   [state block-uid]
-  (let [old-string  (:string/previous state)
-        new-string  (:string/local state)]
-    (dispatch [:block/save {:uid        block-uid
-                            :old-string old-string
-                            :new-string new-string
-                            :callback   #()
-                            :add-time?  true}])))
+  (dispatch [:block/save {:uid       block-uid
+                          :string    (:string/local state)
+                          :callback  #()
+                          :add-time? true}]))
 
 
 ;; Components
@@ -86,7 +83,7 @@
   (let [right-sidebar? (.. e -target (closest ".right-sidebar"))]
     (if right-sidebar?
       (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
-      (navigate-uid breadcrumb-uid e))))
+      (router/navigate-uid breadcrumb-uid e))))
 
 
 (defn block-page-el
@@ -116,7 +113,7 @@
                 {:on-click (fn [e]
                              (.. e preventDefault)
                              (if (.. e -shiftKey)
-                               (navigate-uid uid e)
+                               (router/navigate-uid uid e)
                                (dispatch [:editing/uid uid])))})
           [autosize/textarea
            {:id          (str "editable-uid-" uid)
@@ -149,7 +146,8 @@
                 (for [[group-title group] refs]
                   [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
                    [:h4 (use-style node-page/references-group-title-style)
-                    [:a {:on-click #(navigate-uid (:block/uid @(parse-renderer/pull-node-from-string group-title)))} group-title]]
+                    [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title))}
+                     group-title]]
                    (doall
                      (for [block group]
                        [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})

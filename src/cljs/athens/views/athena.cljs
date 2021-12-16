@@ -5,7 +5,7 @@
     ["@material-ui/icons/Create" :default Create]
     [athens.common.utils :as utils]
     [athens.db :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
-    [athens.router :refer [navigate-uid]]
+    [athens.router :as router]
     [athens.style :refer [color DEPTH-SHADOWS OPACITIES ZINDICES]]
     [athens.subs]
     [athens.util :refer [scroll-into-view]]
@@ -188,24 +188,21 @@
       (= KeyCodes.ENTER key) (cond
                                ;; if page doesn't exist, create and open
                                (and (zero? index) (nil? item))
-                               (let [page-uid  (utils/gen-block-uid)
-                                     block-uid (utils/gen-block-uid)]
+                               (let [block-uid (utils/gen-block-uid)]
                                  (dispatch [:athena/toggle])
-                                 (js/console.debug "athena key down" (pr-str {:page-uid  page-uid
-                                                                              :block-uid block-uid
+                                 (js/console.debug "athena key down" (pr-str {:block-uid block-uid
                                                                               :title     query}))
-                                 (dispatch [:page/create {:title     query
-                                                          :page-uid  page-uid
-                                                          :block-uid block-uid
-                                                          :shift?    shift}]))
+                                 (dispatch [:page/new {:title     query
+                                                       :block-uid block-uid
+                                                       :shift?    shift}]))
                                ;; if shift: open in right-sidebar
                                shift
                                (do (dispatch [:athena/toggle])
-                                   (dispatch [:right-sidebar/open-item (:block/uid item)]))
+                                   (dispatch [:right-sidebar/open-page (:node/title item)]))
                                ;; else open in main view
                                :else
                                (do (dispatch [:athena/toggle])
-                                   (navigate-uid (:block/uid item))
+                                   (router/navigate-page (:node/title item))
                                    (dispatch [:editing/uid (:block/uid item)])))
 
       (= key KeyCodes.UP)
@@ -254,9 +251,9 @@
         (doall
           (for [[i x] (map-indexed list recent-items)]
             (when x
-              (let [{:keys [query :node/title :block/uid :block/string]} x]
+              (let [{:keys [query :node/title :block/string]} x]
                 [:div (use-style result-style {:key      i
-                                               :on-click #(navigate-uid uid %)})
+                                               :on-click #(router/navigate-page title %)})
                  [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
                  (when string
                    [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
@@ -308,12 +305,10 @@
                                                 (if (nil? x)
                                                   ^{:key i}
                                                   [:div (use-style result-style {:on-click (fn [_]
-                                                                                             (let [page-uid  (utils/gen-block-uid)
-                                                                                                   block-uid (utils/gen-block-uid)]
+                                                                                             (let [block-uid (utils/gen-block-uid)]
                                                                                                (dispatch [:athena/toggle])
-                                                                                               (dispatch [:page/create {:title     query
-                                                                                                                        :page-uid  page-uid
-                                                                                                                        :block-uid block-uid}])))
+                                                                                               (dispatch [:page/new {:title     query
+                                                                                                                     :block-uid block-uid}])))
                                                                                  :class    (when (= i index) "selected")})
 
                                                    [:div (use-style result-body-style)
@@ -330,7 +325,7 @@
                                                                                                                   :query        query}]
                                                                                                (dispatch [:athena/toggle])
                                                                                                (dispatch [:athena/update-recent-items selected-page])
-                                                                                               (navigate-uid uid e)))
+                                                                                               (router/navigate-page title e)))
                                                                                  :class    (when (= i index) "selected")})
                                                    [:div (use-style result-body-style)
 

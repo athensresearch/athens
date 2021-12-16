@@ -234,9 +234,9 @@
                          :justify-content "space-between"}}
            [textinput/textinput {:style       {:flex-grow 1
                                                :padding   "5px"}
-                                 :type        "text"
+                                 :type        "password"
                                  :value       @password
-                                 :placeholder "Password (now supported)"
+                                 :placeholder "Password"
                                  :disabled    false
                                  :on-change   #(reset! password (js-event->val %))}]]]
          doall)
