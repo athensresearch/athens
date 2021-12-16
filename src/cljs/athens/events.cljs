@@ -897,7 +897,7 @@
 
 (reg-event-fx
   :backspace/delete-merge-block-with-save
-  (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block local-update] :as args}]]
+  (fn [_ [_ {:keys [uid value prev-block-uid embed-id local-update] :as args}]]
     (log/debug ":backspace/delete-merge-block-with-save args:" (pr-str args))
     (let [op    (graph-ops/build-block-merge-with-updated-op @db/dsdb
                                                              uid
