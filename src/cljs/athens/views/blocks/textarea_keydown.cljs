@@ -763,11 +763,13 @@
         next-block-uid            (db/next-block-uid o-uid)]
     (when (and no-selection? end? next-block-uid)
       (let [next-block (db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
-        (dispatch [:backspace (cond-> next-block-uid
-                                embed-id (str "-embed-" embed-id))
-                   (str (or (:string/local @state)
-                            (:block/string @state))
-                        (:block/string next-block))])))))
+        (dispatch [:backspace
+                   (cond-> next-block-uid
+                     embed-id (str "-embed-" embed-id))
+                   (:block/string next-block)
+                   (when-not (= (:string/local @state)
+                                (:block/string @state))
+                     (:string/local @state))])))))
 
 
 (defn textarea-key-down

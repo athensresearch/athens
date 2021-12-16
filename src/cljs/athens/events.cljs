@@ -734,44 +734,53 @@
   No-op if prev-sibling-block has children.
   Otherwise delete block and join with previous block
   If prev-block has children"
-  [uid value]
-  (let [root-embed?     (= (some-> (str "#editable-uid-" uid)
-                                   js/document.querySelector
-                                   (.. (closest ".block-embed"))
-                                   (. -firstChild)
-                                   (.getAttribute "data-uid"))
-                           uid)
-        db              @db/dsdb
-        [uid embed-id]  (common-db/uid-and-embed-id uid)
-        block           (common-db/get-block db [:block/uid uid])
-        {:block/keys [children order] :or {children []}} block
-        parent          (common-db/get-parent db [:block/uid uid])
-        prev-block-uid  (common-db/prev-block-uid db uid)
-        prev-block      (common-db/get-block db [:block/uid prev-block-uid])
-        prev-sib-order  (dec (:block/order block))
-        prev-sib        (some->> (common-db/prev-sib db uid prev-sib-order)
-                                 (common-db/get-block db))
-        event           (cond
-                          (or (not parent)
-                              root-embed?
-                              (and (not-empty children) (not-empty (:block/children prev-sib)))
-                              (and (not-empty children) (= parent prev-block)))
-                          nil
+  ([uid value]
+   (backspace uid value nil))
+  ([uid value maybe-local-updates]
+   (let [root-embed?     (= (some-> (str "#editable-uid-" uid)
+                                    js/document.querySelector
+                                    (.. (closest ".block-embed"))
+                                    (. -firstChild)
+                                    (.getAttribute "data-uid"))
+                            uid)
+         db              @db/dsdb
+         [uid embed-id]  (common-db/uid-and-embed-id uid)
+         block           (common-db/get-block db [:block/uid uid])
+         {:block/keys [children order] :or {children []}} block
+         parent          (common-db/get-parent db [:block/uid uid])
+         prev-block-uid  (common-db/prev-block-uid db uid)
+         prev-block      (common-db/get-block db [:block/uid prev-block-uid])
+         prev-sib-order  (dec (:block/order block))
+         prev-sib        (some->> (common-db/prev-sib db uid prev-sib-order)
+                                  (common-db/get-block db))
+         event           (cond
+                           (or (not parent)
+                               root-embed?
+                               (and (not-empty children) (not-empty (:block/children prev-sib)))
+                               (and (not-empty children) (= parent prev-block)))
+                           nil
 
-                          (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value))
-                          [:backspace/delete-only-child uid]
+                           (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value))
+                           [:backspace/delete-only-child uid]
 
-                          :else
-                          [:backspace/delete-merge-block {:uid uid
-                                                          :value value
-                                                          :prev-block-uid prev-block-uid
-                                                          :embed-id embed-id
-                                                          :prev-block prev-block}])]
-    (log/debug "[Backspace] args:" (pr-str {:uid uid
-                                            :value value})
-               ", event:" (pr-str event))
-    (when event
-      {:fx [[:dispatch event]]})))
+                           maybe-local-updates
+                           [:backspace/delete-merge-block-with-save {:uid            uid
+                                                                     :value          value
+                                                                     :prev-block-uid prev-block-uid
+                                                                     :embed-id       embed-id
+                                                                     :prev-block     prev-block
+                                                                     :local-update   maybe-local-updates}]
+                           :else
+                           [:backspace/delete-merge-block {:uid uid
+                                                           :value value
+                                                           :prev-block-uid prev-block-uid
+                                                           :embed-id embed-id
+                                                           :prev-block prev-block}])]
+     (log/debug "[Backspace] args:" (pr-str {:uid uid
+                                             :value value})
+                ", event:" (pr-str event))
+     (when event
+       {:fx [[:dispatch event]]}))))
 
 
 ;; todo(abhinav) -- stateless backspace
@@ -779,8 +788,8 @@
 ;; which might not be same as blur is not yet called
 (reg-event-fx
   :backspace
-  (fn [_ [_ uid value]]
-    (backspace uid value)))
+  (fn [_ [_ uid value maybe-local-updates]]
+    (backspace uid value maybe-local-updates)))
 
 
 (reg-event-fx
@@ -884,6 +893,23 @@
                            (cond-> prev-block-uid
                              embed-id (str "-embed-" embed-id))
                            (count (:block/string prev-block))]]]]})))
+
+
+(reg-event-fx
+  :backspace/delete-merge-block-with-save
+  (fn [_ [_ {:keys [uid value prev-block-uid embed-id local-update] :as args}]]
+    (log/debug ":backspace/delete-merge-block-with-save args:" (pr-str args))
+    (let [op    (graph-ops/build-block-merge-with-updated-op @db/dsdb
+                                                             uid
+                                                             prev-block-uid
+                                                             value
+                                                             local-update)
+          event (common-events/build-atomic-event  op)]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
+                          [:editing/uid
+                           (cond-> prev-block-uid
+                             embed-id (str "-embed-" embed-id))
+                           (count local-update)]]]]})))
 
 
 ;; Atomic events end ==========
