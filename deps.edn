@@ -29,6 +29,7 @@
   day8.re-frame/tracing                 #:mvn{:version "0.6.2"}
   org.flatland/ordered                  #:mvn{:version "1.15.10"}
   io.github.nextjournal/clerk           {:git/sha "64ce88eb80609ab915b61fbabd46f7d9c8ac1375"}
+  io.homebase/datalog-console           #:mvn{:version "0.3.2"}
   org.clojure/data.json                 #:mvn{:version "2.4.0"}
   ;; backend
   ;;   logging hell
