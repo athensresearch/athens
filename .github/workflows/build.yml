@@ -75,7 +75,7 @@ jobs:
          run: yarn client:dev-build
 
        - name: Run client e2e tests over dev build
-         run: yarn client:e2e:only:verbose basic
+         run: yarn client:e2e
 
 
    build-app:
