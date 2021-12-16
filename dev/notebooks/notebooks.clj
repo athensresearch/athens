@@ -24,9 +24,11 @@
   [& _args]
   (clerk/build-static-app!
     {:out-path "vercel-static/clerk"
+     :browse? false
      :paths (->> "dev/notebooks"
                  io/file
                  file-seq
                  (filter #(.isFile %))
                  (map io/as-relative-path)
-                 (filter #(not= % "dev/notebooks/notebooks.clj")))}))
+                 (remove #{"dev/notebooks/notebooks.clj"
+                           "dev/notebooks/.DS_Store"}))}))
