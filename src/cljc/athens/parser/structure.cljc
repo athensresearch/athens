@@ -6,6 +6,7 @@
   * [x] `#...` naked hashtags
   * [x] `#[[...]] braced hashtags
   * [x] `((...)) block refs
+  * [x] Ignore structure when in code blocks
   * [x] `{{type: ((...))}}` typed block refs
   * [ ] `{{type: ((...)), atr1: val1}}` typed block refs with optional attributes"
   (:require
@@ -15,14 +16,20 @@
 
 
 (defparser structure-parser
-  "text-or = ( page-link /
+  "text-or = ( code-block /
+               code-span /
+               page-link /
                braced-hashtag /
                naked-hashtag /
                block-ref /
                typed-block-ref /
                text-run )*
    (* below we need to list all significant groups in lookbehind + $ *)
-   text-run = #'.+?(?=(\\[\\[|\\]\\]|#|\\(\\(|\\)\\)|$))\\n?'
+   text-run = #'.+?(?=(\\[\\[|\\]\\]|#|\\(\\(|\\)\\)|$|\\`))\\n?'
+   code-span = < '`' > text-or < '`' >
+   code-block = < '```' >
+                ( text-or | '\\n' )+
+                < '```' >
    page-link = < double-square-open >
                ( text-till-double-square-close /
                  page-link /
@@ -39,8 +46,8 @@
    block-ref = < double-paren-open >
                text-till-double-paren-close
                < double-paren-close >
-   < text-till-double-square-close > = #'[^\\n$]*?(?=(\\]\\]|\\[\\[|#))'
-   < text-till-double-paren-close > = #'[^\\s]*?(?=(\\)\\)))'
+   < text-till-double-square-close > = #'[^\\n$\\[\\]\\#]+?(?=(\\]\\]|\\[\\[|#))'
+   < text-till-double-paren-close > = #'[^\\s]+?(?=(\\)\\)))'
    typed-block-ref = < double-curly-open >
                      ref-type < #':\\s*' > block-ref
                      < double-curly-close >
@@ -69,6 +76,18 @@
 (defn text-or-transform
   [& contents]
   (apply conj [:paragraph] contents))
+
+
+(defn code-span-transform
+  [& _contents]
+  ;; simply ignore code contents for structure
+  [:code-span])
+
+
+(defn code-block-transform
+  [& _contents]
+  ;; simply ignore code contents for structure
+  [:code-block])
 
 
 (defn page-link-transform
@@ -106,6 +125,8 @@
 
 (def transformations
   {:text-or         text-or-transform
+   :code-span       code-span-transform
+   :code-block      code-block-transform
    :page-link       page-link-transform
    :naked-hashtag   naked-hashtag-transform
    :braced-hashtag  braced-hashtag-transform
