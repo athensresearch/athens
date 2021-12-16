@@ -15,20 +15,6 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-
-   test:
-     runs-on: ubuntu-latest
-     steps:
-       - uses: actions/checkout@v2
-       - uses: ./.github/custom-actions/clojure-env
-       - uses: ./.github/custom-actions/node-env
-
-       - name: Run JVM tests
-         run: yarn server:test
-
-       - name: Run Karma tests
-         run: yarn client:test
-
    lint:
      runs-on: ubuntu-latest
      steps:
@@ -43,6 +29,7 @@ jobs:
        - name: Lint
          run: clj-kondo --lint src
 
+
    style:
      runs-on: ubuntu-latest
      steps:
@@ -51,6 +38,7 @@ jobs:
 
        - name: Style
          run: yarn style
+
 
    carve:
      runs-on: ubuntu-latest
@@ -61,6 +49,35 @@ jobs:
        - name: Carve unused vars
          run: yarn carve
 
+
+   test:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v2
+       - uses: ./.github/custom-actions/clojure-env
+       - uses: ./.github/custom-actions/node-env
+
+       - name: Run JVM tests
+         run: yarn server:test
+
+       - name: Run Karma tests
+         run: yarn client:test
+
+
+   e2e:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v2
+       - uses: ./.github/custom-actions/clojure-env
+       - uses: ./.github/custom-actions/node-env
+
+       - name: Compile JS assets for dev
+         run: yarn client:dev-build
+
+       - name: Run client e2e tests over dev build
+         run: yarn client:e2e
+
+
    build-app:
      needs: [test, lint, style, carve]
      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -70,7 +87,7 @@ jobs:
        - uses: ./.github/custom-actions/clojure-env
        - uses: ./.github/custom-actions/node-env
 
-       - name: Compile JS Assets
+       - name: Compile JS Assets for production
          run: yarn prod --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\" athens.main.core/AUTO_UPDATE ${AUTO_UPDATE}}}"
          env:
            SENTRY_DSN: ${{ secrets.sentry_dsn }}
@@ -79,11 +96,15 @@ jobs:
            # TODO: set to true when publishing auto-update information for 2.0.0-beta.
            AUTO_UPDATE: false
 
+       - name: Run client e2e tests over the prod build
+         run: yarn client:e2e
+
        - name: Upload built app for release-web, release-electron
          uses: actions/upload-artifact@v2
          with:
            name: app
            path: resources
+
 
    release-web:
      needs: [build-app]
@@ -107,6 +128,7 @@ jobs:
            github_token: ${{ secrets.GITHUB_TOKEN }}
            publish_dir: ./resources/public
            force_orphan: true
+
 
    release-electron:
      needs: [build-app]
