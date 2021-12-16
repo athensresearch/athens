@@ -18,10 +18,8 @@
     [athens.subs]
     [athens.util :as util]
     [athens.views :as views]
-    [cljs.reader :refer [read-string]]
     [datalog-console.integrations.datascript :as datalog-console]
     [goog.dom :refer [getElement]]
-    [goog.object :as gobj]
     [re-frame.core :as rf]
     [reagent.dom :as r-dom]))
 
