@@ -23,7 +23,17 @@ export const electronFixtures: Fixtures<ElectronTestFixtures> = {
       args: [path.join(__dirname, '../../resources/main.js')],
     });
     await run(electronApp);
-    await electronApp.close();
+    if (process.env.CI) {
+      // TODO: Should await on close here but it doesn't seem to work on the CI.
+      // If you edit the client:e2e:only:verbose script to debug on pw:* you can see
+      // more detailed logs on CI and it seems like the electron process responds
+      // that it closed, but playwright does not recognize. Maybe we need to
+      // update electron beyond v12.
+      electronApp.close();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } else {
+      await electronApp.close();
+    }
   },
   page: async ({ electronApp }, run) => {
     const page = await electronApp.firstWindow();
