@@ -4,6 +4,7 @@
     [athens.electron.db-menu.core :refer [db-menu]]
     [athens.electron.db-modal :as db-modal]
     [athens.electron.utils :as electron.utils]
+    [athens.electron.window]
     [athens.router :as router]
     [athens.self-hosted.presence.views :refer [toolbar-presence-el]]
     [athens.style :refer [unzoom]]
@@ -61,6 +62,9 @@
                        :onPressSettings #(router/navigate :settings)
                        :onPressMerge #(swap! merge-open? not)
                        :onPressRightSidebarToggle #(dispatch [:right-sidebar/toggle])
+                       :onPressMaximizeRestore #(dispatch [:toggle-max-min-win])
+                       :onPressMinimize #(dispatch [:minimize-win])
+                       :onPressClose #(dispatch [:close-win])
                        :databaseMenu (r/as-element [db-menu])
                        :presenceDetails (when (electron.utils/remote-db? @selected-db)
                                           (r/as-element [toolbar-presence-el]))}]])))

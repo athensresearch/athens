@@ -5,8 +5,12 @@
     [athens.common-events.resolver.atomic :as atomic]
     [athens.common.logging                :as log]
     [athens.self-hosted.event-log         :as event-log]
+    [clojure.pprint                       :as pp]
     [com.stuartsierra.component           :as component]
-    [datascript.core                      :as d]))
+    [datascript.core                      :as d])
+  (:import
+    (clojure.lang
+      ExceptionInfo)))
 
 
 (defrecord Datascript
@@ -27,30 +31,21 @@
                             event-log/initial-events
                             (event-log/events fluree))]
           (log/info "Processing" (pr-str id) "with" (common-events/find-event-or-atomic-op-type data))
-          (atomic/resolve-transact! conn data)
-          (swap! total inc))
+          (try
+            (atomic/resolve-transact! conn data)
+            (swap! total inc)
+            (catch Error err
+              (log/warn "Event that we've failed to process was:"
+                        (with-out-str
+                          (pp/pprint data)))
+              (log/error err "Error during processing" (pr-str id)))
+            (catch ExceptionInfo ex
+              (log/warn "Event that we've failed to process was:"
+                        (with-out-str
+                          (pp/pprint data)))
+              (log/error ex "Exception during processing" (pr-str id)))))
         (log/info "✅ Replayed" @total "events."))
-
-      ;; NB: these could be events as well, and then we wouldn't always rerun them.
-      ;; But rerunning them after replaying all events helps us find events that produce
-      ;; states that need fixing.
-      (log/info "Knowledge graph health check...")
-      (let [linkmaker-txs       (common-db/linkmaker @conn)
-            orderkeeper-txs     (common-db/orderkeeper @conn)
-            block-nil-eater-txs (common-db/block-uid-nil-eater @conn)]
-        (when-not (empty? linkmaker-txs)
-          (log/warn "linkmaker fixes#:" (count linkmaker-txs))
-          (log/info "linkmaker fixes:" (pr-str linkmaker-txs))
-          (d/transact! conn linkmaker-txs))
-        (when-not (empty? orderkeeper-txs)
-          (log/warn "orderkeeper fixes#:" (count orderkeeper-txs))
-          (log/info "orderkeeper fixes:" (pr-str orderkeeper-txs))
-          (d/transact! conn orderkeeper-txs))
-        (when-not (empty? block-nil-eater-txs)
-          (log/warn "block-uid-nil-eater fixes#:" (count block-nil-eater-txs))
-          (log/info "block-uid-nil-eater fixes:" (pr-str block-nil-eater-txs))
-          (d/transact! conn block-nil-eater-txs))
-        (log/info "✅ Knowledge graph health check."))
+      (common-db/health-check conn)
       (assoc component :conn conn)))
 
 
