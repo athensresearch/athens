@@ -168,6 +168,6 @@
   (let [op (bfs/build-paste-op (datascript/empty-db common-db/schema)
                                welcome-page-internal-representation)
         welcome-page (common-events/build-atomic-event op)
-        add-sidebar  (atomic-graph-ops/make-shortcut-new-op welcome-page-title)]
+        add-sidebar  (common-events/build-atomic-event (atomic-graph-ops/make-shortcut-new-op welcome-page-title))]
     [[(:event/id welcome-page) welcome-page]
      [(:event/id add-sidebar) add-sidebar]]))

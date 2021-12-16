@@ -32,7 +32,8 @@
 (rf/reg-fx
   :reset-conn!
   (fn [new-db]
-    (d/reset-conn! db/dsdb new-db)))
+    (d/reset-conn! db/dsdb new-db)
+    (common-db/health-check db/dsdb)))
 
 
 (rf/reg-fx

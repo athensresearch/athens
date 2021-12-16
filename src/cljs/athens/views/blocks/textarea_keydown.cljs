@@ -2,10 +2,12 @@
   (:require
     ["@material-ui/icons/DesktopWindows" :default DesktopWindows]
     ["@material-ui/icons/Done" :default Done]
+    ["@material-ui/icons/FlipToFront" :default FlipToFront]
     ["@material-ui/icons/Timer" :default Timer]
     ["@material-ui/icons/Today" :default Today]
     ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
     ["@material-ui/icons/YouTube" :default YouTube]
+    [athens.common-db :as common-db]
     [athens.common.utils :as common.utils]
     [athens.dates :as dates]
     [athens.db :as db]
@@ -13,6 +15,7 @@
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
     [athens.util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
+    [athens.views.blocks.internal-representation :as internal-representation]
     [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
@@ -102,7 +105,8 @@
    ["Yesterday"     Today (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
    ["YouTube Embed" YouTube "{{[[youtube]]: }}" nil 2]
    ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
-   ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]])
+   ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]
+   ["Template"      FlipToFront ";;" nil nil]])
 
 
 ;; [ "Block Embed" #(str "[[" (:title (dates/get-day 1)) "]]")]
@@ -130,11 +134,13 @@
                           :block db/search-in-block-content
                           :page db/search-in-node-title
                           :hashtag db/search-in-node-title
+                          :template db/search-in-block-content
                           :slash filter-slash-options)
         regex           (case type
                           :block #"(?s).*\(\("
                           :page #"(?s).*\[\["
                           :hashtag #"(?s).*#"
+                          :template #"(?s).*;;"
                           :slash #"(?s).*/")
         find            (re-find regex head)
         query-start-idx (count find)
@@ -196,8 +202,15 @@
        (let [new-idx (+ start-idx (count expand) (- pos))]
          (set-cursor-position target new-idx)
          (when (= caption "Block Embed")
-           (swap! state assoc :search/type :block
-                  :search/query "" :search/results [])))))))
+           (swap! state assoc
+                  :search/type :block
+                  :search/query ""
+                  :search/results []))))
+     (when (= caption "Template")
+       (swap! state assoc
+              :search/type :template
+              :search/query ""
+              :search/results [])))))
 
 
 ;; see `auto-complete-slash` for how this arity-overloaded
@@ -255,6 +268,37 @@
                              2)]
        (set-cursor-position target new-cursor-pos))
      (swap! state assoc :search/type nil))))
+
+
+;; see `auto-complete-slash` for how this arity-overloaded
+;; function is used.
+(defn auto-complete-template
+  ([state e]
+   (let [{:search/keys [index results]} @state
+         target (.. e -target)
+         {:keys [block/uid]} (nth results index nil)
+         expansion uid]
+     (auto-complete-template state target expansion)))
+
+  ([state target expansion]
+   (let [{:keys [start head]} (destruct-target target)
+         start-idx (count (re-find #"(?s).*;;" head))
+         source-ir (->> [:block/uid expansion]
+                        (common-db/get-internal-representation @db/dsdb)
+                        :block/children)
+         target-ir (->> source-ir
+                        internal-representation/new-uids-map
+                        (internal-representation/update-uids source-ir)
+                        (into []))
+         uid (:block/uid @state)]
+     (if (or (nil? expansion)
+             (nil? target-ir))
+       (swap! state assoc :search/type nil)
+       (do
+         (set-selection target (- start-idx 2) start)
+         (replace-selection-with "")
+         (dispatch [:paste-internal uid target-ir])
+         (swap! state assoc :search/type nil))))))
 
 
 ;; Arrow Keys
@@ -429,7 +473,8 @@
              :slash (auto-complete-slash state e)
              :page (auto-complete-inline state e)
              :block (auto-complete-inline state e)
-             :hashtag (auto-complete-hashtag state e))
+             :hashtag (auto-complete-hashtag state e)
+             :template (auto-complete-template state e))
       ;; shift-enter: add line break to textarea and move cursor to the next line.
       shift (replace-selection-with "\n")
       ;; cmd-enter: cycle todo states, then move cursor to the end of the line.
@@ -661,6 +706,8 @@
       (and (= "/" look-behind-char) (= type :slash)) (swap! state assoc :search/type nil)
       ;; hashtag: close dropdown
       (and (= "#" look-behind-char) (= type :hashtag)) (swap! state assoc :search/type nil)
+      ;; semicolon: close dropdown
+      (and (= ";" look-behind-char) (= type :template)) (swap! state assoc :search/type nil)
       ;; dropdown is open: update query
       type (update-query state head "" type))))
 
@@ -679,8 +726,9 @@
   "When user types /, trigger slash menu.
   If user writes a character while there is a slash/type, update query and results."
   [e _uid state]
-  (let [{:keys [head key]} (destruct-key-down e)
-        {:search/keys [type]} @state]
+  (let [{:keys [head key value start]} (destruct-key-down e)
+        {:search/keys [type]} @state
+        look-behind-char (nth value (dec start) nil)]
     (cond
       (and (= key " ") (= type :hashtag)) (swap! state assoc
                                                  :search/type nil
@@ -694,6 +742,12 @@
                                            :search/index 0
                                            :search/query ""
                                            :search/type :hashtag
+                                           :search/results [])
+      (and (= key ";" look-behind-char)
+           (nil? type))             (swap! state assoc
+                                           :search/index 0
+                                           :search/query ""
+                                           :search/type :template
                                            :search/results [])
       type (update-query state head key type))))
 
