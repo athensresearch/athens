@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.5](https://github.com/athensresearch/athens/compare/v2.0.0-beta.4...v2.0.0-beta.5) (2021-12-16)
+
+
+### Features
+
+* add log recovery to athens cli ([705b735](https://github.com/athensresearch/athens/commit/705b73592545cf2aa1e307f480b7ae631d42d938))
+* add recovery fns to athens.self-hosted.event-log ([34bc91e](https://github.com/athensresearch/athens/commit/34bc91e29d8dfccc81c06c976ec6c7f9a3150826))
+* deploy notebooks to vercel ([45c7f59](https://github.com/athensresearch/athens/commit/45c7f59a0b3ae62230ef06f59b0540013a59a52a))
+* use backoff during load process ([fb9f968](https://github.com/athensresearch/athens/commit/fb9f968a5084701ec776c2182ba3ad8767a76fbe))
+
+
+### Bug Fixes
+
+* cli:compile build script had an extra single quote ([d1b2af1](https://github.com/athensresearch/athens/commit/d1b2af111b77d5a0ccef84072e4a980dea5a8206))
+* cli:uberjar needs to take in the compiled classes ([3bca14e](https://github.com/athensresearch/athens/commit/3bca14e29a3182dcf56e5c2b5e13cad3224a8920))
+* current-route for pages now uses title ([2b8dd64](https://github.com/athensresearch/athens/commit/2b8dd64fae2c17f3401a057d2ac3f7d3a4dc89ac))
+* deleting the page on the right sidebar ([446851a](https://github.com/athensresearch/athens/commit/446851ab3d7f3dec7cbe9dcbde52fe203cf11c18)), closes [#1350](https://github.com/athensresearch/athens/issues/1350)
+* don't track side effects from mapped fns ([0c34e4d](https://github.com/athensresearch/athens/commit/0c34e4d5c3f5b09d8ed3521f87041112f3f2338d))
+* Fix the issue with merging blocks using the delete key ([ffadff4](https://github.com/athensresearch/athens/commit/ffadff408f36a5cb4ff4da73fea877ab6ec68422))
+* re-order conditions and add comments ([a6a29c3](https://github.com/athensresearch/athens/commit/a6a29c309b53d5009e537a10265b3c7ef9aea3d5))
+* structure parser not allowing empty page links ([9c998bb](https://github.com/athensresearch/athens/commit/9c998bbb07b58f0fe67977cdf15d9f048af994cf))
+* support updating on block remove and merge. ([5677ac6](https://github.com/athensresearch/athens/commit/5677ac6fe269971083cf56f22ada1e7589e9c2fd))
+* take into account local edit state when merge-delete. ([edb8fb0](https://github.com/athensresearch/athens/commit/edb8fb0b2e6aea5df7de7366925199478c6cf297))
+* variable naming ([8917815](https://github.com/athensresearch/athens/commit/8917815bf08c07afba37771cc1bc7c9978e956d4))
+
+
+### Refactors
+
+* move rename and test lazy-cat-while ([4d67342](https://github.com/athensresearch/athens/commit/4d67342e076c7e30b322ca927721742c70a6ec4d))
+
+
+* add script to clean fluree data ([7ad0374](https://github.com/athensresearch/athens/commit/7ad0374c5376eafbf76ac10fdf4d347d5f800a86))
+* **deps-dev:** bump electron from 12.0.9 to 12.1.0 ([aabbedc](https://github.com/athensresearch/athens/commit/aabbedc3d683be0e0daa5e88f7195077049c152d))
+* **deps:** bump nth-check from 2.0.0 to 2.0.1 ([3951102](https://github.com/athensresearch/athens/commit/39511023a7c1a82c8655f2dc0c6820aef6463c6d))
+* **deps:** bump tmpl from 1.0.4 to 1.0.5 ([e400529](https://github.com/athensresearch/athens/commit/e400529fe2ed2cd302195d963d702713d395bfdb))
+* don't install :npm-deps from clojure deps. ([2262f9f](https://github.com/athensresearch/athens/commit/2262f9f9856cbfd82a340ac70007df0ad6fe8feb)), closes [/github.com/thheller/shadow-cljs/issues/800#issuecomment-725716087](https://github.com/athensresearch//github.com/thheller/shadow-cljs/issues/800/issues/issuecomment-725716087)
+* install dependencies and build on vercel ([#1901](https://github.com/athensresearch/athens/issues/1901)) ([b69e21b](https://github.com/athensresearch/athens/commit/b69e21b094e4bda06fe6a6b8329a038dd654c68c))
+* remove unused ns ([7db4c5e](https://github.com/athensresearch/athens/commit/7db4c5e88570a590c64614a5e67eb3db018295d1))
+* rename fluree clean to wipe ([37f58aa](https://github.com/athensresearch/athens/commit/37f58aa96ee63ff02e33301fcc7c50bad0c0f8a3))
+* update fluree/db deps ([19fcbca](https://github.com/athensresearch/athens/commit/19fcbcae7115acc19f008cd17b1ae4fac2ae9732))
+* use checkout@v2 ([1b8f6bb](https://github.com/athensresearch/athens/commit/1b8f6bb9cbfbdf5ba3b851ea72c57d593b90c43a))
+* use latest electro v12.* ([90c3455](https://github.com/athensresearch/athens/commit/90c3455db29b30fc86274ba21ecfcde7393dc612))
+
 ## [2.0.0-beta.4](https://github.com/athensresearch/athens/compare/v2.0.0-beta.3...v2.0.0-beta.4) (2021-12-09)
 
 

@@ -68,6 +68,19 @@
     (atomic/make-block-remove-op delete-uid)))
 
 
+(defn build-block-merge-with-updated-op
+  "Creates `:block/remove` & `:block/save` ops."
+  [db remove-uid merge-uid value update-value]
+  (let [;; block/remove atomic op
+        block-remove-op     (build-block-remove-op db
+                                                   remove-uid)
+        block-save-op       (build-block-save-op db merge-uid (str update-value value))
+        delete-and-merge-op (composite/make-consequence-op {:op/type :block/remove-merge-update}
+                                                           [block-remove-op
+                                                            block-save-op])]
+    delete-and-merge-op))
+
+
 (defn build-block-remove-merge-op
   "Creates `:block/remove` & `:block/save` ops.
   Arguments:
