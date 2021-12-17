@@ -468,14 +468,19 @@
 
 
 (defn resolve-transact!
-  "Iteratively resolve and transact event."
+  "Iteratively resolve and transact event with metadata.
+  Returns :tx-data from datascript/transact!."
   [conn {:event/keys [id] :as event}]
   (log/debug "resolve-transact! event-id:" (pr-str id))
   (utils/log-time
     (str "resolve-transact! event-id: " (pr-str id) " took")
     (if (graph-ops/atomic-composite? event)
-      (doseq [atomic (graph-ops/extract-atomics event)
-              :let   [atomic-txs (resolve-to-tx @conn atomic)]]
-        (common-db/transact-with-middleware! conn atomic-txs))
+      (let [tx-data (atom nil)]
+        (doseq [atomic (graph-ops/extract-atomics event)
+                :let   [atomic-txs (resolve-to-tx @conn atomic)]]
+          (->> (common-db/transact-with-middleware! conn atomic-txs)
+               :tx-data
+               (swap! tx-data concat)))
+        (vec @tx-data))
       (let [txs (resolve-to-tx @conn event)]
-        (common-db/transact-with-middleware! conn txs)))))
+        (:tx-data (common-db/transact-with-middleware! conn txs))))))
