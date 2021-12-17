@@ -72,20 +72,52 @@
   (->> (map (fn [el]
               (if (string? el)
                 el
-                (str "[[" (clojure.string/join (get-in el [3 2])) "]]"))) title-coll)
+                (str "[[" (str/join (get-in el [3 2])) "]]"))) title-coll)
        (str/join "")))
 
 
 (defn render-page-link
   "Renders a page link given the title of the page."
-  [title]
-  [:span (use-style page-link {:class "page-link"})
+  [{:keys [from title]} title-coll]
+  [:span (assoc (use-style page-link {:class "page-link"})
+                :title from)
    [:span {:class "formatting"} "[["]
-   (into [:span {:on-click (fn [e]
-                             (.. e stopPropagation) ; prevent bubbling up click handler for nested links
-                             (router/navigate-page (parse-title title) e))}]
-         title)
+   (cond
+     (not (str/blank? title))
+     [:span {:on-click (fn [e]
+                         (.. e stopPropagation) ; prevent bubbling up click handler for nested links
+                         (router/navigate-page (parse-title title-coll) e))}
+      title]
+
+     :else
+     (into [:span {:on-click (fn [e]
+                               (.. e stopPropagation) ; prevent bubbling up click handler for nested links
+                               (router/navigate-page (parse-title title-coll) e))}]
+           title-coll))
    [:span {:class "formatting"} "]]"]])
+
+
+(defn render-block-ref
+  [{:keys [from title] :as attr} ref-uid uid]
+  (js/console.debug "render-block-ref" (pr-str attr))
+  (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
+    (if @block
+      [:span (assoc (use-style block-ref {:class "block-ref"})
+                    :title (str/replace from
+                                        (str "((" ref-uid "))")
+                                        (str "((" (:block/string @block) "))")))
+       [:span {:class    "contents"
+               :on-click #(router/navigate-uid ref-uid %)}
+        (cond
+          (= uid ref-uid)
+          [parse-and-render "{{SELF}}"]
+
+          (not (str/blank? title))
+          [parse-and-render title ref-uid]
+
+          :else
+          [parse-and-render (:block/string @block) ref-uid])]]
+      from)))
 
 
 ;; -- Component ---
@@ -147,21 +179,15 @@
      ;; https://athensresearch.gitbook.io/handbook/athens/athens-components-documentation/
      :component            (fn [& contents]
                              (component (first contents) uid))
-     :page-link            (fn [{_from :from} & title-coll] (render-page-link title-coll))
+     :page-link            (fn [{_from :from :as attr} & title-coll]
+                             (render-page-link attr title-coll))
      :hashtag              (fn [{_from :from} & title-coll]
                              [:span (use-style hashtag {:class    "hashtag"
                                                         :on-click #(router/navigate-page (parse-title title-coll) %)})
                               [:span {:class "formatting"} "#"]
                               [:span {:class "contents"} title-coll]])
-     :block-ref            (fn [{_from :from} ref-uid]
-                             (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
-                               (if @block
-                                 [:span (use-style block-ref {:class "block-ref"})
-                                  [:span {:class "contents" :on-click #(router/navigate-uid ref-uid %)}
-                                   (if (= uid ref-uid)
-                                     [parse-and-render "{{SELF}}"]
-                                     [parse-and-render (:block/string @block) ref-uid])]]
-                                 (str "((" ref-uid "))"))))
+     :block-ref            (fn [{_from :from :as attr} ref-uid]
+                             (render-block-ref attr ref-uid uid))
      :url-image            (fn [{url :src alt :alt}]
                              [:img (use-style image {:class "url-image"
                                                      :alt   alt
