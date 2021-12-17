@@ -481,7 +481,14 @@
                       [:text-run "a"]
                       [:block-ref {:from "((block-id))"}
                        "block-id"]
-                      [:text-run "b"]]))
+                      [:text-run "b"]]
+
+                     ;; titled block ref
+                     "[choco]((block-id))"
+                     [:paragraph
+                      [:block-ref {:from  "[choco]((block-id))"
+                                   :title "choco"}
+                       "block-id"]]))
 
   (t/testing "hard line breaks"
     (utils/parses-to sut/inline-parser->ast
@@ -549,7 +556,14 @@
                        "one"]
                       [:text-run " and "]
                       [:page-link {:from "[[two]]"}
-                       "two"]]))
+                       "two"]]
+
+                     ;; titled page links
+                     "[ready][[player one]]"
+                     [:paragraph
+                      [:page-link {:from  "[ready][[player one]]"
+                                   :title "ready"}
+                       "player one"]]))
 
   (t/testing "hashtags (Athens extension)"
     (utils/parses-to sut/inline-parser->ast
