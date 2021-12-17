@@ -52,11 +52,11 @@ inline = recur
            emphasis /
            highlight /
            strikethrough /
+           block-ref /
+           page-link /
            link /
            image /
            autolink /
-           block-ref /
-           page-link /
            hashtag-braced /
            hashtag-naked /
            component /
@@ -114,11 +114,13 @@ autolink = <#'(?<!\\w)<(?!\\s)'>
            #'[^>\\s]+'
            <#'(?<!\\s)>(?!\\w)'>
 
-block-ref = <#'\\(\\((?!\\s)'>
+block-ref = title?
+            <#'\\(\\((?!\\s)'>
             #'.+?(?=\\)\\))'
             <#'(?<!\\s)\\)\\)'>
 
-page-link = <#'(?<!\\w)\\[\\[(?!\\s)'>
+page-link = title?
+            <#'(?<!\\w)\\[\\[(?!\\s)'>
             (#'[^\\[\\]\\#\\n]+' | page-link | hashtag-naked | hashtag-braced)+
             <#'(?<!\\s)\\]\\](?!\\w)'>
 
@@ -132,6 +134,10 @@ hashtag-braced = <#'(?<!\\w)\\#\\[\\[(?!\\s)'>
 component = <#'(?<!\\w)\\{\\{(?!\\s)'>
             (page-link / block-ref / #'.+(?=\\}\\})')
             <#'(?<!\\s)\\}\\}(?!\\w)'>
+
+title = <#'(?<!\\w)\\[(?!\\s)'>
+        #'([^\\]]|\\\\\\])+(?=\\])'
+        <#'(?<!\\s)\\](?!\\s)'>
 
 latex = <#'(?<!\\w)\\$\\$(?!\\s)'>
         #'(?s).+?(?=\\$\\$)'
@@ -231,14 +237,30 @@ newline = #'\\n'
 
 (defn- block-ref-transform
   [& contents]
-  (apply conj [:block-ref {:from (str "((" (string/join contents) "))")}]
-         contents))
+  (let [title?   (= :title (ffirst contents))
+        title    (when title? (-> contents first second))
+        contents (if title?
+                   (drop 1 contents)
+                   contents)]
+    (apply conj [:block-ref (cond-> {:from (str (when title?
+                                                  (str "[" title "]"))
+                                                "((" (string/join contents) "))")}
+                              title? (assoc :title title))]
+           contents)))
 
 
 (defn- page-link-transform
   [& contents]
-  (apply conj [:page-link {:from (str "[[" (apply string-representation contents) "]]")}]
-         contents))
+  (let [title?   (= :title (ffirst contents))
+        title    (when title? (-> contents first second))
+        contents (if title?
+                   (drop 1 contents)
+                   contents)]
+    (apply conj [:page-link (cond-> {:from (str (when title?
+                                                  (str "[" title "]"))
+                                                "[[" (apply string-representation contents) "]]")}
+                              title? (assoc :title title))]
+           contents)))
 
 
 (defn- hashtag-braced-transform
