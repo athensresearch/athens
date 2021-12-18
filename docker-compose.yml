@@ -11,7 +11,7 @@ services:
     #   dockerfile: athens.dockerfile
     restart: always
     depends_on:
-      - fluree:
+      - fluree
     ports:
       - 3010:3010 # Change this according to CONFIG_EDN.
     volumes:
@@ -35,7 +35,7 @@ services:
     #  dockerfile: nginx.dockerfile
     restart: always
     depends_on:
-      - athens:
+      - athens
     restart: always
     ports:
       - 80:80
