@@ -84,7 +84,7 @@
     (let [in-memory-events       (-> db :remote/event-sync :stages :memory)
           saved-tx-data          (-> db :remote/tx-data)
           count-in-memory-events (count in-memory-events)
-          count-saved-tx-data    (count in-memory-events)]
+          count-saved-tx-data    (count saved-tx-data)]
       (when (not= count-in-memory-events count-saved-tx-data)
         (log/warn ":remote/rollback-dsdb in-memory-events count" count-in-memory-events
                   "does not match saved-tx-data count" count-saved-tx-data))
