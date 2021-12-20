@@ -98,8 +98,7 @@
 
 
 (defn render-block-ref
-  [{:keys [from title] :as attr} ref-uid uid]
-  (js/console.debug "render-block-ref" (pr-str attr))
+  [{:keys [from title]} ref-uid uid]
   (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
     (if @block
       [:span (assoc (use-style block-ref {:class "block-ref"})
