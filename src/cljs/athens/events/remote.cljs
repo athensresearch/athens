@@ -178,7 +178,7 @@
                            ;; the server, then use that as the new snapshot, then reapply
                            ;; all events in the memory stage.
                            new-event?          (into [[:remote/rollback-dsdb]
-                                                      [:resolve-transact-forward event true]])
+                                                      [:resolve-transact-forward event true true]])
                            new-event?          (into (map (fn [e] [:resolve-transact-forward (second e) true])
                                                           (-> db' :remote/event-sync :stages :memory)))
                            ;; Remove the server event after everything is done.

@@ -610,12 +610,12 @@
 ;; to ensure db/dsdb is synchronized and cannot just reuse the existing :resolve* events.
 (reg-event-fx
   :resolve-transact-forward
-  (fn [{:keys [db]} [_ {:event/keys [id] :as event} skip-forward?]]
+  (fn [{:keys [db]} [_ {:event/keys [id] :as event} skip-forward? skip-tx-data?]]
     (let [remote?  (db-picker/remote-db? db)
           forward? (and (not skip-forward?) remote?)
           _        (log/debug ":resolve-transact-forward event:" (pr-str event) "forward?" (pr-str forward?))
           tx-data  (atomic-resolver/resolve-transact! db/dsdb event)]
-      {:db (if remote?
+      {:db (if (and (not skip-tx-data?) remote?)
              (update db :remote/tx-data assoc (common.utils/uuid->string id) tx-data)
              db)
        :fx [[:dispatch-n [[:electron-sync]
