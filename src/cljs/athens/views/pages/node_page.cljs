@@ -371,7 +371,7 @@
                                            ;; if daily note, delete page and remove from daily notes, otherwise just delete page
                                            (if daily-note?
                                              (dispatch [:daily-note/delete uid title])
-                                             (dispatch [:page/delete uid title])))}
+                                             (dispatch [:page/delete title])))}
                     [:> Delete] [:span "Delete Page"]]]]])))
 
 
