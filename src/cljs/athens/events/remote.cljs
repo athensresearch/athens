@@ -5,6 +5,7 @@
     [athens.common-events.schema    :as schema]
     [athens.common.logging          :as log]
     [athens.db                      :as db]
+    [clojure.pprint                 :as pp]
     [datascript.core                :as d]
     [event-sync.core                :as event-sync]
     [malli.core                     :as m]
@@ -80,21 +81,30 @@
 (rf/reg-event-db
   :remote/rollback-dsdb
   (fn [db _]
-    (let [in-memory-events (-> db :remote/event-sync :stages :memory)
-          saved-tx-data    (-> db :remote/tx-data)
-          rollback-txs     (->> in-memory-events
-                                ;; get events ids
-                                (map first)
-                                ;; reverse the order, last event is now first
-                                reverse
-                                ;; get the tx-data for each
-                                (map saved-tx-data)
-                                ;; undo the tx
-                                (map undo-tx-data))]
-      (log/info ":remote/rollback-dsdb rollback-txs count" (count rollback-txs))
-      (doseq [tx rollback-txs]
-        (d/transact! db/dsdb tx)))
-    (assoc db :remote/tx-data {})))
+    (let [in-memory-events       (-> db :remote/event-sync :stages :memory)
+          saved-tx-data          (-> db :remote/tx-data)
+          count-in-memory-events (count in-memory-events)
+          count-saved-tx-data    (count in-memory-events)]
+      (when (not= count-in-memory-events count-saved-tx-data)
+        (log/warn ":remote/rollback-dsdb in-memory-events count" count-in-memory-events
+                  "does not match saved-tx-data count" count-saved-tx-data))
+
+      (if (= count-in-memory-events 0)
+        (log/debug ":remote/rollback-dsdb rollback-txs skipped, nothing to rollback")
+        (do
+          (log/debug ":remote/rollback-dsdb rollback rollback" count-in-memory-events "events")
+          (doseq [[id event] (reverse in-memory-events)]
+            (let [tx (saved-tx-data id)
+                  rollback-tx (undo-tx-data tx)]
+              (log/debug ":remote/rollback-dsdb rollback event id" (pr-str id))
+              (log/debug ":remote/rollback-dsdb rollback event:")
+              (log/debug (with-out-str (pp/pprint event)))
+              (log/debug ":remote/rollback-dsdb rollback original tx:")
+              (log/debug (with-out-str (pp/pprint tx)))
+              (log/debug ":remote/rollback-dsdb rollback rollback tx:")
+              (log/debug (with-out-str (pp/pprint rollback-tx)))
+              (d/transact! db/dsdb tx)))))
+      (assoc db :remote/tx-data {}))))
 
 
 (rf/reg-event-db
@@ -152,7 +162,7 @@
           memory-log   (event-sync/stage-log (:remote/event-sync db') :memory)
           page-removes (graph-ops/contains-op? (:event/op event) :page/remove)]
       (log/debug ":remote/apply-forwarded-event new event?:" (pr-str new-event?))
-      (log/info ":remote/apply-forwarded-event memory-log count" (count memory-log))
+      (log/debug ":remote/apply-forwarded-event memory-log count" (count memory-log))
       {:db db'
        :fx [[:dispatch-n (cond-> []
                            ;; Mark as synced if there's no events left in memory.
