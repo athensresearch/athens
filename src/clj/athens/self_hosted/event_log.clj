@@ -133,6 +133,7 @@
    (ensure-ledger! fluree initial-events))
   ([fluree seed-events]
    (let [conn (-> fluree :conn-atom deref)]
+     (log/info "Looking for event-log fluree ledger")
      (when (empty? @(fdb/ledger-info conn ledger))
        (let [block (atom nil)]
          (log/info "Fluree ledger for event-log not found, creating" ledger)
