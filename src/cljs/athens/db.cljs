@@ -225,7 +225,6 @@
 ;; -- Datascript and Posh ------------------------------------------------
 
 (defonce dsdb (d/create-conn common-db/schema))
-(defonce dsdb-snapshot (atom nil))
 
 
 ;; todo: turn into an effect

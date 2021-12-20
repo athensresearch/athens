@@ -50,9 +50,8 @@
                                             :block/order    4
                                             :block/children []}]}]]
         (fixture/transact-with-middleware setup-tx)
-        (let [block-move-op  (atomic-ops/make-block-move-op child-4-uid {:block/uid child-2-uid :relation :before})
-              block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
-          (d/transact! @fixture/connection block-move-txs)
+        (let [block-move-op (atomic-ops/make-block-move-op child-4-uid {:block/uid child-2-uid :relation :before})]
+          (atomic-resolver/resolve-transact! @fixture/connection block-move-op false)
           (let [child-1-block (common-db/get-block @@fixture/connection
                                                    [:block/uid child-1-uid])
                 child-2-block (common-db/get-block @@fixture/connection
@@ -101,9 +100,8 @@
                                             :block/order    4
                                             :block/children []}]}]]
         (fixture/transact-with-middleware setup-tx)
-        (let [block-move-op  (atomic-ops/make-block-move-op child-4-uid {:block/uid child-1-uid :relation :after})
-              block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
-          (d/transact! @fixture/connection block-move-txs)
+        (let [block-move-op (atomic-ops/make-block-move-op child-4-uid {:block/uid child-1-uid :relation :after})]
+          (atomic-resolver/resolve-transact! @fixture/connection block-move-op false)
           (let [child-1-block (common-db/get-block @@fixture/connection
                                                    [:block/uid child-1-uid])
                 child-2-block (common-db/get-block @@fixture/connection
@@ -153,9 +151,8 @@
                                             :block/order    4
                                             :block/children []}]}]]
         (fixture/transact-with-middleware setup-tx)
-        (let [block-move-op  (atomic-ops/make-block-move-op child-2-uid {:block/uid child-4-uid :relation :after})
-              block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
-          (d/transact! @fixture/connection block-move-txs)
+        (let [block-move-op (atomic-ops/make-block-move-op child-2-uid {:block/uid child-4-uid :relation :after})]
+          (atomic-resolver/resolve-transact! @fixture/connection block-move-op false)
           (let [child-1-block (common-db/get-block @@fixture/connection
                                                    [:block/uid child-1-uid])
                 child-2-block (common-db/get-block @@fixture/connection
@@ -204,9 +201,8 @@
                                             :block/order    4
                                             :block/children []}]}]]
         (fixture/transact-with-middleware setup-tx)
-        (let [block-move-op  (atomic-ops/make-block-move-op child-2-uid {:block/uid child-5-uid :relation :before})
-              block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
-          (d/transact! @fixture/connection block-move-txs)
+        (let [block-move-op (atomic-ops/make-block-move-op child-2-uid {:block/uid child-5-uid :relation :before})]
+          (atomic-resolver/resolve-transact! @fixture/connection block-move-op false)
           (let [child-1-block (common-db/get-block @@fixture/connection
                                                    [:block/uid child-1-uid])
                 child-2-block (common-db/get-block @@fixture/connection
@@ -256,9 +252,8 @@
                                             :block/children []}]}]]
       (fixture/transact-with-middleware setup-tx)
       ;; from:
-      (let [block-move-op  (atomic-ops/make-block-move-op child-2-2-uid {:block/uid child-1-1-uid :relation :before})
-            block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
-        (d/transact! @fixture/connection block-move-txs)
+      (let [block-move-op (atomic-ops/make-block-move-op child-2-2-uid {:block/uid child-1-1-uid :relation :before})]
+        (atomic-resolver/resolve-transact! @fixture/connection block-move-op false)
         (let [child-1-1-block (common-db/get-block @@fixture/connection
                                                    [:block/uid child-1-1-uid])
               child-1-2-block (common-db/get-block @@fixture/connection
@@ -291,9 +286,8 @@
                                             :block/order    1
                                             :block/children []}]}]]
       (fixture/transact-with-middleware setup-tx)
-      (let [block-move-op  (atomic-ops/make-block-move-op child-1-2-uid {:block/uid child-1-1-uid :relation :first})
-            block-move-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-move-op)]
-        (d/transact! @fixture/connection block-move-txs)
+      (let [block-move-op  (atomic-ops/make-block-move-op child-1-2-uid {:block/uid child-1-1-uid :relation :first})]
+        (atomic-resolver/resolve-transact! @fixture/connection block-move-op false)
         (let [parent-block    (common-db/get-block @@fixture/connection
                                                    [:block/uid parent-1-uid])
               child-1-1-block (common-db/get-block @@fixture/connection
@@ -331,10 +325,7 @@
       (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
                                                             [(atomic-ops/make-block-move-op child-2-uid {:block/uid child-1-uid :relation :first})
                                                              (atomic-ops/make-block-move-op child-3-uid {:block/uid child-2-uid :relation :after})])]
-        ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
-        (doseq [atomic (graph-ops/extract-atomics chained-move)
-                :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
-          (d/transact! @fixture/connection atomic-txs))
+        (atomic-resolver/resolve-transact! @fixture/connection chained-move false)
         (let [parent-block  (common-db/get-block @@fixture/connection
                                                  [:block/uid parent-1-uid])
               child-1-block (common-db/get-block @@fixture/connection
@@ -377,10 +368,7 @@
       (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
                                                             [(atomic-ops/make-block-move-op child-2-uid {:block/uid child-1-uid :relation :first})
                                                              (atomic-ops/make-block-move-op child-3-uid {:block/uid child-2-uid :relation :after})])]
-        ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
-        (doseq [atomic (graph-ops/extract-atomics chained-move)
-                :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
-          (d/transact! @fixture/connection atomic-txs))
+        (atomic-resolver/resolve-transact! @fixture/connection chained-move false)
         (let [parent-block  (common-db/get-block @@fixture/connection
                                                  [:block/uid parent-1-uid])
               child-1-block (common-db/get-block @@fixture/connection
@@ -424,12 +412,7 @@
       (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
                                                             [(atomic-ops/make-block-move-op child-2-uid {:block/uid child-4-uid :relation :after})
                                                              (atomic-ops/make-block-move-op child-3-uid {:block/uid child-2-uid :relation :after})])]
-        ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
-        (doseq [atomic (graph-ops/extract-atomics chained-move)
-                :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
-          (log/debug "weird tx:\n" (with-out-str
-                                     (pp/pprint atomic-txs)))
-          (d/transact! @fixture/connection atomic-txs))
+        (atomic-resolver/resolve-transact! @fixture/connection chained-move false)
         (let [parent-block  (common-db/get-block @@fixture/connection
                                                  [:block/uid parent-1-uid])
               child-1-block (common-db/get-block @@fixture/connection
@@ -479,12 +462,7 @@
       (let [chained-move (composite-ops/make-consequence-op {:op/type :block/move-chained}
                                                             [(atomic-ops/make-block-move-op child-2-uid {:block/uid child-5-uid :relation :after})
                                                              (atomic-ops/make-block-move-op child-3-uid {:block/uid child-2-uid :relation :after})])]
-        ;; in real usage use `resolve-transact!`, here we have to emulate it so we don't use middleware
-        (doseq [atomic (graph-ops/extract-atomics chained-move)
-                :let   [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic)]]
-          (log/debug "weird tx:\n" (with-out-str
-                                     (pp/pprint atomic-txs)))
-          (d/transact! @fixture/connection atomic-txs))
+        (atomic-resolver/resolve-transact! @fixture/connection chained-move false)
         (let [parent-block  (common-db/get-block @@fixture/connection
                                                  [:block/uid parent-1-uid])
               child-1-block (common-db/get-block @@fixture/connection

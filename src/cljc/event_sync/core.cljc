@@ -1,3 +1,7 @@
+;; TODO: rename to something better, candidates below:
+;; optimistic-queue
+;; multi-stage-queue
+;; staged-queue
 (ns event-sync.core
   (:refer-clojure :exclude [print remove type add-watch remove-watch])
   (:require

@@ -605,25 +605,21 @@
 ;; Resolves events when the event-fx is resolved, instead of taking a resolution.
 ;; This is useful for when you want to apply events one after the other, using
 ;; the resulting db to resolve to next one.
-(reg-event-fx
-  :resolve-transact
-  (fn [_ [_ event]]
-    (log/debug "events/resolve-transact, event:" (pr-str event))
-    (atomic-resolver/resolve-transact! db/dsdb event)
-    {:fx [[:dispatch [:electron-sync]]]}))
-
-
-;; Same as above, but also forwards the event.
+;; For remote dbs, stores the tx-data for optimistic rollbacks and optionally forwards the event.
 ;; Anything that uses atomic-resolver/resolve-transact! must duplicate the code
 ;; to ensure db/dsdb is synchronized and cannot just reuse the existing :resolve* events.
 (reg-event-fx
   :resolve-transact-forward
-  (fn [{:keys [db]} [_ event]]
-    (let [forward? (db-picker/remote-db? db)]
-      (log/debug ":resolve-transact-forward event:" (pr-str event) "forward?" (pr-str forward?))
-      (atomic-resolver/resolve-transact! db/dsdb event)
-      {:fx [[:dispatch-n [[:electron-sync]
-                          (when forward? [:remote/forward-event event])]]]})))
+  (fn [{:keys [db]} [_ {:event/keys [id] :as event} skip-forward?]]
+    (let [remote?  (db-picker/remote-db? db)
+          forward? (and (not skip-forward?) remote?)
+          _        (log/debug ":resolve-transact-forward event:" (pr-str event) "forward?" (pr-str forward?))
+          tx-data  (atomic-resolver/resolve-transact! db/dsdb event)]
+      {:db (if remote?
+             (update db :remote/tx-data assoc id tx-data)
+             db)
+       :fx [[:dispatch-n [[:electron-sync]
+                          (when forward? [:remote/forward-event event tx-data])]]]})))
 
 
 (reg-event-fx
