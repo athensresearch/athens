@@ -32,6 +32,16 @@
      (UUID/randomUUID)))
 
 
+(defn uuid->string
+  "Useful for printing and to get around how cljs transit uuids are not uuids
+  (see https://github.com/cognitect/transit-cljs/issues/41).
+  It would be less characters to just type `str` instead of this fn, especially
+  with a namespace, but forgetting to convert uuids at all is a common error,
+  so having a dedicated fn helps us keep it in mind."
+  [uuid]
+  (str uuid))
+
+
 (defn gen-block-uid
   "Generates new `:block/uid`."
   []

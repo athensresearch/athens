@@ -616,7 +616,7 @@
           _        (log/debug ":resolve-transact-forward event:" (pr-str event) "forward?" (pr-str forward?))
           tx-data  (atomic-resolver/resolve-transact! db/dsdb event)]
       {:db (if remote?
-             (update db :remote/tx-data assoc id tx-data)
+             (update db :remote/tx-data assoc (common.utils/uuid->string id) tx-data)
              db)
        :fx [[:dispatch-n [[:electron-sync]
                           (when forward? [:remote/forward-event event tx-data])]]]})))

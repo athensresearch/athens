@@ -4,6 +4,7 @@
     [athens.common-events.graph.ops :as graph-ops]
     [athens.common-events.schema    :as schema]
     [athens.common.logging          :as log]
+    [athens.common.utils            :as utils]
     [athens.db                      :as db]
     [clojure.pprint                 :as pp]
     [datascript.core                :as d]
@@ -158,7 +159,7 @@
     (log/debug ":remote/apply-forwarded-event event:" (pr-str event))
     (let [db'          (-> db
                            (update :remote/event-sync #(event-sync/add % :server id event))
-                           (update :remote/tx-data dissoc id))
+                           (update :remote/tx-data dissoc (utils/uuid->string id)))
           new-event?   (new-event? (-> db' :remote/event-sync :last-op))
           memory-log   (event-sync/stage-log (:remote/event-sync db') :memory)
           page-removes (graph-ops/contains-op? (:event/op event) :page/remove)]
