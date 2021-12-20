@@ -86,8 +86,9 @@
           count-in-memory-events (count in-memory-events)
           count-saved-tx-data    (count saved-tx-data)]
       (when (not= count-in-memory-events count-saved-tx-data)
-        (log/warn ":remote/rollback-dsdb in-memory-events count" count-in-memory-events
-                  "does not match saved-tx-data count" count-saved-tx-data))
+        (log/warn ":remote/rollback-dsdb in-memory-events count does not match saved-tx-data count")
+        (log/warn ":remote/rollback-dsdb in-memory-events ids" (keys in-memory-events))
+        (log/warn ":remote/rollback-dsdb saved-tx-data ids" (keys saved-tx-data)))
 
       (if (= count-in-memory-events 0)
         (log/debug ":remote/rollback-dsdb rollback-txs skipped, nothing to rollback")
