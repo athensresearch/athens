@@ -235,12 +235,12 @@
             ;; that allows closing the window.
             (dispatch [:confirm/js
                        (str "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. "
-                            "Try refreshing or quitting again once the sync is complete. Make sure you exit out of any block you may be editing"
-                            "Press OK to wait, or Cancel to leave without saving (will cause data loss!).")
-                       #()
+                            "Try refreshing or quitting again once the sync is complete. Make sure you exit out of any block you may be editing. "
+                            "Press Cancel to wait, or OK to leave without saving (will cause data loss!).")
                        (fn []
                          (reset! force-leave true)
-                         (js/window.close))])
+                         (js/window.close))
+                       #()])
             (.. e preventDefault)
             (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
             "Returning a string also prevents exit on other browsers.")
