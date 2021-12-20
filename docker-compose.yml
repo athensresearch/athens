@@ -45,7 +45,7 @@ services:
   fluree:
     # Under default settings maximum recommended event size is 2mb.
     # Can be increased via fdb-memory-reindex-max to up to 10mb.
-    image: fluree/ledger:1.0
+    image: fluree/ledger:1.0.0-beta17
     restart: always
     ports:
       - 8090:8090
