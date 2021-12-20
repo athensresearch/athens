@@ -96,7 +96,8 @@
         (do
           (log/debug ":remote/rollback-dsdb rollback rollback" count-in-memory-events "events")
           (doseq [[id event] (reverse in-memory-events)]
-            (let [tx (saved-tx-data id)
+            (let [id (utils/uuid->string id)
+                  tx (saved-tx-data id)
                   rollback-tx (undo-tx-data tx)]
               (log/debug ":remote/rollback-dsdb rollback event id" (pr-str id))
               (log/debug ":remote/rollback-dsdb rollback event:")
