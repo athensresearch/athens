@@ -106,7 +106,7 @@
               (log/debug (with-out-str (pp/pprint tx)))
               (log/debug ":remote/rollback-dsdb rollback rollback tx:")
               (log/debug (with-out-str (pp/pprint rollback-tx)))
-              (d/transact! db/dsdb tx)))))
+              (d/transact! db/dsdb rollback-tx)))))
       (assoc db :remote/tx-data {}))))
 
 
