@@ -1,17 +1,18 @@
 (ns athens.events.remote
   "`re-frame` events related to `:remote/*`."
   (:require
-    [athens.common-events.graph.ops :as graph-ops]
-    [athens.common-events.schema    :as schema]
-    [athens.common.logging          :as log]
-    [athens.common.utils            :as utils]
-    [athens.db                      :as db]
-    [clojure.pprint                 :as pp]
-    [datascript.core                :as d]
-    [event-sync.core                :as event-sync]
-    [malli.core                     :as m]
-    [malli.error                    :as me]
-    [re-frame.core                  :as rf]))
+    [athens.common-events.graph.ops       :as graph-ops]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common-events.schema          :as schema]
+    [athens.common.logging                :as log]
+    [athens.common.utils                  :as utils]
+    [athens.db                            :as db]
+    [clojure.pprint                       :as pp]
+    [datascript.core                      :as d]
+    [event-sync.core                      :as event-sync]
+    [malli.core                           :as m]
+    [malli.error                          :as me]
+    [re-frame.core                        :as rf]))
 
 
 ;; Connection Management
@@ -72,6 +73,10 @@
 
 
 (defn- undo-tx-data
+  "Returns tx-data with all added datoms removed, and all removed datoms added.
+  Datoms are returned in reversed order, so the first datom in the undo tx reverses
+  the last datom in the original.
+  Only works over plain datoms, such as the ones returned from a transaction in :tx-data."
   [tx-data]
   (->> tx-data
        (map undo-datom)
@@ -80,34 +85,76 @@
 
 
 (rf/reg-event-db
-  :remote/rollback-dsdb
-  (fn [db _]
-    (let [in-memory-events       (-> db :remote/event-sync :stages :memory)
-          saved-tx-data          (-> db :remote/tx-data)
-          count-in-memory-events (count in-memory-events)
-          count-saved-tx-data    (count saved-tx-data)]
-      (when (not= count-in-memory-events count-saved-tx-data)
-        (log/warn ":remote/rollback-dsdb in-memory-events count does not match saved-tx-data count")
-        (log/warn ":remote/rollback-dsdb in-memory-events ids" (keys in-memory-events))
-        (log/warn ":remote/rollback-dsdb saved-tx-data ids" (keys saved-tx-data)))
+  :remote/update-optimistic-state
+  (fn [db [_ new-server-event]]
+    ;; This event updates the dsdb optimistic state to reflect the events in the in-memory
+    ;; stage of event-sync, plus an optional new server event.
+    ;; We do this in a single event so that no other reframe events can happen in the middle.
+    ;; Also see :resolve-transact-forward for how new optimistic events are added.
 
+    ;; We apply the new server event (if any) by rolling back all the optimistic events, applying
+    ;; the new one, and then reapplying all the optimistic ones on top.
+    ;; So for instance, given the sequence of events below
+    ;;   [s1 s2 s3 o1 o2 o3]
+    ;; where s* events are server events, and o* events are optimistic events, if we
+    ;; receive s4 we want to
+    ;; - rollback o1 o2 o3
+    ;; - apply s4 on top of s1 s2 s3
+    ;; - apply o1 o2 o3 on top
+    ;; This way we end with
+    ;;   [s1 s2 s3 s4 o1 o2 o3]
+    ;; Rollback here is performed by undoing the previous transactions.
+    ;; This ensures rollback time is proportional to the size of optimistic txs.
+    ;; After each rollback, we have to save the new tx-data for the next undo.
+    ;; Another approach is to rollback by keeping the last known db state with all the
+    ;; server events, but then we'd have to reset the db state and that would cause
+    ;; all listeners to process a whole new db state, instead of an incremental one.
+
+    (let [in-memory-events       (-> db :remote/event-sync :stages :memory)
+          rollback-tx-data       (-> db :remote/rollback-tx-data)
+          count-in-memory-events (count in-memory-events)
+          reapplied-tx-data      (atom {})]
+
+      ;; Rollback
       (if (= count-in-memory-events 0)
-        (log/debug ":remote/rollback-dsdb rollback-txs skipped, nothing to rollback")
+        (log/debug ":remote/apply-new-server-event rollback skipped, nothing to rollback")
         (do
-          (log/debug ":remote/rollback-dsdb rollback rollback" count-in-memory-events "events")
+          (log/debug ":remote/apply-new-server-event rollback" count-in-memory-events "events")
+          ;; Undo events in the reverse order (e.g. first undo reverse last event).
           (doseq [[id event] (reverse in-memory-events)]
-            (let [id (utils/uuid->string id)
-                  tx (saved-tx-data id)
+            (let [id          (utils/uuid->string id)
+                  tx          (rollback-tx-data id)
                   rollback-tx (undo-tx-data tx)]
-              (log/debug ":remote/rollback-dsdb rollback event id" (pr-str id))
-              (log/debug ":remote/rollback-dsdb rollback event:")
-              (log/debug (with-out-str (pp/pprint event)))
-              (log/debug ":remote/rollback-dsdb rollback original tx:")
-              (log/debug (with-out-str (pp/pprint tx)))
-              (log/debug ":remote/rollback-dsdb rollback rollback tx:")
-              (log/debug (with-out-str (pp/pprint rollback-tx)))
-              (d/transact! db/dsdb rollback-tx)))))
-      (assoc db :remote/tx-data {}))))
+              (if (nil? tx)
+                (do
+                  ;; It's very bad if this happens. It means we're not rolling back one of the events.
+                  ;; It shouldn't ever happen, but we should keep an eye out for it in the beta console logs.
+                  (log/warn ":remote/apply-new-server-event no tx-data found for" id)
+                  (log/warn ":remote/apply-new-server-event in-memory-events ids" (keys in-memory-events))
+                  (log/warn ":remote/apply-new-server-event rollback-tx-data ids" (keys rollback-tx-data)))
+                (do
+                  (log/debug ":remote/apply-new-server-event rollback event id" (pr-str id))
+                  (log/debug ":remote/apply-new-server-event rollback event:")
+                  (log/debug (with-out-str (pp/pprint event)))
+                  (log/debug ":remote/apply-new-server-event rollback original tx:")
+                  (log/debug (with-out-str (pp/pprint tx)))
+                  (log/debug ":remote/apply-new-server-event rollback rollback tx:")
+                  (log/debug (with-out-str (pp/pprint rollback-tx)))
+                  (d/transact! db/dsdb rollback-tx)))))))
+
+      ;; Apply the new event
+      (log/debug ":remote/apply-new-server-event apply new event id" (pr-str (:event/id new-server-event)))
+      (atomic-resolver/resolve-transact! db/dsdb new-server-event)
+
+      ;; Reapply the optimistic events.
+      (doseq [[id event] in-memory-events]
+        (log/debug ":remote/apply-new-server-event reapply optimistic event id" (pr-str id))
+        (swap! reapplied-tx-data assoc
+               (utils/uuid->string id)
+               (atomic-resolver/resolve-transact! db/dsdb event)))
+
+      ;; Update rollback-tx-data with the new tx-data.
+      (update db :remote/rollback-tx-data merge @reapplied-tx-data))))
 
 
 (rf/reg-event-db
@@ -115,13 +162,13 @@
   (fn [db _]
     (assoc db
            :remote/event-sync (event-sync/create-state :athens [:memory :server])
-           :remote/tx-data {})))
+           :remote/rollback-tx-data {})))
 
 
 (rf/reg-event-db
   :remote/stop-event-sync
   (fn [db _]
-    (dissoc db :remote/event-sync :remote/tx-data)))
+    (dissoc db :remote/event-sync :remote/rollback-tx-data)))
 
 
 (rf/reg-event-fx
@@ -140,18 +187,17 @@
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
     (log/debug ":remote/reject-forwarded-event event:" (pr-str event))
     (let [db'        (-> db
-                         (update :remote/event-sync #(event-sync/remove % :memory id event))
-                         (update :remote/tx-data dissoc id))
+                         (update :remote/event-sync #(event-sync/remove % :memory (utils/uuid->string id) event))
+                         (update :remote/rollback-tx-data dissoc id))
           memory-log (event-sync/stage-log (:remote/event-sync db') :memory)]
       (log/info ":remote/reject-forwarded-event memory-log count" (count memory-log))
       {:db db'
-       ;; Rollback and reapply all events in the memory stage.
-       ;; If there's no events to reapply, just mark as synced.
-       :fx [[:dispatch-n (into [[:remote/rollback-dsdb]]
+       ;; If there's no events to reapply, just mark as synced, otherwise update the state to remove the
+       ;; rejected event.
+       :fx [[:dispatch-n (into [[:remote/apply-new-server-event]]
                                (if (empty? memory-log)
                                  [[:db/sync]]
-                                 (map (fn [e] [:resolve-transact-forward (second e) true])
-                                      (-> db' :remote/event-sync :stages :memory))))]]})))
+                                 [[:remote/update-optimistic-state]]))]]})))
 
 
 (rf/reg-event-fx
@@ -159,13 +205,15 @@
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
     (log/debug ":remote/apply-forwarded-event event:" (pr-str event))
     (let [db'          (-> db
-                           (update :remote/event-sync #(event-sync/add % :server id event))
-                           (update :remote/tx-data dissoc (utils/uuid->string id)))
+                           ;; Add this event to the server stage.
+                           ;; If it was in the in-memory stage, it will be promoted.
+                           (update :remote/event-sync #(event-sync/add % :server (utils/uuid->string id) event))
+                           ;; Remove this event from the saved tx data for rollbacks.
+                           (update :remote/rollback-tx-data dissoc (utils/uuid->string id)))
           new-event?   (new-event? (-> db' :remote/event-sync :last-op))
           memory-log   (event-sync/stage-log (:remote/event-sync db') :memory)
           page-removes (graph-ops/contains-op? (:event/op event) :page/remove)]
       (log/debug ":remote/apply-forwarded-event new event?:" (pr-str new-event?))
-      (log/debug ":remote/apply-forwarded-event memory-log count" (count memory-log))
       {:db db'
        :fx [[:dispatch-n (cond-> []
                            ;; Mark as synced if there's no events left in memory.
@@ -175,13 +223,8 @@
                                                                          first
                                                                          :op/args
                                                                          :page/title)]])
-                           ;; If there's a new event, apply it over the last dsdb snapshot from
-                           ;; the server, then use that as the new snapshot, then reapply
-                           ;; all events in the memory stage.
-                           new-event?          (into [[:remote/rollback-dsdb]
-                                                      [:resolve-transact-forward event true true]])
-                           new-event?          (into (map (fn [e] [:resolve-transact-forward (second e) true])
-                                                          (-> db' :remote/event-sync :stages :memory)))
+                           ;; If there's a new event, apply it.
+                           new-event?          (into [[:remote/update-optimistic-state event]])
                            ;; Remove the server event after everything is done.
                            true                (into [[:remote/clear-server-event event]]))]]})))
 
@@ -190,6 +233,6 @@
   :remote/forward-event
   (fn [{db :db} [_ {:event/keys [id] :as event}]]
     (log/debug ":remote/forward-event event:" (pr-str event))
-    {:db (update db :remote/event-sync #(event-sync/add % :memory id event))
+    {:db (update db :remote/event-sync #(event-sync/add % :memory (utils/uuid->string id) event))
      :fx [[:dispatch-n [[:remote/send-event! event]
                         [:db/not-synced]]]]}))
