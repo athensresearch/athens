@@ -52,6 +52,10 @@ services:
     volumes:
       - ./athens-data/fluree:/var/lib/fluree
     healthcheck:
+      # TODO: this health check won't work after fluree/ledger:1.0.0-beta17 because
+      # the fluree images no longer contain curl because they use smaller docker base images.
+      # We need to find another way of doing it to update. Once we find it, we can also
+      # update our container to a smaller JDK version.
       test: curl -f localhost:8090/fdb/health
       interval: 15s
       timeout: 30s
