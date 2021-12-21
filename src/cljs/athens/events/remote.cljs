@@ -117,9 +117,9 @@
 
       ;; Rollback
       (if (= count-in-memory-events 0)
-        (log/debug ":remote/apply-new-server-event rollback skipped, nothing to rollback")
+        (log/debug ":remote/update-optimistic-state rollback skipped, nothing to rollback")
         (do
-          (log/debug ":remote/apply-new-server-event rollback" count-in-memory-events "events")
+          (log/debug ":remote/update-optimistic-state rollback" count-in-memory-events "events")
           ;; Undo events in the reverse order (e.g. first undo reverse last event).
           (doseq [[id event] (reverse in-memory-events)]
             (let [id          (utils/uuid->string id)
@@ -129,26 +129,26 @@
                 (do
                   ;; It's very bad if this happens. It means we're not rolling back one of the events.
                   ;; It shouldn't ever happen, but we should keep an eye out for it in the beta console logs.
-                  (log/warn ":remote/apply-new-server-event no tx-data found for" id)
-                  (log/warn ":remote/apply-new-server-event in-memory-events ids" (keys in-memory-events))
-                  (log/warn ":remote/apply-new-server-event rollback-tx-data ids" (keys rollback-tx-data)))
+                  (log/warn ":remote/update-optimistic-state no tx-data found for" id)
+                  (log/warn ":remote/update-optimistic-state in-memory-events ids" (keys in-memory-events))
+                  (log/warn ":remote/update-optimistic-state rollback-tx-data ids" (keys rollback-tx-data)))
                 (do
-                  (log/debug ":remote/apply-new-server-event rollback event id" (pr-str id))
-                  (log/debug ":remote/apply-new-server-event rollback event:")
+                  (log/debug ":remote/update-optimistic-state rollback event id" (pr-str id))
+                  (log/debug ":remote/update-optimistic-state rollback event:")
                   (log/debug (with-out-str (pp/pprint event)))
-                  (log/debug ":remote/apply-new-server-event rollback original tx:")
+                  (log/debug ":remote/update-optimistic-state rollback original tx:")
                   (log/debug (with-out-str (pp/pprint tx)))
-                  (log/debug ":remote/apply-new-server-event rollback rollback tx:")
+                  (log/debug ":remote/update-optimistic-state rollback rollback tx:")
                   (log/debug (with-out-str (pp/pprint rollback-tx)))
                   (d/transact! db/dsdb rollback-tx)))))))
 
       ;; Apply the new event
-      (log/debug ":remote/apply-new-server-event apply new event id" (pr-str (:event/id new-server-event)))
+      (log/debug ":remote/update-optimistic-state apply new event id" (pr-str (:event/id new-server-event)))
       (atomic-resolver/resolve-transact! db/dsdb new-server-event)
 
       ;; Reapply the optimistic events.
       (doseq [[id event] in-memory-events]
-        (log/debug ":remote/apply-new-server-event reapply optimistic event id" (pr-str id))
+        (log/debug ":remote/update-optimistic-state reapply optimistic event id" (pr-str id))
         (swap! reapplied-tx-data assoc
                (utils/uuid->string id)
                (atomic-resolver/resolve-transact! db/dsdb event)))
@@ -194,7 +194,7 @@
       {:db db'
        ;; If there's no events to reapply, just mark as synced, otherwise update the state to remove the
        ;; rejected event.
-       :fx [[:dispatch-n (into [[:remote/apply-new-server-event]]
+       :fx [[:dispatch-n (into [[:remote/update-optimistic-state]]
                                (if (empty? memory-log)
                                  [[:db/sync]]
                                  [[:remote/update-optimistic-state]]))]]})))
