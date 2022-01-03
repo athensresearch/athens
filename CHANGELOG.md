@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.6](https://github.com/athensresearch/athens/compare/v2.0.0-beta.5...v2.0.0-beta.6) (2022-01-03)
+
+
+### Features
+
+* render page link and block ref aliases. ([4dca7db](https://github.com/athensresearch/athens/commit/4dca7db460a698d374320d5f5e18a1cc35ff0ed5))
+* resolve-transact! can also transact without middleware ([963a9bd](https://github.com/athensresearch/athens/commit/963a9bd8d0b915e5fc10d234be49debe1ebf9202))
+* resolve-transact! returns the transacted datoms ([0f7fcd1](https://github.com/athensresearch/athens/commit/0f7fcd18fcf429389d49c003b8fe226f40160caf))
+* titled page links & block refs. ([b01158c](https://github.com/athensresearch/athens/commit/b01158c0d90c14a056654d28f4b7491431a139f3))
+* use undo instead of reset for rollback ([686f82c](https://github.com/athensresearch/athens/commit/686f82cad09a6409879f94143f405f0e4deb4b58))
+
+
+### Bug Fixes
+
+* reverse the buttons on the closing warning ([87bb442](https://github.com/athensresearch/athens/commit/87bb442342a379ff7a93766330a09f1311dcd4fc))
+* youtube embeds. ([a224795](https://github.com/athensresearch/athens/commit/a224795ae4544f2bbdc77b1fecd4a6b57fef24fd))
+
+
+### Work in Progress
+
+* debug on ci ([22b07e7](https://github.com/athensresearch/athens/commit/22b07e7b9e274244bdb29d973c2f39cf4fff65b0))
+
+
+### Refactors
+
+* add note about renaming event-sync ([db0bf63](https://github.com/athensresearch/athens/commit/db0bf63ac4c619b51a0b5f3f64696112ecca87f7))
+
+
+* add client e2e tests ([9c1397f](https://github.com/athensresearch/athens/commit/9c1397f7caa3ffb7008ddcc8a8c27fd165e02cb0))
+* update datascript ([4742a57](https://github.com/athensresearch/athens/commit/4742a57d4bfcaaf800c7180f3f35873daa54b04f))
+* workaround playwright electron close on CI ([eed40ee](https://github.com/athensresearch/athens/commit/eed40ee014c3ad86d358215ca7d213a44152c636))
+
 ## [2.0.0-beta.5](https://github.com/athensresearch/athens/compare/v2.0.0-beta.4...v2.0.0-beta.5) (2021-12-16)
 
 
