@@ -8,6 +8,7 @@
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common-events.schema          :as schema]
     [athens.common.logging                :as log]
     [athens.common.utils                  :as common.utils]
     [athens.dates                         :as dates]
@@ -23,6 +24,8 @@
     [day8.re-frame.async-flow-fx]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [goog.dom :refer [getElement]]
+    [malli.core                           :as m]
+    [malli.error                          :as me]
     [re-frame.core :as rf :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
@@ -602,24 +605,27 @@
                      [:dispatch [:save]]]})))))
 
 
-;; Resolves events when the event-fx is resolved, instead of taking a resolution.
-;; This is useful for when you want to apply events one after the other, using
-;; the resulting db to resolve to next one.
-;; For remote dbs, stores the tx-data for optimistic rollbacks and forwards the event.
-;; See :remote/update-optimistic-state for how non-optimistic additions are handled.
-;; Anything that uses atomic-resolver/resolve-transact! must duplicate the code
-;; to ensure db/dsdb is synchronized and cannot just reuse the existing :resolve* events.
 (reg-event-fx
   :resolve-transact-forward
-  (fn [{:keys [db]} [_ {:event/keys [id] :as event}]]
-    (let [remote?  (db-picker/remote-db? db)
-          _        (log/debug ":resolve-transact-forward event:" (pr-str event) "remote?" (pr-str remote?))
-          tx-data  (atomic-resolver/resolve-transact! db/dsdb event)]
-      {:db (if remote?
-             (update db :remote/rollback-tx-data assoc (common.utils/uuid->string id) tx-data)
-             db)
-       :fx [[:dispatch-n [[:electron-sync]
-                          (when remote? [:remote/forward-event event tx-data])]]]})))
+  (fn [{:keys [db]} [_ event]]
+    (let [remote? (db-picker/remote-db? db)
+          valid?  (schema/valid-event? event)]
+      (log/debug ":resolve-transact-forward event:" (pr-str event)
+                 "remote?" (pr-str remote?)
+                 "valid?" (pr-str valid?))
+      (if valid?
+        (do
+          (when (not remote?)
+            (atomic-resolver/resolve-transact! db/dsdb event))
+          {:fx [[:dispatch (if remote?
+                             [:remote/forward-event event]
+                             [:electron-sync])]]})
+        (let [explanation (-> schema/event
+                              (m/explain event)
+                              (me/humanize))]
+          (log/warn "Not sending invalid event. Error:" (pr-str explanation)
+                    "\nInvalid event was:" (pr-str event))
+          {})))))
 
 
 (reg-event-fx
