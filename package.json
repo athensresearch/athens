@@ -38,6 +38,7 @@
     "client:e2e:only": "yarn client:e2e --grep",
     "client:e2e:only:debug": "yarn client:e2e --debug --grep",
     "client:e2e:only:verbose": "DEBUG=pw:api yarn client:e2e --grep",
+    "client:e2e:new": "cp test/e2e/new-test.template.ts test/e2e/new-test.spec.ts && yarn client:e2e:only:debug new-test-template",
     "//server scripts": "",
     "server": "clojure -M:athens",
     "server:fluree": "docker-compose up --detach fluree",
