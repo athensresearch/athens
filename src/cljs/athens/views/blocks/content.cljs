@@ -333,7 +333,8 @@
 
 (defn textarea-change
   [e _uid state]
-  (swap! state assoc :string/local (.. e -target -value)))
+  (swap! state assoc :string/local (.. e -target -value))
+  ((:string/idle-fn @state)))
 
 
 (defn textarea-click
@@ -410,7 +411,7 @@
                                :on-change      (fn [e] (textarea-change e uid state))
                                :on-paste       (fn [e] (textarea-paste e uid state))
                                :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state))
-                               :on-blur        (fn [_] (db/transact-state-for-uid (or original-uid uid) state))
+                               :on-blur        (:string/save-fn @state)
                                :on-click       (fn [e] (textarea-click e uid state))
                                :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
                                :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}])

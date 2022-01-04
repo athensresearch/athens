@@ -19,6 +19,7 @@
     [athens.views.blocks.context-menu        :as context-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
     [com.rpl.specter                         :as s]
+    [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
     [reagent.core                            :as r]
     [stylefy.core                            :as stylefy]))
@@ -258,6 +259,7 @@
    [block-el block linked-ref-data {}])
   ([block linked-ref-data _opts]
    (let [{:keys [linked-ref initial-open linked-ref-uid parent-uids]} linked-ref-data
+         {:block/keys [uid original-uid]} block
          state (r/atom {:string/local      nil
                         :string/previous   nil
                         ;; one of #{:page :block :slash :hashtag :template}
@@ -274,7 +276,12 @@
                         :caret-position    nil
                         :show-editable-dom false
                         :linked-ref/open   (or (false? linked-ref) initial-open)
-                        :block/uid         (:block/uid block)})]
+                        :block/uid         uid})
+         save-fn #(db/transact-state-for-uid (or original-uid uid) state)
+         idle-fn (gfns/debounce save-fn 2000)]
+     (swap! state assoc
+            :string/save-fn save-fn
+            :string/idle-fn idle-fn)
 
      (fn [block linked-ref-data opts]
        (let [{:block/keys [uid
