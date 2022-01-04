@@ -52,7 +52,8 @@ FILENAME="${FOLDER}${TIMESTAMP}.edn"
 # If java not installed then install it
 
 if [ -z "$(which java)" ]; then
-  apt -y install openjdk-11-jre-headless
+  echo "Java is not installed on your operating system, please install it and try again"
+  exit 1
 fi
 
 # command to save ledger
