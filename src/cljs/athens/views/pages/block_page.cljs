@@ -65,7 +65,6 @@
   [state block-uid]
   (dispatch [:block/save {:uid       block-uid
                           :string    (:string/local state)
-                          :callback  #()
                           :add-time? true}]))
 
 
