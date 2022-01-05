@@ -820,7 +820,7 @@
 
 (reg-event-fx
   :block/save
-  (fn [{:keys [db]} [_ {:keys [uid string callback] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid string] :as args}]]
     (log/debug ":block/save args" (pr-str args))
     (let [local?      (not (db-picker/remote-db? db))
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
@@ -831,8 +831,7 @@
       (log/debug ":block/save local?" local?
                  ", do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [[:dispatch [:resolve-transact-forward event]]
-              [:invoke-callback callback]]}))))
+        {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
 
 
 (reg-event-fx
