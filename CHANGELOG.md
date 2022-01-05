@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.8](https://github.com/athensresearch/athens/compare/v2.0.0-beta.7...v2.0.0-beta.8) (2022-01-05)
+
+
+### Enhancements
+
+* add help manual for anchor text links ([1b1eb85](https://github.com/athensresearch/athens/commit/1b1eb85bb086d19a98f1ceb18906cba929e82c0b))
+
+
+* don't save db to disk on e2e ([6a8a515](https://github.com/athensresearch/athens/commit/6a8a515e6d4bc8ddd07de84b10103b374c197387))
+* update nvmrc to use 16 (active LTS) ([ea93367](https://github.com/athensresearch/athens/commit/ea93367bbeb02f7b7ccda5a4a8b9027342313113))
+
 ## [2.0.0-beta.7](https://github.com/athensresearch/athens/compare/v2.0.0-beta.6...v2.0.0-beta.7) (2022-01-05)
 
 
