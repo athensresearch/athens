@@ -72,15 +72,15 @@
 ;; $space -> small utility to render a space symbol.
 ;; ==========================
 (def syntax-groups
-  [{:name  "Links"
-    :items [{:description "Link (or Create New Page)"
+  [{:name  "Bidirectional Link, Block References, and Tags"
+    :items [{:description "Bidirectional Links"
              :example     [example "[[$text]]" "Athens"]}
-            {:description "Links to Block"
+            {:description "Labeled Bidirectional Link"
+             :example     [example "[$text][[$text]]" "AS" "Alice Smith"]}
+            {:description "Block Reference"
              :example     [example "(($text))" "Block ID"]}
-            {:description "Labeled Link"
-             :example     [example "[$text]($text)" "Athens" "http://athensresearch.org/"]}
-            {:description "Link"
-             :example     [example "<$text>" "http://athensresearch.org/"]}
+            {:description "Labeled Block Reference"
+             :example     [example "[$text](($text))" "Block text" "Block ID"]}
             {:description "Tag"
              :example     [example "#$text" "Athens"]}
             {:description "Tagged Link"
@@ -93,12 +93,16 @@
             {:description "Youtube  Video"
              :example     [example "{{[[youtube]]:$text]]}}" "https://youtube.com/..."]}
             {:description "Web Page"
-             :example     [example "{{iframe:<iframe src=\"$text\"></iframe>}}" "https://github.com/athensresearch/"]}]}
-   {:name  "Formatting"
-    :items [{:description "LaTeX"
-             :example     [example "$$$text$$" "Your equation or mathematical symbol"]}
+             :example     [example "{{iframe:<iframe src=\"$text\"></iframe>}}" "https://github.com/athensresearch/"]}
             {:description "Checkbox"
-             :example     [example "{{[[TODO]]}}$space$text" "Label"]}
+             :example     [example "{{[[TODO]]}}$space$text" "Label"]}]}
+   {:name  "Markdown Formatting"
+    :items [{:description "Labeled Link"
+             :example     [example "[$text]($text)" "Athens" "http://athensresearch.org/"]}
+            {:description "Link"
+             :example     [example "<$text>" "http://athensresearch.org/"]}
+            {:description "LaTeX"
+             :example     [example "$$$text$$" "Your equation or mathematical symbol"]}
             {:description "Inline code"
              :example     [example "`$text`" "Inline Code"]}
             {:description "Highlight"
