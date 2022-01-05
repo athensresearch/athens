@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.7](https://github.com/athensresearch/athens/compare/v2.0.0-beta.6...v2.0.0-beta.7) (2022-01-05)
+
+
+### Features
+
+* add new e2e test script ([741df9b](https://github.com/athensresearch/athens/commit/741df9b89005e310da1194ad52c462465680639b))
+
+
+### Bug Fixes
+
+* don't flicker old state on save ([14bf8f7](https://github.com/athensresearch/athens/commit/14bf8f7d77e5e887ffb9188624af23e6dcb035fe))
+* idling for 2s on a block with changes will save it ([21c6a8b](https://github.com/athensresearch/athens/commit/21c6a8b7a337738e76cb8629e24efe4c4ef0ca07))
+
+
+### Refactors
+
+* rename basic spec file ([a86c4b5](https://github.com/athensresearch/athens/commit/a86c4b56c6955555949911dd28fd9e716a6207fc))
+
 ## [2.0.0-beta.6](https://github.com/athensresearch/athens/compare/v2.0.0-beta.5...v2.0.0-beta.6) (2022-01-03)
 
 
