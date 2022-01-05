@@ -653,8 +653,6 @@
   "uid -> Current block
    state -> Look at state atom in block-el"
   [uid state]
-  (let [{:string/keys [local]} @state
-        callback               #(swap! state assoc :string/previous local)]
+  (let [{:string/keys [local]} @state]
     (dispatch [:block/save {:uid      uid
-                            :string   local
-                            :callback callback}])))
+                            :string   local}])))

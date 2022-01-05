@@ -245,9 +245,9 @@
                                          ^{:key uid}
                                          [:article (use-style sidebar-item-style)
                                           [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
-                                           [:> Button {:style    sidebar-item-toggle-style
-                                                       :on-click #(dispatch [:right-sidebar/toggle-item uid])
-                                                       :class    (when open "is-open")}
+                                           [:> Button (use-style sidebar-item-toggle-style
+                                                                 {:on-click #(dispatch [:right-sidebar/toggle-item uid])
+                                                                  :class    (when open "is-open")})
                                             [:> ChevronRight]]
                                            [:h2
                                             (cond
