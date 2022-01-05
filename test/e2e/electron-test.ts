@@ -3,10 +3,10 @@ import type { Fixtures } from "@playwright/test";
 import { test as base } from "@playwright/test";
 import { BrowserContext, ElectronApplication, Page, _electron } from "playwright";
 
-// athens.listeners/prevent-save checks for this variable in local storage
-// and will not present the confirmation window that stops closing athens.
-const disableSaveCheck = () => window.localStorage.setItem("E2E_IGNORE_SAVE_CHECK", "true");
-const enableSaveCheck = () => window.localStorage.removeItem("E2E_IGNORE_SAVE_CHECK");
+// athens.listeners/prevent-save and athens.electron.fs/write-db check for this
+// variable in local storage and will not perform saves or warn about unsaved changes.
+const disableSave = () => window.localStorage.setItem("E2E_IGNORE_SAVE", "true");
+const enableSave = () => window.localStorage.removeItem("E2E_IGNORE_SAVE");
 
 type ElectronTestFixtures = {
   electronApp: ElectronApplication;
@@ -38,10 +38,10 @@ export const electronFixtures: Fixtures<ElectronTestFixtures> = {
   page: async ({ electronApp }, run) => {
     const page = await electronApp.firstWindow();
 
-    // Always disable the save check on exit, because it needs special handling and
+    // Always disable save and save check on exit, because it needs special handling and
     // would delay every test by 15s.
-    // If you want to test it, call `page.evaluate(enableSaveCheck)` on your test.
-    page.evaluate(disableSaveCheck);
+    // If you want to test it, call `page.evaluate(enableSave)` on your test.
+    page.evaluate(disableSave);
 
     await run(page);
   },
