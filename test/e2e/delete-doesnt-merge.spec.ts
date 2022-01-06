@@ -1,32 +1,18 @@
 import { expect, Page } from '@playwright/test';
 import { test } from './electron-test';
+import { createLocalAthensDB, indentLastBlock, saveLastBlock, saveLastBlockAndEnter, unindentLastBlock } from "./utils";
 
-const saveLastBlock = async (page:Page, text:string) => {
-    await page.click('.textarea >> nth=-1');
-    await page.fill('.textarea >> nth=-1', text);
-    return page.press('.textarea >> nth=-1', 'ArrowUp');
-},
-saveLastBlockAndEnter = async (page:Page, text:string) => {
-    await page.click('.textarea >> nth=-1');
-    await page.fill('.textarea >> nth=-1', text);
-    return page.press('.textarea  >> nth=-1', 'Enter');
-},
-indentLastBlock = async (page:Page) => {
-    await page.click('.textarea >> nth=-1');
-    return page.press('.textarea  >> nth=-1', 'Tab');
-},
-unindentLastBlock = async (page:Page) => {
-    await page.click('.textarea >> nth=-1');
-    return page.press('.textarea  >> nth=-1', 'Shift+Tab');
-},
-testSetup = async (page:Page) => {
+const testSetup = async (page:Page) => {
+    // NOTE this ain't working, and that's ok
+    // await createLocalAthensDB(page, "amazing");
+
     // await page.pause();
     // Navigate to daily pages, Click button:nth-child(6)
     await Promise.all ([
         page.click('button:nth-child(6)'),
         page.waitForNavigation()
     ]);
-    
+
     // Click textarea
     await page.click('textarea');
 
@@ -53,7 +39,6 @@ testSetup = async (page:Page) => {
     await page.press('text=test block 2', 'ArrowUp');
 },
 testCleanup = async (page:Page) => {
-    
     await page.click(".node-page > header > button");
     // Click button:has-text("Delete Page")
     await page.click('button:has-text("Delete Page")');
@@ -61,6 +46,7 @@ testCleanup = async (page:Page) => {
     await page.click('button:nth-child(6)');
 
 };
+
 test('new-test-template', async ({ page }) => {
     await testSetup(page);
 
