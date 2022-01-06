@@ -1,4 +1,4 @@
-# 19. Rollback Optimizations
+# 20. Rollback Optimizations
 
 Date: 2021-12-02
 
@@ -38,7 +38,7 @@ We then again store the transaction report from the reapplication of optimistic 
 
 ## Insights from MVP
 
-We started getting frequent freezes for seconds or even minutes.
+We started getting frequent freezes for seconds or even minuteso#
 Profiling shows `posh` seemed to be causing some of the freezes.
 We settled on following the second approach for the MVP and are observing the results.
 If indeed the cause of freezing is due to resetting the database, this approach should completely eliminate it.
