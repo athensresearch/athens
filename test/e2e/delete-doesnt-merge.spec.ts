@@ -47,7 +47,7 @@ testCleanup = async (page:Page) => {
 
 };
 
-test('new-test-template', async ({ page }) => {
+test('delete-merge-looses-children', async ({ page }) => {
     await testSetup(page);
 
     await page.click('text=test block 1');
