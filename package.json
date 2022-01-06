@@ -34,7 +34,7 @@
     "dist": "electron-builder -p always",
     "storybook": "start-storybook -p 6006",
     "storybook:static": "build-storybook --output-dir vercel-static/storybook --quiet",
-    "client:e2e": "xvfb-maybe playwright test",
+    "client:e2e": "DEBUG=pw:api xvfb-maybe playwright test",
     "client:e2e:only": "yarn client:e2e --grep",
     "client:e2e:only:debug": "yarn client:e2e --debug --grep",
     "client:e2e:only:verbose": "DEBUG=pw:api yarn client:e2e --grep",
