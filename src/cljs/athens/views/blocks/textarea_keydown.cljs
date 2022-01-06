@@ -424,7 +424,7 @@
       ;;       caret position will be last position. Otherwise, we would have to calculate the no. of characters in the
       ;;       block we are moving to, this calculation would be done on client side and, I am not sure if the calculation
       ;;       would be correct because between calculation on client side and block data on server can change.
-      
+
       (or (and left? start?)
           (and up? end?))         (do (.. e preventDefault)
                                       (dispatch [:up uid 99999999999]))
@@ -434,7 +434,7 @@
 
       ;; going RIGHT at last index should always go to index 0 of block below
       (and right? end?)           (do (.. e preventDefault)
-                                    (dispatch [:down uid 0]))
+                                      (dispatch [:down uid 0]))
 
       ;; index 0 is special - always go to index 0 when going up or down
       ;; when caret is anywhere between start and end preserve the position and offset by char
@@ -444,8 +444,6 @@
       (or (and down? bottom-row?)
           (and down? header))     (do (.. e preventDefault)
                                       (dispatch [:down uid char-offset])))))
-
-
 
 
 ;; Tab
