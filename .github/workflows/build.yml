@@ -17,7 +17,6 @@ env:
 jobs:
    lint:
      runs-on: ubuntu-latest
-     if: false
      steps:
        - uses: actions/checkout@v2
 
@@ -33,7 +32,6 @@ jobs:
 
    style:
      runs-on: ubuntu-latest
-     if: false
      steps:
        - uses: actions/checkout@v2
        - uses: ./.github/custom-actions/clojure-env
@@ -44,7 +42,6 @@ jobs:
 
    carve:
      runs-on: ubuntu-latest
-     if: false
      steps:
        - uses: actions/checkout@v2
        - uses: ./.github/custom-actions/clojure-env
@@ -55,7 +52,6 @@ jobs:
 
    test:
      runs-on: ubuntu-latest
-     if: false
      steps:
        - uses: actions/checkout@v2
        - uses: ./.github/custom-actions/clojure-env
