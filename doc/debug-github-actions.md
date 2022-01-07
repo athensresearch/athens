@@ -26,6 +26,8 @@ apt-get install -y nodejs
 npm install -g yarn
 ```
 
+Change the code in `test/e2e/electron-test.ts` that says `if (process.env.CI)` to `if (true)` to force the CI only logic. 
+
 Now you should be able to run project commands:
 ```
 cd /sandbox
