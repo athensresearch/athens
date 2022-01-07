@@ -33,6 +33,8 @@ yarn
 yarn client:e2e
 ```
 
+The `yarn client:e2e:only:verbose <test-name>` script is especially useful to see the verbose logs and figure out where e2e tests are stuck.
+
 Be aware that filesystem operations over docker mapped volumes are much slower, and `yarn` in particular will be very slow.
 
 When you're done you can remove this container:
