@@ -17,7 +17,7 @@ const testSetup = async (page:Page) => {
     await page.click('textarea');
 
     // Invoke Athena, Press k with modifiers
-    await page.press('textarea', 'Meta+k');
+    await page.click('button:has-text("Find or create a page")');
 
     // Fill [placeholder="Find or Create Page"]
     await page.fill('[placeholder="Find or Create Page"]', 'test delete doesn\'t merge');
