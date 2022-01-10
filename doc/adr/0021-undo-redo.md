@@ -10,40 +10,61 @@ MVP implementation
 
 ## Context
 
-Athens RTC does not support undo/redo functionality. This was deliberately cut to reduce scope since the semantics of undo/redo are non-trivial in multiplayer applications.
+Athens RTC does not support undo/redo functionality.
+This was deliberately cut to reduce scope since the semantics of undo/redo are non-trivial in multiplayer applications.
 
-In our internal usage we've seen a number of situations where not having undo has resulted in data loss. Some of these were via deliberate deletion of content, others through accidental deletion via bugs. In both classes of problems the data would have been recovered easily with undo.
+In our internal usage we've seen a number of situations where not having undo has resulted in data loss.
+Some of these were via deliberate deletion of content, others through accidental deletion via bugs.
+In both classes of problems the data would have been recovered easily with undo.
 
-Time travel functionality, where past states of a graph can be seen and used to recover data, sounds like a promising approach to undo/redo that could leverage the [Athens Protocol model of time](doc/adr/0018-athens-protocol-principles.md). While related, it does not quite fit: time travel is about visualizing past states, but undo is about reverting operations over a past state.
+Time travel functionality, where past states of a graph can be seen and used to recover data, sounds like a promising approach to undo/redo that could leverage the [Athens Protocol model of time](doc/adr/0018-athens-protocol-principles.md). 
+While related, it does not quite fit: time travel is about visualizing past states, but undo is about reverting operations over a past state.
 
-To further complicate matters, the multiplayer nature of Athens RTC means that undo must take into account interleaved operations from other users. This is significantly different than in a singleplayer where there is a single canonical "timeline" that does not change aside from the interactions of the current user.
+To further complicate matters, the multiplayer nature of Athens RTC means that undo must take into account interleaved operations from other users.
+This is significantly different than in a singleplayer where there is a single canonical "timeline" that does not change aside from the interactions of the current user.
 
-We can find accounts of undo implementations in modern multiplayer product blogs like [Figma's](https://www.figma.com/blog/how-figmas-multiplayer-technology-works/) and [Hex's](https://hex.tech/blog/a-pragmatic-approach-to-live-collaboration). Both use a key-value property model as the lowest level of operation, and perform undo by reversing those operations.
+We can find accounts of undo implementations in modern multiplayer product blogs like [Figma's](https://www.figma.com/blog/how-figmas-multiplayer-technology-works/) and [Hex's](https://hex.tech/blog/a-pragmatic-approach-to-live-collaboration). Both
+use a key-value property model as the lowest level of operation, and perform undo by reversing those operations.
 
-Figma's undo implementation also lists one very important guiding principle: performing an undo followed by a redo should leave the application in the same state. This is crucial when undoing in multiplayer with multiple editors. The important implication of this principle is that the redo operation should not simply be the original undone operation, because more might have changed meanwhile, but rather the reverse of the undo operation itself. 
+Figma's undo implementation also lists one very important guiding principle: performing an undo followed by a redo should leave the application in the same state. 
+This is crucial when undoing in multiplayer with multiple editors. 
+The important implication of this principle is that the redo operation should not simply be the original undone operation, because more might have changed meanwhile, but rather the reverse of the undo operation itself. 
 
 Athens's model of time gives us a starting point for a model of undo: time only moves forward, and thus undoing an operation yield an operation that reverses the effects of the original one, to be applied in a point further in time.
 
-[Operations in Athens](doc/adr/0010-atomic-composite-grapth-operations.md) follow the principle of determinism, where the operation itself carries enough information for all participants to perform the same changes with no ambiguity over the same state. This property enables us to derive an undo operation from a state together with any operation.
+[Operations in Athens](doc/adr/0010-atomic-composite-grapth-operations.md) follow the principle of determinism, where the operation itself carries enough information for all participants to perform the same changes with no ambiguity over the same state.
+This property enables us to derive an undo operation from a state together with any operation.
 
-We can reduce the participants to three types: the undo issuer, the server, and other users. Although in theory any of these could construct the concrete undo operation, it is onerous for the server and other users to keep all possible past states that might be required for undos from anyone, for any point in time.
+We can reduce the participants to three types: the undo issuer, the server, and other users.
+Although in theory any of these could construct the concrete undo operation, it is onerous for the server and other users to keep all possible past states that might be required for undos from anyone, for any point in time.
 
-The prime candidate to keep relevant states is the undo issuer themselves. This participant can keep a list of states needed for their own set of undoable operations. However, this operation is still optimistic in nature, and subject to conflicts. It can be thought of as saying "this is how to undo the operation given what I know now".
+The prime candidate to keep relevant states is the undo issuer themselves. 
+This participant can keep a list of states needed for their own set of undoable operations.
+However, this operation is still optimistic in nature, and subject to conflicts.
+It can be thought of as saying "this is how to undo the operation given what I know now".
 
-We can also transfer the burden of resolution to the server, achieving a "true" undo since the server itself is the source of truth for the RTC system. The server would still need a way to keep or recall past states in order to resolve the undo operation. This approach would require the client issuing the undo to somehow direct the server to undo the operation, and wait for the result, losing the optimistic nature of the change.
+We can also transfer the burden of resolution to the server, achieving a "true" undo since the server itself is the source of truth for the RTC system.
+The server would still need a way to keep or recall past states in order to resolve the undo operation.
+This approach would require the client issuing the undo to somehow direct the server to undo the operation, and wait for the result, losing the optimistic nature of the change.
 
 
 ## Approach
 
-The primary motivation for undo/redo right now is the prevention of data loss in the moment, and keeping that goal in mind we decided to pursue the first candidate (issuer resolves undo operation). Higher fidelity reconstruction of past application state, either for inspection or data recovery, is left to future time travel functionality.
+The primary motivation for undo/redo right now is the prevention of data loss in the moment, and keeping that goal in mind we decided to pursue the first candidate: issuer resolves undo operation.
+Higher fidelity reconstruction of past application state, either for inspection or data recovery, is left to future time travel functionality.
 
-For each atomic operation over a db state, we can build a corresponding atomic or composite that undoes it in the context of that db state. For composite operations, we can compute the undo atomic/composite for each atomic operation in it, maintaining order so that the operations make sense. 
+For each atomic operation over a db state, we can build a corresponding atomic or composite that undoes it in the context of that db state.
+For composite operations, we can compute the undo atomic/composite for each atomic operation in it, maintaining order so that the operations make sense. 
 
-Given that any arbitrary composite operation can be resolved to a composite that undoes it, we can repeat the process to arrive at a redo operation that restores the state prior to effecting the undo. There's two subtle details to keep in mind in this description: the context for redo, and the restored state.
+Given that any arbitrary composite operation can be resolved to a composite that undoes it, we can repeat the process to arrive at a redo operation that restores the state prior to effecting the undo. 
+There's two subtle details to keep in mind in this description: the context for redo, and the restored state.
 
-In the same way that the original undo was resolved in the context of the db state prior to the operation to be undone, so must the redo be resolved in the context of the db state prior to the operation to be redone. These two contexts are not the same, as performing an undo "moved" time forward, and operations from other users might have "moved" time forward as well.
+In the same way that the original undo was resolved in the context of the db state prior to the operation to be undone, so must the redo be resolved in the context of the db state prior to the operation to be redone.
+These two contexts are not the same, as performing an undo "moved" time forward, and operations from other users might have "moved" time forward as well.
 
-The state restored by redo is then not the result of applying the original operation. It is the state before the undo operation was applied. This is consistent with Figma's principle that undo-redo should result in the same state.
+The state restored by redo is then not the result of applying the original operation. 
+It is the state before the undo operation was applied.
+This is consistent with Figma's principle that undo-redo should result in the same state.
 
 This is the list of undo operations for each atomic:
   - undo operation map
@@ -86,13 +107,21 @@ This is the list of undo operations for each atomic:
           - :shortcut/move
               - undo is shortcut/move to previous position
 
-Each client will hold the last X operations they performed, and the database state they were performed over. The undo operation is computed only when undo is triggered, not ahead of time. The saved db state should be updated each time the operation order changes and the optimistic state suffers a rollback.
+Each client will hold the last X operations they performed, and the database state they were performed over.
+The undo operation is computed only when undo is triggered, not ahead of time.
+The saved db state should be updated each time the operation order changes and the optimistic state suffers a rollback.
 
-Since undo operations can trivially generate much larger operations than the original, we must pay special attention to payload limits in the client and server. We know some of these limits right now but do not enforce them, so we need to start enforcing them for undo/redo to work reliably.
+Since undo operations can trivially generate much larger operations than the original, we must pay special attention to payload limits in the client and server. 
+We know some of these limits right now but do not enforce them, so we need to start enforcing them for undo/redo to work reliably.
 
-Similarly to limits, undo also puts extra stress on the resolution error cases since it will trivially generate uncommon situations. We must make sure that invariants are enforced on resolution. Examples include: cannot rename to an existing page, cannot rename a page that does not exist, etc.
+Similarly to limits, undo also puts extra stress on the resolution error cases since it will trivially generate uncommon situations.
+We must make sure that invariants are enforced on resolution.
+Examples include: cannot rename to an existing page, cannot rename a page that does not exist, etc.
 
-A few of the undo operations rely on a view of the current data via IR (internal representation), which is then converted to a set of operations that create that structure. Undo again adds extra stress to this functionality via enhanced usage. We know it's possible to end up with unlinked refs from the order of block creation. We can address that issue by creating all blocks before adding their content.
+A few of the undo operations rely on a view of the current data via IR (internal representation), which is then converted to a set of operations that create that structure.
+Undo again adds extra stress to this functionality via enhanced usage.
+We know it's possible to end up with unlinked refs from the order of block creation.
+We can address that issue by creating all blocks before adding their content.
 
 
 ## Insights from MVP
