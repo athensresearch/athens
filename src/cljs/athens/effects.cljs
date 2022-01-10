@@ -102,7 +102,6 @@
                            (when el
                              (.focus el)
                              (when editing-index
-                               (println editing-index)
                                (setCursorPosition el editing-index)))))
                        100)))))
 
