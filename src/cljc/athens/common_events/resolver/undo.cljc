@@ -5,11 +5,11 @@
 
 
 (defmulti resolve-atomic-op-to-undo-op
-  #(:op/type %2))
+  #(:op/type %3))
 
 
 (defmethod resolve-atomic-op-to-undo-op :block/save
-  [db {:op/keys [args]}]
+  [db op-db {:op/keys [args]}]
   (let [{:block/keys [uid]}    args
-        {:block/keys [string]} (common-db/get-block db [:block/uid uid])]
+        {:block/keys [string]} (common-db/get-block op-db [:block/uid uid])]
     (graph-ops/build-block-save-op db uid string)))

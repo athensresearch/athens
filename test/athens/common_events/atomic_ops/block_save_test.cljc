@@ -124,11 +124,11 @@
                          op (graph-ops/build-block-save-op @@fixture/connection test-uid string)]
                      (atomic-resolver/resolve-transact! @fixture/connection op)
                      [db op]))
-        undo!    (fn [db op]
-                   (let [db' @@fixture/connection
-                         op' (undo/resolve-atomic-op-to-undo-op db op)]
-                     (atomic-resolver/resolve-transact! @fixture/connection op')
-                     [db' op']))]
+        undo!    (fn [op-db op]
+                   (let [db @@fixture/connection
+                         undo-op (undo/resolve-atomic-op-to-undo-op db op-db op)]
+                     (atomic-resolver/resolve-transact! @fixture/connection undo-op)
+                     [db undo-op]))]
 
     (t/testing "undo"
       (setup! "one")
