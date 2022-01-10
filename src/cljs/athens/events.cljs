@@ -328,7 +328,7 @@
 (reg-event-fx
   :editing/uid
   (fn [{:keys [db]} [_ uid index]]
-    (let [remote?      (db-picker/remote-db? db)]
+    (let [remote? (db-picker/remote-db? db)]
       {:db            (assoc db :editing/uid uid)
        :editing/focus [uid index]
        :dispatch-n    [(when (and uid remote?)
