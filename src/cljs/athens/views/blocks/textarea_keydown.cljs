@@ -371,7 +371,6 @@
         down?                            (= key-code KeyCodes.DOWN)
         left?                            (= key-code KeyCodes.LEFT)
         right?                           (= key-code KeyCodes.RIGHT)
-        header                           (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)
         [char-offset _]                  (get-end-points target)]
 
     (cond

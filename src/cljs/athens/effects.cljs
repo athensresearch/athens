@@ -101,10 +101,6 @@
                                                    (str "#" html-id)))]
                            (when el
                              (.focus el)
-                             ;; NOTE: Using 99999999999 is a hack, if the previous block has less character than mentioned then the default
-                             ;;       caret position will be last position. Otherwise, we would have to calculate the no. of characters in the
-                             ;;       block we are moving to, this calculation would be done on client side and, I am not sure if the calculation
-                             ;;       would be correct because between calculation on client side and block data on server can change.
                              (when editing-index
                                (println editing-index)
                                (setCursorPosition el editing-index)))))
