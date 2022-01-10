@@ -35,7 +35,7 @@ We can also transfer the burden of resolution to the server, achieving a "true" 
 
 ## Approach
 
-The primary motivation for undo/redo right now is the prevention of data loss in the moment, and keeping that goal in mind we decided to pursue the first candidate (issuer resolves undo operation). Higher fidelity reconstruction of paste application state, either for inspection or data recovery, is left to future time travel functionality.
+The primary motivation for undo/redo right now is the prevention of data loss in the moment, and keeping that goal in mind we decided to pursue the first candidate (issuer resolves undo operation). Higher fidelity reconstruction of past application state, either for inspection or data recovery, is left to future time travel functionality.
 
 For each atomic operation over a db state, we can build a corresponding atomic or composite that undoes it. For composite operations, we can compute the undo atomic/composite for each atomic operation in it, maintaining order so that the operations make sense. A redo operation is the undo operation for the effected undo.
 
@@ -82,7 +82,7 @@ This is the list of undo operations for each atomic:
 
 Each client will hold the last X operations they performed, and the database state they were performed over. The undo operation is computed only when undo is triggered, not ahead of time. The saved db state should be updated each time the operation order changes and the optimistic state suffers a rollback.
 
-Since undo operations can trivially generate much larger than the original, we must pay special attention to payload limits in the client and server. We know some of these limits right now but do not enforce them, so we need to start enforcing them for undo/redo to work reliably.
+Since undo operations can trivially generate much larger operations than the original, we must pay special attention to payload limits in the client and server. We know some of these limits right now but do not enforce them, so we need to start enforcing them for undo/redo to work reliably.
 
 Similarly to limits, undo also puts extra stress on the resolution error cases since it will trivially generate uncommon situations. We must make sure that invariants are enforced on resolution. Examples include: cannot rename to an existing page, cannot rename a page that does not exist, etc.
 
