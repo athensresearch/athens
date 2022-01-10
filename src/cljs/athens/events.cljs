@@ -328,9 +328,16 @@
 (reg-event-fx
   :editing/uid
   (fn [{:keys [db]} [_ uid index]]
-    (let [remote? (db-picker/remote-db? db)]
+    (let [remote?        (db-picker/remote-db? db)
+          editing-index  (if (keyword? index)
+                           ;; NOTE: Using 99999999999 is a hack, if the previous block has less character than mentioned then the default
+                           ;;       caret position will be last position. Otherwise, we would have to calculate the no. of characters in the
+                           ;;       block we are moving to, this calculation would be done on client side and, I am not sure if the calculation
+                           ;;       would be correct because between calculation on client side and block data on server can change.
+                           9999999999
+                           index)]
       {:db            (assoc db :editing/uid uid)
-       :editing/focus [uid index]
+       :editing/focus [uid editing-index]
        :dispatch-n    [(when (and uid remote?)
                          [:presence/send-update {:block-uid (util/embed-uid->original-uid uid)}])]})))
 

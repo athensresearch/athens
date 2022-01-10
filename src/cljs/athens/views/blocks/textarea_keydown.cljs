@@ -372,7 +372,7 @@
         left?                            (= key-code KeyCodes.LEFT)
         right?                           (= key-code KeyCodes.RIGHT)
         header                           (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)
-        [char-offset _]                        (get-end-points target)]
+        [char-offset _]                  (get-end-points target)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
@@ -420,17 +420,13 @@
       ;; going LEFT at **0th index** should always go to **last index** of block **above**
       ;; last index is special - always go to last index when going up or down
 
-      ;; NOTE: Using 99999999999 is a hack, if the previous block has less character than mentioned then the default
-      ;;       caret position will be last position. Otherwise, we would have to calculate the no. of characters in the
-      ;;       block we are moving to, this calculation would be done on client side and, I am not sure if the calculation
-      ;;       would be correct because between calculation on client side and block data on server can change.
 
       (or (and left? start?)
           (and up? end?))         (do (.. e preventDefault)
-                                      (dispatch [:up uid 99999999999]))
+                                      (dispatch [:up uid :end]))
 
       (and down? end?)            (do (.. e preventDefault)
-                                      (dispatch [:down uid 99999999999]))
+                                      (dispatch [:down uid :end]))
 
       ;; going RIGHT at last index should always go to index 0 of block below
       (and right? end?)           (do (.. e preventDefault)
@@ -438,11 +434,9 @@
 
       ;; index 0 is special - always go to index 0 when going up or down
       ;; when caret is anywhere between start and end preserve the position and offset by char
-      (or (and up? top-row?)
-          (and up? header))       (do (.. e preventDefault)
+      (and up? top-row?)          (do (.. e preventDefault)
                                       (dispatch [:up uid char-offset]))
-      (or (and down? bottom-row?)
-          (and down? header))     (do (.. e preventDefault)
+      (and down? bottom-row?)     (do (.. e preventDefault)
                                       (dispatch [:down uid char-offset])))))
 
 
