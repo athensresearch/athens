@@ -1,9 +1,12 @@
 (ns athens.common-events.atomic-ops.block-save-test
   (:require
     [athens.common-db                     :as common-db]
+    [athens.common-events                 :as common-events]
+    [athens.common-events.bfs             :as bfs]
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common-events.resolver.undo   :as undo]
     [clojure.test                         :as t]
     [datascript.core                      :as d]))
 
@@ -102,3 +105,57 @@
         (t/is (= new-str (common-db/v-by-ea @@fixture/connection
                                             child-1-eid :block/string)))))))
 
+
+(t/deftest undo
+  (let [test-uid "test-uid"
+        get-str  (fn []
+                   (->> [:block/uid test-uid]
+                        (common-db/get-internal-representation @@fixture/connection)
+                        :block/string))
+        setup!   (fn [string]
+                   (->> [{:page/title     "test-page"
+                          :block/children [{:block/uid    test-uid
+                                            :block/string string}]}]
+                        (bfs/build-paste-op @@fixture/connection)
+                        common-events/build-atomic-event
+                        (atomic-resolver/resolve-transact! @fixture/connection)))
+        save!    (fn [string]
+                   (let [db @@fixture/connection
+                         op (graph-ops/build-block-save-op @@fixture/connection test-uid string)]
+                     (atomic-resolver/resolve-transact! @fixture/connection op)
+                     [db op]))
+        undo!    (fn [db op]
+                   (let [db' @@fixture/connection
+                         op' (undo/resolve-atomic-op-to-undo-op db op)]
+                     (atomic-resolver/resolve-transact! @fixture/connection op')
+                     [db' op']))]
+
+    (t/testing "undo"
+      (setup! "one")
+      (t/is (= "one" (get-str)) "Setup initialized string at one")
+      (let [[db op] (save! "two")]
+        (t/is (= "two" (get-str)) "Changed string to two")
+        (undo! db op)
+        (t/is (= "one" (get-str)) "Undo string back to one")))
+
+    (t/testing "redo"
+      (setup! "one")
+      (t/is (= "one" (get-str)) "Setup initialized string at one")
+      (let [[db op] (save! "two")]
+        (t/is (= "two" (get-str)) "Changed string to two")
+        (let [[db' op'] (undo! db op)]
+          (t/is (= "one" (get-str)) "Undo string back to one")
+          (undo! db' op')
+          (t/is (= "two" (get-str)) "Redo string back to two"))))
+
+    (t/testing "redo with interleaved op"
+      (setup! "one")
+      (t/is (= "one" (get-str)) "Setup initialized string at one")
+      (let [[db op] (save! "two")]
+        (t/is (= "two" (get-str)) "Changed string to two")
+        (save! "three")
+        (t/is (= "three" (get-str)) "Interleaved op changed string to three")
+        (let [[db' op'] (undo! db op)]
+          (t/is (= "one" (get-str)) "Undo string back to one")
+          (undo! db' op')
+          (t/is (= "three" (get-str)) "Redo string back to three"))))))
