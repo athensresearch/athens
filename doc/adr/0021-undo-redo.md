@@ -28,16 +28,22 @@ Athens's model of time gives us a starting point for a model of undo: time only 
 
 We can reduce the participants to three types: the undo issuer, the server, and other users. Although in theory any of these could construct the concrete undo operation, it is onerous for the server and other users to keep all possible past states that might be required for undos from anyone, for any point in time.
 
-The prime candidate to keep relevant states is the undo issuer themselves. This participant can keep a list of states needed for their own set of undoable operations. However, this operation is still optimistic in nature, and subject to conflicts. It is tantamount to saying "this is how to undo the operation given what I know now".
+The prime candidate to keep relevant states is the undo issuer themselves. This participant can keep a list of states needed for their own set of undoable operations. However, this operation is still optimistic in nature, and subject to conflicts. It can be thought of as saying "this is how to undo the operation given what I know now".
 
-We can also transfer the burden of resolution to the server, achieving a "true" undo since the server itself is the source of truth for the RTC system. The server would still need a way to keep or recall past states in order to resolve the undo operation. This approach would require the client issuing the undo to somehow direct the server to undo the operation, and wait for the result.
+We can also transfer the burden of resolution to the server, achieving a "true" undo since the server itself is the source of truth for the RTC system. The server would still need a way to keep or recall past states in order to resolve the undo operation. This approach would require the client issuing the undo to somehow direct the server to undo the operation, and wait for the result, losing the optimistic nature of the change.
 
 
 ## Approach
 
 The primary motivation for undo/redo right now is the prevention of data loss in the moment, and keeping that goal in mind we decided to pursue the first candidate (issuer resolves undo operation). Higher fidelity reconstruction of past application state, either for inspection or data recovery, is left to future time travel functionality.
 
-For each atomic operation over a db state, we can build a corresponding atomic or composite that undoes it. For composite operations, we can compute the undo atomic/composite for each atomic operation in it, maintaining order so that the operations make sense. A redo operation is the undo operation for the effected undo.
+For each atomic operation over a db state, we can build a corresponding atomic or composite that undoes it in the context of that db state. For composite operations, we can compute the undo atomic/composite for each atomic operation in it, maintaining order so that the operations make sense. 
+
+Given that any arbitrary composite operation can be resolved to a composite that undoes it, we can repeat the process to arrive at a redo operation that restores the state prior to effecting the undo. There's two subtle details to keep in mind in this description: the context for redo, and the restored state.
+
+In the same way that the original undo was resolved in the context of the db state prior to the operation to be undone, so must the redo be resolved in the context of the db state prior to the operation to be redone. These two contexts are not the same, as performing an undo "moved" time forward, and operations from other users might have "moved" time forward as well.
+
+The state restored by redo is then not the result of applying the original operation. It is the state before the undo operation was applied. This is consistent with Figma's principle that undo-redo should result in the same state.
 
 This is the list of undo operations for each atomic:
   - undo operation map
