@@ -114,8 +114,11 @@
   Path and data to be written are retrieved from the reframe db directly, not passed as arguments.
   User should eventually have MANY backups files. It's their job to manage these backups :)"
   [copy?]
-  (let [selected-db @(rf/subscribe [:db-picker/selected-db])]
-    (when (utils/local-db? selected-db)
+  (let [selected-db @(rf/subscribe [:db-picker/selected-db])
+        ;; See test/e2e/electron-test.ts for details about this flag.
+        e2e-ignore-save? (= (js/localStorage.getItem "E2E_IGNORE_SAVE") "true")]
+    (when (and (utils/local-db? selected-db)
+               (not e2e-ignore-save?))
       (let [filepath     (:db-path selected-db)
             data         (dt/write-transit-str @db/dsdb)
             r            (.. stream -Readable (from data))

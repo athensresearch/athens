@@ -582,7 +582,7 @@
                                                    (replace-first tail #"(?s)\)\)(.*)" ""))]
 
                                 ;; save block before navigating away
-                                (db/transact-state-for-uid uid state)
+                                ((:string/save-fn @state))
 
                                 (cond
                                   (and (re-find #"(?s)\[\[" head)

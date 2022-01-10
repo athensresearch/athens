@@ -20,7 +20,6 @@
                                                       to-str)]
     (dispatch [:block/save {:uid       uid
                             :string    new-block-content
-                            :callback  #()
                             :add-time? true}])))
 
 
