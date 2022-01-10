@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.9](https://github.com/athensresearch/athens/compare/v2.0.0-beta.8...v2.0.0-beta.9) (2022-01-10)
+
+
+### Bug Fixes
+
+* `Meta+k` didn't work on Linux ([8dca24c](https://github.com/athensresearch/athens/commit/8dca24ce113eb748dab7feae5ce85b61535a4e9b))
+* delete and merge not preserving children ([ed0ab98](https://github.com/athensresearch/athens/commit/ed0ab9853574ed29e70281e109d0f4734eb3d830))
+
+
+* e2e utils and a cleaner tests for "delete doesn't merge" ([123ed7f](https://github.com/athensresearch/athens/commit/123ed7f79a4d4d456e7a1629aea00e6a876ec5fe))
+* rename test from template to meaningful name ([47bf1e7](https://github.com/athensresearch/athens/commit/47bf1e75d34c6546f0ea27d9577223456fec9bd4))
+* supposingly failing e2e test. ([c7c323e](https://github.com/athensresearch/athens/commit/c7c323eff39e2fdb08dd07b68d3dea2fc20f2119))
+
+
+### Documentation
+
+* add ADR for undo/redo ([1bc46ee](https://github.com/athensresearch/athens/commit/1bc46eeec70e5489325522f6ecf0d3a513da0017))
+
 ## [2.0.0-beta.8](https://github.com/athensresearch/athens/compare/v2.0.0-beta.7...v2.0.0-beta.8) (2022-01-05)
 
 
