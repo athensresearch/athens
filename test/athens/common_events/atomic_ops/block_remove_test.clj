@@ -396,3 +396,101 @@
           (t/is (not child-2-exists?))
           (t/is (= 0 (:block/order child-3)))
           (t/is (= child-1-text (:block/string child-3))))))))
+
+
+(t/deftest block-delete-and-merge
+  (t/testing "Merge and delete with update"
+    (let [page-uid             "page-1-uid"
+          parent-uid           "parent-1-uid"
+          child-1-uid          "child-1-1-uid"
+          child-1-text         "this text is godly"
+          child-1-updated-text "new text for child 1"
+          child-2-uid          "child-1-1-1-uid"
+          child-2-text         "this text is unholy"
+          child-3-uid          "child-1-2-uid"
+          setup-txs            [{:block/uid      page-uid
+                                 :node/title     "test page - merge and delete with update"
+                                 :block/children [{:block/uid      parent-uid
+                                                   :block/string   ""
+                                                   :block/order    0
+                                                   :block/children [{:block/uid      child-1-uid
+                                                                     :block/string   child-1-text
+                                                                     :block/order    0
+                                                                     :block/children []}
+                                                                    {:block/uid      child-2-uid
+                                                                     :block/string   child-2-text
+                                                                     :block/order    1
+                                                                     :block/children [{:block/uid      child-3-uid
+                                                                                       :block/string   ""
+                                                                                       :block/order    0
+                                                                                       :block/children []}]}]}]}]]
+      (fixture/transact-with-middleware setup-txs)
+      (let [block-merge-delete         (graph-ops/build-block-merge-with-updated-op @@fixture/connection
+                                                                                    child-2-uid
+                                                                                    child-1-uid
+                                                                                    child-2-text
+                                                                                    child-1-updated-text)
+            block-merge-delete-atomics (graph-ops/extract-atomics block-merge-delete)]
+        (doseq [atomic-op block-merge-delete-atomics
+                :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+          (d/transact! @fixture/connection atomic-txs))
+        (let [page            (common-db/get-block @@fixture/connection [:block/uid page-uid])
+              parent          (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+              child-1         (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
+              child-2-exists? (common-db/e-by-av @@fixture/connection :block/uid child-2-uid)
+              child-3         (common-db/get-block @@fixture/connection [:block/uid child-3-uid])]
+          (t/is (= 1 (-> page :block/children count)))
+          (t/is (= 1 (-> parent :block/children count)))
+          (t/is (seq child-1))
+          (t/is (not child-2-exists?))
+          (t/is (seq child-3))
+          (t/is (= 0 (:block/order child-3)))
+          (t/is (= (str child-1-updated-text child-2-text)
+                   (:block/string child-1)))))))
+
+  (t/testing "Merge and delete without update"
+    (let [page-uid             "page-2-uid"
+          parent-uid           "parent-2-uid"
+          child-1-uid          "child-2-1-uid"
+          child-1-text         "this text is godly"
+          child-2-uid          "child-2-1-1-uid"
+          child-2-text         "this text is unholy"
+          child-3-uid          "child-2-2-uid"
+          setup-txs            [{:block/uid      page-uid
+                                 :node/title     "test page - merge and delete without update"
+                                 :block/children [{:block/uid      parent-uid
+                                                   :block/string   ""
+                                                   :block/order    0
+                                                   :block/children [{:block/uid      child-1-uid
+                                                                     :block/string   child-1-text
+                                                                     :block/order    0
+                                                                     :block/children []}
+                                                                    {:block/uid      child-2-uid
+                                                                     :block/string   child-2-text
+                                                                     :block/order    1
+                                                                     :block/children [{:block/uid      child-3-uid
+                                                                                       :block/string   ""
+                                                                                       :block/order    0
+                                                                                       :block/children []}]}]}]}]]
+      (fixture/transact-with-middleware setup-txs)
+      (let [block-merge-delete         (graph-ops/build-block-remove-merge-op @@fixture/connection
+                                                                              child-2-uid
+                                                                              child-1-uid
+                                                                              child-2-text)
+            block-merge-delete-atomics (graph-ops/extract-atomics block-merge-delete)]
+        (doseq [atomic-op block-merge-delete-atomics
+                :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+          (d/transact! @fixture/connection atomic-txs))
+        (let [page            (common-db/get-block @@fixture/connection [:block/uid page-uid])
+              parent          (common-db/get-block @@fixture/connection [:block/uid parent-uid])
+              child-1         (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
+              child-2-exists? (common-db/e-by-av @@fixture/connection :block/uid child-2-uid)
+              child-3         (common-db/get-block @@fixture/connection [:block/uid child-3-uid])]
+          (t/is (= 1 (-> page :block/children count)) (str "Page should have 1 element:" (pr-str (:block/children page))))
+          (t/is (= 1 (-> parent :block/children count)))
+          (t/is (seq child-1))
+          (t/is (not child-2-exists?))
+          (t/is (seq child-3))
+          (t/is (= 0 (:block/order child-3)))
+          (t/is (= (str child-1-text child-2-text)
+                   (:block/string child-1))))))))

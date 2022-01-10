@@ -75,9 +75,17 @@
         block-remove-op     (build-block-remove-op db
                                                    remove-uid)
         block-save-op       (build-block-save-op db merge-uid (str update-value value))
+        children-to-move    (:block/children (common-db/get-block db [:block/uid remove-uid]))
+        block-move-ops      (into []
+                                  (for [{block-uid :block/uid} children-to-move]
+                                    (atomic/make-block-move-op block-uid {:block/uid merge-uid
+                                                                          :relation  :last})))
         delete-and-merge-op (composite/make-consequence-op {:op/type :block/remove-merge-update}
-                                                           [block-remove-op
-                                                            block-save-op])]
+                                                           (concat (if (seq block-move-ops)
+                                                                     block-move-ops
+                                                                     [])
+                                                                   [block-remove-op
+                                                                    block-save-op]))]
     delete-and-merge-op))
 
 
@@ -92,14 +100,22 @@
   (let [;; block/remove atomic op
         block-remove-op     (build-block-remove-op db
                                                    remove-uid)
-        ;; block/save atomic op]gg
+        ;; block/save atomic op
         existing-string     (common-db/v-by-ea db
                                                [:block/uid merge-uid]
                                                :block/string)
         block-save-op       (build-block-save-op db merge-uid (str existing-string value))
+        children-to-move    (:block/children (common-db/get-block db [:block/uid remove-uid]))
+        block-move-ops      (into []
+                                  (for [{block-uid :block/uid} children-to-move]
+                                    (atomic/make-block-move-op block-uid {:block/uid merge-uid
+                                                                          :relation  :last})))
         delete-and-merge-op (composite/make-consequence-op {:op/type :block/remove-and-merge}
-                                                           [block-remove-op
-                                                            block-save-op])]
+                                                           (concat (if (seq block-move-ops)
+                                                                     block-move-ops
+                                                                     [])
+                                                                   [block-remove-op
+                                                                    block-save-op]))]
     delete-and-merge-op))
 
 
