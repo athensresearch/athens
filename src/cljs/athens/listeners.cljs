@@ -89,8 +89,12 @@
                 shift
                 alt]}    (util/destruct-key-down e)
         editing-uid      @(subscribe [:editing/uid])
-        start?           (textarea-keydown/block-start? e)
-        end?             (textarea-keydown/block-end? e)]
+        start?          (if editing-uid
+                          (textarea-keydown/block-start? e)
+                          false)
+        end?            (if editing-uid
+                         (textarea-keydown/block-end? e)
+                         false)]
 
     (cond
       (util/shortcut-key? meta ctrl) (condp = key-code
