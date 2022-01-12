@@ -4,6 +4,7 @@
     [athens.db :as db]
     [athens.electron.utils :as electron-utils]
     [athens.events.selection :as select-events]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
     [athens.util :as util]
@@ -82,45 +83,49 @@
 
 (defn key-down!
   [e]
-  (let [{:keys [key-code ctrl meta shift alt]} (util/destruct-key-down e)
-        editing-uid @(subscribe [:editing/uid])]
+  (let [{:keys [key-code
+                ctrl
+                meta
+                shift
+                alt]}    (util/destruct-key-down e)
+        editing-uid      @(subscribe [:editing/uid])
+        start?           (textarea-keydown/block-start? e)
+        end?             (textarea-keydown/block-end? e)]
+
     (cond
       (util/shortcut-key? meta ctrl) (condp = key-code
-                                       KeyCodes.S (dispatch [:save])
-
-                                       KeyCodes.EQUALS (dispatch [:zoom/in])
-                                       KeyCodes.DASH (dispatch [:zoom/out])
-                                       KeyCodes.ZERO (dispatch [:zoom/reset])
-
-                                       KeyCodes.K (dispatch [:athena/toggle])
-
-                                       KeyCodes.G (dispatch [:devtool/toggle])
-
-                                       KeyCodes.Z (let [editing-uid    @(subscribe [:editing/uid])
-                                                        selected-items @(subscribe [::select-subs/items])]
-                                                    ;; editing/uid must be nil or selected-items must be non-empty
-                                                    (when (or (nil? editing-uid)
-                                                              (not-empty selected-items))
-                                                      (if shift
-                                                        (dispatch [:redo])
-                                                        (dispatch [:undo]))))
-
+                                       KeyCodes.S         (dispatch [:save])
+                                       KeyCodes.EQUALS    (dispatch [:zoom/in])
+                                       KeyCodes.DASH      (dispatch [:zoom/out])
+                                       KeyCodes.ZERO      (dispatch [:zoom/reset])
+                                       KeyCodes.K         (dispatch [:athena/toggle])
+                                       KeyCodes.G         (dispatch [:devtool/toggle])
+                                       KeyCodes.Z         (let [editing-uid    @(subscribe [:editing/uid])
+                                                                selected-items @(subscribe [::select-subs/items])]
+                                                            ;; editing/uid must be nil or selected-items must be non-empty
+                                                            (when (or (nil? editing-uid)
+                                                                      (not-empty selected-items))
+                                                              (if shift
+                                                                (dispatch [:redo])
+                                                                (dispatch [:undo]))))
                                        KeyCodes.BACKSLASH (if shift
                                                             (dispatch [:right-sidebar/toggle])
                                                             (dispatch [:left-sidebar/toggle]))
-
-                                       KeyCodes.COMMA (router/navigate :settings)
-
-                                       KeyCodes.T (util/toggle-10x)
+                                       KeyCodes.COMMA     (router/navigate :settings)
+                                       KeyCodes.T         (util/toggle-10x)
                                        nil)
-      alt (condp = key-code
-            KeyCodes.LEFT (when (nil? editing-uid) (.back js/window.history))
-            KeyCodes.RIGHT (when (nil? editing-uid) (.forward js/window.history))
-            KeyCodes.D (router/nav-daily-notes)
-            KeyCodes.G (router/navigate :graph)
-            KeyCodes.A (router/navigate :pages)
-            KeyCodes.T (dispatch [:theme/toggle])
-            nil))))
+      (util/navigate-key? meta alt) (condp = key-code
+                                      KeyCodes.LEFT  (when (or (nil? editing-uid)
+                                                               start?)
+                                                       (.back js/window.history))
+                                      KeyCodes.RIGHT (when (or (nil? editing-uid)
+                                                               end?)
+                                                       (.forward js/window.history))
+                                      KeyCodes.D     (router/nav-daily-notes)
+                                      KeyCodes.G     (router/navigate :graph)
+                                      KeyCodes.A     (router/navigate :pages)
+                                      KeyCodes.T     (dispatch [:theme/toggle])
+                                      nil))))
 
 
 ;; -- Clipboard ----------------------------------------------------------

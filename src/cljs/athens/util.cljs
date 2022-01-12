@@ -259,6 +259,15 @@
         (and (= os :linux) ctrl))))
 
 
+(defn navigate-key?
+  "Used to navigate between current and last page
+  Use meta for mac, alt for others."
+  [meta alt]
+  (let [os (get-os)]
+    (or (and (= os :mac) meta)
+        (and (= os :windows) alt)
+        (and (= os :linux) alt))))
+
 ;; re-frame-10x
 
 (defn re-frame-10x-open?
