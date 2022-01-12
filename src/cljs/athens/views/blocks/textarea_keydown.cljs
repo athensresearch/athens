@@ -21,7 +21,8 @@
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [throttle #_debounce]]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [athens.util :as util])
   (:import
     (goog.events
       KeyCodes)))
@@ -424,20 +425,20 @@
 
 
       (or (and left? start?)
-          (and up? end?)) (do (.. e preventDefault)
-                              (dispatch [:up uid :end]))
+          (and up? end?))     (do (.. e preventDefault)
+                                  (dispatch [:up uid :end]))
 
-      (and down? end?) (do (.. e preventDefault)
-                           (dispatch [:down uid :end]))
+      (and down? end?)        (do (.. e preventDefault)
+                                  (dispatch [:down uid :end]))
 
       ;; going RIGHT at last index should always go to index 0 of block below
-      (and right? end?) (do (.. e preventDefault)
-                            (dispatch [:down uid 0]))
+      (and right? end?)       (do (.. e preventDefault)
+                                  (dispatch [:down uid 0]))
 
       ;; index 0 is special - always go to index 0 when going up or down
       ;; when caret is anywhere between start and end preserve the position and offset by char
-      (and up? top-row?) (do (.. e preventDefault)
-                             (dispatch [:up uid char-offset]))
+      (and up? top-row?)      (do (.. e preventDefault)
+                                  (dispatch [:up uid char-offset]))
       (and down? bottom-row?) (do (.. e preventDefault)
                                   (dispatch [:down uid char-offset])))))
 
