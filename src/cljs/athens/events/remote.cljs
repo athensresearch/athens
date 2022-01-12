@@ -6,6 +6,7 @@
     [athens.common.logging                :as log]
     [athens.common.utils                  :as utils]
     [athens.db                            :as db]
+    [athens.undo                          :as undo]
     [clojure.pprint                       :as pp]
     [datascript.core                      :as d]
     [event-sync.core                      :as event-sync]
@@ -244,8 +245,9 @@
                          rollback!
                          (remove-memory-event! event)
                          rollforward!)
+          db''       (undo/remove db (:event/id event))
           memory-log (event-sync/stage-log (:remote/event-sync db') :memory)]
-      {:db db'
+      {:db db''
        ;; If there's no events to reapply mark as synced.
        :fx [[:dispatch-n (when (empty? memory-log)
                            [[:db/sync]])]]})))

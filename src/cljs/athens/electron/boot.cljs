@@ -67,6 +67,7 @@
                                       :dispatch-n [[:fs/update-write-db]
                                                    [:db/sync]
                                                    [:restore-navigation]
+                                                   [:reset-undo-redo]
                                                    [:loading/unset]]
                                       ;; This event ends the async flow successfully.
                                       :halt?      true}
