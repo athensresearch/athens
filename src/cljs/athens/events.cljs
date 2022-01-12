@@ -717,16 +717,16 @@
 
 (reg-event-fx
   :up
-  (fn [_ [_ uid]]
+  (fn [_ [_ uid target-pos]]
     (let [prev-block-uid (db/prev-block-uid uid)]
-      {:dispatch [:editing/uid (or prev-block-uid uid)]})))
+      {:dispatch [:editing/uid (or prev-block-uid uid) target-pos]})))
 
 
 (reg-event-fx
   :down
-  (fn [_ [_ uid]]
+  (fn [_ [_ uid target-pos]]
     (let [next-block-uid (db/next-block-uid uid)]
-      {:dispatch [:editing/uid (or next-block-uid uid)]})))
+      {:dispatch [:editing/uid (or next-block-uid uid) target-pos]})))
 
 
 (defn backspace

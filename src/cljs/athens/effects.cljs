@@ -77,32 +77,33 @@
 (rf/reg-fx
   :editing/focus
   (fn [[uid index]]
-    (if (nil? uid)
-      (when-let [active-el (.-activeElement js/document)]
-        (.blur active-el))
-      (js/setTimeout (fn []
-                       (let [[uid embed-id]  (db/uid-and-embed-id uid)
-                             html-id         (str "editable-uid-" uid)
-                             ;; targets (js/document.querySelectorAll html-id)
-                             ;; n       (count (array-seq targets))
-                             el              (js/document.querySelector
-                                               (if embed-id
-                                                 (or
-                                                   ;; find exact embed block
-                                                   (str "textarea[id='" html-id "-embed-" embed-id "']")
-                                                   ;; find embedded that starts with current html id (embed id changed due to re-render)
-                                                   (str "textarea[id^='" html-id "-embed-']"))
-                                                 ;; take default
-                                                 (str "#" html-id)))]
-                         #_(cond
-                             (zero? n) (prn "No targets")
-                             (= 1 n) (prn "One target")
-                             (< 1 n) (prn "Several targets"))
-                         (when el
-                           (.focus el)
-                           (when index
-                             (setCursorPosition el index)))))
-                     100))))
+    ;; NOTE: Using 99999999999 is a hack, if the previous block has less character than mentioned then the default
+    ;;       caret position will be last position. Otherwise, we would have to calculate the no. of characters in the
+    ;;       block we are moving to, this calculation would be done on client side and, I am not sure if the calculation
+    ;;       would be correct because between calculation on client side and block data on server can change.]
+    (let [editing-index (if (= :end index)
+                          999999999
+                          index)]
+      (if (nil? uid)
+        (when-let [active-el (.-activeElement js/document)]
+          (.blur active-el))
+        (js/setTimeout (fn []
+                         (let [[uid embed-id]  (db/uid-and-embed-id uid)
+                               html-id         (str "editable-uid-" uid)
+                               el              (js/document.querySelector
+                                                 (if embed-id
+                                                   (or
+                                                     ;; find exact embed block
+                                                     (str "textarea[id='" html-id "-embed-" embed-id "']")
+                                                     ;; find embedded that starts with current html id (embed id changed due to re-render)
+                                                     (str "textarea[id^='" html-id "-embed-']"))
+                                                   ;; take default
+                                                   (str "#" html-id)))]
+                           (when el
+                             (.focus el)
+                             (when editing-index
+                               (setCursorPosition el editing-index)))))
+                       100)))))
 
 
 ;; todo(abhinav)
