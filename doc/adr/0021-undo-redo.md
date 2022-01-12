@@ -113,6 +113,7 @@ The saved db state should be updated each time the operation order changes and t
 
 Since undo operations can trivially generate much larger operations than the original, we must pay special attention to payload limits in the client and server. 
 We know some of these limits right now but do not enforce them, so we need to start enforcing them for undo/redo to work reliably.
+We can also warn users that some operations cannot be undone according to some heuristic (e.g. number of deleted blocks).
 
 Similarly to limits, undo also puts extra stress on the resolution error cases since it will trivially generate uncommon situations.
 We must make sure that invariants are enforced on resolution.
