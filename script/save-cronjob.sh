@@ -57,4 +57,4 @@ if [ -z "$(which java)" ]; then
 fi
 
 # command to save ledger
-yarn cli:save -f "$FILENAME"
+java -jar ~/athens-cli.jar save -f "$FILENAME"
