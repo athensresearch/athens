@@ -3,6 +3,7 @@
     [athens.electron.boot]
     [athens.electron.db-picker]
     [athens.electron.fs]
+    [athens.electron.monitoring.core]
     [athens.electron.window]
     [athens.util :as util]
     [day8.re-frame.async-flow-fx]
