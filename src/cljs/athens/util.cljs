@@ -8,7 +8,11 @@
     [goog.dom :refer [getElement setProperties]]
     [posh.reagent :refer [#_pull]])
   (:require-macros
-    [com.rpl.specter :refer [recursive-path]]))
+    [com.rpl.specter :refer [recursive-path]])
+  (:import
+    (goog.events
+      EventType
+      KeyCodes)))
 
 
 ;; Electron ipcMain Channels
@@ -262,11 +266,14 @@
 (defn navigate-key?
   "Used to navigate between current and last page
   Use meta for mac, alt for others."
-  [meta alt]
+  [{:keys [key-code
+           meta
+           alt]}]
   (let [os (get-os)]
-    (or (and (= os :mac) meta)
-        (and (= os :windows) alt)
-        (and (= os :linux) alt))))
+    (and (#{KeyCodes.LEFT KeyCodes.RIGHT} key-code)
+         (or (and (= os :mac) meta)
+             (and (= os :windows) alt)
+             (and (= os :linux) alt)))))
 
 
 ;; re-frame-10x
