@@ -4,10 +4,10 @@
     [athens.db :as db]
     [athens.electron.utils :as electron-utils]
     [athens.events.selection :as select-events]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
     [athens.util :as util]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]
     [goog.events :as events]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]])
@@ -93,8 +93,8 @@
                           (textarea-keydown/block-start? e)
                           false)
         end?            (if editing-uid
-                         (textarea-keydown/block-end? e)
-                         false)]
+                          (textarea-keydown/block-end? e)
+                          false)]
 
     (cond
       (util/shortcut-key? meta ctrl) (condp = key-code
