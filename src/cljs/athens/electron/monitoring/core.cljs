@@ -1,8 +1,8 @@
 (ns athens.electron.monitoring.core
   (:require
      [re-frame.core :as rf]
-     [athens.electron.db-picker :as db-picker]
-     [athens.electron.utils :as utils]))
+     [athens.electron.utils :as utils]
+     [athens.electron.db-picker :as db-picker]))
 
 
 
