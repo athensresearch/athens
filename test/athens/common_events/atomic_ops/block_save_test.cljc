@@ -121,41 +121,43 @@
                         (atomic-resolver/resolve-transact! @fixture/connection)))
         save!    (fn [string]
                    (let [db @@fixture/connection
-                         op (graph-ops/build-block-save-op @@fixture/connection test-uid string)]
-                     (atomic-resolver/resolve-transact! @fixture/connection op)
-                     [db op]))
-        undo!    (fn [op-db op]
+                         op (graph-ops/build-block-save-op @@fixture/connection test-uid string)
+                         evt (common-events/build-atomic-event op)]
+                     (atomic-resolver/resolve-transact! @fixture/connection evt)
+                     [db evt]))
+        undo!    (fn [evt-db evt]
                    (let [db @@fixture/connection
-                         undo-op (undo/resolve-atomic-op-to-undo-op db op-db op)]
-                     (atomic-resolver/resolve-transact! @fixture/connection undo-op)
-                     [db undo-op]))]
+                         undo-evt (undo/build-undo-event db evt-db evt)]
+                     (println undo-evt)
+                     (atomic-resolver/resolve-transact! @fixture/connection undo-evt)
+                     [db undo-evt]))]
 
     (t/testing "undo"
       (setup! "one")
       (t/is (= "one" (get-str)) "Setup initialized string at one")
-      (let [[db op] (save! "two")]
+      (let [[db evt] (save! "two")]
         (t/is (= "two" (get-str)) "Changed string to two")
-        (undo! db op)
+        (undo! db evt)
         (t/is (= "one" (get-str)) "Undo string back to one")))
 
     (t/testing "redo"
       (setup! "one")
       (t/is (= "one" (get-str)) "Setup initialized string at one")
-      (let [[db op] (save! "two")]
+      (let [[db evt] (save! "two")]
         (t/is (= "two" (get-str)) "Changed string to two")
-        (let [[db' op'] (undo! db op)]
+        (let [[db' evt'] (undo! db evt)]
           (t/is (= "one" (get-str)) "Undo string back to one")
-          (undo! db' op')
+          (undo! db' evt')
           (t/is (= "two" (get-str)) "Redo string back to two"))))
 
-    (t/testing "redo with interleaved op"
+    (t/testing "redo with interleaved edit"
       (setup! "one")
       (t/is (= "one" (get-str)) "Setup initialized string at one")
-      (let [[db op] (save! "two")]
+      (let [[db evt] (save! "two")]
         (t/is (= "two" (get-str)) "Changed string to two")
         (save! "three")
         (t/is (= "three" (get-str)) "Interleaved op changed string to three")
-        (let [[db' op'] (undo! db op)]
+        (let [[db' evt'] (undo! db evt)]
           (t/is (= "one" (get-str)) "Undo string back to one")
-          (undo! db' op')
+          (undo! db' evt')
           (t/is (= "three" (get-str)) "Redo string back to three"))))))
