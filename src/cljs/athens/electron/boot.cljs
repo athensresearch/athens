@@ -61,7 +61,7 @@
                                       :dispatch-n [[:navigate :home]
                                                    [:left-sidebar/toggle]]}
 
-                                     ;; if nth time, remember dark/light theme and last page
+                                     ;; if nth time, remember dark/light theme
                                      {:when       :seen?
                                       :events     :reset-conn
                                       :dispatch-n [[:fs/update-write-db]
