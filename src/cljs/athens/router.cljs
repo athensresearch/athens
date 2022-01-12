@@ -110,6 +110,8 @@
                             [:editing/first-child parent-uid])]}))))))
 
 
+;; doesn't reliably work. notably, Daily Notes are often not remembered as last open page, leading to incorrect
+;; last open page
 (reg-event-fx
   :restore-navigation
   (fn [{:keys [db]} _]
