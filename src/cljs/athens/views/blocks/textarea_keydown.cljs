@@ -14,7 +14,7 @@
     [athens.events.selection :as select-events]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
-    [athens.util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
+    [athens.util :as util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
     [athens.views.blocks.internal-representation :as internal-representation]
     [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
@@ -374,6 +374,9 @@
         [char-offset _]                  (get-end-points target)]
 
     (cond
+      (util/navigate-key? keys-destruct) (cond
+                                           left?  (.back js/window.history)
+                                           right? (.forward js/window.history))
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
       shift (cond
               left?                        nil
@@ -421,22 +424,22 @@
 
 
       (or (and left? start?)
-          (and up? end?))         (do (.. e preventDefault)
-                                      (dispatch [:up uid :end]))
+          (and up? end?)) (do (.. e preventDefault)
+                              (dispatch [:up uid :end]))
 
-      (and down? end?)            (do (.. e preventDefault)
-                                      (dispatch [:down uid :end]))
+      (and down? end?) (do (.. e preventDefault)
+                           (dispatch [:down uid :end]))
 
       ;; going RIGHT at last index should always go to index 0 of block below
-      (and right? end?)           (do (.. e preventDefault)
-                                      (dispatch [:down uid 0]))
+      (and right? end?) (do (.. e preventDefault)
+                            (dispatch [:down uid 0]))
 
       ;; index 0 is special - always go to index 0 when going up or down
       ;; when caret is anywhere between start and end preserve the position and offset by char
-      (and up? top-row?)          (do (.. e preventDefault)
-                                      (dispatch [:up uid char-offset]))
-      (and down? bottom-row?)     (do (.. e preventDefault)
-                                      (dispatch [:down uid char-offset])))))
+      (and up? top-row?) (do (.. e preventDefault)
+                             (dispatch [:up uid char-offset]))
+      (and down? bottom-row?) (do (.. e preventDefault)
+                                  (dispatch [:down uid char-offset])))))
 
 
 ;; Tab

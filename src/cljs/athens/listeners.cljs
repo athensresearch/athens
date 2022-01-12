@@ -89,13 +89,7 @@
                 shift
                 alt]
          :as destruct-keys}    (util/destruct-key-down e)
-        editing-uid            @(subscribe [:editing/uid])
-        start?                 (if editing-uid
-                                 (textarea-keydown/block-start? e)
-                                 false)
-        end?                   (if editing-uid
-                                 (textarea-keydown/block-end? e)
-                                 false)]
+        editing-uid            @(subscribe [:editing/uid])]
     (cond
       (util/shortcut-key? meta ctrl)     (condp = key-code
                                            KeyCodes.S         (dispatch [:save])
@@ -119,11 +113,9 @@
                                            KeyCodes.T         (util/toggle-10x)
                                            nil)
       (util/navigate-key? destruct-keys) (condp = key-code
-                                           KeyCodes.LEFT  (when (or (nil? editing-uid)
-                                                                    start?)
+                                           KeyCodes.LEFT  (when (or (nil? editing-uid))
                                                             (.back js/window.history))
-                                           KeyCodes.RIGHT (when (or (nil? editing-uid)
-                                                                    end?)
+                                           KeyCodes.RIGHT (when (or (nil? editing-uid))
                                                             (.forward js/window.history))
                                            nil)
       alt                               (condp = key-code
