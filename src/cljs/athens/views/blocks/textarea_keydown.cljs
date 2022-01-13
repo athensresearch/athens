@@ -353,8 +353,7 @@
                 shift
                 ctrl
                 target
-                selection]
-         :as destruct-keys}              (destruct-key-down e)
+                selection]}              (destruct-key-down e)
         selection?                       (not (blank? selection))
         start?                           (block-start? e)
         end?                             (block-end? e)
@@ -372,8 +371,7 @@
         down?                            (= key-code KeyCodes.DOWN)
         left?                            (= key-code KeyCodes.LEFT)
         right?                           (= key-code KeyCodes.RIGHT)
-        [char-offset _]                  (get-end-points target)
-        os                               (util/get-os)]
+        [char-offset _]                  (get-end-points target)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
