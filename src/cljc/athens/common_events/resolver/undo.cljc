@@ -12,6 +12,7 @@
   (-> event :event/op :op/trigger :op/undo))
 
 
+;; Impl according to https://github.com/athensresearch/athens/blob/main/doc/adr/0021-undo-redo.md#approach
 (defmulti resolve-atomic-op-to-undo-ops
   #(:op/type %3))
 
