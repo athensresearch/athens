@@ -127,6 +127,12 @@ We can address that issue by creating all blocks before adding their content.
 
 ## Insights from MVP
 
+- what block should be focused after undo/redo?
+- should block/open have undo?
+- what are undoable scenenarios and how do we present them to the user?
+- what limits do we want to enforce?
+- how do we present scenarios that won't allow undo to the user?
+- what are the invariants we need to check on op and undo op resolution?
 
 ## Decision
 
