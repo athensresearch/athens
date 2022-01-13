@@ -467,8 +467,7 @@
 (defn compat-position
   "Build a position by coercing incompatible arguments into compatible ones.
   uid to a page will instead use that page's title.
-  Integer relation will be converted to :first if 0, or :after (with matching uid) if not.
-  Warns when coercion was required."
+  Integer relation will be converted to :first if 0, or :after (with matching uid) if not."
   [db {:keys [relation block/uid page/title] :as pos}]
   (let [[coerced-ref-uid
          coerced-relation] (when (integer? relation)
@@ -490,9 +489,6 @@
                                (if-let [title' (or coerced-title title)]
                                  {:page/title title'}
                                  {:block/uid (or coerced-ref-uid uid)})))]
-
-    (when new-pos
-      (log/warn "compat-position: coercion required for" (pr-str pos) "to" (pr-str new-pos)))
     (or new-pos pos)))
 
 
