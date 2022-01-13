@@ -133,6 +133,7 @@ We can address that issue by creating all blocks before adding their content.
 - what limits do we want to enforce?
 - how do we present scenarios that won't allow undo to the user?
 - what are the invariants we need to check on op and undo op resolution?
+- repeating undo/redo over an operation results in an ever increasing operation due to nested composites
 
 ## Decision
 

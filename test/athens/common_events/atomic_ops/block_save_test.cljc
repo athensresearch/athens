@@ -4,6 +4,7 @@
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs             :as bfs]
     [athens.common-events.fixture         :as fixture]
+    [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common-events.resolver.undo   :as undo]
@@ -107,57 +108,45 @@
 
 
 (t/deftest undo
-  (let [test-uid "test-uid"
-        get-str  (fn []
-                   (->> [:block/uid test-uid]
-                        (common-db/get-internal-representation @@fixture/connection)
-                        :block/string))
-        setup!   (fn [string]
-                   (->> [{:page/title     "test-page"
-                          :block/children [{:block/uid    test-uid
-                                            :block/string string}]}]
-                        (bfs/build-paste-op @@fixture/connection)
-                        common-events/build-atomic-event
-                        (atomic-resolver/resolve-transact! @fixture/connection)))
-        save!    (fn [string]
-                   (let [db @@fixture/connection
-                         op (graph-ops/build-block-save-op @@fixture/connection test-uid string)
-                         evt (common-events/build-atomic-event op)]
-                     (atomic-resolver/resolve-transact! @fixture/connection evt)
-                     [db evt]))
-        undo!    (fn [evt-db evt]
-                   (let [db @@fixture/connection
-                         undo-evt (undo/build-undo-event db evt-db evt)]
-                     (println undo-evt)
-                     (atomic-resolver/resolve-transact! @fixture/connection undo-evt)
-                     [db undo-evt]))]
+  (let [test-uid   "test-uid"
+        setup-repr [{:page/title     "test-page"
+                     :block/children [{:block/uid    test-uid
+                                       :block/string "one"}]}]
+        get-str    #(->> [:block/uid test-uid]
+                         fixture/get-repr
+                         :block/string)
+        save!      #(-> (atomic-graph-ops/make-block-save-op test-uid %)
+                        fixture/op-resolve-transact!)]
 
     (t/testing "undo"
-      (setup! "one")
+      (fixture/setup! setup-repr)
       (t/is (= "one" (get-str)) "Setup initialized string at one")
-      (let [[db evt] (save! "two")]
+      (let [[evt-db evt] (save! "two")]
         (t/is (= "two" (get-str)) "Changed string to two")
-        (undo! db evt)
-        (t/is (= "one" (get-str)) "Undo string back to one")))
+        (fixture/undo! evt-db evt)
+        (t/is (= "one" (get-str)) "Undo string back to one"))
+      (fixture/teardown! setup-repr))
 
     (t/testing "redo"
-      (setup! "one")
+      (fixture/setup! setup-repr)
       (t/is (= "one" (get-str)) "Setup initialized string at one")
       (let [[db evt] (save! "two")]
         (t/is (= "two" (get-str)) "Changed string to two")
-        (let [[db' evt'] (undo! db evt)]
+        (let [[db' evt'] (fixture/undo! db evt)]
           (t/is (= "one" (get-str)) "Undo string back to one")
-          (undo! db' evt')
-          (t/is (= "two" (get-str)) "Redo string back to two"))))
+          (fixture/undo! db' evt')
+          (t/is (= "two" (get-str)) "Redo string back to two")))
+      (fixture/teardown! setup-repr))
 
     (t/testing "redo with interleaved edit"
-      (setup! "one")
+      (fixture/setup! setup-repr)
       (t/is (= "one" (get-str)) "Setup initialized string at one")
       (let [[db evt] (save! "two")]
         (t/is (= "two" (get-str)) "Changed string to two")
         (save! "three")
         (t/is (= "three" (get-str)) "Interleaved op changed string to three")
-        (let [[db' evt'] (undo! db evt)]
+        (let [[db' evt'] (fixture/undo! db evt)]
           (t/is (= "one" (get-str)) "Undo string back to one")
-          (undo! db' evt')
-          (t/is (= "three" (get-str)) "Redo string back to three"))))))
+          (fixture/undo! db' evt')
+          (t/is (= "three" (get-str)) "Redo string back to three")))
+      (fixture/teardown! setup-repr))))
