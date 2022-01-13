@@ -90,6 +90,12 @@
          :as destruct-keys}    (util/destruct-key-down e)
         editing-uid            @(subscribe [:editing/uid])]
     (cond
+      (util/navigate-key? destruct-keys) (condp = key-code
+                                           KeyCodes.LEFT  (when (nil? editing-uid)
+                                                            (.back js/window.history))
+                                           KeyCodes.RIGHT (when (nil? editing-uid)
+                                                            (.forward js/window.history))
+                                           nil)
       (util/shortcut-key? meta ctrl)     (condp = key-code
                                            KeyCodes.S         (dispatch [:save])
                                            KeyCodes.EQUALS    (dispatch [:zoom/in])
@@ -110,12 +116,6 @@
                                                                 (dispatch [:left-sidebar/toggle]))
                                            KeyCodes.COMMA     (router/navigate :settings)
                                            KeyCodes.T         (util/toggle-10x)
-                                           nil)
-      (util/navigate-key? destruct-keys) (condp = key-code
-                                           KeyCodes.LEFT  (when (nil? editing-uid)
-                                                            (.back js/window.history))
-                                           KeyCodes.RIGHT (when (nil? editing-uid)
-                                                            (.forward js/window.history))
                                            nil)
       alt                               (condp = key-code
                                           KeyCodes.D     (router/nav-daily-notes)
