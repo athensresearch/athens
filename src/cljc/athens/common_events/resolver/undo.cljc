@@ -26,8 +26,8 @@
 
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
   [db evt-db {:op/keys [consequences] :as op}]
-  (assoc op :op/consequences (map (partial resolve-atomic-op-to-undo-ops db evt-db)
-                                  consequences)))
+  [(assoc op :op/consequences (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db)
+                                      consequences))])
 
 
 ;; TODO: should there be a distinction between undo and redo?

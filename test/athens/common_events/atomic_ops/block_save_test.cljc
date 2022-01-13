@@ -117,7 +117,6 @@
                          :block/string)
         save!      #(-> (atomic-graph-ops/make-block-save-op test-uid %)
                         fixture/op-resolve-transact!)]
-
     (t/testing "undo"
       (fixture/setup! setup-repr)
       (t/is (= "one" (get-str)) "Setup initialized string at one")
@@ -130,23 +129,23 @@
     (t/testing "redo"
       (fixture/setup! setup-repr)
       (t/is (= "one" (get-str)) "Setup initialized string at one")
-      (let [[db evt] (save! "two")]
+      (let [[evt-db evt] (save! "two")]
         (t/is (= "two" (get-str)) "Changed string to two")
-        (let [[db' evt'] (fixture/undo! db evt)]
+        (let [[evt-db' evt'] (fixture/undo! evt-db evt)]
           (t/is (= "one" (get-str)) "Undo string back to one")
-          (fixture/undo! db' evt')
+          (fixture/undo! evt-db' evt')
           (t/is (= "two" (get-str)) "Redo string back to two")))
       (fixture/teardown! setup-repr))
 
     (t/testing "redo with interleaved edit"
       (fixture/setup! setup-repr)
       (t/is (= "one" (get-str)) "Setup initialized string at one")
-      (let [[db evt] (save! "two")]
+      (let [[evt-db evt] (save! "two")]
         (t/is (= "two" (get-str)) "Changed string to two")
         (save! "three")
         (t/is (= "three" (get-str)) "Interleaved op changed string to three")
-        (let [[db' evt'] (fixture/undo! db evt)]
+        (let [[evt-db' evt'] (fixture/undo! evt-db evt)]
           (t/is (= "one" (get-str)) "Undo string back to one")
-          (fixture/undo! db' evt')
+          (fixture/undo! evt-db' evt')
           (t/is (= "three" (get-str)) "Redo string back to three")))
       (fixture/teardown! setup-repr))))
