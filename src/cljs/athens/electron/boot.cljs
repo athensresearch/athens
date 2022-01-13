@@ -67,6 +67,7 @@
                                       :dispatch-n [[:fs/update-write-db]
                                                    [:db/sync]
                                                    ;; [:restore-navigation]
+                                                   [:posthog/set-super-properties]
                                                    [:loading/unset]]
                                       ;; This event ends the async flow successfully.
                                       :halt?      true}
