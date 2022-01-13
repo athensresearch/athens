@@ -15,7 +15,7 @@
           graph-type          {:graph-type (if remote-db?
                                              :self-hosted
                                              :local)}
-          electron-build      {:electron-build (util/athens-version)}
+          electron-build      {:electron-build-version (util/athens-version)}
           super-properties    (merge graph-type electron-build)
           js-super-properties (clj->js super-properties)]
       (.. js/posthog (register js-super-properties)))))
