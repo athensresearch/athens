@@ -353,7 +353,8 @@
                 shift
                 ctrl
                 target
-                selection]}              (destruct-key-down e)
+                selection]
+         :as destruct-keys}              (destruct-key-down e)
         selection?                       (not (blank? selection))
         start?                           (block-start? e)
         end?                             (block-end? e)
@@ -371,12 +372,23 @@
         down?                            (= key-code KeyCodes.DOWN)
         left?                            (= key-code KeyCodes.LEFT)
         right?                           (= key-code KeyCodes.RIGHT)
-        [char-offset _]                  (get-end-points target)]
+        [char-offset _]                  (get-end-points target)
+        os                               (util/get-os)]
 
     (cond
-      (util/navigate-key? keys-destruct) (cond
-                                           left?  (.back js/window.history)
-                                           right? (.forward js/window.history))
+      ;; These navigation options are derived from how chrome does keyboard shortcuts.
+      (util/navigate-key? destruct-keys) (cond
+                                           ;; For mac only navigate when caret is at start or end of the block with
+                                           ;; the corresponding arrow keys
+                                           (and (= os :mac)
+                                                (and start? left?)) (.back js/window.history)
+                                           (and (= os :mac)
+                                                (and end? right?))  (.forward js/window.history)
+
+                                           ;; If the os is linux or windows then we navigate regardless of where the caret is
+                                           left?                    (.back js/window.history)
+                                           right?                   (.forward js/window.history))
+
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
       shift (cond
               left?                        nil

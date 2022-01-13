@@ -11,7 +11,6 @@
     [com.rpl.specter :refer [recursive-path]])
   (:import
     (goog.events
-      EventType
       KeyCodes)))
 
 

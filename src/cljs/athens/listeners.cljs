@@ -7,7 +7,6 @@
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
     [athens.util :as util]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]
     [goog.events :as events]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]])
@@ -113,9 +112,9 @@
                                            KeyCodes.T         (util/toggle-10x)
                                            nil)
       (util/navigate-key? destruct-keys) (condp = key-code
-                                           KeyCodes.LEFT  (when (or (nil? editing-uid))
+                                           KeyCodes.LEFT  (when (nil? editing-uid)
                                                             (.back js/window.history))
-                                           KeyCodes.RIGHT (when (or (nil? editing-uid))
+                                           KeyCodes.RIGHT (when (nil? editing-uid)
                                                             (.forward js/window.history))
                                            nil)
       alt                               (condp = key-code
@@ -124,7 +123,6 @@
                                           KeyCodes.A     (router/navigate :pages)
                                           KeyCodes.T     (dispatch [:theme/toggle])
                                           nil))))
-
 
 
 ;; -- Clipboard ----------------------------------------------------------
