@@ -376,19 +376,6 @@
         os                               (util/get-os)]
 
     (cond
-      ;; These navigation options are derived from how chrome does keyboard shortcuts.
-      (util/navigate-key? destruct-keys) (cond
-                                           ;; For mac only navigate when caret is at start or end of the block with
-                                           ;; the corresponding arrow keys
-                                           (and (= os :mac)
-                                                (and start? left?)) (.back js/window.history)
-                                           (and (= os :mac)
-                                                (and end? right?))  (.forward js/window.history)
-
-                                           ;; If the os is linux or windows then we navigate regardless of where the caret is
-                                           left?                    (.back js/window.history)
-                                           right?                   (.forward js/window.history))
-
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
       shift (cond
               left?                        nil
