@@ -1,9 +1,13 @@
 (ns athens.common-events.atomic-ops.block-open-test
   (:require
     [athens.common-db                     :as common-db]
+    [athens.common-events.bfs             :as bfs]
+    [athens.common-events                 :as common-events]
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common-events.resolver.undo   :as undo]
     [clojure.test                         :as t]
     [datascript.core                      :as d]))
 
