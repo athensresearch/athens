@@ -109,9 +109,14 @@
   (let [test-uid "test-uid"
         setup-repr (fn [open?]
                      [{:page/title     "test-page"
-                       :block/children [{:block/uid    test-uid
-                                         :block/string "test-str"
-                                         :block/open?  open?}]}])
+                       :block/children [(merge
+                                          {:block/uid    test-uid
+                                           :block/string "test-str"}
+                                          ;; NB: internal representation does not contain
+                                          ;; a key for :block/open? if it's true, since
+                                          ;; that's the default.
+                                          (when (not open?)
+                                            {:block/open? open?}))]}])
         get-open #(->> [:block/uid test-uid]
                        (common-db/get-internal-representation @@fixture/connection)
                        :block/open?)
@@ -121,26 +126,26 @@
 
     (t/testing "undo initializing block to open"
       (fixture/setup! (setup-repr true))
-      (t/is (true? (get-open)) "Setup initialized block to open")
+      (t/is (nil? (get-open)) "Setup initialized block to open")
       (let [[db evt] (save! false)]
         (t/is (false? (get-open)) "Changed block to close")
         (fixture/undo! db evt)
-        (t/is (true? (get-open)) "Undo block back to open")))
+        (t/is (nil? (get-open)) "Undo block back to open")))
 
     (t/testing "undo initializing block to closed"
       (fixture/setup! (setup-repr false))
       (t/is (false? (get-open)) "Setup initialized block to closed")
       (let [[db evt] (save! true)]
-        (t/is (true? (get-open)) "Changed block to open")
+        (t/is (nil? (get-open)) "Changed block to open")
         (fixture/undo! db evt)
         (t/is (false? (get-open)) "Undo block back to closed")))
 
     (t/testing "redo"
       (fixture/setup! (setup-repr true))
-      (t/is (true? (get-open)) "Setup initialized block to open")
+      (t/is (nil? (get-open)) "Setup initialized block to open")
       (let [[db evt] (save! false)]
         (t/is (false? (get-open)) "Changed block to close")
         (let [[db' evt'] (fixture/undo! db evt)]
-          (t/is (true? (get-open)) "Undo block back to open")
+          (t/is (nil? (get-open)) "Undo block back to open")
           (fixture/undo! db' evt')
           (t/is (false? (get-open)) "Redo block back to closed"))))))

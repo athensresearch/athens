@@ -16,18 +16,15 @@
 (def tree-without-page
   [{:block/uid    "eaa4c9435"
     :block/string "block 1"
-    :block/open?  true
     :block/children
     [{:block/uid    "88c9ff662"
-      :block/string "B1 C1"
-      :block/open?  true}
+      :block/string "B1 C1"}
      {:block/uid    "7d11d532f"
       :block/string "B1 C2"
       :block/open?  false
       :block/children
       [{:block/uid    "db5fa9a43"
-        :block/string "B1 C2 C1"
-        :block/open?  true}]}]}])
+        :block/string "B1 C2 C1"}]}]}])
 
 
 (deftest get-individual-blocks-from-tree-test
