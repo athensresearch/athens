@@ -2,9 +2,9 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
+    [athens.common-events.bfs             :as bfs]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.composite :as composite]
-    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common.logging                :as log]))
 
 
@@ -19,10 +19,28 @@
 
 
 (defmethod resolve-atomic-op-to-undo-ops :block/save
-  [db evt-db {:op/keys [args]}]
+  [_db evt-db {:op/keys [args]}]
   (let [{:block/keys [uid]}    args
         {:block/keys [string]} (common-db/get-block evt-db [:block/uid uid])]
-    [(graph-ops/build-block-save-op db uid string)]))
+    [(atomic-graph-ops/make-block-save-op uid string)]))
+
+
+(defmethod resolve-atomic-op-to-undo-ops :block/remove
+  [_db evt-db {:op/keys [args]}]
+  (let [{:block/keys [uid]} args
+        {:block/keys [order _refs]
+         :db/keys    [id]}  (common-db/get-block evt-db [:block/uid uid])
+        parent-uid          (->> id (common-db/get-parent evt-db) :block/uid)
+        position            (common-db/compat-position evt-db {:block/uid parent-uid
+                                                               :relation  order})
+        repr                [(common-db/get-internal-representation evt-db [:block/uid uid])]
+        repr-ops            (bfs/internal-representation->atomic-ops evt-db repr position)
+        save-ops            (->> _refs
+                                 (map :db/id)
+                                 (map (partial common-db/get-block evt-db))
+                                 (map (fn [{:block/keys [uid string]}]
+                                        (atomic-graph-ops/make-block-save-op uid string))))]
+    (vec (concat repr-ops save-ops))))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :block/open
