@@ -2,6 +2,7 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
+    [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common.logging                :as log]))
@@ -22,6 +23,13 @@
   (let [{:block/keys [uid]}    args
         {:block/keys [string]} (common-db/get-block evt-db [:block/uid uid])]
     [(graph-ops/build-block-save-op db uid string)]))
+
+
+(defmethod resolve-atomic-op-to-undo-ops :block/open
+  [_db evt-db {:op/keys [args]}]
+  (let [{:block/keys [uid]}    args
+        {:block/keys [open]} (common-db/get-block evt-db [:block/uid uid])]
+    [(atomic-graph-ops/make-block-open-op uid open)]))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
