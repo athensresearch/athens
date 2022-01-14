@@ -4,7 +4,8 @@
     [athens.common-events                 :as common-events]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common.logging                :as log]))
+    [athens.common.logging                :as log]
+    [athens.common-events.graph.atomic    :as atomic))
 
 
 (defn undo?
@@ -23,6 +24,35 @@
         {:block/keys [string]} (common-db/get-block evt-db [:block/uid uid])]
     [(graph-ops/build-block-save-op db uid string)]))
 
+(defmethod resolve-atomic-op-to-undo-ops :block/move
+  [evt-db {:op/keys [args]}]
+  (println "resolve atomic op to undo ops args -->" args)
+  (let [{:block/keys [uid]}       args
+        {:block/keys [order]}     (common-db/get-block evt-db [:block/uid uid])
+        ;; How to get the relative position of a block?
+        ;; - If the block has 0 block-order then we can say it is children of some block
+        ;;   hence we can reference its position via parent
+        ;; - If the block has order > 0 then we know it atleast a previous sibling so we
+        ;;   can use this previous block to reference the position
+        parent                    (common-db/get-parent evt-db [:block/uid uid])
+        parent-page?              (if (:node/title parent)
+                                    true
+                                    false)
+        parent-ref                (if parent-page?
+                                    (:node/title parent)
+                                    (:block/uid parent))
+        {prev-sib-uid :block/uid} (common-db/nth-sibling evt-db uid -1)
+        prev-block-pos            (cond
+                                    (= order 0) :parent
+                                    :else       :prev-sib)
+        position                  (cond
+                                    (true? parent-page?)         {:page/title parent-ref
+                                                                  :relation   :first}
+                                    (= :parent   prev-block-pos) {:block/uid parent-ref
+                                                                  :relation  :first}
+                                    (= :prev-sib prev-block-pos) {:block/uid prev-sib-uid
+                                                                  :relation  :after})]
+    [(atomic/make-block-move-op uid position)]))
 
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
   [db evt-db {:op/keys [consequences] :as op}]
