@@ -432,19 +432,28 @@
   '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
+(defn- dissoc-on-match
+  [m [k f]]
+  (if (f m)
+    (dissoc m k)
+    m))
+
+
 (defn get-internal-representation
   "Returns internal representation for eid in db."
   [db eid]
-  (let [remove-ks [:block/order]
-        rename-ks {:block/open :block/open?
-                   :node/title :page/title}]
+  (let [rename-ks            {:block/open :block/open?
+                              :node/title :page/title}
+        remove-ks-on-match [[:block/order (constantly true)]
+                            [:block/open? #(:block/open? %)]
+                            [:block/uid #(:page/title %)]]]
     (->> (d/pull db block-document-pull-vector-for-copy eid)
          sort-block-children
+         (walk/postwalk-replace rename-ks)
          (walk/prewalk (fn [node]
                          (if (map? node)
-                           (apply dissoc node remove-ks)
-                           node)))
-         (walk/postwalk-replace rename-ks))))
+                           (reduce dissoc-on-match node remove-ks-on-match)
+                           node))))))
 
 
 (defn get-linked-refs-by-page-title
