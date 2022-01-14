@@ -34,12 +34,8 @@
   (let [db (d/empty-db common-db/schema)]
     (is (= [#:op{:type :page/new, :atomic? true, :args {:page/title "Welcome"}}
             #:op{:type :block/new, :atomic? true, :args {:block/uid "block-1", :block/position {:page/title "Welcome", :relation :last}}}
-            #:op{:type :composite/consequence,
-                 :atomic? false,
-                 :trigger #:op{:type :block/save},
-                 :consequences
-                 [#:op{:type :page/new, :atomic? true, :args {:page/title "Welcome"}}
-                  #:op{:type :block/save, :atomic? true, :args {:block/uid "block-1", :block/string "block with link to [[Welcome]]"}}]}
+            #:op{:type :page/new, :atomic? true, :args {:page/title "Welcome"}}
+            #:op{:type :block/save, :atomic? true, :args {:block/uid "block-1", :block/string "block with link to [[Welcome]]"}}
             #:op{:type :block/open :atomic? true :args {:block/uid "block-1" :block/open? false}}]
            (bfs/internal-representation->atomic-ops db tree-with-page nil)))
 

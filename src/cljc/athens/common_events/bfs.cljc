@@ -67,9 +67,12 @@
                                       parent-uid   {:block/uid parent-uid     :relation :last}
                                       ;; There's a default place where we can drop blocks, use it.
                                       default-position default-position
-                                      :else (throw (ex-info "Cannot determine position for enhanced internal representation" eir)))]
-      (cond-> [(atomic/make-block-new-op uid position)
-               (graph-ops/build-block-save-op db uid string)]
+                                      :else (throw (ex-info "Cannot determine position for enhanced internal representation" eir)))
+          save-op                   (graph-ops/build-block-save-op db uid string)
+          atomic-save-ops           (if (graph-ops/atomic-composite? save-op)
+                                      (graph-ops/extract-atomics save-op)
+                                      [save-op])]
+      (cond-> (into [(atomic/make-block-new-op uid position)] atomic-save-ops)
         (= open? false) (conj (atomic/make-block-open-op uid false))))))
 
 
