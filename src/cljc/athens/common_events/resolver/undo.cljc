@@ -24,11 +24,13 @@
         {:block/keys [string]} (common-db/get-block evt-db [:block/uid uid])]
     [(graph-ops/build-block-save-op db uid string)]))
 
+
 (defmethod resolve-atomic-op-to-undo-ops :block/open
   [_db evt-db {:op/keys [args]}]
   (let [{:block/keys [uid]}    args
         {:block/keys [open]} (common-db/get-block evt-db [:block/uid uid])]
     [(atomic-graph-ops/make-block-open-op uid open)]))
+
 
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
   [db evt-db {:op/keys [consequences] :as op}]
