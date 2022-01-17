@@ -4,6 +4,7 @@
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs             :as bfs]
     [athens.common-events.fixture         :as fixture]
+    [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common-events.resolver.undo   :as undo]
@@ -521,7 +522,7 @@
                      :block/children [{:block/uid    "reffer-uid"
                                        :block/string "\"yields falsehood when preceded by its quotation\" yields falsehood when preceded by its quotation."}]}]
         lookup     [:node/title "test-page"]
-        remove!    #(-> (graph-ops/build-block-remove-op @@fixture/connection test-uid)
+        remove!    #(-> (atomic-graph-ops/make-block-remove-op test-uid)
                         fixture/op-resolve-transact!)]
 
     (t/testing "undo"
