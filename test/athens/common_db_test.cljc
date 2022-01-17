@@ -40,3 +40,37 @@
                       :block/uid  "1"}]
                     [:node/title "a page"])
                {:page/title "a page"})))))
+
+
+(t/deftest compat-position
+  (let [tx-data [{:node/title     "a page"
+                  :block/uid      "page-uid"
+                  :block/children [{:block/uid   "1"
+                                    :block/order 0}
+                                   {:block/uid      "2"
+                                    :block/order    1
+                                    :block/children [{:block/uid   "2-1"
+                                                      :block/order 0}
+                                                     {:block/uid   "2-2"
+                                                      :block/order 1}]}]}]
+        db      (-> (d/empty-db common-db/schema)
+                    (d/db-with tx-data))]
+
+    (t/testing "coerce uid to title"
+      (t/is (= (common-db/compat-position db {:block/uid "page-uid"
+                                              :relation  :first})
+               {:page/title "a page"
+                :relation   :first})))
+
+    (t/testing "coerce integer relation"
+      (t/testing "first block"
+        (t/is (= (common-db/compat-position db {:block/uid "2"
+                                                :relation  0})
+                 {:block/uid "2"
+                  :relation  :first})))
+
+      (t/testing "non-first block"
+        (t/is (= (common-db/compat-position db {:block/uid "2"
+                                                :relation  1})
+                 {:block/uid "2-1"
+                  :relation  :after}))))))

@@ -476,7 +476,11 @@
 (defn compat-position
   "Build a position by coercing incompatible arguments into compatible ones.
   uid to a page will instead use that page's title.
-  Integer relation will be converted to :first if 0, or :after (with matching uid) if not."
+  Integer relation will be converted to :first if 0, or :after (with matching uid) if not.
+  Accepts the `{:block/uid <parent-uid> :relation <integer>}` old format based on order number.
+  Output position will be athens.common-events.graph.schema/child-position for the first block,
+  and athens.common-events.graph.schema/sibling-position for others.
+  It's safe to use a position that does not need coercing of any arguments, like the output formats."
   [db {:keys [relation block/uid page/title] :as pos}]
   (let [[coerced-ref-uid
          coerced-relation] (when (integer? relation)
