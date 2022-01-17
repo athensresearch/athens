@@ -312,6 +312,24 @@
         (t/is (empty? (get-children))))
       (fixture/teardown! setup-repr))
 
-    (t/testing "redo"
-      ;; TODO try redo expressed in atomic/composites
-      )))
+    ;; TODO try redo expressed in atomic/composites
+    #_(t/testing "redo"
+        (fixture/setup! setup-repr)
+        (t/is (empty? (get-children)))
+        (let [[event-db new-child-event] (new-child! new-test-uid)]
+          (t/is (= [#:block{:uid   new-test-uid
+                            :order 0}] (get-children)))
+          (let [[undo-event-db undo-event] (fixture/undo! event-db new-child-event)]
+            (t/is (= #:op{:type         :composite/consequence,
+                          :atomic?      false,
+                          :trigger      #:op{:undo (:event/id new-child-event)},
+                          :consequences [#:op{:type    :block/remove,
+                                              :atomic? true,
+                                              :args    #:block{:uid new-test-uid}}]}
+                     (:event/op undo-event)))
+            (t/is (empty? (get-children)))
+            (let [[redo-event-db redo-event] (fixture/undo! undo-event-db undo-event)]
+              (t/is (= [] (:event/op redo-event)))
+              (t/is (= [#:block{:uid   new-test-uid
+                                :order 0}] (get-children))))))
+        (fixture/teardown! setup-repr))))
