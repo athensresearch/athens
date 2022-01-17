@@ -10,22 +10,22 @@
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
 
+(defn get-sidebar-count
+  []
+  (-> (common-db/get-sidebar-elements @@fixture/connection)
+      (count)))
 
 (t/deftest shortcut-add-test
   (let [setup-tx  [{:block/uid      "parent-uid"
                     :node/title     "Hello World!"
                     :block/children []}]]
     (fixture/transact-with-middleware setup-tx)
-    (t/is (= 0
-             (-> (common-db/get-sidebar-elements @@fixture/connection)
-                 (count))))
+    (t/is (= 0 (get-sidebar-count)))
     (let [shortcut-new-op  (atomic-graph-ops/make-shortcut-new-op "Hello World!")
           shortcut-new-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                     shortcut-new-op)]
       (d/transact! @fixture/connection shortcut-new-txs)
-      (t/is (= 1
-               (-> (common-db/get-sidebar-elements @@fixture/connection)
-                   (count)))))))
+      (t/is (= 1 (get-sidebar-count))))))
 
 
 (t/deftest shortcut-remove-test
@@ -33,9 +33,7 @@
                     :node/title     "Hello World!"
                     :block/children []}]]
     (fixture/transact-with-middleware setup-tx)
-    (t/is (= 0
-             (-> (common-db/get-sidebar-elements @@fixture/connection)
-                 (count))))
+    (t/is (= 0 (get-sidebar-count)))
     (let [shortcut-new-op     (atomic-graph-ops/make-shortcut-new-op "Hello World!")
           shortcut-new-txs    (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                        shortcut-new-op)
@@ -44,14 +42,10 @@
                                                                          shortcut-remove-op)]
 
       (d/transact! @fixture/connection shortcut-new-txs)
-      (t/is (= 1
-               (-> (common-db/get-sidebar-elements @@fixture/connection)
-                   (count))))
+      (t/is (= 1 (get-sidebar-count)))
 
       (d/transact! @fixture/connection shortcut-remove-txs)
-      (t/is (= 0
-               (-> (common-db/get-sidebar-elements @@fixture/connection)
-                   (count)))))))
+      (t/is (= 0 (get-sidebar-count))))))
 
 
 (t/deftest shortcut-move-before-test
@@ -83,18 +77,14 @@
                     :node/title     "page 3"
                     :block/children []}]]
     (fixture/transact-with-middleware setup-tx)
-    (t/is (= 0
-             (-> (common-db/get-sidebar-elements @@fixture/connection)
-                 (count))))
+    (t/is (= 0 (get-sidebar-count)))
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                               (atomic-graph-ops/make-shortcut-new-op "page 1")))
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                               (atomic-graph-ops/make-shortcut-new-op "page 2")))
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                               (atomic-graph-ops/make-shortcut-new-op "page 3")))
-    (t/is (= 3
-             (-> (common-db/get-sidebar-elements @@fixture/connection)
-                 (count))))
+    (t/is (= 3 (get-sidebar-count)))
 
     ;; Test 1
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
@@ -196,6 +186,9 @@
       (t/is (= 2 page-1-loc)))))
 
 
+
+
+(t/deftest undo-shortcut-add)
 (fixture/integration-test-fixture
   (fn []
     (let [setup-repr [{:page/title     "Hello World!"}]
@@ -203,20 +196,13 @@
                           (fixture/op-resolve-transact!))]
       (t/testing "undo"
         (fixture/setup! setup-repr)
-        (t/is (= 0
-                 (-> (common-db/get-sidebar-elements @@fixture/connection)
-                     (count))))
+        (t/is (= 0 (get-sidebar-count)))
         (let [[evt-db evt] (save!)]
-          (t/is (= 1
-                   (-> (common-db/get-sidebar-elements @@fixture/connection)
-                       (count))))
-          ;(cljs.pprint/pprint evt)
+          (t/is (= 1 (get-sidebar-count)))
           (fixture/undo! evt-db evt)
-          (t/is (= 0
-                   (-> (common-db/get-sidebar-elements @@fixture/connection)
-                       (count)))))))))
+          (t/is (= 0 (get-sidebar-count))))))))
 
-
+(t/deftest undo-shortcut-remove)
 (fixture/integration-test-fixture
   (fn []
     (let [setup-repr [{:page/title     "Hello World!"}]
@@ -224,27 +210,13 @@
                           (fixture/op-resolve-transact!))]
       (t/testing "redo"
         (fixture/setup! setup-repr)
-        (t/is (= 0
-                 (-> (common-db/get-sidebar-elements @@fixture/connection)
-                     (count))))
+        (t/is (= 0 (get-sidebar-count)))
         (let [[evt-db evt] (save!)]
-          (t/is (= 1
-                   (-> (common-db/get-sidebar-elements @@fixture/connection)
-                       (count))))
+          (t/is (= 1 (get-sidebar-count)))
           (let [[evt-db' evt'] (fixture/undo! evt-db evt)]
-            (t/is (= 0
-                     (-> (common-db/get-sidebar-elements @@fixture/connection)
-                         (count))))
+            (t/is (= 0 (get-sidebar-count)))
             (fixture/undo! evt-db' evt')
-            (t/is (= 1
-                      (-> (common-db/get-sidebar-elements @@fixture/connection)
-                          (count))))))))))
-
-
-(t/deftest undo-shortcut-add)
-
-(t/deftest undo-shortcut-remove)
-
+            (t/is (= 1 (get-sidebar-count)))))))))
 
 (t/deftest undo-shortcut-move-before)
 (t/deftest undo-shortcut-move-after)
