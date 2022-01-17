@@ -505,6 +505,19 @@
     (or new-pos pos)))
 
 
+(defn get-position
+  "Get the position for block-uid in db.
+  Position will be athens.common-events.graph.schema/child-position for the first block,
+  and athens.common-events.graph.schema/sibling-position for others."
+  [db block-uid]
+  (let [{:block/keys [order]
+         :db/keys    [id]} (get-block db [:block/uid block-uid])
+        parent-uid         (->> id (get-parent db) :block/uid)
+        position           (compat-position db {:block/uid parent-uid
+                                                :relation  order})]
+    position))
+
+
 (defn validate-position
   [db {:keys [block/uid page/title] :as position}]
   (let [title->uid (get-page-uid db title)

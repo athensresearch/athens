@@ -74,3 +74,40 @@
                                                 :relation  1})
                  {:block/uid "2-1"
                   :relation  :after}))))))
+
+
+(t/deftest get-position
+  (let [tx-data [{:node/title     "a page"
+                  :block/uid      "page-uid"
+                  :block/children [{:block/uid   "1"
+                                    :block/order 0}
+                                   {:block/uid      "2"
+                                    :block/order    1
+                                    :block/children [{:block/uid   "2-1"
+                                                      :block/order 0}
+                                                     {:block/uid   "2-2"
+                                                      :block/order 1}]}]}]
+        db      (-> (d/empty-db common-db/schema)
+                    (d/db-with tx-data))]
+
+    (t/testing "page parent"
+      (t/testing "first block"
+        (t/is (= (common-db/get-position db "1")
+                 {:page/title "a page"
+                  :relation   :first})))
+
+      (t/testing "non-first block"
+        (t/is (= (common-db/get-position db "2")
+                 {:block/uid "1"
+                  :relation  :after}))))
+
+    (t/testing "block parent"
+      (t/testing "first block"
+        (t/is (= (common-db/get-position db "2-1")
+                 {:block/uid "2"
+                  :relation  :first})))
+
+      (t/testing "non-first block"
+        (t/is (= (common-db/get-position db "2-2")
+                 {:block/uid "2-1"
+                  :relation  :after}))))))
