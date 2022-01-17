@@ -510,14 +510,14 @@
                                                              :block/order    0
                                                              :block/children []}]}]}]
         get-block-order    #(->> [:block/uid %]
-                                 fixture/get-repr
+                                 (common-db/get-block @@fixture/connection)
                                  :block/order)
         get-children-count #(->> [:block/uid %]
-                                 fixture/get-repr
+                                 (common-db/get-block @@fixture/connection)
                                  :block/children
                                  count)
         move!              #(-> (atomic-ops/make-block-move-op %1 {:relation %2
-                                                                   :block-uid %3})
+                                                                   :block/uid %3})
                                 fixture/op-resolve-transact!)]
 
     (t/testing "Undo move: Move source block :after target block, when both source and target block are under **same** parent"

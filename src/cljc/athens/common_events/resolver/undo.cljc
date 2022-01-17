@@ -5,8 +5,9 @@
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common.logging                :as log]
-    [athens.common-events.graph.atomic    :as atomic))
+    [athens.common-events.graph.atomic    :as atomic]
+    [athens.common.logging                :as log]))
+
 
 
 (defn undo?
@@ -26,7 +27,7 @@
     [(graph-ops/build-block-save-op db uid string)]))
 
 (defmethod resolve-atomic-op-to-undo-ops :block/move
-  [evt-db {:op/keys [args]}]
+  [_ evt-db {:op/keys [args]}]
   (println "resolve atomic op to undo ops args -->" args)
   (let [{:block/keys [uid]}       args
         {:block/keys [order]}     (common-db/get-block evt-db [:block/uid uid])
@@ -52,7 +53,9 @@
                                     (= :parent   prev-block-pos) {:block/uid parent-ref
                                                                   :relation  :first}
                                     (= :prev-sib prev-block-pos) {:block/uid prev-sib-uid
-                                                                  :relation  :after})]
+                                                                  :relation  :after})
+        #_#_ position             (common-db/compat-position evt-db {:relation order
+                                                                     :block/uid uid})]
     [(atomic/make-block-move-op uid position)]))
 
 (defmethod resolve-atomic-op-to-undo-ops :block/open
