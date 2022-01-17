@@ -74,39 +74,42 @@
        db))
 
 
+(defn get-sidebar-count
+  [db]
+  (-> (get-sidebar-elements db)
+      count))
+
 (defn find-title-from-order
-  [sidebar-elements order]
-  (-> (filter (fn [el]
-                (= (:page/sidebar el)
-                   order))
-              sidebar-elements)
-      (first)
-      (:node/title)))
+  [db order]
+  (->> (get-sidebar-elements db)
+       (filter (fn [el]
+                 (= (:page/sidebar el)
+                    order)))
+       (first)
+       (:node/title)))
 
 
 (defn find-source-target-title
   [db source-order target-order]
-  (let [sidebar-elements   (get-sidebar-elements db)
-        source-title (find-title-from-order sidebar-elements source-order)
-        target-title (find-title-from-order sidebar-elements target-order)]
+  (let [source-title (find-title-from-order db source-order)
+        target-title (find-title-from-order db target-order)]
     [source-title target-title]))
 
 
 (defn find-order-from-title
-  [sidebar-elements title]
-  (-> (filter (fn [el]
-                (= (:node/title el)
-                   title))
-              sidebar-elements)
-      (first)
-      (:page/sidebar)))
+  [db title]
+  (->> (get-sidebar-elements db)
+       (filter (fn [el]
+                 (= (:node/title el)
+                    title)))
+       (first)
+       (:page/sidebar)))
 
 
 (defn find-source-target-order
   [db source-title target-title]
-  (let [sidebar-elements   (get-sidebar-elements db)
-        source-order (find-order-from-title sidebar-elements source-title)
-        target-order (find-order-from-title sidebar-elements target-title)]
+  (let [source-order (find-order-from-title db source-title)
+        target-order (find-order-from-title db target-title)]
     [source-order target-order]))
 
 

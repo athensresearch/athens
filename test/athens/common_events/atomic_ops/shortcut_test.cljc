@@ -25,7 +25,7 @@
           shortcut-new-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                     shortcut-new-op)]
       (d/transact! @fixture/connection shortcut-new-txs)
-      (t/is (= 1 (get-sidebar-count))))))
+      (t/is (= 1 (common-db/get-sidebar-count @@fixture/connection))))))
 
 
 (t/deftest shortcut-remove-test
@@ -33,7 +33,7 @@
                     :node/title     "Hello World!"
                     :block/children []}]]
     (fixture/transact-with-middleware setup-tx)
-    (t/is (= 0 (get-sidebar-count)))
+    (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection)))
     (let [shortcut-new-op     (atomic-graph-ops/make-shortcut-new-op "Hello World!")
           shortcut-new-txs    (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                        shortcut-new-op)
@@ -42,10 +42,10 @@
                                                                          shortcut-remove-op)]
 
       (d/transact! @fixture/connection shortcut-new-txs)
-      (t/is (= 1 (get-sidebar-count)))
+      (t/is (= 1 (common-db/get-sidebar-count @@fixture/connection)))
 
       (d/transact! @fixture/connection shortcut-remove-txs)
-      (t/is (= 0 (get-sidebar-count))))))
+      (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection))))))
 
 
 (t/deftest shortcut-move-before-test
@@ -77,14 +77,14 @@
                     :node/title     "page 3"
                     :block/children []}]]
     (fixture/transact-with-middleware setup-tx)
-    (t/is (= 0 (get-sidebar-count)))
+    (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection)))
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                               (atomic-graph-ops/make-shortcut-new-op "page 1")))
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                               (atomic-graph-ops/make-shortcut-new-op "page 2")))
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                               (atomic-graph-ops/make-shortcut-new-op "page 3")))
-    (t/is (= 3 (get-sidebar-count)))
+    (t/is (= 3 (common-db/get-sidebar-count @@fixture/connection)))
 
     ;; Test 1
     (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
@@ -92,10 +92,9 @@
                                                                                                                       {:page/title "page 1"
                                                                                                                        :relation :before})))
 
-    (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
-          page-1-loc  (common-db/find-order-from-title sidebar-els "page 1")
-          page-2-loc  (common-db/find-order-from-title sidebar-els "page 2")
-          page-3-loc  (common-db/find-order-from-title sidebar-els "page 3")]
+    (let [page-1-loc  (common-db/find-order-from-title @@fixture/connection "page 1")
+          page-2-loc  (common-db/find-order-from-title @@fixture/connection "page 2")
+          page-3-loc  (common-db/find-order-from-title @@fixture/connection "page 3")]
       (t/is (= 0 page-3-loc))
       (t/is (= 1 page-1-loc))
       (t/is (= 2 page-2-loc)))
@@ -106,10 +105,9 @@
                                                                               (atomic-graph-ops/make-shortcut-move-op "page 3"
                                                                                                                       {:page/title "page 2"
                                                                                                                        :relation :before})))
-    (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
-          page-1-loc  (common-db/find-order-from-title sidebar-els "page 1")
-          page-2-loc  (common-db/find-order-from-title sidebar-els "page 2")
-          page-3-loc  (common-db/find-order-from-title sidebar-els "page 3")]
+    (let [page-1-loc  (common-db/find-order-from-title @@fixture/connection "page 1")
+          page-2-loc  (common-db/find-order-from-title @@fixture/connection "page 2")
+          page-3-loc  (common-db/find-order-from-title @@fixture/connection "page 3")]
       (t/is (= 0 page-1-loc))
       (t/is (= 1 page-3-loc))
       (t/is (= 2 page-2-loc)))))
@@ -163,10 +161,9 @@
                                                                                                                       {:page/title "page 2"
                                                                                                                        :relation :before})))
 
-    (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
-          page-1-loc  (common-db/find-order-from-title sidebar-els "page 1")
-          page-2-loc  (common-db/find-order-from-title sidebar-els "page 2")
-          page-3-loc  (common-db/find-order-from-title sidebar-els "page 3")]
+    (let [page-1-loc  (common-db/find-order-from-title @@fixture/connection "page 1")
+          page-2-loc  (common-db/find-order-from-title @@fixture/connection "page 2")
+          page-3-loc  (common-db/find-order-from-title @@fixture/connection "page 3")]
       (t/is (= 0 page-1-loc))
       (t/is (= 1 page-3-loc))
       (t/is (= 2 page-2-loc)))
@@ -177,13 +174,13 @@
                                                                               (atomic-graph-ops/make-shortcut-move-op "page 1"
                                                                                                                       {:page/title "page 2"
                                                                                                                        :relation :after})))
-    (let [sidebar-els (common-db/get-sidebar-elements @@fixture/connection)
-          page-1-loc  (common-db/find-order-from-title sidebar-els "page 1")
-          page-2-loc  (common-db/find-order-from-title sidebar-els "page 2")
-          page-3-loc  (common-db/find-order-from-title sidebar-els "page 3")]
+    (let [page-1-loc  (common-db/find-order-from-title @@fixture/connection "page 1")
+          page-2-loc  (common-db/find-order-from-title @@fixture/connection "page 2")
+          page-3-loc  (common-db/find-order-from-title @@fixture/connection "page 3")]
       (t/is (= 0 page-3-loc))
       (t/is (= 1 page-2-loc))
       (t/is (= 2 page-1-loc)))))
+
 
 
 
@@ -196,25 +193,75 @@
                           (fixture/op-resolve-transact!))]
       (t/testing "undo"
         (fixture/setup! setup-repr)
-        (t/is (= 0 (get-sidebar-count)))
+        (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection)))
         (let [[evt-db evt] (save!)]
-          (t/is (= 1 (get-sidebar-count)))
+          (t/is (= 1 (common-db/get-sidebar-count @@fixture/connection)))
           (fixture/undo! evt-db evt)
-          (t/is (= 0 (get-sidebar-count)))))
+          (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection)))))
 
       (t/testing "redo"
          (fixture/setup! setup-repr)
-         (t/is (= 0 (get-sidebar-count)))
+         (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection)))
          (let [[evt-db evt] (save!)]
-           (t/is (= 1 (get-sidebar-count)))
+           (t/is (= 1 (common-db/get-sidebar-count @@fixture/connection)))
            (let [[evt-db' evt'] (fixture/undo! evt-db evt)]
-             (t/is (= 0 (get-sidebar-count)))
+             (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection)))
              (fixture/undo! evt-db' evt')
-             (t/is (= 1 (get-sidebar-count)))))))))
+             (t/is (= 1 (common-db/get-sidebar-count @@fixture/connection)))))))))
 
 
+"
+--Setup--
+* Alice
+* Bob
+* Charlie
+
+--Save--
+
+* Alice
+* Charlie
+
+--Undo--
+* Alice
+* Bob
+* Charlie
+
+"
 
 (t/deftest undo-shortcut-remove)
+(fixture/integration-test-fixture
+  (fn []
+    (let [setup-tx [{:node/title "Alice" :block/uid "Alice" :page/sidebar 0}
+                    {:node/title "Bob" :block/uid "Bob" :page/sidebar 1}
+                    {:node/title "Charlie" :block/uid "Charlie" :page/sidebar 2}]
+          setup!   #(fixture/transact-with-middleware setup-tx)
+          save!    #(->> "Bob"
+                         (atomic-graph-ops/make-shortcut-remove-op)
+                         (fixture/op-resolve-transact!))]
+      (t/testing "undo"
+        (setup!)
+        (t/is (= 3 (common-db/get-sidebar-count @@fixture/connection)))
+        (t/is (= 0 (common-db/find-order-from-title @@fixture/connection "Alice")))
+        (t/is (= 1 (common-db/find-order-from-title @@fixture/connection "Bob")))
+        (t/is (= 2 (common-db/find-order-from-title @@fixture/connection "Charlie")))
+        (let [[evt-db evt] (save!)]
+          (t/is (= 2 (common-db/get-sidebar-count @@fixture/connection)))
+          (fixture/undo! evt-db evt)
+          (cljs.pprint/pprint (common-db/get-sidebar-elements @@fixture/connection))
+          (t/is (= 3 (common-db/get-sidebar-count @@fixture/connection)))
+          (t/is (= 0 (common-db/find-order-from-title @@fixture/connection "Alice")))
+          (t/is (= 1 (common-db/find-order-from-title @@fixture/connection "Bob")))
+          (t/is (= 2 (common-db/find-order-from-title @@fixture/connection "Charlie")))))
+
+      #_(t/testing "redo"
+          (fixture/setup! setup-repr)
+          (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection)))
+          (let [[evt-db evt] (save!)]
+            (t/is (= 1 (common-db/get-sidebar-count @@fixture/connection)))
+            (let [[evt-db' evt'] (fixture/undo! evt-db evt)]
+              (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection)))
+              (fixture/undo! evt-db' evt')
+              (t/is (= 1 (common-db/get-sidebar-count @@fixture/connection)))))))))
 
 (t/deftest undo-shortcut-move-before)
 (t/deftest undo-shortcut-move-after)

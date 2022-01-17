@@ -61,9 +61,19 @@
     [(atomic-graph-ops/make-shortcut-remove-op title)]))
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/remove
-  [_db _evt-db {:op/keys [args]}]
-  (let [{:page/keys [title]} args]
-    [(atomic-graph-ops/make-shortcut-new-op title)]))
+  [db evt-db {:op/keys [args]}]
+  (let [{undone-title :page/title} args
+        undone-order  (common-db/find-order-from-title evt-db undone-title)
+        current-title (common-db/find-title-from-order db undone-order)]
+    (prn "HI" undone-title undone-order current-title)
+    [(atomic-graph-ops/make-shortcut-new-op undone-title)
+     (atomic-graph-ops/make-shortcut-move-op undone-title {:page/title current-title
+                                                           :shortcut/position :above})]))
+
+#_(defn spy
+    [x]
+    (cljs.pprint/pprint x)
+    x)
 
 ;; TODO: should there be a distinction between undo and redo?
 (defn build-undo-event
@@ -73,6 +83,7 @@
     (throw (ex-info "Cannot undo non-atomic event" event))
     (->> op
          (resolve-atomic-op-to-undo-ops db evt-db)
+         ;spy
          (composite/make-consequence-op {:op/undo id})
          common-events/build-atomic-event)))
 
