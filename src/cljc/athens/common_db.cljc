@@ -445,8 +445,8 @@
   (let [rename-ks            {:block/open :block/open?
                               :node/title :page/title}
         remove-ks-on-match [[:block/order (constantly true)]
-                            [:block/open? #(:block/open? %)]
-                            [:block/uid #(:page/title %)]]]
+                            [:block/open? :block/open?]
+                            [:block/uid   :page/title]]]
     (->> (d/pull db block-document-pull-vector-for-copy eid)
          sort-block-children
          (walk/postwalk-replace rename-ks)
