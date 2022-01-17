@@ -191,7 +191,7 @@
 (t/deftest undo-shortcut-add)
 (fixture/integration-test-fixture
   (fn []
-    (let [setup-repr [{:page/title     "Hello World!"}]
+    (let [setup-repr [{:page/title "Hello World!"}]
           save!      #(-> (atomic-graph-ops/make-shortcut-new-op "Hello World!")
                           (fixture/op-resolve-transact!))]
       (t/testing "undo"
@@ -200,23 +200,21 @@
         (let [[evt-db evt] (save!)]
           (t/is (= 1 (get-sidebar-count)))
           (fixture/undo! evt-db evt)
-          (t/is (= 0 (get-sidebar-count))))))))
+          (t/is (= 0 (get-sidebar-count)))))
+
+      (t/testing "redo"
+         (fixture/setup! setup-repr)
+         (t/is (= 0 (get-sidebar-count)))
+         (let [[evt-db evt] (save!)]
+           (t/is (= 1 (get-sidebar-count)))
+           (let [[evt-db' evt'] (fixture/undo! evt-db evt)]
+             (t/is (= 0 (get-sidebar-count)))
+             (fixture/undo! evt-db' evt')
+             (t/is (= 1 (get-sidebar-count)))))))))
+
+
 
 (t/deftest undo-shortcut-remove)
-(fixture/integration-test-fixture
-  (fn []
-    (let [setup-repr [{:page/title     "Hello World!"}]
-          save!      #(-> (atomic-graph-ops/make-shortcut-new-op "Hello World!")
-                          (fixture/op-resolve-transact!))]
-      (t/testing "redo"
-        (fixture/setup! setup-repr)
-        (t/is (= 0 (get-sidebar-count)))
-        (let [[evt-db evt] (save!)]
-          (t/is (= 1 (get-sidebar-count)))
-          (let [[evt-db' evt'] (fixture/undo! evt-db evt)]
-            (t/is (= 0 (get-sidebar-count)))
-            (fixture/undo! evt-db' evt')
-            (t/is (= 1 (get-sidebar-count)))))))))
 
 (t/deftest undo-shortcut-move-before)
 (t/deftest undo-shortcut-move-after)
