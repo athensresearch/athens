@@ -280,3 +280,38 @@
                                 #"Location uid does not exist"
                 (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-new-v2-op)))))))
 
+
+(t/deftest undo
+  (let [test-uid     "test-uid"
+        new-test-uid "test-new-uid"
+        setup-repr   [{:page/title     "test-undo-block-new-page"
+                       :block/children [{:block/uid    test-uid
+                                         :block/string ""}]}]
+        get-children #(->> [:block/uid test-uid]
+                           (common-db/get-block @@fixture/connection)
+                           :block/children)
+        new-child!   #(->> (atomic-graph-ops/make-block-new-op %
+                                                               {:block/uid test-uid
+                                                                :relation  :first})
+                           fixture/op-resolve-transact!)]
+    (t/testing "undo"
+      (fixture/setup! setup-repr)
+      (t/is (empty? (get-children)))
+      (let [[event-db event] (new-child! new-test-uid)]
+        (t/is (= [#:block{:uid   new-test-uid
+                          :order 0}] (get-children)))
+        (let [undo-event (fixture/undo-resulting-ops event-db event)]
+          (t/is (= #:op{:type         :composite/consequence,
+                        :atomic?      false,
+                        :trigger      #:op{:undo (:event/id event)},
+                        :consequences [#:op{:type    :block/remove,
+                                            :atomic? true,
+                                            :args    #:block{:uid new-test-uid}}]}
+                   (:event/op undo-event))))
+        (fixture/undo! event-db event)
+        (t/is (empty? (get-children))))
+      (fixture/teardown! setup-repr))
+
+    (t/testing "redo"
+      ;; TODO try redo expressed in atomic/composites
+      )))

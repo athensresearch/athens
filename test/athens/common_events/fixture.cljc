@@ -59,6 +59,12 @@
     [db evt]))
 
 
+(defn undo-resulting-ops
+  [event-db event]
+  (let [db @@connection]
+    (undo/build-undo-event db event-db event)))
+
+
 (defn undo!
   [evt-db evt]
   (let [db       @@connection

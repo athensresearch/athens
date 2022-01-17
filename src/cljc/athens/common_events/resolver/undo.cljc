@@ -32,6 +32,13 @@
     [(atomic-graph-ops/make-block-open-op uid open)]))
 
 
+(defmethod resolve-atomic-op-to-undo-ops :block/new
+  [_db _evt-db {:op/keys [args]}]
+  (let [{:block/keys [uid]} args]
+    (log/info "whoop whoop")
+    [(atomic-graph-ops/make-block-remove-op uid)]))
+
+
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
   [db evt-db {:op/keys [consequences] :as op}]
   [(assoc op :op/consequences (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db)
