@@ -1,9 +1,13 @@
 (ns athens.common-events.atomic-ops.block-remove-test
   (:require
     [athens.common-db                     :as common-db]
+    [athens.common-events                 :as common-events]
+    [athens.common-events.bfs             :as bfs]
     [athens.common-events.fixture         :as fixture]
+    [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common-events.resolver.undo   :as undo]
     [athens.common.logging :as log]
     [clojure.pprint :as pp]
     [clojure.test                         :as t]
@@ -494,3 +498,49 @@
           (t/is (= 0 (:block/order child-3)))
           (t/is (= (str child-1-text child-2-text)
                    (:block/string child-1))))))))
+
+
+(t/deftest undo
+  (let [test-uid   "test-uid"
+        setup-repr [{:page/title     "test-page"
+                     :block/children [{:block/uid    "reffer-uid"
+                                       ;; The string displays as:
+                                       ;;   "yields falsehood when preceded by its quotation" yields falsehood when preceded by its quotation.
+                                       ;; This is a quine: https://en.wikipedia.org/wiki/Quine_(computing)
+                                       ;; It's interesting in and of itself but it's also especially relevant
+                                       ;; for this test, as it's an example of a reference in plain text.
+                                       ;; Undoing a remove must restore the referencing string to its previous
+                                       ;; state instead of trying to do clever things with regexes, since there
+                                       ;; isn't enough information in the string after the reference was removed
+                                       ;; to determine what parts need to go back to being a ref.
+                                       :block/string (str "\"((" test-uid "))\" ((" test-uid ")).")}
+                                      {:block/uid      test-uid
+                                       :block/string   "yields falsehood when preceded by its quotation"
+                                       :block/children [{:block/uid    "123-uid"
+                                                         :block/string "123"}]}]}]
+        exp-repr   [{:page/title     "test-page"
+                     :block/children [{:block/uid    "reffer-uid"
+                                       :block/string "\"yields falsehood when preceded by its quotation\" yields falsehood when preceded by its quotation."}]}]
+        lookup     [:node/title "test-page"]
+        remove!    #(-> (atomic-graph-ops/make-block-remove-op test-uid)
+                        fixture/op-resolve-transact!)]
+
+    (t/testing "undo"
+      (fixture/setup! setup-repr)
+      (let [[evt-db evt] (remove!)]
+        (t/is (= [(fixture/get-repr lookup)] exp-repr)
+              "Removed block and children, and replaced ref with text")
+        (fixture/undo! evt-db evt)
+        (t/is (= setup-repr [(fixture/get-repr [:node/title "test-page"])]) "Undo restored to the original state"))
+      (fixture/teardown! setup-repr))
+
+
+    ;; TODO: re-enable when block/new is supported
+    #_(t/testing "redo"
+      (fixture/setup! setup-repr)
+      (let [[evt-db evt]   (remove!)
+            [evt-db' evt'] (fixture/undo! evt-db evt)]
+        (fixture/undo! evt-db' evt')
+        (t/is (= [(fixture/get-repr lookup)] exp-repr)
+              "Redo removed block and children, and replaced ref with text"))
+      (fixture/teardown! setup-repr))))
