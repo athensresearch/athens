@@ -55,6 +55,10 @@
   [(assoc op :op/consequences (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db)
                                       consequences))])
 
+(defmethod resolve-atomic-op-to-undo-ops :shortcut/new
+  [_db evt-db {:op/keys [args]}]
+  (let [{:page/keys [title]}    args]
+    [(atomic-graph-ops/make-shortcut-remove-op title)]))
 
 ;; TODO: should there be a distinction between undo and redo?
 (defn build-undo-event

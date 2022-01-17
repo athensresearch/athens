@@ -194,3 +194,34 @@
       (t/is (= 0 page-3-loc))
       (t/is (= 1 page-2-loc))
       (t/is (= 2 page-1-loc)))))
+
+
+(fixture/integration-test-fixture
+  (fn []
+    (let [setup-repr [{:page/title     "Hello World!"}]
+          save!      #(-> (atomic-graph-ops/make-shortcut-new-op "Hello World!")
+                          (fixture/op-resolve-transact!))]
+      (t/testing "undo")
+      (fixture/setup! setup-repr)
+      (t/is (= 0
+               (-> (common-db/get-sidebar-elements @@fixture/connection)
+                   (count))))
+      (let [[evt-db evt] (save!)]
+        (t/is (= 1
+                 (-> (common-db/get-sidebar-elements @@fixture/connection)
+                     (count))))
+        (cljs.pprint/pprint evt)
+        (fixture/undo! evt-db evt)
+        (t/is (= 0
+                  (-> (common-db/get-sidebar-elements @@fixture/connection)
+                      (count))))))))
+
+
+(t/deftest undo-shortcut-add)
+
+
+(t/deftest undo-shortcut-remove)
+
+
+(t/deftest undo-shortcut-move-before)
+(t/deftest undo-shortcut-move-after)
