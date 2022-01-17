@@ -56,9 +56,14 @@
                                       consequences))])
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/new
-  [_db evt-db {:op/keys [args]}]
-  (let [{:page/keys [title]}    args]
+  [_db _evt-db {:op/keys [args]}]
+  (let [{:page/keys [title]} args]
     [(atomic-graph-ops/make-shortcut-remove-op title)]))
+
+(defmethod resolve-atomic-op-to-undo-ops :shortcut/remove
+  [_db _evt-db {:op/keys [args]}]
+  (let [{:page/keys [title]} args]
+    [(atomic-graph-ops/make-shortcut-new-op title)]))
 
 ;; TODO: should there be a distinction between undo and redo?
 (defn build-undo-event

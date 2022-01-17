@@ -201,24 +201,47 @@
     (let [setup-repr [{:page/title     "Hello World!"}]
           save!      #(-> (atomic-graph-ops/make-shortcut-new-op "Hello World!")
                           (fixture/op-resolve-transact!))]
-      (t/testing "undo")
-      (fixture/setup! setup-repr)
-      (t/is (= 0
-               (-> (common-db/get-sidebar-elements @@fixture/connection)
-                   (count))))
-      (let [[evt-db evt] (save!)]
-        (t/is (= 1
+      (t/testing "undo"
+        (fixture/setup! setup-repr)
+        (t/is (= 0
                  (-> (common-db/get-sidebar-elements @@fixture/connection)
                      (count))))
-        (cljs.pprint/pprint evt)
-        (fixture/undo! evt-db evt)
+        (let [[evt-db evt] (save!)]
+          (t/is (= 1
+                   (-> (common-db/get-sidebar-elements @@fixture/connection)
+                       (count))))
+          ;(cljs.pprint/pprint evt)
+          (fixture/undo! evt-db evt)
+          (t/is (= 0
+                   (-> (common-db/get-sidebar-elements @@fixture/connection)
+                       (count)))))))))
+
+
+(fixture/integration-test-fixture
+  (fn []
+    (let [setup-repr [{:page/title     "Hello World!"}]
+          save!      #(-> (atomic-graph-ops/make-shortcut-new-op "Hello World!")
+                          (fixture/op-resolve-transact!))]
+      (t/testing "redo"
+        (fixture/setup! setup-repr)
         (t/is (= 0
-                  (-> (common-db/get-sidebar-elements @@fixture/connection)
-                      (count))))))))
+                 (-> (common-db/get-sidebar-elements @@fixture/connection)
+                     (count))))
+        (let [[evt-db evt] (save!)]
+          (t/is (= 1
+                   (-> (common-db/get-sidebar-elements @@fixture/connection)
+                       (count))))
+          (let [[evt-db' evt'] (fixture/undo! evt-db evt)]
+            (t/is (= 0
+                     (-> (common-db/get-sidebar-elements @@fixture/connection)
+                         (count))))
+            (fixture/undo! evt-db' evt')
+            (t/is (= 1
+                      (-> (common-db/get-sidebar-elements @@fixture/connection)
+                          (count))))))))))
 
 
 (t/deftest undo-shortcut-add)
-
 
 (t/deftest undo-shortcut-remove)
 
