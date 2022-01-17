@@ -28,14 +28,15 @@
 (defmethod resolve-atomic-op-to-undo-ops :block/remove
   [_db evt-db {:op/keys [args]}]
   (let [{:block/keys [uid]} args
-        {:block/keys [order _refs]
+        {backrefs    :block/_refs
+         :block/keys [order]
          :db/keys    [id]}  (common-db/get-block evt-db [:block/uid uid])
         parent-uid          (->> id (common-db/get-parent evt-db) :block/uid)
         position            (common-db/compat-position evt-db {:block/uid parent-uid
                                                                :relation  order})
         repr                [(common-db/get-internal-representation evt-db [:block/uid uid])]
         repr-ops            (bfs/internal-representation->atomic-ops evt-db repr position)
-        save-ops            (->> _refs
+        save-ops            (->> backrefs
                                  (map :db/id)
                                  (map (partial common-db/get-block evt-db))
                                  (map (fn [{:block/keys [uid string]}]
