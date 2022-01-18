@@ -23,7 +23,10 @@
   [db evt-db {:op/keys [args]}]
   (let [{:block/keys [uid]}    args
         {:block/keys [string]} (common-db/get-block evt-db [:block/uid uid])]
-    [(graph-ops/build-block-save-op db uid string)]))
+    ;; if block wasn't present in `event-db`
+    (if string
+      [(graph-ops/build-block-save-op db uid string)]
+      [])))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :block/open
@@ -40,18 +43,13 @@
 
 
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
-  [db evt-db {:op/keys [consequences] :as _op}]
-  (let [undo-composite     (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db)
-                                   consequences)
-        removed-block-uids (->> undo-composite
-                                (filter #(= :block/remove (:op/type %)))
-                                (map #(get-in % [:op/args :block/uid]))
-                                (into #{}))
-        undo-consequences  (->> undo-composite
-                                (remove #(and (not= :block/remove (:op/type %))
-                                              (removed-block-uids (get-in % [:op/args :block/uid]))))
-                                (into []))]
-    undo-consequences))
+  [db evt-db {:op/keys [_consequences] :as op}]
+  (let [atomic-ops (graph-ops/extract-atomics op)
+        undo-ops   (->> atomic-ops
+                        reverse
+                        (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db))
+                        (into []))]
+    undo-ops))
 
 
 ;; TODO: should there be a distinction between undo and redo?

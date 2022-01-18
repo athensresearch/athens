@@ -310,10 +310,24 @@
                    (:event/op undo-event))))
         (fixture/undo! event-db event)
         (t/is (empty? (get-children))))
-      (fixture/teardown! setup-repr))
+      (fixture/teardown! setup-repr))))
 
+
+#_(t/deftest undo-2
+  (let [test-uid     "test-uid"
+        new-test-uid "test-new-uid"
+        setup-repr   [{:page/title     "test-undo-block-new-page"
+                       :block/children [{:block/uid    test-uid
+                                         :block/string ""}]}]
+        get-children #(->> [:block/uid test-uid]
+                           (common-db/get-block @@fixture/connection)
+                           :block/children)
+        new-child!   #(->> (atomic-graph-ops/make-block-new-op %
+                                                               {:block/uid test-uid
+                                                                :relation  :first})
+                           fixture/op-resolve-transact!)]
     ;; TODO try redo expressed in atomic/composites
-    #_(t/testing "redo"
+    (t/testing "redo"
         (fixture/setup! setup-repr)
         (t/is (empty? (get-children)))
         (let [[event-db new-child-event] (new-child! new-test-uid)]
