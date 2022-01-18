@@ -69,7 +69,7 @@
 
 (defn teardown!
   [repr]
-  (doseq [title (map :page-title repr)]
+  (doseq [title (map :page/title repr)]
     (when title
       (-> (atomic-graph-ops/make-page-remove-op title)
           op-resolve-transact!))))
