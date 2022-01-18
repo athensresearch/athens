@@ -53,16 +53,7 @@
                                       consequences))])
 
 
-(defn get-sidebar-neighbors
-  "Get the neighbors for a given shortcut page, as :before and :after keys.
-  Return nil values if there is no neighbor before or after."
-  [db title]
-  (let [sidebar-items  (common-db/get-sidebar-elements db)
-        sidebar-titles (mapv :node/title sidebar-items)
-        idx            (.indexOf sidebar-titles title)
-        neighbors      {:before (get sidebar-titles (dec idx))
-                        :after  (get sidebar-titles (inc idx))}]
-    neighbors))
+
 
 
 (defn flip-neighbor-position
@@ -107,7 +98,7 @@
   [_db evt-db {:op/keys [args] :as op}]
   (let [{removed-title :page/title} args
         new-op            (atomic-graph-ops/make-shortcut-new-op removed-title)
-        neighbors         (get-sidebar-neighbors evt-db removed-title)
+        neighbors         (common-db/get-shortcut-neighbors evt-db removed-title)
         neighbor-position (flip-neighbor-position neighbors)
         move-op           (cond neighbors
                                 (atomic-graph-ops/make-shortcut-move-op removed-title neighbor-position))]
@@ -126,7 +117,7 @@
   [_db evt-db {:op/keys [args] :as op}]
   (let [{moved-title :page/title position :shortcut/position} args
         {_prev-target-title :page/title prev-relation :relation} position
-        neighbors         (get-sidebar-neighbors evt-db moved-title)
+        neighbors         (common-db/get-shortcut-neighbors evt-db moved-title)
         neighbor-position (flip-neighbor-position neighbors)
         move-op           (atomic-graph-ops/make-shortcut-move-op moved-title neighbor-position)]
     [move-op]))

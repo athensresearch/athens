@@ -80,6 +80,19 @@
   (-> (get-sidebar-elements db)
       count))
 
+
+(defn get-shortcut-neighbors
+  "Get the neighbors for a given shortcut page, as :before and :after keys.
+  Return nil values if there is no neighbor before or after."
+  [db title]
+  (let [sidebar-items  (get-sidebar-elements db)
+        sidebar-titles (mapv :node/title sidebar-items)
+        idx            (.indexOf sidebar-titles title)
+        neighbors      {:before (get sidebar-titles (dec idx))
+                        :after  (get sidebar-titles (inc idx))}]
+    neighbors))
+
+
 (defn find-title-from-order
   [db order]
   (->> (get-sidebar-elements db)
