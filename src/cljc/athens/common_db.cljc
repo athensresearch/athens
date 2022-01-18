@@ -68,10 +68,11 @@
 
 (defn get-sidebar-elements
   [db]
-  (d/q '[:find [(pull ?e [*]) ...]
-         :where
-         [?e :page/sidebar _]]
-       db))
+  (->> (d/q '[:find [(pull ?e [*]) ...]
+              :where
+              [?e :page/sidebar _]]
+            db)
+       (sort-by :page/sidebar)))
 
 
 (defn get-sidebar-count

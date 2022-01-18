@@ -55,29 +55,77 @@
   [(assoc op :op/consequences (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db)
                                       consequences))])
 
+;; only need neighbors from the thing that got removed
+;; if >= 3 sidebar-elements, get a subvec of 3
+;; if == 2 sidebar-elements, get a subvec of 2
+;; if == 1 sidebar-elements, don't need subvec
+;; if == 0 sidebar-elements, don't need subvec
+
+(defn get-sidebar-neighbors
+  [db title]
+  (let [sidebar-elem   (common-db/get-sidebar-elements db)
+        sidebar-titles (mapv :node/title sidebar-elem)
+        idx            (.indexOf sidebar-titles title)
+        neighbors      (case (count sidebar-titles)
+                         1 []
+                         2 sidebar-titles
+                         3 (subvec sidebar-titles (dec idx) (+ 2 idx)))
+        _ (prn neighbors)]
+    neighbors))
+
+(subvec [0 1] 0 3)
+(get [0 1] 3)
+
+(defn get-relative-position
+  "if 1 element, no move.
+  if 2 elements, move relative to other
+  if 3 elements, your choice of before or after"
+  [title neighbors]
+  (let [cnt (count neighbors)
+        idx (.indexOf neighbors title)]
+    ;;(prn cnt idx neighbors)
+    (case cnt
+      1 nil
+      2 (if (zero? idx)
+          {:page/title (get neighbors (inc idx))
+           :relation   :before}
+          {:page/title (get neighbors (dec idx))
+           :relation   :after})
+      3 {:page/title (get neighbors (inc idx))
+         :relation   :before})))
+
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/new
   [_db _evt-db {:op/keys [args]}]
   (let [{:page/keys [title]} args]
     [(atomic-graph-ops/make-shortcut-remove-op title)]))
 
-;; use a cond-> because atomic-graph-ops/make-shortcut-move-op sometimes has a nil value for relation page/title
+
+
+;; 1 <- no move
+
+;; 1 <- :before 2
+;; 2
+
+;; 2
+;; 3 <- :after 3
+
+;; 1
+;; 2 <- :before 3 or :after 1
+;; 3
+
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/remove
-  [db evt-db {:op/keys [args]}]
+  [_db evt-db {:op/keys [args]}]
   (let [{prev-source-title :page/title} args
-        prev-source-order               (common-db/find-order-from-title evt-db prev-source-title)
-        curr-title-at-prev-source-order (common-db/find-title-from-order db prev-source-order)
-        make-op                         (atomic-graph-ops/make-shortcut-new-op prev-source-title)
-        move-op                         (atomic-graph-ops/make-shortcut-move-op prev-source-title {:page/title curr-title-at-prev-source-order
-                                                                                                   :relation   :before})]
-    (cljs.pprint/pprint (cond-> [make-op
-                                 curr-title-at-prev-source-order (conj move-op)]))
-    ;; a nil value for relation's page/title leads to a nil value for redo new
-    ;; and sometimes also for remove
-    #_[make-op
-       move-op]
-    ;; maybe following there should be a nil remover elsewhere
+        ;; if using :before, find the element that was right :before prev-source-title
+        make-op   (atomic-graph-ops/make-shortcut-new-op prev-source-title)
+        neighbors (get-sidebar-neighbors evt-db prev-source-title)
+        position  (get-relative-position prev-source-title neighbors)
+        move-op   (atomic-graph-ops/make-shortcut-move-op prev-source-title position)]
+    ;; if the last index was removed: new
+    ;; if any other index was removed: new + move
     (cond-> [make-op]
-            curr-title-at-prev-source-order (conj move-op))))
+      position (conj move-op))))
+
 
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/move
