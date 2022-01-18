@@ -55,15 +55,10 @@
   [(assoc op :op/consequences (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db)
                                       consequences))])
 
-;; only need neighbors from the thing that got removed
-;; if >= 3 sidebar-elements, get a subvec of 3
-;; if == 2 sidebar-elements, get a subvec of 2
-;; if == 1 sidebar-elements, don't need subvec
-;; if == 0 sidebar-elements, don't need subvec
 
 (defn get-sidebar-neighbors
   "Get the neighbors for a given shortcut page, as :before and :after keys.
-  Returns nil values if there is nothing before and after."
+  Return nil values if there is no neighbor before or after."
   [db title]
   (let [sidebar-items  (common-db/get-sidebar-elements db)
         sidebar-titles (mapv :node/title sidebar-items)
@@ -99,7 +94,6 @@
     [(atomic-graph-ops/make-shortcut-remove-op title)]))
 
 
-
 ;; 1 <- no move
 
 ;; 1 <- :before 2
@@ -113,17 +107,20 @@
 ;; 3
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/remove
-  [_db evt-db {:op/keys [args]}]
+  [_db evt-db {:op/keys [args] :as op}]
   (let [{removed-title :page/title} args
-        ;; if using :before, find the element that was right :before prev-source-title
-        new-op           (atomic-graph-ops/make-shortcut-new-op removed-title)
+        new-op            (atomic-graph-ops/make-shortcut-new-op removed-title)
         neighbors         (get-sidebar-neighbors evt-db removed-title)
         neighbor-position (flip-neighbor-position neighbors)
         move-op           (cond neighbors
                                 (atomic-graph-ops/make-shortcut-move-op removed-title neighbor-position))]
     ;; if the last index was removed: new
     ;; if any other index was removed: new + move
-    (prn "REMOVE" neighbors neighbor-position move-op)
+    (prn "OG OP")
+    (cljs.pprint/pprint op)
+    (prn "REMOVE" neighbor-position)
+    (cljs.pprint/pprint (cond-> [new-op]
+                                neighbor-position (conj move-op)))
     (cond-> [new-op]
             neighbor-position (conj move-op))))
 
@@ -135,10 +132,6 @@
         neighbors         (get-sidebar-neighbors evt-db moved-title)
         neighbor-position (flip-neighbor-position neighbors)
         move-op           (atomic-graph-ops/make-shortcut-move-op moved-title neighbor-position)]
-    (prn "ORIGINAL OP")
-    (cljs.pprint/pprint op)
-    (prn "MOVE")
-    (cljs.pprint/pprint move-op)
     [move-op]))
 
 

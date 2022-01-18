@@ -238,7 +238,33 @@
               (t/is (= 0 (common-db/find-order-from-title @@fixture/connection "Alice")))
               (t/is (= 1 (common-db/find-order-from-title @@fixture/connection "Bob"))))))))))
 
+(t/deftest undo-shortcut-remove-bottom)
+(fixture/integration-test-fixture
+  (fn []
+    (let [setup-tx    [{:node/title "Bob" :block/uid "Bob" :page/sidebar 0}
+                       {:node/title "Charlie" :block/uid "Charlie" :page/sidebar 1}]
+          setup!      #(fixture/transact-with-middleware setup-tx)
+          remove-bottom! #(->> "Charlie"
+                               (atomic-graph-ops/make-shortcut-remove-op)
+                               (fixture/op-resolve-transact!))]
 
+      (t/testing "undo remove bottom"
+        (setup!)
+        (let [sidebar-elem (common-db/get-sidebar-elements @@fixture/connection)]
+          (t/is (= 2 (common-db/get-sidebar-count @@fixture/connection)))
+          (t/is (= 0 (common-db/find-order-from-title @@fixture/connection "Bob")))
+          (t/is (= 1 (common-db/find-order-from-title @@fixture/connection "Charlie")))
+          (let [[evt-db evt] (remove-bottom!)]
+            (t/is (= 1 (common-db/get-sidebar-count @@fixture/connection)))
+            (t/is (= 0 (common-db/find-order-from-title @@fixture/connection "Bob")))
+            (fixture/undo! evt-db evt)
+            (let [sidebar-elem' (common-db/get-sidebar-elements @@fixture/connection)]
+              (t/is (= sidebar-elem sidebar-elem'))
+              (t/is (= 2 (common-db/get-sidebar-count @@fixture/connection)))
+              (t/is (= 0 (common-db/find-order-from-title @@fixture/connection "Bob")))
+              (t/is (= 1 (common-db/find-order-from-title @@fixture/connection "Charlie"))))))))))
+
+(common-db/get-sidebar-elements @athens.db/dsdb)
 (t/deftest undo-shortcut-remove-middle)
 (fixture/integration-test-fixture
   (fn []
@@ -259,18 +285,25 @@
           (t/is (= 1 (common-db/find-order-from-title @@fixture/connection "Bob")))
           (t/is (= 2 (common-db/find-order-from-title @@fixture/connection "Charlie")))
           ;; remove Bob
-          (let [[evt-db evt] (remove-middle!)]
+          (let [[evt-db evt] (remove-middle!)
+                sidebar-elem' (common-db/get-sidebar-elements @@fixture/connection)]
             (t/is (= 2 (common-db/get-sidebar-count @@fixture/connection)))
             (t/is (= 0 (common-db/find-order-from-title @@fixture/connection "Alice")))
             (t/is (= 1 (common-db/find-order-from-title @@fixture/connection "Charlie")))
             ;; undo (add)
             (fixture/undo! evt-db evt)
-            (let [sidebar-elem' (common-db/get-sidebar-elements @@fixture/connection)]
-              (t/is (= sidebar-elem sidebar-elem'))
-              (t/is (= 3 (common-db/get-sidebar-count @@fixture/connection)))))))
-              ;;(t/is (= 0 (common-db/find-order-from-title @@fixture/connection "Alice")))
-              ;;(t/is (= 1 (common-db/find-order-from-title @@fixture/connection "Bob")))
-              ;;(t/is (= 2 (common-db/find-order-from-title @@fixture/connection "Charlie")))))))
+            (let [sidebar-elem'' (common-db/get-sidebar-elements @@fixture/connection)]
+              ;;(t/is (= sidebar-elem sidebar-elem'))
+              (prn "1")
+              (cljs.pprint/pprint sidebar-elem)
+              (prn "2")
+              (cljs.pprint/pprint sidebar-elem')
+              (prn "3")
+              (cljs.pprint/pprint sidebar-elem'')
+              (t/is (= 3 (common-db/get-sidebar-count @@fixture/connection)))
+              (t/is (= 0 (common-db/find-order-from-title @@fixture/connection "Alice")))
+              (t/is (= 1 (common-db/find-order-from-title @@fixture/connection "Bob")))
+              (t/is (= 2 (common-db/find-order-from-title @@fixture/connection "Charlie")))))))
 
       #_(t/testing "redo"
           ;; setup
