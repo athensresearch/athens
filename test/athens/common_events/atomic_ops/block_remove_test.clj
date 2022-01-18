@@ -535,7 +535,6 @@
       (fixture/teardown! setup-repr))
 
 
-    ;; TODO: re-enable when block/new is supported
     (t/testing "redo"
       (fixture/setup! setup-repr)
       (let [[evt-db evt]   (remove!)
