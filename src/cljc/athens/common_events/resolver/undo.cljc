@@ -44,21 +44,7 @@
   [_ evt-db {:op/keys [args]}]
   (println "resolve atomic op to undo ops args -->" args)
   (let [{:block/keys [uid]}       args
-        {:block/keys [order]}     (common-db/get-block evt-db [:block/uid uid])
-        ;; How to get the relative position of a block?
-        ;; - If the block has 0 block-order then we can say it is children of some block
-        ;;   hence we can reference its position via parent
-        ;; - If the block has order > 0 then we know it atleast a previous sibling so we
-        ;;   can use this previous block to reference the position
-        parent                    (common-db/get-parent evt-db [:block/uid uid])
-        parent-page?              (if (and (= 0 order)
-                                           (:node/title parent))
-                                    true
-                                    false)
-        position                  (if (true? parent-page?)
-                                    {:page/title (:node/title parent)
-                                     :relation   :first}
-                                    (common-db/get-position evt-db uid))]
+        position                  (common-db/get-position evt-db uid)]
     [(atomic-graph-ops/make-block-move-op uid position)]))
 
 
