@@ -71,10 +71,11 @@
   Page 2 <- :before"
   [{:keys [before after] :as _neighbors}]
   (cond
-    before {:relation :after
-            :page/title before}
     after {:relation :before
-           :page/title after}))
+           :page/title after}
+    before {:relation :after
+            :page/title before}))
+
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/new
   [_db _evt-db {:op/keys [args]}]
@@ -104,11 +105,11 @@
                                 (atomic-graph-ops/make-shortcut-move-op removed-title neighbor-position))]
     ;; if the last index was removed: new
     ;; if any other index was removed: new + move
-    (prn "OG OP")
-    (cljs.pprint/pprint op)
-    (prn "REMOVE" neighbor-position)
-    (cljs.pprint/pprint (cond-> [new-op]
-                                neighbor-position (conj move-op)))
+    ;;(prn "OG OP")
+    ;;(cljs.pprint/pprint op)
+    ;;(prn "REMOVE" neighbor-position)
+    ;;(cljs.pprint/pprint (cond-> [new-op]
+    ;;                            neighbor-position (conj move-op)))
     (cond-> [new-op]
             neighbor-position (conj move-op))))
 
