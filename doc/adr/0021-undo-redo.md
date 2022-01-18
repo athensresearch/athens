@@ -134,6 +134,17 @@ We can address that issue by creating all blocks before adding their content.
 - how do we present scenarios that won't allow undo to the user?
 - what are the invariants we need to check on op and undo op resolution?
 - repeating undo/redo over an operation results in an ever increasing operation due to nested composites
+- clients with partial state, derived from partial loads, cannot compute the full undo operation since it doesn't have all the data. 
+  In that case it can compute a partial undo, and ask the server to compute the full version.
+  Another strategy is to have the partial load client pull all the data necessary for the operation.
+- When can optimize the operations in undo by flattening the list and analysing it for redundancy (e.g. block/save followed by block/delete).
+  This can help save IO, and we already know that our performance due to IO is suffering.
+  This analysis would need to fully understand the causality chain between operations in order to not introduce bugs over valid composites.
+  A better place to effect this optimization is in the transaction resolver itself, as an execution planner.
+  This would also reduce, or even eliminate, the need for iterative resolution.
+- It's not actually mandatory to update the saved db state on client optimistic rollbacks. 
+  The difference here is a semantic one: if we update we say undos show use the most up to date data, if we don't we say they should use the original data.
+
 
 ## Decision
 
