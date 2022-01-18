@@ -449,8 +449,8 @@
   (let [rename-ks            {:block/open :block/open?
                               :node/title :page/title}
         remove-ks-on-match [[:block/order (constantly true)]
-                            [:block/open? #(:block/open? %)]
-                            [:block/uid #(:page/title %)]]]
+                            [:block/open? :block/open?]
+                            [:block/uid   :page/title]]]
     (->> (d/pull db block-document-pull-vector-for-copy eid)
          sort-block-children
          (walk/postwalk-replace rename-ks)
@@ -480,7 +480,11 @@
 (defn compat-position
   "Build a position by coercing incompatible arguments into compatible ones.
   uid to a page will instead use that page's title.
-  Integer relation will be converted to :first if 0, or :after (with matching uid) if not."
+  Integer relation will be converted to :first if 0, or :after (with matching uid) if not.
+  Accepts the `{:block/uid <parent-uid> :relation <integer>}` old format based on order number.
+  Output position will be athens.common-events.graph.schema/child-position for the first block,
+  and athens.common-events.graph.schema/sibling-position for others.
+  It's safe to use a position that does not need coercing of any arguments, like the output formats."
   [db {:keys [relation block/uid page/title] :as pos}]
   (let [[coerced-ref-uid
          coerced-relation] (when (integer? relation)
@@ -503,6 +507,19 @@
                                  {:page/title title'}
                                  {:block/uid (or coerced-ref-uid uid)})))]
     (or new-pos pos)))
+
+
+(defn get-position
+  "Get the position for block-uid in db.
+  Position will be athens.common-events.graph.schema/child-position for the first block,
+  and athens.common-events.graph.schema/sibling-position for others."
+  [db block-uid]
+  (let [{:block/keys [order]
+         :db/keys    [id]} (get-block db [:block/uid block-uid])
+        parent-uid         (->> id (get-parent db) :block/uid)
+        position           (compat-position db {:block/uid parent-uid
+                                                :relation  order})]
+    position))
 
 
 (defn validate-position
