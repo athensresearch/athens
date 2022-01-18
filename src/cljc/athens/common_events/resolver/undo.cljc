@@ -2,6 +2,7 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
+    [athens.common-events.bfs             :as bfs]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops       :as graph-ops]
@@ -20,13 +21,28 @@
 
 
 (defmethod resolve-atomic-op-to-undo-ops :block/save
-  [db evt-db {:op/keys [args]}]
+  [_db evt-db {:op/keys [args]}]
   (let [{:block/keys [uid]}    args
         {:block/keys [string]} (common-db/get-block evt-db [:block/uid uid])]
     ;; if block wasn't present in `event-db`
     (if string
       [(graph-ops/build-block-save-op db uid string)]
       [])))
+
+
+(defmethod resolve-atomic-op-to-undo-ops :block/remove
+  [_db evt-db {:op/keys [args]}]
+  (let [{:block/keys [uid]}     args
+        {backrefs :block/_refs} (common-db/get-block evt-db [:block/uid uid])
+        position                (common-db/get-position evt-db uid)
+        repr                    [(common-db/get-internal-representation evt-db [:block/uid uid])]
+        repr-ops                (bfs/internal-representation->atomic-ops evt-db repr position)
+        save-ops                (->> backrefs
+                                     (map :db/id)
+                                     (map (partial common-db/get-block evt-db))
+                                     (map (fn [{:block/keys [uid string]}]
+                                            (atomic-graph-ops/make-block-save-op uid string))))]
+    (vec (concat repr-ops save-ops))))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :block/open
