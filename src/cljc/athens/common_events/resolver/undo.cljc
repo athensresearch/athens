@@ -65,10 +65,19 @@
   (let [{undone-title :page/title} args
         undone-order  (common-db/find-order-from-title evt-db undone-title)
         current-title (common-db/find-title-from-order db undone-order)]
-    (prn "HI" undone-title undone-order current-title)
+    ;;(prn "HI" undone-title undone-order current-title)
     [(atomic-graph-ops/make-shortcut-new-op undone-title)
-     (atomic-graph-ops/make-shortcut-move-op undone-title {:page/title current-title
-                                                           :shortcut/position :above})]))
+     #_(atomic-graph-ops/make-shortcut-move-op undone-title {:page/title current-title
+                                                             :shortcut/position :above})]))
+
+(defmethod resolve-atomic-op-to-undo-ops :shortcut/move
+  [db evt-db {:op/keys [args]}]
+  (let [{undone-title :page/title} args
+        undone-order  (common-db/find-order-from-title evt-db undone-title)
+        current-title (common-db/find-title-from-order db undone-order)
+        undo-op       [(atomic-graph-ops/make-shortcut-move-op undone-title {:page/title current-title
+                                                                             :relation :after})]]
+    undo-op))
 
 #_(defn spy
     [x]
