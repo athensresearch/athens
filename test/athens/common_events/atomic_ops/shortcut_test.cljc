@@ -10,17 +10,14 @@
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
 
-(defn get-sidebar-count
-  []
-  (-> (common-db/get-sidebar-elements @@fixture/connection)
-      (count)))
+
 
 (t/deftest shortcut-add-test
   (let [setup-tx  [{:block/uid      "parent-uid"
                     :node/title     "Hello World!"
                     :block/children []}]]
     (fixture/transact-with-middleware setup-tx)
-    (t/is (= 0 (get-sidebar-count)))
+    (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection)))
     (let [shortcut-new-op  (atomic-graph-ops/make-shortcut-new-op "Hello World!")
           shortcut-new-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
                                                                     shortcut-new-op)]
