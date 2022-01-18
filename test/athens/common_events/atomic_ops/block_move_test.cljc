@@ -520,32 +520,44 @@
                                                                    :block/uid %3})
                                 fixture/op-resolve-transact!)]
 
-    (t/testing "Undo move: Move source block :after target block, when both source and target block are under **same** parent"
-      (println (get-block-order block-0-uid))
-      (t/is (= 0 (get-block-order block-0-uid)) "Move block 0 after block 1")
-      (t/is (= 1 (get-block-order block-1-uid)) "Move block 0 after block 1")
-      (let [[evt-db evt] (move! block-0-uid :after block-1-uid)]
-        (t/is (= 1 (get-block-order block-0-uid)) "Move source uid (block-0-uid) after target uid (block-1-uid)")
-        (t/is (= 0 (get-block-order block-1-uid)) "Move source uid (block-0-uid) after target uid (block-1-uid)")
-        (fixture/undo! evt-db evt)
-        (t/is (= 0 (get-block-order block-0-uid)) "Undo: Move source uid (block-0-uid) and target uid (block-1-uid) to original position ")
-        (t/is (= 1 (get-block-order block-1-uid))  "Undo: Move source uid (block-0-uid) and target uid (block-1-uid) to original position "))
-      (fixture/teardown! setup-repr))
+    (t/testing "Undo Block move: Move source block :after target block, when both source and target block are under **same** parent"
+     (fixture/setup! setup-repr)
+     (t/is (= 1 (get-block-order block-1-uid)) "Move block 1 after block 2")
+     (t/is (= 2 (get-block-order block-2-uid)) "Move block 1 after block 2")
+     (let [[evt-db evt] (move! block-1-uid :after block-2-uid)]
+       (t/is (= 2 (get-block-order block-1-uid)) "Move source uid (block-1-uid) after target uid (block-2-uid)")
+       (t/is (= 1 (get-block-order block-2-uid)) "Move source uid (block-1-uid) after target uid (block-2-uid)")
+       (fixture/undo! evt-db evt)
+       (t/is (= 1 (get-block-order block-1-uid)) "Undo: Move source uid (block-1-uid) and target uid (block-2-uid) to original position ")
+       (t/is (= 2 (get-block-order block-2-uid))  "Undo: Move source uid (block-1-uid) and target uid (block-2-uid) to original position "))
+     (fixture/teardown! setup-repr))
 
-    (t/testing "Redo move: Move source block :after target block, when both source and target block are under **same** parent"
-      (fixture/setup! setup-repr)
-      (t/is (= 0 (get-block-order block-0-uid)) "Move block 0 after block 1")
-      (t/is (= 1 (get-block-order block-1-uid)) "Move block 0 after block 1")
-      (let [[evt-db evt] (move! block-0-uid :after block-1-uid)]
-        (t/is (= 1 (get-block-order block-0-uid)) "Move source uid (block-0-uid) after target uid (block-1-uid)")
-        (t/is (= 0 (get-block-order block-1-uid)) "Move source uid (block-0-uid) after target uid (block-1-uid)")
-        (let [[evt-db' evt']  (fixture/undo! evt-db evt)]
-          (t/is (= 0 (get-block-order block-0-uid)) "Undo: Move source uid (block-0-uid) and target uid (block-1-uid) to original position ")
-          (t/is (= 1 (get-block-order block-1-uid))  "Undo: Move source uid (block-0-uid) and target uid (block-1-uid) to original position ")
-          (fixture/undo! evt-db' evt')
+    #_(t/testing "Undo: Block move under a page: Move source block :after target block, when both source and target block are under **same** parent"
+        (fixture/setup! setup-repr)
+        (t/is (= 0 (get-block-order block-0-uid)) "Move block 0 after block 1")
+        (t/is (= 1 (get-block-order block-1-uid)) "Move block 0 after block 1")
+        (let [[evt-db evt] (move! block-0-uid :after block-1-uid)]
           (t/is (= 1 (get-block-order block-0-uid)) "Move source uid (block-0-uid) after target uid (block-1-uid)")
-          (t/is (= 0 (get-block-order block-1-uid))) "Move source uid (block-0-uid) after target uid (block-1-uid)"))
-      (fixture/teardown! setup-repr))
+          (t/is (= 0 (get-block-order block-1-uid)) "Move source uid (block-0-uid) after target uid (block-1-uid)")
+          (fixture/undo! evt-db evt)
+          (t/is (= 0 (get-block-order block-0-uid)) "Undo: Move source uid (block-0-uid) and target uid (block-1-uid) to original position ")
+          (t/is (= 1 (get-block-order block-1-uid))  "Undo: Move source uid (block-0-uid) and target uid (block-1-uid) to original position "))
+        (fixture/teardown! setup-repr))
+
+    #_(t/testing "Redo move: Move source block :after target block, when both source and target block are under **same** parent"
+        (fixture/setup! setup-repr)
+        (t/is (= 0 (get-block-order block-0-uid)) "Move block 0 after block 1")
+        (t/is (= 1 (get-block-order block-1-uid)) "Move block 0 after block 1")
+        (let [[evt-db evt] (move! block-0-uid :after block-1-uid)]
+          (t/is (= 1 (get-block-order block-0-uid)) "Move source uid (block-0-uid) after target uid (block-1-uid)")
+          (t/is (= 0 (get-block-order block-1-uid)) "Move source uid (block-0-uid) after target uid (block-1-uid)")
+          (let [[evt-db' evt']  (fixture/undo! evt-db evt)]
+            (t/is (= 0 (get-block-order block-0-uid)) "Undo: Move source uid (block-0-uid) and target uid (block-1-uid) to original position ")
+            (t/is (= 1 (get-block-order block-1-uid))  "Undo: Move source uid (block-0-uid) and target uid (block-1-uid) to original position ")
+            (fixture/undo! evt-db' evt')
+            (t/is (= 1 (get-block-order block-0-uid)) "Move source uid (block-0-uid) after target uid (block-1-uid)")
+            (t/is (= 0 (get-block-order block-1-uid))) "Move source uid (block-0-uid) after target uid (block-1-uid)"))
+        (fixture/teardown! setup-repr))
 
     (t/testing "Undo move: Move source block :before target block, when both source and target block are under **same** parent"
       (fixture/setup! setup-repr)
@@ -559,20 +571,20 @@
         (t/is (= 1 (get-block-order block-1-uid)) "Undo: Move source uid (block-1-uid) and target uid (block-0-uid) to original position "))
       (fixture/teardown! setup-repr))
 
-    (t/testing "Redo move: Move source block :before target block, when both source and target block are under **same** parent"
-      (fixture/setup! setup-repr)
-      (t/is (= 0 (get-block-order block-0-uid)) "Move block 1 :before block 0")
-      (t/is (= 1 (get-block-order block-1-uid)) "Move block 1 :before block 0")
-      (let [[evt-db evt] (move! block-1-uid :before block-0-uid)]
-        (t/is (= 1 (get-block-order block-0-uid)) "Move source uid (block-1-uid) :before target uid (block-0-uid)")
-        (t/is (= 0 (get-block-order block-1-uid)) "Move source uid (block-1-uid) :before target uid (block-0-uid)")
-        (let [[evt-db' evt'] (fixture/undo! evt-db evt)]
-          (t/is (= 0 (get-block-order block-0-uid)) "Undo: Move source uid (block-1-uid) and target uid (block-0-uid) to original position ")
-          (t/is (= 1 (get-block-order block-1-uid)) "Undo: Move source uid (block-1-uid) and target uid (block-0-uid) to original position ")
-          (fixture/undo! evt-db' evt')
+    #_(t/testing "Redo move: Move source block :before target block, when both source and target block are under **same** parent"
+        (fixture/setup! setup-repr)
+        (t/is (= 0 (get-block-order block-0-uid)) "Move block 1 :before block 0")
+        (t/is (= 1 (get-block-order block-1-uid)) "Move block 1 :before block 0")
+        (let [[evt-db evt] (move! block-1-uid :before block-0-uid)]
           (t/is (= 1 (get-block-order block-0-uid)) "Move source uid (block-1-uid) :before target uid (block-0-uid)")
-          (t/is (= 0 (get-block-order block-1-uid)) "Move source uid (block-1-uid) :before target uid (block-0-uid)")))
-      (fixture/teardown! setup-repr))
+          (t/is (= 0 (get-block-order block-1-uid)) "Move source uid (block-1-uid) :before target uid (block-0-uid)")
+          (let [[evt-db' evt'] (fixture/undo! evt-db evt)]
+            (t/is (= 0 (get-block-order block-0-uid)) "Undo: Move source uid (block-1-uid) and target uid (block-0-uid) to original position ")
+            (t/is (= 1 (get-block-order block-1-uid)) "Undo: Move source uid (block-1-uid) and target uid (block-0-uid) to original position ")
+            (fixture/undo! evt-db' evt')
+            (t/is (= 1 (get-block-order block-0-uid)) "Move source uid (block-1-uid) :before target uid (block-0-uid)")
+            (t/is (= 0 (get-block-order block-1-uid)) "Move source uid (block-1-uid) :before target uid (block-0-uid)")))
+        (fixture/teardown! setup-repr))
 
     (t/testing "Undo move: Move source block :before target block, when both source and target block are under **Different** parent"
       (fixture/setup! setup-repr)
