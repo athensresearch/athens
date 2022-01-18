@@ -5,8 +5,6 @@
     [athens.common-events.bfs             :as bfs]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.composite :as composite]
-    [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common-events.graph.atomic    :as atomic]
     [athens.common.logging                :as log]))
 
 
@@ -53,7 +51,8 @@
         ;; - If the block has order > 0 then we know it atleast a previous sibling so we
         ;;   can use this previous block to reference the position
         parent                    (common-db/get-parent evt-db [:block/uid uid])
-        parent-page?              (if (:node/title parent)
+        parent-page?              (if (and (= 0 order)
+                                           (:node/title parent))
                                     true
                                     false)
         parent-ref                (if parent-page?
@@ -69,10 +68,9 @@
                                     (= :parent   prev-block-pos) {:block/uid parent-ref
                                                                   :relation  :first}
                                     (= :prev-sib prev-block-pos) {:block/uid prev-sib-uid
-                                                                  :relation  :after})
-        #_#_ position             (common-db/compat-position evt-db {:relation order
-                                                                     :block/uid uid})]
-    [(atomic/make-block-move-op uid position)]))
+                                                                  :relation  :after})]
+    [(atomic-graph-ops/make-block-move-op uid position)]))
+
 
 (defmethod resolve-atomic-op-to-undo-ops :block/open
   [_db evt-db {:op/keys [args]}]
