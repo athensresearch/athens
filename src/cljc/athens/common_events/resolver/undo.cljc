@@ -55,11 +55,8 @@
                                            (:node/title parent))
                                     true
                                     false)
-        parent-ref                (if parent-page?
-                                    (:node/title parent)
-                                    (:block/uid parent))
         position                  (if (true? parent-page?)
-                                    {:page/title parent-ref
+                                    {:page/title (:node/title parent)
                                      :relation   :first}
                                     (common-db/get-position evt-db uid))]
     [(atomic-graph-ops/make-block-move-op uid position)]))
