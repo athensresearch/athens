@@ -89,14 +89,25 @@
     [reverse-op]))
 
 
-(defmethod resolve-atomic-op-to-undo-ops :composite/consequence
-  [db evt-db {:op/keys [_consequences] :as op}]
-  (let [atomic-ops (graph-ops/extract-atomics op)
-        undo-ops   (->> atomic-ops
-                        reverse
-                        (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db))
-                        (into []))]
-    undo-ops))
+(defmethod resolve-atomic-op-to-undo-ops :page/merge
+  [_db evt-db {:op/keys [args]}]
+  (let [{from :page/title}      args
+        {children :block/children
+         backrefs :block/_refs} (common-db/get-page evt-db [:node/title from])
+        page-new                (atomic-graph-ops/make-page-new-op from)
+        save-ops                (->> backrefs
+                                     (map :db/id)
+                                     (map (partial common-db/get-block evt-db))
+                                     (map (fn [{:block/keys [uid string]}]
+                                            (atomic-graph-ops/make-block-save-op uid string))))
+        move-ops                (->> children
+                                     (sort-by :block/order)
+                                     (map :block/uid)
+                                     (map #(atomic-graph-ops/make-block-move-op % {:page/title from
+                                                                                   :relation   :last})))
+        ;; TODO: use jeffs helpers
+        shortcut-ops            []]
+    (vec (concat [page-new] shortcut-ops move-ops save-ops))))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :page/new
@@ -130,6 +141,16 @@
         neighbor-position         (common-db/flip-neighbor-position neighbors)
         move-op                   (atomic-graph-ops/make-shortcut-move-op moved-title neighbor-position)]
     [move-op]))
+
+
+(defmethod resolve-atomic-op-to-undo-ops :composite/consequence
+  [db evt-db {:op/keys [_consequences] :as op}]
+  (let [atomic-ops (graph-ops/extract-atomics op)
+        undo-ops   (->> atomic-ops
+                        reverse
+                        (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db))
+                        (into []))]
+    undo-ops))
 
 
 ;; TODO: should there be a distinction between undo and redo?

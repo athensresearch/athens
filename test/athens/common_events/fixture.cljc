@@ -38,14 +38,6 @@
     (d/transact! @connection processed-txs)))
 
 
-(defn setup!
-  [repr]
-  (->> repr
-       (bfs/build-paste-op @@connection)
-       common-events/build-atomic-event
-       (atomic-resolver/resolve-transact! @connection)))
-
-
 (defn get-repr
   [lookup]
   (common-db/get-internal-representation @@connection lookup))
@@ -73,6 +65,20 @@
     [db undo-evt]))
 
 
+(defn setup!
+  ([repr]
+   (setup! repr []))
+  ([repr ops]
+   (->> repr
+        (bfs/build-paste-op @@connection)
+        op-resolve-transact!)
+   (doseq [op ops]
+     (op-resolve-transact! op))))
+
+
+;; Don't really need to teardown the ops since the only ops right now
+;; that aren't part of repr are shortcut ops, and removing the page
+;; will remove the shortcut.
 (defn teardown!
   [repr]
   (doseq [title (map :page/title repr)]

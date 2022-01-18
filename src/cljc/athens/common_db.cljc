@@ -191,6 +191,20 @@
           eid))
 
 
+(defn get-page
+  "Fetches whole page based on `:db/id`."
+  [db eid]
+  (d/pull db '[:db/id
+               :node/title
+               :block/uid
+               :page/sidebar
+               :block/refs
+               :block/_refs
+               {:block/children [:block/uid
+                                 :block/order]}]
+          eid))
+
+
 (defn get-parent-eid
   "Find parent's `:db/id` of given `eid`."
   [db eid]
