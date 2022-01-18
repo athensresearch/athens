@@ -62,37 +62,36 @@
 ;; if == 0 sidebar-elements, don't need subvec
 
 (defn get-sidebar-neighbors
+  "Get the neighbors for a given shortcut page, as :before and :after keys.
+  Returns nil values if there is nothing before and after."
   [db title]
-  (let [sidebar-elem   (common-db/get-sidebar-elements db)
-        sidebar-titles (mapv :node/title sidebar-elem)
+  (let [sidebar-items  (common-db/get-sidebar-elements db)
+        sidebar-titles (mapv :node/title sidebar-items)
         idx            (.indexOf sidebar-titles title)
-        neighbors      (case (count sidebar-titles)
-                         1 []
-                         2 sidebar-titles
-                         3 (subvec sidebar-titles (dec idx) (+ 2 idx)))
-        _ (prn neighbors)]
+        neighbors      {:before (get sidebar-titles (dec idx))
+                        :after  (get sidebar-titles (inc idx))}]
     neighbors))
 
-(subvec [0 1] 0 3)
-(get [0 1] 3)
 
-(defn get-relative-position
-  "if 1 element, no move.
-  if 2 elements, move relative to other
-  if 3 elements, your choice of before or after"
-  [title neighbors]
-  (let [cnt (count neighbors)
-        idx (.indexOf neighbors title)]
-    ;;(prn cnt idx neighbors)
-    (case cnt
-      1 nil
-      2 (if (zero? idx)
-          {:page/title (get neighbors (inc idx))
-           :relation   :before}
-          {:page/title (get neighbors (dec idx))
-           :relation   :after})
-      3 {:page/title (get neighbors (inc idx))
-         :relation   :before})))
+(defn flip-neighbor-position
+  "Flips neighbor position to undo a remove.
+
+  --Setup--
+  Page 1 <- remove shortcut
+  Page 2 <- :after
+
+  --After Remove--
+  Page 2 <-
+
+  --Undo--
+  Page 1 <- restore shortcut (new)
+  Page 2 <- :before"
+  [{:keys [before after] :as _neighbors}]
+  (cond
+    before {:relation :after
+            :page/title before}
+    after {:relation :before
+           :page/title after}))
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/new
   [_db _evt-db {:op/keys [args]}]
@@ -115,32 +114,33 @@
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/remove
   [_db evt-db {:op/keys [args]}]
-  (let [{prev-source-title :page/title} args
+  (let [{removed-title :page/title} args
         ;; if using :before, find the element that was right :before prev-source-title
-        make-op   (atomic-graph-ops/make-shortcut-new-op prev-source-title)
-        neighbors (get-sidebar-neighbors evt-db prev-source-title)
-        position  (get-relative-position prev-source-title neighbors)
-        move-op   (atomic-graph-ops/make-shortcut-move-op prev-source-title position)]
+        new-op           (atomic-graph-ops/make-shortcut-new-op removed-title)
+        neighbors         (get-sidebar-neighbors evt-db removed-title)
+        neighbor-position (flip-neighbor-position neighbors)
+        move-op           (cond neighbors
+                                (atomic-graph-ops/make-shortcut-move-op removed-title neighbor-position))]
     ;; if the last index was removed: new
     ;; if any other index was removed: new + move
-    (cond-> [make-op]
-      position (conj move-op))))
-
+    (prn "REMOVE" neighbors neighbor-position move-op)
+    (cond-> [new-op]
+            neighbor-position (conj move-op))))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/move
-  [db evt-db {:op/keys [args]}]
-  (let [{prev-source-title :page/title position :shortcut/position} args
+  [_db evt-db {:op/keys [args] :as op}]
+  (let [{moved-title :page/title position :shortcut/position} args
         {_prev-target-title :page/title prev-relation :relation} position
-        prev-source-order (common-db/find-order-from-title evt-db prev-source-title)
-        new-target-title  (common-db/find-title-from-order db prev-source-order)
-        flip-relation     (if (= prev-relation :before)
-                            :after
-                            :before)
-        move-op           (atomic-graph-ops/make-shortcut-move-op prev-source-title {:page/title new-target-title
-                                                                                     :relation   flip-relation})]
-    (cond-> []
-            new-target-title (conj move-op))))
+        neighbors         (get-sidebar-neighbors evt-db moved-title)
+        neighbor-position (flip-neighbor-position neighbors)
+        move-op           (atomic-graph-ops/make-shortcut-move-op moved-title neighbor-position)]
+    (prn "ORIGINAL OP")
+    (cljs.pprint/pprint op)
+    (prn "MOVE")
+    (cljs.pprint/pprint move-op)
+    [move-op]))
+
 
 ;; TODO: should there be a distinction between undo and redo?
 (defn build-undo-event

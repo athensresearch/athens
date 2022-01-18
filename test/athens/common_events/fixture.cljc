@@ -63,7 +63,7 @@
   [evt-db evt]
   (let [db       @@connection
         undo-evt (undo/build-undo-event db evt-db evt)]
-    (cljs.pprint/pprint undo-evt)
+    ;;(cljs.pprint/pprint undo-evt)
     (atomic-resolver/resolve-transact! @connection undo-evt)
     [db undo-evt]))
 
