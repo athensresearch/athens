@@ -272,15 +272,14 @@
 
 "
 --Setup--
-* Alice
+* Alice <- target, :before
 * Bob
-* Charlie <-
+* Charlie <- source
 
 --Move--
-* Charlie <-
+* Charlie <- source
 * Alice
-* Bob
-
+* Bob <- target, :after
 
 --Undo--
 * Alice
