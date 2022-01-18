@@ -60,14 +60,18 @@
   (let [{:page/keys [title]} args]
     [(atomic-graph-ops/make-shortcut-remove-op title)]))
 
+;; use a cond-> because atomic-graph-ops/make-shortcut-move-op sometimes has a nil value for relation page/title
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/remove
   [db evt-db {:op/keys [args]}]
   (let [{prev-source-title :page/title} args
         prev-source-order               (common-db/find-order-from-title evt-db prev-source-title)
-        curr-title-at-prev-source-order (common-db/find-title-from-order db prev-source-order)]
-    [(atomic-graph-ops/make-shortcut-new-op prev-source-title)
-     (atomic-graph-ops/make-shortcut-move-op prev-source-title {:page/title curr-title-at-prev-source-order
-                                                                :relation :before})]))
+        curr-title-at-prev-source-order (common-db/find-title-from-order db prev-source-order)
+        make-op                         (atomic-graph-ops/make-shortcut-new-op prev-source-title)
+        move-op                         (atomic-graph-ops/make-shortcut-move-op prev-source-title {:page/title curr-title-at-prev-source-order
+                                                                                                   :relation   :before})]
+    (cond-> [make-op]
+            curr-title-at-prev-source-order (conj move-op))))
+
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/move
   [db evt-db {:op/keys [args]}]
