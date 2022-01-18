@@ -120,7 +120,12 @@
                                                     (throw (ex-info "Ref block does not exist" {:block/uid ref-uid})))
                                                   (common-db/get-parent db [:block/uid ref-uid]))
         same-parent?                            (= new-parent-block-uid old-parent-block-uid)
-        ref-block-order                         (:block/order ref-block)
+        ref-block-order                         (or (:block/order ref-block)
+                                                    ;; When the ref-block is page we can say the order of
+                                                    ;; page is -1, the consequence of this is that all the
+                                                    ;; block moves would be considered as moving up when compared
+                                                    ;; with this -1 order.
+                                                    -1)
         ;; Up means it went from a higher number (e.g. 5) to a lower number (e.g. 2).
         up?                                     (< ref-block-order old-block-order)
         new-block-order                         (condp = relation

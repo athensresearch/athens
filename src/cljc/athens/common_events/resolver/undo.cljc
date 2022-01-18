@@ -45,6 +45,14 @@
     (vec (concat repr-ops save-ops))))
 
 
+(defmethod resolve-atomic-op-to-undo-ops :block/move
+  [_ evt-db {:op/keys [args]}]
+  (println "resolve atomic op to undo ops args -->" args)
+  (let [{:block/keys [uid]}       args
+        position                  (common-db/get-position evt-db uid)]
+    [(atomic-graph-ops/make-block-move-op uid position)]))
+
+
 (defmethod resolve-atomic-op-to-undo-ops :block/open
   [_db evt-db {:op/keys [args]}]
   (let [{:block/keys [uid]}    args
