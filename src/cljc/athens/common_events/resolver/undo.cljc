@@ -69,6 +69,13 @@
         make-op                         (atomic-graph-ops/make-shortcut-new-op prev-source-title)
         move-op                         (atomic-graph-ops/make-shortcut-move-op prev-source-title {:page/title curr-title-at-prev-source-order
                                                                                                    :relation   :before})]
+    (cljs.pprint/pprint (cond-> [make-op
+                                 curr-title-at-prev-source-order (conj move-op)]))
+    ;; a nil value for relation's page/title leads to a nil value for redo new
+    ;; and sometimes also for remove
+    #_[make-op
+       move-op]
+    ;; maybe following there should be a nil remover elsewhere
     (cond-> [make-op]
             curr-title-at-prev-source-order (conj move-op))))
 
@@ -82,8 +89,9 @@
         flip-relation     (if (= prev-relation :before)
                             :after
                             :before)]
-    [(atomic-graph-ops/make-shortcut-move-op prev-source-title {:page/title new-target-title
-                                                                :relation   flip-relation})]))
+    (cond-> []
+            new-target-title (conj (atomic-graph-ops/make-shortcut-move-op prev-source-title {:page/title new-target-title
+                                                                                              :relation   flip-relation})))))
 
 ;; TODO: should there be a distinction between undo and redo?
 (defn build-undo-event
