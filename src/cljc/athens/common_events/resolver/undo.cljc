@@ -58,17 +58,10 @@
         parent-ref                (if parent-page?
                                     (:node/title parent)
                                     (:block/uid parent))
-        {prev-sib-uid :block/uid} (common-db/nth-sibling evt-db uid -1)
-        prev-block-pos            (cond
-                                    (= order 0) :parent
-                                    :else       :prev-sib)
         position                  (cond
                                     (true? parent-page?)         {:page/title parent-ref
                                                                   :relation   :first}
-                                    (= :parent   prev-block-pos) {:block/uid parent-ref
-                                                                  :relation  :first}
-                                    (= :prev-sib prev-block-pos) {:block/uid prev-sib-uid
-                                                                  :relation  :after})]
+                                    :else                        (common-db/get-position evt-db uid))]
     [(atomic-graph-ops/make-block-move-op uid position)]))
 
 
