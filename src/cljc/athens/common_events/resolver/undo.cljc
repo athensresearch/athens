@@ -21,7 +21,7 @@
 
 
 (defmethod resolve-atomic-op-to-undo-ops :block/save
-  [_db evt-db {:op/keys [args]}]
+  [db evt-db {:op/keys [args]}]
   (let [{:block/keys [uid]}    args
         {:block/keys [string]} (common-db/get-block evt-db [:block/uid uid])]
     ;; if block wasn't present in `event-db`

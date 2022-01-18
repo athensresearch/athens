@@ -313,7 +313,7 @@
       (fixture/teardown! setup-repr))))
 
 
-#_(t/deftest undo-2
+(t/deftest undo-2
   (let [test-uid     "test-uid"
         new-test-uid "test-new-uid"
         setup-repr   [{:page/title     "test-undo-block-new-page"
@@ -326,7 +326,6 @@
                                                                {:block/uid test-uid
                                                                 :relation  :first})
                            fixture/op-resolve-transact!)]
-    ;; TODO try redo expressed in atomic/composites
     (t/testing "redo"
         (fixture/setup! setup-repr)
         (t/is (empty? (get-children)))
@@ -342,8 +341,20 @@
                                               :args    #:block{:uid new-test-uid}}]}
                      (:event/op undo-event)))
             (t/is (empty? (get-children)))
-            (let [[redo-event-db redo-event] (fixture/undo! undo-event-db undo-event)]
-              (t/is (= [] (:event/op redo-event)))
+            (let [[_redo-event-db redo-event] (fixture/undo! undo-event-db undo-event)]
+              (t/is (= #:op{:type         :composite/consequence
+                            :atomic?      false
+                            :trigger      #:op{:undo (:event/id undo-event)}
+                            :consequences [#:op{:type    :block/new
+                                                :atomic? true
+                                                :args    #:block{:uid      new-test-uid
+                                                                 :position {:relation  :first
+                                                                            :block/uid test-uid}}}
+                                           #:op{:type    :block/save
+                                                :atomic? true
+                                                :args    #:block{:uid    new-test-uid
+                                                                 :string ""}}]}
+                       (:event/op redo-event)))
               (t/is (= [#:block{:uid   new-test-uid
                                 :order 0}] (get-children))))))
         (fixture/teardown! setup-repr))))

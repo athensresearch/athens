@@ -536,7 +536,7 @@
 
 
     ;; TODO: re-enable when block/new is supported
-    #_(t/testing "redo"
+    (t/testing "redo"
       (fixture/setup! setup-repr)
       (let [[evt-db evt]   (remove!)
             [evt-db' evt'] (fixture/undo! evt-db evt)]
