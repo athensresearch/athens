@@ -88,10 +88,11 @@
         new-target-title  (common-db/find-title-from-order db prev-source-order)
         flip-relation     (if (= prev-relation :before)
                             :after
-                            :before)]
+                            :before)
+        move-op           (atomic-graph-ops/make-shortcut-move-op prev-source-title {:page/title new-target-title
+                                                                                     :relation   flip-relation})]
     (cond-> []
-            new-target-title (conj (atomic-graph-ops/make-shortcut-move-op prev-source-title {:page/title new-target-title
-                                                                                              :relation   flip-relation})))))
+            new-target-title (conj move-op))))
 
 ;; TODO: should there be a distinction between undo and redo?
 (defn build-undo-event
