@@ -44,6 +44,28 @@
       (remove!)
       (t/is (= 0 (common-db/get-sidebar-count @@fixture/connection))))))
 
+(fixture/integration-test-fixture
+  (fn []
+    (let [setup-tx [{:block/uid    "page-uid-1"
+                     :node/title   "page 1"
+                     :page/sidebar 0}
+                    {:block/uid    "page-uid-2"
+                     :node/title   "page 2"
+                     :page/sidebar 1}
+                    {:block/uid    "page-uid-3"
+                     :node/title   "page 3"
+                     :page/sidebar 2}]
+          remove!  #(->> (atomic-graph-ops/make-shortcut-remove-op "page 2")
+                         (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
+                         (d/transact! @fixture/connection))]
+      ;; setup
+      (fixture/transact-with-middleware setup-tx)
+      (t/is (= 3 (common-db/get-sidebar-count @@fixture/connection)))
+      ;; remove shortcut
+      (remove!)
+      (t/is (= 2 (common-db/get-sidebar-count @@fixture/connection)))
+      (t/is (= 0 (common-db/find-order-from-title @@fixture/connection "page 1")))
+      (t/is (= 1 (common-db/find-order-from-title @@fixture/connection "page 3"))))))
 
 (t/deftest shortcut-move-before-test
   "Test 1 :
@@ -95,6 +117,7 @@
     (t/is (= 2 (common-db/find-order-from-title @@fixture/connection "page 2")))))
 
 
+;; TODO this isn't testing :after page 1 even though it says it is
 (t/deftest shortcut-move-after-test
   "Test 1 :  Note this case is not possible through UI this action is registered as
              move page 3 before 2
