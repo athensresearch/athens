@@ -51,7 +51,6 @@
         ;; undo (remove page)
         (let [[db' evt'] (fixture/undo! db evt)]
           (t/is (nil? (common-db/get-page-document @@fixture/connection [:node/title test-title])))
-          ;; TODO: uncomment the following tests after undo page/remove is implemented
           (fixture/undo! db' evt')
           (t/is (common-db/get-page-document @@fixture/connection [:node/title test-title])))))))
 
@@ -74,7 +73,6 @@
           (t/is (nil? (common-db/get-page-document @@fixture/connection [:node/title test-title])))
           (t/is (nil? (common-db/get-block @@fixture/connection [:block/uid block-uid])))
           ;; redo
-          ;; TODO: uncomment the following tests after undo page/remove is implemented
           (fixture/undo! db' evt')
           (t/is (common-db/get-page-document @@fixture/connection [:node/title test-title]))
           (t/is (common-db/get-block @@fixture/connection [:block/uid block-uid])))))))
