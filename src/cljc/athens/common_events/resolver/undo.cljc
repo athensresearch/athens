@@ -16,6 +16,17 @@
   (-> event :event/op :op/trigger :op/undo))
 
 
+(defn- restore-shortcut
+  [evt-db title]
+  (let [new-op            (atomic-graph-ops/make-shortcut-new-op title)
+        neighbors         (common-db/get-shortcut-neighbors evt-db title)
+        neighbor-position (common-db/flip-neighbor-position neighbors)
+        move-op           (cond neighbors
+                                (atomic-graph-ops/make-shortcut-move-op title neighbor-position))]
+    (cond-> [new-op]
+      neighbor-position (conj move-op))))
+
+
 ;; Impl according to https://github.com/athensresearch/athens/blob/main/doc/adr/0021-undo-redo.md#approach
 (defmulti resolve-atomic-op-to-undo-ops
   #(:op/type %3))
@@ -68,17 +79,19 @@
 
 (defmethod resolve-atomic-op-to-undo-ops :page/remove
   [_db evt-db {:op/keys [args]}]
-  ;; Restoring shortcut is missing here
   (let [{:page/keys [title]} args
-        {page-refs :block/_refs} (common-db/get-page-document evt-db [:node/title title])
+        {sidebar   :page/sidebar
+         page-refs :block/_refs} (common-db/get-page-document evt-db [:node/title title])
         page-repr                 [(common-db/get-internal-representation evt-db (:db/id (d/entity evt-db [:node/title title])))]
         repr-ops                  (bfs/internal-representation->atomic-ops evt-db page-repr nil)
         save-ops                  (->> page-refs
                                        (map :db/id)
                                        (map (partial common-db/get-block evt-db))
                                        (map (fn [{:block/keys [uid string]}]
-                                              (atomic-graph-ops/make-block-save-op uid string))))]
-    (vec (concat repr-ops save-ops))))
+                                              (atomic-graph-ops/make-block-save-op uid string))))
+        shortcut-ops            (when sidebar
+                                  (restore-shortcut evt-db (:page/title args)))]
+    (vec (concat repr-ops save-ops shortcut-ops))))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :page/rename
@@ -93,6 +106,7 @@
   [_db evt-db {:op/keys [args]}]
   (let [{from :page/title}      args
         {children :block/children
+         sidebar  :page/sidebar
          backrefs :block/_refs} (common-db/get-page evt-db [:node/title from])
         page-new                (atomic-graph-ops/make-page-new-op from)
         save-ops                (->> backrefs
@@ -105,9 +119,9 @@
                                      (map :block/uid)
                                      (map #(atomic-graph-ops/make-block-move-op % {:page/title from
                                                                                    :relation   :last})))
-        ;; TODO: use jeffs helpers
-        shortcut-ops            []]
-    (vec (concat [page-new] shortcut-ops move-ops save-ops))))
+        shortcut-ops            (when sidebar
+                                  (restore-shortcut evt-db (:page/title args)))]
+    (vec (concat [page-new] move-ops save-ops shortcut-ops))))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :page/new
@@ -124,14 +138,7 @@
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/remove
   [_db evt-db {:op/keys [args]}]
-  (let [{removed-title :page/title} args
-        new-op                      (atomic-graph-ops/make-shortcut-new-op removed-title)
-        neighbors                   (common-db/get-shortcut-neighbors evt-db removed-title)
-        neighbor-position           (common-db/flip-neighbor-position neighbors)
-        move-op                     (cond neighbors
-                                          (atomic-graph-ops/make-shortcut-move-op removed-title neighbor-position))]
-    (cond-> [new-op]
-      neighbor-position (conj move-op))))
+  (restore-shortcut evt-db (:page/title args)))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/move

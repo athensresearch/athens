@@ -170,21 +170,20 @@
       merge!       #(-> (atomic-graph-ops/make-page-merge-op from-title target-title)
                         fixture/op-resolve-transact!)]
 
-  ;; TODO: uncomment short assertions when undo merge supports shortcuts
   (t/deftest undo-merge
     (fixture/setup! setup-repr setup-ops)
 
     (let [[evt-db evt] (merge!)]
       (t/is (= [(fixture/get-repr lookup)] exp-repr)
             "Merged children into target and replaced ref")
-      #_(t/is (= (mapv :node/title (common-db/get-sidebar-elements @@fixture/connection))
+      (t/is (= (common-db/get-sidebar-titles @@fixture/connection)
                ["target-title"])
             "Removed shortcut")
       (fixture/undo! evt-db evt)
       (t/is (= setup-repr [(fixture/get-repr [:node/title from-title])
                            (fixture/get-repr [:node/title target-title])])
             "Undo restored to the original state")
-      #_(t/is (= (mapv :node/title (common-db/get-sidebar-elements @@fixture/connection))
+      (t/is (= (common-db/get-sidebar-titles @@fixture/connection)
                ["from-title" "target-title"])
             "Undo restored shortcuts")))
 
@@ -197,6 +196,6 @@
       (fixture/undo! evt-db' evt')
       (t/is (= [(fixture/get-repr lookup)] exp-repr)
             "Redo merged children into target and replaced ref")
-      #_(t/is (= (mapv :node/title (common-db/get-sidebar-elements @@fixture/connection))
+      (t/is (= (common-db/get-sidebar-titles @@fixture/connection)
                ["target-title"])
             "Redo removed shortcut"))))
