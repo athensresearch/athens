@@ -68,45 +68,83 @@
 
 (defn get-sidebar-elements
   [db]
-  (d/q '[:find [(pull ?e [*]) ...]
-         :where
-         [?e :page/sidebar _]]
-       db))
+  (->> (d/q '[:find [(pull ?e [*]) ...]
+              :where
+              [?e :page/sidebar _]]
+            db)
+       (sort-by :page/sidebar)))
+
+
+(defn get-sidebar-count
+  [db]
+  (-> (get-sidebar-elements db)
+      count))
+
+
+(defn get-shortcut-neighbors
+  "Get the neighbors for a given shortcut page, as :before and :after keys.
+  Return nil values if there is no neighbor before or after."
+  [db title]
+  (let [sidebar-items  (get-sidebar-elements db)
+        sidebar-titles (mapv :node/title sidebar-items)
+        idx            (.indexOf sidebar-titles title)
+        neighbors      {:before (get sidebar-titles (dec idx))
+                        :after  (get sidebar-titles (inc idx))}]
+    neighbors))
+
+
+(defn flip-neighbor-position
+  "Flips neighbor position to undo a remove.
+
+  --Setup--
+  Page 1 <- remove shortcut
+  Page 2 <- :after
+
+  --After Remove--
+  Page 2 <-
+
+  --Undo--
+  Page 1 <- restore shortcut (new)
+  Page 2 <- :before"
+  [{:keys [before after] :as _neighbors}]
+  (cond
+    after {:relation :before
+           :page/title after}
+    before {:relation :after
+            :page/title before}))
 
 
 (defn get-sidebar-titles
   [db]
   (->> (get-sidebar-elements db)
-       (sort-by :page/sidebar)
        (mapv :node/title)))
 
 
 (defn find-title-from-order
-  [sidebar-elements order]
-  (-> (filter (fn [el]
-                (= (:page/sidebar el)
-                   order))
-              sidebar-elements)
-      (first)
-      (:node/title)))
+  [db order]
+  (->> (get-sidebar-elements db)
+       (filter (fn [el]
+                 (= (:page/sidebar el)
+                    order)))
+       (first)
+       (:node/title)))
 
 
 (defn find-source-target-title
   [db source-order target-order]
-  (let [sidebar-elements   (get-sidebar-elements db)
-        source-title (find-title-from-order sidebar-elements source-order)
-        target-title (find-title-from-order sidebar-elements target-order)]
+  (let [source-title (find-title-from-order db source-order)
+        target-title (find-title-from-order db target-order)]
     [source-title target-title]))
 
 
 (defn find-order-from-title
-  [sidebar-elements title]
-  (-> (filter (fn [el]
-                (= (:node/title el)
-                   title))
-              sidebar-elements)
-      (first)
-      (:page/sidebar)))
+  [db title]
+  (->> (get-sidebar-elements db)
+       (filter (fn [el]
+                 (= (:node/title el)
+                    title)))
+       (first)
+       (:page/sidebar)))
 
 
 (defn get-children-uids-recursively

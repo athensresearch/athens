@@ -105,6 +105,33 @@
     [(atomic-graph-ops/make-page-remove-op title)]))
 
 
+(defmethod resolve-atomic-op-to-undo-ops :shortcut/new
+  [_db _evt-db {:op/keys [args]}]
+  (let [{:page/keys [title]} args]
+    [(atomic-graph-ops/make-shortcut-remove-op title)]))
+
+
+(defmethod resolve-atomic-op-to-undo-ops :shortcut/remove
+  [_db evt-db {:op/keys [args]}]
+  (let [{removed-title :page/title} args
+        new-op                      (atomic-graph-ops/make-shortcut-new-op removed-title)
+        neighbors                   (common-db/get-shortcut-neighbors evt-db removed-title)
+        neighbor-position           (common-db/flip-neighbor-position neighbors)
+        move-op                     (cond neighbors
+                                          (atomic-graph-ops/make-shortcut-move-op removed-title neighbor-position))]
+    (cond-> [new-op]
+      neighbor-position (conj move-op))))
+
+
+(defmethod resolve-atomic-op-to-undo-ops :shortcut/move
+  [_db evt-db {:op/keys [args]}]
+  (let [{moved-title :page/title} args
+        neighbors                 (common-db/get-shortcut-neighbors evt-db moved-title)
+        neighbor-position         (common-db/flip-neighbor-position neighbors)
+        move-op                   (atomic-graph-ops/make-shortcut-move-op moved-title neighbor-position)]
+    [move-op]))
+
+
 ;; TODO: should there be a distinction between undo and redo?
 (defn build-undo-event
   [db evt-db {:event/keys [id type op] :as event}]
