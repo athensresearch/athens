@@ -105,74 +105,30 @@
     [(atomic-graph-ops/make-page-remove-op title)]))
 
 
-
-
-
-(defn flip-neighbor-position
-  "Flips neighbor position to undo a remove.
-
-  --Setup--
-  Page 1 <- remove shortcut
-  Page 2 <- :after
-
-  --After Remove--
-  Page 2 <-
-
-  --Undo--
-  Page 1 <- restore shortcut (new)
-  Page 2 <- :before"
-  [{:keys [before after] :as _neighbors}]
-  (cond
-    after {:relation :before
-           :page/title after}
-    before {:relation :after
-            :page/title before}))
-
-
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/new
   [_db _evt-db {:op/keys [args]}]
   (let [{:page/keys [title]} args]
     [(atomic-graph-ops/make-shortcut-remove-op title)]))
 
 
-;; 1 <- no move
-
-;; 1 <- :before 2
-;; 2
-
-;; 2
-;; 3 <- :after 3
-
-;; 1
-;; 2 <- :before 3 or :after 1
-;; 3
-
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/remove
-  [_db evt-db {:op/keys [args] :as op}]
+  [_db evt-db {:op/keys [args]}]
   (let [{removed-title :page/title} args
-        new-op            (atomic-graph-ops/make-shortcut-new-op removed-title)
-        neighbors         (common-db/get-shortcut-neighbors evt-db removed-title)
-        neighbor-position (flip-neighbor-position neighbors)
-        move-op           (cond neighbors
-                                (atomic-graph-ops/make-shortcut-move-op removed-title neighbor-position))]
-    ;; if the last index was removed: new
-    ;; if any other index was removed: new + move
-    ;;(prn "OG OP")
-    ;;(cljs.pprint/pprint op)
-    ;;(prn "REMOVE" neighbor-position)
-    ;;(cljs.pprint/pprint (cond-> [new-op]
-    ;;                            neighbor-position (conj move-op)))
+        new-op                      (atomic-graph-ops/make-shortcut-new-op removed-title)
+        neighbors                   (common-db/get-shortcut-neighbors evt-db removed-title)
+        neighbor-position           (common-db/flip-neighbor-position neighbors)
+        move-op                     (cond neighbors
+                                          (atomic-graph-ops/make-shortcut-move-op removed-title neighbor-position))]
     (cond-> [new-op]
-            neighbor-position (conj move-op))))
+      neighbor-position (conj move-op))))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/move
-  [_db evt-db {:op/keys [args] :as op}]
-  (let [{moved-title :page/title position :shortcut/position} args
-        {_prev-target-title :page/title prev-relation :relation} position
-        neighbors         (common-db/get-shortcut-neighbors evt-db moved-title)
-        neighbor-position (flip-neighbor-position neighbors)
-        move-op           (atomic-graph-ops/make-shortcut-move-op moved-title neighbor-position)]
+  [_db evt-db {:op/keys [args]}]
+  (let [{moved-title :page/title} args
+        neighbors                 (common-db/get-shortcut-neighbors evt-db moved-title)
+        neighbor-position         (common-db/flip-neighbor-position neighbors)
+        move-op                   (atomic-graph-ops/make-shortcut-move-op moved-title neighbor-position)]
     [move-op]))
 
 

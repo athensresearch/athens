@@ -133,12 +133,12 @@
                               :page/sidebar 2}]))]
 
     (t/testing "no shortcuts, no neighbhors"
-       (t/is (= (common-db/get-shortcut-neighbors db-0 "page 1")
-                {:before nil
-                 :after  nil})))
+      (t/is (= (common-db/get-shortcut-neighbors db-0 "page 1")
+               {:before nil
+                :after  nil})))
 
     (t/testing "only one shortcut, no neighbhors"
-       (t/is (= (common-db/get-shortcut-neighbors db-1 "page 1")
+      (t/is (= (common-db/get-shortcut-neighbors db-1 "page 1")
                {:before nil
                 :after  nil})))
 

@@ -93,10 +93,30 @@
     neighbors))
 
 
+(defn flip-neighbor-position
+  "Flips neighbor position to undo a remove.
+
+  --Setup--
+  Page 1 <- remove shortcut
+  Page 2 <- :after
+
+  --After Remove--
+  Page 2 <-
+
+  --Undo--
+  Page 1 <- restore shortcut (new)
+  Page 2 <- :before"
+  [{:keys [before after] :as _neighbors}]
+  (cond
+    after {:relation :before
+           :page/title after}
+    before {:relation :after
+            :page/title before}))
+
+
 (defn get-sidebar-titles
   [db]
   (->> (get-sidebar-elements db)
-       (sort-by :page/sidebar)
        (mapv :node/title)))
 
 
