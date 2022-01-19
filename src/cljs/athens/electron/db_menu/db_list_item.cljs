@@ -1,5 +1,6 @@
 (ns athens.electron.db-menu.db-list-item
   (:require
+    ["@material-ui/icons/Clear" :default Clear]
     ["@material-ui/icons/Link" :default Link]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
     [athens.style :refer [color]]
@@ -59,10 +60,21 @@
 
 (defn db-list-item
   [{:keys [db is-current]}]
-  [:div (use-style db-list-item-style)
-   (if is-current
-     [:div.body.is-current
-      [db-list-item-content {:db db}]]
-     [:button.body.button {:onClick
-                           #(dispatch [:db-picker/select-db db])}
-      [db-list-item-content {:db db}]])])
+  (let [state                   (reagent.core/atom {:show-remove-button false})
+        mouse-over-handler      #(swap! state assoc :show-remove-button true)
+        mouse-leave-handler     #(swap! state assoc :show-remove-button false)
+        remove-db-click-handler (fn [e]
+                                  (dispatch [:db-picker/remove-db db])
+                                  (.. e stopPropagation))]
+    (fn []
+      [:div (use-style db-list-item-style)
+       (if is-current
+         [:div.body.is-current
+          [db-list-item-content {:db db}]]
+         [:button.body.button {:onClick      #(dispatch [:db-picker/select-db db])
+                               :onMouseOver  mouse-over-handler
+                               :onMouseLeave mouse-leave-handler}
+          [db-list-item-content {:db db}]
+          (when (:show-remove-button @state)
+            [:> Clear {:on-click remove-db-click-handler}])])])))
+
