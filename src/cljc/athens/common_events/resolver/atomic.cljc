@@ -259,21 +259,22 @@
 
 (defmethod resolve-atomic-op-to-tx :page/merge
   [db {:op/keys [args]}]
-  (let [from-name                       (-> args :page/title)
-        to-name                         (-> args :target :page/title)
-        linked-refs                     (common-db/get-linked-refs-by-page-title db from-name)
-        new-linked-refs                 (common-db/map-new-refs linked-refs from-name to-name)
-        {old-page-kids :block/children} (common-db/get-page-document db [:node/title from-name])
-        existing-page-block-count       (common-db/existing-block-count db to-name)
-        reindex                         (map (fn [{:block/keys [order uid]}]
-                                               {:db/id           [:block/uid uid]
-                                                :block/order     (+ order existing-page-block-count)
-                                                :block/_children [:node/title to-name]})
-                                             old-page-kids)
-        delete-page                     [:db/retractEntity [:node/title from-name]]
-        new-datoms                      (concat [delete-page]
-                                                new-linked-refs
-                                                reindex)]
+  (let [from-name       (-> args :page/title)
+        to-name         (-> args :target :page/title)
+        linked-refs     (common-db/get-linked-refs-by-page-title db from-name)
+        new-linked-refs (common-db/map-new-refs linked-refs from-name to-name)
+        from-children   (common-db/get-children-uids db [:node/title from-name])
+        to-children     (common-db/get-children-uids db [:node/title to-name])
+        to-children'    (reduce #(order/insert %1 %2 :last nil) to-children from-children)
+        reorder-map-fn  (fn [n x]
+                          {:block/uid       x
+                           :block/order     n
+                           :block/_children [:node/title to-name]})
+        reorder         (order/reorder to-children to-children' reorder-map-fn)
+        delete-page     [:db/retractEntity [:node/title from-name]]
+        new-datoms      (concat [delete-page]
+                                new-linked-refs
+                                reorder)]
     (log/debug ":page/merge args:" (pr-str args) ", resolved-tx:" (pr-str new-datoms))
     new-datoms))
 
