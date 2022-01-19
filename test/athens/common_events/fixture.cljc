@@ -59,6 +59,12 @@
     [db evt]))
 
 
+(defn undo-resulting-ops
+  [event-db event]
+  (let [db @@connection]
+    (undo/build-undo-event db event-db event)))
+
+
 (defn undo!
   [evt-db evt]
   (let [db       @@connection
@@ -70,7 +76,7 @@
 
 (defn teardown!
   [repr]
-  (doseq [title (map :page-title repr)]
+  (doseq [title (map :page/title repr)]
     (when title
       (-> (atomic-graph-ops/make-page-remove-op title)
           op-resolve-transact!))))

@@ -5,7 +5,10 @@
     [athens.common-events.bfs             :as bfs]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.composite :as composite]
-    [athens.common.logging                :as log]))
+    [athens.common-events.graph.ops       :as graph-ops]
+    [athens.common.logging                :as log]
+    [clojure.pprint                       :as pp]
+    [datascript.core :as d]))
 
 
 (defn undo?
@@ -19,10 +22,13 @@
 
 
 (defmethod resolve-atomic-op-to-undo-ops :block/save
-  [_db evt-db {:op/keys [args]}]
+  [db evt-db {:op/keys [args]}]
   (let [{:block/keys [uid]}    args
         {:block/keys [string]} (common-db/get-block evt-db [:block/uid uid])]
-    [(atomic-graph-ops/make-block-save-op uid string)]))
+    ;; if block wasn't present in `event-db`
+    (if string
+      [(graph-ops/build-block-save-op db uid string)]
+      [])))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :block/remove
@@ -40,6 +46,13 @@
     (vec (concat repr-ops save-ops))))
 
 
+(defmethod resolve-atomic-op-to-undo-ops :block/move
+  [_ evt-db {:op/keys [args]}]
+  (let [{:block/keys [uid]}       args
+        position                  (common-db/get-position evt-db uid)]
+    [(atomic-graph-ops/make-block-move-op uid position)]))
+
+
 (defmethod resolve-atomic-op-to-undo-ops :block/open
   [_db evt-db {:op/keys [args]}]
   (let [{:block/keys [uid]}    args
@@ -47,10 +60,49 @@
     [(atomic-graph-ops/make-block-open-op uid open)]))
 
 
+(defmethod resolve-atomic-op-to-undo-ops :block/new
+  [_db _evt-db {:op/keys [args]}]
+  (let [{:block/keys [uid]} args]
+    [(atomic-graph-ops/make-block-remove-op uid)]))
+
+
+(defmethod resolve-atomic-op-to-undo-ops :page/remove
+  [_db evt-db {:op/keys [args]}]
+  ;; Restoring shortcut is missing here
+  (let [{:page/keys [title]} args
+        {page-refs :block/_refs} (common-db/get-page-document evt-db [:node/title title])
+        page-repr                 [(common-db/get-internal-representation evt-db (:db/id (d/entity evt-db [:node/title title])))]
+        repr-ops                  (bfs/internal-representation->atomic-ops evt-db page-repr nil)
+        save-ops                  (->> page-refs
+                                       (map :db/id)
+                                       (map (partial common-db/get-block evt-db))
+                                       (map (fn [{:block/keys [uid string]}]
+                                              (atomic-graph-ops/make-block-save-op uid string))))]
+    (vec (concat repr-ops save-ops))))
+
+
+(defmethod resolve-atomic-op-to-undo-ops :page/rename
+  [_db _event-db {:op/keys [args]}]
+  (let [from-title (:page/title args)
+        to-title   (get-in args [:target :page/title])
+        reverse-op (atomic-graph-ops/make-page-rename-op to-title from-title)]
+    [reverse-op]))
+
+
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
-  [db evt-db {:op/keys [consequences] :as op}]
-  [(assoc op :op/consequences (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db)
-                                      consequences))])
+  [db evt-db {:op/keys [_consequences] :as op}]
+  (let [atomic-ops (graph-ops/extract-atomics op)
+        undo-ops   (->> atomic-ops
+                        reverse
+                        (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db))
+                        (into []))]
+    undo-ops))
+
+
+(defmethod resolve-atomic-op-to-undo-ops :page/new
+  [_db _evt-db {:op/keys [args]}]
+  (let [{:page/keys [title]} args]
+    [(atomic-graph-ops/make-page-remove-op title)]))
 
 
 
@@ -127,11 +179,17 @@
 ;; TODO: should there be a distinction between undo and redo?
 (defn build-undo-event
   [db evt-db {:event/keys [id type op] :as event}]
-  (log/debug "build-undo-event" event)
+  (log/debug "build-undo-event\n"
+             (with-out-str
+               (pp/pprint event)))
   (if-not (contains? #{:op/atomic} type)
     (throw (ex-info "Cannot undo non-atomic event" event))
-    (->> op
-         (resolve-atomic-op-to-undo-ops db evt-db)
-         (composite/make-consequence-op {:op/undo id})
-         common-events/build-atomic-event)))
+    (let [undo-ops (->> op
+                        (resolve-atomic-op-to-undo-ops db evt-db)
+                        (composite/make-consequence-op {:op/undo id})
+                        common-events/build-atomic-event)]
+      (log/debug "undo-ops:\n"
+                 (with-out-str
+                   (pp/pprint undo-ops)))
+      undo-ops)))
 
