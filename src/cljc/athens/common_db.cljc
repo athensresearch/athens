@@ -74,6 +74,13 @@
        db))
 
 
+(defn get-sidebar-titles
+  [db]
+  (->> (get-sidebar-elements db)
+       (sort-by :page/sidebar)
+       (mapv :node/title)))
+
+
 (defn find-title-from-order
   [sidebar-elements order]
   (-> (filter (fn [el]
@@ -100,64 +107,6 @@
               sidebar-elements)
       (first)
       (:page/sidebar)))
-
-
-(defn find-source-target-order
-  [db source-title target-title]
-  (let [sidebar-elements   (get-sidebar-elements db)
-        source-order (find-order-from-title sidebar-elements source-title)
-        target-order (find-order-from-title sidebar-elements target-title)]
-    [source-order target-order]))
-
-
-(defn between
-  "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
-  [s t x]
-  (if (< s t)
-    (and (< s x) (< x t))
-    (and (< t x) (< x s))))
-
-
-(defn reindex-sidebar-after-move
-  [db source-order target-order between inc-or-dec]
-  (d/q '[:find ?shortcut ?new-order
-         :keys db/id page/sidebar
-         :in $ ?source-order ?target-order ?between ?inc-or-dec
-         :where
-         [?shortcut :page/sidebar ?order]
-         [(?between ?source-order ?target-order ?order)]
-         [(?inc-or-dec ?order) ?new-order]]
-       db
-       source-order
-       target-order
-       between
-       inc-or-dec))
-
-
-(defn inc-after
-  [db eid order]
-  (->> (d/q '[:find ?block-uid ?new-o
-              :in $ % ?p ?at
-              :keys block/uid block/order
-              :where (inc-after ?p ?at ?ch ?new-o)
-              [?ch :block/uid ?block-uid]]
-            db
-            rules
-            eid
-            order)))
-
-
-(defn dec-after
-  [db eid order]
-  (->> (d/q '[:find ?block-uid ?new-o
-              :in $ % ?p ?at
-              :keys block/uid block/order
-              :where (dec-after ?p ?at ?ch ?new-o)
-              [?ch :block/uid ?block-uid]]
-            db
-            rules
-            eid
-            order)))
 
 
 (defn get-children-uids-recursively
@@ -221,6 +170,17 @@
   (get-block db (get-parent-eid db eid)))
 
 
+(defn get-children-uids
+  "Fetches page or block sorted children uids based on eid lookup."
+  [db eid]
+  (->> (d/pull db '[{:block/children [:block/uid
+                                      :block/order]}]
+               eid)
+       :block/children
+       (sort-by :block/order)
+       (mapv :block/uid)))
+
+
 (defn prev-sib
   [db uid prev-sib-order]
   (d/q '[:find ?sib .
@@ -258,17 +218,6 @@
       :block/uid))
 
 
-(defn existing-block-count
-  "Count is used to reindex blocks after merge."
-  [db local-title]
-  (count (d/q '[:find [?ch ...]
-                :in $ ?t
-                :where
-                [?e :node/title ?t]
-                [?e :block/children ?ch]]
-              db local-title)))
-
-
 (defn map-new-refs
   "Find and replace linked ref with new linked ref, based on title change."
   [linked-refs old-title new-title]
@@ -302,27 +251,6 @@
                                                deleted-blocks)]
                    (assoc block-ref :block/string updated-content))))
           block-refs)))
-
-
-(defn reindex-blocks-between-bounds
-  "Increase/decrease by n all child blocks of parent-eid between
-  lower-bound (exclusive) and upper-bound (exclusive)."
-  [db inc-or-dec parent-eid lower-bound upper-bound n]
-  #_(log/debug "reindex block")
-  (d/q '[:find ?block-uid ?new-order
-         :keys block/uid block/order
-         :in $ % ?+or- ?parent ?lower-bound ?upper-bound ?n
-         :where
-         (between ?parent ?lower-bound ?upper-bound ?ch ?order)
-         [(?+or- ?order ?n) ?new-order]
-         [?ch :block/uid ?block-uid]]
-       db
-       rules
-       inc-or-dec
-       parent-eid
-       lower-bound
-       upper-bound
-       n))
 
 
 (defn get-page-document
