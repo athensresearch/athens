@@ -74,6 +74,17 @@
        db))
 
 
+(defn get-sidebar-titles
+  [db]
+  (->> (d/q '[:find [(pull ?e [*]) ...]
+              :where
+              [?e :page/sidebar _]]
+            db)
+       (sort-by :page/sidebar)
+       (map :node/title)
+       vec))
+
+
 (defn find-title-from-order
   [sidebar-elements order]
   (-> (filter (fn [el]

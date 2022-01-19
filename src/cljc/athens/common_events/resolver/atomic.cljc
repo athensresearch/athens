@@ -301,66 +301,35 @@
 (defmethod resolve-atomic-op-to-tx :shortcut/new
   [db {:op/keys [args]}]
   (let [{:page/keys [title]} args
-        page-uid             (common-db/get-page-uid db title)
-        reindex-shortcut-txs (->> (common-db/get-sidebar-elements db)
-                                  (sort-by :page/sidebar)
-                                  (map-indexed (fn [i m] (assoc m :page/sidebar i)))
-                                  vec)
-        add-shortcut-tx      {:block/uid    page-uid
-                              :page/sidebar (or (count reindex-shortcut-txs)
-                                                1)}
-        tx-data              (conj reindex-shortcut-txs
-                                   add-shortcut-tx)]
+        titles               (common-db/get-sidebar-titles db)
+        titles'              (order/insert titles title :last nil)
+        reorder              (order/reorder titles titles' order/shortcut-map-fn)
+        tx-data              reorder]
     tx-data))
 
 
 (defmethod resolve-atomic-op-to-tx :shortcut/remove
   [db {:op/keys [args]}]
   (let [{:page/keys [title]} args
+        titles               (common-db/get-sidebar-titles db)
+        titles'              (order/remove titles title)
+        reorder              (order/reorder titles titles' order/shortcut-map-fn)
         page-uid             (common-db/get-page-uid db title)
-        reindex-shortcut-txs (->> (common-db/get-sidebar-elements db)
-                                  (remove #(= page-uid (:block/uid %)))
-                                  (sort-by :page/sidebar)
-                                  (map-indexed (fn [i m] (assoc m :page/sidebar i)))
-                                  vec)
-        remove-shortcut-tx    [:db/retract [:block/uid page-uid] :page/sidebar]
-        tx-data               (conj reindex-shortcut-txs remove-shortcut-tx)]
+        remove-shortcut-tx   [:db/retract [:block/uid page-uid] :page/sidebar]
+        tx-data              (conj reorder remove-shortcut-tx)]
     tx-data))
 
 
 (defmethod resolve-atomic-op-to-tx :shortcut/move
   [db {:op/keys [args]}]
   (let [{title        :page/title
-         ref-position :shortcut/position}  args
+         ref-position :shortcut/position} args
         {relation  :relation
-         ref-title :page/title}            ref-position
-        source-uid                         (common-db/get-page-uid db title)
-        [source-order
-         target-order]                     (common-db/find-source-target-order db
-                                                                               title
-                                                                               ref-title)
-        new-source-order                   (if (and  (= :before relation)
-                                                     (< source-order target-order))
-                                             (dec target-order)
-                                             target-order)
-        new-source                         [{:block/uid    source-uid
-                                             :page/sidebar new-source-order}]
-        new-target-order                   (cond
-                                             (and  (= :before relation)
-                                                   (< source-order target-order)) target-order
-                                             (= :before relation)                 (dec target-order)
-                                             :else                                (inc target-order))
-        inc-or-dec                         (if (and (= :before relation)
-                                                    (> source-order target-order))
-                                             inc
-                                             dec)
-        reindex                            (common-db/reindex-sidebar-after-move db
-                                                                                 source-order
-                                                                                 new-target-order
-                                                                                 common-db/between
-                                                                                 inc-or-dec)
-        tx-data                            (concat new-source
-                                                   reindex)]
+         ref-title :page/title}           ref-position
+        titles                            (common-db/get-sidebar-titles db)
+        titles'                           (order/move-within titles title relation ref-title)
+        reorder                           (order/reorder titles titles' order/shortcut-map-fn)
+        tx-data                           reorder]
     tx-data))
 
 
