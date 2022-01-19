@@ -137,16 +137,16 @@
   ;; [x] cleanup block refs
   (let [{:block/keys [uid]}   args
         block-exists?         (common-db/e-by-av db :block/uid uid)
-        {removed-order :block/order
-         children      :block/children
+        {children      :block/children
          :as           block} (when block-exists?
                                 (common-db/get-block db [:block/uid uid]))
         parent-eid            (when block-exists?
                                 (common-db/get-parent-eid db [:block/uid uid]))
         parent-uid            (when parent-eid
                                 (common-db/v-by-ea db parent-eid :block/uid))
-        reindex               (common-db/dec-after db [:block/uid parent-uid] removed-order)
-        reindex?              (seq reindex)
+        parent-children       (common-db/get-children-uids db [:block/uid parent-uid])
+        parent-children'      (order/remove parent-children uid)
+        reorder               (order/reorder parent-children parent-children' order/block-map-fn)
         has-kids?             (seq children)
         descendants-uids      (when has-kids?
                                 (loop [acc        []
@@ -190,7 +190,7 @@
                                                             title  (common-db/get-page-title db uid)]
                                                         (cond-> {:block/uid uid}
                                                           string (merge {:block/string (s/replace string from-string removed-string)})
-                                                          title  (merge {:node/title   (s/replace title from-string removed-string)}))))
+                                                          title  (merge {:node/title (s/replace title from-string removed-string)}))))
                                                     referenced-uids)))))
         has-asserts?          (seq asserts)
         retract-kids          (mapv (fn [uid]
@@ -200,13 +200,10 @@
                                 [:db/retractEntity [:block/uid uid]])
         retract-parents-child (when parent-uid
                                 [:db/retract [:block/uid parent-uid] :block/children [:block/uid uid]])
-        parent                (when reindex?
-                                {:block/uid      parent-uid
-                                 :block/children reindex})
         txs                   (when block-exists?
                                 (cond-> []
                                   parent-uid   (conj retract-parents-child)
-                                  reindex?     (conj parent)
+                                  reorder      (into reorder)
                                   has-kids?    (into retract-kids)
                                   has-asserts? (into asserts)
                                   true         (conj retract-entity)))]
