@@ -90,10 +90,12 @@
                         (into []))]
     undo-ops))
 
+
 (defmethod resolve-atomic-op-to-undo-ops :page/new
   [_db _evt-db {:op/keys [args]}]
   (let [{:page/keys [title]} args]
     [(atomic-graph-ops/make-page-remove-op title)]))
+
 
 ;; TODO: should there be a distinction between undo and redo?
 (defn build-undo-event

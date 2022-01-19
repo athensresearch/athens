@@ -18,9 +18,9 @@
           save!      #(->> (atomic-graph-ops/make-page-new-op test-title)
                            (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
                            (d/transact! @fixture/connection))]
-      (t/is (= nil (common-db/e-by-av @@fixture/connection :node/title test-title)))
+      (t/is (nil? (common-db/get-page-document @@fixture/connection [:node/title test-title])))
       (save!)
-      (t/is (= 1 (common-db/e-by-av @@fixture/connection :node/title test-title)))))
+      (t/is (common-db/get-page-document @@fixture/connection [:node/title test-title]))))
 
   (t/testing "page/new daily page resolves to special uid"
     (let [title "October 22, 2021"
@@ -38,47 +38,43 @@
       (t/is (= :composite/consequence (:op/type page-new-op))))))
 
 
-(t/deftest undo-page-new-atomic)
-(fixture/integration-test-fixture
-  (fn []
-    (t/testing "page/new when page didn't exist yet"
-      (let [test-title "test page title"
-            save!      #(->> (atomic-graph-ops/make-page-new-op test-title)
+(t/deftest undo-page-new-atomic
+  (t/testing "page/new when page didn't exist yet"
+    (let [test-title "test page title"
+          save!      #(->> (atomic-graph-ops/make-page-new-op test-title)
+                           (fixture/op-resolve-transact!))]
+      ;; setup
+      (t/is (nil? (common-db/get-page-document @@fixture/connection [:node/title test-title])))
+      (let [[db evt] (save!)]
+        ;; new page
+        (t/is (common-db/get-page-document @@fixture/connection [:node/title test-title]))
+        ;; undo (remove page)
+        (let [[db' evt'] (fixture/undo! db evt)]
+          (t/is (nil? (common-db/get-page-document @@fixture/connection [:node/title test-title])))
+          ;; TODO: uncomment the following tests after undo page/remove is implemented
+          (fixture/undo! db' evt')
+          (t/is (common-db/get-page-document @@fixture/connection [:node/title test-title])))))))
+
+
+(t/deftest undo-page-new-composite
+  (t/testing "page/new when page didn't exist yet"
+    (let [test-title   "test-title"
+          block-uid    "block-uid"
+          save!        #(->> (graph-ops/build-page-new-op @@fixture/connection test-title block-uid)
                              (fixture/op-resolve-transact!))]
-        ;; setup
-        (t/is (nil? (common-db/e-by-av @@fixture/connection :node/title test-title)))
-        (let [[db evt] (save!)]
-          ;; new page
-          (t/is (= 1 (common-db/e-by-av @@fixture/connection :node/title test-title)))
-          ;; undo (remove page)
-          (let [[db' evt'] (fixture/undo! db evt)]
-            (t/is (nil? (common-db/e-by-av @@fixture/connection :node/title test-title)))
-            ;; TODO: uncomment the following tests after undo page/remove is implemented
-            #_#_(fixture/undo! db' evt')
-            (t/is (= 1 (common-db/e-by-av @@fixture/connection :node/title test-title)))))))))
-
-
-(t/deftest undo-page-new-composite)
-(fixture/integration-test-fixture
-  (fn []
-    (t/testing "page/new when page didn't exist yet"
-      (let [page-title   "page-title"
-            block-uid    "block-uid"
-            save!        #(->> (graph-ops/build-page-new-op @@fixture/connection page-title block-uid)
-                               (fixture/op-resolve-transact!))]
-        ;; setup
-        (t/is (nil? (common-db/e-by-av @@fixture/connection :node/title page-title)))
-        (t/is (nil? (common-db/e-by-av @@fixture/connection :block/uid page-title)))
-        (let [[db evt] (save!)]
-          ;; new page
-          (t/is (= 1 (common-db/e-by-av @@fixture/connection :node/title page-title)))
-          (t/is (= 2 (common-db/e-by-av @@fixture/connection :block/uid block-uid)))
-          ;; undo (remove page)
-          (let [[db' evt'] (fixture/undo! db evt)]
-            (t/is (nil? (common-db/e-by-av @@fixture/connection :node/title page-title)))
-            (t/is (nil? (common-db/e-by-av @@fixture/connection :block/uid page-title)))
-            ;; redo
-            ;; TODO: uncomment the following tests after undo page/remove is implemented
-            #_#_#_(fixture/undo! db' evt')
-            (t/is (= 1 (common-db/e-by-av @@fixture/connection :node/title page-title)))
-            (t/is (= 2 (common-db/e-by-av @@fixture/connection :block/uid block-uid)))))))))
+      ;; setup
+      (t/is (nil? (common-db/get-page-document @@fixture/connection [:node/title test-title])))
+      (t/is (nil? (common-db/get-block @@fixture/connection [:block/uid block-uid])))
+      (let [[db evt] (save!)]
+        ;; new page
+        (t/is (common-db/get-page-document @@fixture/connection [:node/title test-title]))
+        (t/is (common-db/get-block @@fixture/connection [:block/uid block-uid]))
+        ;; undo (remove page)
+        (let [[db' evt'] (fixture/undo! db evt)]
+          (t/is (nil? (common-db/get-page-document @@fixture/connection [:node/title test-title])))
+          (t/is (nil? (common-db/get-block @@fixture/connection [:block/uid block-uid])))
+          ;; redo
+          ;; TODO: uncomment the following tests after undo page/remove is implemented
+          (fixture/undo! db' evt')
+          (t/is (common-db/get-page-document @@fixture/connection [:node/title test-title]))
+          (t/is (common-db/get-block @@fixture/connection [:block/uid block-uid])))))))
