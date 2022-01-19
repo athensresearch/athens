@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.11](https://github.com/athensresearch/athens/compare/v2.0.0-beta.10...v2.0.0-beta.11) (2022-01-19)
+
+
+### Bug Fixes
+
+* offsetTop error from navigating to dailynotes ([debbdca](https://github.com/athensresearch/athens/commit/debbdcae078c1aec418c3c42188ef43d209bf7eb))
+
+
+### Enhancements
+
+* **db-picker:** allow users to remove dbs from list ([7ad8c27](https://github.com/athensresearch/athens/commit/7ad8c27090943382768e14987b1e7fab466a2d63))
+* **presence:** move inline avatars to the right ([9fa2d23](https://github.com/athensresearch/athens/commit/9fa2d230b88eadd16e0c8e3b247f0ebde547592d))
+
 ## [2.0.0-beta.10](https://github.com/athensresearch/athens/compare/v2.0.0-beta.9...v2.0.0-beta.10) (2022-01-13)
 
 
