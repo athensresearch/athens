@@ -523,18 +523,19 @@
   :daily-note/scroll
   (fn [_ [_]]
     (let [daily-notes @(subscribe [:daily-notes/items])
-          el          (getElement "daily-notes")
-          offset-top  (.. el -offsetTop)
-          rect        (.. el getBoundingClientRect)
-          from-bottom (.. rect -bottom)
-          from-top    (.. rect -top)
-          doc-height  (.. js/document -documentElement -scrollHeight)
-          top-delta   (- offset-top from-top)
-          bottom-delta (- from-bottom doc-height)]
-      ;; Don't allow user to scroll up for now.
-      (cond
-        (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
-        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))
+          el          (getElement "daily-notes")]
+      (when el
+        (let [offset-top   (.. el -offsetTop)
+              rect         (.. el getBoundingClientRect)
+              from-bottom  (.. rect -bottom)
+              from-top     (.. rect -top)
+              doc-height   (.. js/document -documentElement -scrollHeight)
+              top-delta    (- offset-top from-top)
+              bottom-delta (- from-bottom doc-height)]
+          ;; Don't allow user to scroll up for now.
+          (cond
+            (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
+            (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))))
 
 
 ;; -- event-fx and Datascript Transactions -------------------------------
