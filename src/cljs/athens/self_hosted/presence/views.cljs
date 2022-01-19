@@ -98,12 +98,7 @@
                   :top "0.25rem"
                   :padding "0.125rem"
                   :background "var(--background-color)"}}]
-        (->>
-          @users
-          ;;   (concat @users @users)
-          ;;   (concat @users @users @users)
-          ;;   (concat @users @users @users @users)
-
+        (->> @users
              (map user->person)
              (remove nil?)
              (map (fn [{:keys [personId] :as person}]
