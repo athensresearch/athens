@@ -96,6 +96,7 @@
                     @@fixture/connection
                     block-uid))))))
 
+
 (t/deftest undo-page-remove-with-reference
   (let [test-page-1-title "test page 1 title"
         test-page-1-uid   "test-page-1-uid"
@@ -126,6 +127,7 @@
         (t/is (= test-page-1-title (get-str block-uid)) "see if the referenced page got removed from the block string")
         (fixture/undo! evt-db db)
         (t/is (= block-text (get-str block-uid)) "After undo see if test-page-1-title is referenced in test-page-2")))))
+
 
 (t/deftest undo-page-remove-without-reference
   (let [test-page-1-title "test page 1 title"

@@ -7,8 +7,8 @@
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common.logging                :as log]
-    [datascript.core :as d]
-    [clojure.pprint                       :as pp]))
+    [clojure.pprint                       :as pp]
+    [datascript.core :as d]))
 
 
 (defn undo?
@@ -65,6 +65,7 @@
   (let [{:block/keys [uid]} args]
     [(atomic-graph-ops/make-block-remove-op uid)]))
 
+
 (defmethod resolve-atomic-op-to-undo-ops :page/remove
   [_db evt-db {:op/keys [args]}]
   (let [{:page/keys [title]} args
@@ -77,6 +78,7 @@
                                        (map (fn [{:block/keys [uid string]}]
                                               (atomic-graph-ops/make-block-save-op uid string))))]
     (vec (concat repr-ops save-ops))))
+
 
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
   [db evt-db {:op/keys [_consequences] :as op}]
