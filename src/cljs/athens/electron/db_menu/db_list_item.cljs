@@ -5,6 +5,7 @@
     [athens.electron.db-menu.db-icon :refer [db-icon]]
     [athens.style :refer [color]]
     [re-frame.core :refer [dispatch]]
+    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -60,7 +61,7 @@
 
 (defn db-list-item
   [{:keys [db is-current]}]
-  (let [state                   (reagent.core/atom {:show-remove-button false})
+  (let [state                   (r/atom {:show-remove-button false})
         mouse-over-handler      #(swap! state assoc :show-remove-button true)
         mouse-leave-handler     #(swap! state assoc :show-remove-button false)
         remove-db-click-handler (fn [e]
