@@ -66,3 +66,86 @@
           (t/is (nil? (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
           (t/is (= test-page-uid uid-by-title))
           (t/is (= test-string-to block-string)))))))
+
+
+(t/deftest page-rename-undo-test
+  (t/testing "just rename it back already"
+    (let [from-title        "test-rename-undo-title-from"
+          to-title          "test-rename-undo-title-to"
+          test-uid          "block-1-uid"
+          setup-repr        [{:page/title     from-title
+                              :block/children [{:block/uid    test-uid
+                                                :block/string ""}]}]
+          get-page-by-title #(common-db/get-page-document @@fixture/connection [:node/title %])]
+      (fixture/setup! setup-repr)
+      (t/is (seq (get-page-by-title from-title)))
+      (t/is (nil? (get-page-by-title to-title)))
+      (let [[rename-db rename-event] (fixture/op-resolve-transact! (atomic-graph-ops/make-page-rename-op from-title to-title))]
+        (t/is (nil? (get-page-by-title from-title)))
+        (t/is (seq (get-page-by-title to-title)))
+        (fixture/undo! rename-db rename-event)
+        (t/is (seq (get-page-by-title from-title)))
+        (t/is (nil? (get-page-by-title to-title)))))))
+
+
+(t/deftest page-rename-undo-test-2
+  (t/testing "Rename and change refs"
+    (let [from-title        "test-rename-undo-title-from"
+          to-title          "test-rename-undo-title-to"
+          test-uid          "block-1-uid"
+          start-str         (str "[[" from-title "]]")
+          end-str           (str "[[" to-title "]]")
+          setup-repr        [{:page/title     from-title
+                              :block/children [{:block/uid    "doesn't really matter"
+                                                :block/string ""}]}
+                             {:page/title     "this page holds block with ref to renamed page"
+                              :block/children [{:block/uid    test-uid
+                                                :block/string start-str}]}]
+          get-page-by-title #(common-db/get-page-document @@fixture/connection [:node/title %])
+          get-str           #(common-db/v-by-ea @@fixture/connection [:block/uid test-uid] :block/string)]
+      (fixture/setup! setup-repr)
+      (t/is (seq (get-page-by-title from-title)))
+      (t/is (nil? (get-page-by-title to-title)))
+      (t/is (= start-str (get-str)))
+      (let [[rename-db rename-event] (fixture/op-resolve-transact! (atomic-graph-ops/make-page-rename-op from-title to-title))]
+        (t/is (nil? (get-page-by-title from-title)))
+        (t/is (seq (get-page-by-title to-title)))
+        (t/is (= end-str (get-str)))
+        (fixture/undo! rename-db rename-event)
+        (t/is (seq (get-page-by-title from-title)))
+        (t/is (nil? (get-page-by-title to-title)))
+        (t/is (= start-str (get-str)))))))
+
+
+(t/deftest page-rename-undo-redo-test
+  (t/testing "Rename and change refs"
+    (let [from-title        "test-rename-undo-title-from"
+          to-title          "test-rename-undo-title-to"
+          test-uid          "block-1-uid"
+          start-str         (str "[[" from-title "]]")
+          end-str           (str "[[" to-title "]]")
+          setup-repr        [{:page/title     from-title
+                              :block/children [{:block/uid    "doesn't really matter"
+                                                :block/string ""}]}
+                             {:page/title     "this page holds block with ref to renamed page"
+                              :block/children [{:block/uid    test-uid
+                                                :block/string start-str}]}]
+          get-page-by-title #(common-db/get-page-document @@fixture/connection [:node/title %])
+          get-str           #(common-db/v-by-ea @@fixture/connection [:block/uid test-uid] :block/string)]
+      (fixture/setup! setup-repr)
+      (t/is (seq (get-page-by-title from-title)))
+      (t/is (nil? (get-page-by-title to-title)))
+      (t/is (= start-str (get-str)))
+      (let [[rename-db rename-event] (fixture/op-resolve-transact! (atomic-graph-ops/make-page-rename-op from-title to-title))]
+        (t/is (nil? (get-page-by-title from-title)))
+        (t/is (seq (get-page-by-title to-title)))
+        (t/is (= end-str (get-str)))
+        (let [[undo-db undo-event] (fixture/undo! rename-db rename-event)]
+          (t/is (seq (get-page-by-title from-title)))
+          (t/is (nil? (get-page-by-title to-title)))
+          (t/is (= start-str (get-str)))
+          ;; redo
+          (fixture/undo! undo-db undo-event)
+          (t/is (nil? (get-page-by-title from-title)))
+          (t/is (seq (get-page-by-title to-title)))
+          (t/is (= end-str (get-str))))))))
