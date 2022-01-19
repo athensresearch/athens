@@ -7,6 +7,7 @@
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common.logging                :as log]
+    [datascript.core :as d]
     [clojure.pprint                       :as pp]))
 
 
@@ -64,6 +65,18 @@
   (let [{:block/keys [uid]} args]
     [(atomic-graph-ops/make-block-remove-op uid)]))
 
+(defmethod resolve-atomic-op-to-undo-ops :page/remove
+  [_db evt-db {:op/keys [args]}]
+  (let [{:page/keys [title]} args
+        {page-refs :block/_refs} (common-db/get-page-document evt-db [:node/title title])
+        page-repr                 [(common-db/get-internal-representation evt-db (:db/id (d/entity evt-db [:node/title title])))]
+        repr-ops                  (bfs/internal-representation->atomic-ops evt-db page-repr nil)
+        save-ops                  (->> page-refs
+                                       (map :db/id)
+                                       (map (partial common-db/get-block evt-db))
+                                       (map (fn [{:block/keys [uid string]}]
+                                              (atomic-graph-ops/make-block-save-op uid string))))]
+    (vec (concat repr-ops save-ops))))
 
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
   [db evt-db {:op/keys [_consequences] :as op}]

@@ -115,13 +115,14 @@
         get-str          #(->> [:block/uid %]
                                fixture/get-repr
                                :block/string)
-        remove!          #(->> (atomic-graph-ops/make-page-remove-op %)
-                               (atomic-resolver/resolve-to-tx @@fixture/connection))]
+        remove!          #(-> (atomic-graph-ops/make-page-remove-op %)
+                              fixture/op-resolve-transact!)]
 
     (t/testing "undo page remove with refs"
-      (fixture/setup! setup-repr)
+      (fixture/transact-with-middleware setup-repr)
       (t/is (= block-text (get-str block-uid)) "see if test-page-1-title is referenced in test-page-2")
       (let [[evt-db db] (remove! test-page-1-title)]
+        (remove! test-page-1-title)
         (t/is (= test-page-1-title (get-str block-uid)) "see if the referenced page got removed from the block string")
         (fixture/undo! evt-db db)
         (t/is (= block-text (get-str block-uid)) "After undo see if test-page-1-title is referenced in test-page-2")))))
@@ -136,14 +137,13 @@
                                               :block/children []}]}]
 
         get-page-by-title #(common-db/get-page-document @@fixture/connection [:node/title test-page-1-title])
-        remove!           #(->> (atomic-graph-ops/make-page-remove-op %)
-                                (atomic-resolver/resolve-to-tx @@fixture/connection))]
+        remove!           #(-> (atomic-graph-ops/make-page-remove-op %)
+                               fixture/op-resolve-transact!)]
 
     (t/testing "undo page remove with refs"
-      (fixture/setup! setup-repr)
+      (fixture/transact-with-middleware setup-repr)
       (t/is (seq (get-page-by-title)) "Check if the page is created")
       (let [[evt-db db] (remove! test-page-1-title)]
         (t/is (empty? (get-page-by-title)) "Check if the page is removed")
         (fixture/undo! evt-db db)
-        (t/is (seq (get-page-by-title)) "After Undo :w
-        Check if the page is created")))))
+        (t/is (seq (get-page-by-title)) "After Undo Check if the page is created")))))
