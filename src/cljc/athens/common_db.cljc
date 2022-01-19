@@ -76,13 +76,9 @@
 
 (defn get-sidebar-titles
   [db]
-  (->> (d/q '[:find [(pull ?e [*]) ...]
-              :where
-              [?e :page/sidebar _]]
-            db)
+  (->> (get-sidebar-elements db)
        (sort-by :page/sidebar)
-       (map :node/title)
-       vec))
+       (mapv :node/title)))
 
 
 (defn find-title-from-order
@@ -182,8 +178,7 @@
                eid)
        :block/children
        (sort-by :block/order)
-       (map :block/uid)
-       vec))
+       (mapv :block/uid)))
 
 
 (defn prev-sib
