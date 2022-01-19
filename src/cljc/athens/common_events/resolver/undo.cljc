@@ -81,6 +81,14 @@
     (vec (concat repr-ops save-ops))))
 
 
+(defmethod resolve-atomic-op-to-undo-ops :page/rename
+  [_db _event-db {:op/keys [args]}]
+  (let [from-title (:page/title args)
+        to-title   (get-in args [:target :page/title])
+        reverse-op (atomic-graph-ops/make-page-rename-op to-title from-title)]
+    [reverse-op]))
+
+
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
   [db evt-db {:op/keys [_consequences] :as op}]
   (let [atomic-ops (graph-ops/extract-atomics op)
