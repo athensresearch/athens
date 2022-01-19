@@ -221,6 +221,18 @@
   (get-block db (get-parent-eid db eid)))
 
 
+(defn get-children-uids
+  "Fetches page or block sorted children uids based on eid lookup."
+  [db eid]
+  (->> (d/pull db '[{:block/children [:block/uid
+                                      :block/order]}]
+               eid)
+       :block/children
+       (sort-by :block/order)
+       (map :block/uid)
+       vec))
+
+
 (defn prev-sib
   [db uid prev-sib-order]
   (d/q '[:find ?sib .

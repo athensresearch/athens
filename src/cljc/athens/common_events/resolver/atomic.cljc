@@ -1,14 +1,15 @@
 (ns athens.common-events.resolver.atomic
   (:require
-    [athens.common-db               :as common-db]
-    [athens.common-events.graph.ops :as graph-ops]
-    [athens.common-events.resolver  :as resolver]
-    [athens.common.logging          :as log]
-    [athens.common.utils            :as utils]
-    [athens.dates                   :as dates]
-    [clojure.pprint                 :as pp]
-    [clojure.string                 :as s]
-    [datascript.core                :as d]))
+    [athens.common-db                    :as common-db]
+    [athens.common-events.graph.ops      :as graph-ops]
+    [athens.common-events.resolver       :as resolver]
+    [athens.common-events.resolver.order :as order]
+    [athens.common.logging               :as log]
+    [athens.common.utils                 :as utils]
+    [athens.dates                        :as dates]
+    [clojure.pprint                      :as pp]
+    [clojure.string                      :as s]
+    [datascript.core                     :as d]))
 
 
 (defmulti resolve-atomic-op-to-tx
@@ -18,52 +19,37 @@
 
 (defmethod resolve-atomic-op-to-tx :block/new
   [db {:op/keys [args]}]
-  (let [{:block/keys [uid position]}    args
+  (let [{:block/keys [uid position]}  args
         {relation  :relation
          ref-uid   :block/uid
-         ref-title :page/title}         position
-        _valid-position                 (common-db/validate-position db position)
-        ref-title->uid                  (common-db/get-page-uid db ref-title)
+         ref-title :page/title}       position
+        _valid-position               (common-db/validate-position db position)
+        ref-title->uid                (common-db/get-page-uid db ref-title)
         ;; Pages must be referenced by title but internally we still use uids for them.
-        ref-uid                         (or ref-uid ref-title->uid)
-        ref-parent?                     (#{:first :last} relation)
-        ref-block-exists?               (int? (common-db/e-by-av db :block/uid ref-uid))
-        ref-block                       (when ref-block-exists?
-                                          (common-db/get-block db [:block/uid ref-uid]))
-        {parent-block-uid :block/uid
-         :as              parent-block} (if ref-parent?
-                                          (if ref-block-exists?
-                                            ref-block
-                                            (throw (ex-info "Ref block does not exist" {:block/uid ref-uid})))
-                                          (common-db/get-parent db [:block/uid ref-uid]))
-        parent-block-exists?            (int? (common-db/e-by-av db :block/uid parent-block-uid))
-        new-block-order                 (condp = relation
-                                          :first  0
-                                          :last   (if-let [parent-block-children (:block/children parent-block)]
-                                                    (->> parent-block-children
-                                                         (map :block/order)
-                                                         (reduce max 0)
-                                                         inc)
-                                                    0)
-                                          :before (:block/order ref-block)
-                                          :after  (inc (:block/order ref-block)))
-        now                             (utils/now-ts)
-        new-block                       {:block/uid    uid
-                                         :block/string ""
-                                         :block/order  new-block-order
-                                         :block/open   true
-                                         :create/time  now
-                                         :edit/time    now}
-        reindex                         (if-not parent-block-exists?
-                                          [new-block]
-                                          (concat [new-block]
-                                                  (common-db/inc-after db
-                                                                       [:block/uid parent-block-uid]
-                                                                       (dec new-block-order))))
-        tx-data                         [{:block/uid      parent-block-uid
-                                          :block/children reindex
-                                          :edit/time      now}]]
-    tx-data))
+        ref-uid                       (or ref-uid ref-title->uid)
+        ref-parent?                   (#{:first :last} relation)
+        ref-block-exists?             (int? (common-db/e-by-av db :block/uid ref-uid))
+        ref-block                     (when ref-block-exists?
+                                        (common-db/get-block db [:block/uid ref-uid]))
+        {parent-block-uid :block/uid} (if ref-parent?
+                                        (if ref-block-exists?
+                                          ref-block
+                                          (throw (ex-info "Ref block does not exist" {:block/uid ref-uid})))
+                                        (common-db/get-parent db [:block/uid ref-uid]))
+        now                           (utils/now-ts)
+        new-block                     {:block/uid    uid
+                                       :block/string ""
+                                       :block/open   true
+                                       :create/time  now
+                                       :edit/time    now}
+        children                      (common-db/get-children-uids db [:block/uid parent-block-uid])
+        children'                     (order/insert children uid relation ref-uid)
+        reorder                       (order/reorder children children' order/block-map-fn)
+        children-tx                   (concat [new-block] reorder)
+        tx-data'                      [{:block/uid      parent-block-uid
+                                        :block/children children-tx
+                                        :edit/time      now}]]
+    tx-data'))
 
 
 ;; This is Atomic Graph Op, there is also composite version of it
