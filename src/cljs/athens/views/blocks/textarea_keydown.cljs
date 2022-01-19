@@ -14,7 +14,7 @@
     [athens.events.selection :as select-events]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
-    [athens.util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
+    [athens.util :as util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
     [athens.views.blocks.internal-representation :as internal-representation]
     [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]

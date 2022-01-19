@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.10](https://github.com/athensresearch/athens/compare/v2.0.0-beta.9...v2.0.0-beta.10) (2022-01-13)
+
+
+### Enhancements
+
+* stop using restore-navigation until more reliable ([81f0d93](https://github.com/athensresearch/athens/commit/81f0d93eb931e307bfc5a98c2329f08ac83d633d))
+
 ## [2.0.0-beta.9](https://github.com/athensresearch/athens/compare/v2.0.0-beta.8...v2.0.0-beta.9) (2022-01-10)
 
 

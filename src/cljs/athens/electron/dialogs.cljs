@@ -89,12 +89,27 @@
           (rf/dispatch [:fs/create-and-watch local-db]))))))
 
 
+(defn- delete-msg-prompt
+  [{:keys [name base-dir url] :as db}]
+  (let [remote-db? (utils/remote-db? db)
+        part-1 (str "Confirm removing \"" name "\" from the list?\n\n")
+        part-2 (if remote-db?
+                 (str "The data will still remain at remote server " url ".")
+                 (str "The files will still remain locally on disk at \"" base-dir "\"."))]
+    (str part-1 part-2)))
+
+
 (defn delete-dialog!
-  "Delete an existing database and select the first db of the remaining ones."
-  [{:keys [name base-dir] :as db}]
-  (when (.confirm js/window (str "Do you really want to delete " name "from the list?"
-                                 "The files will still remain on disk in" base-dir "."))
-    (when (utils/remote-db? db)
-      (rf/dispatch [:remote/disconnect!]))
-    (rf/dispatch [:db-picker/remove-db db])
-    (rf/dispatch [:db-picker/select-most-recent-db])))
+  "Delete an existing database. Select the first db of the remaining ones if user is deleting the currently selected db."
+  [{:keys [id] :as db}]
+  (let [remote-db?       (utils/remote-db? db)
+        confirmation-msg (delete-msg-prompt db)
+        current-db-id    (-> @(rf/subscribe [:db-picker/selected-db])
+                             :id)
+        delete-current-db? (= id current-db-id)]
+    (when (.confirm js/window confirmation-msg)
+      (when remote-db?
+        (rf/dispatch [:remote/disconnect!]))
+      (rf/dispatch [:db-picker/remove-db db])
+      (when delete-current-db?
+        (rf/dispatch [:db-picker/select-most-recent-db])))))
