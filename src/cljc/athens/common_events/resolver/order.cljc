@@ -5,6 +5,7 @@
 
 
 (defn remove
+  "Remove x from v."
   [v x]
   (vec (c/remove #{x} v)))
 
@@ -15,6 +16,8 @@
 
 
 (defn insert
+  "Insert x in v, in a position defined by relation to target.
+  See athens.common-events.graph.schema for position values."
   [v x relation target]
   (let [n (when (and target (#{:before :after} relation))
             (let [n (.indexOf v target)]
@@ -30,11 +33,17 @@
 
 
 (defn move-between
-  [from to x relation target]
-  [(remove from x) (insert to x relation target)])
+  "Move x from origin to destination, to a position defined by relation to target.
+  See athens.common-events.graph.schema for position values.
+  Returns [modified-origin modified-destination]."
+  [origin destination x relation target]
+  [(remove origin x) (insert destination x relation target)])
 
 
 (defn move-within
+  "Move x within v, to a position defined by relation to target.
+  See athens.common-events.graph.schema for position values.
+  Returns modified v."
   [v x relation target]
   (-> v
       (remove x)
@@ -54,6 +63,10 @@
 
 
 (defn reorder
+  "Maps each element in before and after using map-indexed over map-fn.
+  Returns all elements in after that are not in before.
+  Use with block-map-fn and shortcut-map-fn to obtain valid datascript
+  transactions that will reorder those elements using absolute positions."
   [before after map-fn]
   (let [before' (map-indexed map-fn before)
         after'  (map-indexed map-fn after)]
