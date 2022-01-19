@@ -68,6 +68,7 @@
 
 (defmethod resolve-atomic-op-to-undo-ops :page/remove
   [_db evt-db {:op/keys [args]}]
+  ;; Restoring shortcut is missing here
   (let [{:page/keys [title]} args
         {page-refs :block/_refs} (common-db/get-page-document evt-db [:node/title title])
         page-repr                 [(common-db/get-internal-representation evt-db (:db/id (d/entity evt-db [:node/title title])))]
