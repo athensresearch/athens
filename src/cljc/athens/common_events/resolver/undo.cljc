@@ -150,11 +150,32 @@
     [move-op]))
 
 
+(defn reorder-ops
+  "Reverse the order of operations in coll.
+  Then, for all contiguous :block/move operations, restore their original relative order.
+    e.g.: a b m1 m2 m3 c -> c m1 m2 m3 b a
+  Move operations keep their relative order to ensure that chains of relative moves still work.
+  This is in part a quirk of the `forward bias` in our location resolution that favors :first
+  and :after positions, and is not meant to be a universal solution.
+  There are valid combination of relative moves that will still not be correctly undone."
+  [coll]
+  (let [move-op?            #(= (:op/type %) :block/move)
+        restore-move-order #(if (move-op? (first %))
+                              (reverse %)
+                              %)]
+    (->> coll
+         reverse
+         (partition-by move-op?)
+         (map restore-move-order)
+         (apply concat)
+         (into []))))
+
+
 (defmethod resolve-atomic-op-to-undo-ops :composite/consequence
   [db evt-db {:op/keys [_consequences] :as op}]
   (let [atomic-ops (graph-ops/extract-atomics op)
         undo-ops   (->> atomic-ops
-                        reverse
+                        reorder-ops
                         (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db))
                         (into []))]
     undo-ops))
