@@ -1,7 +1,9 @@
 (ns athens.electron.db-menu.db-list-item
   (:require
+    ["@material-ui/icons/Clear" :default Clear]
     ["@material-ui/icons/Link" :default Link]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
+    [athens.electron.dialogs :as dialogs]
     [athens.style :refer [color]]
     [re-frame.core :refer [dispatch]]
     [stylefy.core :as stylefy :refer [use-style]]))
@@ -23,6 +25,7 @@
                               :appearance "none"
                               :border "none"
                               :line-height "1.1"}
+                      [:.MuiSvgIcon-root {:opacity "50%"}]
                       ["&:hover" {:filter "brightness(110%)"}]]
                      [:.is-current]
                      [:.label {:display "block"
@@ -59,10 +62,14 @@
 
 (defn db-list-item
   [{:keys [db is-current]}]
-  [:div (use-style db-list-item-style)
-   (if is-current
-     [:div.body.is-current
-      [db-list-item-content {:db db}]]
-     [:button.body.button {:onClick
-                           #(dispatch [:db-picker/select-db db])}
-      [db-list-item-content {:db db}]])])
+  (let [remove-db-click-handler (fn [e]
+                                  (dialogs/delete-dialog! db)
+                                  (.. e stopPropagation))]
+    [:div (use-style db-list-item-style)
+     (if is-current
+       [:div.body.is-current
+        [db-list-item-content {:db db}]]
+       [:button.body.button {:onClick #(dispatch [:db-picker/select-db db])}
+        [db-list-item-content {:db db}]
+        [:> Clear {:on-click remove-db-click-handler}]])]))
+

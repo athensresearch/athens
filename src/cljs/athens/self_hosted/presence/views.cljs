@@ -94,7 +94,7 @@
           :limit 3
           :style {:zIndex 100
                   :position "absolute"
-                  :right "1.5rem"
+                  :right "-1.5rem"
                   :top "0.25rem"
                   :padding "0.125rem"
                   :background "var(--background-color)"}}]

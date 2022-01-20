@@ -14,7 +14,7 @@
     [athens.events.selection :as select-events]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
-    [athens.util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
+    [athens.util :as util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
     [athens.views.blocks.internal-representation :as internal-representation]
     [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
@@ -371,7 +371,7 @@
         down?                            (= key-code KeyCodes.DOWN)
         left?                            (= key-code KeyCodes.LEFT)
         right?                           (= key-code KeyCodes.RIGHT)
-        header                           (db/v-by-ea (db/e-by-av :block/uid uid) :block/header)]
+        [char-offset _]                  (get-end-points target)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
@@ -415,14 +415,28 @@
 
       ;; Else: navigate across blocks
       ;; FIX: always navigates up or down for header because get-caret-position for some reason returns the wrong value for top
-      (or (and up? top-row?)
-          (and left? start?)
-          (and up? header))   (do (.. e preventDefault)
-                                  (dispatch [:up uid]))
-      (or (and down? bottom-row?)
-          (and right? end?)
-          (and down? header)) (do (.. e preventDefault)
-                                  (dispatch [:down uid])))))
+
+      ;; going LEFT at **0th index** should always go to **last index** of block **above**
+      ;; last index is special - always go to last index when going up or down
+
+
+      (or (and left? start?)
+          (and up? end?))         (do (.. e preventDefault)
+                                      (dispatch [:up uid :end]))
+
+      (and down? end?)            (do (.. e preventDefault)
+                                      (dispatch [:down uid :end]))
+
+      ;; going RIGHT at last index should always go to index 0 of block below
+      (and right? end?)           (do (.. e preventDefault)
+                                      (dispatch [:down uid 0]))
+
+      ;; index 0 is special - always go to index 0 when going up or down
+      ;; when caret is anywhere between start and end preserve the position and offset by char
+      (and up? top-row?)          (do (.. e preventDefault)
+                                      (dispatch [:up uid char-offset]))
+      (and down? bottom-row?)     (do (.. e preventDefault)
+                                      (dispatch [:down uid char-offset])))))
 
 
 ;; Tab

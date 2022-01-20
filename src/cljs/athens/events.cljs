@@ -525,18 +525,19 @@
   :daily-note/scroll
   (fn [_ [_]]
     (let [daily-notes @(subscribe [:daily-notes/items])
-          el          (getElement "daily-notes")
-          offset-top  (.. el -offsetTop)
-          rect        (.. el getBoundingClientRect)
-          from-bottom (.. rect -bottom)
-          from-top    (.. rect -top)
-          doc-height  (.. js/document -documentElement -scrollHeight)
-          top-delta   (- offset-top from-top)
-          bottom-delta (- from-bottom doc-height)]
-      ;; Don't allow user to scroll up for now.
-      (cond
-        (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
-        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))
+          el          (getElement "daily-notes")]
+      (when el
+        (let [offset-top   (.. el -offsetTop)
+              rect         (.. el getBoundingClientRect)
+              from-bottom  (.. rect -bottom)
+              from-top     (.. rect -top)
+              doc-height   (.. js/document -documentElement -scrollHeight)
+              top-delta    (- offset-top from-top)
+              bottom-delta (- from-bottom doc-height)]
+          ;; Don't allow user to scroll up for now.
+          (cond
+            (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
+            (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))))
 
 
 ;; -- event-fx and Datascript Transactions -------------------------------
@@ -769,16 +770,16 @@
 
 (reg-event-fx
   :up
-  (fn [_ [_ uid]]
+  (fn [_ [_ uid target-pos]]
     (let [prev-block-uid (db/prev-block-uid uid)]
-      {:dispatch [:editing/uid (or prev-block-uid uid)]})))
+      {:dispatch [:editing/uid (or prev-block-uid uid) target-pos]})))
 
 
 (reg-event-fx
   :down
-  (fn [_ [_ uid]]
+  (fn [_ [_ uid target-pos]]
     (let [next-block-uid (db/next-block-uid uid)]
-      {:dispatch [:editing/uid (or next-block-uid uid)]})))
+      {:dispatch [:editing/uid (or next-block-uid uid) target-pos]})))
 
 
 (defn backspace
