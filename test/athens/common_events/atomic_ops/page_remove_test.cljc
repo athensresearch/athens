@@ -149,3 +149,24 @@
         (t/is (empty? (get-page-by-title)) "Check if the page is removed")
         (fixture/undo! evt-db db)
         (t/is (seq (get-page-by-title)) "After Undo Check if the page is created")))))
+
+
+(t/deftest undo-page-remove-in-sidebar
+  (let [test-page-1-title "test page 1 title"
+        test-page-1-uid   "test-page-1-uid"
+        setup-repr        [{:node/title     test-page-1-title
+                            :block/uid      test-page-1-uid
+                            :page/sidebar   0
+                            :block/children [{:block/uid      "test-block-1-uid"
+                                              :block/string   ""
+                                              :block/children []}]}]
+        remove!           #(-> (atomic-graph-ops/make-page-remove-op %)
+                               fixture/op-resolve-transact!)]
+
+    (t/testing "undo page remove with refs"
+      (fixture/transact-with-middleware setup-repr)
+      (let [[evt-db db] (remove! test-page-1-title)]
+        (fixture/undo! evt-db db)
+        (t/is (= (common-db/get-sidebar-titles @@fixture/connection)
+                 [test-page-1-title])
+              "Undo restored shortcuts")))))

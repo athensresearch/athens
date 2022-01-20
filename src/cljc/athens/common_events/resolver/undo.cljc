@@ -16,6 +16,17 @@
   (-> event :event/op :op/trigger :op/undo))
 
 
+(defn- restore-shortcut
+  [evt-db title]
+  (let [new-op            (atomic-graph-ops/make-shortcut-new-op title)
+        neighbors         (common-db/get-shortcut-neighbors evt-db title)
+        neighbor-position (common-db/flip-neighbor-position neighbors)
+        move-op           (cond neighbors
+                                (atomic-graph-ops/make-shortcut-move-op title neighbor-position))]
+    (cond-> [new-op]
+      neighbor-position (conj move-op))))
+
+
 ;; Impl according to https://github.com/athensresearch/athens/blob/main/doc/adr/0021-undo-redo.md#approach
 (defmulti resolve-atomic-op-to-undo-ops
   #(:op/type %3))
@@ -68,17 +79,19 @@
 
 (defmethod resolve-atomic-op-to-undo-ops :page/remove
   [_db evt-db {:op/keys [args]}]
-  ;; Restoring shortcut is missing here
   (let [{:page/keys [title]} args
-        {page-refs :block/_refs} (common-db/get-page-document evt-db [:node/title title])
+        {sidebar   :page/sidebar
+         page-refs :block/_refs} (common-db/get-page-document evt-db [:node/title title])
         page-repr                 [(common-db/get-internal-representation evt-db (:db/id (d/entity evt-db [:node/title title])))]
         repr-ops                  (bfs/internal-representation->atomic-ops evt-db page-repr nil)
         save-ops                  (->> page-refs
                                        (map :db/id)
                                        (map (partial common-db/get-block evt-db))
                                        (map (fn [{:block/keys [uid string]}]
-                                              (atomic-graph-ops/make-block-save-op uid string))))]
-    (vec (concat repr-ops save-ops))))
+                                              (atomic-graph-ops/make-block-save-op uid string))))
+        shortcut-ops            (when sidebar
+                                  (restore-shortcut evt-db (:page/title args)))]
+    (vec (concat repr-ops save-ops shortcut-ops))))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :page/rename
@@ -89,14 +102,26 @@
     [reverse-op]))
 
 
-(defmethod resolve-atomic-op-to-undo-ops :composite/consequence
-  [db evt-db {:op/keys [_consequences] :as op}]
-  (let [atomic-ops (graph-ops/extract-atomics op)
-        undo-ops   (->> atomic-ops
-                        reverse
-                        (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db))
-                        (into []))]
-    undo-ops))
+(defmethod resolve-atomic-op-to-undo-ops :page/merge
+  [_db evt-db {:op/keys [args]}]
+  (let [{from :page/title}      args
+        {children :block/children
+         sidebar  :page/sidebar
+         backrefs :block/_refs} (common-db/get-page evt-db [:node/title from])
+        page-new                (atomic-graph-ops/make-page-new-op from)
+        save-ops                (->> backrefs
+                                     (map :db/id)
+                                     (map (partial common-db/get-block evt-db))
+                                     (map (fn [{:block/keys [uid string]}]
+                                            (atomic-graph-ops/make-block-save-op uid string))))
+        move-ops                (->> children
+                                     (sort-by :block/order)
+                                     (map :block/uid)
+                                     (map #(atomic-graph-ops/make-block-move-op % {:page/title from
+                                                                                   :relation   :last})))
+        shortcut-ops            (when sidebar
+                                  (restore-shortcut evt-db (:page/title args)))]
+    (vec (concat [page-new] move-ops save-ops shortcut-ops))))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :page/new
@@ -113,14 +138,7 @@
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/remove
   [_db evt-db {:op/keys [args]}]
-  (let [{removed-title :page/title} args
-        new-op                      (atomic-graph-ops/make-shortcut-new-op removed-title)
-        neighbors                   (common-db/get-shortcut-neighbors evt-db removed-title)
-        neighbor-position           (common-db/flip-neighbor-position neighbors)
-        move-op                     (cond neighbors
-                                          (atomic-graph-ops/make-shortcut-move-op removed-title neighbor-position))]
-    (cond-> [new-op]
-      neighbor-position (conj move-op))))
+  (restore-shortcut evt-db (:page/title args)))
 
 
 (defmethod resolve-atomic-op-to-undo-ops :shortcut/move
@@ -130,6 +148,37 @@
         neighbor-position         (common-db/flip-neighbor-position neighbors)
         move-op                   (atomic-graph-ops/make-shortcut-move-op moved-title neighbor-position)]
     [move-op]))
+
+
+(defn reorder-ops
+  "Reverse the order of operations in coll.
+  Then, for all contiguous :block/move operations, restore their original relative order.
+    e.g.: a b m1 m2 m3 c -> c m1 m2 m3 b a
+  Move operations keep their relative order to ensure that chains of relative moves still work.
+  This is in part a quirk of the `forward bias` in our location resolution that favors :first
+  and :after positions, and is not meant to be a universal solution.
+  There are valid combination of relative moves that will still not be correctly undone."
+  [coll]
+  (let [move-op?            #(= (:op/type %) :block/move)
+        restore-move-order #(if (move-op? (first %))
+                              (reverse %)
+                              %)]
+    (->> coll
+         reverse
+         (partition-by move-op?)
+         (map restore-move-order)
+         (apply concat)
+         (into []))))
+
+
+(defmethod resolve-atomic-op-to-undo-ops :composite/consequence
+  [db evt-db {:op/keys [_consequences] :as op}]
+  (let [atomic-ops (graph-ops/extract-atomics op)
+        undo-ops   (->> atomic-ops
+                        reorder-ops
+                        (mapcat (partial resolve-atomic-op-to-undo-ops db evt-db))
+                        (into []))]
+    undo-ops))
 
 
 ;; TODO: should there be a distinction between undo and redo?
