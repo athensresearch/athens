@@ -280,3 +280,81 @@
                                 #"Location uid does not exist"
                 (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection block-new-v2-op)))))))
 
+
+(t/deftest undo
+  (let [test-uid     "test-uid"
+        new-test-uid "test-new-uid"
+        setup-repr   [{:page/title     "test-undo-block-new-page"
+                       :block/children [{:block/uid    test-uid
+                                         :block/string ""}]}]
+        get-children #(->> [:block/uid test-uid]
+                           (common-db/get-block @@fixture/connection)
+                           :block/children)
+        new-child!   #(->> (atomic-graph-ops/make-block-new-op %
+                                                               {:block/uid test-uid
+                                                                :relation  :first})
+                           fixture/op-resolve-transact!)]
+    (t/testing "undo"
+      (fixture/setup! setup-repr)
+      (t/is (empty? (get-children)))
+      (let [[event-db event] (new-child! new-test-uid)]
+        (t/is (= [#:block{:uid   new-test-uid
+                          :order 0}] (get-children)))
+        (let [undo-event (fixture/undo-resulting-ops event-db event)]
+          (t/is (= #:op{:type         :composite/consequence,
+                        :atomic?      false,
+                        :trigger      #:op{:undo (:event/id event)},
+                        :consequences [#:op{:type    :block/remove,
+                                            :atomic? true,
+                                            :args    #:block{:uid new-test-uid}}]}
+                   (:event/op undo-event))))
+        (fixture/undo! event-db event)
+        (t/is (empty? (get-children))))
+      (fixture/teardown! setup-repr))))
+
+
+(t/deftest undo-2
+  (let [test-uid     "test-uid"
+        new-test-uid "test-new-uid"
+        setup-repr   [{:page/title     "test-undo-block-new-page"
+                       :block/children [{:block/uid    test-uid
+                                         :block/string ""}]}]
+        get-children #(->> [:block/uid test-uid]
+                           (common-db/get-block @@fixture/connection)
+                           :block/children)
+        new-child!   #(->> (atomic-graph-ops/make-block-new-op %
+                                                               {:block/uid test-uid
+                                                                :relation  :first})
+                           fixture/op-resolve-transact!)]
+    (t/testing "redo"
+      (fixture/setup! setup-repr)
+      (t/is (empty? (get-children)))
+      (let [[event-db new-child-event] (new-child! new-test-uid)]
+        (t/is (= [#:block{:uid   new-test-uid
+                          :order 0}] (get-children)))
+        (let [[undo-event-db undo-event] (fixture/undo! event-db new-child-event)]
+          (t/is (= #:op{:type         :composite/consequence,
+                        :atomic?      false,
+                        :trigger      #:op{:undo (:event/id new-child-event)},
+                        :consequences [#:op{:type    :block/remove,
+                                            :atomic? true,
+                                            :args    #:block{:uid new-test-uid}}]}
+                   (:event/op undo-event)))
+          (t/is (empty? (get-children)))
+          (let [[_redo-event-db redo-event] (fixture/undo! undo-event-db undo-event)]
+            (t/is (= #:op{:type         :composite/consequence
+                          :atomic?      false
+                          :trigger      #:op{:undo (:event/id undo-event)}
+                          :consequences [#:op{:type    :block/new
+                                              :atomic? true
+                                              :args    #:block{:uid      new-test-uid
+                                                               :position {:relation  :first
+                                                                          :block/uid test-uid}}}
+                                         #:op{:type    :block/save
+                                              :atomic? true
+                                              :args    #:block{:uid    new-test-uid
+                                                               :string ""}}]}
+                     (:event/op redo-event)))
+            (t/is (= [#:block{:uid   new-test-uid
+                              :order 0}] (get-children))))))
+      (fixture/teardown! setup-repr))))
