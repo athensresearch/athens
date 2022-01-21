@@ -1301,9 +1301,6 @@
       {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
 
 
-
-
-
 (reg-event-fx
   :drop-multi/child
   (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
