@@ -34,8 +34,7 @@
                                                              :string        start-str
                                                              :index         split-index
                                                              :relation      :after})
-                            (graph-ops/extract-atomics)
-                            (fixture/transact-atomic-ops))]
+                            (fixture/op-resolve-transact!))]
       ;; setup
       (fixture/setup! setup-repr)
       (t/is (= setup-repr [(fixture/get-repr [:node/title page-title])]))
@@ -72,8 +71,7 @@
                                                              :string        start-str
                                                              :index         split-index
                                                              :relation      :after})
-                            (graph-ops/extract-atomics)
-                            (fixture/transact-atomic-ops))]
+                            (fixture/op-resolve-transact!))]
 
       ;; setup
       (fixture/setup! setup-repr)
@@ -89,7 +87,7 @@
           bob-uid           "bob-uid"
           alice-start-str   "asd123"
           new-page          "123"
-          alice-end-str         "asd"
+          alice-end-str     "asd"
           split-index       3
           end-str-2         (str "[[" new-page "]]")
           new-tmp-string    (str alice-end-str end-str-2)
@@ -108,8 +106,7 @@
                                                                    :string        new-tmp-string
                                                                    :index         split-index
                                                                    :relation      :after})
-                                  (graph-ops/extract-atomics)
-                                  (fixture/transact-atomic-ops))]
+                                  (fixture/op-resolve-transact!))]
       ;; setup
       (fixture/setup! setup-repr)
       (t/is (= [(fixture/get-repr [:node/title page-title])]
@@ -128,7 +125,7 @@
 
 
 (t/deftest block-split-to-child-test
-  (t/testing "`:block/split` add splitted block as first child with re-indexing 🪄"
+  (t/testing "`:block/split` add split block as first child with re-indexing 🪄"
     (let [page-title      "test page"
           alice-uid       "alice-uid"
           bob-uid         "bob-uid"
@@ -156,9 +153,7 @@
                                                                  :string        alice-start-str
                                                                  :index         split-index
                                                                  :relation      :first})
-                                (graph-ops/extract-atomics)
-                                (fixture/transact-atomic-ops))]
-
+                                (fixture/op-resolve-transact!))]
       ;; setup
       (fixture/setup! setup-repr)
       (t/is (= setup-repr
@@ -170,33 +165,42 @@
                [(fixture/get-repr [:node/title page-title])])))))
 
 
-
-
-{:block/uid "page-3-uid",
- :db/id 1,
- :node/title "test page 2"
- :block/children [{:block/order 0,
-                    :block/string "a-o-k",
-                    :block/uid "child-3-1-uid",
-                    :db/id 2}
-                  {:block/order 1,
-                   :block/string "",
-                   :block/uid "child-3-2-uid",
-                   :db/id 3}]}
-
-{:block/children [{:block/children [{:block/open true,
-                                     :block/order 0,
-                                     :block/string "o-k",
-                                     :block/uid "child-3-3-uid",
-                                     :db/id 4}],
-                   :block/order 0,
-                   :block/string "a-",
-                   :block/uid "child-3-1-uid",
-                   :db/id 2}
-                  {:block/order 1,
-                   :block/string "",
-                   :block/uid "child-3-2-uid",
-                   :db/id 3}],
- :block/uid "page-3-uid",
- :db/id 1,
- :node/title "test page 2"}
+(t/deftest block-split-with-children-test
+  (t/testing "`:block/split` on a block with children adds a block :after and adopts the children"
+    (let [page-title      "test page"
+          alice-uid       "alice-uid"
+          bob-uid         "bob-uid"
+          charlie-uid     "charlie-uid"
+          alice-start-str "asd123"
+          split-index     3
+          alice-end-str   (subs alice-start-str 0 split-index)
+          charlie-end-str (subs alice-start-str split-index)
+          bob-str         "bob was here"
+          setup-repr      [{:page/title     page-title
+                            :block/children [#:block {:uid      alice-uid
+                                                      :string   alice-start-str
+                                                      :children [#:block {:uid    bob-uid
+                                                                          :string bob-str}]}]}]
+          exp-repr        [{:page/title     page-title
+                            :block/children [#:block {:uid    alice-uid
+                                                      :string alice-end-str}
+                                             #:block{:string   charlie-end-str
+                                                     :uid      charlie-uid
+                                                     :children [#:block {:uid    bob-uid
+                                                                         :string bob-str}]}]}]
+          run!            #(->> (graph-ops/build-block-split-op @@fixture/connection
+                                                                {:old-block-uid alice-uid
+                                                                 :new-block-uid charlie-uid
+                                                                 :string        alice-start-str
+                                                                 :index         split-index
+                                                                 :relation      :after})
+                                (fixture/op-resolve-transact!))]
+      ;; setup
+      (fixture/setup! setup-repr)
+      (t/is (= setup-repr
+               [(fixture/get-repr [:node/title page-title])]))
+      ;; run
+      (run!)
+      ;; test
+      (t/is (= exp-repr
+               [(fixture/get-repr [:node/title page-title])])))))
