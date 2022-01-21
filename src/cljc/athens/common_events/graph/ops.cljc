@@ -158,10 +158,12 @@
                                                                    :relation  relation})
         new-block-save-op (build-block-save-op db new-block-uid (subs string index))
         children          (common-db/get-children-uids db [:block/uid old-block-uid])
-        move-children-op  (block-move-chain new-block-uid children :first)
+        children?         (seq children)
+        move-children-op  (when children?
+                            (block-move-chain new-block-uid children :first))
         split-block-op    (composite/make-consequence-op {:op/type :block/split}
                                                          (cond-> [save-block-op
                                                                   new-block-op
                                                                   new-block-save-op]
-                                                           children (conj move-children-op)))]
+                                                                 children? (conj move-children-op)))]
     split-block-op))
