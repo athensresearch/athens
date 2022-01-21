@@ -28,17 +28,14 @@
                                                   :string end-str-1}
                                          #:block {:uid    bob-uid
                                                   :string end-str-2}]}]
-          run!        (fn []
-                        (let [atomic-txs (->> (graph-ops/build-block-split-op @@fixture/connection
-                                                                              {:old-block-uid alice-uid
-                                                                               :new-block-uid bob-uid
-                                                                               :string        start-str
-                                                                               :index         split-index
-                                                                               :relation      :after})
-                                              (graph-ops/extract-atomics)
-                                              (map #(atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection %)))]
-                          (doseq [atomic-tx atomic-txs]
-                            (fixture/transact-with-middleware atomic-tx))))]
+          run!        #(->> (graph-ops/build-block-split-op @@fixture/connection
+                                                            {:old-block-uid alice-uid
+                                                             :new-block-uid bob-uid
+                                                             :string        start-str
+                                                             :index         split-index
+                                                             :relation      :after})
+                            (graph-ops/extract-atomics)
+                            (fixture/transact-atomic-ops))]
       ;; setup
       (fixture/setup! setup-repr)
       (t/is (= setup-repr [(fixture/get-repr [:node/title page-title])]))
@@ -69,17 +66,15 @@
                                                   :string end-str-2}
                                          #:block {:uid    bob-uid
                                                   :string bob-str}]}]
-          run!        (fn []
-                        (let [atomic-txs (->> (graph-ops/build-block-split-op @@fixture/connection
-                                                                              {:old-block-uid alice-uid
-                                                                               :new-block-uid charlie-uid
-                                                                               :string        start-str
-                                                                               :index         split-index
-                                                                               :relation      :after})
-                                              (graph-ops/extract-atomics)
-                                              (map #(atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection %)))]
-                          (doseq [atomic-tx atomic-txs]
-                            (fixture/transact-with-middleware atomic-tx))))]
+          run!        #(->> (graph-ops/build-block-split-op @@fixture/connection
+                                                            {:old-block-uid alice-uid
+                                                             :new-block-uid charlie-uid
+                                                             :string        start-str
+                                                             :index         split-index
+                                                             :relation      :after})
+                            (graph-ops/extract-atomics)
+                            (fixture/transact-atomic-ops))]
+
       ;; setup
       (fixture/setup! setup-repr)
       (t/is (= setup-repr [(fixture/get-repr [:node/title page-title])]))
@@ -107,17 +102,14 @@
                                                #:block{:string end-str-2
                                                        :uid    bob-uid}]}]
           exp-repr-new-page [{:page/title new-page}]
-          run!              (fn []
-                              (let [atomic-txs (->> (graph-ops/build-block-split-op @@fixture/connection
-                                                                                    {:old-block-uid alice-uid
-                                                                                     :new-block-uid bob-uid
-                                                                                     :string        new-tmp-string
-                                                                                     :index         split-index
-                                                                                     :relation      :after})
-                                                    (graph-ops/extract-atomics)
-                                                    (map #(atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection %)))]
-                                (doseq [atomic-tx atomic-txs]
-                                  (fixture/transact-with-middleware atomic-tx))))]
+          run!              #(->> (graph-ops/build-block-split-op @@fixture/connection
+                                                                  {:old-block-uid alice-uid
+                                                                   :new-block-uid bob-uid
+                                                                   :string        new-tmp-string
+                                                                   :index         split-index
+                                                                   :relation      :after})
+                                  (graph-ops/extract-atomics)
+                                  (fixture/transact-atomic-ops))]
       ;; setup
       (fixture/setup! setup-repr)
       (t/is (= [(fixture/get-repr [:node/title page-title])]
@@ -141,7 +133,7 @@
           alice-uid       "alice-uid"
           bob-uid         "bob-uid"
           charlie-uid     "charlie-uid"
-          alice-start-str "a-o-k"
+          alice-start-str "asd123"
           split-index     3
           alice-end-str   (subs alice-start-str 0 split-index)
           charlie-end-str (subs alice-start-str split-index)
@@ -158,17 +150,15 @@
                                                                          :uid    charlie-uid}]}
                                              #:block {:uid    bob-uid
                                                       :string bob-str}]}]
-          run!            (fn []
-                            (let [atomic-txs (->> (graph-ops/build-block-split-op @@fixture/connection
-                                                                                  {:old-block-uid alice-uid
-                                                                                   :new-block-uid charlie-uid
-                                                                                   :string        alice-start-str
-                                                                                   :index         split-index
-                                                                                   :relation      :first})
-                                                  (graph-ops/extract-atomics)
-                                                  (map #(atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection %)))]
-                              (doseq [atomic-tx atomic-txs]
-                                (fixture/transact-with-middleware atomic-tx))))]
+          run!            #(->> (graph-ops/build-block-split-op @@fixture/connection
+                                                                {:old-block-uid alice-uid
+                                                                 :new-block-uid charlie-uid
+                                                                 :string        alice-start-str
+                                                                 :index         split-index
+                                                                 :relation      :first})
+                                (graph-ops/extract-atomics)
+                                (fixture/transact-atomic-ops))]
+
       ;; setup
       (fixture/setup! setup-repr)
       (t/is (= setup-repr

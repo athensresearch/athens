@@ -37,6 +37,13 @@
                "\nto:" (pr-str processed-txs))
     (d/transact! @connection processed-txs)))
 
+(defn transact-atomic-ops
+  [atomic-ops]
+  (let [atomic-txs (map #(atomic-resolver/resolve-atomic-op-to-tx @@connection %)
+                        atomic-ops)]
+    (doseq [atomic-tx atomic-txs]
+      (transact-with-middleware atomic-tx))))
+
 
 (defn get-repr
   [lookup]
