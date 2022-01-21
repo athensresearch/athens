@@ -1112,6 +1112,7 @@
                                                    :new-uid  new-uid
                                                    :embed-id embed-id}]
 
+                                (not (zero? start))
                                 [:enter/split-block {:uid      uid
                                                      :value    value
                                                      :index    start

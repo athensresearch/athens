@@ -163,5 +163,5 @@
                                                          (cond-> [save-block-op
                                                                   new-block-op
                                                                   new-block-save-op]
-                                                                 children (conj move-children-op)))]
+                                                           children (conj move-children-op)))]
     split-block-op))
