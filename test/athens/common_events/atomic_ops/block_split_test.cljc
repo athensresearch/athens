@@ -92,17 +92,17 @@
     (let [page-title        "test page 1"
           alice-uid         "alice-uid"
           bob-uid           "bob-uid"
-          start-str         "asd123"
+          alice-start-str   "asd123"
           new-page          "123"
-          end-str-1         "asd"
+          alice-end-str         "asd"
           split-index       3
           end-str-2         (str "[[" new-page "]]")
-          new-tmp-string    (str end-str-1 end-str-2)
+          new-tmp-string    (str alice-end-str end-str-2)
           setup-repr        [{:page/title     page-title
                               :block/children [#:block{:uid    alice-uid
-                                                       :string start-str}]}]
+                                                       :string alice-start-str}]}]
           exp-repr-page-1   [{:page/title     page-title
-                              :block/children [#:block{:string end-str-1
+                              :block/children [#:block{:string alice-end-str
                                                        :uid    alice-uid}
                                                #:block{:string end-str-2
                                                        :uid    bob-uid}]}]
@@ -137,56 +137,76 @@
 
 (t/deftest block-split-to-child-test
   (t/testing "`:block/split` add splitted block as first child with re-indexing 🪄"
-    (let [page-1-uid  "page-3-uid"
-          child-1-uid "child-3-1-uid"
-          child-2-uid "child-3-2-uid"
-          child-3-uid "child-3-3-uid"
-          start-str   "a-o-k"
-          new-str     "o-k"
-          setup-txs   [{:block/uid      page-1-uid
-                        :node/title     "test page 2"
-                        :block/children [{:block/uid      child-1-uid
-                                          :block/string   start-str
-                                          :block/order    0
-                                          :block/children []}
-                                         {:block/uid      child-2-uid
-                                          :block/string   ""
-                                          :block/order    1
-                                          :block/children []}]}]]
-      (fixture/transact-with-middleware setup-txs)
-      (let [page (common-db/get-block @@fixture/connection [:block/uid page-1-uid])]
-        (t/is (nil? (common-db/e-by-av @@fixture/connection
-                                       :block/uid
-                                       child-3-uid))
-              "Should not have 3rd child before block split.")
-        (t/is (= 2 (-> page
-                       :block/children
-                       count))
-              "Page should have only 2 children block after setup.")
-        (let [block-split-op      (graph-ops/build-block-split-op @@fixture/connection
-                                                                  {:old-block-uid child-1-uid
-                                                                   :new-block-uid child-3-uid
-                                                                   :string        start-str
-                                                                   :index         2
-                                                                   :relation      :first})
-              block-split-atomics (graph-ops/extract-atomics block-split-op)]
-          (doseq [atomic-op block-split-atomics
-                  :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
-            (fixture/transact-with-middleware atomic-txs))
-          (let [page        (common-db/get-block @@fixture/connection [:block/uid page-1-uid])
-                old-1-block (common-db/get-block @@fixture/connection [:block/uid child-1-uid])
-                old-2-block (common-db/get-block @@fixture/connection [:block/uid child-2-uid])
-                new-block   (common-db/get-block @@fixture/connection [:block/uid child-3-uid])]
-            (t/is (= 2 (-> page :block/children count))
-                  "Page should have 2 children after block split")
-            (t/is (= 1 (-> old-1-block :block/children count))
-                  "old-1-block should have 1 child after block split")
-            ;; `:block/string` tests
-            (t/is (= "a-" (-> old-1-block :block/string)))
-            (t/is (= "" (-> old-2-block :block/string)))
-            (t/is (= new-str (-> new-block :block/string)))
-            ;; `:block/order' tests`
-            (t/is (= 0 (-> old-1-block :block/order)))
-            (t/is (= 0 (-> new-block :block/order)))
-            (t/is (= 1 (-> old-2-block :block/order)))))))))
+    (let [page-title      "test page"
+          alice-uid       "alice-uid"
+          bob-uid         "bob-uid"
+          charlie-uid     "charlie-uid"
+          alice-start-str "a-o-k"
+          split-index     3
+          alice-end-str   (subs alice-start-str 0 split-index)
+          charlie-end-str (subs alice-start-str split-index)
+          bob-str         "bob was here"
+          setup-repr      [{:page/title     page-title
+                            :block/children [#:block {:uid    alice-uid
+                                                      :string alice-start-str}
+                                             #:block {:uid    bob-uid
+                                                      :string bob-str}]}]
+          exp-repr        [{:page/title     page-title
+                            :block/children [#:block {:uid      alice-uid
+                                                      :string   alice-end-str
+                                                      :children [#:block{:string charlie-end-str
+                                                                         :uid    charlie-uid}]}
+                                             #:block {:uid    bob-uid
+                                                      :string bob-str}]}]
+          run!            (fn []
+                            (let [atomic-txs (->> (graph-ops/build-block-split-op @@fixture/connection
+                                                                                  {:old-block-uid alice-uid
+                                                                                   :new-block-uid charlie-uid
+                                                                                   :string        alice-start-str
+                                                                                   :index         split-index
+                                                                                   :relation      :first})
+                                                  (graph-ops/extract-atomics)
+                                                  (map #(atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection %)))]
+                              (doseq [atomic-tx atomic-txs]
+                                (fixture/transact-with-middleware atomic-tx))))]
+      ;; setup
+      (fixture/setup! setup-repr)
+      (t/is (= setup-repr
+               [(fixture/get-repr [:node/title page-title])]))
+      ;; run
+      (run!)
+      ;; test
+      (t/is (= exp-repr
+               [(fixture/get-repr [:node/title page-title])])))))
 
+
+
+
+{:block/uid "page-3-uid",
+ :db/id 1,
+ :node/title "test page 2"
+ :block/children [{:block/order 0,
+                    :block/string "a-o-k",
+                    :block/uid "child-3-1-uid",
+                    :db/id 2}
+                  {:block/order 1,
+                   :block/string "",
+                   :block/uid "child-3-2-uid",
+                   :db/id 3}]}
+
+{:block/children [{:block/children [{:block/open true,
+                                     :block/order 0,
+                                     :block/string "o-k",
+                                     :block/uid "child-3-3-uid",
+                                     :db/id 4}],
+                   :block/order 0,
+                   :block/string "a-",
+                   :block/uid "child-3-1-uid",
+                   :db/id 2}
+                  {:block/order 1,
+                   :block/string "",
+                   :block/uid "child-3-2-uid",
+                   :db/id 3}],
+ :block/uid "page-3-uid",
+ :db/id 1,
+ :node/title "test page 2"}
