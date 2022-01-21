@@ -36,6 +36,9 @@ END_COMMENT
 
 FOLDER=/var/lib/athens/backups/
 
+if [ ! -d "$FOLDER" ]; then
+  mkdir -p "$FOLDER"
+fi
 
 # Some of the strategies to calculate the filename
 #  - Timestamp
@@ -46,5 +49,12 @@ FOLDER=/var/lib/athens/backups/
 TIMESTAMP=$(date +%F-%H-%M)
 FILENAME="${FOLDER}${TIMESTAMP}.edn"
 
+# If java not installed then install it
+
+if [ -z "$(which java)" ]; then
+  echo "Java is not installed on your operating system, please install it and try again"
+  exit 1
+fi
+
 # command to save ledger
-yarn cli:save -f "$FILENAME"
+java -jar ~/athens-cli.jar save -f "$FILENAME"

@@ -8,6 +8,7 @@
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common-events.resolver.undo   :as undo-resolver]
     [athens.common-events.schema          :as schema]
     [athens.common.logging                :as log]
     [athens.common.utils                  :as common.utils]
@@ -17,6 +18,7 @@
     [athens.electron.images :as images]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
+    [athens.undo                          :as undo]
     [athens.util                          :as util]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
@@ -523,18 +525,19 @@
   :daily-note/scroll
   (fn [_ [_]]
     (let [daily-notes @(subscribe [:daily-notes/items])
-          el          (getElement "daily-notes")
-          offset-top  (.. el -offsetTop)
-          rect        (.. el getBoundingClientRect)
-          from-bottom (.. rect -bottom)
-          from-top    (.. rect -top)
-          doc-height  (.. js/document -documentElement -scrollHeight)
-          top-delta   (- offset-top from-top)
-          bottom-delta (- from-bottom doc-height)]
-      ;; Don't allow user to scroll up for now.
-      (cond
-        (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
-        (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))
+          el          (getElement "daily-notes")]
+      (when el
+        (let [offset-top   (.. el -offsetTop)
+              rect         (.. el getBoundingClientRect)
+              from-bottom  (.. rect -bottom)
+              from-top     (.. rect -top)
+              doc-height   (.. js/document -documentElement -scrollHeight)
+              top-delta    (- offset-top from-top)
+              bottom-delta (- from-bottom doc-height)]
+          ;; Don't allow user to scroll up for now.
+          (cond
+            (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
+            (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))))
 
 
 ;; -- event-fx and Datascript Transactions -------------------------------
@@ -609,15 +612,26 @@
   :resolve-transact-forward
   (fn [{:keys [db]} [_ event]]
     (let [remote? (db-picker/remote-db? db)
-          valid?  (schema/valid-event? event)]
+          valid?  (schema/valid-event? event)
+          dsdb    @db/dsdb
+          undo?   (undo-resolver/undo? event)]
       (log/debug ":resolve-transact-forward event:" (pr-str event)
                  "remote?" (pr-str remote?)
-                 "valid?" (pr-str valid?))
+                 "valid?" (pr-str valid?)
+                 "undo?" (pr-str undo?))
       (if valid?
         (do
           (when (not remote?)
             (atomic-resolver/resolve-transact! db/dsdb event))
-          {:fx [[:dispatch (if remote?
+
+          {:db (if undo?
+                 ;; For undos, let the undo/redo handlers manage db state.
+                 db
+                 ;; Otherwise wipe the redo stack and add the new event.
+                 (-> db
+                     undo/reset-redo
+                     (undo/push-undo (:event/id event) [dsdb event])))
+           :fx [[:dispatch (if remote?
                              [:remote/forward-event event]
                              [:electron-sync])]]})
         (let [explanation (-> schema/event
@@ -689,44 +703,83 @@
     {:fs/write! nil}))
 
 
+(def USE_OLD_UNDO_FOR_LOCAL? true)
+
+
 (reg-event-fx
   :undo
   (fn [{:keys [db]} _]
-    (log/debug ":undo")
     (let [local? (not (db-picker/remote-db? db))]
       (log/debug ":undo: local?" local?)
-      (if local?
+      (if (and local? USE_OLD_UNDO_FOR_LOCAL?)
+
         (let [undo-event (common-events/build-undo-redo-event  false)
               tx-data    (resolver/resolve-event-to-tx db/history undo-event)]
           {:fx [[:dispatch [:transact tx-data]]]})
-        {:fx [[:dispatch [:alert/js "Undo not supported in Lan-Party, yet."]]]}))))
+
+        (try
+          (log/debug ":undo count" (undo/count-undo db))
+          (if-some [[undo db'] (undo/pop-undo db)]
+            (let [[evt-dsdb evt] undo
+                  evt-id         (:event/id evt)
+                  dsdb           @db/dsdb
+                  undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
+                  undo-evt-id    (:event/id undo-evt)
+                  db''           (undo/push-redo db' undo-evt-id [dsdb undo-evt])]
+              (log/debug ":undo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
+              {:db db''
+               :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
+            {})
+          (catch :default _
+            {:fx [[:dispatch [:alert/js "Undo for this operation not supported in Lan-Party, yet."]]]}))))))
 
 
 (reg-event-fx
   :redo
   (fn [{:keys [db]} _]
-    (log/debug ":redo")
     (let [local? (not (db-picker/remote-db? db))]
-      (log/debug ":redo: local?" local?)
-      (if local?
+      (log/debug ":redo local?" local?)
+      (if (and local? USE_OLD_UNDO_FOR_LOCAL?)
+
         (let [redo-event (common-events/build-undo-redo-event  true)
               tx-data    (resolver/resolve-event-to-tx db/history redo-event)]
           {:fx [[:dispatch [:transact tx-data]]]})
-        {:fx [[:dispatch [:alert/js "Redo not supported in Lan-Party, yet."]]]}))))
+
+        (try
+          (log/debug ":redo count" (undo/count-redo db))
+          (if-some [[redo db'] (undo/pop-redo db)]
+            (let [[evt-dsdb evt] redo
+                  evt-id         (:event/id evt)
+                  dsdb           @db/dsdb
+                  undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
+                  undo-evt-id    (:event/id undo-evt)
+                  db''           (undo/push-undo db' undo-evt-id [dsdb undo-evt])]
+              (log/debug ":redo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
+              {:db db''
+               :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
+            {})
+          (catch :default _
+            {:fx [[:dispatch [:alert/js "Redo for this operation not supported in Lan-Party, yet."]]]}))))))
+
+
+(reg-event-fx
+  :reset-undo-redo
+  (fn [{:keys [db]} _]
+    {:db (undo/reset db)}))
 
 
 (reg-event-fx
   :up
-  (fn [_ [_ uid]]
+  (fn [_ [_ uid target-pos]]
     (let [prev-block-uid (db/prev-block-uid uid)]
-      {:dispatch [:editing/uid (or prev-block-uid uid)]})))
+      {:dispatch [:editing/uid (or prev-block-uid uid) target-pos]})))
 
 
 (reg-event-fx
   :down
-  (fn [_ [_ uid]]
+  (fn [_ [_ uid target-pos]]
     (let [next-block-uid (db/next-block-uid uid)]
-      {:dispatch [:editing/uid (or next-block-uid uid)]})))
+      {:dispatch [:editing/uid (or next-block-uid uid) target-pos]})))
 
 
 (defn backspace
