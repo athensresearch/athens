@@ -2,6 +2,88 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.12](https://github.com/athensresearch/athens/compare/v2.0.0-beta.11...v2.0.0-beta.12) (2022-01-20)
+
+
+### Features
+
+* add :page/merge undo ([dce25c5](https://github.com/athensresearch/athens/commit/dce25c5bd24a20be1a34479ac91926d4d1dc1dd6))
+* add order DSL ([5dd40dc](https://github.com/athensresearch/athens/commit/5dd40dc96353c37673bbcefd5dfc617a8287c030))
+* build-paste-op returns a flat list of atomic ops ([15f54dc](https://github.com/athensresearch/athens/commit/15f54dccf64d5646b407aa78cb0de55f037bbce4))
+* build-undo-event with support for composite ([90390d8](https://github.com/athensresearch/athens/commit/90390d886ded4fb6f3911a16f8a19685ebe07aed))
+* group block save at the end of paste-op ([dc92885](https://github.com/athensresearch/athens/commit/dc92885c96088d1cfc6ddb29c2d5404d30010f85))
+* redo testing of `:block/new` and `:block/remove` ([006d5dc](https://github.com/athensresearch/athens/commit/006d5dc32e2d39e3f00d5d1d4ad85bb8c12616ec))
+* restore shortcut on undo page/remove and page/merge ([7471f90](https://github.com/athensresearch/athens/commit/7471f905569a4489cb48f4064c659e6b1a3a8bc1))
+* support :block/remove in undo ([d105f6d](https://github.com/athensresearch/athens/commit/d105f6d3171bcb63f9db535fd3f4f0faa024f276))
+* support undo/redo for lan party ([a0682d6](https://github.com/athensresearch/athens/commit/a0682d6dcfa328a3762772baa736f9c87a1f481f))
+* undo `:block/new` operation with initial tests. ([dabd498](https://github.com/athensresearch/athens/commit/dabd4982663ad9317b4cad9877cdd4bb0170cf02))
+* Undo `:page/rename` ([a4f63bd](https://github.com/athensresearch/athens/commit/a4f63bdda96d661a07c62d3d7bfb03614e804ffb))
+* undo composite ([2bb5ff3](https://github.com/athensresearch/athens/commit/2bb5ff3090c5e047c6763e437e6cabd499e024db))
+* undo composite improvements ([f381702](https://github.com/athensresearch/athens/commit/f381702a0182adf52b214ea4226662becee62eed))
+* undo for block/open ([a4385d2](https://github.com/athensresearch/athens/commit/a4385d2db1f065764cd01d8b641a8df2ad35e398))
+* undo resolver for :block/save ([e3c643e](https://github.com/athensresearch/athens/commit/e3c643e248f92eb05e8a8cc8cbf4fd82f0689941))
+
+
+### Bug Fixes
+
+* don't return repr with uid for title or open true ([99ac570](https://github.com/athensresearch/athens/commit/99ac570f92a63c3f20d006dded4ff70cef36b3a8))
+* more places that need to account for :block/open? default value ([9f3234f](https://github.com/athensresearch/athens/commit/9f3234fde49f34446a6a77a1477e85f44a16c43e))
+* resolver for composite ops was not matching vector return format ([38d8429](https://github.com/athensresearch/athens/commit/38d842959e6f3eb0bd65f402c6f50fbf5b043d2f))
+* support undoing contiguous moves ([acaef19](https://github.com/athensresearch/athens/commit/acaef19128a899a79223aa4645f81602555d0628))
+* undo-op should receive current and op dbs ([33d0b78](https://github.com/athensresearch/athens/commit/33d0b78bed10d7b6d46500cc5228a6c987f402c1))
+* use atomic op in undo test ([0572702](https://github.com/athensresearch/athens/commit/0572702cca07792cb00cb431bb18725c4f293b43))
+
+
+### Work in Progress
+
+* refactor functions; stuck on why indices aren't updating ([4b601cf](https://github.com/athensresearch/athens/commit/4b601cf8704f5b96a2789081d5f80a03e9b15caa))
+
+
+### Documentation
+
+* add docstrings to athens.common-events.resolver.order ([60bc879](https://github.com/athensresearch/athens/commit/60bc879ccb2e196b418f62c7640ce92db929d897))
+* add note about impl source ([0367287](https://github.com/athensresearch/athens/commit/036728747fb79c4bca013480556d0cbbc3416e13))
+
+
+### Refactors
+
+* add common undo ops to fixture ns ([d7632de](https://github.com/athensresearch/athens/commit/d7632de0bb3600c23a958bf91c622c126ff88d28))
+* add get-position helper ([f2c4aaf](https://github.com/athensresearch/athens/commit/f2c4aafc5e0ae9f89ce4d54b2de81ab992181d91))
+* cleanup for review ([238a1b3](https://github.com/athensresearch/athens/commit/238a1b3bf50697ac694a96f3b2e5f87bea9199d6))
+* don't warn on compat-position ([f3ff90b](https://github.com/athensresearch/athens/commit/f3ff90b62386a81c03321af6e5108dc8e46391fb))
+* review items from jeff ([1351d58](https://github.com/athensresearch/athens/commit/1351d589b4209fdd840bf906c79264a72a456211))
+* undo resolver returns vector of ops ([07af7cb](https://github.com/athensresearch/athens/commit/07af7cb66c341249e6efed20c500c5d1d9aaef34))
+* use backrefs instead of _refs ([2a71bd6](https://github.com/athensresearch/athens/commit/2a71bd6007a475a353fc04e8fa57e3bba1357e28))
+* use kw as fn ([e14d6d6](https://github.com/athensresearch/athens/commit/e14d6d663ba4a347b5ca910a07f344f1fbce6516))
+* use order in block/move ([b00399e](https://github.com/athensresearch/athens/commit/b00399e20878194313ceaf56f9c1b8f1ed578416))
+* use order in block/new ([be4af63](https://github.com/athensresearch/athens/commit/be4af63e15ae7ed618c363b5943269abfd918716))
+* use order in block/remove ([72aeded](https://github.com/athensresearch/athens/commit/72aeded89f5a8542c73b3ea8229d014c0b696cee))
+* use order in page/merge ([3993184](https://github.com/athensresearch/athens/commit/39931841d376efdb75f4ed5a2ae49a056c0c369b))
+* use order in shortcut/* ([8c49cc7](https://github.com/athensresearch/athens/commit/8c49cc7d772779301b55cf04a75d6dfde4081ecb))
+
+
+* add compat-position tests ([79333a8](https://github.com/athensresearch/athens/commit/79333a8206c2b36d3f4b1a57d3121e0b93abfee9))
+* add tests for get-internal-representation ([6496ab5](https://github.com/athensresearch/athens/commit/6496ab57130017368ee68ea831e435b3d18ffe1c))
+* carve ([eef7ce3](https://github.com/athensresearch/athens/commit/eef7ce3240095fb02799d7b7405f3dbc9b6f7018))
+* comment not needed anymore ([8f3ff9f](https://github.com/athensresearch/athens/commit/8f3ff9f77e26fe25494af349fe669a8c45ddec1d))
+* Commented out redo tests until `:block/remove` is reversable ([562fb38](https://github.com/athensresearch/athens/commit/562fb380d6c5399fa9945a69a8e38d4c57b60ba4))
+* enable composite-of-composites-undo test ([f14f1bb](https://github.com/athensresearch/athens/commit/f14f1bb8735548cced2e16ca73ad1af19a1f58c1))
+* more test cases. ([335e10e](https://github.com/athensresearch/athens/commit/335e10ef875a1d7606c3502bbe98391a49f3de92))
+* style happy now ([c86cdb7](https://github.com/athensresearch/athens/commit/c86cdb7719bf14b1d5d97b7529ee0335e08d8122))
+
+## [2.0.0-beta.11](https://github.com/athensresearch/athens/compare/v2.0.0-beta.10...v2.0.0-beta.11) (2022-01-19)
+
+
+### Bug Fixes
+
+* offsetTop error from navigating to dailynotes ([debbdca](https://github.com/athensresearch/athens/commit/debbdcae078c1aec418c3c42188ef43d209bf7eb))
+
+
+### Enhancements
+
+* **db-picker:** allow users to remove dbs from list ([7ad8c27](https://github.com/athensresearch/athens/commit/7ad8c27090943382768e14987b1e7fab466a2d63))
+* **presence:** move inline avatars to the right ([9fa2d23](https://github.com/athensresearch/athens/commit/9fa2d230b88eadd16e0c8e3b247f0ebde547592d))
+
 ## [2.0.0-beta.10](https://github.com/athensresearch/athens/compare/v2.0.0-beta.9...v2.0.0-beta.10) (2022-01-13)
 
 

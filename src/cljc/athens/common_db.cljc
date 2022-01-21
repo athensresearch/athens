@@ -68,96 +68,83 @@
 
 (defn get-sidebar-elements
   [db]
-  (d/q '[:find [(pull ?e [*]) ...]
-         :where
-         [?e :page/sidebar _]]
-       db))
+  (->> (d/q '[:find [(pull ?e [*]) ...]
+              :where
+              [?e :page/sidebar _]]
+            db)
+       (sort-by :page/sidebar)))
+
+
+(defn get-sidebar-count
+  [db]
+  (-> (get-sidebar-elements db)
+      count))
+
+
+(defn get-shortcut-neighbors
+  "Get the neighbors for a given shortcut page, as :before and :after keys.
+  Return nil values if there is no neighbor before or after."
+  [db title]
+  (let [sidebar-items  (get-sidebar-elements db)
+        sidebar-titles (mapv :node/title sidebar-items)
+        idx            (.indexOf sidebar-titles title)
+        neighbors      {:before (get sidebar-titles (dec idx))
+                        :after  (get sidebar-titles (inc idx))}]
+    neighbors))
+
+
+(defn flip-neighbor-position
+  "Flips neighbor position to undo a remove.
+
+  --Setup--
+  Page 1 <- remove shortcut
+  Page 2 <- :after
+
+  --After Remove--
+  Page 2 <-
+
+  --Undo--
+  Page 1 <- restore shortcut (new)
+  Page 2 <- :before"
+  [{:keys [before after] :as _neighbors}]
+  (cond
+    after {:relation :before
+           :page/title after}
+    before {:relation :after
+            :page/title before}))
+
+
+(defn get-sidebar-titles
+  [db]
+  (->> (get-sidebar-elements db)
+       (mapv :node/title)))
 
 
 (defn find-title-from-order
-  [sidebar-elements order]
-  (-> (filter (fn [el]
-                (= (:page/sidebar el)
-                   order))
-              sidebar-elements)
-      (first)
-      (:node/title)))
+  [db order]
+  (->> (get-sidebar-elements db)
+       (filter (fn [el]
+                 (= (:page/sidebar el)
+                    order)))
+       (first)
+       (:node/title)))
 
 
 (defn find-source-target-title
   [db source-order target-order]
-  (let [sidebar-elements   (get-sidebar-elements db)
-        source-title (find-title-from-order sidebar-elements source-order)
-        target-title (find-title-from-order sidebar-elements target-order)]
+  (let [source-title (find-title-from-order db source-order)
+        target-title (find-title-from-order db target-order)]
     [source-title target-title]))
 
 
 (defn find-order-from-title
-  [sidebar-elements title]
-  (-> (filter (fn [el]
-                (= (:node/title el)
-                   title))
-              sidebar-elements)
-      (first)
-      (:page/sidebar)))
-
-
-(defn find-source-target-order
-  [db source-title target-title]
-  (let [sidebar-elements   (get-sidebar-elements db)
-        source-order (find-order-from-title sidebar-elements source-title)
-        target-order (find-order-from-title sidebar-elements target-title)]
-    [source-order target-order]))
-
-
-(defn between
-  "http://blog.jenkster.com/2013/11/clojure-less-than-greater-than-tip.html"
-  [s t x]
-  (if (< s t)
-    (and (< s x) (< x t))
-    (and (< t x) (< x s))))
-
-
-(defn reindex-sidebar-after-move
-  [db source-order target-order between inc-or-dec]
-  (d/q '[:find ?shortcut ?new-order
-         :keys db/id page/sidebar
-         :in $ ?source-order ?target-order ?between ?inc-or-dec
-         :where
-         [?shortcut :page/sidebar ?order]
-         [(?between ?source-order ?target-order ?order)]
-         [(?inc-or-dec ?order) ?new-order]]
-       db
-       source-order
-       target-order
-       between
-       inc-or-dec))
-
-
-(defn inc-after
-  [db eid order]
-  (->> (d/q '[:find ?block-uid ?new-o
-              :in $ % ?p ?at
-              :keys block/uid block/order
-              :where (inc-after ?p ?at ?ch ?new-o)
-              [?ch :block/uid ?block-uid]]
-            db
-            rules
-            eid
-            order)))
-
-
-(defn dec-after
-  [db eid order]
-  (->> (d/q '[:find ?block-uid ?new-o
-              :in $ % ?p ?at
-              :keys block/uid block/order
-              :where (dec-after ?p ?at ?ch ?new-o)
-              [?ch :block/uid ?block-uid]]
-            db
-            rules
-            eid
-            order)))
+  [db title]
+  (->> (get-sidebar-elements db)
+       (filter (fn [el]
+                 (= (:node/title el)
+                    title)))
+       (first)
+       (:page/sidebar)))
 
 
 (defn get-children-uids-recursively
@@ -204,6 +191,20 @@
           eid))
 
 
+(defn get-page
+  "Fetches whole page based on `:db/id`."
+  [db eid]
+  (d/pull db '[:db/id
+               :node/title
+               :block/uid
+               :page/sidebar
+               :block/refs
+               :block/_refs
+               {:block/children [:block/uid
+                                 :block/order]}]
+          eid))
+
+
 (defn get-parent-eid
   "Find parent's `:db/id` of given `eid`."
   [db eid]
@@ -219,6 +220,17 @@
   "Given `:db/id` find it's parent."
   [db eid]
   (get-block db (get-parent-eid db eid)))
+
+
+(defn get-children-uids
+  "Fetches page or block sorted children uids based on eid lookup."
+  [db eid]
+  (->> (d/pull db '[{:block/children [:block/uid
+                                      :block/order]}]
+               eid)
+       :block/children
+       (sort-by :block/order)
+       (mapv :block/uid)))
 
 
 (defn prev-sib
@@ -258,17 +270,6 @@
       :block/uid))
 
 
-(defn existing-block-count
-  "Count is used to reindex blocks after merge."
-  [db local-title]
-  (count (d/q '[:find [?ch ...]
-                :in $ ?t
-                :where
-                [?e :node/title ?t]
-                [?e :block/children ?ch]]
-              db local-title)))
-
-
 (defn map-new-refs
   "Find and replace linked ref with new linked ref, based on title change."
   [linked-refs old-title new-title]
@@ -302,27 +303,6 @@
                                                deleted-blocks)]
                    (assoc block-ref :block/string updated-content))))
           block-refs)))
-
-
-(defn reindex-blocks-between-bounds
-  "Increase/decrease by n all child blocks of parent-eid between
-  lower-bound (exclusive) and upper-bound (exclusive)."
-  [db inc-or-dec parent-eid lower-bound upper-bound n]
-  #_(log/debug "reindex block")
-  (d/q '[:find ?block-uid ?new-order
-         :keys block/uid block/order
-         :in $ % ?+or- ?parent ?lower-bound ?upper-bound ?n
-         :where
-         (between ?parent ?lower-bound ?upper-bound ?ch ?order)
-         [(?+or- ?order ?n) ?new-order]
-         [?ch :block/uid ?block-uid]]
-       db
-       rules
-       inc-or-dec
-       parent-eid
-       lower-bound
-       upper-bound
-       n))
 
 
 (defn get-page-document
@@ -432,19 +412,28 @@
   '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
+(defn- dissoc-on-match
+  [m [k f]]
+  (if (f m)
+    (dissoc m k)
+    m))
+
+
 (defn get-internal-representation
   "Returns internal representation for eid in db."
   [db eid]
-  (let [remove-ks [:block/order]
-        rename-ks {:block/open :block/open?
-                   :node/title :page/title}]
+  (let [rename-ks            {:block/open :block/open?
+                              :node/title :page/title}
+        remove-ks-on-match [[:block/order (constantly true)]
+                            [:block/open? :block/open?]
+                            [:block/uid   :page/title]]]
     (->> (d/pull db block-document-pull-vector-for-copy eid)
          sort-block-children
+         (walk/postwalk-replace rename-ks)
          (walk/prewalk (fn [node]
                          (if (map? node)
-                           (apply dissoc node remove-ks)
-                           node)))
-         (walk/postwalk-replace rename-ks))))
+                           (reduce dissoc-on-match node remove-ks-on-match)
+                           node))))))
 
 
 (defn get-linked-refs-by-page-title
@@ -468,7 +457,10 @@
   "Build a position by coercing incompatible arguments into compatible ones.
   uid to a page will instead use that page's title.
   Integer relation will be converted to :first if 0, or :after (with matching uid) if not.
-  Warns when coercion was required."
+  Accepts the `{:block/uid <parent-uid> :relation <integer>}` old format based on order number.
+  Output position will be athens.common-events.graph.schema/child-position for the first block,
+  and athens.common-events.graph.schema/sibling-position for others.
+  It's safe to use a position that does not need coercing of any arguments, like the output formats."
   [db {:keys [relation block/uid page/title] :as pos}]
   (let [[coerced-ref-uid
          coerced-relation] (when (integer? relation)
@@ -490,10 +482,20 @@
                                (if-let [title' (or coerced-title title)]
                                  {:page/title title'}
                                  {:block/uid (or coerced-ref-uid uid)})))]
-
-    (when new-pos
-      (log/warn "compat-position: coercion required for" (pr-str pos) "to" (pr-str new-pos)))
     (or new-pos pos)))
+
+
+(defn get-position
+  "Get the position for block-uid in db.
+  Position will be athens.common-events.graph.schema/child-position for the first block,
+  and athens.common-events.graph.schema/sibling-position for others."
+  [db block-uid]
+  (let [{:block/keys [order]
+         :db/keys    [id]} (get-block db [:block/uid block-uid])
+        parent-uid         (->> id (get-parent db) :block/uid)
+        position           (compat-position db {:block/uid parent-uid
+                                                :relation  order})]
+    position))
 
 
 (defn validate-position
