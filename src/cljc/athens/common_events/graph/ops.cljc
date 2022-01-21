@@ -150,20 +150,26 @@
 
 
 (defn build-block-split-op
-  "Creates `:block/split` composite op, taking into account context."
+  "Creates `:block/split` composite op, taking into account context.
+  If old-block has children, pass them on to new-block.
+  If old-block is open or closed, pass that state on to new-block."
   [db {:keys [old-block-uid new-block-uid
               string index relation]}]
-  (let [save-block-op     (build-block-save-op db old-block-uid (subs string 0 index))
-        new-block-op      (atomic/make-block-new-op new-block-uid {:block/uid old-block-uid
-                                                                   :relation  relation})
-        new-block-save-op (build-block-save-op db new-block-uid (subs string index))
-        children          (common-db/get-children-uids db [:block/uid old-block-uid])
-        children?         (seq children)
-        move-children-op  (when children?
-                            (block-move-chain new-block-uid children :first))
-        split-block-op    (composite/make-consequence-op {:op/type :block/split}
-                                                         (cond-> [save-block-op
-                                                                  new-block-op
-                                                                  new-block-save-op]
-                                                           children? (conj move-children-op)))]
+  (let [save-block-op      (build-block-save-op db old-block-uid (subs string 0 index))
+        new-block-op       (atomic/make-block-new-op new-block-uid {:block/uid old-block-uid
+                                                                    :relation  relation})
+        new-block-save-op  (build-block-save-op db new-block-uid (subs string index))
+        {:block/keys [open]} (common-db/get-block db [:block/uid old-block-uid])
+        children           (common-db/get-children-uids db [:block/uid old-block-uid])
+        children?          (seq children)
+        move-children-op   (when children?
+                             (block-move-chain new-block-uid children :first))
+        close-new-block-op (when children?
+                             (atomic/make-block-open-op new-block-uid open))
+        split-block-op     (composite/make-consequence-op {:op/type :block/split}
+                                                          (cond-> [save-block-op
+                                                                   new-block-op
+                                                                   new-block-save-op]
+                                                            children? (conj move-children-op)
+                                                            children? (conj close-new-block-op)))]
     split-block-op))
