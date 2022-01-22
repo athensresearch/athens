@@ -67,6 +67,8 @@
 
 
 (deftest paste-internal-event)
+
+
 (fixture/integration-test-fixture
   (fn []
     (let [block-1-uid         "test-block-1-uid"
@@ -102,6 +104,8 @@
 
 
 (deftest paste-with-open-block-children-test)
+
+
 (fixture/integration-test-fixture
   (fn []
     (let [page-title          "test page"
@@ -136,9 +140,9 @@
              [(fixture/get-repr [:node/title page-title])])))))
 
 
-
-
 (deftest paste-with-temporary-string-event)
+
+
 (fixture/integration-test-fixture
   (fn []
     (let [block-1-uid         "test-block-1-uid"
