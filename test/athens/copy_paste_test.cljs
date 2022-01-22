@@ -100,6 +100,39 @@
              [(fixture/get-repr [:node/title page-title])])))))
 
 
+(deftest paste-with-open-block-children-test)
+(fixture/integration-test-fixture
+  (fn []
+    (let [page-title          "test page"
+          block-1-uid         "test-block-1-uid"
+          block-2-uid         "test-block-2-uid"
+          paste-uid           "paste-uid"
+          paste-string        "Paste me"
+          setup-repr          [{:page/title     page-title
+                                :block/children [#:block {:uid      block-1-uid
+                                                          :string   "A block with text"
+                                                          :children [#:block {:uid    block-2-uid
+                                                                              :string ""}]}]}]
+          exp-repr            [{:page/title     page-title
+                                :block/children [#:block {:uid      block-1-uid
+                                                          :string   "A block with text"
+                                                          :children [#:block {:uid    paste-uid
+                                                                              :string paste-string}
+                                                                     #:block {:uid    block-2-uid
+                                                                              :string ""}]}]}]
+          paste-internal-repr [{:block/uid    paste-uid,
+                                :block/string paste-string,
+                                :block/open   true,
+                                :block/order  5}]
+          run!                #(->> (bfs/build-paste-op @@fixture/connection block-1-uid paste-internal-repr)
+                                    fixture/op-resolve-transact!)]
+      (fixture/setup! setup-repr)
+      (is (= setup-repr
+             [(fixture/get-repr [:node/title page-title])]))
+      (run!)
+      (is (= exp-repr
+             [(fixture/get-repr [:node/title page-title])])))))
+
 
 
 

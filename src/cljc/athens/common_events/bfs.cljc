@@ -127,7 +127,9 @@
                                                 empty-block?          order
                                                 current-block-parent? 0
                                                 :else                 (inc order))
-         default-position                     (common-db/compat-position db {:block/uid current-block-parent-uid
+         default-position                     (common-db/compat-position db {:block/uid (if empty-block?
+                                                                                          current-block-parent-uid
+                                                                                          uid)
                                                                              :relation  new-block-order})
          extra-ops                            (if empty-block? [(graph-ops/build-block-remove-op db uid)] [])]
      (composite/make-consequence-op {:op/type :block/paste}
