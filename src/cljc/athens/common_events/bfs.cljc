@@ -105,32 +105,44 @@
 
   ([db internal-representation]
    (composite/make-consequence-op {:op/type :block/paste} (internal-representation->atomic-ops db internal-representation nil)))
-  ([db uid internal-representation]
-   (let [current-block-parent-uid             (:block/uid (common-db/get-parent db [:block/uid uid]))
+  ([db uid local-str internal-representation]
+   (let [current-block-parent-uid (:block/uid (common-db/get-parent db [:block/uid uid]))
          {:block/keys [order
                        children
                        open
-                       string]}               (common-db/get-block db [:block/uid uid])
+                       string]} (common-db/get-block db [:block/uid uid])
          ;; The parent of block depends on:
          ;; - if the current block is open and has chidren : if this is the case then we want the blocks to be pasted
          ;;   under the current block as its first children
          ;; - else the parent is the current block's parent
-         current-block-parent?                (and children
-                                                   open)
-         empty-block?                         (and (string/blank? string)
-                                                   (empty?        children))
+         current-block-parent?    (and children
+                                       open)
+         empty-block?             (and (string/blank? local-str)
+                                       (empty? children))
+         new-block-str?           (not= local-str string)
+         ;; If block has a new local-str, write that
+         block-save-op            (when new-block-str?
+                                    (atomic/make-block-save-op uid local-str))
          ;; - If the block is empty then we delete the empty block and add new blocks. So in this case
          ;;   the block order for the new blocks is the same as deleted blocks order.
          ;; - If the block is parent then we want the blocks to be pasted as this blocks first children
          ;; - If the block is not empty then add the new blocks after the current one.
-         new-block-order                      (cond
-                                                empty-block?          order
-                                                current-block-parent? 0
-                                                :else                 (inc order))
-         default-position                     (common-db/compat-position db {:block/uid (if empty-block?
-                                                                                          current-block-parent-uid
-                                                                                          uid)
-                                                                             :relation  new-block-order})
-         extra-ops                            (if empty-block? [(graph-ops/build-block-remove-op db uid)] [])]
+         new-block-order          (cond
+                                    empty-block? order
+                                    current-block-parent? 0
+                                    :else (inc order))
+         block-position           (cond
+                                    empty-block? current-block-parent-uid
+                                    current-block-parent? uid
+                                    :else current-block-parent-uid)
+         ;; do we need compat position? the 3 cases are X, :first, and :after. I'm not sure about the case of empty-block?
+         default-position         (common-db/compat-position db {:block/uid block-position
+                                                                 :relation  new-block-order})
+         ir-ops                   (internal-representation->atomic-ops db internal-representation default-position)
+         remove-op                (when empty-block?
+                                    (graph-ops/build-block-remove-op db uid))]
      (composite/make-consequence-op {:op/type :block/paste}
-                                    (concat extra-ops (internal-representation->atomic-ops db internal-representation default-position))))))
+                                    (cond-> ir-ops
+                                      new-block-str? (conj block-save-op)
+                                      empty-block? (conj remove-op))))))
+

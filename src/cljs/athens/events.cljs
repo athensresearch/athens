@@ -1337,10 +1337,11 @@
 
 (reg-event-fx
   :paste-internal
-  (fn [_ [_ uid internal-representation]]
+  (fn [_ [_ uid local-str internal-representation]]
     (let [[uid]  (db/uid-and-embed-id uid)
           op     (bfs/build-paste-op @db/dsdb
                                      uid
+                                     local-str
                                      internal-representation)
           event  (common-events/build-atomic-event op)]
       (log/debug "paste internal event is" (pr-str event))

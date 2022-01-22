@@ -297,7 +297,7 @@
        (do
          (set-selection target (- start-idx 2) start)
          (replace-selection-with "")
-         (dispatch [:paste-internal uid target-ir])
+         (dispatch [:paste-internal uid (:string/local @state) target-ir])
          (swap! state assoc :search/type nil))))))
 
 
