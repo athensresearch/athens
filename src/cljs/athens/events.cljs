@@ -1174,16 +1174,24 @@
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-    (let [block                        (common-db/get-block @db/dsdb [:block/uid uid])
-          block-zero?                  (zero? (:block/order block))
-          [prev-block-uid target-rel]  (get-prev-block-uid-and-target-rel uid)
-          {:keys [start end]}          d-key-down
-          block-save-block-move-op     (block-save-block-move-composite-op uid
-                                                                           prev-block-uid
-                                                                           target-rel
-                                                                           local-string)
-          event                        (common-events/build-atomic-event block-save-block-move-op)]
-
+    (let [block                    (common-db/get-block @db/dsdb [:block/uid uid])
+          block-zero?              (zero? (:block/order block))
+          [prev-block-uid target-rel] (get-prev-block-uid-and-target-rel uid)
+          sib-block                (common-db/get-block @db/dsdb [:block/uid prev-block-uid])
+          ;; if sibling block is closed with children, open
+          {sib-open :block/open sib-children :block/children sib-uid :block/uid} sib-block
+          block-closed? (and (not sib-open) sib-children)
+          sib-block-open-op        (when block-closed?
+                                     (atomic-graph-ops/make-block-open-op sib-uid true))
+          {:keys [start end]} d-key-down
+          block-save-block-move-op (block-save-block-move-composite-op uid
+                                                                       prev-block-uid
+                                                                       target-rel
+                                                                       local-string)
+          event                    (common-events/build-atomic-event
+                                     (composite-ops/make-consequence-op {:op/type :indent}
+                                                                        (cond-> [block-save-block-move-op]
+                                                                          block-closed? (conj sib-block-open-op))))]
       (log/debug "null-sib-uid" (and block-zero?
                                      prev-block-uid)
                  ", args:" (pr-str args)
