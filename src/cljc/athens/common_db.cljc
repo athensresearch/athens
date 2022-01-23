@@ -485,6 +485,14 @@
    [:block/_refs :limit nil]])
 
 
+(defn get-all-page-titles
+  [db]
+  (d/q '[:find [?t ...]
+         :where
+         [?e :node/title ?t]]
+       db))
+
+
 (defn get-all-pages
   [db]
   (->> (d/datoms db :aevt :node/title)

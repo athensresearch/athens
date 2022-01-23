@@ -4,6 +4,7 @@
     [athens.common-events.schema       :as schema]
     [athens.common.logging             :as log]
     [athens.self-hosted.clients        :as clients]
+    [athens.self-hosted.web.api        :as api]
     [athens.self-hosted.web.datascript :as datascript]
     [athens.self-hosted.web.presence   :as presence]
     [com.stuartsierra.component        :as component]
@@ -121,7 +122,8 @@
 (defn make-handler
   [datascript fluree config]
   (compojure/routes health-check-route
-                    (make-ws-route datascript fluree config)))
+                    (make-ws-route datascript fluree config)
+                    (api/make-routes datascript fluree config)))
 
 
 (defrecord WebServer
