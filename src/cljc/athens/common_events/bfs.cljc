@@ -135,7 +135,6 @@
                                     empty-block? current-block-parent-uid
                                     current-block-parent? uid
                                     :else current-block-parent-uid)
-         ;; do we need compat position? the 3 cases are X, :first, and :after. I'm not sure about the case of empty-block?
          default-position         (common-db/compat-position db {:block/uid block-position
                                                                  :relation  new-block-order})
          ir-ops                   (internal-representation->atomic-ops db internal-representation default-position)

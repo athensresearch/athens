@@ -66,113 +66,101 @@
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
 
 
-(deftest paste-internal-event)
+(deftest paste-internal-event
+  (let [block-1-uid         "test-block-1-uid"
+        block-2-uid         "test-block-2-uid"
+        block-1-str         "block 1 string"
+        paste-uid           "test-block-uid"
+        paste-string        "Paste me"
+        page-title          "test page"
+        setup-repr          [{:page/title     page-title
+                              :block/children [#:block {:uid    block-1-uid
+                                                        :string block-1-str}
+                                               #:block {:uid    block-2-uid
+                                                        :string ""}]}]
+        exp-repr            [{:page/title     page-title
+                              :block/children [#:block {:uid    block-1-uid
+                                                        :string block-1-str}
+                                               #:block {:uid    paste-uid
+                                                        :string paste-string}
+                                               #:block {:uid    block-2-uid
+                                                        :string ""}]}]
+        paste-internal-repr [{:block/uid    paste-uid,
+                              :block/string paste-string,
+                              :block/open   true,
+                              :block/order  5}]
+        run!                #(->> (bfs/build-paste-op @@fixture/connection block-1-uid block-1-str paste-internal-repr)
+                                  fixture/op-resolve-transact!)]
+    (fixture/setup! setup-repr)
+    (is (= setup-repr
+           [(fixture/get-repr [:node/title page-title])]))
+    (run!)
+    (is (= exp-repr
+           [(fixture/get-repr [:node/title page-title])]))))
 
 
-(fixture/integration-test-fixture
-  (fn []
-    (let [block-1-uid         "test-block-1-uid"
-          block-2-uid         "test-block-2-uid"
-          block-1-str         "block 1 string"
-          paste-uid           "test-block-uid"
-          paste-string        "Paste me"
-          page-title          "test page"
-          setup-repr          [{:page/title     page-title
-                                :block/children [#:block {:uid    block-1-uid
-                                                          :string block-1-str}
-                                                 #:block {:uid    block-2-uid
-                                                          :string ""}]}]
-          exp-repr            [{:page/title     page-title
-                                :block/children [#:block {:uid    block-1-uid
-                                                          :string block-1-str}
-                                                 #:block {:uid    paste-uid
-                                                          :string paste-string}
-                                                 #:block {:uid    block-2-uid
-                                                          :string ""}]}]
-          paste-internal-repr [{:block/uid    paste-uid,
-                                :block/string paste-string,
-                                :block/open   true,
-                                :block/order  5}]
-          run!                #(->> (bfs/build-paste-op @@fixture/connection block-1-uid block-1-str paste-internal-repr)
-                                    fixture/op-resolve-transact!)]
-      (fixture/setup! setup-repr)
-      (is (= setup-repr
-             [(fixture/get-repr [:node/title page-title])]))
-      (run!)
-      (is (= exp-repr
-             [(fixture/get-repr [:node/title page-title])])))))
+(deftest paste-with-open-block-children-test
+  (let [page-title          "test page"
+        block-1-uid         "test-block-1-uid"
+        block-1-str         "block 1 string"
+        block-2-uid         "test-block-2-uid"
+        paste-uid           "paste-uid"
+        paste-string        "Paste me"
+        setup-repr          [{:page/title     page-title
+                              :block/children [#:block {:uid      block-1-uid
+                                                        :string   block-1-str
+                                                        :children [#:block {:uid    block-2-uid
+                                                                            :string ""}]}]}]
+        exp-repr            [{:page/title     page-title
+                              :block/children [#:block {:uid      block-1-uid
+                                                        :string   block-1-str
+                                                        :children [#:block {:uid    paste-uid
+                                                                            :string paste-string}
+                                                                   #:block {:uid    block-2-uid
+                                                                            :string ""}]}]}]
+        paste-internal-repr [{:block/uid    paste-uid,
+                              :block/string paste-string,
+                              :block/open   true,
+                              :block/order  5}]
+        run!                #(->> (bfs/build-paste-op @@fixture/connection block-1-uid block-1-str paste-internal-repr)
+                                  fixture/op-resolve-transact!)]
+    (fixture/setup! setup-repr)
+    (is (= setup-repr
+           [(fixture/get-repr [:node/title page-title])]))
+    (run!)
+    (is (= exp-repr
+           [(fixture/get-repr [:node/title page-title])]))))
 
 
-(deftest paste-with-open-block-children-test)
-
-
-(fixture/integration-test-fixture
-  (fn []
-    (let [page-title          "test page"
-          block-1-uid         "test-block-1-uid"
-          block-1-str         "block 1 string"
-          block-2-uid         "test-block-2-uid"
-          paste-uid           "paste-uid"
-          paste-string        "Paste me"
-          setup-repr          [{:page/title     page-title
-                                :block/children [#:block {:uid      block-1-uid
-                                                          :string   block-1-str
-                                                          :children [#:block {:uid    block-2-uid
-                                                                              :string ""}]}]}]
-          exp-repr            [{:page/title     page-title
-                                :block/children [#:block {:uid      block-1-uid
-                                                          :string   block-1-str
-                                                          :children [#:block {:uid    paste-uid
-                                                                              :string paste-string}
-                                                                     #:block {:uid    block-2-uid
-                                                                              :string ""}]}]}]
-          paste-internal-repr [{:block/uid    paste-uid,
-                                :block/string paste-string,
-                                :block/open   true,
-                                :block/order  5}]
-          run!                #(->> (bfs/build-paste-op @@fixture/connection block-1-uid block-1-str paste-internal-repr)
-                                    fixture/op-resolve-transact!)]
-      (fixture/setup! setup-repr)
-      (is (= setup-repr
-             [(fixture/get-repr [:node/title page-title])]))
-      (run!)
-      (is (= exp-repr
-             [(fixture/get-repr [:node/title page-title])])))))
-
-
-(deftest paste-with-temporary-string-event)
-
-
-(fixture/integration-test-fixture
-  (fn []
-    (let [block-1-uid         "test-block-1-uid"
-          block-2-uid         "test-block-2-uid"
-          block-1-str-start   "block 1 string"
-          block-1-str-end     (str block-1-str-start " and more text")
-          paste-uid           "test-block-uid"
-          paste-string        "Paste me"
-          page-title          "test page"
-          setup-repr          [{:page/title     page-title
-                                :block/children [#:block {:uid    block-1-uid
-                                                          :string block-1-str-start}
-                                                 #:block {:uid    block-2-uid
-                                                          :string ""}]}]
-          exp-repr            [{:page/title     page-title
-                                :block/children [#:block {:uid    block-1-uid
-                                                          :string block-1-str-end}
-                                                 #:block {:uid    paste-uid
-                                                          :string paste-string}
-                                                 #:block {:uid    block-2-uid
-                                                          :string ""}]}]
-          paste-internal-repr [{:block/uid    paste-uid,
-                                :block/string paste-string,
-                                :block/open   true,
-                                :block/order  5}]
-          run!                #(->> (bfs/build-paste-op @@fixture/connection block-1-uid block-1-str-end paste-internal-repr)
-                                    fixture/op-resolve-transact!)]
-      (fixture/setup! setup-repr)
-      (is (= setup-repr
-             [(fixture/get-repr [:node/title page-title])]))
-      (run!)
-      (is (= exp-repr
-             [(fixture/get-repr [:node/title page-title])])))))
+(deftest paste-with-temporary-string-event
+  (let [block-1-uid         "test-block-1-uid"
+        block-2-uid         "test-block-2-uid"
+        block-1-str-start   "block 1 string"
+        block-1-str-end     (str block-1-str-start " and more text")
+        paste-uid           "test-block-uid"
+        paste-string        "Paste me"
+        page-title          "test page"
+        setup-repr          [{:page/title     page-title
+                              :block/children [#:block {:uid    block-1-uid
+                                                        :string block-1-str-start}
+                                               #:block {:uid    block-2-uid
+                                                        :string ""}]}]
+        exp-repr            [{:page/title     page-title
+                              :block/children [#:block {:uid    block-1-uid
+                                                        :string block-1-str-end}
+                                               #:block {:uid    paste-uid
+                                                        :string paste-string}
+                                               #:block {:uid    block-2-uid
+                                                        :string ""}]}]
+        paste-internal-repr [{:block/uid    paste-uid,
+                              :block/string paste-string,
+                              :block/open   true,
+                              :block/order  5}]
+        run!                #(->> (bfs/build-paste-op @@fixture/connection block-1-uid block-1-str-end paste-internal-repr)
+                                  fixture/op-resolve-transact!)]
+    (fixture/setup! setup-repr)
+    (is (= setup-repr
+           [(fixture/get-repr [:node/title page-title])]))
+    (run!)
+    (is (= exp-repr
+           [(fixture/get-repr [:node/title page-title])]))))
