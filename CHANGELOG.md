@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.13](https://github.com/athensresearch/athens/compare/v2.0.0-beta.12...v2.0.0-beta.13) (2022-01-24)
+
+
+### Bug Fixes
+
+* **indent:** if sibling block is closed, open ([a43a71c](https://github.com/athensresearch/athens/commit/a43a71cb50b1f106ad588254e34c03db9579d8d4))
+* pressing up and the previous block has a closed child ([d2b795f](https://github.com/athensresearch/athens/commit/d2b795ff65b886847bf02ff62462aee0481e5ad0))
+* small paste bugs ([#1991](https://github.com/athensresearch/athens/issues/1991)) ([18d76e4](https://github.com/athensresearch/athens/commit/18d76e4f11426e596e4d8c0473cf4a1965068d3d))
+
+
+### Enhancements
+
+* **help-popup:** Use more general term for search shortcut ([312b1ce](https://github.com/athensresearch/athens/commit/312b1cea1dff1d90a311a12fb25be51b9281e302))
+
+
+* **deps:** bump engine.io from 4.1.1 to 4.1.2 ([e4cdb87](https://github.com/athensresearch/athens/commit/e4cdb876dc441bd712721ae2117bbc99a827234c))
+* **deps:** bump follow-redirects from 1.14.1 to 1.14.7 ([d11e39c](https://github.com/athensresearch/athens/commit/d11e39ca8a27139560812b1f35af056c5f0e34e1))
+* **deps:** bump log4js from 6.3.0 to 6.4.1 ([a4153bb](https://github.com/athensresearch/athens/commit/a4153bb89815e32484718c797e283f69f01bbb69))
+* **deps:** bump node-fetch from 2.6.1 to 2.6.7 ([f257800](https://github.com/athensresearch/athens/commit/f2578005779b2f2262c6e718b102c0004944d23c))
+* **deps:** bump trim-off-newlines from 1.0.1 to 1.0.3 ([fa7f247](https://github.com/athensresearch/athens/commit/fa7f247a1320677dd215fe2ee57c27f61e305437))
+* remove marked dependency ([#1997](https://github.com/athensresearch/athens/issues/1997)) ([4558bc2](https://github.com/athensresearch/athens/commit/4558bc20039ce1b00e86bff974d82e4af6686efe))
+
 ## [2.0.0-beta.12](https://github.com/athensresearch/athens/compare/v2.0.0-beta.11...v2.0.0-beta.12) (2022-01-20)
 
 

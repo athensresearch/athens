@@ -306,7 +306,7 @@
       internal?
       (do
         (.. e preventDefault)
-        (rf/dispatch [:paste-internal uid repr-with-new-uids]))
+        (rf/dispatch [:paste-internal uid (:string/local @state) repr-with-new-uids]))
 
       ;; For images
       (seq (filter (fn [item]
@@ -320,7 +320,7 @@
       (and line-breaks no-shift)
       (do
         (.. e preventDefault)
-        (rf/dispatch [:paste-internal uid text-to-inter]))
+        (rf/dispatch [:paste-internal uid (:string/local @state) text-to-inter]))
 
       (not no-shift)
       (do
