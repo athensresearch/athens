@@ -1113,12 +1113,12 @@
                                                    :embed-id embed-id}]
 
                                 (not (zero? start))
-                                [:enter/split-block {:uid        uid
-                                                     :value      value
-                                                     :index      start
-                                                     :new-uid    new-uid
-                                                     :embed-id   embed-id
-                                                     :relation   :after}]
+                                [:enter/split-block {:uid      uid
+                                                     :value    value
+                                                     :index    start
+                                                     :new-uid  new-uid
+                                                     :embed-id embed-id
+                                                     :relation :after}]
 
                                 (empty? value)
                                 [:unindent {:uid              uid
@@ -1301,24 +1301,11 @@
       {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
 
 
-(defn- block-move-chain
-  [target-uid source-uids first-rel]
-  (composite-ops/make-consequence-op {:op/type :block/move-chain}
-                                     (concat [(atomic-graph-ops/make-block-move-op (first source-uids)
-                                                                                   {:block/uid target-uid
-                                                                                    :relation first-rel})]
-                                             (doall
-                                               (for [[one two] (partition 2 1 source-uids)]
-                                                 (atomic-graph-ops/make-block-move-op two
-                                                                                      {:block/uid one
-                                                                                       :relation :after}))))))
-
-
 (reg-event-fx
   :drop-multi/child
   (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
     (log/debug ":drop-multi/child args" (pr-str args))
-    (let [atomic-op (block-move-chain target-uid source-uids :first)
+    (let [atomic-op (graph-ops/block-move-chain target-uid source-uids :first)
           event     (common-events/build-atomic-event atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
@@ -1330,7 +1317,7 @@
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
     (log/debug ":drop-multi/sibling args" (pr-str args))
     (let [rel-position drag-target
-          atomic-op    (block-move-chain target-uid source-uids rel-position)
+          atomic-op    (graph-ops/block-move-chain target-uid source-uids rel-position)
           event        (common-events/build-atomic-event atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
