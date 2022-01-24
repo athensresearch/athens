@@ -67,20 +67,32 @@
                                       parent-uid   {:block/uid parent-uid     :relation :last}
                                       ;; There's a default place where we can drop blocks, use it.
                                       default-position default-position
-                                      :else (throw (ex-info "Cannot determine position for enhanced internal representation" eir)))]
-      (cond-> [(atomic/make-block-new-op uid position)
-               (graph-ops/build-block-save-op db uid string)]
+                                      :else (throw (ex-info "Cannot determine position for enhanced internal representation" eir)))
+          save-op                   (graph-ops/build-block-save-op db uid string)
+          atomic-save-ops           (if (graph-ops/atomic-composite? save-op)
+                                      (graph-ops/extract-atomics save-op)
+                                      [save-op])]
+      (cond-> (into [(atomic/make-block-new-op uid position)] atomic-save-ops)
         (= open? false) (conj (atomic/make-block-open-op uid false))))))
 
 
+(defn move-save-ops-to-end
+  [coll]
+  (let [{save true
+         not-save false} (group-by #(= (:op/type %) :block/save) coll)]
+    (concat [] not-save save)))
+
+
 (defn internal-representation->atomic-ops
-  "Convert internal representation to the set of atomic operations that would create it."
+  "Convert internal representation to the vector of atomic operations that would create it.
+  :block/save operations are grouped at the end so that any ref'd entities are already created."
   [db internal-representation default-position]
   (->> internal-representation
        enhance-internal-representation
        (mapcat (partial tree-seq :block/children :block/children))
        (map (partial enhanced-internal-representation->atomic-ops db default-position))
        flatten
+       move-save-ops-to-end
        vec))
 
 

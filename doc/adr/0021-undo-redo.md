@@ -113,6 +113,7 @@ The saved db state should be updated each time the operation order changes and t
 
 Since undo operations can trivially generate much larger operations than the original, we must pay special attention to payload limits in the client and server. 
 We know some of these limits right now but do not enforce them, so we need to start enforcing them for undo/redo to work reliably.
+We can also warn users that some operations cannot be undone according to some heuristic (e.g. number of deleted blocks).
 
 Similarly to limits, undo also puts extra stress on the resolution error cases since it will trivially generate uncommon situations.
 We must make sure that invariants are enforced on resolution.
@@ -126,6 +127,29 @@ We can address that issue by creating all blocks before adding their content.
 
 ## Insights from MVP
 
+- what block should be focused after undo/redo?
+- should block/open have undo?
+- what are undoable scenenarios and how do we present them to the user?
+- what limits do we want to enforce?
+- how do we present scenarios that won't allow undo to the user?
+- what are the invariants we need to check on op and undo op resolution?
+- repeating undo/redo over an operation results in an ever increasing operation due to nested composites
+- clients with partial state, derived from partial loads, cannot compute the full undo operation since it doesn't have all the data. 
+  In that case it can compute a partial undo, and ask the server to compute the full version.
+  Another strategy is to have the partial load client pull all the data necessary for the operation.
+- When can optimize the operations in undo by flattening the list and analysing it for redundancy (e.g. block/save followed by block/delete).
+  This can help save IO, and we already know that our performance due to IO is suffering.
+  This analysis would need to fully understand the causality chain between operations in order to not introduce bugs over valid composites.
+  A better place to effect this optimization is in the transaction resolver itself, as an execution planner.
+  This would also reduce, or even eliminate, the need for iterative resolution.
+- It's not actually mandatory to update the saved db state on client optimistic rollbacks. 
+  The difference here is a semantic one: if we update we say undos show use the most up to date data, if we don't we say they should use the original data.
+- Contiguous moves are problematic to undo, because of how they implicitely have a grouping together with how they resolve back their previous position.
+  We currently have a "forward" bias, where we prefer the :first position if available, followed by :after.
+  But while undoing contiguous moves this fails, because undoing reverts the order of operations, and resolves each position relative to the previous block, which is not yet moved, and results in all blocks but the first staying in place.
+  There's a range of approaches to this issue: static analysis, changing the bias, encoding contiguous ranges, failing the undo.
+  For now we chose to restore the relative order of contiguous moves, after reversing all operations.
+  This is not correct for the general case, but it might be sufficient for all the cases we care about, especially since we have decided that undo is not time travel.
 
 ## Decision
 
