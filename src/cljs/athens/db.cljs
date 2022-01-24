@@ -386,12 +386,13 @@
 
 (defn deepest-child-block
   [id]
-  (let [document (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] id)
+  (let [document (->> (d/pull @dsdb '[:block/order :block/uid :block/open {:block/children ...}] id)
                       sort-block-children)]
     (loop [block document]
-      (let [{:block/keys [children]} block
+      (let [{:block/keys [children open]} block
             n (count children)]
-        (if (zero? n)
+        (if (or (zero? n)
+                (not open))
           block
           (recur (get children (dec n))))))))
 
