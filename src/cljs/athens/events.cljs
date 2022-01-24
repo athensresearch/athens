@@ -1180,7 +1180,7 @@
           sib-block                (common-db/get-block @db/dsdb [:block/uid prev-block-uid])
           ;; if sibling block is closed with children, open
           {sib-open :block/open sib-children :block/children sib-uid :block/uid} sib-block
-          block-closed? (and (not sib-open) sib-children)
+          block-closed?            (and (not sib-open) sib-children)
           sib-block-open-op        (when block-closed?
                                      (atomic-graph-ops/make-block-open-op sib-uid true))
           {:keys [start end]} d-key-down
