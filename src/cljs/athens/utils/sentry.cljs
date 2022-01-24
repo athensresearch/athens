@@ -23,7 +23,8 @@
 (defn transaction-finish
   "Finishes provided transaction"
   [transaction]
-  (.finish transaction))
+  (when transaction
+    (.finish transaction)))
 
 
 (def span-stack (atom []))
@@ -39,14 +40,16 @@
   "Starts a *span* named `op-name` within given `transaction`,
   with optional `op-description`."
   ([transaction op-name]
-   (let [span (.startChild transaction (clj->js {:op op-name}))]
-     (swap! span-stack conj span)
-     span))
+   (when transaction
+     (let [span (.startChild transaction (clj->js {:op op-name}))]
+       (swap! span-stack conj span)
+       span)))
   ([transaction op-name op-description]
-   (let [span (.startChild transaction (clj->js {:op          op-name
-                                                 :description op-description}))]
-     (swap! span-stack conj span)
-     span)))
+   (when transaction
+     (let [span (.startChild transaction (clj->js {:op          op-name
+                                                   :description op-description}))]
+       (swap! span-stack conj span)
+       span))))
 
 
 (def span-status-mapping
@@ -79,10 +82,10 @@
 (defn span-finish
   "Finish provided `span`."
   ([]
-   (span-finish (peek @span-stack)))
+   (span-finish (span-active)))
   ([span]
-   (let [active-span (peek @span-stack)]
+   (let [active-span (span-active)]
      (when (= active-span span)
-       (swap! active-span pop))
+       (swap! span-stack pop))
      (.finish span))))
 

@@ -214,4 +214,5 @@
 (rf/reg-fx
   :invoke-callback
   (fn [callback]
+    (log/debug "Invoking callback")
     (callback)))

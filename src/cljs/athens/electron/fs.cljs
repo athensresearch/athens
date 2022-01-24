@@ -1,14 +1,16 @@
 (ns athens.electron.fs
   (:require
-    [athens.athens-datoms :as athens-datoms]
-    [athens.common-db :as common-db]
+    [athens.athens-datoms                 :as athens-datoms]
+    [athens.common-db                     :as common-db]
     [athens.common-events.resolver.atomic :as atomic-resolver]
-    [athens.db :as db]
-    [athens.electron.utils :as utils]
-    [datascript.core :as d]
-    [datascript.transit :as dt]
-    [goog.functions :refer [debounce]]
-    [re-frame.core :as rf]))
+    [athens.db                            :as db]
+    [athens.electron.utils                :as utils]
+    [athens.interceptors                  :as interceptors]
+    [athens.utils.sentry                  :as sentry]
+    [datascript.core                      :as d]
+    [datascript.transit                   :as dt]
+    [goog.functions                       :refer [debounce]]
+    [re-frame.core                        :as rf]))
 
 
 (def fs (js/require "fs"))
@@ -78,6 +80,7 @@
 
 (rf/reg-event-fx
   :fs/read-and-watch
+  [(interceptors/sentry-span "fs/read-and-watch")]
   (fn [_ [_ {:keys [db-path]}]]
     (let [datoms (-> (.readFileSync fs db-path)
                      dt/read-transit-str)]

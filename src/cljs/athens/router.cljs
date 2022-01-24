@@ -5,6 +5,8 @@
     [athens.dates                :as dates]
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
+    [athens.interceptors         :as interceptors]
+    [athens.utils.sentry         :as sentry]
     [day8.re-frame.tracing       :refer-macros [fn-traced]]
     [posh.reagent                :refer [pull]]
     [re-frame.core               :as rf :refer [reg-sub reg-event-fx]]
@@ -12,6 +14,10 @@
     [reitit.frontend             :as rfe]
     [reitit.frontend.controllers :as rfc]
     [reitit.frontend.easy        :as rfee]))
+
+
+;; Sentry navigation TX
+(def nav-tx (atom nil))
 
 
 ;; subs
@@ -42,6 +48,7 @@
 ;; events
 (rf/reg-event-fx
   :navigate
+  [(interceptors/sentry-span "navigate")]
   (fn [{:keys [db]} [_ & route]]
     (log/debug ":navigate route:" (pr-str route))
     (let [db-id       (-> db db-picker/selected-db :id)
@@ -63,6 +70,7 @@
 
 (rf/reg-event-fx
   :navigated
+  [(interceptors/sentry-span "navigated")]
   (fn [{:keys [db]} [_ new-match]]
     (log/debug "navigated, new-match:" (pr-str new-match))
     (let [old-match   (:current-route db)
@@ -76,12 +84,14 @@
                 page-block (common-db/get-block @db/dsdb [:node/title page-title])
                 html-title (str page-title " | Athens")]
             (set! (.-title js/document) html-title)
-            {:db       (-> db
-                           (assoc :current-route (assoc new-match :controllers controllers))
-                           (dissoc :merge-prompt))
-             :timeout  {:action :clear
-                        :id     :merge-prompt}
-             :dispatch [:editing/first-child (:block/uid page-block)]})
+            {:db              (-> db
+                                  (assoc :current-route (assoc new-match :controllers controllers))
+                                  (dissoc :merge-prompt))
+             :timeout         {:action :clear
+                               :id     :merge-prompt}
+             :dispatch-n      [[:editing/first-child (:block/uid page-block)]
+                               [:sentry/end-tx @nav-tx]]
+             :invoke-callback #(reset! nav-tx nil)})
           (let [uid               (-> new-match :path-params :id)
                 node              (pull db/dsdb '[*] [:block/uid uid]) ; TODO make the page title query work when zoomed in on a block
                 node-title        (:node/title @node)
@@ -95,24 +105,27 @@
                                     "Athens")
                 today             (dates/get-day)]
             (set! (.-title js/document) html-title)
-            {:db         (-> db
-                             (assoc :current-route (assoc new-match :controllers controllers))
-                             (dissoc :merge-prompt))
-             :timeout    {:action :clear
-                          :id     :merge-prompt}
-             :dispatch-n [(when (and (not loading?)
-                                     home?)
-                            [:daily-note/ensure-day today])
-                          (when-let [parent-uid (and (not loading?)
-                                                     (or uid
-                                                         (and home?
-                                                              (:uid today))))]
-                            [:editing/first-child parent-uid])]}))))))
+            {:db              (-> db
+                                  (assoc :current-route (assoc new-match :controllers controllers))
+                                  (dissoc :merge-prompt))
+             :timeout         {:action :clear
+                               :id     :merge-prompt}
+             :dispatch-n      [(when (and (not loading?)
+                                          home?)
+                                 [:daily-note/ensure-day today])
+                               (when-let [parent-uid (and (not loading?)
+                                                          (or uid
+                                                              (and home?
+                                                                   (:uid today))))]
+                                 [:editing/first-child parent-uid])
+                               [:sentry/end-tx @nav-tx]]
+             :invoke-callback #(reset! nav-tx nil)}))))))
 
 
 ;; doesn't reliably work. notably, Daily Notes are often not remembered as last open page, leading to incorrect restore
 (reg-event-fx
   :restore-navigation
+  [(interceptors/sentry-span "restore-navigation")]
   (fn [{:keys [db]} _]
     (let [prev-title (-> db db-picker/selected-db :current-route/title)
           prev-uid   (-> db db-picker/selected-db :current-route/uid)]
@@ -157,12 +170,16 @@
 (defn navigate
   [page]
   (log/debug "navigate:" (pr-str page))
+  (when-not @nav-tx
+    (reset! nav-tx (sentry/transaction-start "navigate")))
   (rf/dispatch [:navigate page]))
 
 
 (defn nav-daily-notes
   "When user is already on a date node-page, clicking on daily notes goes to that date and allows scrolling."
   []
+  (when-not @nav-tx
+    (reset! nav-tx (sentry/transaction-start "nav-daily-notes")))
   (let [route-uid @(rf/subscribe [:current-route/uid])]
     (if (dates/is-daily-note route-uid)
       (rf/dispatch [:daily-note/reset [route-uid]])
@@ -170,15 +187,20 @@
     (navigate :home)))
 
 
+;; TODO sentry tx for navigation tracking
 (defn navigate-page
   "Navigate to page by it's title"
   ([title]
+   (when-not @nav-tx
+     (reset! nav-tx (sentry/transaction-start "navigate-page")))
    (let [current-route-page-title @(rf/subscribe [:current-route/page-title])]
      (log/debug "navigate-page:" (pr-str {:title                    title
                                           :current-route-page-title current-route-page-title}))
      (when-not (= current-route-page-title title)
        (rf/dispatch [:navigate :page-by-title {:title title}]))))
   ([title e]
+   (when-not @nav-tx
+     (reset! nav-tx (sentry/transaction-start "navigate-page-arr-2")))
    (let [shift? (.-shiftKey e)]
      (if shift?
        (do
@@ -191,11 +213,15 @@
 (defn navigate-uid
   "Don't navigate if already on the page."
   ([uid]
+   (when-not @nav-tx
+     (reset! nav-tx (sentry/transaction-start "navigate-uid")))
    (let [[uid _embed-id]   (db/uid-and-embed-id uid)
          current-route-uid @(rf/subscribe [:current-route/uid])]
      (when (not= current-route-uid uid)
        (rf/dispatch [:navigate :page {:id uid}]))))
   ([uid e]
+   (when-not @nav-tx
+     (reset! nav-tx (sentry/transaction-start "navigate-uid-arr-2")))
    (let [[uid _embed-id] (db/uid-and-embed-id uid)
          shift           (.. e -shiftKey)]
      (if shift

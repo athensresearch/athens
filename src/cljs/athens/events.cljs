@@ -2,7 +2,7 @@
   (:require
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
-    [athens.common-events.bfs :as bfs]
+    [athens.common-events.bfs             :as bfs]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.composite :as composite-ops]
     [athens.common-events.graph.ops       :as graph-ops]
@@ -15,20 +15,23 @@
     [athens.dates                         :as dates]
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
-    [athens.electron.images :as images]
+    [athens.electron.images               :as images]
     [athens.events.remote]
+    [athens.events.sentry]
+    [athens.interceptors                  :as interceptors]
     [athens.patterns                      :as patterns]
     [athens.undo                          :as undo]
     [athens.util                          :as util]
+    [athens.utils.sentry                  :as sentry]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
-    [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [goog.dom :refer [getElement]]
+    [day8.re-frame.tracing                :refer-macros [fn-traced]]
+    [goog.dom                             :refer [getElement]]
     [malli.core                           :as m]
     [malli.error                          :as me]
-    [re-frame.core :as rf :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [re-frame.core                        :as rf :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -37,7 +40,8 @@
 ;; cycle that works with RTC.
 (reg-event-fx
   :boot/web
-  [(inject-cofx :local-storage :athens/persist)]
+  [(interceptors/sentry-span "boot/web")
+   (inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
     {:db         (db/init-app-db local-storage)
      :dispatch-n [[:theme/set]
@@ -46,18 +50,21 @@
 
 (reg-event-db
   :init-rfdb
+  [(interceptors/sentry-span "init-rfdb")]
   (fn [_ _]
     db/rfdb))
 
 
 (reg-event-db
   :db/sync
+  [(interceptors/sentry-span "db/sync")]
   (fn [db [_]]
     (assoc db :db/synced true)))
 
 
 (reg-event-db
   :db/not-synced
+  [(interceptors/sentry-span "db/not-synced")]
   (fn [db [_]]
     (assoc db :db/synced false)))
 
@@ -173,6 +180,7 @@
 
 (reg-event-fx
   :upload/roam-edn
+  [(interceptors/sentry-span "upload/roam-edn")]
   (fn [_ [_ transformed-dates-roam-db roam-db-filename]]
     (let [shared-pages   (get-shared-pages transformed-dates-roam-db)
           merge-shared   (mapv (fn [x] (merge-shared-page [:node/title x] transformed-dates-roam-db roam-db-filename))
@@ -187,12 +195,14 @@
 
 (reg-event-db
   :athena/toggle
+  [(interceptors/sentry-span "athena/toggle")]
   (fn [db _]
     (update db :athena/open not)))
 
 
 (reg-event-db
   :athena/update-recent-items
+  [(interceptors/sentry-span "athena/undate-recent-items")]
   (fn-traced [db [_ selected-page]]
              (when (nil? ((set (:athena/recent-items db)) selected-page))
                (update db :athena/recent-items conj selected-page))))
@@ -200,36 +210,42 @@
 
 (reg-event-db
   :devtool/toggle
+  [(interceptors/sentry-span "devtool/toggle")]
   (fn [db _]
     (update db :devtool/open not)))
 
 
 (reg-event-db
   :help/toggle
+  [(interceptors/sentry-span "help/toggle")]
   (fn [db _]
     (update db :help/open? not)))
 
 
 (reg-event-db
   :left-sidebar/toggle
+  [(interceptors/sentry-span "left-sidebar/toggle")]
   (fn [db _]
     (update db :left-sidebar/open not)))
 
 
 (reg-event-db
   :right-sidebar/toggle
+  [(interceptors/sentry-span "right-sidebar/toggle")]
   (fn [db _]
     (update db :right-sidebar/open not)))
 
 
 (reg-event-db
   :right-sidebar/toggle-item
+  [(interceptors/sentry-span "right-sidebar/toggle-item")]
   (fn [db [_ item]]
     (update-in db [:right-sidebar/items item :open] not)))
 
 
 (reg-event-db
   :right-sidebar/set-width
+  [(interceptors/sentry-span "right-sidebar/set-width")]
   (fn [db [_ width]]
     (assoc db :right-sidebar/width width)))
 
@@ -258,6 +274,7 @@
 ;; TODO: dec all indices > closed item
 (reg-event-db
   :right-sidebar/close-item
+  [(interceptors/sentry-span "right-sidebar/close-item")]
   (fn [db [_ uid]]
     (let [{:right-sidebar/keys [items]} db]
       (cond-> (update db :right-sidebar/items dissoc uid)
@@ -266,6 +283,7 @@
 
 (reg-event-db
   :right-sidebar/navigate-item
+  [(interceptors/sentry-span "right-sidebar/navigate-item")]
   (fn [db [_ uid breadcrumb-uid]]
     (let [block      (d/pull @db/dsdb '[:node/title :block/string] [:block/uid breadcrumb-uid])
           item-index (get-in db [:right-sidebar/items uid :index])
@@ -278,6 +296,7 @@
 ;; TODO: change right sidebar items from map to datascript
 (reg-event-fx
   :right-sidebar/open-item
+  [(interceptors/sentry-span "right-sidebar/open-item")]
   (fn [{:keys [db]} [_ uid is-graph?]]
     (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
           new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
@@ -300,6 +319,7 @@
 
 (reg-event-fx
   :right-sidebar/open-page
+  [(interceptors/sentry-span "right-sidebar/open-page")]
   (fn [{:keys [db]} [_ page-title is-graph?]]
     (let [{:keys [:block/uid]
            :as   block} (d/pull @db/dsdb '[:block/uid :node/title :block/string] [:node/title page-title])
@@ -323,12 +343,14 @@
 
 (reg-event-fx
   :right-sidebar/scroll-top
+  [(interceptors/sentry-span "right-sidebar/scroll-top")]
   (fn []
     {:right-sidebar/scroll-top nil}))
 
 
 (reg-event-fx
   :editing/uid
+  [(interceptors/sentry-span "editing/uid")]
   (fn [{:keys [db]} [_ uid index]]
     (let [remote? (db-picker/remote-db? db)]
       {:db            (assoc db :editing/uid uid)
@@ -339,6 +361,7 @@
 
 (reg-event-fx
   :editing/target
+  [(interceptors/sentry-span "editing/target")]
   (fn [_ [_ target]]
     (let [uid (-> (.. target -id)
                   (string/split "editable-uid-")
@@ -348,6 +371,7 @@
 
 (reg-event-fx
   :editing/first-child
+  [(interceptors/sentry-span "editing/first-child")]
   (fn [_ [_ uid]]
     (when-let [first-block-uid (db/get-first-child-uid uid @db/dsdb)]
       {:dispatch [:editing/uid first-block-uid]})))
@@ -393,6 +417,7 @@
 
 (reg-event-db
   :selected/up
+  [(interceptors/sentry-span "selected/up")]
   (fn [db [_ selected-items]]
     (assoc-in db [:selection :items] (select-up selected-items))))
 
@@ -401,6 +426,7 @@
 ;; this would let us know if the operation is additive or subtractive
 (reg-event-db
   :selected/down
+  [(interceptors/sentry-span "selected/down")]
   (fn [db [_ selected-items]]
     (let [last-item         (last selected-items)
           next-block-uid    (db/next-block-uid last-item true)
@@ -547,6 +573,7 @@
 
 (reg-event-fx
   :http-success/get-db
+  [(interceptors/sentry-span "http-success/get-db")]
   (fn [_ [_ json-str]]
     (let [datoms (db/str-to-db-tx json-str)
           new-db (d/db-with (d/empty-db common-db/schema) datoms)]
@@ -555,6 +582,7 @@
 
 (reg-event-fx
   :theme/set
+  [(interceptors/sentry-span "theme/set")]
   (fn [{:keys [db]} _]
     (util/switch-body-classes (if (-> db :athens/persist :theme/dark)
                                 ["is-theme-light" "is-theme-dark"]
@@ -564,6 +592,7 @@
 
 (reg-event-fx
   :theme/toggle
+  [(interceptors/sentry-span "theme/toggle")]
   (fn [{:keys [db]} _]
     {:db       (update-in db [:athens/persist :theme/dark] not)
      :dispatch [:theme/set]}))
@@ -581,6 +610,7 @@
 ;; No other reframe events should be calling this event.
 (reg-event-fx
   :transact
+  [(interceptors/sentry-span "transact")]
   (fn [_ [_ tx-data]]
     (let [synced?   @(subscribe [:db/synced])
           electron? (athens.util/electron?)]
@@ -593,12 +623,14 @@
 
 (reg-event-fx
   :reset-conn
-  (fn [_ [_ db]]
-    {:reset-conn! db}))
+  [(interceptors/sentry-span "reset-conn")]
+  (fn [_ [_ db-with-tx]]
+    {:reset-conn! db-with-tx}))
 
 
 (reg-event-fx
   :electron-sync
+  [(interceptors/sentry-span "electron-sync")]
   (fn [_ _]
     (let [synced?   @(subscribe [:db/synced])
           electron? (athens.util/electron?)]
@@ -610,6 +642,7 @@
 
 (reg-event-fx
   :resolve-transact-forward
+  [(interceptors/sentry-span "resolve-transact-forward")]
   (fn [{:keys [db]} [_ event]]
     (let [remote? (db-picker/remote-db? db)
           valid?  (schema/valid-event? event)
@@ -644,6 +677,7 @@
 
 (reg-event-fx
   :page/delete
+  [(interceptors/sentry-span "page/delete")]
   (fn [_ [_ title]]
     (log/debug ":page/delete:" title)
     (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-remove-op title))]
@@ -652,6 +686,7 @@
 
 (rf/reg-event-fx
   :page/removed
+  [(interceptors/sentry-span "page/removed")]
   (fn [{:keys [db]} [_ title]]
     (let [route-template     (get-in db [:current-route :template])
           page-title?        (string/starts-with? route-template "/page-t/")
@@ -670,6 +705,7 @@
 
 (reg-event-fx
   :left-sidebar/add-shortcut
+  [(interceptors/sentry-span "left-sidebar/add-shortcut")]
   (fn [_ [_ name]]
     (log/debug ":page/add-shortcut:" name)
     (let [add-shortcut-op (atomic-graph-ops/make-shortcut-new-op name)
@@ -679,6 +715,7 @@
 
 (reg-event-fx
   :left-sidebar/remove-shortcut
+  [(interceptors/sentry-span "left-sidebar/remove-shortcut")]
   (fn [_ [_ name]]
     (log/debug ":page/remove-shortcut:" name)
     (let [remove-shortcut-op (atomic-graph-ops/make-shortcut-remove-op name)
@@ -688,6 +725,7 @@
 
 (reg-event-fx
   :left-sidebar/drop
+  [(interceptors/sentry-span "left-sidebar/drop")]
   (fn [_ [_ source-order target-order relation]]
     (let [[source-name target-name] (common-db/find-source-target-title @db/dsdb source-order target-order)
           drop-op                   (atomic-graph-ops/make-shortcut-move-op source-name
@@ -699,6 +737,7 @@
 
 (reg-event-fx
   :save
+  [(interceptors/sentry-span "save")]
   (fn [_ _]
     {:fs/write! nil}))
 
@@ -708,6 +747,7 @@
 
 (reg-event-fx
   :undo
+  [(interceptors/sentry-span "undo")]
   (fn [{:keys [db]} _]
     (let [local? (not (db-picker/remote-db? db))]
       (log/debug ":undo: local?" local?)
@@ -736,6 +776,7 @@
 
 (reg-event-fx
   :redo
+  [(interceptors/sentry-span "redo")]
   (fn [{:keys [db]} _]
     (let [local? (not (db-picker/remote-db? db))]
       (log/debug ":redo local?" local?)
@@ -764,12 +805,14 @@
 
 (reg-event-fx
   :reset-undo-redo
+  [(interceptors/sentry-span "reset-undo-redo")]
   (fn [{:keys [db]} _]
     {:db (undo/reset db)}))
 
 
 (reg-event-fx
   :up
+  [(interceptors/sentry-span "up")]
   (fn [_ [_ uid target-pos]]
     (let [prev-block-uid (db/prev-block-uid uid)]
       {:dispatch [:editing/uid (or prev-block-uid uid) target-pos]})))
@@ -777,6 +820,7 @@
 
 (reg-event-fx
   :down
+  [(interceptors/sentry-span "down")]
   (fn [_ [_ uid target-pos]]
     (let [next-block-uid (db/next-block-uid uid)]
       {:dispatch [:editing/uid (or next-block-uid uid) target-pos]})))
@@ -843,6 +887,7 @@
 ;; which might not be same as blur is not yet called
 (reg-event-fx
   :backspace
+  [(interceptors/sentry-span "backspace")]
   (fn [_ [_ uid value maybe-local-updates]]
     (backspace uid value maybe-local-updates)))
 
@@ -1138,6 +1183,7 @@
 
 (reg-event-fx
   :enter
+  [(interceptors/sentry-span "enter")]
   (fn [{rfdb :db} [_ uid d-event]]
     (enter rfdb uid d-event)))
 
@@ -1169,6 +1215,7 @@
 
 (reg-event-fx
   :indent
+  [(interceptors/sentry-span "indent")]
   (fn [{:keys [_db]} [_ {:keys [uid d-key-down local-string] :as args}]]
     ;; - `block-zero`: The first block in a page
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
@@ -1224,6 +1271,7 @@
 
 (reg-event-fx
   :unindent
+  [(interceptors/sentry-span "unindent")]
   (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
     (log/debug ":unindent args" (pr-str args))
     (let [parent                    (common-db/get-parent @db/dsdb
@@ -1332,6 +1380,7 @@
 
 (reg-event-fx
   :paste-internal
+  [(interceptors/sentry-span "paste-internal")]
   (fn [_ [_ uid local-str internal-representation]]
     (let [[uid]  (db/uid-and-embed-id uid)
           op     (bfs/build-paste-op @db/dsdb
@@ -1345,6 +1394,7 @@
 
 (reg-event-fx
   :paste-image
+  [(interceptors/sentry-span "paste-image")]
   (fn [{:keys [db]} [_ items head tail callback]]
     (let [local?     (not (db-picker/remote-db? db))
           img-regex  #"(?i)^image/(p?jpeg|gif|png)$"]
@@ -1365,6 +1415,7 @@
 
 (reg-event-fx
   :paste-verbatim
+  [(interceptors/sentry-span "paste-verbatim")]
   (fn [_ [_ uid text]]
     ;; NOTE: use of `value` is questionable, it's the DOM so it's what users sees,
     ;; but what users sees should taken from DB. How would `value` behave with multiple editors?

@@ -6,6 +6,7 @@
     [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events.schema       :as schema]
     [athens.common.logging             :as log]
+    [athens.utils.sentry               :as sentry]
     [cognitect.transit                 :as transit]
     [com.cognitect.transit.types       :as ty]
     [com.stuartsierra.component        :as component]
@@ -218,14 +219,19 @@
 
 (defn- db-dump-handler
   [{:keys [datoms]}]
-  (log/debug "Received DB Dump")
-  (rf/dispatch [:reset-conn (d/empty-db common-db/schema)])
-  ;; TODO: this transact should be a internal representation event instead.
-  (rf/dispatch [:transact (into [] (map datom->tx-entry) datoms)])
-  (rf/dispatch [:remote/start-event-sync])
-  (rf/dispatch [:db/sync])
-  (rf/dispatch [:remote/connected])
-  (log/info "✅ Transacted DB dump."))
+  (let [sentry-tx (sentry/transaction-start "db-dump-handler")]
+    (log/debug "Received DB Dump")
+    (rf/dispatch [:reset-conn [(d/empty-db common-db/schema) sentry-tx]])
+    ;; TODO: this transact should be a internal representation event instead.
+    (let [conversion-span (sentry/span-start sentry-tx "convert-datoms")
+          tx-data         (into [] (map datom->tx-entry) datoms)]
+      (sentry/span-finish conversion-span)
+      (rf/dispatch [:transact tx-data]))
+    (rf/dispatch [:remote/start-event-sync])
+    (rf/dispatch [:db/sync])
+    (rf/dispatch [:remote/connected])
+    (log/info "✅ Transacted DB dump.")
+    (sentry/transaction-finish sentry-tx)))
 
 
 (defn- presence-session-id-handler
