@@ -46,21 +46,6 @@
     block-save-op))
 
 
-(defn build-block-split-op
-  "Creates `:block/split` composite op, taking into account context."
-  [db {:keys [old-block-uid new-block-uid
-              string index relation]}]
-  (let [save-block-op     (build-block-save-op db old-block-uid (subs string 0 index))
-        new-block-op      (atomic/make-block-new-op new-block-uid {:block/uid old-block-uid
-                                                                   :relation  relation})
-        new-block-save-op (build-block-save-op db new-block-uid (subs string index))
-        split-block-op    (composite/make-consequence-op {:op/type :block/split}
-                                                         [save-block-op
-                                                          new-block-op
-                                                          new-block-save-op])]
-    split-block-op))
-
-
 (defn build-block-remove-op
   "Creates `:block/remove` op."
   [db delete-uid]
@@ -149,3 +134,42 @@
   (let [atomics  (extract-atomics op)
         filtered (filter #(= op-type (:op/type %)) atomics)]
     (seq filtered)))
+
+
+(defn block-move-chain
+  [target-uid source-uids first-rel]
+  (composite/make-consequence-op {:op/type :block/move-chain}
+                                 (concat [(atomic/make-block-move-op (first source-uids)
+                                                                     {:block/uid target-uid
+                                                                      :relation first-rel})]
+                                         (doall
+                                           (for [[one two] (partition 2 1 source-uids)]
+                                             (atomic/make-block-move-op two
+                                                                        {:block/uid one
+                                                                         :relation :after}))))))
+
+
+(defn build-block-split-op
+  "Creates `:block/split` composite op, taking into account context.
+  If old-block has children, pass them on to new-block.
+  If old-block is open or closed, pass that state on to new-block."
+  [db {:keys [old-block-uid new-block-uid
+              string index relation]}]
+  (let [save-block-op      (build-block-save-op db old-block-uid (subs string 0 index))
+        new-block-op       (atomic/make-block-new-op new-block-uid {:block/uid old-block-uid
+                                                                    :relation  relation})
+        new-block-save-op  (build-block-save-op db new-block-uid (subs string index))
+        {:block/keys [open]} (common-db/get-block db [:block/uid old-block-uid])
+        children           (common-db/get-children-uids db [:block/uid old-block-uid])
+        children?          (seq children)
+        move-children-op   (when children?
+                             (block-move-chain new-block-uid children :first))
+        close-new-block-op (when children?
+                             (atomic/make-block-open-op new-block-uid open))
+        split-block-op     (composite/make-consequence-op {:op/type :block/split}
+                                                          (cond-> [save-block-op
+                                                                   new-block-op
+                                                                   new-block-save-op]
+                                                            children? (conj move-children-op)
+                                                            children? (conj close-new-block-op)))]
+    split-block-op))
