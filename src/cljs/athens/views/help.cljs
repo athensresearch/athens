@@ -131,7 +131,7 @@
 
 (def shortcut-groups
   [{:name  "App"
-    :items [{:description "Toggle Athena"
+    :items [{:description "Toggle Search"
              :shortcut    "mod+k"}
             {:description "Toggle Left Sidebar"
              :shortcut    "mod+\\"}

@@ -1,8 +1,11 @@
 (ns athens.common-events.fixture
   (:require
     [athens.common-db                     :as common-db]
-    [athens.common-events.graph.ops       :as graph-ops]
+    [athens.common-events                 :as common-events]
+    [athens.common-events.bfs             :as bfs]
+    [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common-events.resolver.undo   :as undo]
     [athens.common.logging                :as log]
     [datascript.core                      :as d]))
 
@@ -33,3 +36,52 @@
                "\nfrom:" (pr-str txs)
                "\nto:" (pr-str processed-txs))
     (d/transact! @connection processed-txs)))
+
+
+(defn get-repr
+  [lookup]
+  (common-db/get-internal-representation @@connection lookup))
+
+
+(defn op-resolve-transact!
+  [op]
+  (let [db  @@connection
+        evt (common-events/build-atomic-event op)]
+    (atomic-resolver/resolve-transact! @connection evt)
+    [db evt]))
+
+
+(defn undo-resulting-ops
+  [event-db event]
+  (let [db @@connection]
+    (undo/build-undo-event db event-db event)))
+
+
+(defn undo!
+  [evt-db evt]
+  (let [db       @@connection
+        undo-evt (undo/build-undo-event db evt-db evt)]
+    (atomic-resolver/resolve-transact! @connection undo-evt)
+    [db undo-evt]))
+
+
+(defn setup!
+  ([repr]
+   (setup! repr []))
+  ([repr ops]
+   (->> repr
+        (bfs/build-paste-op @@connection)
+        op-resolve-transact!)
+   (doseq [op ops]
+     (op-resolve-transact! op))))
+
+
+;; Don't really need to teardown the ops since the only ops right now
+;; that aren't part of repr are shortcut ops, and removing the page
+;; will remove the shortcut.
+(defn teardown!
+  [repr]
+  (doseq [title (map :page/title repr)]
+    (when title
+      (-> (atomic-graph-ops/make-page-remove-op title)
+          op-resolve-transact!))))
