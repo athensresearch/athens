@@ -152,20 +152,25 @@
 
 (defn reorder-ops
   "Reverse the order of operations in coll.
-  Then, for all contiguous :block/move operations, restore their original relative order.
+  Then, for all contiguous operations involving positions, restore their original relative order.
     e.g.: a b m1 m2 m3 c -> c m1 m2 m3 b a
-  Move operations keep their relative order to ensure that chains of relative moves still work.
+  Position operations keep their relative order to ensure that chains of relative moves still work.
   This is in part a quirk of the `forward bias` in our location resolution that favors :first
   and :after positions, and is not meant to be a universal solution.
   There are valid combination of relative moves that will still not be correctly undone."
   [coll]
-  (let [move-op?            #(= (:op/type %) :block/move)
-        restore-move-order #(if (move-op? (first %))
+  (let [position-op?       #(-> % :op/type #{:block/move :block/new
+                                             ;; Neither :block/save or :block/remove use positions,
+                                             ;; but :block/remove is undo to :block/new followed by
+                                             ;; :block/save, and thus these two types end up being
+                                             ;; part of sequential move operations.
+                                             :block/save :block/remove})
+        restore-move-order #(if (position-op? (first %))
                               (reverse %)
                               %)]
     (->> coll
          reverse
-         (partition-by move-op?)
+         (partition-by position-op?)
          (map restore-move-order)
          (apply concat)
          (into []))))
