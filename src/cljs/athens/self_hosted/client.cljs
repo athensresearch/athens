@@ -221,7 +221,7 @@
   [{:keys [datoms]}]
   (let [sentry-tx (sentry/transaction-start "db-dump-handler")]
     (log/debug "Received DB Dump")
-    (rf/dispatch [:reset-conn [(d/empty-db common-db/schema) sentry-tx]])
+    (rf/dispatch [:reset-conn (d/empty-db common-db/schema)])
     ;; TODO: this transact should be a internal representation event instead.
     (let [conversion-span (sentry/span-start sentry-tx "convert-datoms")
           tx-data         (into [] (map datom->tx-entry) datoms)]
