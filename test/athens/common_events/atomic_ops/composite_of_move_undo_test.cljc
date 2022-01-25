@@ -117,7 +117,7 @@
                                     {:block/uid    "three"
                                      :block/string ""}]}]
       exp-repr   [{:page/title title}]
-      move!      #(->> [(atomic-ops/make-block-remove-op "one")
+      remove!    #(->> [(atomic-ops/make-block-remove-op "one")
                         (atomic-ops/make-block-remove-op "two")
                         (atomic-ops/make-block-remove-op "three")]
                        (composite/make-consequence-op {:op/type :multi-move})
@@ -128,7 +128,7 @@
   (t/deftest undo-remove-composite
     (fixture/setup! setup-repr)
 
-    (let [[evt-db evt] (move!)]
+    (let [[evt-db evt] (remove!)]
       (t/is (= [(fixture/get-repr [:node/title title])] exp-repr)
             "Blocks were moved in order")
       (fixture/undo! evt-db evt)
@@ -138,7 +138,7 @@
   (t/deftest redo-remove-composite
     (fixture/setup! setup-repr)
 
-    (let [[evt-db evt]   (move!)
+    (let [[evt-db evt]   (remove!)
           [evt-db' evt'] (fixture/undo! evt-db evt)]
       (fixture/undo! evt-db' evt')
       (t/is (= [(fixture/get-repr [:node/title title])] exp-repr)
@@ -162,7 +162,7 @@
                                      :block/string ""}
                                     {:block/uid    "four"
                                      :block/string ""}]}]
-      move!      #(->> [(atomic-ops/make-block-remove-op "one")
+      remove!    #(->> [(atomic-ops/make-block-remove-op "one")
                         (atomic-ops/make-block-remove-op "two")
                         (atomic-ops/make-block-remove-op "three")]
                        (composite/make-consequence-op {:op/type :multi-move})
@@ -173,7 +173,7 @@
   (t/deftest undo-middle-remove-composite
     (fixture/setup! setup-repr)
 
-    (let [[evt-db evt] (move!)]
+    (let [[evt-db evt] (remove!)]
       (t/is (= [(fixture/get-repr [:node/title title])] exp-repr)
             "Blocks were moved in order")
       (fixture/undo! evt-db evt)
@@ -183,7 +183,7 @@
   (t/deftest redo-middle-remove-composite
     (fixture/setup! setup-repr)
 
-    (let [[evt-db evt]   (move!)
+    (let [[evt-db evt]   (remove!)
           [evt-db' evt'] (fixture/undo! evt-db evt)]
       (fixture/undo! evt-db' evt')
       (t/is (= [(fixture/get-repr [:node/title title])] exp-repr)
