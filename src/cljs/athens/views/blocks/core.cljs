@@ -3,6 +3,7 @@
     ["/components/Block/components/Anchor"   :refer [Anchor]]
     ["/components/Block/components/Toggle"   :refer [Toggle]]
     ["/components/Button/Button"             :refer [Button]]
+    [athens.common-db                        :as common-db]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -231,16 +232,34 @@
 
 ;; Components
 
+(def coref-string-size-limit 3)
+
+
+;; TODO: show corefs in block view
 (defn block-refs-count-el
-  [count click-fn]
-  [:div (stylefy/use-style {:margin-left "1em"
-                            :grid-area "refs"
-                            :z-index (:zindex-dropdown style/ZINDICES)
-                            :visibility (when-not (pos? count) "hidden")})
-   [:> Button {:on-click  (fn [e]
-                            (.. e stopPropagation)
-                            (click-fn e))}
-    count]])
+  [refs click-fn]
+  (let [db     @db/dsdb ; TODO: this isn't reactive
+        total  (count refs)
+        corefs (->> refs
+                    (map :db/id)
+                    (mapcat (partial common-db/page-refs db))
+                    (remove #(> (count %) coref-string-size-limit))
+                    (frequencies))]
+
+    [:div (stylefy/use-style {:margin-left "1em"
+                              :grid-area "refs"
+                              :z-index (:zindex-dropdown style/ZINDICES)
+                              :visibility (when-not (pos? total) "hidden")})
+     (doall
+       (for [[title total] corefs]
+         [:> Button {:on-click  (fn [e]
+                                  (.. e stopPropagation)
+                                  (click-fn e))}
+          [:span title " " [:sub total]]]))
+     [:> Button {:on-click  (fn [e]
+                              (.. e stopPropagation)
+                              (click-fn e))}
+      total]]))
 
 
 (defn block-drag-over
@@ -483,10 +502,10 @@
            [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
-             [block-refs-count-el (count _refs) (fn [e]
-                                                  (if (.. e -shiftKey)
-                                                    (rf/dispatch [:right-sidebar/open-item uid])
-                                                    (swap! state update :inline-refs/open not)))])]
+             [block-refs-count-el _refs (fn [e]
+                                          (if (.. e -shiftKey)
+                                            (rf/dispatch [:right-sidebar/open-item uid])
+                                            (swap! state update :inline-refs/open not)))])]
 
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
