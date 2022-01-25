@@ -103,7 +103,8 @@
     (let [[evt-db evt]   (move!)
           [evt-db' evt'] (fixture/undo! evt-db evt)]
       (fixture/undo! evt-db' evt')
-      (t/is (= [(fixture/get-repr [:node/title target-title])] exp-repr)
+      (t/is (= [(fixture/get-repr [:node/title from-title])
+                (fixture/get-repr [:node/title target-title])] exp-repr)
             "Blocks were moved in order"))))
 
 
