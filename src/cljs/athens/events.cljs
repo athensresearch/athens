@@ -1113,12 +1113,12 @@
                                                    :embed-id embed-id}]
 
                                 (not (zero? start))
-                                [:enter/split-block {:uid        uid
-                                                     :value      value
-                                                     :index      start
-                                                     :new-uid    new-uid
-                                                     :embed-id   embed-id
-                                                     :relation   :after}]
+                                [:enter/split-block {:uid      uid
+                                                     :value    value
+                                                     :index    start
+                                                     :new-uid  new-uid
+                                                     :embed-id embed-id
+                                                     :relation :after}]
 
                                 (empty? value)
                                 [:unindent {:uid              uid
@@ -1174,16 +1174,24 @@
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-    (let [block                        (common-db/get-block @db/dsdb [:block/uid uid])
-          block-zero?                  (zero? (:block/order block))
-          [prev-block-uid target-rel]  (get-prev-block-uid-and-target-rel uid)
-          {:keys [start end]}          d-key-down
-          block-save-block-move-op     (block-save-block-move-composite-op uid
-                                                                           prev-block-uid
-                                                                           target-rel
-                                                                           local-string)
-          event                        (common-events/build-atomic-event block-save-block-move-op)]
-
+    (let [block                    (common-db/get-block @db/dsdb [:block/uid uid])
+          block-zero?              (zero? (:block/order block))
+          [prev-block-uid target-rel] (get-prev-block-uid-and-target-rel uid)
+          sib-block                (common-db/get-block @db/dsdb [:block/uid prev-block-uid])
+          ;; if sibling block is closed with children, open
+          {sib-open :block/open sib-children :block/children sib-uid :block/uid} sib-block
+          block-closed?            (and (not sib-open) sib-children)
+          sib-block-open-op        (when block-closed?
+                                     (atomic-graph-ops/make-block-open-op sib-uid true))
+          {:keys [start end]} d-key-down
+          block-save-block-move-op (block-save-block-move-composite-op uid
+                                                                       prev-block-uid
+                                                                       target-rel
+                                                                       local-string)
+          event                    (common-events/build-atomic-event
+                                     (composite-ops/make-consequence-op {:op/type :indent}
+                                                                        (cond-> [block-save-block-move-op]
+                                                                          block-closed? (conj sib-block-open-op))))]
       (log/debug "null-sib-uid" (and block-zero?
                                      prev-block-uid)
                  ", args:" (pr-str args)
@@ -1301,24 +1309,11 @@
       {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
 
 
-(defn- block-move-chain
-  [target-uid source-uids first-rel]
-  (composite-ops/make-consequence-op {:op/type :block/move-chain}
-                                     (concat [(atomic-graph-ops/make-block-move-op (first source-uids)
-                                                                                   {:block/uid target-uid
-                                                                                    :relation first-rel})]
-                                             (doall
-                                               (for [[one two] (partition 2 1 source-uids)]
-                                                 (atomic-graph-ops/make-block-move-op two
-                                                                                      {:block/uid one
-                                                                                       :relation :after}))))))
-
-
 (reg-event-fx
   :drop-multi/child
   (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
     (log/debug ":drop-multi/child args" (pr-str args))
-    (let [atomic-op (block-move-chain target-uid source-uids :first)
+    (let [atomic-op (graph-ops/block-move-chain target-uid source-uids :first)
           event     (common-events/build-atomic-event atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
@@ -1330,17 +1325,18 @@
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
     (log/debug ":drop-multi/sibling args" (pr-str args))
     (let [rel-position drag-target
-          atomic-op    (block-move-chain target-uid source-uids rel-position)
+          atomic-op    (graph-ops/block-move-chain target-uid source-uids rel-position)
           event        (common-events/build-atomic-event atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
   :paste-internal
-  (fn [_ [_ uid internal-representation]]
+  (fn [_ [_ uid local-str internal-representation]]
     (let [[uid]  (db/uid-and-embed-id uid)
           op     (bfs/build-paste-op @db/dsdb
                                      uid
+                                     local-str
                                      internal-representation)
           event  (common-events/build-atomic-event op)]
       (log/debug "paste internal event is" (pr-str event))
