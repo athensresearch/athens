@@ -621,11 +621,57 @@
         {:fx [[:transact! tx-data]]}))))
 
 
+(rf/reg-event-fx
+  :success-transact
+  (fn [_ _]
+    {}))
+
+
 (reg-event-fx
   :reset-conn
   [(interceptors/sentry-span "reset-conn")]
   (fn [_ [_ db-with-tx]]
     {:reset-conn! db-with-tx}))
+
+
+(rf/reg-event-fx
+  :success-reset-conn
+  (fn [_ _]
+    {}))
+
+
+(defn datom->tx-entry
+  [[e a v]]
+  [:db/add e a v])
+
+
+(rf/reg-event-fx
+  :db-dump-handler
+  (fn [{:keys [db]} [_ datoms]]
+    (let [sentry-tx       (sentry/transaction-start "db-dump-handler")
+          conversion-span (sentry/span-start sentry-tx "convert-datoms")
+          tx-data         (into [] (map datom->tx-entry) datoms)]
+      (sentry/span-finish conversion-span)
+      {:db         db
+       :async-flow {:id             :db-dump-handler-async-flow ;; NOTE do not ever use id that is defined event
+                    :db-path        [:async-flow :db-dump-handler]
+                    :first-dispatch [:reset-conn (d/empty-db common-db/schema)]
+                    :rules          [{:when     :seen?
+                                      :events   :success-reset-conn
+                                      :dispatch [:transact tx-data]}
+                                     {:when       :seen?
+                                      :events     :success-transact
+                                      :dispatch-n [[:remote/start-event-sync]
+                                                   [:db/sync]
+                                                   [:remote/connected]]}
+                                     {:when     :seen-all-of?
+                                      :events   [:success-reset-conn
+                                                 :success-transact
+                                                 :remote/start-event-sync
+                                                 :db/sync
+                                                 :remote/connected]
+                                      :dispatch [:sentry/end-tx sentry-tx]
+                                      :halt?    true}]}})))
 
 
 (reg-event-fx

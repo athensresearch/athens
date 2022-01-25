@@ -6,6 +6,7 @@
     [athens.common.logging       :as log]
     [athens.db                   :as db]
     [athens.self-hosted.client   :as client]
+    [athens.utils.sentry         :as sentry]
     [cljs-http.client            :as http]
     [cljs.core.async             :refer [go <!]]
     [cljs.core.async.interop     :refer [<p!]]
@@ -26,14 +27,44 @@
 (rf/reg-fx
   :transact!
   (fn [tx-data]
-    (common-db/transact-with-middleware! db/dsdb tx-data)))
+    ;; TODO we should have a macro for it
+    (let [sentry-tx   (sentry/transaction-get-current)
+          sentry-span (sentry/span-active)
+          span        (when sentry-tx
+                        (sentry/span-start (or sentry-span
+                                               sentry-tx)
+                                           "transact!"))]
+      (common-db/transact-with-middleware! db/dsdb tx-data)
+      (when span
+        (sentry/span-finish span)))
+    (rf/dispatch [:success-transact])))
 
 
 (rf/reg-fx
   :reset-conn!
   (fn [new-db]
-    (d/reset-conn! db/dsdb new-db)
-    (common-db/health-check db/dsdb)))
+    ;; TODO we should have a macro for it
+    (let [sentry-tx   (sentry/transaction-get-current)
+          sentry-span (sentry/span-active)
+          span        (when sentry-tx
+                        (sentry/span-start (or sentry-span
+                                               sentry-tx)
+                                           "reset-conn!"))]
+
+      (d/reset-conn! db/dsdb new-db)
+
+      (when span
+        (sentry/span-finish span))
+      (let [span (when sentry-tx
+                   (sentry/span-start (or sentry-span
+                                          sentry-tx)
+                                      "health-check"))]
+
+        (common-db/health-check db/dsdb)
+
+        (when span
+          (sentry/span-finish span))))
+    (rf/dispatch [:success-reset-conn])))
 
 
 (rf/reg-fx

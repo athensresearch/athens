@@ -1,30 +1,45 @@
 (ns athens.utils.sentry
   "Sentry integration utilities."
   (:require
+    [athens.common.logging :as log]
     ["@sentry/react" :as Sentry]
     ["@sentry/react"]))
+
+
+(def tx-active (atom nil))
 
 
 (defn transaction-start
   "Starts new Sentry Transaction"
   [tx-name]
-  (.startTransaction Sentry (clj->js {:name tx-name})))
+  (log/debug "Sentry: Starting TX:" tx-name)
+  (let [tx (.startTransaction Sentry (clj->js {:name tx-name}))]
+    (reset! tx-active {:name tx-name
+                       :tx   tx})
+    tx))
 
 
 (defn transaction-get-current
   "Tries to find existing Sentry Transaction"
   []
-  (let [hub         (.getCurrentHub Sentry)
-        scope       (.getScope hub)
-        transaction (.getTransaction scope)]
-    transaction))
+  (let [{:keys [name tx]} @tx-active]
+    (log/debug "Sentry: Current TX:" (when tx
+                                       name))
+    tx))
 
 
 (defn transaction-finish
   "Finishes provided transaction"
-  [transaction]
-  (when transaction
-    (.finish transaction)))
+  ([]
+   (when-let [{:keys [name tx]} @tx-active]
+     (log/debug "Sentry: Finishing TX:" name)
+     (.finish tx)
+     (reset! tx-active nil)))
+  ([tx]
+   (when tx
+     (log/debug "Sentry: Finishing TX, don't know the name though, maybe it is:" (:name @tx-active))
+     (.finish tx)
+     (reset! tx-active nil))))
 
 
 (def span-stack (atom []))

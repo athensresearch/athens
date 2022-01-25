@@ -219,19 +219,8 @@
 
 (defn- db-dump-handler
   [{:keys [datoms]}]
-  (let [sentry-tx (sentry/transaction-start "db-dump-handler")]
-    (log/debug "Received DB Dump")
-    (rf/dispatch [:reset-conn (d/empty-db common-db/schema)])
-    ;; TODO: this transact should be a internal representation event instead.
-    (let [conversion-span (sentry/span-start sentry-tx "convert-datoms")
-          tx-data         (into [] (map datom->tx-entry) datoms)]
-      (sentry/span-finish conversion-span)
-      (rf/dispatch [:transact tx-data]))
-    (rf/dispatch [:remote/start-event-sync])
-    (rf/dispatch [:db/sync])
-    (rf/dispatch [:remote/connected])
-    (log/info "✅ Transacted DB dump.")
-    (sentry/transaction-finish sentry-tx)))
+  (log/debug "Received DB Dump")
+  (rf/dispatch [:db-dump-handler datoms]))
 
 
 (defn- presence-session-id-handler
