@@ -823,10 +823,18 @@
 
 (defn tx-with-middleware
   [db tx-data]
-  (->> tx-data
-       (block-uid-nil-eater db)
-       (linkmaker db)
-       (orderkeeper db)))
+  #?(:cljs
+     (as-> tx-data $
+          (wrap-span "block-uid-nil-eater"
+                     (block-uid-nil-eater db $))
+          (wrap-span "linkmaker"
+                     (linkmaker db $))
+          (wrap-span "orderkeeper"
+                     (orderkeeper db $)))
+     :clj (->> tx-data
+               (block-uid-nil-eater db)
+               (linkmaker db)
+               (orderkeeper db))))
 
 
 (defn transact-with-middleware!
@@ -836,7 +844,9 @@
   (let [processed-tx-data #?(:cljs (wrap-span "tx-with-middleware"
                                               (tx-with-middleware @conn tx-data))
                              :clj (tx-with-middleware @conn tx-data))]
-    (d/transact! conn processed-tx-data)))
+    #?(:cljs (wrap-span "ds/transact!"
+                        (d/transact! conn processed-tx-data))
+       :clj (d/transact! conn processed-tx-data))))
 
 
 (defn health-check
