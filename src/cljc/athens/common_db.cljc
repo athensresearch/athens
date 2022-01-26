@@ -1,16 +1,18 @@
 (ns athens.common-db
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
+  #?(:cljs
+     (:require-macros [athens.common.sentry :as sentry-m :refer [wrap-span]]))
   (:require
-    [athens.common.logging :as log]
-    [athens.parser         :as parser]
-    [athens.patterns       :as patterns]
-    [clojure.data          :as data]
-    [clojure.pprint        :as pp]
-    [clojure.set           :as set]
-    [clojure.string        :as string]
-    [clojure.walk          :as walk]
-    [datascript.core       :as d]))
+    [athens.common.logging        :as log]
+    [athens.parser                :as parser]
+    [athens.patterns              :as patterns]
+    [clojure.data                 :as data]
+    [clojure.pprint               :as pp]
+    [clojure.set                  :as set]
+    [clojure.string               :as string]
+    [clojure.walk                 :as walk]
+    [datascript.core              :as d]))
 
 
 (def schema
@@ -831,7 +833,10 @@
   "Transact tx-data enriched with middleware txs into conn."
   [conn tx-data]
   ;; 🎶 Sia "Cheap Thrills"
-  (d/transact! conn (tx-with-middleware @conn tx-data)))
+  (let [processed-tx-data #?(:cljs (wrap-span "tx-with-middleware"
+                                              (tx-with-middleware @conn tx-data))
+                             :clj (tx-with-middleware @conn tx-data))]
+    (d/transact! conn processed-tx-data)))
 
 
 (defn health-check
