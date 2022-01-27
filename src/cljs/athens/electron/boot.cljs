@@ -1,16 +1,20 @@
 (ns athens.electron.boot
   (:require
-    [athens.db :as db]
+    [athens.common.sentry      :refer-macros [wrap-span]]
+    [athens.db                 :as db]
     [athens.electron.db-picker :as db-picker]
-    [athens.electron.utils :as utils]
-    [re-frame.core :as rf]))
+    [athens.electron.utils     :as utils]
+    [athens.utils.sentry       :as sentry]
+    [re-frame.core             :as rf]))
 
 
 (rf/reg-event-fx
   :boot/desktop
   [(rf/inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
-    (let [init-app-db         (db/init-app-db local-storage)
+    (let [boot-tx             (sentry/transaction-start "boot/desktop")
+          init-app-db         (wrap-span "db/init-app-db"
+                                         (db/init-app-db local-storage))
           all-dbs             (db-picker/all-dbs init-app-db)
           selected-db         (db-picker/selected-db init-app-db)
           default-db          (utils/local-db (utils/default-base-dir))
@@ -50,11 +54,12 @@
 
 
       ;; output => [:reset-conn] OR [:fs/create-and-watch]
-
       {:db         init-app-db
        :dispatch-n [[:theme/set]
                     [:loading/set]]
-       :async-flow {:first-dispatch first-event
+       :async-flow {:id             :boot-desktop-async-flow
+                    :db-path        [:async-flow :boot/desktop]
+                    :first-dispatch first-event
                     :rules          [;; if first time, go to Daily Pages and open left-sidebar
                                      {:when       :seen?
                                       :events     :fs/create-and-watch
@@ -70,13 +75,21 @@
                                                    [:navigate :home]
                                                    [:reset-undo-redo]
                                                    [:posthog/set-super-properties]
-                                                   [:loading/unset]]
-                                      ;; This event ends the async flow successfully.
-                                      :halt?      true}
+                                                   [:loading/unset]]}
+                                     {:when     :seen-all-of?
+                                      :events   [[:fs/update-write-db]
+                                                 [:db/sync]
+                                                 [:navigate :home]
+                                                 [:reset-undo-redo]
+                                                 [:posthog/set-super-properties]
+                                                 [:loading/unset]]
+                                      :dispatch [:sentry/end-tx boot-tx]
+                                      :halt?    true}
 
                                      {:when       :seen?
                                       :events     :remote/connection-failed
-                                      :dispatch   [:db-picker/remove-selection]
+                                      :dispatch-n [[:db-picker/remove-selection]
+                                                   [:sentry/end-tx boot-tx]]
                                       ;; This event ends the async flow unsuccessfully
                                       ;; and tries to reboot on a different db.
                                       :halt?      true}

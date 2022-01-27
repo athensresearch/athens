@@ -648,7 +648,10 @@
 (rf/reg-event-fx
   :db-dump-handler
   (fn [{:keys [db]} [_ datoms]]
-    (let [sentry-tx       (sentry/transaction-start "db-dump-handler")
+    (let [existing-tx     (sentry/transaction-get-current)
+          sentry-tx       (if existing-tx
+                            existing-tx
+                            (sentry/transaction-start "db-dump-handler"))
           conversion-span (sentry/span-start sentry-tx "convert-datoms")
           tx-data         (into [] (map datom->tx-entry) datoms)]
       (sentry/span-finish conversion-span)
@@ -664,14 +667,15 @@
                                       :dispatch-n [[:remote/start-event-sync]
                                                    [:db/sync]
                                                    [:remote/connected]]}
-                                     {:when     :seen-all-of?
-                                      :events   [:success-reset-conn
-                                                 :success-transact
-                                                 :remote/start-event-sync
-                                                 :db/sync
-                                                 :remote/connected]
-                                      :dispatch [:sentry/end-tx sentry-tx]
-                                      :halt?    true}]}})))
+                                     (merge {:when     :seen-all-of?
+                                             :events   [:success-reset-conn
+                                                        :success-transact
+                                                        :remote/start-event-sync
+                                                        :db/sync
+                                                        :remote/connected]
+                                             :halt?    true}
+                                            (when-not existing-tx
+                                              {:dispatch [:sentry/end-tx sentry-tx]}))]}})))
 
 
 (reg-event-fx
