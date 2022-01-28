@@ -239,7 +239,7 @@
                             :visibility (when-not (pos? count) "hidden")})
    [:> Button {:on-click  (fn [e]
                             (.. e stopPropagation)
-                            (click-fn))}
+                            (click-fn e))}
     count]])
 
 
@@ -483,7 +483,10 @@
            [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
-             [block-refs-count-el (count _refs) #(swap! state update :inline-refs/open not)])]
+             [block-refs-count-el (count _refs) (fn [e]
+                                                  (if (.. e -shiftKey)
+                                                    (rf/dispatch [:right-sidebar/open-item uid])
+                                                    (swap! state update :inline-refs/open not)))])]
 
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
