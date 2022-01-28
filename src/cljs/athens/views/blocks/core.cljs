@@ -251,7 +251,9 @@
                          (mapcat :block/refs)
                          (remove #(-> % :node/title not))
                          (remove #(> (count (:node/title %)) coref-string-size-limit))
-                         (frequencies))] ; TODO: stable sort
+                         (frequencies)
+                         (seq)
+                         (sort-by (fn [[{:node/keys [title]} _total]] title)))]
 
     [:div (stylefy/use-style {:margin-left "1em"
                               :grid-area   "refs"
