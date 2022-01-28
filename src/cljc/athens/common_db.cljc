@@ -516,16 +516,6 @@
       (throw (ex-info fail-msg position)))))
 
 
-(defn page-refs
-  "Returns page titles referenced in eid."
-  [db eid]
-  (->> eid
-       (d/entity db)
-       :block/refs
-       (map :node/title)
-       (remove nil?)))
-
-
 (defn extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]

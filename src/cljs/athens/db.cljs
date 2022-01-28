@@ -295,7 +295,9 @@
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order :block/header {:block/children ...} :block/refs :block/_refs])
+  '[:db/id :block/uid :block/string :block/open :block/order :block/header {:block/children ...} :block/refs
+    ;; for backrefs, also return their refs and matching titles, if any, for coref analysis.
+    {:block/_refs [:db/id {:block/refs [:db/id :node/title]}]}])
 
 
 (def node-document-pull-vector
