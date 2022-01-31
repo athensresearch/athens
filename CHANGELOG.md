@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.14](https://github.com/athensresearch/athens/compare/v2.0.0-beta.13...v2.0.0-beta.14) (2022-01-31)
+
+
+### Features
+
+* show references inline ([#2006](https://github.com/athensresearch/athens/issues/2006)) ([bf568d8](https://github.com/athensresearch/athens/commit/bf568d8188607a43639a7019b48ccf274a4be818))
+
+
+### Bug Fixes
+
+* include :block/{new,save,remove} in the reorder exception ([ffac7f7](https://github.com/athensresearch/athens/commit/ffac7f7388da837e1e6261cee6f67ed3e41931b2))
+* redo-middle-move-composite should be comparing both pages ([9984e63](https://github.com/athensresearch/athens/commit/9984e6323288ffdf66a86fb9d10b5f699cc1f4bf))
+
+
+* add undo move/remove failure scenarios ([7551a7d](https://github.com/athensresearch/athens/commit/7551a7d383f15223c530732c54075c141cad9c1e))
+
+
+### Refactors
+
+* binding should reflect operation ([ab36105](https://github.com/athensresearch/athens/commit/ab36105bf9844ed23aee835ed3b78cde9164a23e))
+
 ## [2.0.0-beta.13](https://github.com/athensresearch/athens/compare/v2.0.0-beta.12...v2.0.0-beta.13) (2022-01-24)
 
 
