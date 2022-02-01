@@ -138,13 +138,13 @@
   [block parent-state]
   (let [orig-uid        (:block/uid block)
         state           (r/cursor parent-state [:inline-refs/states orig-uid])
-        _               (when (nil? @state)
-                          ;; Init state on parent
-                          (reset! state {:block     block
-                                         :embed-id  (random-uuid)
-                                         :open?     true
-                                         :parents   (:block/parents block)
-                                         :focus?    true}))
+        ;; Reset state on parent each time the component is created.
+        ;; To clear state, open/close the inline refs.
+        _               (reset! state {:block     block
+                                       :embed-id  (random-uuid)
+                                       :open?     true
+                                       :parents   (:block/parents block)
+                                       :focus?    true})
         linked-ref-data {:linked-ref     true
                          :initial-open   false
                          :linked-ref-uid (:block/uid block)
