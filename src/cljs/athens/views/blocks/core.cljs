@@ -138,13 +138,13 @@
   [block parent-state]
   (let [orig-uid        (:block/uid block)
         state           (r/cursor parent-state [:inline-refs/states orig-uid])
-        _               (when (nil? @state)
-                          ;; Init state on parent
-                          (reset! state {:block     block
-                                         :embed-id  (random-uuid)
-                                         :open?     true
-                                         :parents   (:block/parents block)
-                                         :top?      false}))
+        ;; Reset state on parent each time the component is created.
+        ;; To clear state, open/close the inline refs.
+        _               (reset! state {:block     block
+                                       :embed-id  (random-uuid)
+                                       :open?     true
+                                       :parents   (:block/parents block)
+                                       :focus?    true})
         linked-ref-data {:linked-ref     true
                          :initial-open   false
                          :linked-ref-uid (:block/uid block)
@@ -161,35 +161,38 @@
 
           [breadcrumbs/breadcrumbs-list {:style reference-breadcrumbs-style}
            (doall
-             (for [{:keys [node/title block/string block/uid]}
-                   (if (or (:open? @state) (:top? @state))
+             (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
+                   (if (or (:open? @state) (not (:focus? @state)))
                      parents
                      (conj parents block))]
                [breadcrumbs/breadcrumb {:key       (str "breadcrumb-" uid)
                                         :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
-                                                             top?  (= (count parents) 1)
-                                                             new-P (if top? parents (drop-last parents))]
+                                                             new-P (concat
+                                                                     (take-while (fn [b] (not= (:block/uid b) uid)) parents)
+                                                                     [breadcrumb-block])]
                                                          (.. % stopPropagation)
-                                                         (swap! state assoc :block new-B :parents new-P :top? true)))}
+                                                         (swap! state assoc :block new-B :parents new-P :focus? false)))}
                 [parse-renderer/parse-and-render (or title string) uid]]))]]
 
          (when (:open? @state)
-           (if (:top? @state)
+           (if (:focus? @state)
 
-             ;; Display children of the parent directly if user clicked the top of the breadcrumbs.
+             ;; Display the single child block only when focusing.
+             ;; This is the default behaviour, for brevity.
+             [:div.block-embed
+              [block-el
+               (util/recursively-modify-block-for-embed block embed-id)
+               linked-ref-data
+               {:block-embed? true}]]
+
+
+             ;; Otherwise display children of the parent directly if user clicked a breadcrumb.
              (for [child (:block/children block)]
                [:<> {:key (:db/id child)}
                 [block-el
                  (util/recursively-modify-block-for-embed child embed-id)
                  linked-ref-data
-                 {:block-embed? true}]])
-
-             ;; Otherwise display the child block
-             [:div.block-embed
-              [block-el
-               (util/recursively-modify-block-for-embed block embed-id)
-               linked-ref-data
-               {:block-embed? true}]]))]))))
+                 {:block-embed? true}]])))]))))
 
 
 (def references-style
