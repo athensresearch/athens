@@ -28,6 +28,15 @@
     tx))
 
 
+(defn transaction-get-current-name
+  "Tries to find existing Sentry Transaction name"
+  []
+  (let [{:keys [name tx]} @tx-active]
+    (log/debug "Sentry: Current TX:" (when tx
+                                       name))
+    name))
+
+
 (defn transaction-finish
   "Finishes provided transaction"
   ([]
@@ -103,4 +112,3 @@
      (when (= active-span span)
        (swap! span-stack pop))
      (.finish span))))
-

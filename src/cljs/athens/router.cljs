@@ -2,6 +2,7 @@
   (:require
     [athens.common-db            :as common-db]
     [athens.common.logging       :as log]
+    [athens.common.sentry        :refer-macros [wrap-span]]
     [athens.dates                :as dates]
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
@@ -14,10 +15,6 @@
     [reitit.frontend             :as rfe]
     [reitit.frontend.controllers :as rfc]
     [reitit.frontend.easy        :as rfee]))
-
-
-;; Sentry navigation TX
-(def nav-tx (atom nil))
 
 
 ;; subs
@@ -73,25 +70,27 @@
   [(interceptors/sentry-span "navigated")]
   (fn [{:keys [db]} [_ new-match]]
     (log/debug "navigated, new-match:" (pr-str new-match))
-    (let [old-match   (:current-route db)
-          route-name  (-> new-match :data :name)
-          nav-page?   (= :page-by-title route-name)
-          controllers (rfc/apply-controllers (:controllers old-match) new-match)
-          loading?    (:loading? db)]
+    (let [sentry-tx      (sentry/transaction-get-current)
+          sentry-tx-name (sentry/transaction-get-current-name)
+          old-match      (:current-route db)
+          route-name     (-> new-match :data :name)
+          nav-page?      (= :page-by-title route-name)
+          controllers    (rfc/apply-controllers (:controllers old-match) new-match)
+          loading?       (:loading? db)]
       (when-not loading?
         (if nav-page?
           (let [page-title (-> new-match :path-params :title)
                 page-block (common-db/get-block @db/dsdb [:node/title page-title])
                 html-title (str page-title " | Athens")]
             (set! (.-title js/document) html-title)
-            {:db              (-> db
-                                  (assoc :current-route (assoc new-match :controllers controllers))
-                                  (dissoc :merge-prompt))
-             :timeout         {:action :clear
-                               :id     :merge-prompt}
-             :dispatch-n      [[:editing/first-child (:block/uid page-block)]
-                               [:sentry/end-tx @nav-tx]]
-             :invoke-callback #(reset! nav-tx nil)})
+            {:db         (-> db
+                             (assoc :current-route (assoc new-match :controllers controllers))
+                             (dissoc :merge-prompt))
+             :timeout    {:action :clear
+                          :id     :merge-prompt}
+             :dispatch-n [[:editing/first-child (:block/uid page-block)]
+                          (when (= "router/navigate" sentry-tx-name)
+                            [:sentry/end-tx sentry-tx])]})
           (let [uid               (-> new-match :path-params :id)
                 node              (pull db/dsdb '[*] [:block/uid uid]) ; TODO make the page title query work when zoomed in on a block
                 node-title        (:node/title @node)
@@ -105,21 +104,21 @@
                                     "Athens")
                 today             (dates/get-day)]
             (set! (.-title js/document) html-title)
-            {:db              (-> db
-                                  (assoc :current-route (assoc new-match :controllers controllers))
-                                  (dissoc :merge-prompt))
-             :timeout         {:action :clear
-                               :id     :merge-prompt}
-             :dispatch-n      [(when (and (not loading?)
-                                          home?)
-                                 [:daily-note/ensure-day today])
-                               (when-let [parent-uid (and (not loading?)
-                                                          (or uid
-                                                              (and home?
-                                                                   (:uid today))))]
-                                 [:editing/first-child parent-uid])
-                               [:sentry/end-tx @nav-tx]]
-             :invoke-callback #(reset! nav-tx nil)}))))))
+            {:db         (-> db
+                             (assoc :current-route (assoc new-match :controllers controllers))
+                             (dissoc :merge-prompt))
+             :timeout    {:action :clear
+                          :id     :merge-prompt}
+             :dispatch-n [(when (and (not loading?)
+                                     home?)
+                            [:daily-note/ensure-day today])
+                          (when-let [parent-uid (and (not loading?)
+                                                     (or uid
+                                                         (and home?
+                                                              (:uid today))))]
+                            [:editing/first-child parent-uid])
+                          (when (= "router/navigate" sentry-tx-name)
+                            [:sentry/end-tx sentry-tx])]}))))))
 
 
 ;; doesn't reliably work. notably, Daily Notes are often not remembered as last open page, leading to incorrect restore
@@ -140,7 +139,8 @@
 (rf/reg-fx
   :navigate!
   (fn-traced [route]
-             (apply rfee/push-state route)))
+             (wrap-span "push-state"
+                        (apply rfee/push-state route))))
 
 
 ;; router definition
@@ -170,16 +170,14 @@
 (defn navigate
   [page]
   (log/debug "navigate:" (pr-str page))
-  (when-not @nav-tx
-    (reset! nav-tx (sentry/transaction-start "navigate")))
+  (when-not (sentry/transaction-get-current)
+    (sentry/transaction-start "router/navigate"))
   (rf/dispatch [:navigate page]))
 
 
 (defn nav-daily-notes
   "When user is already on a date node-page, clicking on daily notes goes to that date and allows scrolling."
   []
-  (when-not @nav-tx
-    (reset! nav-tx (sentry/transaction-start "nav-daily-notes")))
   (let [route-uid @(rf/subscribe [:current-route/uid])]
     (if (dates/is-daily-note route-uid)
       (rf/dispatch [:daily-note/reset [route-uid]])
@@ -191,16 +189,14 @@
 (defn navigate-page
   "Navigate to page by it's title"
   ([title]
-   (when-not @nav-tx
-     (reset! nav-tx (sentry/transaction-start "navigate-page")))
    (let [current-route-page-title @(rf/subscribe [:current-route/page-title])]
+     (when-not (sentry/transaction-get-current)
+       (sentry/transaction-start "router/navigate"))
      (log/debug "navigate-page:" (pr-str {:title                    title
                                           :current-route-page-title current-route-page-title}))
      (when-not (= current-route-page-title title)
        (rf/dispatch [:navigate :page-by-title {:title title}]))))
   ([title e]
-   (when-not @nav-tx
-     (reset! nav-tx (sentry/transaction-start "navigate-page-arr-2")))
    (let [shift? (.-shiftKey e)]
      (if shift?
        (do
@@ -213,15 +209,14 @@
 (defn navigate-uid
   "Don't navigate if already on the page."
   ([uid]
-   (when-not @nav-tx
-     (reset! nav-tx (sentry/transaction-start "navigate-uid")))
    (let [[uid _embed-id]   (db/uid-and-embed-id uid)
          current-route-uid @(rf/subscribe [:current-route/uid])]
+     (when-not (sentry/transaction-get-current)
+       (sentry/transaction-start "router/navigate"))
+     ;; TODO this is not ok, we're not closing this TX afterward
      (when (not= current-route-uid uid)
        (rf/dispatch [:navigate :page {:id uid}]))))
   ([uid e]
-   (when-not @nav-tx
-     (reset! nav-tx (sentry/transaction-start "navigate-uid-arr-2")))
    (let [[uid _embed-id] (db/uid-and-embed-id uid)
          shift           (.. e -shiftKey)]
      (if shift
