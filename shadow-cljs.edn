@@ -24,14 +24,15 @@
 
           ;; frontend for electron
           :renderer {:target           :browser
-                     :reader-features  #{:electron} ;; see https://shadow-cljs.github.io/docs/UsersGuide.html#_conditional_reading
                      :output-dir       "resources/public/js/compiled"
                      :asset-path       "js/compiled"
                      :modules          {:renderer {:init-fn athens.core/init}}
                      :compiler-options {:closure-warnings   {:global-this :off}
                                         :infer-externs      :auto
                                         :closure-defines    {re-frame.trace.trace-enabled? true}
-                                        :output-feature-set :es-next}
+                                        :output-feature-set :es-next
+                                        ;; see https://shadow-cljs.github.io/docs/UsersGuide.html#_conditional_reading
+                                        :reader-features  #{:electron}}
                      :dev              {:compiler-options {:closure-defines {re-frame.trace.trace-enabled?        true
                                                                              day8.re-frame.tracing.trace-enabled? true}}}
                      :release          {:build-options {:ns-aliases {day8.re-frame.tracing day8.re-frame.tracing-stubs}}
@@ -42,10 +43,10 @@
 
           ;; backend for electron (node.js)
           :main {:target           :node-script
-                 :reader-features  #{:electron}
                  :output-to        "resources/main.js"
                  :main             athens.main.core/main
-                 :compiler-options {:output-feature-set :es-next}}
+                 :compiler-options {:output-feature-set :es-next
+                                    :reader-features  #{:electron}}}
 
           :karma-test {:target    :karma
                        :ns-regexp "-test$"

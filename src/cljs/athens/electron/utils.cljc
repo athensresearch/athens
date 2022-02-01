@@ -4,8 +4,8 @@
 ;; Electron node libs
 
 (def electron?
-  #?(:cljs     false
-     :electron true))
+  #?(:electron true
+     :cljs     false))
 
 
 (def platform-require-error-msg "Platform does not support Electron requires.")
@@ -14,9 +14,9 @@
 (defn require-or-error
   "Returns the result of js/require when in a electron environment, otherwise throws."
   [_x]
-  #?(:cljs     ^js (throw (new js/Error platform-require-error-msg))
-     ;; See shadow-cljs.edn reader-features for details.
-     :electron (js/require _x)))
+  #?(;; See shadow-cljs.edn reader-features for details.
+     :electron (js/require _x)
+     :cljs     ^js (throw (new js/Error platform-require-error-msg))))
 
 
 (def electron #(require-or-error "electron"))
