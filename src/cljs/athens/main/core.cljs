@@ -29,14 +29,12 @@
 ;;   action-electron-builder args
 (goog-define AUTO_UPDATE true)
 
-(def log (js/require "electron-log"))
-
-(set! (.. autoUpdater -logger) electron.utils/log)
+(set! (.. autoUpdater -logger) (electron.utils/log))
 (set! (.. autoUpdater -logger -transports -file -level) "info")
 (set! (.. autoUpdater -autoDownload) false)
 (set! (.. autoUpdater -autoInstallOnAppQuit) false)
 
-(.. log (info (str "Athens starting... "  "version=" (.getVersion app))))
+(.. (electron.utils/log) (info (str "Athens starting... "  "version=" (.getVersion app))))
 
 
 (defonce main-window (atom nil))

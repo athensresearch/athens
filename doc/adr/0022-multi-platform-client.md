@@ -1,4 +1,4 @@
-# x. Multi-platform Client
+# 22. Multi-platform Client
 
 Date: 2021-08-20
 
@@ -31,7 +31,7 @@ But we are primarily concerned with Chrome/Chromium as the main client here.
 
 When there's a mismatch between capabilities provided by the environment and the capabilities the application is expecting at runtime, an error is thrown.
 
-We can move some of the runtime errors to compile-time errors by using either Shadow-CLJS [Reader Features](https://shadow-cljs.github.io/docs/UsersGuide.html#_conditional_reading) or [Custom Resolvers](https://shadow-cljs.github.io/docs/UsersGuide.html#js-resolve).
+We can move some of the runtime errors to compile-time errors by using either Shadow-CLJS [Reader Conditionals](https://shadow-cljs.github.io/docs/UsersGuide.html#_conditional_reading) or [Custom Resolvers](https://shadow-cljs.github.io/docs/UsersGuide.html#js-resolve).
 These features allow for conditionally loading of clj and js modules.
 Under this approach the compilation would fail when trying to make use platform specific modules.
 Failures of this type are usually easy to trace because of the detail of compiler errors.
@@ -68,7 +68,7 @@ It is hard to put forward a general enough model that would support any client s
  
 ## Decision
 
-TDB
+We decided to use Shadow-CLJS's Reader Conditionals with a special key for electron builds, together with a single namespace (`athens.electron.utils`) to contain Electron specific `js/require`.
 
 
 ### Implementation

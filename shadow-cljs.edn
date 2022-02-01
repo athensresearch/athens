@@ -24,6 +24,7 @@
 
           ;; frontend for electron
           :renderer {:target           :browser
+                     :reader-features  #{:electron} ;; see https://shadow-cljs.github.io/docs/UsersGuide.html#_conditional_reading
                      :output-dir       "resources/public/js/compiled"
                      :asset-path       "js/compiled"
                      :modules          {:renderer {:init-fn athens.core/init}}
@@ -41,6 +42,7 @@
 
           ;; backend for electron (node.js)
           :main {:target           :node-script
+                 :reader-features  #{:electron}
                  :output-to        "resources/main.js"
                  :main             athens.main.core/main
                  :compiler-options {:output-feature-set :es-next}}

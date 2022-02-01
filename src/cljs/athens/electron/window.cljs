@@ -102,21 +102,21 @@
   :invoke-win!
   (fn [{:keys [channel arg]} _]
     (if arg
-      (.. electron.utils/ipcRenderer (invoke channel arg))
-      (.. electron.utils/ipcRenderer (invoke channel)))))
+      (.. (electron.utils/ipcRenderer) (invoke channel arg))
+      (.. (electron.utils/ipcRenderer) (invoke channel)))))
 
 
 (rf/reg-fx
   :close-win!
   (fn []
-    (let [window (.. electron.utils/electron -BrowserWindow getFocusedWindow)]
+    (let [window (.. (electron.utils/electron) -BrowserWindow getFocusedWindow)]
       (.close window))))
 
 
 (rf/reg-fx
   :bind-win-listeners!
   (fn []
-    (let [active-win (.getCurrentWindow electron.utils/remote)]
+    (let [active-win (.getCurrentWindow (electron.utils/remote))]
       (doto ^js/BrowserWindow active-win
         (.on "maximize" #(rf/dispatch-sync [:toggle-win-maximized true]))
         (.on "unmaximize" #(rf/dispatch-sync [:toggle-win-maximized false]))

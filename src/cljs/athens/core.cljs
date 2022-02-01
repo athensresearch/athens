@@ -75,16 +75,16 @@
 (defn init-ipcRenderer
   []
   (when electron.utils/electron?
-    (let [update-available? (.sendSync electron.utils/ipcRenderer "check-update" "renderer")]
+    (let [update-available? (.sendSync (electron.utils/ipcRenderer) "check-update" "renderer")]
       (when update-available?
         (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
-          (.sendSync electron.utils/ipcRenderer "confirm-update"))))))
+          (.sendSync (electron.utils/ipcRenderer) "confirm-update"))))))
 
 
 (defn init-styles
   []
   (util/add-body-classes (util/app-classes {:os        (util/get-os)
-                                            :electron? (util/electron?)})))
+                                            :electron? electron.utils/electron?})))
 
 
 (defn boot-evts

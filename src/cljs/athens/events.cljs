@@ -602,7 +602,7 @@
   :electron-sync
   (fn [_ _]
     (let [synced?   @(subscribe [:db/synced])
-          electron? (athens.util/electron?)]
+          electron? electron.utils/electron?]
       (merge {}
              (when (and synced? electron?)
                {:fx [[:dispatch [:db/not-synced]]
@@ -1355,7 +1355,7 @@
           (mapv (fn [item]
                   (let [datatype (.. item -type)]
                     (cond
-                      (re-find img-regex datatype)    (when (util/electron?)
+                      (re-find img-regex datatype)    (when electron.utils/electron?
                                                         (let [new-str (images/save-image head tail item "png")]
                                                           (callback new-str)))
                       (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))

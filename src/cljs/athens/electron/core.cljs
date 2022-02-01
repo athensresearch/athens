@@ -19,12 +19,10 @@
     (:db/mtime db)))
 
 
-  ;; This event isn't used at the moment in boot. Figure out if it's still needed next
-  ;; time boot is revisited.
-  #_(rf/reg-event-fx
+;; This event isn't used at the moment in boot. Figure out if it's still needed next
+;; time boot is revisited.
+#_(rf/reg-event-fx
     :db/retract-athens-pages
     (fn []
       {:dispatch [:transact (concat (db/retract-page-recursively "Welcome")
-                                    (db/retract-page-recursively "Changelog"))]})))
-
-
+                                    (db/retract-page-recursively "Changelog"))]}))
