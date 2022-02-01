@@ -43,7 +43,7 @@
 
 (defn send-status-to-window
   [text]
-  (.. log (info text))
+  (.. (electron.utils/log) (info text))
   (when @main-window
     (.. ^js @main-window -webContents (send text))))
 

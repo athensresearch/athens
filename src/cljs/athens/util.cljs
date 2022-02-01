@@ -315,7 +315,7 @@
 (defn athens-version
   []
   (cond
-    electron.utils/electron? electron.utils/version))
+    electron.utils/electron? (electron.utils/version)))
 
 
 ;; (not (string/blank? COMMIT_URL)) COMMIT_URL
