@@ -85,7 +85,7 @@
 (rf/reg-event-fx
   :db-picker/select-default-db
   (fn [_ [_]]
-    {:dispatch [:db-picker/add-and-select-db (utils/local-db (utils/default-base-dir))]}))
+    {:dispatch [:db-picker/add-and-select-db (utils/get-default-db)]}))
 
 
 ;; Delete a db from the db-picker.

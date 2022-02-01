@@ -87,19 +87,6 @@
                                             :electron? electron.utils/electron?})))
 
 
-(defn boot-evts
-  []
-  (if electron.utils/electron?
-    [:boot/desktop]
-    [:boot/web]))
-
-
-(rf/reg-event-fx
-  :boot
-  (fn [_ _]
-    {:dispatch (boot-evts)}))
-
-
 (defn init
   []
   (set-global-alert!)
@@ -110,6 +97,6 @@
   (listeners/init)
   (when config/debug?
     (datalog-console/enable! {:conn dsdb}))
-  (rf/dispatch-sync (boot-evts))
+  (rf/dispatch-sync [:boot])
   (dev-setup)
   (mount-root))

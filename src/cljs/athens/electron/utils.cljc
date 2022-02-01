@@ -63,6 +63,15 @@
    :db-path    (.resolve (path) base-dir DB-INDEX)})
 
 
+(defn in-memory-db
+  "Returns a map representing an in-memory db.
+   In-memory dbs are uniquely identified by their name."
+  [name]
+  {:type       :in-memory
+   :name       name
+   :id         name})
+
+
 (defn local-db-exists?
   [{:keys [db-path] :as db}]
   (when db db-path (.existsSync (fs) db-path)))
@@ -101,9 +110,22 @@
   (-> db :type (= :self-hosted)))
 
 
+(defn in-memory-db?
+  [db]
+  (-> db :type (= :in-memory)))
+
+
 (defn db-exists?
   [db]
   (condp = (:type db)
     :local       (local-db-exists? db)
-    :self-hosted remote-db? true
-    :else        false))
+    :self-hosted true
+    :in-memory   true
+    false))
+
+
+(defn get-default-db
+  []
+  (if electron?
+    (local-db (default-base-dir))
+    (in-memory-db "In-memory DB")))

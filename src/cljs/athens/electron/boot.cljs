@@ -7,16 +7,21 @@
 
 
 (rf/reg-event-fx
-  :boot/desktop
+  :boot
   [(rf/inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
     (let [init-app-db         (db/init-app-db local-storage)
           all-dbs             (db-picker/all-dbs init-app-db)
           selected-db         (db-picker/selected-db init-app-db)
-          default-db          (utils/local-db (utils/default-base-dir))
+          default-db          (utils/get-default-db)
           selected-db-exists? (utils/db-exists? selected-db)
           default-db-exists?  (utils/db-exists? default-db)
+          _ (println default-db selected-db)
           first-event         (cond
+                                ;; DB is in-memory, just create a new one.
+                                (utils/in-memory-db? selected-db)
+                                [:create-in-memory-conn]
+
                                 ;; DB is remote, attempt to connect to it.
                                 (utils/remote-db? selected-db)
                                 [:remote/connect! selected-db]

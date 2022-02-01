@@ -1,5 +1,6 @@
 (ns athens.events
   (:require
+    [athens.athens-datoms                 :as athens-datoms]
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs :as bfs]
@@ -34,15 +35,13 @@
 
 ;; -- re-frame app-db events ---------------------------------------------
 
-;; TODO: boot/web should be rolled into boot/desktop to have a central boot
-;; cycle that works with RTC.
 (reg-event-fx
-  :boot/web
-  [(inject-cofx :local-storage :athens/persist)]
-  (fn [{:keys [local-storage]} _]
-    {:db         (db/init-app-db local-storage)
-     :dispatch-n [[:theme/set]
-                  [:loading/unset]]}))
+  :create-in-memory-conn
+  (fn [_ _]
+    (let [conn (d/create-conn common-db/schema)]
+      (doseq [[_id data] athens-datoms/welcome-events]
+        (atomic-resolver/resolve-transact! conn data))
+      {:dispatch [:reset-conn @conn]})))
 
 
 (reg-event-db
