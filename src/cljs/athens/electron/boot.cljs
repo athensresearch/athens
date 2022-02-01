@@ -16,7 +16,6 @@
           default-db          (utils/get-default-db)
           selected-db-exists? (utils/db-exists? selected-db)
           default-db-exists?  (utils/db-exists? default-db)
-          _ (println default-db selected-db)
           first-event         (cond
                                 ;; DB is in-memory, just create a new one.
                                 (utils/in-memory-db? selected-db)
