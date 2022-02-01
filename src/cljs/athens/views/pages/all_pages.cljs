@@ -2,15 +2,16 @@
   (:require
     ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
     ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
-    [athens.common-db :as common-db]
-    [athens.dates :as dates]
-    [athens.db :as db]
-    [athens.router :as router]
-    [athens.style :as style :refer [color OPACITIES]]
-    [clojure.string :refer [lower-case]]
-    [garden.selectors :as selectors]
-    [re-frame.core :as rf :refer [dispatch subscribe]]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [athens.common-db          :as common-db]
+    [athens.dates              :as dates]
+    [athens.db                 :as db]
+    [athens.router             :as router]
+    [athens.style              :as style :refer [color OPACITIES]]
+    [athens.views.hoc.perf-mon :as perf-mon]
+    [clojure.string            :refer [lower-case]]
+    [garden.selectors          :as selectors]
+    [re-frame.core             :as rf :refer [dispatch subscribe]]
+    [stylefy.core              :as stylefy :refer [use-style]]))
 
 
 ;; Styles
@@ -145,16 +146,17 @@
   (let [all-pages (common-db/get-all-pages @db/dsdb)]
     (fn []
       (let [sorted-pages @(subscribe [:all-pages/sorted all-pages])]
-        [:div (use-style page-style)
-         [:table (use-style table-style)
-          [:thead
-           [:tr
-            [sortable-header :title "Title"]
-            [sortable-header :links-count "Links"]
-            [sortable-header :modified "Modified" {:date? true}]
-            [sortable-header :created "Created" {:date? true}]]]
-          [:tbody
-           (doall
+        [perf-mon/hoc-perfmon {:span-name "pages.all-pages/page"}
+         [:div (use-style page-style)
+          [:table (use-style table-style)
+           [:thead
+            [:tr
+             [sortable-header :title "Title"]
+             [sortable-header :links-count "Links"]
+             [sortable-header :modified "Modified" {:date? true}]
+             [sortable-header :created "Created" {:date? true}]]]
+           [:tbody
+            (doall
              (for [{:keys    [block/uid node/title block/_refs]
                     modified :edit/time
                     created  :create/time} sorted-pages]
@@ -164,4 +166,4 @@
                  title]
                 [:td {:class "links"} (count _refs)]
                 [:td {:class "date"} (dates/date-string modified)]
-                [:td {:class "date"} (dates/date-string created)]]))]]]))))
+                [:td {:class "date"} (dates/date-string created)]]))]]]]))))
