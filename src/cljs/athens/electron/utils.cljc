@@ -13,10 +13,10 @@
 
 (defn require-or-error
   "Returns the result of js/require when in a electron environment, otherwise throws."
-  [x]
+  [_x]
   #?(:cljs     ^js (throw (new js/Error platform-require-error-msg))
      ;; See shadow-cljs.edn reader-features for details.
-     :electron (js/require x)))
+     :electron (js/require _x)))
 
 
 (def electron #(require-or-error "electron"))

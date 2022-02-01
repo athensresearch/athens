@@ -30,7 +30,7 @@
     [goog.dom :refer [getElement]]
     [malli.core                           :as m]
     [malli.error                          :as me]
-    [re-frame.core :as rf :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [re-frame.core :as rf :refer [reg-event-db reg-event-fx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
