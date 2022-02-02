@@ -12,12 +12,11 @@
         sentry-tx        (if sentry-active-tx
                            sentry-active-tx
                            (sentry/transaction-start (str span-name "-hoc-auto-tx")))
-        sentry-span      (sentry/span-start sentry-tx span-name)
+        sentry-span      (sentry/span-start sentry-tx (str span-name "-prep"))
         render-span      (atom nil)
         did-mount        (fn [_this]
                            (log/debug "hoc-perfmon:" span-name "did-mount")
                            (sentry/span-finish @render-span)
-                           (sentry/span-finish sentry-span)
                            (when-not sentry-active-tx
                              (sentry/transaction-finish sentry-tx)))
         should-update    (fn [_this old-argv new-argv]
@@ -32,6 +31,7 @@
      {:display-name            "hoc-perfmon"
       :reagent-render          (fn [{:keys [_span-name]} component]
                                  (log/debug "hoc-perfmon:" span-name "reagent-render")
+                                 (sentry/span-finish sentry-span)
                                  (reset! render-span (sentry/span-start sentry-tx (str span-name "-render")))
                                  [:div component])
       :component-did-mount     did-mount
