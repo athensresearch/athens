@@ -259,7 +259,7 @@
         el (.. js/document (querySelector "#app"))
         selected-db       @(subscribe [:db-picker/selected-db])
         state             (r/atom {:input     ""
-                                   :tab-value 0})]
+                                   :tab-value (if utils/electron? 0 2)})]
     (fn []
       (.createPortal
         react-dom
@@ -271,19 +271,23 @@
                                     (when-not @loading
                                       [:> Button {:on-click close-modal} [:> Close]])]
                          :content  [:div (use-style modal-contents-style)
-                                    [:div (use-style picker-style)
-                                     [:button {:class (when (= 0 (:tab-value @state)) "active")
-                                               :on-click (fn [] (swap! state assoc :tab-value 0))}
-                                      [:> Folder]
-                                      [:span "Open"]]
-                                     [:button {:class (when (= 1 (:tab-value @state)) "active")
-                                               :on-click (fn [] (swap! state assoc :tab-value 1))}
-                                      [:> AddBox]
-                                      [:span "New"]]
-                                     [:button {:class (when (= 2 (:tab-value @state)) "active")
-                                               :on-click (fn [] (swap! state assoc :tab-value 2))}
-                                      [:> Group]
-                                      [:span "Join"]]]
+                                    ;; TODO: this is hacky, we're just hiding the picker and forcing
+                                    ;; tab 2 for the web client. Instead we should use Stuart's
+                                    ;; redesigned DB picker.
+                                    (when utils/electron?
+                                      [:div (use-style picker-style)
+                                       [:button {:class (when (= 0 (:tab-value @state)) "active")
+                                                 :on-click (fn [] (swap! state assoc :tab-value 0))}
+                                        [:> Folder]
+                                        [:span "Open"]]
+                                       [:button {:class (when (= 1 (:tab-value @state)) "active")
+                                                 :on-click (fn [] (swap! state assoc :tab-value 1))}
+                                        [:> AddBox]
+                                        [:span "New"]]
+                                       [:button {:class (when (= 2 (:tab-value @state)) "active")
+                                                 :on-click (fn [] (swap! state assoc :tab-value 2))}
+                                        [:> Group]
+                                        [:span "Join"]]])
                                     (cond
                                       (= 2 (:tab-value @state))
                                       [join-remote-comp]

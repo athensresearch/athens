@@ -1,5 +1,6 @@
 (ns athens.events
   (:require
+    [athens.athens-datoms                 :as athens-datoms]
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs :as bfs]
@@ -15,7 +16,8 @@
     [athens.dates                         :as dates]
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
-    [athens.electron.images :as images]
+    [athens.electron.images               :as images]
+    [athens.electron.utils                :as electron.utils]
     [athens.events.remote]
     [athens.patterns                      :as patterns]
     [athens.undo                          :as undo]
@@ -28,20 +30,18 @@
     [goog.dom :refer [getElement]]
     [malli.core                           :as m]
     [malli.error                          :as me]
-    [re-frame.core :as rf :refer [reg-event-db reg-event-fx inject-cofx subscribe]]))
+    [re-frame.core :as rf :refer [reg-event-db reg-event-fx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
 
-;; TODO: boot/web should be rolled into boot/desktop to have a central boot
-;; cycle that works with RTC.
 (reg-event-fx
-  :boot/web
-  [(inject-cofx :local-storage :athens/persist)]
-  (fn [{:keys [local-storage]} _]
-    {:db         (db/init-app-db local-storage)
-     :dispatch-n [[:theme/set]
-                  [:loading/unset]]}))
+  :create-in-memory-conn
+  (fn [_ _]
+    (let [conn (d/create-conn common-db/schema)]
+      (doseq [[_id data] athens-datoms/welcome-events]
+        (atomic-resolver/resolve-transact! conn data))
+      {:dispatch [:reset-conn @conn]})))
 
 
 (reg-event-db
@@ -583,7 +583,7 @@
   :transact
   (fn [_ [_ tx-data]]
     (let [synced?   @(subscribe [:db/synced])
-          electron? (athens.util/electron?)]
+          electron? electron.utils/electron?]
       (if (and synced? electron?)
         {:fx [[:transact! tx-data]
               [:dispatch [:db/not-synced]]
@@ -601,7 +601,7 @@
   :electron-sync
   (fn [_ _]
     (let [synced?   @(subscribe [:db/synced])
-          electron? (athens.util/electron?)]
+          electron? electron.utils/electron?]
       (merge {}
              (when (and synced? electron?)
                {:fx [[:dispatch [:db/not-synced]]
@@ -1354,7 +1354,7 @@
           (mapv (fn [item]
                   (let [datatype (.. item -type)]
                     (cond
-                      (re-find img-regex datatype)    (when (util/electron?)
+                      (re-find img-regex datatype)    (when electron.utils/electron?
                                                         (let [new-str (images/save-image head tail item "png")]
                                                           (callback new-str)))
                       (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))

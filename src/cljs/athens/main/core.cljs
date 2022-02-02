@@ -4,6 +4,7 @@
     ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
     ["electron-updater" :refer [autoUpdater]]
     ["electron-window-state" :as electron-window-state]
+    [athens.electron.utils :as electron.utils]
     [athens.menu :refer [menu-template]]
     [athens.util :refer [ipcMainChannels]]))
 
@@ -28,14 +29,12 @@
 ;;   action-electron-builder args
 (goog-define AUTO_UPDATE true)
 
-(def log (js/require "electron-log"))
-
-(set! (.. autoUpdater -logger) log)
+(set! (.. autoUpdater -logger) (electron.utils/log))
 (set! (.. autoUpdater -logger -transports -file -level) "info")
 (set! (.. autoUpdater -autoDownload) false)
 (set! (.. autoUpdater -autoInstallOnAppQuit) false)
 
-(.. log (info (str "Athens starting... "  "version=" (.getVersion app))))
+(.. (electron.utils/log) (info (str "Athens starting... "  "version=" (.getVersion app))))
 
 
 (defonce main-window (atom nil))
@@ -44,7 +43,7 @@
 
 (defn send-status-to-window
   [text]
-  (.. log (info text))
+  (.. (electron.utils/log) (info text))
   (when @main-window
     (.. ^js @main-window -webContents (send text))))
 
