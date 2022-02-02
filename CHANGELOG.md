@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.15](https://github.com/athensresearch/athens/compare/v2.0.0-beta.14...v2.0.0-beta.15) (2022-02-02)
+
+
+### Bug Fixes
+
+* a few bad electron specific invocations ([08bee39](https://github.com/athensresearch/athens/commit/08bee39822f09e2bc39731c8000b94632890ef14))
+* allow any domain to health check ([7f9e653](https://github.com/athensresearch/athens/commit/7f9e653c4e2aae01ffe2c06bfd4311dd4ce7a0c7))
+* clicking on a breadcrumb should it as the new parent view ([1bb6c0b](https://github.com/athensresearch/athens/commit/1bb6c0b31d7ca4b27fa78537a1e7ecba28640015))
+* open/close inline refs should reset breadcrumbs state ([5042d1e](https://github.com/athensresearch/athens/commit/5042d1e0c95781512c668dcb9c8590114efc3657))
+* reader features should be under compiler-options ([6186245](https://github.com/athensresearch/athens/commit/618624526d0f253d3d873e6d9c59b556eef7de39))
+* remove stray print ([c6c458a](https://github.com/athensresearch/athens/commit/c6c458a43849ed40c0ca023348ec61d0a827ed0d))
+
+
+### Refactors
+
+* centralize electron requires, provide good errors ([4c540b4](https://github.com/athensresearch/athens/commit/4c540b4a76f52612a4f83c4f8b78b57f7e7d39fe))
+* unify web and desktop boot ([75e66d8](https://github.com/athensresearch/athens/commit/75e66d83b47972d2227127b109814ceb04fc2c40))
+* use reader conditionals for electron code ([dabbf59](https://github.com/athensresearch/athens/commit/dabbf59fdd153e0cec8554298139fc949b577c7a))
+
+
+* add note about local docker builds on M1 ([fef4f65](https://github.com/athensresearch/athens/commit/fef4f6530d394808c68d33f6f19312c6168c9687))
+* deploy v2 browser app on release ([d2e71be](https://github.com/athensresearch/athens/commit/d2e71be5db0587d5b06a52b55e4e4e5da366082c))
+* deploy web client to vercel ([d954288](https://github.com/athensresearch/athens/commit/d954288f8575d110b4e920e7f4155286f2f1f274))
+* fix ([176af6f](https://github.com/athensresearch/athens/commit/176af6f49a0cc3af9317f04661751d6bba5e005e))
+* fix release-web tag check ([c6e7919](https://github.com/athensresearch/athens/commit/c6e7919717e5338fde8a24e3da41272bf14041fe))
+* fix vercel cp ([9f7cf43](https://github.com/athensresearch/athens/commit/9f7cf43d9c6e1d7859614d7fa44f4e179ca82214))
+* remove unused file ([5902e9a](https://github.com/athensresearch/athens/commit/5902e9a444e7d419ba4ef11a4bdf7d21339cee51))
+
 ## [2.0.0-beta.14](https://github.com/athensresearch/athens/compare/v2.0.0-beta.13...v2.0.0-beta.14) (2022-01-31)
 
 
