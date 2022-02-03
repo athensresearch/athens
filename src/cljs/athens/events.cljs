@@ -963,8 +963,8 @@
           op          (wrap-span "build-block-remove-op"
                                  (graph-ops/build-block-remove-op @db/dsdb uid))
           event       (common-events/build-atomic-event op)]
-      {:fx [[:async-flow {:id             :enter-open-block-add-child-async-flow
-                          :db-path        [:async-flow :enter-open-block-add-child]
+      {:fx [[:async-flow {:id             :backspace-delete-only-child-async-flow
+                          :db-path        [:async-flow :backspace-delete-only-child]
                           :first-dispatch [:resolve-transact-forward event]
                           :rules          [{:when     :seen?
                                             :events   :success-resolved-forward-transact
@@ -1071,33 +1071,63 @@
   :backspace/delete-merge-block
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
     (log/debug ":backspace/delete-merge-block args:" (pr-str args))
-    (let [op    (graph-ops/build-block-remove-merge-op @db/dsdb
-                                                       uid
-                                                       prev-block-uid
-                                                       value)
-          event (common-events/build-atomic-event  op)]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                          [:editing/uid
-                           (cond-> prev-block-uid
-                             embed-id (str "-embed-" embed-id))
-                           (count (:block/string prev-block))]]]]})))
+    (let [existing-tx (sentry/transaction-get-current)
+          sentry-tx   (if existing-tx
+                        existing-tx
+                        (sentry/transaction-start "backspace/delete-merge-block"))
+          op          (wrap-span "build-block-remove-merge-op"
+                                 (graph-ops/build-block-remove-merge-op @db/dsdb
+                                                                        uid
+                                                                        prev-block-uid
+                                                                        value))
+          event       (common-events/build-atomic-event  op)]
+      {:fx [[:async-flow {:id             :backspace-delete-merge-block-with-save-async-flow
+                          :db-path        [:async-flow :backspacn-delete-merge-block-with-save]
+                          :first-dispatch [:resolve-transact-forward event]
+                          :rules          [{:when     :seen?
+                                            :events   :success-resolved-forward-transact
+                                            :dispatch [:editing/uid
+                                                       (cond-> prev-block-uid
+                                                         embed-id (str "-embed-" embed-id))
+                                                       (count (:block/string prev-block))]}
+                                           (merge {:when   :seen-all-of?
+                                                   :events [:success-resolved-forward-transact
+                                                            :success-self-presence-updated]
+                                                   :halt?   true}
+                                                  (when-not existing-tx
+                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
 
 
 (reg-event-fx
   :backspace/delete-merge-block-with-save
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id local-update] :as args}]]
     (log/debug ":backspace/delete-merge-block-with-save args:" (pr-str args))
-    (let [op    (graph-ops/build-block-merge-with-updated-op @db/dsdb
+    (let [existing-tx (sentry/transaction-get-current)
+          sentry-tx   (if existing-tx
+                        existing-tx
+                        (sentry/transaction-start "backspace/delete-merge-block-with-save"))
+          op    (wrap-span "build-block-merge-with-updated-op"
+                           (graph-ops/build-block-merge-with-updated-op @db/dsdb
                                                              uid
                                                              prev-block-uid
                                                              value
-                                                             local-update)
+                                                             local-update))
           event (common-events/build-atomic-event  op)]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                          [:editing/uid
-                           (cond-> prev-block-uid
-                             embed-id (str "-embed-" embed-id))
-                           (count local-update)]]]]})))
+      {:fx [[:async-flow {:id             :backspace-delete-merge-block-with-save-async-flow
+                          :db-path        [:async-flow :backspacn-delete-merge-block-with-save]
+                          :first-dispatch [:resolve-transact-forward event]
+                          :rules          [{:when     :seen?
+                                            :events   :success-resolved-forward-transact
+                                            :dispatch [:editing/uid
+                                                       (cond-> prev-block-uid
+                                                         embed-id (str "-embed-" embed-id))
+                                                       (count local-update)]}
+                                           (merge {:when   :seen-all-of?
+                                                   :events [:success-resolved-forward-transact
+                                                            :success-self-presence-updated]
+                                                   :halt?   true}
+                                                  (when-not existing-tx
+                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
 
 
 ;; Atomic events end ==========
