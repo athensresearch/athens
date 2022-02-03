@@ -1081,8 +1081,8 @@
                                                                         prev-block-uid
                                                                         value))
           event       (common-events/build-atomic-event  op)]
-      {:fx [[:async-flow {:id             :backspace-delete-merge-block-with-save-async-flow
-                          :db-path        [:async-flow :backspacn-delete-merge-block-with-save]
+      {:fx [[:async-flow {:id             :backspace-delete-merge-block-async-flow
+                          :db-path        [:async-flow :backspace-delete-merge-block]
                           :first-dispatch [:resolve-transact-forward event]
                           :rules          [{:when     :seen?
                                             :events   :success-resolved-forward-transact
@@ -1114,7 +1114,7 @@
                                                              local-update))
           event (common-events/build-atomic-event  op)]
       {:fx [[:async-flow {:id             :backspace-delete-merge-block-with-save-async-flow
-                          :db-path        [:async-flow :backspacn-delete-merge-block-with-save]
+                          :db-path        [:async-flow :backspace-delete-merge-block-with-save]
                           :first-dispatch [:resolve-transact-forward event]
                           :rules          [{:when     :seen?
                                             :events   :success-resolved-forward-transact
