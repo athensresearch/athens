@@ -4,6 +4,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events.graph.atomic    :as atomic]
     [athens.common-events.graph.composite :as composite]
+    [athens.common.sentry                 :refer-macros [wrap-span]]
     [clojure.set                          :as set]))
 
 
@@ -27,16 +28,21 @@
   "Creates `:block/save` op, taking into account context.
   So it might be a composite or atomic event, depending if new page link is present and if pages exist."
   [db block-uid string]
-  (let [old-string      (common-db/get-block-string db block-uid)
-        links-in-old    (common-db/find-page-links old-string)
-        links-in-new    (common-db/find-page-links string)
+  (let [old-string      (wrap-span "get-block-string"
+                                   (common-db/get-block-string db block-uid))
+        links-in-old    (wrap-span "find-page-links"
+                                   (common-db/find-page-links old-string))
+        links-in-new    (wrap-span "find-page-links"
+                                   (common-db/find-page-links string))
         link-diff       (set/difference links-in-new links-in-old)
-        new-page-titles (remove #(seq (common-db/get-page-uid db %))
+        new-page-titles (remove #(seq (wrap-span "get-page-uid"
+                                                 (common-db/get-page-uid db %)))
                                 link-diff)
         atomic-pages    (when-not (empty? new-page-titles)
                           (into []
                                 (for [title new-page-titles]
-                                  (build-page-new-op db title))))
+                                  (wrap-span "build-page-new-op"
+                                             (build-page-new-op db title)))))
         atomic-save     (atomic/make-block-save-op block-uid string)
         block-save-op   (if (empty? atomic-pages)
                           atomic-save
@@ -155,12 +161,15 @@
   If old-block is open or closed, pass that state on to new-block."
   [db {:keys [old-block-uid new-block-uid
               string index relation]}]
-  (let [save-block-op      (build-block-save-op db old-block-uid (subs string 0 index))
+  (let [save-block-op      (wrap-span "build-block-save-op"
+                                      (build-block-save-op db old-block-uid (subs string 0 index)))
         new-block-op       (atomic/make-block-new-op new-block-uid {:block/uid old-block-uid
                                                                     :relation  relation})
-        new-block-save-op  (build-block-save-op db new-block-uid (subs string index))
+        new-block-save-op  (wrap-span "new-block-save-op"
+                                      (build-block-save-op db new-block-uid (subs string index)))
         {:block/keys [open]} (common-db/get-block db [:block/uid old-block-uid])
-        children           (common-db/get-children-uids db [:block/uid old-block-uid])
+        children           (wrap-span "get-children-uids"
+                                      (common-db/get-children-uids db [:block/uid old-block-uid]))
         children?          (seq children)
         move-children-op   (when children?
                              (block-move-chain new-block-uid children :first))

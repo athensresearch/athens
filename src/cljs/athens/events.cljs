@@ -956,10 +956,25 @@
   :backspace/delete-only-child
   (fn [_ [_ uid]]
     (log/debug ":backspace/delete-only-child:" (pr-str uid))
-    (let [op    (graph-ops/build-block-remove-op @db/dsdb uid)
-          event (common-events/build-atomic-event op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]
-            [:dispatch [:editing/uid nil]]]})))
+    (let [existing-tx (sentry/transaction-get-current)
+          sentry-tx   (if existing-tx
+                        existing-tx
+                        (sentry/transaction-start "backspace/delete-only-child"))
+          op          (wrap-span "build-block-remove-op"
+                                 (graph-ops/build-block-remove-op @db/dsdb uid))
+          event       (common-events/build-atomic-event op)]
+      {:fx [[:async-flow {:id             :enter-open-block-add-child-async-flow
+                          :db-path        [:async-flow :enter-open-block-add-child]
+                          :first-dispatch [:resolve-transact-forward event]
+                          :rules          [{:when     :seen?
+                                            :events   :success-resolved-forward-transact
+                                            :dispatch [:editing/uid nil]}
+                                           (merge {:when   :seen-all-of?
+                                                   :events [:success-resolved-forward-transact
+                                                            :success-self-presence-updated]
+                                                   :halt?   true}
+                                                  (when-not existing-tx
+                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
 
 
 ;; Atomic events start ==========
@@ -968,12 +983,26 @@
   :enter/new-block
   (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
     (log/debug ":enter/new-block" (pr-str block) (pr-str parent) (pr-str new-uid))
-    (let [op    (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
+    (let [existing-tx (sentry/transaction-get-current)
+          sentry-tx   (if existing-tx
+                        existing-tx
+                        (sentry/transaction-start "enter/new-block"))
+          op    (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
                                                              :relation :after})
           event (common-events/build-atomic-event op)]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                          [:editing/uid (str new-uid (when embed-id
-                                                       (str "-embed-" embed-id)))]]]]})))
+      {:fx [[:async-flow {:id             :enter-new-block-async-flow
+                          :db-path        [:async-flow :enter-new-block]
+                          :first-dispatch [:resolve-transact-forward event]
+                          :rules          [{:when     :seen?
+                                            :events   :success-resolved-forward-transact
+                                            :dispatch [:editing/uid (str new-uid (when embed-id
+                                                                                   (str "-embed-" embed-id)))]}
+                                           (merge {:when   :seen-all-of?
+                                                   :events [:success-resolved-forward-transact
+                                                            :success-self-presence-updated]
+                                                   :halt?   true}
+                                                  (when-not existing-tx
+                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
 
 
 (reg-event-fx
@@ -1078,38 +1107,86 @@
   :enter/add-child
   (fn [_ [_ {:keys [block new-uid embed-id] :as args}]]
     (log/debug ":enter/add-child args:" (pr-str args))
-    (let [position (common-db/compat-position @db/dsdb {:block/uid  (:block/uid block)
-                                                        :relation :first})
-          event    (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                          [:editing/uid (str new-uid (when embed-id
-                                                       (str "-embed-" embed-id)))]]]]})))
+    (let [existing-tx (sentry/transaction-get-current)
+          sentry-tx   (if existing-tx
+                        existing-tx
+                        (sentry/transaction-start "enter/add-child"))
+          position    (wrap-span "compat-position"
+                                 (common-db/compat-position @db/dsdb {:block/uid  (:block/uid block)
+                                                                      :relation :first}))
+          event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
+      {:fx [[:async-flow {:id             :enter-add-child-async-flow
+                          :db-path        [:async-flow :enter-add-child]
+                          :first-dispatch [:resolve-transact-forward event]
+                          :rules          [{:when     :seen?
+                                            :events   :success-resolved-forward-transact
+                                            :dispatch [:editing/uid (str new-uid (when embed-id
+                                                                                   (str "-embed-" embed-id)))]}
+                                           (merge {:when   :seen-all-of?
+                                                   :events [:success-resolved-forward-transact
+                                                            :success-self-presence-updated]
+                                                   :halt?   true}
+                                                  (when-not existing-tx
+                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
 
 
 (reg-event-fx
   :enter/split-block
   (fn [_ [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
-    (let [op    (graph-ops/build-block-split-op @db/dsdb
-                                                {:old-block-uid uid
-                                                 :new-block-uid new-uid
-                                                 :string        value
-                                                 :index         index
-                                                 :relation      relation})
-          event (common-events/build-atomic-event op)]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                          [:editing/uid (str new-uid (when embed-id
-                                                       (str "-embed-" embed-id)))]]]]})))
+    (let [existing-tx (sentry/transaction-get-current)
+          sentry-tx   (if existing-tx
+                        existing-tx
+                        (sentry/transaction-start "enter/split-block"))
+          op          (wrap-span "build-block-split-op"
+                                 (graph-ops/build-block-split-op @db/dsdb
+                                                                {:old-block-uid uid
+                                                                 :new-block-uid new-uid
+                                                                 :string        value
+                                                                 :index         index
+                                                                 :relation      relation}))
+          event       (common-events/build-atomic-event op)]
+      {:fx [[:async-flow {:id             :enter-split-block-async-flow
+                          :db-path        [:async-flow :enter-split-block-child]
+                          :first-dispatch [:resolve-transact-forward event]
+                          :rules          [{:when     :seen?
+                                            :events   :success-resolved-forward-transact
+                                            :dispatch [:editing/uid (str new-uid (when embed-id
+                                                                                   (str "-embed-" embed-id)))]}
+                                           (merge {:when   :seen-all-of?
+                                                   :events [:success-resolved-forward-transact
+                                                            :success-self-presence-updated]
+                                                   :halt?   true}
+                                                  (when-not existing-tx
+                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
 
 
 (reg-event-fx
   :enter/bump-up
   (fn [_ [_ {:keys [uid new-uid embed-id] :as args}]]
     (log/debug ":enter/bump-up args" (pr-str args))
-    (let [position (common-db/compat-position @db/dsdb {:block/uid  uid
-                                                        :relation :before})
-          event    (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
+    (let [existing-tx (sentry/transaction-get-current)
+          sentry-tx   (if existing-tx
+                        existing-tx
+                        (sentry/transaction-start "enter/bump-up"))
+          position    (wrap-span "compat-position"
+                                 (common-db/compat-position @db/dsdb {:block/uid  uid
+                                                                      :relation :before}))
+          event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
+      {:fx [[:async-flow {:id             :enter-bump-up-async-flow
+                          :db-path        [:async-flow :enter-bump-up-child]
+                          :first-dispatch [:resolve-transact-forward event]
+                          :rules          [{:when     :seen?
+                                            :events   :success-resolved-forward-transact
+                                            :dispatch [:editing/uid (str new-uid (when embed-id
+                                                                                   (str "-embed-" embed-id)))]}
+                                           (merge {:when   :seen-all-of?
+                                                   :events [:success-resolved-forward-transact
+                                                            :success-self-presence-updated]
+                                                   :halt?   true}
+                                                  (when-not existing-tx
+                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]
+            [:dispatch-n [[:resolve-transact-forward event]
                           [:editing/uid (str new-uid (when embed-id
                                                        (str "-embed-" embed-id)))]]]]})))
 
@@ -1120,19 +1197,34 @@
     ;; Triggered when there is a closed embeded block with no content in the top level block
     ;; and then one presses enter in the embeded block.
     (log/debug ":enter/open-block-add-child" (pr-str block) (pr-str new-uid))
-    (let [block-uid                  (:block/uid block)
+    (let [existing-tx             (sentry/transaction-get-current)
+          sentry-tx               (if existing-tx
+                                    existing-tx
+                                    (sentry/transaction-start "enter/open-block-add-child"))
+          block-uid               (:block/uid block)
           block-open-op           (atomic-graph-ops/make-block-open-op block-uid
                                                                        true)
-          position                (common-db/compat-position @db/dsdb {:block/uid  (:block/uid block)
-                                                                       :relation :first})
+          position                (wrap-span "compat-position"
+                                             (common-db/compat-position @db/dsdb {:block/uid  (:block/uid block)
+                                                                                  :relation :first}))
           add-child-op            (atomic-graph-ops/make-block-new-op new-uid position)
           open-block-add-child-op (composite-ops/make-consequence-op {:op/type :open-block-add-child}
                                                                      [block-open-op
                                                                       add-child-op])
           event                   (common-events/build-atomic-event open-block-add-child-op)]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                          [:editing/uid (str new-uid (when embed-id
-                                                       (str "-embed-" embed-id)))]]]]})))
+      {:fx [[:async-flow {:id             :enter-open-block-add-child-async-flow
+                          :db-path        [:async-flow :enter-open-block-add-child]
+                          :first-dispatch [:resolve-transact-forward event]
+                          :rules          [{:when     :seen?
+                                            :events   :success-resolved-forward-transact
+                                            :dispatch [:editing/uid (str new-uid (when embed-id
+                                                                                   (str "-embed-" embed-id)))]}
+                                           (merge {:when   :seen-all-of?
+                                                   :events [:success-resolved-forward-transact
+                                                            :success-self-presence-updated]
+                                                   :halt?   true}
+                                                  (when-not existing-tx
+                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
 
 
 (defn enter
