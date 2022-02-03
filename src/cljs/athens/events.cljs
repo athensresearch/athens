@@ -1207,7 +1207,7 @@
                                                                       :relation :before}))
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [[:async-flow {:id             :enter-bump-up-async-flow
-                          :db-path        [:async-flow :enter-bump-up-child]
+                          :db-path        [:async-flow :enter-bump-up]
                           :first-dispatch [:resolve-transact-forward event]
                           :rules          [{:when     :seen?
                                             :events   :success-resolved-forward-transact
@@ -1218,10 +1218,7 @@
                                                             :success-self-presence-updated]
                                                    :halt?   true}
                                                   (when-not existing-tx
-                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]
-            [:dispatch-n [[:resolve-transact-forward event]
-                          [:editing/uid (str new-uid (when embed-id
-                                                       (str "-embed-" embed-id)))]]]]})))
+                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
 
 
 (reg-event-fx
