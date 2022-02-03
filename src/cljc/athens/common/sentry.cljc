@@ -1,7 +1,9 @@
 (ns athens.common.sentry
   "Macros for Sentry monitoring"
   #?(:cljs
-     (:require [athens.utils.sentry :as sentry])))
+     (:require
+       [athens.utils.sentry :as sentry])))
+
 
 (defn span*
   [span-name f]

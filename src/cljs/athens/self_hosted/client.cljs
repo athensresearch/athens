@@ -1,16 +1,13 @@
 (ns athens.self-hosted.client
   "Self-Hosted Mode connector."
   (:require
-    [athens.common-db                  :as common-db]
     [athens.common-events              :as common-events]
     [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events.schema       :as schema]
     [athens.common.logging             :as log]
-    [athens.utils.sentry               :as sentry]
     [cognitect.transit                 :as transit]
     [com.cognitect.transit.types       :as ty]
     [com.stuartsierra.component        :as component]
-    [datascript.core                   :as d]
     [re-frame.core                     :as rf]))
 
 

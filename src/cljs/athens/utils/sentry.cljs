@@ -1,9 +1,9 @@
 (ns athens.utils.sentry
   "Sentry integration utilities."
   (:require
-    [athens.common.logging :as log]
     ["@sentry/react" :as Sentry]
-    ["@sentry/react"]))
+    ["@sentry/react"]
+    [athens.common.logging :as log]))
 
 
 (def tx-active (atom nil))

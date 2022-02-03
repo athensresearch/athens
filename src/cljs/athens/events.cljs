@@ -627,15 +627,18 @@
   (fn [_ _]
     {}))
 
+
 (rf/reg-event-fx
   :success-resolved-forward-transact
   (fn [_ _]
     {}))
 
+
 (rf/reg-event-fx
   :success-self-presence-updated
   (fn [_ _]
     {}))
+
 
 (reg-event-fx
   :reset-conn
@@ -666,7 +669,7 @@
           tx-data         (into [] (map datom->tx-entry) datoms)]
       (sentry/span-finish conversion-span)
       {:db         db
-       :async-flow {:id             :db-dump-handler-async-flow ;; NOTE do not ever use id that is defined event
+       :async-flow {:id             :db-dump-handler-async-flow ; NOTE do not ever use id that is defined event
                     :db-path        [:async-flow :db-dump-handler]
                     :first-dispatch [:reset-conn (d/empty-db common-db/schema)]
                     :rules          [{:when     :seen?
@@ -1108,10 +1111,10 @@
                         (sentry/transaction-start "backspace/delete-merge-block-with-save"))
           op    (wrap-span "build-block-merge-with-updated-op"
                            (graph-ops/build-block-merge-with-updated-op @db/dsdb
-                                                             uid
-                                                             prev-block-uid
-                                                             value
-                                                             local-update))
+                                                                        uid
+                                                                        prev-block-uid
+                                                                        value
+                                                                        local-update))
           event (common-events/build-atomic-event  op)]
       {:fx [[:async-flow {:id             :backspace-delete-merge-block-with-save-async-flow
                           :db-path        [:async-flow :backspace-delete-merge-block-with-save]
@@ -1170,11 +1173,11 @@
                         (sentry/transaction-start "enter/split-block"))
           op          (wrap-span "build-block-split-op"
                                  (graph-ops/build-block-split-op @db/dsdb
-                                                                {:old-block-uid uid
-                                                                 :new-block-uid new-uid
-                                                                 :string        value
-                                                                 :index         index
-                                                                 :relation      relation}))
+                                                                 {:old-block-uid uid
+                                                                  :new-block-uid new-uid
+                                                                  :string        value
+                                                                  :index         index
+                                                                  :relation      relation}))
           event       (common-events/build-atomic-event op)]
       {:fx [[:async-flow {:id             :enter-split-block-async-flow
                           :db-path        [:async-flow :enter-split-block-child]
@@ -1404,8 +1407,8 @@
     ;;                 transaction that updates the string).
     (let [existing-tx                   (sentry/transaction-get-current)
           sentry-tx                     (if existing-tx
-                                           existing-tx
-                                           (sentry/transaction-start "indent"))
+                                          existing-tx
+                                          (sentry/transaction-start "indent"))
           block                         (wrap-span "get-block"
                                                    (common-db/get-block @db/dsdb [:block/uid uid]))
           block-zero?                   (zero? (:block/order block))
@@ -1453,8 +1456,8 @@
     (log/debug ":indent/multi" (pr-str uids))
     (let [existing-tx              (sentry/transaction-get-current)
           sentry-tx                (if existing-tx
-                                      existing-tx
-                                      (sentry/transaction-start "indent/multi"))
+                                     existing-tx
+                                     (sentry/transaction-start "indent/multi"))
           sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
           f-uid                    (first sanitized-selected-uids)
           dsdb                     @db/dsdb
@@ -1487,11 +1490,11 @@
     (log/debug ":unindent args" (pr-str args))
     (let [existing-tx               (sentry/transaction-get-current)
           sentry-tx                 (if existing-tx
-                                       existing-tx
-                                       (sentry/transaction-start "unindent"))
+                                      existing-tx
+                                      (sentry/transaction-start "unindent"))
           parent                    (wrap-span "parent"
-                                      (common-db/get-parent @db/dsdb
-                                                            (common-db/e-by-av @db/dsdb :block/uid uid)))
+                                               (common-db/get-parent @db/dsdb
+                                                                     (common-db/e-by-av @db/dsdb :block/uid uid)))
           is-parent-root-embed?     (= (some-> d-key-down
                                                :target
                                                (.. (closest ".block-embed"))
@@ -1532,8 +1535,8 @@
     (log/debug ":unindent/multi" uids)
     (let [existing-tx                   (sentry/transaction-get-current)
           sentry-tx                     (if existing-tx
-                                           existing-tx
-                                           (sentry/transaction-start "unindent/multi"))
+                                          existing-tx
+                                          (sentry/transaction-start "unindent/multi"))
           [f-uid f-embed-id]          (wrap-span "uid-and-embed-id"
                                                  (common-db/uid-and-embed-id (first uids)))
           sanitized-selected-uids     (mapv (comp

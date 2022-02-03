@@ -6,7 +6,6 @@
     [athens.db                            :as db]
     [athens.electron.utils                :as utils]
     [athens.interceptors                  :as interceptors]
-    [athens.utils.sentry                  :as sentry]
     [datascript.core                      :as d]
     [datascript.transit                   :as dt]
     [goog.functions                       :refer [debounce]]
