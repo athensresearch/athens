@@ -1483,7 +1483,6 @@
 
 (reg-event-fx
   :unindent
-  ;;[(interceptors/sentry-span "unindent")]
   (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
     (log/debug ":unindent args" (pr-str args))
     (let [existing-tx               (sentry/transaction-get-current)
