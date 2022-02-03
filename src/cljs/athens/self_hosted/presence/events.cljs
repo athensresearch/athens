@@ -49,5 +49,6 @@
   :presence/send-update
   (fn [{:keys [db]} [_ m]]
     {;; Optimistically update own presence to not have weird delay.
-     :dispatch [:presence/update (merge m {:session-id (get-in db [:presence :session-id])})]
+     :dispatch-n [[:presence/update (merge m {:session-id (get-in db [:presence :session-id])})]
+                  [:success-self-presence-updated]]
      :fx [[:presence/send-update-fx m]]}))

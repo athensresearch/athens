@@ -58,7 +58,7 @@
                                                     (clj->js {:levels ["error" "assert"]}))
                                                (new (.. integrations -ReportingObserver)
                                                     (clj->js {:types ["crash"]}))]
-                            :environment      (if config/debug? "development" "production")
+                            :environment     "sid" #_(if config/debug? "development" "production")
                             :beforeSend       #(when (sentry-on?) %)
                             :tracesSampleRate 1.0}))))
 

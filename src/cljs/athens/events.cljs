@@ -11,6 +11,7 @@
     [athens.common-events.resolver.undo   :as undo-resolver]
     [athens.common-events.schema          :as schema]
     [athens.common.logging                :as log]
+    [athens.common.sentry                 :refer-macros [wrap-span]]
     [athens.common.utils                  :as common.utils]
     [athens.dates                         :as dates]
     [athens.db                            :as db]
@@ -626,6 +627,15 @@
   (fn [_ _]
     {}))
 
+(rf/reg-event-fx
+  :success-resolved-forward-transact
+  (fn [_ _]
+    {}))
+
+(rf/reg-event-fx
+  :success-self-presence-updated
+  (fn [_ _]
+    {}))
 
 (reg-event-fx
   :reset-conn
@@ -1265,37 +1275,53 @@
 
 (reg-event-fx
   :indent
-  [(interceptors/sentry-span "indent")]
   (fn [{:keys [_db]} [_ {:keys [uid d-key-down local-string] :as args}]]
     ;; - `block-zero`: The first block in a page
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-    (let [block                    (common-db/get-block @db/dsdb [:block/uid uid])
-          block-zero?              (zero? (:block/order block))
-          [prev-block-uid target-rel] (get-prev-block-uid-and-target-rel uid)
-          sib-block                (common-db/get-block @db/dsdb [:block/uid prev-block-uid])
+    (let [existing-tx                   (sentry/transaction-get-current)
+          sentry-tx                     (if existing-tx
+                                           existing-tx
+                                           (sentry/transaction-start "indent"))
+          block                         (wrap-span "get-block"
+                                                   (common-db/get-block @db/dsdb [:block/uid uid]))
+          block-zero?                   (zero? (:block/order block))
+          [prev-block-uid
+           target-rel]                  (wrap-span "get-prev-block-uid-and-target-rel"
+                                                   (get-prev-block-uid-and-target-rel uid))
+          sib-block                     (wrap-span "get-block-sib-block"
+                                                   (common-db/get-block @db/dsdb [:block/uid prev-block-uid]))
           ;; if sibling block is closed with children, open
-          {sib-open :block/open sib-children :block/children sib-uid :block/uid} sib-block
-          block-closed?            (and (not sib-open) sib-children)
-          sib-block-open-op        (when block-closed?
-                                     (atomic-graph-ops/make-block-open-op sib-uid true))
-          {:keys [start end]} d-key-down
-          block-save-block-move-op (block-save-block-move-composite-op uid
-                                                                       prev-block-uid
-                                                                       target-rel
-                                                                       local-string)
-          event                    (common-events/build-atomic-event
-                                     (composite-ops/make-consequence-op {:op/type :indent}
-                                                                        (cond-> [block-save-block-move-op]
-                                                                          block-closed? (conj sib-block-open-op))))]
+          {sib-open     :block/open
+           sib-children :block/children
+           sib-uid      :block/uid}     sib-block
+          block-closed?                 (and (not sib-open) sib-children)
+          sib-block-open-op             (when block-closed?
+                                          (atomic-graph-ops/make-block-open-op sib-uid true))
+          {:keys [start end]}           d-key-down
+          block-save-block-move-op      (block-save-block-move-composite-op uid
+                                                                            prev-block-uid
+                                                                            target-rel
+                                                                            local-string)
+          event                         (common-events/build-atomic-event
+                                          (composite-ops/make-consequence-op {:op/type :indent}
+                                                                             (cond-> [block-save-block-move-op]
+                                                                               block-closed? (conj sib-block-open-op))))]
       (log/debug "null-sib-uid" (and block-zero?
                                      prev-block-uid)
                  ", args:" (pr-str args)
                  ", block-zero?" block-zero?)
       (when (and prev-block-uid
                  (not block-zero?))
-        {:fx [[:dispatch            [:resolve-transact-forward event]]
+        {:fx [[:async-flow {:id             :indent-async-flow
+                            :db-path        [:async-flow :indent]
+                            :first-dispatch [:resolve-transact-forward event]
+                            :rules          [(merge {:when   :seen?
+                                                     :events :success-resolved-forward-transact
+                                                     :halt?   true}
+                                                    (when-not existing-tx
+                                                      {:dispatch [:sentry/end-tx sentry-tx]}))]}]
               [:set-cursor-position [uid start end]]]}))))
 
 
@@ -1303,29 +1329,48 @@
   :indent/multi
   (fn [_ [_ {:keys [uids]}]]
     (log/debug ":indent/multi" (pr-str uids))
-    (let [sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
+    (let [existing-tx              (sentry/transaction-get-current)
+          sentry-tx                (if existing-tx
+                                      existing-tx
+                                      (sentry/transaction-start "indent/multi"))
+          sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
           f-uid                    (first sanitized-selected-uids)
           dsdb                     @db/dsdb
           [prev-block-uid
-           target-rel]             (get-prev-block-uid-and-target-rel f-uid)
-          same-parent?             (common-db/same-parent? dsdb sanitized-selected-uids)
-          first-block-order        (:block/order (common-db/get-block dsdb [:block/uid f-uid]))
+           target-rel]             (wrap-span "get-prev-block-uid-and-target-rel"
+                                              (get-prev-block-uid-and-target-rel f-uid))
+          same-parent?             (wrap-span "same-parent"
+                                              (common-db/same-parent? dsdb sanitized-selected-uids))
+          first-block-order        (:block/order (wrap-span "get-block"
+                                                            (common-db/get-block dsdb [:block/uid f-uid])))
           block-zero?              (zero? first-block-order)]
       (log/debug ":indent/multi same-parent?" same-parent?
                  ", not block-zero?" (not  block-zero?))
       (when (and same-parent? (not block-zero?))
-        {:fx [[:dispatch [:drop-multi/sibling {:source-uids sanitized-selected-uids
-                                               :target-uid  prev-block-uid
-                                               :drag-target target-rel}]]]}))))
+        {:fx [[:async-flow {:id             :indent-multi-async-flow
+                            :db-path        [:async-flow :indent-multi]
+                            :first-dispatch [:drop-multi/sibling {:source-uids sanitized-selected-uids
+                                                                  :target-uid  prev-block-uid
+                                                                  :drag-target target-rel}]
+                            :rules          [(merge {:when   :seen?
+                                                     :events :success-resolved-forward-transact
+                                                     :halt?   true}
+                                                    (when-not existing-tx
+                                                      {:dispatch [:sentry/end-tx sentry-tx]}))]}]]}))))
 
 
 (reg-event-fx
   :unindent
-  [(interceptors/sentry-span "unindent")]
+  ;;[(interceptors/sentry-span "unindent")]
   (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
     (log/debug ":unindent args" (pr-str args))
-    (let [parent                    (common-db/get-parent @db/dsdb
-                                                          (common-db/e-by-av @db/dsdb :block/uid uid))
+    (let [existing-tx               (sentry/transaction-get-current)
+          sentry-tx                 (if existing-tx
+                                       existing-tx
+                                       (sentry/transaction-start "unindent"))
+          parent                    (wrap-span "parent"
+                                      (common-db/get-parent @db/dsdb
+                                                            (common-db/e-by-av @db/dsdb :block/uid uid)))
           is-parent-root-embed?     (= (some-> d-key-down
                                                :target
                                                (.. (closest ".block-embed"))
@@ -1344,9 +1389,19 @@
 
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                            [:editing/uid (str uid (when embed-id
-                                                     (str "-embed-" embed-id)))]]]
+        {:fx [[:async-flow {:id             :unindent-async-flow
+                            :db-path        [:async-flow :unindent]
+                            :first-dispatch [:resolve-transact-forward event]
+                            :rules          [{:when     :seen?
+                                              :events   :success-resolved-forward-transact
+                                              :dispatch [:editing/uid (str uid (when embed-id
+                                                                                 (str "-embed-" embed-id)))]}
+                                             (merge {:when   :seen-all-of?
+                                                     :events [:success-resolved-forward-transact
+                                                              :success-self-presence-updated]
+                                                     :halt?   true}
+                                                    (when-not existing-tx
+                                                      {:dispatch [:sentry/end-tx sentry-tx]}))]}]
               [:set-cursor-position [uid start end]]]}))))
 
 
@@ -1354,13 +1409,20 @@
   :unindent/multi
   (fn [{:keys [db]} [_ {:keys [uids]}]]
     (log/debug ":unindent/multi" uids)
-    (let [[f-uid f-embed-id]          (common-db/uid-and-embed-id (first uids))
+    (let [existing-tx                   (sentry/transaction-get-current)
+          sentry-tx                     (if existing-tx
+                                           existing-tx
+                                           (sentry/transaction-start "unindent/multi"))
+          [f-uid f-embed-id]          (wrap-span "uid-and-embed-id"
+                                                 (common-db/uid-and-embed-id (first uids)))
           sanitized-selected-uids     (mapv (comp
                                               first
                                               common-db/uid-and-embed-id) uids)
           {parent-title :node/title
-           parent-uid   :block/uid}   (common-db/get-parent @db/dsdb [:block/uid f-uid])
-          same-parent?                (common-db/same-parent? @db/dsdb sanitized-selected-uids)
+           parent-uid   :block/uid}   (wrap-span "get-parent"
+                                                 (common-db/get-parent @db/dsdb [:block/uid f-uid]))
+          same-parent?                (wrap-span "same-parent"
+                                                 (common-db/same-parent? @db/dsdb sanitized-selected-uids))
           is-parent-root-embed?       (when same-parent?
                                         (some-> "#editable-uid-"
                                                 (str f-uid "-embed-" f-embed-id)
@@ -1376,9 +1438,16 @@
                                           (= parent-uid context-root-uid))]
       (log/debug ":unindent/multi do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [[:dispatch [:drop-multi/sibling {:source-uids  sanitized-selected-uids
-                                               :target-uid   parent-uid
-                                               :drag-target  :after}]]]}))))
+        {:fx [[:async-flow {:id             :unindent-multi-async-flow
+                            :db-path        [:async-flow :unindent-multi]
+                            :first-dispatch [:drop-multi/sibling {:source-uids  sanitized-selected-uids
+                                                                  :target-uid   parent-uid
+                                                                  :drag-target  :after}]
+                            :rules          [(merge {:when   :seen?
+                                                     :events :success-resolved-forward-transact
+                                                     :halt?   true}
+                                                    (when-not existing-tx
+                                                      {:dispatch [:sentry/end-tx sentry-tx]}))]}]]}))))
 
 
 (reg-event-fx

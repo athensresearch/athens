@@ -283,5 +283,6 @@
     (log/debug ":remote/forwarded-event event:" (pr-str event))
     (let [[db'] (add-memory-event! [db db/dsdb] event)]
       {:db db'
-       :fx [[:dispatch [:db/not-synced]]]
+       :fx [[:dispatch-n [[:db/not-synced]
+                          [:success-resolved-forward-transact]]]]
        :remote/send-event-fx! event})))
