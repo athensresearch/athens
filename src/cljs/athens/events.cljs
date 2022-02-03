@@ -1180,7 +1180,7 @@
                                                                   :relation      relation}))
           event       (common-events/build-atomic-event op)]
       {:fx [[:async-flow {:id             :enter-split-block-async-flow
-                          :db-path        [:async-flow :enter-split-block-child]
+                          :db-path        [:async-flow :enter-split-block]
                           :first-dispatch [:resolve-transact-forward event]
                           :rules          [{:when     :seen?
                                             :events   :success-resolved-forward-transact
