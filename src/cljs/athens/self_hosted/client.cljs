@@ -71,7 +71,8 @@
   (when-let [timer-id @reconnect-timer]
     (js/clearTimeout timer-id)
     (reset! reconnect-timer nil)
-    (reset! reconnect-counter -1)))
+    (reset! reconnect-counter -1)
+    (rf/dispatch [:loading/unset])))
 
 
 (defn open?
@@ -325,9 +326,10 @@
 
 (defn- close-handler
   [event]
-  (log/info "WSClient Disconnected:" (pr-str event))
+  (log/info "WSClient Disconnected unexpectedly, reconnecting:" (pr-str event))
   (let [connection (.-target event)
         url        (.-url connection)]
+    (rf/dispatch [:loading/set])
     (rf/dispatch [:presence/clear])
     (rf/dispatch [:conn-status :reconnecting])
     (remove-listeners! connection)
