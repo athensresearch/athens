@@ -1,8 +1,6 @@
 (ns athens.common-db
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
-  #?(:cljs
-     (:require-macros [athens.common.sentry :as sentry-m :refer [wrap-span]]))
   (:require
     [athens.common.logging        :as log]
     [athens.parser                :as parser]
@@ -12,7 +10,10 @@
     [clojure.set                  :as set]
     [clojure.string               :as string]
     [clojure.walk                 :as walk]
-    [datascript.core              :as d]))
+    [datascript.core              :as d])
+  #?(:cljs
+     (:require-macros
+       [athens.common.sentry :as sentry-m :refer [wrap-span]])))
 
 
 (def schema
@@ -825,12 +826,12 @@
   [db tx-data]
   #?(:cljs
      (as-> tx-data $
-          (wrap-span "block-uid-nil-eater"
-                     (block-uid-nil-eater db $))
-          (wrap-span "linkmaker"
-                     (linkmaker db $))
-          (wrap-span "orderkeeper"
-                     (orderkeeper db $)))
+           (wrap-span "block-uid-nil-eater"
+                      (block-uid-nil-eater db $))
+           (wrap-span "linkmaker"
+                      (linkmaker db $))
+           (wrap-span "orderkeeper"
+                      (orderkeeper db $)))
      :clj (->> tx-data
                (block-uid-nil-eater db)
                (linkmaker db)
