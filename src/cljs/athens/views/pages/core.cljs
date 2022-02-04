@@ -1,6 +1,7 @@
 (ns athens.views.pages.core
   (:require
     [athens.style :as style]
+    [athens.views.hoc.perf-mon :as perf-mon]
     [athens.views.pages.all-pages :as all-pages]
     [athens.views.pages.daily-notes :as daily-notes]
     [athens.views.pages.graph :as graph]

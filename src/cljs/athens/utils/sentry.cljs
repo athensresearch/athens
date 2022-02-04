@@ -63,6 +63,8 @@
 (defn span-start
   "Starts a *span* named `op-name` within given `transaction`,
   with optional `op-description`."
+  ([op-name]
+   (span-start (transaction-get-current) op-name))
   ([transaction op-name]
    (when transaction
      (let [span (.startChild transaction (clj->js {:op op-name}))]
