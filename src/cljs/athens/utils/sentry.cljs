@@ -1,9 +1,9 @@
 (ns athens.utils.sentry
   "Sentry integration utilities."
   (:require
-    [athens.common.logging :as log]
     ["@sentry/react" :as Sentry]
-    ["@sentry/react"]))
+    ["@sentry/react"]
+    [athens.common.logging :as log]))
 
 
 (def tx-active (atom nil))
@@ -63,6 +63,8 @@
 (defn span-start
   "Starts a *span* named `op-name` within given `transaction`,
   with optional `op-description`."
+  ([op-name]
+   (span-start (transaction-get-current) op-name))
   ([transaction op-name]
    (when transaction
      (let [span (.startChild transaction (clj->js {:op op-name}))]
