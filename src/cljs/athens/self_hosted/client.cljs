@@ -219,7 +219,7 @@
 (defn- db-dump-handler
   [{:keys [datoms]}]
   (log/debug "Received DB Dump")
-  (rf/dispatch [:reset-conn (d/empty-db common-db/schema)])
+  (rf/dispatch [:reset-conn common-db/empty-db])
   ;; TODO: this transact should be a internal representation event instead.
   (rf/dispatch [:transact (into [] (map datom->tx-entry) datoms)])
   (rf/dispatch [:remote/start-event-sync])

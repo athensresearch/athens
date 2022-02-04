@@ -28,7 +28,7 @@
 
 
 (deftest get-individual-blocks-from-tree-test
-  (let [db (d/empty-db common-db/schema)]
+  (let [db common-db/empty-db]
     (is (= [#:op{:type :page/new, :atomic? true, :args {:page/title "Welcome"}}
             #:op{:type :block/new, :atomic? true, :args {:block/uid "block-1", :block/position {:page/title "Welcome", :relation :last}}}
             #:op{:type :page/new, :atomic? true, :args {:page/title "Welcome"}}
@@ -49,7 +49,7 @@
 
 
 (deftest get-internal-representation
-  (let [db (-> (d/empty-db common-db/schema)
+  (let [db (-> common-db/empty-db
                (d/db-with [{:node/title     "Welcome"
                             :page/sidebar   0
                             :block/children [#:block{:uid    "block-1"
@@ -83,4 +83,4 @@
 
   (get-internal-representation)
 
-  (bfs/internal-representation->atomic-ops (d/empty-db common-db/schema) tree-without-page {:page/title "title" :relation :first}))
+  (bfs/internal-representation->atomic-ops common-db/empty-db tree-without-page {:page/title "title" :relation :first}))

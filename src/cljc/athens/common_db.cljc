@@ -26,6 +26,9 @@
    :block/remote-id     {:db/unique :db.unique/identity}})
 
 
+(def empty-db (d/empty-db schema))
+
+
 (defn e-by-av
   [db a v]
   (-> (d/datoms db :avet a v)

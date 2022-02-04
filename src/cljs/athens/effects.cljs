@@ -33,7 +33,8 @@
   :reset-conn!
   (fn [new-db]
     (d/reset-conn! db/dsdb new-db)
-    (common-db/health-check db/dsdb)))
+    (when-not (= new-db common-db/empty-db)
+      (common-db/health-check db/dsdb))))
 
 
 (rf/reg-fx
