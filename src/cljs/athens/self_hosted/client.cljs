@@ -9,7 +9,6 @@
     [cognitect.transit                 :as transit]
     [com.cognitect.transit.types       :as ty]
     [com.stuartsierra.component        :as component]
-    [datascript.core                   :as d]
     [re-frame.core                     :as rf]))
 
 
