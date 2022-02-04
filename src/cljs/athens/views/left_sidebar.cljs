@@ -151,11 +151,10 @@
 (defn left-sidebar
   []
   (let [open? (subscribe [:left-sidebar/open])
-        shortcuts (->> @(q '[:find ?order ?title ?uid
+        shortcuts (->> @(q '[:find ?order ?title
                              :where
                              [?e :page/sidebar ?order]
-                             [?e :node/title ?title]
-                             [?e :block/uid ?uid]] db/dsdb)
+                             [?e :node/title ?title]] db/dsdb)
                        seq
                        (sort-by first))]
     ;; (when @open?

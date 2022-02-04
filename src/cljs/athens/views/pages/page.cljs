@@ -21,7 +21,7 @@
   "Can be a block or a node page."
   []
   (let [uid (rf/subscribe [:current-route/uid])
-        {:keys [node/title block/string db/id]} @(pull db/dsdb '[*] [:block/uid @uid])]
+        {:keys [node/title block/string db/id]} @(pull db/dsdb '[:node/title :block/string :db/id] [:block/uid @uid])]
     (cond
       title [node-page/page id]
       string [block-page/page id]

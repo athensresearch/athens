@@ -7,7 +7,7 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull q]]
+    [posh.reagent :refer [posh! pull]]
     [re-frame.core :refer [dispatch]]))
 
 
@@ -579,13 +579,13 @@
 
 (defn get-ref-ids
   [pattern]
-  @(q '[:find [?e ...]
-        :in $ ?regex
-        :where
-        [?e :block/string ?s]
-        [(re-find ?regex ?s)]]
-      dsdb
-      pattern))
+  (d/q '[:find [?e ...]
+         :in $ ?regex
+         :where
+         [?e :block/string ?s]
+         [(re-find ?regex ?s)]]
+       dsdb
+       pattern))
 
 
 (defn merge-parents-and-block

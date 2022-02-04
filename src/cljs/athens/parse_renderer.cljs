@@ -10,7 +10,7 @@
     [athens.style :refer [color OPACITIES]]
     [clojure.string :as str]
     [instaparse.core :as insta]
-    [posh.reagent :refer [pull #_q]]
+    [posh.reagent :refer [pull]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -99,7 +99,7 @@
 
 (defn render-block-ref
   [{:keys [from title]} ref-uid uid]
-  (let [block (pull db/dsdb '[*] [:block/uid ref-uid])]
+  (let [block (pull db/dsdb '[:block/string] [:block/uid ref-uid])]
     (if @block
       [:span (assoc (use-style block-ref {:class "block-ref"})
                     :title (str/replace from

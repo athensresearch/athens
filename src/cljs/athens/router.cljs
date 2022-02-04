@@ -6,7 +6,6 @@
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
     [day8.re-frame.tracing       :refer-macros [fn-traced]]
-    [posh.reagent                :refer [pull]]
     [re-frame.core               :as rf :refer [reg-sub reg-event-fx]]
     [reitit.coercion.spec        :as rss]
     [reitit.frontend             :as rfe]
@@ -83,8 +82,8 @@
                         :id     :merge-prompt}
              :dispatch [:editing/first-child (:block/uid page-block)]})
           (let [uid               (-> new-match :path-params :id)
-                node              (pull db/dsdb '[*] [:block/uid uid]) ; TODO make the page title query work when zoomed in on a block
-                node-title        (:node/title @node)
+                ;; TODO make the page title query work when zoomed in on a block
+                node-title        (common-db/get-page-title @db/dsdb uid)
                 home?             (= route-name :home)
                 html-title-prefix (cond
                                     node-title            node-title
