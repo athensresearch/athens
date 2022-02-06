@@ -108,6 +108,10 @@
     ;; Path is relative to the compiled js file (main.js in our case)
     (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
     (.on ^js @main-window "closed" #(reset! main-window nil))
+    (.on ^js @main-window "close" (fn [e]
+                                    (when (= js/process.platform "darwin")
+                                      (. e preventDefault)
+                                      (. @main-window hide))))
     (.. ^js @main-window -webContents (on "new-window" (fn [e url]
                                                          (.. e preventDefault)
                                                          (.. shell (openExternal url)))))))
