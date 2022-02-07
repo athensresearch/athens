@@ -77,6 +77,9 @@
   )
 
 
+(def quitting (atom false))
+
+
 (defn init-browser
   []
   (let [main-window-state (electron-window-state #js {:defaultWidth 800
@@ -108,10 +111,14 @@
     ;; Path is relative to the compiled js file (main.js in our case)
     (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
     (.on ^js @main-window "closed" #(reset! main-window nil))
+    ;; On mac, hide the window instead of closing to keep transient state.
+    ;; https://stackoverflow.com/a/45156004/2116927
+    ;; Also see remaining code from the example in the `main` fn below.
     (.on ^js @main-window "close" (fn [e]
-                                    (when (= js/process.platform "darwin")
-                                      (. e preventDefault)
-                                      (. @main-window hide))))
+                                    (when (and (= js/process.platform "darwin")
+                                               (not @quitting))
+                                      (.. e preventDefault)
+                                      (.. @main-window hide))))
     (.. ^js @main-window -webContents (on "new-window" (fn [e url]
                                                          (.. e preventDefault)
                                                          (.. shell (openExternal url)))))))
@@ -171,9 +178,11 @@
   []
   (.on app "window-all-closed" #(when-not (= js/process.platform "darwin")
                                   (.quit app)))
+  (.on app "before-quit" #(reset! quitting true))
   (.on app "activate" (fn []
-                        (when (nil? @main-window)
-                          (init-browser))))
+                        (if (nil? @main-window)
+                          (init-browser)
+                          (.show @main-window))))
   (.on app "ready" (fn []
                      (init-ipcMain)
                      (init-menu)
