@@ -31,9 +31,9 @@
 
 (rf/reg-fx
   :reset-conn!
-  (fn [new-db]
+  (fn [[new-db skip-health-check?]]
     (d/reset-conn! db/dsdb new-db)
-    (when-not (= new-db common-db/empty-db)
+    (when-not skip-health-check?
       (common-db/health-check db/dsdb))))
 
 

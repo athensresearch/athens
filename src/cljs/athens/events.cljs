@@ -576,7 +576,6 @@
 ;; TODO: remove this event and also :transact! when the following are converted to events:
 ;; - athens.electron.images/dnd-image (needs file upload)
 ;; - :upload/roam-edn (needs internal representation)
-;; - athens.self-hosted.client/db-dump-handler (needs internal representation)
 ;; - :undo / :redo
 ;; No other reframe events should be calling this event.
 (reg-event-fx
@@ -593,8 +592,8 @@
 
 (reg-event-fx
   :reset-conn
-  (fn [_ [_ db]]
-    {:reset-conn! db}))
+  (fn [_ [_ db skip-health-check?]]
+    {:reset-conn! [db skip-health-check?]}))
 
 
 (reg-event-fx

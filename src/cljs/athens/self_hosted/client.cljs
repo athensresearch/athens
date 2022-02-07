@@ -9,6 +9,7 @@
     [cognitect.transit                 :as transit]
     [com.cognitect.transit.types       :as ty]
     [com.stuartsierra.component        :as component]
+    [datascript.core                   :as d]
     [re-frame.core                     :as rf]))
 
 
@@ -219,9 +220,10 @@
 (defn- db-dump-handler
   [{:keys [datoms]}]
   (log/debug "Received DB Dump")
-  (rf/dispatch [:reset-conn common-db/empty-db])
-  ;; TODO: this transact should be a internal representation event instead.
-  (rf/dispatch [:transact (into [] (map datom->tx-entry) datoms)])
+  ;; TODO: this reset should be a internal representation transact event instead.
+  (rf/dispatch [:reset-conn (d/db-with common-db/empty-db
+                                       (into [] (map datom->tx-entry) datoms))
+                true])
   (rf/dispatch [:remote/start-event-sync])
   (rf/dispatch [:db/sync])
   (rf/dispatch [:remote/connected])
