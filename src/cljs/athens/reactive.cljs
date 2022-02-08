@@ -60,6 +60,7 @@
 (def node-document-pull-vector
   '[:db/id :block/uid :node/title :page/sidebar
     ;; TODO: only pull direct children ids when blocks support local pulls
+    :block/string :block/open
     {:block/children ...}])
 
 
