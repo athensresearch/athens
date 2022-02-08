@@ -3,6 +3,7 @@
     ["@material-ui/icons/Edit" :default Edit]
     [athens.db :as db]
     [athens.parse-renderer :refer [component]]
+    [athens.reactive :as reactive]
     [athens.style :refer [color]]
     [athens.util :refer [recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
@@ -96,7 +97,7 @@
     (if (db/e-by-av :block/uid block-uid)
       (r/with-let [embed-id (random-uuid)]
                   [:div.block-embed (use-style block-embed-adjustments)
-                   (let [block (db/get-block-document [:block/uid block-uid])]
+                   (let [block (reactive/get-block-document [:block/uid block-uid])]
                      [:<>
                       [blocks/block-el
                        (recursively-modify-block-for-embed block embed-id)

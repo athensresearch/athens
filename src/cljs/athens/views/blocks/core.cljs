@@ -9,6 +9,7 @@
     [athens.electron.utils                   :as electron.utils]
     [athens.events.selection                 :as select-events]
     [athens.parse-renderer                   :as parse-renderer]
+    [athens.reactive                         :as reactive]
     [athens.router                           :as router]
     [athens.self-hosted.presence.views       :as presence]
     [athens.style                            :as style]
@@ -152,7 +153,7 @@
                          :parent-uids    (set (map :block/uid (:block/parents block)))}]
     (fn [_]
       (let [{:keys [block parents embed-id]} @state
-            block (db/get-block-document (:db/id block))]
+            block (reactive/get-block-document (:db/id block))]
         [:<>
          [:div (stylefy/use-style reference-breadcrumbs-container-style)
           [:> Toggle {:isOpen (:open? @state)
@@ -167,7 +168,7 @@
                      parents
                      (conj parents block))]
                [breadcrumbs/breadcrumb {:key       (str "breadcrumb-" uid)
-                                        :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
+                                        :on-click #(do (let [new-B (db/get-block [:block/uid uid])
                                                              new-P (concat
                                                                      (take-while (fn [b] (not= (:block/uid b) uid)) parents)
                                                                      [breadcrumb-block])]
@@ -514,8 +515,3 @@
           (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"} :child true}])
           (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"}}])])))))
 
-
-(defn block-component
-  [ident]
-  (let [block (db/get-block-document ident)]
-    [block-el block]))

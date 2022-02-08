@@ -7,7 +7,6 @@ athens.main.core/main
 athens.patterns/date
 athens.util/common-ancestor
 athens.events/pages
-athens.views.blocks.core/block-component
 athens.self-hosted.presence.utils/MEMBERS
 athens.common-events.schema/datascript-indent-multi
 athens.common-events.schema/datascript-unindent-multi

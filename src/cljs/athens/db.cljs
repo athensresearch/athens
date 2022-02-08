@@ -7,7 +7,6 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
-    [posh.reagent :refer [pull]]
     [re-frame.core :refer [dispatch]]))
 
 
@@ -291,7 +290,7 @@
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order :block/header {:block/children ...} :block/refs :block/_refs])
+  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs])
 
 
 (def node-document-pull-vector
@@ -301,12 +300,6 @@
 
 (def roam-node-document-pull-vector
   '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
-
-
-(defn get-block-document
-  [id]
-  (->> @(pull dsdb block-document-pull-vector id)
-       sort-block-children))
 
 
 (defn get-node-document
@@ -579,7 +572,7 @@
   (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively v)))
                            {}
                            ref-ids)
-        blocks (map (fn [id] (get-block-document id)) ref-ids)]
+        blocks (map (fn [id] (get-block id)) ref-ids)]
     (mapv
       (fn [block]
         (merge block {:block/parents (get parents (:db/id block))}))

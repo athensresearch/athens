@@ -70,6 +70,17 @@
        db/sort-block-children))
 
 
+(def block-document-pull-vector
+  '[:db/id :block/uid :block/string :block/open :block/order
+    {:block/children ...} :block/refs :block/_refs])
+
+
+(defn get-block-document
+  [id]
+  (->> @(p/pull db/dsdb block-document-pull-vector id)
+       db/sort-block-children))
+
+
 (defn get-parents-recursively
   [id]
   (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
