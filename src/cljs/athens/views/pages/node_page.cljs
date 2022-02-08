@@ -587,6 +587,6 @@
 
 (defn page
   [ident]
-  (let [node (db/get-node-document ident)
+  (let [node (reactive/get-node-document ident)
         editing-uid @(subscribe [:editing/uid])]
     [node-page-el node editing-uid]))

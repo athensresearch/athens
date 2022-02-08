@@ -57,6 +57,18 @@
        rseq))
 
 
+(def node-document-pull-vector
+  '[:db/id :block/uid :node/title :page/sidebar
+    ;; TODO: only pull direct children ids when blocks support local pulls
+    {:block/children ...}])
+
+
+(defn get-node-document
+  [id]
+  (->> @(p/pull db/dsdb node-document-pull-vector id)
+       db/sort-block-children))
+
+
 (comment
   ;; Print what ratoms are active.
   (-> (ratoms) utils/spy)
