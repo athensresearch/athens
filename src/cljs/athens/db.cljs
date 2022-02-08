@@ -321,13 +321,6 @@
        sort-block-children))
 
 
-(defn get-athens-datoms
-  "Copy REPL output to athens-datoms.cljs"
-  [id]
-  (->> @(pull dsdb (filter #(not (or (= % :db/id) (= % :block/_refs))) node-document-pull-vector) id)
-       sort-block-children))
-
-
 (defn shape-parent-query
   "Normalize path from deeply nested block to root node."
   [pull-results]
