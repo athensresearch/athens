@@ -41,7 +41,24 @@
   (-> (watch-state) :ratoms))
 
 
+;; Ratoms
+
+(defn get-linked-references
+  "For node-page references UI."
+  [title]
+  (->> @(p/pull db/dsdb '[:block/_refs] [:node/title title])
+       :block/_refs
+       (mapv :db/id)
+       db/merge-parents-and-block
+       db/group-by-parent
+       (sort-by #(-> % first second))
+       (map #(vector (ffirst %) (second %)))
+       vec
+       rseq))
+
+
 (comment
+  ;; Print what ratoms are active.
   (-> (ratoms) utils/spy)
   ;;
   )

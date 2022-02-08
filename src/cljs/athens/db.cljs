@@ -611,20 +611,6 @@
   (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
-(defn get-linked-references
-  "For node-page references UI."
-  [title]
-  (->> @(pull dsdb '[* :block/_refs] [:node/title title])
-       :block/_refs
-       (mapv :db/id)
-       merge-parents-and-block
-       group-by-parent
-       (sort-by #(-> % first second))
-       (map #(vector (ffirst %) (second %)))
-       vec
-       rseq))
-
-
 (defn get-linked-block-references
   "For block-page references UI."
   [block]

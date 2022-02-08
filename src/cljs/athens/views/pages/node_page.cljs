@@ -15,8 +15,9 @@
     [athens.common-db :as common-db]
     [athens.common.utils :as utils]
     [athens.dates :as dates]
-    [athens.db :as db :refer [get-linked-references get-unlinked-references]]
+    [athens.db :as db :refer [get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+    [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
@@ -404,8 +405,9 @@
 
 
 (defn linked-ref-el
-  [state daily-notes? linked-refs]
-  (let [linked? "Linked References"]
+  [state daily-notes? title]
+  (let [linked? "Linked References"
+        linked-refs (reactive/get-linked-references title)]
     (when (or (and daily-notes? (not-empty linked-refs))
               (not daily-notes?))
       [:section (use-style references-style)
@@ -512,7 +514,7 @@
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
         block-uid     (r/atom nil)]
-    (fn [node editing-uid linked-refs]
+    (fn [node editing-uid]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
         (reset! unlinked-refs [])
@@ -579,13 +581,12 @@
               [blocks/block-el child])])
 
          ;; References
-         [linked-ref-el state on-daily-notes? linked-refs]
+         [linked-ref-el state on-daily-notes? title]
          [unlinked-ref-el state on-daily-notes? unlinked-refs title]]))))
 
 
 (defn page
   [ident]
-  (let [{:keys [#_block/uid node/title] :as node} (db/get-node-document ident)
-        editing-uid   @(subscribe [:editing/uid])
-        linked-refs   (get-linked-references title)]
-    [node-page-el node editing-uid linked-refs]))
+  (let [node (db/get-node-document ident)
+        editing-uid @(subscribe [:editing/uid])]
+    [node-page-el node editing-uid]))
