@@ -5,6 +5,7 @@
     [athens.common-events.schema :as schema]
     [athens.common.logging       :as log]
     [athens.db                   :as db]
+    [athens.reactive             :as reactive]
     [athens.self-hosted.client   :as client]
     [cljs-http.client            :as http]
     [cljs.core.async             :refer [go <!]]
@@ -32,9 +33,11 @@
 (rf/reg-fx
   :reset-conn!
   (fn [[new-db skip-health-check?]]
+    (reactive/unwatch!)
     (d/reset-conn! db/dsdb new-db)
     (when-not skip-health-check?
-      (common-db/health-check db/dsdb))))
+      (common-db/health-check db/dsdb))
+    (reactive/watch!)))
 
 
 (rf/reg-fx

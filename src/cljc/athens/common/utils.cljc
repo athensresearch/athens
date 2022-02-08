@@ -1,6 +1,8 @@
 (ns athens.common.utils
   "Athens Common Utilities.
   Shared between CLJ and CLJS."
+  (:require
+    [clojure.pprint :as pprint])
   #?(:cljs
      (:require-macros
        [athens.common.utils]))
@@ -84,3 +86,11 @@
   (apply concat (->> (range)
                      (map f)
                      (take-while (complement stop?)))))
+
+
+(defn spy
+  "Pretty print and return x.
+  Useful for debugging and logging."
+  [x]
+  (pprint/pprint x)
+  x)

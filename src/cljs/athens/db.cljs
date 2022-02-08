@@ -7,7 +7,7 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull]]
+    [posh.reagent :refer [pull]]
     [re-frame.core :refer [dispatch]]))
 
 
@@ -225,10 +225,6 @@
 ;; -- Datascript and Posh ------------------------------------------------
 
 (defonce dsdb (d/create-conn common-db/schema))
-
-
-;; todo: turn into an effect
-(posh! dsdb)
 
 
 (defn e-by-av
