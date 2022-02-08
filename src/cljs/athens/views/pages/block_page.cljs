@@ -129,7 +129,7 @@
   [_ _ _ _]
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})]
-    (fn [block editing-uid]
+    (fn [block]
       (let [{:block/keys [string children uid] :db/keys [id]} block]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
@@ -149,7 +149,7 @@
           [autosize/textarea
            {:id          (str "editable-uid-" uid)
             :value       (:string/local @state)
-            :class       (when (= editing-uid uid) "is-editing")
+            :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
             :auto-focus  true
             :on-blur     (fn [_] (persist-textarea-string @state uid))
             :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
@@ -169,6 +169,5 @@
 
 (defn page
   [ident]
-  (let [block       (reactive/get-block-document ident)
-        editing-uid @(subscribe [:editing/uid])]
-    [block-page-el block parents editing-uid]))
+  (let [block (reactive/get-block-document ident)]
+    [block-page-el block parents]))

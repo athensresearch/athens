@@ -514,7 +514,7 @@
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
         block-uid     (r/atom nil)]
-    (fn [node editing-uid]
+    (fn [node]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
         (reset! unlinked-refs [])
@@ -559,7 +559,7 @@
              [autosize/textarea
               {:value       (:title/local @state)
                :id          (str "editable-uid-" uid)
-               :class       (when (= editing-uid uid) "is-editing")
+               :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
                :on-blur     (fn [_]
                               ;; add title Untitled-n for empty titles
                               (when (empty? (:title/local @state))
@@ -587,6 +587,5 @@
 
 (defn page
   [ident]
-  (let [node (reactive/get-node-document ident)
-        editing-uid @(subscribe [:editing/uid])]
-    [node-page-el node editing-uid]))
+  (let [node (reactive/get-node-document ident)]
+    [node-page-el node]))
