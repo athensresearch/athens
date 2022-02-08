@@ -1,9 +1,7 @@
 (ns athens.views.pages.block-page
   (:require
     ["@material-ui/icons/Link" :default Link]
-    [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
-    [athens.reactive :as reactive]
     [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.style :refer [color]]

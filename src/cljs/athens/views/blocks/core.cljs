@@ -411,11 +411,12 @@
             :string/idle-fn idle-fn)
 
      (fn [block linked-ref-data opts]
-       (let [{:block/keys [uid
+       (let [ident                [:block/uid (or original-uid uid)]
+             {:block/keys [uid
                            string
                            open
                            children
-                           _refs]} block
+                           _refs]} (merge (reactive/get-block-document ident) block)
              children-uids         (set (map :block/uid children))
              uid-sanitized-block   (s/transform
                                      (specter-recursive-path #(contains? % :block/uid))

@@ -59,9 +59,7 @@
 
 (def node-document-pull-vector
   '[:db/id :block/uid :node/title :page/sidebar
-    ;; TODO: only pull direct children ids when blocks support local pulls
-    :block/string :block/open
-    {:block/children ...}])
+    {:block/children [:block/uid :block/order]}])
 
 
 (defn get-node-document
@@ -71,8 +69,8 @@
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order
-    {:block/children ...} :block/refs :block/_refs])
+  '[:db/id :block/uid :block/string :block/open :block/_refs
+    {:block/children [:block/uid :block/order]}])
 
 
 (defn get-block-document
