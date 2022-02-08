@@ -3,6 +3,7 @@
     ["@material-ui/icons/Link" :default Link]
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
+    [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.style :refer [color]]
     [athens.views.blocks.core :as blocks]
@@ -156,7 +157,7 @@
 (defn page
   [ident]
   (let [block       (db/get-block-document ident)
-        parents     (db/get-parents-recursively ident)
+        parents     (reactive/get-parents-recursively ident)
         editing-uid @(subscribe [:editing/uid])
         refs        (db/get-linked-block-references block)]
     [block-page-el block parents editing-uid refs]))

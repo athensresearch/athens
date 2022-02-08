@@ -343,7 +343,7 @@
 
 (defn get-parents-recursively
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
+  (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
        shape-parent-query))
 
 

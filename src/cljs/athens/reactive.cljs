@@ -70,6 +70,12 @@
        db/sort-block-children))
 
 
+(defn get-parents-recursively
+  [id]
+  (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
+       db/shape-parent-query))
+
+
 (comment
   ;; Print what ratoms are active.
   (-> (ratoms) utils/spy)
