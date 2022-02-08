@@ -88,8 +88,8 @@
 
 
 (defn linked-refs-el
-  [uid]
-  (let [linked-refs (reactive/get-linked-references [:block/uid uid])]
+  [id]
+  (let [linked-refs (reactive/get-linked-references id)]
     (when (seq linked-refs)
       [:div (use-style node-page/references-style {:key "Linked References"})
        [:section
@@ -111,26 +111,32 @@
                    [node-page/ref-comp block]]))]))]]])))
 
 
+(defn parents-el
+  [uid id]
+  (let [parents (reactive/get-parents-recursively id)]
+    [:span {:style {:color "gray"}}
+     [breadcrumbs-list {:style {:font-size "1.2rem"}}
+      (doall
+        (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
+          ^{:key breadcrumb-uid}
+          [breadcrumb {:key (str "breadcrumb-" breadcrumb-uid)
+                       :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)}
+           [:span {:style {:pointer-events "none"}}
+            [parse-renderer/parse-and-render (or title string)]]]))]]))
+
+
 (defn block-page-el
   [_ _ _ _]
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})]
-    (fn [block parents editing-uid]
-      (let [{:block/keys [string children uid]} block]
+    (fn [block editing-uid]
+      (let [{:block/keys [string children uid] :db/keys [id]} block]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
         [:div.block-page (use-style node-page/page-style {:data-uid uid})
          ;; Parent Context
-         [:span {:style {:color "gray"}}
-          [breadcrumbs-list {:style {:font-size "1.2rem"}}
-           (doall
-             (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
-               ^{:key breadcrumb-uid}
-               [breadcrumb {:key (str "breadcrumb-" breadcrumb-uid)
-                            :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)}
-                [:span {:style {:pointer-events "none"}}
-                 [parse-renderer/parse-and-render (or title string)]]]))]]
+         [parents-el uid id]
 
          ;; Header
          [:h1 (merge
@@ -158,12 +164,11 @@
                    ^{:key id} [blocks/block-el child]))]
 
          ;; Refs
-         [linked-refs-el uid]]))))
+         [linked-refs-el id]]))))
 
 
 (defn page
   [ident]
   (let [block       (reactive/get-block-document ident)
-        parents     (reactive/get-parents-recursively ident)
         editing-uid @(subscribe [:editing/uid])]
     [block-page-el block parents editing-uid]))
