@@ -44,9 +44,9 @@
 ;; Ratoms
 
 (defn get-linked-references
-  "For node-page references UI."
-  [title]
-  (->> @(p/pull db/dsdb '[:block/_refs] [:node/title title])
+  "For node and block page references UI."
+  [eid]
+  (->> @(p/pull db/dsdb '[:block/_refs] eid)
        :block/_refs
        (mapv :db/id)
        db/merge-parents-and-block

@@ -87,11 +87,35 @@
       (router/navigate-uid breadcrumb-uid e))))
 
 
+(defn linked-refs-el
+  [uid]
+  (let [linked-refs (reactive/get-linked-references [:block/uid uid])]
+    (when (seq linked-refs)
+      [:div (use-style node-page/references-style {:key "Linked References"})
+       [:section
+        [:h4 (use-style node-page/references-heading-style)
+         [(r/adapt-react-class Link)]
+         [:span "Linked References"]]
+        ;; Hide button until feature is implemented
+        ;; [:> Button {:disabled true} [(r/adapt-react-class FilterList)]]]
+        [:div (use-style node-page/references-list-style)
+         (doall
+           (for [[group-title group] linked-refs]
+             [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
+              [:h4 (use-style node-page/references-group-title-style)
+               [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title))}
+                group-title]]
+              (doall
+                (for [block group]
+                  [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
+                   [node-page/ref-comp block]]))]))]]])))
+
+
 (defn block-page-el
   [_ _ _ _]
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})]
-    (fn [block parents editing-uid refs]
+    (fn [block parents editing-uid]
       (let [{:block/keys [string children uid]} block]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
@@ -134,32 +158,12 @@
                    ^{:key id} [blocks/block-el child]))]
 
          ;; Refs
-         (when (not-empty refs)
-           [:div (use-style node-page/references-style {:key "Linked References"})
-            [:section
-             [:h4 (use-style node-page/references-heading-style)
-              [(r/adapt-react-class Link)]
-              [:span "Linked References"]]
-             ;; Hide button until feature is implemented
-             ;; [:> Button {:disabled true} [(r/adapt-react-class FilterList)]]]
-             [:div (use-style node-page/references-list-style)
-              (doall
-                (for [[group-title group] refs]
-                  [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
-                   [:h4 (use-style node-page/references-group-title-style)
-                    [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title))}
-                     group-title]]
-                   (doall
-                     (for [block group]
-                       [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
-                        [node-page/ref-comp block]]))]))]]])]))))
+         [linked-refs-el uid]]))))
 
 
 (defn page
   [ident]
   (let [block       (reactive/get-block-document ident)
         parents     (reactive/get-parents-recursively ident)
-        editing-uid @(subscribe [:editing/uid])
-        refs        (db/get-linked-block-references block)]
-    [block-page-el block parents editing-uid refs]))
-
+        editing-uid @(subscribe [:editing/uid])]
+    [block-page-el block parents editing-uid]))

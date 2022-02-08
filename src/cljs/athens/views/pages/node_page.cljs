@@ -407,7 +407,7 @@
 (defn linked-ref-el
   [state daily-notes? title]
   (let [linked? "Linked References"
-        linked-refs (reactive/get-linked-references title)]
+        linked-refs (reactive/get-linked-references [:node/title title])]
     (when (or (and daily-notes? (not-empty linked-refs))
               (not daily-notes?))
       [:section (use-style references-style)
