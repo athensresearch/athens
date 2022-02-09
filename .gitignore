@@ -51,4 +51,5 @@ classes/*
 # vercel static site deployment
 vercel-static/*
 !vercel-static/index.html
+!vercel-state/athens/.gitignore
 .vercel

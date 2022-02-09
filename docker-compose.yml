@@ -6,6 +6,10 @@ services:
   athens:
     image: ghcr.io/athensresearch/athens:latest
     # Uncomment the build sections if you want docker compose to build them locally.
+    # Note: when building locally on a M1 mac, the athens image seems to hang on connecting
+    # to fluree for no clear reason, but if you remove all memory flags on the
+    # script/docker-run-lan-party.sh script it doesn't hang anymore. Maybe an issue with
+    # docker on M1, unclear.
     # build:
     #   context: .
     #   dockerfile: athens.dockerfile

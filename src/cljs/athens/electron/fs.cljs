@@ -12,11 +12,6 @@
     [re-frame.core                        :as rf]))
 
 
-(def fs (js/require "fs"))
-(def path (js/require "path"))
-(def stream (js/require "stream"))
-
-
 (declare write-bkp)
 
 
@@ -24,7 +19,7 @@
   "If modified time is newer, update app-db with m-time. Prevents sync happening after db is written from the app."
   [filepath _filename]
   (let [prev-mtime @(rf/subscribe [:db/mtime])
-        curr-mtime (try (.-mtime (.statSync fs filepath))
+        curr-mtime (try (.-mtime (.statSync (utils/fs) filepath))
                         (catch :default _))
         newer?     (< prev-mtime curr-mtime)]
     (when (and prev-mtime curr-mtime newer?)
@@ -36,7 +31,7 @@
                                                "Accept changes?"))]
         (when confirm
           (rf/dispatch [:db/update-mtime curr-mtime])
-          (let [read-db (.readFileSync fs filepath)
+          (let [read-db (.readFileSync (utils/fs) filepath)
                 db      (dt/read-transit-str read-db)]
             (rf/dispatch [:reset-conn db])))))))
 
@@ -53,14 +48,14 @@
   :fs/watch
   (fn [{:keys [db]} [_ filepath]]
     (let [old-watcher (:fs/watcher db)
-          dirpath     (.dirname path filepath)
-          new-watcher (.. fs (watch dirpath (fn [_event filename]
-                                              ;; when filename matches last part of filepath
-                                              ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
-                                              (when (re-find #"conflict" (or filename ""))
-                                                (throw "Conflict file created by Dropbox"))
-                                              (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
-                                                (debounce-sync-db-from-fs filepath filename)))))]
+          dirpath     (.dirname (utils/path) filepath)
+          new-watcher (.. (utils/fs) (watch dirpath (fn [_event filename]
+                                                      ;; when filename matches last part of filepath
+                                                      ;; e.g. "first-db.transit" matches "home/u/Documents/athens/first-db.transit"
+                                                      (when (re-find #"conflict" (or filename ""))
+                                                        (throw "Conflict file created by Dropbox"))
+                                                      (when (re-find (re-pattern (str "\\b" filename "$")) filepath)
+                                                        (debounce-sync-db-from-fs filepath filename)))))]
       (when old-watcher (.close old-watcher))
       {:db (assoc db :fs/watcher new-watcher)})))
 
@@ -73,7 +68,7 @@
         (atomic-resolver/resolve-transact! conn data))
       (utils/create-dir-if-needed! base-dir)
       (utils/create-dir-if-needed! images-dir)
-      (.writeFileSync fs db-path (dt/write-transit-str @conn))
+      (.writeFileSync (utils/fs) db-path (dt/write-transit-str @conn))
       {:dispatch [:db-picker/add-and-select-db local-db]})))
 
 
@@ -81,7 +76,7 @@
   :fs/read-and-watch
   [(interceptors/sentry-span "fs/read-and-watch")]
   (fn [_ [_ {:keys [db-path]}]]
-    (let [datoms (-> (.readFileSync fs db-path)
+    (let [datoms (-> (.readFileSync (utils/fs) db-path)
                      dt/read-transit-str)]
       {:dispatch-n [[:reset-conn datoms]
                     [:fs/watch db-path]]})))
@@ -97,7 +92,7 @@
   :db/update-mtime
   (fn [db [_ mtime1]]
     (let [{:db/keys [filepath]} db
-          mtime (or mtime1 (.. fs (statSync filepath) -mtime))]
+          mtime (or mtime1 (.. (utils/fs) (statSync filepath) -mtime))]
       (assoc db :db/mtime mtime))))
 
 
@@ -105,11 +100,11 @@
 
 (defn os-username
   []
-  (.. (js/require "os") userInfo -username))
+  (.. (utils/os) userInfo -username))
 
 
 (defn write-db
-  "Tries to create a write stream to {timestamp}-index.transit.bkp. Then tries to copy backup to index.transit.
+  "Tries to create a write utils/stream to {timestamp}-index.transit.bkp. Then tries to copy backup to index.transit.
   If the write operation fails, the backup file is corrupted and no copy is attempted, thus index.transit is assumed to be untouched.
   If the write operation succeeds, a backup is created and index.transit is overwritten.
   Reading and writing will occur asynchronously.
@@ -123,12 +118,12 @@
                (not e2e-ignore-save?))
       (let [filepath     (:db-path selected-db)
             data         (dt/write-transit-str @db/dsdb)
-            r            (.. stream -Readable (from data))
-            dirname      (.dirname path filepath)
+            r            (.. (utils/stream) -Readable (from data))
+            dirname      (.dirname (utils/path) filepath)
             time         (.. (js/Date.) getTime)
             bkp-filename (str time "-" (os-username) "-" "index.transit.bkp")
-            bkp-filepath (.resolve path dirname bkp-filename)
-            w            (.createWriteStream fs bkp-filepath)
+            bkp-filepath (.resolve (utils/path) dirname bkp-filename)
+            w            (.createWriteStream (utils/fs) bkp-filepath)
             error-cb     (fn [err]
                            (when err
                              (js/alert (js/Error. err))
@@ -140,8 +135,8 @@
                           ;; copyFile is not atomic, unlike rename, but is still a short operation and has the nice side effect of creating a backup file
                           ;; If copy fails, by default, node.js deletes the destination file (index.transit): https://nodejs.org/api/fs.html#fs_fs_copyfilesync_src_dest_mode
                           (when copy?
-                            (.. fs (copyFileSync bkp-filepath filepath))
-                            (let [mtime (.-mtime (.statSync fs filepath))]
+                            (.. (utils/fs) (copyFileSync bkp-filepath filepath))
+                            (let [mtime (.-mtime (.statSync (utils/fs) filepath))]
                               (rf/dispatch-sync [:db/update-mtime mtime])
                               (rf/dispatch [:db/sync])))))
         (.pipe r w)))))

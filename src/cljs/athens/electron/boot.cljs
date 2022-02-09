@@ -4,23 +4,29 @@
     [athens.db                 :as db]
     [athens.electron.db-picker :as db-picker]
     [athens.electron.utils     :as utils]
+    [athens.interceptors       :as interceptors]
     [athens.utils.sentry       :as sentry]
     [re-frame.core             :as rf]))
 
 
 (rf/reg-event-fx
-  :boot/desktop
-  [(rf/inject-cofx :local-storage :athens/persist)]
+  :boot
+  [(interceptors/sentry-span "boot/web")
+   (rf/inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
     (let [boot-tx             (sentry/transaction-start "boot/desktop")
           init-app-db         (wrap-span "db/init-app-db"
                                          (db/init-app-db local-storage))
           all-dbs             (db-picker/all-dbs init-app-db)
           selected-db         (db-picker/selected-db init-app-db)
-          default-db          (utils/local-db (utils/default-base-dir))
+          default-db          (utils/get-default-db)
           selected-db-exists? (utils/db-exists? selected-db)
           default-db-exists?  (utils/db-exists? default-db)
           first-event         (cond
+                                ;; DB is in-memory, just create a new one.
+                                (utils/in-memory-db? selected-db)
+                                [:create-in-memory-conn]
+
                                 ;; DB is remote, attempt to connect to it.
                                 (utils/remote-db? selected-db)
                                 [:remote/connect! selected-db]

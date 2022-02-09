@@ -4,7 +4,6 @@
     [athens.electron.db-menu.core :refer [db-menu]]
     [athens.electron.db-modal :as db-modal]
     [athens.electron.utils :as electron.utils]
-    [athens.electron.window]
     [athens.router :as router]
     [athens.self-hosted.presence.views :refer [toolbar-presence-el]]
     [athens.style :refer [unzoom]]
@@ -20,7 +19,7 @@
         right-open?       (subscribe [:right-sidebar/open])
         route-name        (subscribe [:current-route/name])
         os                (util/get-os)
-        electron?         (util/electron?)
+        electron?         electron.utils/electron?
         theme-dark        (subscribe [:theme/dark])
         win-focused?      (if electron?
                             (subscribe [:win-focused?])

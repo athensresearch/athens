@@ -6,7 +6,9 @@
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
+    [athens.electron.utils                   :as electron.utils]
     [athens.events.selection                 :as select-events]
+    [athens.parse-renderer                   :as parse-renderer]
     [athens.router                           :as router]
     [athens.self-hosted.presence.views       :as presence]
     [athens.style                            :as style]
@@ -18,6 +20,7 @@
     [athens.views.blocks.content             :as content]
     [athens.views.blocks.context-menu        :as context-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+    [athens.views.breadcrumbs                :as breadcrumbs]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
@@ -109,17 +112,138 @@
 (stylefy/class "dragging" dragging-style)
 
 
+;; Inline refs
+
+;; block-el depends on inline-linked-refs-el, which in turn depends on block-el
+;; It would be nicer to have inline refs code in a different file, but it's
+;; much easier to resolve the circular dependency if they are on the same one.
+(declare block-el)
+
+
+(def reference-breadcrumbs-style
+  {:font-size "12px"
+   :padding "0 0.25em"})
+
+
+(def reference-breadcrumbs-container-style
+  {:padding-left          "0.5em"
+   :display               "grid"
+   :grid-template-columns "1em 1fr"
+   :grid-template-rows    "1fr"
+   :grid-template-areas   "'toggle breadcrumbs'"
+   :border-radius         "0.5rem"
+   :position              "relative"})
+
+
+(defn ref-comp
+  [block parent-state]
+  (let [orig-uid        (:block/uid block)
+        state           (r/cursor parent-state [:inline-refs/states orig-uid])
+        ;; Reset state on parent each time the component is created.
+        ;; To clear state, open/close the inline refs.
+        _               (reset! state {:block     block
+                                       :embed-id  (random-uuid)
+                                       :open?     true
+                                       :parents   (:block/parents block)
+                                       :focus?    true})
+        linked-ref-data {:linked-ref     true
+                         :initial-open   false
+                         :linked-ref-uid (:block/uid block)
+                         :parent-uids    (set (map :block/uid (:block/parents block)))}]
+    (fn [_]
+      (let [{:keys [block parents embed-id]} @state
+            block (db/get-block-document (:db/id block))]
+        [:<>
+         [:div (stylefy/use-style reference-breadcrumbs-container-style)
+          [:> Toggle {:isOpen (:open? @state)
+                      :on-click (fn [e]
+                                  (.. e stopPropagation)
+                                  (swap! state update :open? not))}]
+
+          [breadcrumbs/breadcrumbs-list {:style reference-breadcrumbs-style}
+           (doall
+             (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
+                   (if (or (:open? @state) (not (:focus? @state)))
+                     parents
+                     (conj parents block))]
+               [breadcrumbs/breadcrumb {:key       (str "breadcrumb-" uid)
+                                        :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
+                                                             new-P (concat
+                                                                     (take-while (fn [b] (not= (:block/uid b) uid)) parents)
+                                                                     [breadcrumb-block])]
+                                                         (.. % stopPropagation)
+                                                         (swap! state assoc :block new-B :parents new-P :focus? false)))}
+                [parse-renderer/parse-and-render (or title string) uid]]))]]
+
+         (when (:open? @state)
+           (if (:focus? @state)
+
+             ;; Display the single child block only when focusing.
+             ;; This is the default behaviour, for brevity.
+             [:div.block-embed
+              [block-el
+               (util/recursively-modify-block-for-embed block embed-id)
+               linked-ref-data
+               {:block-embed? true}]]
+
+
+             ;; Otherwise display children of the parent directly if user clicked a breadcrumb.
+             (for [child (:block/children block)]
+               [:<> {:key (:db/id child)}
+                [block-el
+                 (util/recursively-modify-block-for-embed child embed-id)
+                 linked-ref-data
+                 {:block-embed? true}]])))]))))
+
+
+(def references-style
+  {:padding-left "2em"})
+
+
+(def references-list-style
+  {:font-size "14px"})
+
+
+(def references-group-style
+  {:background (style/color :background-minus-2 :opacity-med)
+   :padding "0rem 0.5rem"
+   :border-radius "0.25rem"
+   :margin "0.5em 0"})
+
+
+(def references-group-block-style
+  {:width "100%"
+   ::stylefy/manual [[:&:first-of-type {:border-top "0"
+                                        :margin-block-start "0"}]]})
+
+
+(defn inline-linked-refs-el
+  [block state]
+  (let [refs (db/get-linked-block-references block)]
+    (when (not-empty refs)
+      [:div (stylefy/use-style references-style {:key "Inline Linked References"})
+       [:section
+        [:div (stylefy/use-style references-list-style)
+         (doall
+           (for [[group-title group] refs]
+             [:div (stylefy/use-style references-group-style {:key (str "group-" group-title)})
+              (doall
+                (for [block' group]
+                  [:div (stylefy/use-style references-group-block-style {:key (str "ref-" (:block/uid block'))})
+                   [ref-comp block' state]]))]))]]])))
+
+
 ;; Components
 
 (defn block-refs-count-el
-  [count uid]
+  [count click-fn]
   [:div (stylefy/use-style {:margin-left "1em"
                             :grid-area "refs"
                             :z-index (:zindex-dropdown style/ZINDICES)
                             :visibility (when-not (pos? count) "hidden")})
-   [:> Button {:on-click (fn [e]
-                           (.. e stopPropagation)
-                           (rf/dispatch [:right-sidebar/open-item uid]))}
+   [:> Button {:on-click  (fn [e]
+                            (.. e stopPropagation)
+                            (click-fn e))}
     count]])
 
 
@@ -221,7 +345,7 @@
         selected-items           @(rf/subscribe [::select-subs/items])]
 
     (cond
-      (re-find img-regex datatype) (when (util/electron?)
+      (re-find img-regex datatype) (when electron.utils/electron?
                                      (images/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
@@ -260,23 +384,25 @@
   ([block linked-ref-data _opts]
    (let [{:keys [linked-ref initial-open linked-ref-uid parent-uids]} linked-ref-data
          {:block/keys [uid original-uid]} block
-         state (r/atom {:string/local      nil
-                        :string/previous   nil
+         state (r/atom {:string/local       nil
+                        :string/previous    nil
                         ;; one of #{:page :block :slash :hashtag :template}
-                        :search/type       nil
-                        :search/results    nil
-                        :search/query      nil
-                        :search/index      nil
-                        :dragging          false
-                        :drag-target       nil
-                        :last-keydown      nil
-                        :context-menu/x    nil
-                        :context-menu/y    nil
-                        :context-menu/show false
-                        :caret-position    nil
-                        :show-editable-dom false
-                        :linked-ref/open   (or (false? linked-ref) initial-open)
-                        :block/uid         uid})
+                        :search/type        nil
+                        :search/results     nil
+                        :search/query       nil
+                        :search/index       nil
+                        :dragging           false
+                        :drag-target        nil
+                        :last-keydown       nil
+                        :context-menu/x     nil
+                        :context-menu/y     nil
+                        :context-menu/show  false
+                        :caret-position     nil
+                        :show-editable-dom  false
+                        :linked-ref/open    (or (false? linked-ref) initial-open)
+                        :inline-refs/open   false
+                        :inline-refs/states {}
+                        :block/uid          uid})
          save-fn #(db/transact-state-for-uid (or original-uid uid) state)
          idle-fn (gfns/debounce save-fn 2000)]
      (swap! state assoc
@@ -361,10 +487,19 @@
            [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
-             [block-refs-count-el (count _refs) uid])]
+             [block-refs-count-el (count _refs) (fn [e]
+                                                  (if (.. e -shiftKey)
+                                                    (rf/dispatch [:right-sidebar/open-item uid])
+                                                    (swap! state update :inline-refs/open not)))])]
 
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
+
+          ;; Inline refs
+          (when (and (> (count _refs) 0)
+                     (not= :block-embed? opts)
+                     (:inline-refs/open @state))
+            [inline-linked-refs-el block state])
 
           ;; Children
           (when (and (seq children)

@@ -4,6 +4,7 @@
     ["electron" :refer [app BrowserWindow Menu ipcMain shell]]
     ["electron-updater" :refer [autoUpdater]]
     ["electron-window-state" :as electron-window-state]
+    [athens.electron.utils :as electron.utils]
     [athens.menu :refer [menu-template]]
     [athens.util :refer [ipcMainChannels]]))
 
@@ -28,14 +29,12 @@
 ;;   action-electron-builder args
 (goog-define AUTO_UPDATE true)
 
-(def log (js/require "electron-log"))
-
-(set! (.. autoUpdater -logger) log)
+(set! (.. autoUpdater -logger) (electron.utils/log))
 (set! (.. autoUpdater -logger -transports -file -level) "info")
 (set! (.. autoUpdater -autoDownload) false)
 (set! (.. autoUpdater -autoInstallOnAppQuit) false)
 
-(.. log (info (str "Athens starting... "  "version=" (.getVersion app))))
+(.. (electron.utils/log) (info (str "Athens starting... "  "version=" (.getVersion app))))
 
 
 (defonce main-window (atom nil))
@@ -44,7 +43,7 @@
 
 (defn send-status-to-window
   [text]
-  (.. log (info text))
+  (.. (electron.utils/log) (info text))
   (when @main-window
     (.. ^js @main-window -webContents (send text))))
 
@@ -78,6 +77,9 @@
   )
 
 
+(def quitting (atom false))
+
+
 (defn init-browser
   []
   (let [main-window-state (electron-window-state #js {:defaultWidth 800
@@ -109,6 +111,14 @@
     ;; Path is relative to the compiled js file (main.js in our case)
     (.loadURL ^js @main-window (str "file://" js/__dirname "/public/index.html"))
     (.on ^js @main-window "closed" #(reset! main-window nil))
+    ;; On mac, hide the window instead of closing to keep transient state.
+    ;; https://stackoverflow.com/a/45156004/2116927
+    ;; Also see remaining code from the example in the `main` fn below.
+    (.on ^js @main-window "close" (fn [e]
+                                    (when (and (= js/process.platform "darwin")
+                                               (not @quitting))
+                                      (.. e preventDefault)
+                                      (.. @main-window hide))))
     (.. ^js @main-window -webContents (on "new-window" (fn [e url]
                                                          (.. e preventDefault)
                                                          (.. shell (openExternal url)))))))
@@ -168,9 +178,11 @@
   []
   (.on app "window-all-closed" #(when-not (= js/process.platform "darwin")
                                   (.quit app)))
+  (.on app "before-quit" #(reset! quitting true))
   (.on app "activate" (fn []
-                        (when (nil? @main-window)
-                          (init-browser))))
+                        (if (nil? @main-window)
+                          (init-browser)
+                          (.show @main-window))))
   (.on app "ready" (fn []
                      (init-ipcMain)
                      (init-menu)

@@ -2,7 +2,7 @@
   (:require
     [athens.common-db :as common-db]
     [athens.db :as db]
-    [athens.electron.utils :as electron-utils]
+    [athens.electron.utils :as electron.utils]
     [athens.events.selection :as select-events]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
@@ -225,7 +225,7 @@
             editing? @(subscribe [:editing/uid])
             ;; See test/e2e/electron-test.ts for details about this flag.
             e2e-ignore-save? (= (js/localStorage.getItem "E2E_IGNORE_SAVE") "true")
-            remote? (electron-utils/remote-db? @(subscribe [:db-picker/selected-db]))]
+            remote? (electron.utils/remote-db? @(subscribe [:db-picker/selected-db]))]
         (cond
           (and (or (not synced?)
                    (not (= nil editing?)))

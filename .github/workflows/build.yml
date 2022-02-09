@@ -108,9 +108,8 @@ jobs:
 
    release-web:
      needs: [build-app]
-     # Only deploy on v1.* tag pushes to the default branch (main).
-     # GH pages is effectively a singleton deploy env for main, and we only want v1 stable to be deployed there for now.
-     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v1.') && github.ref == 'refs/heads/main'
+     # Only deploy on v2.* tag pushes to the default branch (main).
+     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v2.')
      runs-on: ubuntu-latest
      steps:
        - uses: actions/checkout@v2
