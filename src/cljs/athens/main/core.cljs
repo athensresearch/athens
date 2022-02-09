@@ -118,7 +118,7 @@
                                     (when (and (= js/process.platform "darwin")
                                                (not @quitting))
                                       (.. e preventDefault)
-                                      (.. @main-window hide))))
+                                      (.. ^js @main-window hide))))
     (.. ^js @main-window -webContents (on "new-window" (fn [e url]
                                                          (.. e preventDefault)
                                                          (.. shell (openExternal url)))))))
