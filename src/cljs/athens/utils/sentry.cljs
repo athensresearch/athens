@@ -114,7 +114,10 @@
   ([]
    (if-let [active (span-active)]
      (span-finish active)
-     (throw (js/Error. "Can't finish Sentry Span, there is no active span."))))
+     (try
+       (throw (js/Error. "Can't finish Sentry Span, there is no active span."))
+       (catch js/Error ex
+         (log/warn ex)))))
   ([span]
    (span-finish span true))
   ([span stack?]
