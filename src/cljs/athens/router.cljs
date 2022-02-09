@@ -187,12 +187,12 @@
     (navigate :home)))
 
 
-;; TODO sentry tx for navigation tracking
 (defn navigate-page
   "Navigate to page by it's title"
   ([title]
    (let [current-route-page-title @(rf/subscribe [:current-route/page-title])]
-     (when-not (sentry/transaction-get-current)
+     (when-not (sentry/tx-running?)
+       ;; NOTE: this name here "router/navigate" is used to close this transaction, check `:navigated` event above
        (sentry/transaction-start "router/navigate"))
      (log/debug "navigate-page:" (pr-str {:title                    title
                                           :current-route-page-title current-route-page-title}))
@@ -213,9 +213,9 @@
   ([uid]
    (let [[uid _embed-id]   (db/uid-and-embed-id uid)
          current-route-uid @(rf/subscribe [:current-route/uid])]
-     (when-not (sentry/transaction-get-current)
+     (when-not (sentry/tx-running?)
+       ;; NOTE: this name here "router/navigate" is used to close this transaction, check `:navigated` event above
        (sentry/transaction-start "router/navigate"))
-     ;; TODO this is not ok, we're not closing this TX afterward
      (when (not= current-route-uid uid)
        (rf/dispatch [:navigate :page {:id uid}]))))
   ([uid e]
