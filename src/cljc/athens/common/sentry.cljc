@@ -5,33 +5,24 @@
     #?(:cljs [athens.utils.sentry :as sentry])))
 
 
-(defn span*
-  [span-name f]
-  #?(:cljs
-     (let [sentry-tx    (sentry/transaction-get-current)
-           active-span  (sentry/span-active)
-           current-span (when sentry-tx
-                          (sentry/span-start (or active-span
-                                                 sentry-tx)
-                                             span-name))
-           result       (f)]
-       (when current-span
-         (sentry/span-finish current-span))
-       result))
-  #?(:clj (f)))
-
-
 (defmacro wrap-span
   [span-name body]
-  `(let [sentry-tx#    (athens.utils.sentry/transaction-get-current)
+  `(let [tx-running?#  (athens.utils.sentry/tx-running?)
+         sentry-tx#    (if tx-running?#
+                         (athens.utils.sentry/transaction-get-current)
+                         (athens.utils.sentry/transaction-start (str ~span-name "-wrap-span-auto-tx")))
          active-span#  (athens.utils.sentry/span-active)
          current-span# (when sentry-tx#
                          (athens.utils.sentry/span-start (or active-span#
                                                              sentry-tx#)
-                                                         ~span-name))
+                                                         (str ~span-name "-wrap-span")
+                                                         false))
          result#       ~body]
      (when current-span#
-       (athens.utils.sentry/span-finish current-span#))
+       (println "wrap-span closing span" ~span-name)
+       (athens.utils.sentry/span-finish current-span# false)
+       (when-not tx-running?#
+         (athens.utils.sentry/transaction-finish sentry-tx#)))
      result#))
 
 
@@ -56,7 +47,7 @@
         provided-name (when (string? first-arg) first-arg)
         args'         (if provided-name (rest args) args)
         xform (fn [conf name]
-                (let [name-str       (str (or provided-name name))
+                (let [name-str       (str (or provided-name name) "-deftrace")
                       prepost-form   `{:pre [(or (span-start ~name-str) true)]
                                        :post [(or (span-finish) true)]}
                       body-update-fn (partial macros/add-prepost prepost-form)]

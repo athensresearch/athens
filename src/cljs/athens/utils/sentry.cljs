@@ -19,21 +19,38 @@
     tx))
 
 
+(defn tx-running?
+  "Checks if there is TX running"
+  []
+  (not (nil? @tx-active)))
+
+
 (defn transaction-get-current
   "Tries to find existing Sentry Transaction"
   []
   (let [{:keys [name tx]} @tx-active]
-    (log/debug "Sentry: Current TX:" (when tx
-                                       name))
-    tx))
+    (log/debug "Sentry: Current TX:"
+               (when tx
+                 (aget tx "name"))
+               (when tx
+                 name))
+    (if tx
+      tx
+      (try
+        (throw (js/Error. "FU from transaction-get-current"))
+        (catch js/Error ex
+          (js/console.warn ex))))))
 
 
 (defn transaction-get-current-name
   "Tries to find existing Sentry Transaction name"
   []
   (let [{:keys [name tx]} @tx-active]
-    (log/debug "Sentry: Current TX:" (when tx
-                                       name))
+    (log/debug "Sentry: Current TX Name:"
+               (when tx
+                 (aget tx "name"))
+               (when tx
+                 name))
     name))
 
 
@@ -62,19 +79,22 @@
 
 (defn span-start
   "Starts a *span* named `op-name` within given `transaction`,
-  with optional `op-description`."
+  with optional `op-description`.
+
+  Arguments:
+  * `op-name`: operation name
+  * `transaction`: Sentry transaction like object
+  * `stack?`: (optional - defaults to true) if newly created span should be put on stack"
   ([op-name]
    (span-start (transaction-get-current) op-name))
   ([transaction op-name]
+   (span-start transaction op-name true))
+  ([transaction op-name stack?]
    (when transaction
      (let [span (.startChild transaction (clj->js {:op op-name}))]
-       (swap! span-stack conj span)
-       span)))
-  ([transaction op-name op-description]
-   (when transaction
-     (let [span (.startChild transaction (clj->js {:op          op-name
-                                                   :description op-description}))]
-       (swap! span-stack conj span)
+       (log/debug "Sentry: Started Span:" op-name stack?)
+       (when stack?
+         (swap! span-stack conj span))
        span))))
 
 
@@ -108,9 +128,20 @@
 (defn span-finish
   "Finish provided `span`."
   ([]
-   (span-finish (span-active)))
+   (if-let [active (span-active)]
+     (span-finish active)
+     (try
+       (throw (js/Error. "FU, can't finish, there is nothing to finish"))
+       (catch js/Error ex
+        (js/console.warn ex "Oh well, you've asked me to close span, but there is no span, go figure.")))))
   ([span]
+   (span-finish span true))
+  ([span stack?]
+   {:pre [(not (nil? span))]}
+   (log/debug "Sentry: Finished Span" (aget span "op") stack?)
    (let [active-span (span-active)]
-     (when (= active-span span)
+     (when (and stack?
+                active-span
+                (= active-span span))
        (swap! span-stack pop))
      (.finish span))))

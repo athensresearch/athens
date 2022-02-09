@@ -31,23 +31,6 @@
                                                 :border-radius "0.5rem"}}})
 
 
-;; Helpers
-
-
-(defn match-page
-  "When app initializes, `route-name` is `nil`. Side effect of this is that a daily page for today is automatically
-  created when app inits. This is expected, but perhaps shouldn't be a side effect here."
-  [route-name]
-  [(case route-name
-     :settings settings/page
-     :pages all-pages/page
-     :page page/page
-     :page-by-title page/page-by-title
-     :graph graph/page
-     :home daily-notes/page
-     daily-notes/page)])
-
-
 ;; View
 
 (defn view
@@ -59,4 +42,18 @@
     [:div (stylefy/use-style main-content-style
                              {:on-scroll (when (= @route-name :home)
                                            #(rf/dispatch [:daily-note/scroll]))})
-     [match-page @route-name]]))
+     (case @route-name
+       :settings      [perf-mon/hoc-perfmon {:span-name "pages/settings"}
+                       [settings/page]]
+       :pages         [perf-mon/hoc-perfmon {:span-name "pages/all-pages"}
+                       [all-pages/page]]
+       :page          [perf-mon/hoc-perfmon {:span-name "pages/page"}
+                       [page/page]]
+       :page-by-title [perf-mon/hoc-perfmon {:span-name "pages/page-by-title"}
+                       [page/page-by-title]]
+       :home          [perf-mon/hoc-perfmon {:span-name "pages/home-page"}
+                       [daily-notes/page]]
+       :graph         [perf-mon/hoc-perfmon {:span-name "pages/graph"}
+                       [graph/page]]
+       [perf-mon/hoc-perfmon {:span-name "pages/default"}
+        [daily-notes/page]])]))
