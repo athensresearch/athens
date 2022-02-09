@@ -209,11 +209,6 @@
         (log/warn "Received invalid response:" (pr-str explanation))))))
 
 
-(defn datom->tx-entry
-  [[e a v]]
-  [:db/add e a v])
-
-
 (defn- db-dump-handler
   [{:keys [datoms]}]
   (log/debug "Received DB Dump")

@@ -86,11 +86,3 @@
   (apply concat (->> (range)
                      (map f)
                      (take-while (complement stop?)))))
-
-
-(defn spy
-  "Pretty-print x and return it.
-  Useful for debugging."
-  [x]
-  (pprint/pprint x)
-  x)

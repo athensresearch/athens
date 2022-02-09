@@ -82,33 +82,6 @@
        span))))
 
 
-(def span-status-mapping
-  {:ok                  "ok"
-   :deadline-exceeded   "deadline_exceeded"
-   :unauthenticated     "unauthenticated"
-   :permission-denied   "permission_denied"
-   :not-found           "not_found"
-   :resource-exhausted  "resource_exhausted"
-   :invalid-argument    "invalid_argument"
-   :unimplemented       "unimplemented"
-   :unavailable         "unavailable"
-   :internal-error      "internal_error"
-   :unknown-error       "unknown_error"
-   :cancelled           "cancelled"
-   :already-exists      "already_exists"
-   :failed-precondition "failed_precondition"
-   :aborted             "aborted"
-   :out-of-range        "out_of_range"
-   :data-loss           "data_loss"})
-
-
-(defn span-set-status
-  "Sets `status` on given `span`.
-  Allowed statuses are keys in `span-status-mapping`, defaults to `:unknown-error`."
-  [span status]
-  (.setStatus span {:op (span-status-mapping status "unknown_error")}))
-
-
 (defn span-finish
   "Finish provided `span`."
   ([]

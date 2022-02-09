@@ -28,6 +28,8 @@
 ;; We redefine span-start/finish here to add reader conditionals to them.
 ;; We can't add reader conditionals in macros, they just get interpreted before the macro quotes.
 #_{:clj-kondo/ignore #?(:clj [:unused-binding] :cljs [])}
+
+
 (defn span-start
   [name]
   #?(:cljs (sentry/span-start name)))
