@@ -22,5 +22,5 @@
     (r/create-class
       {:display-name        "hoc-perfmon"
        :reagent-render      (fn [{:keys [_span-name]} component]
-                              [:div component])
+                              [:<> component])
        :component-did-mount did-mount})))
