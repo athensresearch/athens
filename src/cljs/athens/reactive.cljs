@@ -85,6 +85,21 @@
        db/shape-parent-query))
 
 
+(defn get-shortcuts
+  []
+  (->> @(p/q '[:find ?order ?title
+               :where
+               [?e :page/sidebar ?order]
+               [?e :node/title ?title]] db/dsdb)
+       seq
+       (sort-by first)))
+
+
+(defn get-block-or-page-by-uid
+  [uid]
+  @(p/pull db/dsdb '[:node/title :block/string :db/id] [:block/uid uid]))
+
+
 (comment
   ;; Print what ratoms are active.
   (-> (ratoms) utils/spy)

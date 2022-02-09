@@ -9,8 +9,8 @@
     [athens.router :as router]
     [athens.style :refer [color OPACITIES]]
     [clojure.string :as str]
+    [datascript.core :as d]
     [instaparse.core :as insta]
-    [posh.reagent :refer [pull]]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
@@ -99,12 +99,12 @@
 
 (defn render-block-ref
   [{:keys [from title]} ref-uid uid]
-  (let [block (pull db/dsdb '[:block/string] [:block/uid ref-uid])]
-    (if @block
+  (let [block (d/pull @db/dsdb '[:block/string] [:block/uid ref-uid])]
+    (if block
       [:span (assoc (use-style block-ref {:class "block-ref"})
                     :title (str/replace from
                                         (str "((" ref-uid "))")
-                                        (str "((" (:block/string @block) "))")))
+                                        (str "((" (:block/string block) "))")))
        [:span {:class    "contents"
                :on-click #(router/navigate-uid ref-uid %)}
         (cond
@@ -115,7 +115,7 @@
           [parse-and-render title ref-uid]
 
           :else
-          [parse-and-render (:block/string @block) ref-uid])]]
+          [parse-and-render (:block/string block) ref-uid])]]
       from)))
 
 
