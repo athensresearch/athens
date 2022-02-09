@@ -4,17 +4,15 @@
     [athens.db                 :as db]
     [athens.electron.db-picker :as db-picker]
     [athens.electron.utils     :as utils]
-    [athens.interceptors       :as interceptors]
     [athens.utils.sentry       :as sentry]
     [re-frame.core             :as rf]))
 
 
 (rf/reg-event-fx
   :boot
-  [(interceptors/sentry-span "boot/web")
-   (rf/inject-cofx :local-storage :athens/persist)]
+  [(rf/inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
-    (let [boot-tx             (sentry/transaction-start "boot/desktop")
+    (let [boot-tx             (sentry/transaction-start "boot-sequence")
           init-app-db         (wrap-span "db/init-app-db"
                                          (db/init-app-db local-storage))
           all-dbs             (db-picker/all-dbs init-app-db)
@@ -63,7 +61,7 @@
       {:db         init-app-db
        :dispatch-n [[:theme/set]
                     [:loading/set]]
-       :async-flow {:id             :boot-desktop-async-flow
+       :async-flow {:id             :boot-async-flow
                     :db-path        [:async-flow :boot/desktop]
                     :first-dispatch first-event
                     :rules          [;; if first time, go to Daily Pages and open left-sidebar
