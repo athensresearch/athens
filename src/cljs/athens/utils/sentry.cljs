@@ -2,7 +2,6 @@
   "Sentry integration utilities."
   (:require
     ["@sentry/react" :as Sentry]
-    ["@sentry/react"]
     [athens.common.logging :as log]))
 
 
@@ -12,10 +11,9 @@
 (defn transaction-start
   "Starts new Sentry Transaction"
   [tx-name]
-  (log/debug "Sentry: Starting TX:" tx-name)
   (let [tx (.startTransaction Sentry (clj->js {:name tx-name}))]
-    (reset! tx-active {:name tx-name
-                       :tx   tx})
+    (log/debug "Sentry: Starting TX:" tx-name)
+    (reset! tx-active tx)
     tx))
 
 
@@ -28,42 +26,29 @@
 (defn transaction-get-current
   "Tries to find existing Sentry Transaction"
   []
-  (let [{:keys [name tx]} @tx-active]
-    (log/debug "Sentry: Current TX:"
-               (when tx
-                 (aget tx "name"))
-               (when tx
-                 name))
+  (let [tx @tx-active]
     (if tx
       tx
       (try
-        (throw (js/Error. "FU from transaction-get-current"))
+        (throw (js/Error. "transaction-get-current called but no TX running"))
         (catch js/Error ex
-          (js/console.warn ex))))))
+          (log/warn ex))))))
 
 
 (defn transaction-get-current-name
   "Tries to find existing Sentry Transaction name"
   []
-  (let [{:keys [name tx]} @tx-active]
-    (log/debug "Sentry: Current TX Name:"
-               (when tx
-                 (aget tx "name"))
-               (when tx
-                 name))
-    name))
+  (aget @tx-active "name"))
 
 
 (defn transaction-finish
   "Finishes provided transaction"
   ([]
-   (when-let [{:keys [name tx]} @tx-active]
-     (log/debug "Sentry: Finishing TX:" name)
-     (.finish tx)
-     (reset! tx-active nil)))
+   (when-let [tx @tx-active]
+     (transaction-finish tx)))
   ([tx]
    (when tx
-     (log/debug "Sentry: Finishing TX, don't know the name though, maybe it is:" (:name @tx-active))
+     (log/debug "Sentry: Finishing TX:" (aget tx "name"))
      (.finish tx)
      (reset! tx-active nil))))
 
@@ -92,7 +77,6 @@
   ([transaction op-name stack?]
    (when transaction
      (let [span (.startChild transaction (clj->js {:op op-name}))]
-       (log/debug "Sentry: Started Span:" op-name stack?)
        (when stack?
          (swap! span-stack conj span))
        span))))
@@ -130,15 +114,11 @@
   ([]
    (if-let [active (span-active)]
      (span-finish active)
-     (try
-       (throw (js/Error. "FU, can't finish, there is nothing to finish"))
-       (catch js/Error ex
-        (js/console.warn ex "Oh well, you've asked me to close span, but there is no span, go figure.")))))
+     (throw (js/Error. "Can't finish Sentry Span, there is no active span."))))
   ([span]
    (span-finish span true))
   ([span stack?]
    {:pre [(not (nil? span))]}
-   (log/debug "Sentry: Finished Span" (aget span "op") stack?)
    (let [active-span (span-active)]
      (when (and stack?
                 active-span

@@ -310,7 +310,6 @@
 
 (deftrace "db.get-block-document" get-block-document
   [id]
-  (js/console.debug "get-block-document" (pr-str id))
   (->> @(pull dsdb block-document-pull-vector id)
        sort-block-children))
 

@@ -19,7 +19,6 @@
                                                          false))
          result#       ~body]
      (when current-span#
-       (println "wrap-span closing span" ~span-name)
        (athens.utils.sentry/span-finish current-span# false)
        (when-not tx-running?#
          (athens.utils.sentry/transaction-finish sentry-tx#)))
