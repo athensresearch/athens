@@ -1,8 +1,6 @@
 (ns athens.common.utils
   "Athens Common Utilities.
   Shared between CLJ and CLJS."
-  (:require
-    [clojure.pprint :as pprint])
   #?(:cljs
      (:require-macros
        [athens.common.utils]))
