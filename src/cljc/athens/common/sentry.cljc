@@ -25,23 +25,36 @@
      result#))
 
 
+(defn span-start
+  [_span-name]
+  #?(:clj  nil
+     :cljs (let [tx-running?  (sentry/tx-running?)
+                 sentry-tx    (if tx-running?
+                                (sentry/transaction-get-current)
+                                (sentry/transaction-start (str _span-name "-wrap-span-auto-tx")))
+                 active-span  (sentry/span-active)
+                 current-span (when sentry-tx
+                                (sentry/span-start (or active-span
+                                                       sentry-tx)
+                                                   (str _span-name "-wrap-span")
+                                                   false))]
+             [tx-running? sentry-tx current-span])))
+
+
+(defn span-finish
+  [[_tx-running? _sentry-tx _current-span]]
+  #?(:clj  nil
+     :cljs (when _current-span
+             (sentry/span-finish _current-span false)
+             (when-not _tx-running?
+               (sentry/transaction-finish _sentry-tx)))))
+
+
 (defn wrap-span-xform
   [span-name body]
-  `((let [tx-running?#  (athens.utils.sentry/tx-running?)
-          sentry-tx#    (if tx-running?#
-                          (athens.utils.sentry/transaction-get-current)
-                          (athens.utils.sentry/transaction-start (str ~span-name "-wrap-span-auto-tx")))
-          active-span#  (athens.utils.sentry/span-active)
-          current-span# (when sentry-tx#
-                          (athens.utils.sentry/span-start (or active-span#
-                                                              sentry-tx#)
-                                                          (str ~span-name "-wrap-span")
-                                                          false))
-          result#       (do ~@body)]
-      (when current-span#
-        (athens.utils.sentry/span-finish current-span# false)
-        (when-not tx-running?#
-          (athens.utils.sentry/transaction-finish sentry-tx#)))
+  `((let [span-ret# (span-start ~span-name)
+          result#   (do ~@body)]
+      (span-finish span-ret#)
       result#)))
 
 

@@ -44,7 +44,6 @@
     :arity-1 (update-in conf [:bs 1 :body] body-update-fn)
     :arity-n (update-in conf [:bs 1 :bodies]
                         (fn [bodies]
-                          (prn bodies)
                           (map (fn [body] (update body :body body-update-fn)) bodies)))))
 
 
