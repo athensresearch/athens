@@ -2,7 +2,7 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common.logging :as log]
-    [athens.common.sentry :refer-macros [deftrace]]
+    [athens.common.sentry :refer-macros [defntrace]]
     [athens.patterns :as patterns]
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
@@ -308,13 +308,13 @@
   '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
-(deftrace get-block-document
+(defntrace get-block-document
   [id]
   (->> @(pull dsdb block-document-pull-vector id)
        sort-block-children))
 
 
-(deftrace get-node-document
+(defntrace get-node-document
   ([id]
    (->> @(pull dsdb node-document-pull-vector id)
         sort-block-children))
@@ -323,20 +323,20 @@
         sort-block-children)))
 
 
-(deftrace get-roam-node-document
+(defntrace get-roam-node-document
   [id db]
   (->> (d/pull db roam-node-document-pull-vector id)
        sort-block-children))
 
 
-(deftrace get-athens-datoms
+(defntrace get-athens-datoms
   "Copy REPL output to athens-datoms.cljs"
   [id]
   (->> @(pull dsdb (filter #(not (or (= % :db/id) (= % :block/_refs))) node-document-pull-vector) id)
        sort-block-children))
 
 
-(deftrace shape-parent-query
+(defntrace shape-parent-query
   "Normalize path from deeply nested block to root node."
   [pull-results]
   (->> (loop [b   pull-results
@@ -356,13 +356,13 @@
        vec))
 
 
-(deftrace get-parents-recursively
+(defntrace get-parents-recursively
   [id]
   (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
        shape-parent-query))
 
 
-(deftrace get-root-parent-page
+(defntrace get-root-parent-page
   "Returns the root parent page or returns the block because this block is a page."
   [uid]
   ;; make sure block first exists
@@ -371,12 +371,12 @@
       (or opt1 block))))
 
 
-(deftrace get-block
+(defntrace get-block
   [id]
   @(pull dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
 
 
-(deftrace get-parent
+(defntrace get-parent
   [id]
   (-> (d/entity @dsdb id)
       :block/_children
@@ -385,7 +385,7 @@
       get-block))
 
 
-(deftrace deepest-child-block
+(defntrace deepest-child-block
   [id]
   (let [document (->> (d/pull @dsdb '[:block/order :block/uid :block/open {:block/children ...}] id)
                       sort-block-children)]
@@ -398,13 +398,13 @@
           (recur (get children (dec n))))))))
 
 
-(deftrace re-case-insensitive
+(defntrace re-case-insensitive
   "More options here https://clojuredocs.org/clojure.core/re-pattern"
   [query]
   (re-pattern (str "(?i)" (escape-str query))))
 
 
-(deftrace search-exact-node-title
+(defntrace search-exact-node-title
   [query]
   (d/entity @dsdb [:node/title query]))
 
@@ -473,7 +473,7 @@
          @dsdb rules uid find-order)))
 
 
-(deftrace prev-block-uid
+(defntrace prev-block-uid
   "If order 0, go to parent.
    If order n but block is closed, go to prev sibling.
    If order n and block is OPEN, go to prev sibling's deepest child."
@@ -492,7 +492,7 @@
       embed-id (str "-embed-" embed-id))))
 
 
-(deftrace next-sibling-recursively
+(defntrace next-sibling-recursively
   "Search for next sibling. If not there (i.e. is last child), find sibling of parent.
   If parent is root, go to next sibling."
   [uid]
@@ -537,7 +537,7 @@
      (next-block-uid uid))))
 
 
-(deftrace get-first-child-uid
+(defntrace get-first-child-uid
   [uid db]
   (when uid
     (try
@@ -578,7 +578,7 @@
 
 ;; -- Linked & Unlinked References ----------
 
-(deftrace get-ref-ids
+(defntrace get-ref-ids
   [pattern]
   @(q '[:find [?e ...]
         :in $ ?regex
@@ -616,7 +616,7 @@
   (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
-(deftrace get-linked-references
+(defntrace get-linked-references
   "For node-page references UI."
   [title]
   (->> @(pull dsdb '[* :block/_refs] [:node/title title])
@@ -630,7 +630,7 @@
        rseq))
 
 
-(deftrace get-linked-block-references
+(defntrace get-linked-block-references
   "For block-page references UI."
   [block]
   (->> (:block/_refs block)
@@ -642,7 +642,7 @@
        vec))
 
 
-(deftrace get-unlinked-references
+(defntrace get-unlinked-references
   "For node-page references UI."
   [title]
   (-> title patterns/unlinked get-data))
