@@ -4,7 +4,31 @@
     [clojure.test :refer [deftest is] :as t]))
 
 
-(defn test-xform
+(defn wrap-log
+  [body]
+  `((let [~'res (do ~@body)]
+      (println "result is" ~'res)
+      ~'res)))
+
+
+(defn wrap-log-xform
+  [conf _]
+  (->> wrap-log
+       (partial macros/update-body-body)
+       (macros/update-bodies conf)))
+
+
+(deftest add-trycatch
+  (is (= (macros/defn-args-xform wrap-log-xform '(abc [x] x))
+         '(abc
+            [x]
+            (clojure.core/let [res (do x)]
+              (clojure.core/println "result is" res)
+              res)))
+      "Should add a logging block around the fn body."))
+
+
+(defn test-prepost-xform
   [conf name]
   (let [name-str       (str name)
         prepost-form   `{:pre  [(or (println "pre" ~name-str) true)]
@@ -14,7 +38,7 @@
 
 
 (deftest add-prepost
-  (is (= (macros/defn-args-xform test-xform '(abc [x] x))
+  (is (= (macros/defn-args-xform test-prepost-xform '(abc [x] x))
          '(abc
             [x]
             {:pre  [(clojure.core/or (clojure.core/println "pre" "abc") true)],

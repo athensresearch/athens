@@ -31,9 +31,10 @@
   You can use a spy function, like athens.common.utils/spy, to pretty print
   the conformed args for inspection."
   [xform args]
-  (let [conf (s/conform ::specs/defn-args args)
-        name (:name conf)]
-    (s/unform ::specs/defn-args (xform conf name))))
+  (let [conf  (s/conform ::specs/defn-args args)
+        name  (:name conf)
+        conf' (xform conf name)]
+    (s/unform ::specs/defn-args conf')))
 
 
 (defn update-bodies
@@ -56,3 +57,9 @@
     :prepost+body (throw (ex-info "add-prepost does not yet support composing prepost" body))))
 
 
+(defn update-body-body
+  "Updates the body form inside a conformed defn body."
+  [xform [k _ :as body]]
+  (case k
+    :body (update body 1 xform)
+    :prepost+body (update-in body [1 :body] xform)))
