@@ -31,12 +31,12 @@
      :cljs (let [tx-running?  (sentry/tx-running?)
                  sentry-tx    (if tx-running?
                                 (sentry/transaction-get-current)
-                                (sentry/transaction-start (str _span-name "-wrap-span-auto-tx")))
+                                (sentry/transaction-start (str _span-name "-defntrace-auto-tx")))
                  active-span  (sentry/span-active)
                  current-span (when sentry-tx
                                 (sentry/span-start (or active-span
                                                        sentry-tx)
-                                                   (str _span-name "-wrap-span")
+                                                   (str _span-name "-defntrace-span")
                                                    false))]
              [tx-running? sentry-tx current-span])))
 
