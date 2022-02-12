@@ -551,6 +551,24 @@
          (set-cursor-position target (+ start n)))))))
 
 
+(defn insert-markdown-link
+  "If there is no selection, insert []() and place caret at [_].
+  If there is selection, insert [] around selection and place caret at (_)"
+  [e]
+  (let [{:keys [selection start end target]} (destruct-key-down e)
+        selection? (not= start end)]
+    (.preventDefault e)
+    (.stopPropagation e)
+    (if selection?
+      (let [new-selection (str (surround selection "[") "()")
+            n             (count selection)]
+        (replace-selection-with new-selection)
+        (set-cursor-position target (+ start n 3)))
+      (do
+        (replace-selection-with "[]()")
+        (set-cursor-position target (inc start))))))
+
+
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e uid state]
@@ -571,6 +589,8 @@
                                   (if shift
                                     (dispatch [:redo])
                                     (dispatch [:undo]))))
+
+      (= key-code KeyCodes.K) (insert-markdown-link e)
 
       (= key-code KeyCodes.B) (surround-and-set e state "**")
 
