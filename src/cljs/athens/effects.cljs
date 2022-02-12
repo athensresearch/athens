@@ -9,6 +9,7 @@
     [cljs-http.client            :as http]
     [cljs.core.async             :refer [go <!]]
     [cljs.core.async.interop     :refer [<p!]]
+    [clojure.string              :as str]
     [com.stuartsierra.component  :as component]
     [datascript.core             :as d]
     [day8.re-frame.async-flow-fx]
@@ -152,10 +153,16 @@
 ;; TODO: temporary, and limits to one client opened.
 (def self-hosted-client (atom nil))
 
+(defn resolve-url
+  [url]
+  (if (or (str/starts-with? url "http://") (str/starts-with? url "https://"))
+    url
+    (str/join ["http://" url])))
+
 
 (defn self-hosted-health-check
   [url success-cb failure-cb]
-  (go (let [ch  (go (<p! (.. (js/fetch (str "http://" url "/health-check"))
+  (go (let [ch  (go (<p! (.. (js/fetch (str (resolve-url url) "/health-check"))
                              (then (fn [response]
                                      (if (.-ok response)
                                        :success
