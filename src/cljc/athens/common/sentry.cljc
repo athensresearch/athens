@@ -67,7 +67,7 @@
         provided-name (when (string? first-arg) first-arg)
         args'         (if provided-name (rest args) args)
         xform         (fn [conf name]
-                        (->> (partial wrap-span-xform name)
+                        (->> (partial wrap-span-xform (str name))
                              (partial macros/update-body-body)
                              (macros/update-bodies conf)))]
     (cons `defn (macros/defn-args-xform xform args'))))
