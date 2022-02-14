@@ -61,7 +61,21 @@
 (defmacro defntrace
   "Define a function that is traced by Sentry using a span-start and span-finish as a prepost block.
   Accepts the same arguments as defn. You can optionally include a string as the first argument to
-  use that as the span name, otherwise the function name is used."
+  use that as the span name, otherwise the function name is used.
+
+  Given the following function:
+
+    (defn foo [x]
+      (bar) (baz))
+
+  Using defntraced instead of defn will output the following function definition:
+
+    (defn foo []
+      (let [span-ret (span-start ~span-name)
+          result     (do (bar) (baz))]
+      (span-finish span-ret)
+      result))
+  "
   [& args]
   (let [first-arg     (first args)
         provided-name (when (string? first-arg) first-arg)
