@@ -627,15 +627,19 @@
     {}))
 
 
+;; These events are used for async flows, so we know when changes are in the
+;; datascript db.
+;; If you need to know which event was resolved, check the arg as
+;; shown in https://github.com/day8/re-frame-async-flow-fx#advanced-use.
 (rf/reg-event-fx
-  :success-resolved-forward-transact
-  (fn [_ _]
+  :success-resolve-forward-transact
+  (fn [_ [_ _event]]
     {}))
 
 
 (rf/reg-event-fx
-  :success-self-presence-updated
-  (fn [_ _]
+  :fail-resolve-transact-forward
+  (fn [_ [_ _event]]
     {}))
 
 
@@ -721,7 +725,7 @@
                               (me/humanize))]
           (log/warn "Not sending invalid event. Error:" (pr-str explanation)
                     "\nInvalid event was:" (pr-str event))
-          {:fx [[:dispatch [:fail-resolved-forward-transact]]]})
+          {:fx [[:dispatch [:fail-resolve-forward-transact event]]]})
 
 
         (try
@@ -752,14 +756,14 @@
                     ;; Remote dbs just wait for the event to be confirmed by the server.
                     (when remote?     [:dispatch [:db/not-synced]])
                     ;; Processing has finished successfully at this point, signal the async flows.
-                    [:dispatch :success-resolved-forward-transact]]}
+                    [:dispatch [:success-resolve-forward-transact event]]]}
               ;; Remote dbs need to actually send the event via the network.
               (when remote? {:remote/send-event-fx! event})))
 
           ;; Bork bork, still need to clean up.
           (catch :default e
             (log/error ":resolve-transact-forward failed with event " event " with error " e)
-            {:fx [[:dispatch [:fail-resolved-forward-transact]]]}))))))
+            {:fx [[:dispatch [:fail-resolve-forward-transact event]]]}))))))
 
 
 (reg-event-fx
@@ -979,6 +983,32 @@
     (backspace uid value maybe-local-updates)))
 
 
+;; Atomic events start ==========
+
+(defn- wait-for-rft
+  [sentry-tx success-dispatch-n]
+  [{:when       :seen?
+    :events     :fail-resolve-forward-transact
+    :dispatch   [:sentry/end-tx sentry-tx]
+    :halt?      true}
+   {:when       :seen?
+    :events     :success-resolve-forward-transact
+    :dispatch-n (into [[:sentry/end-tx sentry-tx]] success-dispatch-n)
+    :halt?      true}])
+
+
+(defn- focus-on-uid
+  ([uid embed-id]
+   [:editing/uid
+    (str uid (when embed-id
+               (str "-embed-" embed-id)))])
+  ([uid embed-id idx]
+   [:editing/uid
+    (str uid (when embed-id
+               (str "-embed-" embed-id)))
+    idx]))
+
+
 (reg-event-fx
   :backspace/delete-only-child
   (fn [_ [_ uid]]
@@ -993,18 +1023,8 @@
       {:fx [[:async-flow {:id             :backspace-delete-only-child-async-flow
                           :db-path        [:async-flow :backspace-delete-only-child]
                           :first-dispatch [:resolve-transact-forward event]
-                          :rules          [{:when     :seen?
-                                            :events   :success-resolved-forward-transact
-                                            :dispatch [:editing/uid nil]}
-                                           (merge {:when   :seen-all-of?
-                                                   :events [:success-resolved-forward-transact
-                                                            :success-self-presence-updated]
-                                                   :halt?   true}
-                                                  (when-not existing-tx
-                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
+                          :rules          (wait-for-rft sentry-tx [[:editing/uid nil]])}]]})))
 
-
-;; Atomic events start ==========
 
 (reg-event-fx
   :enter/new-block
@@ -1014,22 +1034,13 @@
           sentry-tx   (if existing-tx
                         existing-tx
                         (sentry/transaction-start "enter/new-block"))
-          op    (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
-                                                             :relation :after})
-          event (common-events/build-atomic-event op)]
+          op          (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
+                                                                   :relation  :after})
+          event       (common-events/build-atomic-event op)]
       {:fx [[:async-flow {:id             :enter-new-block-async-flow
                           :db-path        [:async-flow :enter-new-block]
                           :first-dispatch [:resolve-transact-forward event]
-                          :rules          [{:when     :seen?
-                                            :events   :success-resolved-forward-transact
-                                            :dispatch [:editing/uid (str new-uid (when embed-id
-                                                                                   (str "-embed-" embed-id)))]}
-                                           (merge {:when   :seen-all-of?
-                                                   :events [:success-resolved-forward-transact
-                                                            :success-self-presence-updated]
-                                                   :halt?   true}
-                                                  (when-not existing-tx
-                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
+                          :rules          (wait-for-rft sentry-tx [(focus-on-uid new-uid embed-id)])}]]})))
 
 
 (reg-event-fx
@@ -1111,18 +1122,8 @@
       {:fx [[:async-flow {:id             :backspace-delete-merge-block-async-flow
                           :db-path        [:async-flow :backspace-delete-merge-block]
                           :first-dispatch [:resolve-transact-forward event]
-                          :rules          [{:when     :seen?
-                                            :events   :success-resolved-forward-transact
-                                            :dispatch [:editing/uid
-                                                       (cond-> prev-block-uid
-                                                         embed-id (str "-embed-" embed-id))
-                                                       (count (:block/string prev-block))]}
-                                           (merge {:when   :seen-all-of?
-                                                   :events [:success-resolved-forward-transact
-                                                            :success-self-presence-updated]
-                                                   :halt?   true}
-                                                  (when-not existing-tx
-                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
+                          :rules          (wait-for-rft sentry-tx [(focus-on-uid prev-block-uid embed-id
+                                                                                 (count (:block/string prev-block)))])}]]})))
 
 
 (reg-event-fx
@@ -1133,28 +1134,19 @@
           sentry-tx   (if existing-tx
                         existing-tx
                         (sentry/transaction-start "backspace/delete-merge-block-with-save"))
-          op    (wrap-span "build-block-merge-with-updated-op"
-                           (graph-ops/build-block-merge-with-updated-op @db/dsdb
-                                                                        uid
-                                                                        prev-block-uid
-                                                                        value
-                                                                        local-update))
-          event (common-events/build-atomic-event  op)]
+          op          (wrap-span "build-block-merge-with-updated-op"
+                                 (graph-ops/build-block-merge-with-updated-op @db/dsdb
+                                                                              uid
+                                                                              prev-block-uid
+                                                                              value
+                                                                              local-update))
+          event       (common-events/build-atomic-event  op)
+          editing-uid (cond-> prev-block-uid
+                        embed-id (str "-embed-" embed-id))]
       {:fx [[:async-flow {:id             :backspace-delete-merge-block-with-save-async-flow
                           :db-path        [:async-flow :backspace-delete-merge-block-with-save]
                           :first-dispatch [:resolve-transact-forward event]
-                          :rules          [{:when     :seen?
-                                            :events   :success-resolved-forward-transact
-                                            :dispatch [:editing/uid
-                                                       (cond-> prev-block-uid
-                                                         embed-id (str "-embed-" embed-id))
-                                                       (count local-update)]}
-                                           (merge {:when   :seen-all-of?
-                                                   :events [:success-resolved-forward-transact
-                                                            :success-self-presence-updated]
-                                                   :halt?   true}
-                                                  (when-not existing-tx
-                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
+                          :rules          (wait-for-rft sentry-tx [(focus-on-uid prev-block-uid embed-id (count local-update))])}]]})))
 
 
 ;; Atomic events end ==========
@@ -1169,22 +1161,13 @@
                         existing-tx
                         (sentry/transaction-start "enter/add-child"))
           position    (wrap-span "compat-position"
-                                 (common-db/compat-position @db/dsdb {:block/uid  (:block/uid block)
-                                                                      :relation :first}))
+                                 (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
+                                                                      :relation  :first}))
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [[:async-flow {:id             :enter-add-child-async-flow
                           :db-path        [:async-flow :enter-add-child]
                           :first-dispatch [:resolve-transact-forward event]
-                          :rules          [{:when     :seen?
-                                            :events   :success-resolved-forward-transact
-                                            :dispatch [:editing/uid (str new-uid (when embed-id
-                                                                                   (str "-embed-" embed-id)))]}
-                                           (merge {:when   :seen-all-of?
-                                                   :events [:success-resolved-forward-transact
-                                                            :success-self-presence-updated]
-                                                   :halt?   true}
-                                                  (when-not existing-tx
-                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
+                          :rules          (wait-for-rft sentry-tx [(focus-on-uid new-uid embed-id)])}]]})))
 
 
 (reg-event-fx
@@ -1206,16 +1189,7 @@
       {:fx [[:async-flow {:id             :enter-split-block-async-flow
                           :db-path        [:async-flow :enter-split-block]
                           :first-dispatch [:resolve-transact-forward event]
-                          :rules          [{:when     :seen?
-                                            :events   :success-resolved-forward-transact
-                                            :dispatch [:editing/uid (str new-uid (when embed-id
-                                                                                   (str "-embed-" embed-id)))]}
-                                           (merge {:when   :seen-all-of?
-                                                   :events [:success-resolved-forward-transact
-                                                            :success-self-presence-updated]
-                                                   :halt?   true}
-                                                  (when-not existing-tx
-                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
+                          :rules          (wait-for-rft sentry-tx [(focus-on-uid new-uid embed-id)])}]]})))
 
 
 (reg-event-fx
@@ -1227,22 +1201,13 @@
                         existing-tx
                         (sentry/transaction-start "enter/bump-up"))
           position    (wrap-span "compat-position"
-                                 (common-db/compat-position @db/dsdb {:block/uid  uid
-                                                                      :relation :before}))
+                                 (common-db/compat-position @db/dsdb {:block/uid uid
+                                                                      :relation  :before}))
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [[:async-flow {:id             :enter-bump-up-async-flow
                           :db-path        [:async-flow :enter-bump-up]
                           :first-dispatch [:resolve-transact-forward event]
-                          :rules          [{:when     :seen?
-                                            :events   :success-resolved-forward-transact
-                                            :dispatch [:editing/uid (str new-uid (when embed-id
-                                                                                   (str "-embed-" embed-id)))]}
-                                           (merge {:when   :seen-all-of?
-                                                   :events [:success-resolved-forward-transact
-                                                            :success-self-presence-updated]
-                                                   :halt?   true}
-                                                  (when-not existing-tx
-                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
+                          :rules          (wait-for-rft sentry-tx [(focus-on-uid new-uid embed-id)])}]]})))
 
 
 (reg-event-fx
@@ -1259,8 +1224,8 @@
           block-open-op           (atomic-graph-ops/make-block-open-op block-uid
                                                                        true)
           position                (wrap-span "compat-position"
-                                             (common-db/compat-position @db/dsdb {:block/uid  (:block/uid block)
-                                                                                  :relation :first}))
+                                             (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
+                                                                                  :relation  :first}))
           add-child-op            (atomic-graph-ops/make-block-new-op new-uid position)
           open-block-add-child-op (composite-ops/make-consequence-op {:op/type :open-block-add-child}
                                                                      [block-open-op
@@ -1269,16 +1234,7 @@
       {:fx [[:async-flow {:id             :enter-open-block-add-child-async-flow
                           :db-path        [:async-flow :enter-open-block-add-child]
                           :first-dispatch [:resolve-transact-forward event]
-                          :rules          [{:when     :seen?
-                                            :events   :success-resolved-forward-transact
-                                            :dispatch [:editing/uid (str new-uid (when embed-id
-                                                                                   (str "-embed-" embed-id)))]}
-                                           (merge {:when   :seen-all-of?
-                                                   :events [:success-resolved-forward-transact
-                                                            :success-self-presence-updated]
-                                                   :halt?   true}
-                                                  (when-not existing-tx
-                                                    {:dispatch [:sentry/end-tx sentry-tx]}))]}]]})))
+                          :rules          (wait-for-rft sentry-tx [(focus-on-uid new-uid embed-id)])}]]})))
 
 
 (defn enter
@@ -1463,11 +1419,7 @@
         {:fx [[:async-flow {:id             :indent-async-flow
                             :db-path        [:async-flow :indent]
                             :first-dispatch [:resolve-transact-forward event]
-                            :rules          [(merge {:when   :seen?
-                                                     :events :success-resolved-forward-transact
-                                                     :halt?   true}
-                                                    (when-not existing-tx
-                                                      {:dispatch [:sentry/end-tx sentry-tx]}))]}]
+                            :rules          (wait-for-rft sentry-tx [])}]
               [:set-cursor-position [uid start end]]]}))))
 
 
@@ -1498,11 +1450,7 @@
                             :first-dispatch [:drop-multi/sibling {:source-uids sanitized-selected-uids
                                                                   :target-uid  prev-block-uid
                                                                   :drag-target target-rel}]
-                            :rules          [(merge {:when   :seen?
-                                                     :events :success-resolved-forward-transact
-                                                     :halt?   true}
-                                                    (when-not existing-tx
-                                                      {:dispatch [:sentry/end-tx sentry-tx]}))]}]]}))))
+                            :rules          (wait-for-rft sentry-tx [])}]]}))))
 
 
 (reg-event-fx
@@ -1537,16 +1485,7 @@
         {:fx [[:async-flow {:id             :unindent-async-flow
                             :db-path        [:async-flow :unindent]
                             :first-dispatch [:resolve-transact-forward event]
-                            :rules          [{:when     :seen?
-                                              :events   :success-resolved-forward-transact
-                                              :dispatch [:editing/uid (str uid (when embed-id
-                                                                                 (str "-embed-" embed-id)))]}
-                                             (merge {:when   :seen-all-of?
-                                                     :events [:success-resolved-forward-transact
-                                                              :success-self-presence-updated]
-                                                     :halt?   true}
-                                                    (when-not existing-tx
-                                                      {:dispatch [:sentry/end-tx sentry-tx]}))]}]
+                            :rules          (wait-for-rft sentry-tx [(focus-on-uid uid embed-id)])}]
               [:set-cursor-position [uid start end]]]}))))
 
 
@@ -1588,11 +1527,7 @@
                             :first-dispatch [:drop-multi/sibling {:source-uids  sanitized-selected-uids
                                                                   :target-uid   parent-uid
                                                                   :drag-target  :after}]
-                            :rules          [(merge {:when   :seen?
-                                                     :events :success-resolved-forward-transact
-                                                     :halt?   true}
-                                                    (when-not existing-tx
-                                                      {:dispatch [:sentry/end-tx sentry-tx]}))]}]]}))))
+                            :rules          (wait-for-rft sentry-tx [])}]]}))))
 
 
 (reg-event-fx
