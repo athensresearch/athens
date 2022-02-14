@@ -153,12 +153,6 @@
 ;; TODO: temporary, and limits to one client opened.
 (def self-hosted-client (atom nil))
 
-(defn resolve-url
-  [url]
-  (if (or (str/starts-with? url "http://") (str/starts-with? url "https://"))
-    url
-    (str/join ["http://" url])))
-
 
 (defn self-hosted-health-check
   [url success-cb failure-cb]
@@ -176,14 +170,14 @@
 
 (rf/reg-fx
   :remote/client-connect!
-  (fn [{:keys [url ws-url] :as remote-db}]
-    (log/debug ":remote/client-connect!" (pr-str (:url remote-db)))
+  (fn [{:keys [url http-url ws-url]}]
+    (log/debug ":remote/client-connect!" (pr-str url))
     (when @self-hosted-client
       (log/info ":remote/client-connect! already connected, restarting")
       (component/stop @self-hosted-client))
     (log/info ":remote/client-connect! health-check")
     (self-hosted-health-check
-      url
+      http-url
       (fn []
         (log/info ":remote/client-connect! health-check success")
         (log/info ":remote/client-connect! connecting")

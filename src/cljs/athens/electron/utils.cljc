@@ -89,11 +89,22 @@
   (when (not (.existsSync (fs) dir))
     (.mkdirSync (fs) dir)))
 
+
+(defn resolve-http-url
+  [url]
+  (if (or (str/starts-with? url "http://")
+          (str/starts-with? url "https://"))
+    url
+    (str/join ["http://" url])))
+
+
 (defn resolve-ws-url
   [url]
-  (if (str/starts-with? url "http://") (str "ws://" (last (str/split url #"http://")) "/ws")
-    (if (str/starts-with? url "https://") (str "wss://" (last (str/split url #"https://")) "/ws")
-      (str "ws://" url "/ws"))))
+  (cond
+    (str/starts-with? url "http://")  (str "ws://"  (last (str/split url #"http://")) "/ws")
+    (str/starts-with? url "https://") (str "wss://" (last (str/split url #"https://")) "/ws")
+    :else                             (str "ws://"  url "/ws")))
+
 
 (defn self-hosted-db
   "Returns a map representing a self-hosted db.
@@ -104,7 +115,8 @@
    :id       url
    :url      url
    :password password
-   :ws-url   (resolve-ws-url url )})
+   :http-url (resolve-http-url url)
+   :ws-url   (resolve-ws-url url)})
 
 
 (defn local-db?
