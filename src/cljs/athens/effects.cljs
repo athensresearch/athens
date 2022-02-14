@@ -155,8 +155,8 @@
 
 
 (defn self-hosted-health-check
-  [url success-cb failure-cb]
-  (go (let [ch  (go (<p! (.. (js/fetch (str (resolve-url url) "/health-check"))
+  [http-url success-cb failure-cb]
+  (go (let [ch  (go (<p! (.. (js/fetch (str http-url "/health-check"))
                              (then (fn [response]
                                      (if (.-ok response)
                                        :success
