@@ -19,7 +19,7 @@
     [athens.electron.db-picker            :as db-picker]
     [athens.electron.images               :as images]
     [athens.electron.utils                :as electron.utils]
-    [athens.events.remote]
+    [athens.events.remote                 :as events-remote]
     [athens.events.sentry]
     [athens.interceptors                  :as interceptors]
     [athens.patterns                      :as patterns]
@@ -714,27 +714,52 @@
                  "remote?" (pr-str remote?)
                  "valid?" (pr-str valid?)
                  "undo?" (pr-str undo?))
-      (if valid?
-        (do
-          (when (not remote?)
-            (atomic-resolver/resolve-transact! db/dsdb event))
-
-          {:db (if undo?
-                 ;; For undos, let the undo/redo handlers manage db state.
-                 db
-                 ;; Otherwise wipe the redo stack and add the new event.
-                 (-> db
-                     undo/reset-redo
-                     (undo/push-undo (:event/id event) [dsdb event])))
-           :fx [[:dispatch (if remote?
-                             [:remote/forward-event event]
-                             [:electron-sync])]]})
+      (if-not valid?
+        ;; Don't try to process invalid events, just log them.
         (let [explanation (-> schema/event
                               (m/explain event)
                               (me/humanize))]
           (log/warn "Not sending invalid event. Error:" (pr-str explanation)
                     "\nInvalid event was:" (pr-str event))
-          {})))))
+          {:fx [[:dispatch [:fail-resolved-forward-transact]]]})
+
+
+        (try
+          ;; Seems valid, lets process it.
+          (let [;; First, resolve it into dsdb.
+                db' (if remote?
+                      ;; Remote db events have to be managed via the synchronizer in events.remote.
+                      (first (events-remote/add-memory-event! [db db/dsdb] event))
+                      (do
+                        ;; For local dbs, just transact it directly into dsdb.
+                        (atomic-resolver/resolve-transact! db/dsdb event)
+                        db))
+
+                ;; Then figure out the undo situation.
+                db'' (if undo?
+                       ;; For undos, let the undo/redo handlers manage db state.
+                       db'
+                       ;; Otherwise wipe the redo stack and add the new event.
+                       (-> db'
+                           undo/reset-redo
+                           (undo/push-undo (:event/id event) [dsdb event])))]
+
+            ;; Wrap it up.
+            (merge
+              {:db db''
+               :fx [;; Local dbs will need to be synced via electron.
+                    (when-not remote? [:dispatch [:electron-sync]])
+                    ;; Remote dbs just wait for the event to be confirmed by the server.
+                    (when remote?     [:dispatch [:db/not-synced]])
+                    ;; Processing has finished successfully at this point, signal the async flows.
+                    [:dispatch :success-resolved-forward-transact]]}
+              ;; Remote dbs need to actually send the event via the network.
+              (when remote? {:remote/send-event-fx! event})))
+
+          ;; Bork bork, still need to clean up.
+          (catch :default e
+            (log/error ":resolve-transact-forward failed with event " event " with error " e)
+            {:fx [[:dispatch [:fail-resolved-forward-transact]]]}))))))
 
 
 (reg-event-fx

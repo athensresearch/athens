@@ -159,7 +159,7 @@
           [db' conn])))))
 
 
-(defn- add-memory-event!
+(defn add-memory-event!
   "Add an event to the memory stage."
   [[db conn] {:event/keys [id] :as event}]
   ;; Apply the new event, store it in the memory stage, and save the tx-data for rollback.
@@ -275,14 +275,3 @@
                                                                          :page/title)]])
                            ;; Remove the server event after everything is done.
                            true                (into [[:remote/clear-server-event event]]))]]})))
-
-
-(rf/reg-event-fx
-  :remote/forward-event
-  (fn [{db :db} [_ event]]
-    (log/debug ":remote/forwarded-event event:" (pr-str event))
-    (let [[db'] (add-memory-event! [db db/dsdb] event)]
-      {:db db'
-       :fx [[:dispatch-n [[:db/not-synced]
-                          [:success-resolved-forward-transact]]]]
-       :remote/send-event-fx! event})))
