@@ -172,7 +172,7 @@
 (defn navigate
   [page]
   (log/debug "navigate:" (pr-str page))
-  (when-not (sentry/transaction-get-current)
+  (when-not (sentry/tx-running?)
     (sentry/transaction-start "router/navigate"))
   (rf/dispatch [:navigate page]))
 
