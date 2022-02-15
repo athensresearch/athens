@@ -1,6 +1,5 @@
 (ns athens.interceptors
   (:require
-    [athens.common.logging :as log]
     [athens.util           :as util]
     [athens.utils.sentry   :as sentry]
     [re-frame.core         :as rf]))
