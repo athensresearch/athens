@@ -217,9 +217,19 @@
                                         :margin-block-start "0"}]]})
 
 
+(defn has-coref?
+  [set {:block/keys [refs] :as backref}]
+  (when (some set refs)
+    backref))
+
+
 (defn inline-linked-refs-el
   [block state]
-  (let [refs (db/get-linked-block-references block)]
+  (let [ref-filter (-> state deref :inline-refs/filter)
+        block'     (if (seq ref-filter)
+                     (update block :block/_refs #(vec (keep (partial has-coref? ref-filter) %)))
+                     block)
+        refs       (db/get-linked-block-references block')]
     (when (not-empty refs)
       [:div (stylefy/use-style references-style {:key "Inline Linked References"})
        [:section
@@ -235,16 +245,35 @@
 
 ;; Components
 
+(def coref-string-size-limit 3)
+
+
 (defn block-refs-count-el
-  [count click-fn]
-  [:div (stylefy/use-style {:margin-left "1em"
-                            :grid-area "refs"
-                            :z-index (:zindex-dropdown style/ZINDICES)
-                            :visibility (when-not (pos? count) "hidden")})
-   [:> Button {:on-click  (fn [e]
-                            (.. e stopPropagation)
-                            (click-fn e))}
-    count]])
+  [backrefs click-fn]
+  (let [total      (count backrefs)
+        coref-freqs (->> backrefs
+                         (mapcat :block/refs)
+                         (remove #(-> % :node/title not))
+                         (remove #(> (count (:node/title %)) coref-string-size-limit))
+                         (frequencies)
+                         (seq)
+                         (sort-by (fn [[{:node/keys [title]} _total]] title)))]
+
+    [:div (stylefy/use-style {:margin-left "1em"
+                              :grid-area   "refs"
+                              :z-index     (:zindex-dropdown style/ZINDICES)
+                              :visibility  (when-not (pos? total) "hidden")})
+     (doall
+       (for [[{:node/keys [title] :as coref} total] coref-freqs]
+         [:> Button {:key      (str "coref-count-" title)
+                     :on-click (fn [e]
+                                 (.. e stopPropagation)
+                                 (click-fn e #{coref}))}
+          [:span title " " [:sub total]]]))
+     [:> Button {:on-click (fn [e]
+                             (.. e stopPropagation)
+                             (click-fn e #{}))}
+      total]]))
 
 
 (defn block-drag-over
@@ -401,6 +430,7 @@
                         :show-editable-dom  false
                         :linked-ref/open    (or (false? linked-ref) initial-open)
                         :inline-refs/open   false
+                        :inline-refs/filter #{}
                         :inline-refs/states {}
                         :block/uid          uid})
          save-fn #(db/transact-state-for-uid (or original-uid uid) state)
@@ -487,10 +517,18 @@
            [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
-             [block-refs-count-el (count _refs) (fn [e]
-                                                  (if (.. e -shiftKey)
-                                                    (rf/dispatch [:right-sidebar/open-item uid])
-                                                    (swap! state update :inline-refs/open not)))])]
+             [block-refs-count-el _refs (fn [e new-filter]
+                                          (let [{:inline-refs/keys [open filter]}  @state]
+                                            (if (.. e -shiftKey)
+                                              ;; shift-click always opens the block on the sidebar
+                                              (rf/dispatch [:right-sidebar/open-item uid])
+                                              (do
+                                                ;; update the filter
+                                                (swap! state assoc :inline-refs/filter new-filter)
+
+                                                ;; toggle open unless we're already open and just switching filters
+                                                (when-not (and open (not= filter new-filter))
+                                                  (swap! state update :inline-refs/open not))))))])]
 
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
