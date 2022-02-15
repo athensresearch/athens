@@ -160,8 +160,8 @@
 
 
 (defn self-hosted-health-check
-  [url success-cb failure-cb]
-  (go (let [ch  (go (<p! (.. (js/fetch (str "http://" url "/health-check"))
+  [http-url success-cb failure-cb]
+  (go (let [ch  (go (<p! (.. (js/fetch (str http-url "/health-check"))
                              (then (fn [response]
                                      (if (.-ok response)
                                        :success
@@ -175,14 +175,14 @@
 
 (rf/reg-fx
   :remote/client-connect!
-  (fn [{:keys [url ws-url] :as remote-db}]
-    (log/debug ":remote/client-connect!" (pr-str (:url remote-db)))
+  (fn [{:keys [url http-url ws-url]}]
+    (log/debug ":remote/client-connect!" (pr-str url))
     (when @self-hosted-client
       (log/info ":remote/client-connect! already connected, restarting")
       (component/stop @self-hosted-client))
     (log/info ":remote/client-connect! health-check")
     (self-hosted-health-check
-      url
+      http-url
       (fn []
         (log/info ":remote/client-connect! health-check success")
         (log/info ":remote/client-connect! connecting")

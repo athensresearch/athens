@@ -1,4 +1,6 @@
-(ns athens.electron.utils)
+(ns athens.electron.utils
+  (:require
+    [clojure.string :as str]))
 
 
 ;; Electron node libs
@@ -88,6 +90,22 @@
     (.mkdirSync (fs) dir)))
 
 
+(defn resolve-http-url
+  [url]
+  (if (or (str/starts-with? url "http://")
+          (str/starts-with? url "https://"))
+    url
+    (str/join ["http://" url])))
+
+
+(defn resolve-ws-url
+  [url]
+  (cond
+    (str/starts-with? url "http://")  (str "ws://"  (last (str/split url #"http://")) "/ws")
+    (str/starts-with? url "https://") (str "wss://" (last (str/split url #"https://")) "/ws")
+    :else                             (str "ws://"  url "/ws")))
+
+
 (defn self-hosted-db
   "Returns a map representing a self-hosted db.
    Self-hosted dbs are uniquely identified by the url."
@@ -97,7 +115,8 @@
    :id       url
    :url      url
    :password password
-   :ws-url   (str "ws://" url "/ws")})
+   :http-url (resolve-http-url url)
+   :ws-url   (resolve-ws-url url)})
 
 
 (defn local-db?
