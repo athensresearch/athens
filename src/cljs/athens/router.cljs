@@ -88,8 +88,6 @@
                              (dissoc :merge-prompt))
              :timeout    {:action :clear
                           :id     :merge-prompt}
-             ;; TODO make it async flow
-             ;; halt? event trigger is when view is rendered
              :dispatch-n [[:editing/first-child (:block/uid page-block)]
                           (when (= "router/navigate" sentry-tx-name)
                             [:sentry/end-tx sentry-tx])]})
