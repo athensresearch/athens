@@ -36,19 +36,17 @@
                     sentry-span   (sentry/span-start (or existing-span
                                                          auto-tx)
                                                      span-name)]
-                (when-not tx-running?
-                  (log/warn "Auto generated local Sentry TX for span:" (pr-str span-name)))
-                (cond-> context
-                  true              (assoc :sentry-span sentry-span)
-                  (not tx-running?) (assoc :sentry-tx auto-tx))))
+                (cond-> (assoc context :sentry-span sentry-span)
+                  (not tx-running?) (assoc :sentry-auto-tx auto-tx))))
     :after  (fn [context]
               (let [sentry-span (:sentry-span context)
-                    auto-tx     (:sentry-tx context)]
+                    auto-tx     (:sentry-auto-tx context)]
                 (when sentry-span
                   (sentry/span-finish sentry-span))
                 (when auto-tx
                   (sentry/transaction-finish auto-tx))
-                (dissoc context :sentry-span)))))
+                (cond-> (dissoc context :sentry-span)
+                  auto-tx (dissoc :sentry-auto-tx))))))
 
 
 (rf/reg-global-interceptor persist-db)

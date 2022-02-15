@@ -1005,13 +1005,13 @@
                 :rules          (wait-for-rft sentry-tx success-dispatch-n)}])
 
 
-(defn- get-sentry-tx
+(defn- close-and-get-sentry-tx
+  "Always closes old running transaction and starts new one"
   [name]
-  (let [existing-tx (sentry/transaction-get-current)
-        sentry-tx   (if existing-tx
-                      existing-tx
-                      (sentry/transaction-start name))]
-    sentry-tx))
+  (let [running-tx? (sentry/tx-running?)]
+    (when running-tx?
+      (sentry/transaction-finish (sentry/transaction-get-current)))
+    (sentry/transaction-start name)))
 
 
 (defn- focus-on-uid
@@ -1030,7 +1030,7 @@
   :backspace/delete-only-child
   (fn [_ [_ uid]]
     (log/debug ":backspace/delete-only-child:" (pr-str uid))
-    (let [sentry-tx   (get-sentry-tx "backspace/delete-only-child")
+    (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-only-child")
           op          (wrap-span "build-block-remove-op"
                                  (graph-ops/build-block-remove-op @db/dsdb uid))
           event       (common-events/build-atomic-event op)]
@@ -1041,7 +1041,7 @@
   :enter/new-block
   (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
     (log/debug ":enter/new-block" (pr-str block) (pr-str parent) (pr-str new-uid))
-    (let [sentry-tx   (get-sentry-tx "enter/new-block")
+    (let [sentry-tx   (close-and-get-sentry-tx "enter/new-block")
           op          (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
                                                                    :relation  :after})
           event       (common-events/build-atomic-event op)]
@@ -1114,7 +1114,7 @@
   :backspace/delete-merge-block
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
     (log/debug ":backspace/delete-merge-block args:" (pr-str args))
-    (let [sentry-tx   (get-sentry-tx "backspace/delete-merge-block")
+    (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block")
           op          (wrap-span "build-block-remove-merge-op"
                                  (graph-ops/build-block-remove-merge-op @db/dsdb
                                                                         uid
@@ -1130,7 +1130,7 @@
   :backspace/delete-merge-block-with-save
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id local-update] :as args}]]
     (log/debug ":backspace/delete-merge-block-with-save args:" (pr-str args))
-    (let [sentry-tx   (get-sentry-tx "backspace/delete-merge-block-with-save")
+    (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block-with-save")
           op          (wrap-span "build-block-merge-with-updated-op"
                                  (graph-ops/build-block-merge-with-updated-op @db/dsdb
                                                                               uid
@@ -1149,7 +1149,7 @@
   :enter/add-child
   (fn [_ [_ {:keys [block new-uid embed-id] :as args}]]
     (log/debug ":enter/add-child args:" (pr-str args))
-    (let [sentry-tx   (get-sentry-tx "enter/add-child")
+    (let [sentry-tx   (close-and-get-sentry-tx "enter/add-child")
           position    (wrap-span "compat-position"
                                  (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
                                                                       :relation  :first}))
@@ -1161,7 +1161,7 @@
   :enter/split-block
   (fn [_ [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
-    (let [sentry-tx   (get-sentry-tx "enter/split-block")
+    (let [sentry-tx   (close-and-get-sentry-tx "enter/split-block")
           op          (wrap-span "build-block-split-op"
                                  (graph-ops/build-block-split-op @db/dsdb
                                                                  {:old-block-uid uid
@@ -1177,7 +1177,7 @@
   :enter/bump-up
   (fn [_ [_ {:keys [uid new-uid embed-id] :as args}]]
     (log/debug ":enter/bump-up args" (pr-str args))
-    (let [sentry-tx   (get-sentry-tx "enter/bump-up")
+    (let [sentry-tx   (close-and-get-sentry-tx "enter/bump-up")
           position    (wrap-span "compat-position"
                                  (common-db/compat-position @db/dsdb {:block/uid uid
                                                                       :relation  :before}))
@@ -1191,7 +1191,7 @@
     ;; Triggered when there is a closed embeded block with no content in the top level block
     ;; and then one presses enter in the embeded block.
     (log/debug ":enter/open-block-add-child" (pr-str block) (pr-str new-uid))
-    (let [sentry-tx               (get-sentry-tx "enter/open-block-add-child")
+    (let [sentry-tx               (close-and-get-sentry-tx "enter/open-block-add-child")
           block-uid               (:block/uid block)
           block-open-op           (atomic-graph-ops/make-block-open-op block-uid
                                                                        true)
@@ -1351,7 +1351,7 @@
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-    (let [sentry-tx                     (get-sentry-tx "indent")
+    (let [sentry-tx                     (close-and-get-sentry-tx "indent")
           block                         (wrap-span "get-block"
                                                    (common-db/get-block @db/dsdb [:block/uid uid]))
           block-zero?                   (zero? (:block/order block))
@@ -1390,7 +1390,7 @@
   :indent/multi
   (fn [_ [_ {:keys [uids]}]]
     (log/debug ":indent/multi" (pr-str uids))
-    (let [sentry-tx                (get-sentry-tx "indent/multi")
+    (let [sentry-tx                (close-and-get-sentry-tx "indent/multi")
           sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
           f-uid                    (first sanitized-selected-uids)
           dsdb                     @db/dsdb
@@ -1417,7 +1417,7 @@
   :unindent
   (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
     (log/debug ":unindent args" (pr-str args))
-    (let [sentry-tx                 (get-sentry-tx "unindent")
+    (let [sentry-tx                 (close-and-get-sentry-tx "unindent")
           parent                    (wrap-span "parent"
                                                (common-db/get-parent @db/dsdb
                                                                      (common-db/e-by-av @db/dsdb :block/uid uid)))
@@ -1447,7 +1447,7 @@
   :unindent/multi
   (fn [{:keys [db]} [_ {:keys [uids]}]]
     (log/debug ":unindent/multi" uids)
-    (let [sentry-tx                   (get-sentry-tx "unindent/multi")
+    (let [sentry-tx                   (close-and-get-sentry-tx "unindent/multi")
           [f-uid f-embed-id]          (wrap-span "uid-and-embed-id"
                                                  (common-db/uid-and-embed-id (first uids)))
           sanitized-selected-uids     (mapv (comp
