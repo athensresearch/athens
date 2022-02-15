@@ -1,7 +1,6 @@
 (ns athens.self-hosted.client
   "Self-Hosted Mode connector."
   (:require
-    [athens.common-db                  :as common-db]
     [athens.common-events              :as common-events]
     [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events.schema       :as schema]
@@ -9,7 +8,6 @@
     [cognitect.transit                 :as transit]
     [com.cognitect.transit.types       :as ty]
     [com.stuartsierra.component        :as component]
-    [datascript.core                   :as d]
     [re-frame.core                     :as rf]))
 
 
@@ -211,21 +209,10 @@
         (log/warn "Received invalid response:" (pr-str explanation))))))
 
 
-(defn datom->tx-entry
-  [[e a v]]
-  [:db/add e a v])
-
-
 (defn- db-dump-handler
   [{:keys [datoms]}]
   (log/debug "Received DB Dump")
-  (rf/dispatch [:reset-conn (d/empty-db common-db/schema)])
-  ;; TODO: this transact should be a internal representation event instead.
-  (rf/dispatch [:transact (into [] (map datom->tx-entry) datoms)])
-  (rf/dispatch [:remote/start-event-sync])
-  (rf/dispatch [:db/sync])
-  (rf/dispatch [:remote/connected])
-  (log/info "✅ Transacted DB dump."))
+  (rf/dispatch [:db-dump-handler datoms]))
 
 
 (defn- presence-session-id-handler

@@ -4,6 +4,7 @@
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
     [athens.common.logging       :as log]
+    [athens.common.sentry        :refer-macros [wrap-span]]
     [athens.db                   :as db]
     [athens.self-hosted.client   :as client]
     [cljs-http.client            :as http]
@@ -26,14 +27,19 @@
 (rf/reg-fx
   :transact!
   (fn [tx-data]
-    (common-db/transact-with-middleware! db/dsdb tx-data)))
+    (wrap-span "fx/transact!"
+               (common-db/transact-with-middleware! db/dsdb tx-data))
+    (rf/dispatch [:success-transact])))
 
 
 (rf/reg-fx
   :reset-conn!
   (fn [new-db]
-    (d/reset-conn! db/dsdb new-db)
-    (common-db/health-check db/dsdb)))
+    (wrap-span "ds/reset-conn"
+               (d/reset-conn! db/dsdb new-db))
+    (wrap-span "db/health-check"
+               (common-db/health-check db/dsdb))
+    (rf/dispatch [:success-reset-conn])))
 
 
 (rf/reg-fx
@@ -214,4 +220,5 @@
 (rf/reg-fx
   :invoke-callback
   (fn [callback]
+    (log/debug "Invoking callback")
     (callback)))

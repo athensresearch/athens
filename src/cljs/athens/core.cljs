@@ -52,13 +52,13 @@
   "Two checks for sentry: once on init and once on beforeSend."
   []
   (when (sentry-on?)
-    (.init Sentry (clj->js {:dsn SENTRY_DSN
+    (.init Sentry (clj->js {:dsn              SENTRY_DSN
                             :release          (str "athens@" (util/athens-version))
-                            :integrations     [(new (.. tracing -Integrations -BrowserTracing))
-                                               (new (.. integrations -CaptureConsole)
-                                                    (clj->js {:levels ["error" "assert"]}))
-                                               (new (.. integrations -ReportingObserver)
-                                                    (clj->js {:types ["crash"]}))]
+                            :integrations     [(tracing/Integrations.BrowserTracing.)
+                                               (Sentry/Integrations.Breadcrumbs. (clj->js {:console false}))
+                                               ;; NOTE This configuration is not working, we're not capturing these levels
+                                               (integrations/CaptureConsole. (clj->js {:levels ["warn" "error" "assert"]}))
+                                               (integrations/ReportingObserver. (clj->js {:types ["crash"]}))]
                             :environment      (if config/debug? "development" "production")
                             :beforeSend       #(when (sentry-on?) %)
                             :tracesSampleRate 1.0}))))

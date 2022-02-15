@@ -63,7 +63,7 @@
   (let [;; other kv don't really matter.
         v1 {:persist/version 1
             :settings        {}}]
-    (is (= (db/update-persisted v1)
+    (is (= (db/update-v1-to-v2 v1)
            (-> v1
                (assoc-in [:settings :color] (:color db/default-settings))
                (assoc :persist/version 2))))))

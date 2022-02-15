@@ -2,9 +2,12 @@
   (:require
     [athens.common-db            :as common-db]
     [athens.common.logging       :as log]
+    [athens.common.sentry        :refer-macros [wrap-span]]
     [athens.dates                :as dates]
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
+    [athens.interceptors         :as interceptors]
+    [athens.utils.sentry         :as sentry]
     [day8.re-frame.tracing       :refer-macros [fn-traced]]
     [posh.reagent                :refer [pull]]
     [re-frame.core               :as rf :refer [reg-sub reg-event-fx]]
@@ -42,6 +45,7 @@
 ;; events
 (rf/reg-event-fx
   :navigate
+  [(interceptors/sentry-span "navigate")]
   (fn [{:keys [db]} [_ & route]]
     (log/debug ":navigate route:" (pr-str route))
     (let [db-id       (-> db db-picker/selected-db :id)
@@ -63,25 +67,30 @@
 
 (rf/reg-event-fx
   :navigated
+  [(interceptors/sentry-span "navigated")]
   (fn [{:keys [db]} [_ new-match]]
     (log/debug "navigated, new-match:" (pr-str new-match))
-    (let [old-match   (:current-route db)
-          route-name  (-> new-match :data :name)
-          nav-page?   (= :page-by-title route-name)
-          controllers (rfc/apply-controllers (:controllers old-match) new-match)
-          loading?    (:loading? db)]
+    (let [sentry-tx      (sentry/transaction-get-current)
+          sentry-tx-name (sentry/transaction-get-current-name)
+          old-match      (:current-route db)
+          route-name     (-> new-match :data :name)
+          nav-page?      (= :page-by-title route-name)
+          controllers    (rfc/apply-controllers (:controllers old-match) new-match)
+          loading?       (:loading? db)]
       (when-not loading?
         (if nav-page?
           (let [page-title (-> new-match :path-params :title)
                 page-block (common-db/get-block @db/dsdb [:node/title page-title])
                 html-title (str page-title " | Athens")]
             (set! (.-title js/document) html-title)
-            {:db       (-> db
-                           (assoc :current-route (assoc new-match :controllers controllers))
-                           (dissoc :merge-prompt))
-             :timeout  {:action :clear
-                        :id     :merge-prompt}
-             :dispatch [:editing/first-child (:block/uid page-block)]})
+            {:db         (-> db
+                             (assoc :current-route (assoc new-match :controllers controllers))
+                             (dissoc :merge-prompt))
+             :timeout    {:action :clear
+                          :id     :merge-prompt}
+             :dispatch-n [[:editing/first-child (:block/uid page-block)]
+                          (when (= "router/navigate" sentry-tx-name)
+                            [:sentry/end-tx sentry-tx])]})
           (let [uid               (-> new-match :path-params :id)
                 node              (pull db/dsdb '[*] [:block/uid uid]) ; TODO make the page title query work when zoomed in on a block
                 node-title        (:node/title @node)
@@ -107,12 +116,15 @@
                                                      (or uid
                                                          (and home?
                                                               (:uid today))))]
-                            [:editing/first-child parent-uid])]}))))))
+                            [:editing/first-child parent-uid])
+                          (when (= "router/navigate" sentry-tx-name)
+                            [:sentry/end-tx sentry-tx])]}))))))
 
 
 ;; doesn't reliably work. notably, Daily Notes are often not remembered as last open page, leading to incorrect restore
 (reg-event-fx
   :restore-navigation
+  [(interceptors/sentry-span "restore-navigation")]
   (fn [{:keys [db]} _]
     (let [prev-title (-> db db-picker/selected-db :current-route/title)
           prev-uid   (-> db db-picker/selected-db :current-route/uid)]
@@ -127,7 +139,8 @@
 (rf/reg-fx
   :navigate!
   (fn-traced [route]
-             (apply rfee/push-state route)))
+             (wrap-span "push-state"
+                        (apply rfee/push-state route))))
 
 
 ;; router definition
@@ -157,6 +170,8 @@
 (defn navigate
   [page]
   (log/debug "navigate:" (pr-str page))
+  (when-not (sentry/tx-running?)
+    (sentry/transaction-start "router/navigate"))
   (rf/dispatch [:navigate page]))
 
 
@@ -174,6 +189,9 @@
   "Navigate to page by it's title"
   ([title]
    (let [current-route-page-title @(rf/subscribe [:current-route/page-title])]
+     (when-not (sentry/tx-running?)
+       ;; NOTE: this name here "router/navigate" is used to close this transaction, check `:navigated` event above
+       (sentry/transaction-start "router/navigate"))
      (log/debug "navigate-page:" (pr-str {:title                    title
                                           :current-route-page-title current-route-page-title}))
      (when-not (= current-route-page-title title)
@@ -193,6 +211,9 @@
   ([uid]
    (let [[uid _embed-id]   (db/uid-and-embed-id uid)
          current-route-uid @(rf/subscribe [:current-route/uid])]
+     (when-not (sentry/tx-running?)
+       ;; NOTE: this name here "router/navigate" is used to close this transaction, check `:navigated` event above
+       (sentry/transaction-start "router/navigate"))
      (when (not= current-route-uid uid)
        (rf/dispatch [:navigate :page {:id uid}]))))
   ([uid e]
