@@ -21,7 +21,7 @@
   "Can be a block or a node page."
   []
   (let [uid (rf/subscribe [:current-route/uid])
-        {:keys [node/title block/string db/id]} (reactive/get-block-or-page-by-uid @uid)]
+        {:keys [node/title block/string db/id]} (reactive/get-reactive-block-or-page-by-uid @uid)]
     (cond
       title [node-page/page id]
       string [block-page/page id]

@@ -87,7 +87,7 @@
 
 (defn linked-refs-el
   [id]
-  (let [linked-refs (reactive/get-linked-references id)]
+  (let [linked-refs (reactive/get-reactive-linked-references id)]
     (when (seq linked-refs)
       [:div (use-style node-page/references-style {:key "Linked References"})
        [:section
@@ -111,7 +111,7 @@
 
 (defn parents-el
   [uid id]
-  (let [parents (reactive/get-parents-recursively id)]
+  (let [parents (reactive/get-reactive-parents-recursively id)]
     [:span {:style {:color "gray"}}
      [breadcrumbs-list {:style {:font-size "1.2rem"}}
       (doall
@@ -167,5 +167,5 @@
 
 (defn page
   [ident]
-  (let [block (reactive/get-block-document ident)]
+  (let [block (reactive/get-reactive-block-document ident)]
     [block-page-el block parents]))

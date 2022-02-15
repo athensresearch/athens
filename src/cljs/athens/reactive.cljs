@@ -1,5 +1,6 @@
 (ns athens.reactive
   (:require
+    [athens.common.sentry :refer-macros [defntrace]]
     [athens.common.utils :as utils]
     [athens.db :as db]
     [datascript.core :as d]
@@ -43,7 +44,7 @@
 
 ;; Ratoms
 
-(defn get-linked-references
+(defn get-reactive-linked-references
   "For node and block page references UI."
   [eid]
   (->> @(p/pull db/dsdb '[:block/_refs] eid)
@@ -62,7 +63,7 @@
     {:block/children [:block/uid :block/order]}])
 
 
-(defn get-node-document
+(defntrace get-reactive-node-document
   [id]
   (->> @(p/pull db/dsdb node-document-pull-vector id)
        db/sort-block-children))
@@ -73,19 +74,19 @@
     {:block/children [:block/uid :block/order]}])
 
 
-(defn get-block-document
+(defntrace get-reactive-block-document
   [id]
   (->> @(p/pull db/dsdb block-document-pull-vector id)
        db/sort-block-children))
 
 
-(defn get-parents-recursively
+(defntrace get-reactive-parents-recursively
   [id]
   (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
        db/shape-parent-query))
 
 
-(defn get-shortcuts
+(defntrace get-reactive-shortcuts
   []
   (->> @(p/q '[:find ?order ?title
                :where
@@ -95,7 +96,7 @@
        (sort-by first)))
 
 
-(defn get-block-or-page-by-uid
+(defntrace get-reactive-block-or-page-by-uid
   [uid]
   @(p/pull db/dsdb '[:node/title :block/string :db/id] [:block/uid uid]))
 

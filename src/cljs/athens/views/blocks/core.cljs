@@ -153,7 +153,7 @@
                          :parent-uids    (set (map :block/uid (:block/parents block)))}]
     (fn [_]
       (let [{:keys [block parents embed-id]} @state
-            block (reactive/get-block-document (:db/id block))]
+            block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
          [:div (stylefy/use-style reference-breadcrumbs-container-style)
           [:> Toggle {:isOpen (:open? @state)
@@ -416,7 +416,7 @@
                            string
                            open
                            children
-                           _refs]} (merge (reactive/get-block-document ident) block)
+                           _refs]} (merge (reactive/get-reactive-block-document ident) block)
              children-uids         (set (map :block/uid children))
              uid-sanitized-block   (s/transform
                                      (specter-recursive-path #(contains? % :block/uid))

@@ -13,6 +13,7 @@
     ["@material-ui/icons/Link" :default Link]
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
     [athens.common-db :as common-db]
+    [athens.common.sentry :refer-macros [wrap-span]]
     [athens.common.utils :as utils]
     [athens.dates :as dates]
     [athens.db :as db :refer [get-unlinked-references]]
@@ -25,6 +26,7 @@
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.dropdown :refer [menu-style menu-separator-style]]
+    [athens.views.hoc.perf-mon     :as perf-mon]
     [clojure.string :as str]
     [datascript.core :as d]
     [garden.selectors :as selectors]
@@ -387,7 +389,7 @@
                          :parent-uids    (set (map :block/uid (:block/parents block)))}]
     (fn [_]
       (let [{:keys [block parents embed-id]} @state
-            block (reactive/get-block-document (:db/id block))]
+            block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
          [breadcrumbs-list {:style reference-breadcrumbs-style}
           (doall
@@ -407,7 +409,8 @@
 (defn linked-ref-el
   [state daily-notes? title]
   (let [linked? "Linked References"
-        linked-refs (reactive/get-linked-references [:node/title title])]
+        linked-refs (wrap-span "get-reactive-linked-references"
+                               (reactive/get-reactive-linked-references [:node/title title]))]
     (when (or (and daily-notes? (not-empty linked-refs))
               (not daily-notes?))
       [:section (use-style references-style)
@@ -570,7 +573,8 @@
            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
            (if (str/blank? (:title/local @state))
              [:wbr]
-             [parse-renderer/parse-and-render (:title/local @state) uid])]]
+             [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
+              [parse-renderer/parse-and-render (:title/local @state) uid]])]]
 
          ;; Children
          (if (empty? children)
@@ -578,14 +582,18 @@
            [:div
             (for [{:block/keys [uid] :as child} children]
               ^{:key uid}
-              [blocks/block-el child])])
+              [perf-mon/hoc-perfmon {:span-name "block-el"}
+               [blocks/block-el child]])])
 
          ;; References
-         [linked-ref-el state on-daily-notes? title]
-         [unlinked-ref-el state on-daily-notes? unlinked-refs title]]))))
+         [perf-mon/hoc-perfmon {:span-name "linked-ref-el"}
+          [linked-ref-el state on-daily-notes? title]]
+         [perf-mon/hoc-perfmon {:span-name "unlinked-ref-el"}
+          [unlinked-ref-el state on-daily-notes? unlinked-refs title]]]))))
 
 
 (defn page
   [ident]
-  (let [node (reactive/get-node-document ident)]
+  (let [node (wrap-span "db/get-reactive-node-document"
+                        (reactive/get-reactive-node-document ident))]
     [node-page-el node]))

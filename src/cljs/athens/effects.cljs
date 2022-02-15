@@ -4,6 +4,7 @@
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
     [athens.common.logging       :as log]
+    [athens.common.sentry        :refer-macros [wrap-span]]
     [athens.db                   :as db]
     [athens.reactive             :as reactive]
     [athens.self-hosted.client   :as client]
@@ -27,17 +28,22 @@
 (rf/reg-fx
   :transact!
   (fn [tx-data]
-    (common-db/transact-with-middleware! db/dsdb tx-data)))
+    (wrap-span "fx/transact!"
+               (common-db/transact-with-middleware! db/dsdb tx-data))
+    (rf/dispatch [:success-transact])))
 
 
 (rf/reg-fx
   :reset-conn!
   (fn [[new-db skip-health-check?]]
     (reactive/unwatch!)
-    (d/reset-conn! db/dsdb new-db)
+    (wrap-span "ds/reset-conn"
+               (d/reset-conn! db/dsdb new-db))
     (when-not skip-health-check?
-      (common-db/health-check db/dsdb))
-    (reactive/watch!)))
+      (wrap-span "db/health-check"
+                 (common-db/health-check db/dsdb)))
+    (reactive/watch!)
+    (rf/dispatch [:success-reset-conn])))
 
 
 (rf/reg-fx
@@ -158,8 +164,8 @@
 
 
 (defn self-hosted-health-check
-  [url success-cb failure-cb]
-  (go (let [ch  (go (<p! (.. (js/fetch (str "http://" url "/health-check"))
+  [http-url success-cb failure-cb]
+  (go (let [ch  (go (<p! (.. (js/fetch (str http-url "/health-check"))
                              (then (fn [response]
                                      (if (.-ok response)
                                        :success
@@ -173,14 +179,14 @@
 
 (rf/reg-fx
   :remote/client-connect!
-  (fn [{:keys [url ws-url] :as remote-db}]
-    (log/debug ":remote/client-connect!" (pr-str (:url remote-db)))
+  (fn [{:keys [url http-url ws-url]}]
+    (log/debug ":remote/client-connect!" (pr-str url))
     (when @self-hosted-client
       (log/info ":remote/client-connect! already connected, restarting")
       (component/stop @self-hosted-client))
     (log/info ":remote/client-connect! health-check")
     (self-hosted-health-check
-      url
+      http-url
       (fn []
         (log/info ":remote/client-connect! health-check success")
         (log/info ":remote/client-connect! connecting")
@@ -218,4 +224,5 @@
 (rf/reg-fx
   :invoke-callback
   (fn [callback]
+    (log/debug "Invoking callback")
     (callback)))

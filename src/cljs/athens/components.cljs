@@ -97,7 +97,7 @@
     (if (db/e-by-av :block/uid block-uid)
       (r/with-let [embed-id (random-uuid)]
                   [:div.block-embed (use-style block-embed-adjustments)
-                   (let [block (reactive/get-block-document [:block/uid block-uid])]
+                   (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
                      [:<>
                       [blocks/block-el
                        (recursively-modify-block-for-embed block embed-id)

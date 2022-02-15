@@ -2,15 +2,18 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
-    [athens.common.logging :as log]
-    [athens.parser         :as parser]
-    [athens.patterns       :as patterns]
-    [clojure.data          :as data]
-    [clojure.pprint        :as pp]
-    [clojure.set           :as set]
-    [clojure.string        :as string]
-    [clojure.walk          :as walk]
-    [datascript.core       :as d]))
+    [athens.common.logging        :as log]
+    [athens.parser                :as parser]
+    [athens.patterns              :as patterns]
+    [clojure.data                 :as data]
+    [clojure.pprint               :as pp]
+    [clojure.set                  :as set]
+    [clojure.string               :as string]
+    [clojure.walk                 :as walk]
+    [datascript.core              :as d])
+  #?(:cljs
+     (:require-macros
+       [athens.common.sentry :as sentry-m :refer [wrap-span]])))
 
 
 (def schema
@@ -824,17 +827,30 @@
 
 (defn tx-with-middleware
   [db tx-data]
-  (->> tx-data
-       (block-uid-nil-eater db)
-       (linkmaker db)
-       (orderkeeper db)))
+  #?(:cljs
+     (as-> tx-data $
+           (wrap-span "block-uid-nil-eater"
+                      (block-uid-nil-eater db $))
+           (wrap-span "linkmaker"
+                      (linkmaker db $))
+           (wrap-span "orderkeeper"
+                      (orderkeeper db $)))
+     :clj (->> tx-data
+               (block-uid-nil-eater db)
+               (linkmaker db)
+               (orderkeeper db))))
 
 
 (defn transact-with-middleware!
   "Transact tx-data enriched with middleware txs into conn."
   [conn tx-data]
   ;; 🎶 Sia "Cheap Thrills"
-  (d/transact! conn (tx-with-middleware @conn tx-data)))
+  (let [processed-tx-data #?(:cljs (wrap-span "tx-with-middleware"
+                                              (tx-with-middleware @conn tx-data))
+                             :clj (tx-with-middleware @conn tx-data))]
+    #?(:cljs (wrap-span "ds/transact!"
+                        (d/transact! conn processed-tx-data))
+       :clj (d/transact! conn processed-tx-data))))
 
 
 (defn health-check
@@ -843,19 +859,31 @@
   ;; But rerunning them after replaying all events helps us find events that produce
   ;; states that need fixing.
   (log/info "Knowledge graph health check...")
-  (let [linkmaker-txs       (linkmaker @conn)
-        orderkeeper-txs     (orderkeeper @conn)
-        block-nil-eater-txs (block-uid-nil-eater @conn)]
+  (let [linkmaker-txs       #?(:cljs (wrap-span "linkmaker"
+                                                (linkmaker @conn))
+                               :clj (linkmaker @conn))
+        orderkeeper-txs     #?(:cljs (wrap-span "orderkeeper"
+                                                (orderkeeper @conn))
+                               :clj (orderkeeper @conn))
+        block-nil-eater-txs #?(:cljs (wrap-span "nil-eater"
+                                                (block-uid-nil-eater @conn))
+                               :clj (block-uid-nil-eater @conn))]
     (when-not (empty? linkmaker-txs)
       (log/warn "linkmaker fixes#:" (count linkmaker-txs))
       (log/info "linkmaker fixes:" (pr-str linkmaker-txs))
-      (d/transact! conn linkmaker-txs))
+      #?(:cljs (wrap-span "transact linkmaker"
+                          (d/transact! conn linkmaker-txs))
+         :clj (d/transact! conn linkmaker-txs)))
     (when-not (empty? orderkeeper-txs)
       (log/warn "orderkeeper fixes#:" (count orderkeeper-txs))
       (log/info "orderkeeper fixes:" (pr-str orderkeeper-txs))
-      (d/transact! conn orderkeeper-txs))
+      #?(:cljs (wrap-span "transact orderkeeper"
+                          (d/transact! conn orderkeeper-txs))
+         :clj (d/transact! conn orderkeeper-txs)))
     (when-not (empty? block-nil-eater-txs)
       (log/warn "block-uid-nil-eater fixes#:" (count block-nil-eater-txs))
       (log/info "block-uid-nil-eater fixes:" (pr-str block-nil-eater-txs))
-      (d/transact! conn block-nil-eater-txs))
+      #?(:cljs (wrap-span "transact nil-eater"
+                          (d/transact! conn block-nil-eater-txs))
+         :clj (d/transact! conn block-nil-eater-txs)))
     (log/info "✅ Knowledge graph health check.")))

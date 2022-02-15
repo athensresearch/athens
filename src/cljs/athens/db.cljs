@@ -2,6 +2,8 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common.logging :as log]
+    [athens.common.sentry :refer-macros [defntrace]]
+    [athens.electron.utils :as electron.utils]
     [athens.patterns :as patterns]
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
@@ -104,6 +106,22 @@
       (assoc :persist/version 2)))
 
 
+(defn- recreate-self-hosted-dbs
+  [dbs]
+  (into {} (map (fn [[k {:keys [name url password] :as db}]]
+                  [k (if (electron.utils/remote-db? db)
+                       (electron.utils/self-hosted-db name url password)
+                       db)])
+                dbs)))
+
+
+(defn update-v2-to-v3
+  [persisted]
+  (-> persisted
+      (update :db-picker/all-dbs recreate-self-hosted-dbs)
+      (assoc :persist/version 3)))
+
+
 (defn update-persisted
   "Updates persisted to the latest format."
   [{:keys [:persist/version] :as persisted}]
@@ -118,8 +136,7 @@
       (cond-> persisted
         ;; Update persisted by applying each update fn incrementally.
         (v< 2) update-v1-to-v2
-        ;; (v< 3) update-v2-to-v3
-        ))))
+        (v< 3) update-v2-to-v3))))
 
 
 ;; -- re-frame -----------------------------------------------------------
@@ -302,19 +319,19 @@
   '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
-(defn get-node-document
+(defntrace get-node-document
   [id db]
   (->> (d/pull db node-document-pull-vector id)
        sort-block-children))
 
 
-(defn get-roam-node-document
+(defntrace get-roam-node-document
   [id db]
   (->> (d/pull db roam-node-document-pull-vector id)
        sort-block-children))
 
 
-(defn shape-parent-query
+(defntrace shape-parent-query
   "Normalize path from deeply nested block to root node."
   [pull-results]
   (->> (loop [b   pull-results
@@ -334,13 +351,13 @@
        vec))
 
 
-(defn get-parents-recursively
+(defntrace get-parents-recursively
   [id]
   (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
        shape-parent-query))
 
 
-(defn get-root-parent-page
+(defntrace get-root-parent-page
   "Returns the root parent page or returns the block because this block is a page."
   [uid]
   ;; make sure block first exists
@@ -349,12 +366,12 @@
       (or opt1 block))))
 
 
-(defn get-block
+(defntrace get-block
   [id]
   (d/pull @dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
 
 
-(defn get-parent
+(defntrace get-parent
   [id]
   (-> (d/entity @dsdb id)
       :block/_children
@@ -363,7 +380,7 @@
       get-block))
 
 
-(defn deepest-child-block
+(defntrace deepest-child-block
   [id]
   (let [document (->> (d/pull @dsdb '[:block/order :block/uid :block/open {:block/children ...}] id)
                       sort-block-children)]
@@ -376,13 +393,13 @@
           (recur (get children (dec n))))))))
 
 
-(defn re-case-insensitive
+(defntrace re-case-insensitive
   "More options here https://clojuredocs.org/clojure.core/re-pattern"
   [query]
   (re-pattern (str "(?i)" (escape-str query))))
 
 
-(defn search-exact-node-title
+(defntrace search-exact-node-title
   [query]
   (d/entity @dsdb [:node/title query]))
 
@@ -451,7 +468,7 @@
          @dsdb rules uid find-order)))
 
 
-(defn prev-block-uid
+(defntrace prev-block-uid
   "If order 0, go to parent.
    If order n but block is closed, go to prev sibling.
    If order n and block is OPEN, go to prev sibling's deepest child."
@@ -470,7 +487,7 @@
       embed-id (str "-embed-" embed-id))))
 
 
-(defn next-sibling-recursively
+(defntrace next-sibling-recursively
   "Search for next sibling. If not there (i.e. is last child), find sibling of parent.
   If parent is root, go to next sibling."
   [uid]
@@ -515,7 +532,7 @@
      (next-block-uid uid))))
 
 
-(defn get-first-child-uid
+(defntrace get-first-child-uid
   [uid db]
   (when uid
     (try
@@ -556,7 +573,7 @@
 
 ;; -- Linked & Unlinked References ----------
 
-(defn get-ref-ids
+(defntrace get-ref-ids
   [pattern]
   (d/q '[:find [?e ...]
          :in $ ?regex
@@ -594,7 +611,7 @@
   (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
-(defn get-linked-block-references
+(defntrace get-linked-block-references
   "For block-page references UI."
   [block]
   (->> (:block/_refs block)
@@ -606,7 +623,7 @@
        vec))
 
 
-(defn get-unlinked-references
+(defntrace get-unlinked-references
   "For node-page references UI."
   [title]
   (-> title patterns/unlinked get-data))

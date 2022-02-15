@@ -150,7 +150,7 @@
 (defn left-sidebar
   []
   (let [open? (subscribe [:left-sidebar/open])
-        shortcuts (reactive/get-shortcuts)]
+        shortcuts (reactive/get-reactive-shortcuts)]
     ;; (when @open?
 
     ;; IF EXPANDED

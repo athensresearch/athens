@@ -2,15 +2,15 @@
   (:require
     ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
     ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
-    [athens.common-db :as common-db]
-    [athens.dates :as dates]
-    [athens.db :as db]
-    [athens.router :as router]
-    [athens.style :as style :refer [color OPACITIES]]
-    [clojure.string :refer [lower-case]]
-    [garden.selectors :as selectors]
-    [re-frame.core :as rf :refer [dispatch subscribe]]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [athens.common-db          :as common-db]
+    [athens.dates              :as dates]
+    [athens.db                 :as db]
+    [athens.router             :as router]
+    [athens.style              :as style :refer [color OPACITIES]]
+    [clojure.string            :refer [lower-case]]
+    [garden.selectors          :as selectors]
+    [re-frame.core             :as rf :refer [dispatch subscribe]]
+    [stylefy.core              :as stylefy :refer [use-style]]))
 
 
 ;; Styles
