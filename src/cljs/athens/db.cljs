@@ -3,6 +3,7 @@
     [athens.common-db :as common-db]
     [athens.common.logging :as log]
     [athens.common.sentry :refer-macros [defntrace]]
+    [athens.electron.utils :as electron.utils]
     [athens.patterns :as patterns]
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
@@ -106,6 +107,22 @@
       (assoc :persist/version 2)))
 
 
+(defn- recreate-self-hosted-dbs
+  [dbs]
+  (into {} (map (fn [[k {:keys [name url password] :as db}]]
+                  [k (if (electron.utils/remote-db? db)
+                       (electron.utils/self-hosted-db name url password)
+                       db)])
+                dbs)))
+
+
+(defn update-v2-to-v3
+  [persisted]
+  (-> persisted
+      (update :db-picker/all-dbs recreate-self-hosted-dbs)
+      (assoc :persist/version 3)))
+
+
 (defn update-persisted
   "Updates persisted to the latest format."
   [{:keys [:persist/version] :as persisted}]
@@ -120,8 +137,7 @@
       (cond-> persisted
         ;; Update persisted by applying each update fn incrementally.
         (v< 2) update-v1-to-v2
-        ;; (v< 3) update-v2-to-v3
-        ))))
+        (v< 3) update-v2-to-v3))))
 
 
 ;; -- re-frame -----------------------------------------------------------
