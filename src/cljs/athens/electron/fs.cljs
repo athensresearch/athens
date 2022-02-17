@@ -79,7 +79,8 @@
     (let [datoms (-> (.readFileSync (utils/fs) db-path)
                      dt/read-transit-str)]
       {:dispatch-n [[:reset-conn datoms]
-                    [:fs/watch db-path]]})))
+                    [:fs/watch db-path]
+                    [:stage/success-db-load]]})))
 
 
 (rf/reg-event-fx
