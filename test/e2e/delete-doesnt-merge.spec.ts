@@ -1,17 +1,13 @@
 import { expect, Page } from '@playwright/test';
 import { test } from './electron-test';
-import { createLocalAthensDB, indentLastBlock, saveLastBlock, saveLastBlockAndEnter, unindentLastBlock } from "./utils";
+import { createLocalAthensDB, indentLastBlock, saveLastBlock, saveLastBlockAndEnter, unindentLastBlock, waitReady } from "./utils";
 
 const testSetup = async (page:Page) => {
     // NOTE this ain't working, and that's ok
     // await createLocalAthensDB(page, "amazing");
 
     // await page.pause();
-    // Navigate to daily pages, Click button:nth-child(6)
-    await Promise.all ([
-        page.click('button:nth-child(6)'),
-        page.waitForNavigation()
-    ]);
+    await waitReady(page);
 
     // Click textarea
     await page.click('textarea');
