@@ -26,6 +26,22 @@ export const createLocalAthensDB = async (page:Page, dbName:string) => {
     await page.pause()
 };
 
+export const getTitle = async (page:Page) => {
+    const titleLocator = await page.locator("h1 >> nth=0");
+    const titleText = await titleLocator.innerText();
+    return titleText;
+};
+
+export const todaysDate = async (page:Page) => {
+    const todaysDate = await page.evaluate(`athens.dates.get_day()`);
+    const dateTitle = todaysDate.arr[3];
+    return dateTitle;
+};
+
+export const waitReady = async (page:Page) => {
+    await getTitle(page);
+};
+
 export const saveLastBlock = async (page:Page, text:string) => {
     await page.click('.textarea >> nth=-1');
     await page.fill('.textarea >> nth=-1', text);
