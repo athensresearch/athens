@@ -180,7 +180,12 @@
   (let [key                           (.. e -keyCode)
         shift                         (.. e -shiftKey)
         {:keys [index query results]} @state
-        item                          (get results index)]
+        item                          (get results index)
+        navigate-to                   (if (:node/title item)
+                                        ;; If the search result is a page
+                                        (:node/title item)
+                                        ;; If the search result is for a block
+                                        (:node/title (:block/parent item)))]
     (cond
       (= key KeyCodes.ESC)
       (dispatch [:athena/toggle])
@@ -202,7 +207,7 @@
                                ;; else open in main view
                                :else
                                (do (dispatch [:athena/toggle])
-                                   (router/navigate-page (:node/title item))
+                                   (router/navigate-page navigate-to)
                                    (dispatch [:editing/uid (:block/uid item)])))
 
       (= key KeyCodes.UP)
