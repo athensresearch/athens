@@ -1,5 +1,7 @@
 import { Page } from '@playwright/test';
 
+export const isMac = process.platform === "darwin";
+
 // NOTE: this is not supported by Playwright right now.
 export const createLocalAthensDB = async (page:Page, dbName:string) => {
     // click db picker
@@ -41,7 +43,12 @@ export const saveLastBlock = async (page:Page, text:string) => {
 
 export const saveLastBlockAndEnter = async (page:Page, text:string) => {
     await inputInLastBlock(page, text);
-    return page.press(lastBlockSelector, 'Enter');
+    await page.press(lastBlockSelector, 'Enter');
+    // Wait a bit for transaction and focus events to be resolved between saves.
+    // Without waiting, it's possible for multiple calls to end up in the same block instead of
+    // different blocks, because by the time the second call runs the new block hasn't appeared yet.
+    // TODO: we shouldn't need to do this, instead we should have deterministic states from input.
+    await page.waitForTimeout(200);
 };
 
 export const indentLastBlock = async (page:Page) => {
