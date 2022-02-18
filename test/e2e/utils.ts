@@ -32,12 +32,6 @@ export const getTitle = async (page:Page) => {
     return titleText;
 };
 
-export const todaysDate = async (page:Page) => {
-    const todaysDate = await page.evaluate(`athens.dates.get_day()`);
-    const dateTitle = todaysDate.arr[3];
-    return dateTitle;
-};
-
 export const waitReady = async (page:Page) => {
     await getTitle(page);
 };
