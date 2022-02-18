@@ -7,7 +7,7 @@
 
 (t/deftest get-internal-representation
   (let [gir (fn [tx-data eid]
-              (-> (d/empty-db common-db/schema)
+              (-> common-db/empty-db
                   (d/db-with tx-data)
                   (common-db/get-internal-representation eid)))]
 
@@ -53,7 +53,7 @@
                                                       :block/order 0}
                                                      {:block/uid   "2-2"
                                                       :block/order 1}]}]}]
-        db      (-> (d/empty-db common-db/schema)
+        db      (-> common-db/empty-db
                     (d/db-with tx-data))]
 
     (t/testing "coerce uid to title"
@@ -87,7 +87,7 @@
                                                       :block/order 0}
                                                      {:block/uid   "2-2"
                                                       :block/order 1}]}]}]
-        db      (-> (d/empty-db common-db/schema)
+        db      (-> common-db/empty-db
                     (d/db-with tx-data))]
 
     (t/testing "page parent"
@@ -114,14 +114,14 @@
 
 
 (t/deftest get-shortcut-neighbors
-  (let [db-0 (-> (d/empty-db common-db/schema)
+  (let [db-0 (-> common-db/empty-db
                  (d/db-with [{:node/title "page 1"
                               :block/uid  "page-uid-1"}]))
-        db-1 (-> (d/empty-db common-db/schema)
+        db-1 (-> common-db/empty-db
                  (d/db-with [{:node/title   "page 1"
                               :block/uid    "page-uid-1"
                               :page/sidebar 0}]))
-        db-3 (-> (d/empty-db common-db/schema)
+        db-3 (-> common-db/empty-db
                  (d/db-with [{:node/title   "page 1"
                               :block/uid    "page-uid-1"
                               :page/sidebar 0}

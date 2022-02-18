@@ -9,7 +9,6 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull q]]
     [re-frame.core :refer [dispatch]]))
 
 
@@ -244,10 +243,6 @@
 (defonce dsdb (d/create-conn common-db/schema))
 
 
-;; todo: turn into an effect
-(posh! dsdb)
-
-
 (defn e-by-av
   [a v]
   (-> (d/datoms @dsdb :avet a v) first :e))
@@ -312,7 +307,7 @@
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order :block/header {:block/children ...} :block/refs :block/_refs])
+  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs])
 
 
 (def node-document-pull-vector
@@ -324,31 +319,15 @@
   '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
-(defntrace get-block-document
-  [id]
-  (->> @(pull dsdb block-document-pull-vector id)
-       sort-block-children))
-
-
 (defntrace get-node-document
-  ([id]
-   (->> @(pull dsdb node-document-pull-vector id)
-        sort-block-children))
-  ([id db]
-   (->> (d/pull db node-document-pull-vector id)
-        sort-block-children)))
+  [id db]
+  (->> (d/pull db node-document-pull-vector id)
+       sort-block-children))
 
 
 (defntrace get-roam-node-document
   [id db]
   (->> (d/pull db roam-node-document-pull-vector id)
-       sort-block-children))
-
-
-(defntrace get-athens-datoms
-  "Copy REPL output to athens-datoms.cljs"
-  [id]
-  (->> @(pull dsdb (filter #(not (or (= % :db/id) (= % :block/_refs))) node-document-pull-vector) id)
        sort-block-children))
 
 
@@ -374,7 +353,7 @@
 
 (defntrace get-parents-recursively
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
+  (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
        shape-parent-query))
 
 
@@ -389,7 +368,7 @@
 
 (defntrace get-block
   [id]
-  @(pull dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
+  (d/pull @dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
 
 
 (defntrace get-parent
@@ -596,13 +575,13 @@
 
 (defntrace get-ref-ids
   [pattern]
-  @(q '[:find [?e ...]
-        :in $ ?regex
-        :where
-        [?e :block/string ?s]
-        [(re-find ?regex ?s)]]
-      dsdb
-      pattern))
+  (d/q '[:find [?e ...]
+         :in $ ?regex
+         :where
+         [?e :block/string ?s]
+         [(re-find ?regex ?s)]]
+       dsdb
+       pattern))
 
 
 (defn merge-parents-and-block
@@ -610,7 +589,7 @@
   (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively v)))
                            {}
                            ref-ids)
-        blocks (map (fn [id] (get-block-document id)) ref-ids)]
+        blocks (map (fn [id] (get-block id)) ref-ids)]
     (mapv
       (fn [block]
         (merge block {:block/parents (get parents (:db/id block))}))
@@ -630,20 +609,6 @@
 (defn get-data
   [pattern]
   (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
-
-
-(defntrace get-linked-references
-  "For node-page references UI."
-  [title]
-  (->> @(pull dsdb '[* :block/_refs] [:node/title title])
-       :block/_refs
-       (mapv :db/id)
-       merge-parents-and-block
-       group-by-parent
-       (sort-by #(-> % first second))
-       (map #(vector (ffirst %) (second %)))
-       vec
-       rseq))
 
 
 (defntrace get-linked-block-references

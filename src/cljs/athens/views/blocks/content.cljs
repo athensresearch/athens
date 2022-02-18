@@ -403,7 +403,7 @@
                :style {:font-size font-size}}
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
          ;; When block is in editing mode or the editing DOM elements are rendered
-         (when (or (:show-editable-dom @state) editing?)
+         (when (or (:show-editable-dom @state) @editing?)
            [autosize/textarea {:value          (:string/local @state)
                                :class          ["textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
                                ;; :auto-focus  true
