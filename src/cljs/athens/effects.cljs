@@ -195,7 +195,8 @@
                                        component/start)))
       (fn []
         (log/warn ":remote/client-connect! health-check failure")
-        (rf/dispatch [:remote/connection-failed])))))
+        (rf/dispatch [:remote/connection-failed])
+        (rf/dispatch [:stage/fail-db-load])))))
 
 
 (rf/reg-fx

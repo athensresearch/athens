@@ -45,7 +45,27 @@
     (let [conn (d/create-conn common-db/schema)]
       (doseq [[_id data] athens-datoms/welcome-events]
         (atomic-resolver/resolve-transact! conn data))
-      {:dispatch [:reset-conn @conn]})))
+      {:async-flow {:id             :db-in-mem-load
+                    :db-path        [:async-flow :db/in-mem-load]
+                    :first-dispatch [:reset-conn @conn]
+                    :rules          [{:when     :seen?
+                                      :events   :success-reset-conn
+                                      :dispatch [:stage/success-db-load]
+                                      :halt?    true}]}})))
+
+
+(rf/reg-event-db
+  :stage/success-db-load
+  (fn [db]
+    (js/console.debug ":stage/success-db-load")
+    db))
+
+
+(rf/reg-event-db
+  :stage/fail-db-load
+  (fn [db]
+    (js/console.debug ":stage/fail-db-load")
+    db))
 
 
 (reg-event-db
@@ -610,14 +630,14 @@
 (reg-event-fx
   :transact
   [(interceptors/sentry-span "transact")]
-  (fn [_ [_ tx-data]]
-    (let [synced?   @(subscribe [:db/synced])
-          electron? electron.utils/electron?]
-      (if (and synced? electron?)
-        {:fx [[:transact! tx-data]
-              [:dispatch [:db/not-synced]]
-              [:dispatch [:save]]]}
-        {:fx [[:transact! tx-data]]}))))
+  (fn-traced [_ [_ tx-data]]
+             (let [synced?   @(subscribe [:db/synced])
+                   electron? electron.utils/electron?]
+               (if (and synced? electron?)
+                 {:fx [[:transact! tx-data]
+                       [:dispatch [:db/not-synced]]
+                       [:dispatch [:save]]]}
+                 {:fx [[:transact! tx-data]]}))))
 
 
 (rf/reg-event-fx
@@ -645,13 +665,14 @@
 (reg-event-fx
   :reset-conn
   [(interceptors/sentry-span "reset-conn")]
-  (fn [_ [_ db skip-health-check?]]
-    {:reset-conn! [db skip-health-check?]}))
+  (fn-traced [_ [_ db skip-health-check?]]
+             {:reset-conn! [db skip-health-check?]}))
 
 
 (rf/reg-event-fx
   :success-reset-conn
   (fn [_ _]
+    (js/console.debug ":success-reset-conn")
     {}))
 
 
@@ -662,33 +683,33 @@
 
 (rf/reg-event-fx
   :db-dump-handler
-  (fn [{:keys [db]} [_ datoms]]
-    (let [existing-tx     (sentry/transaction-get-current)
-          sentry-tx       (if existing-tx
-                            existing-tx
-                            (sentry/transaction-start "db-dump-handler"))
-          conversion-span (sentry/span-start sentry-tx "convert-datoms")
-          ;; TODO: this new-db should be derived from an internal representation transact event instead.
-          new-db          (d/db-with common-db/empty-db
-                                     (into [] (map datom->tx-entry) datoms))]
-      (sentry/span-finish conversion-span)
-      {:db         db
-       :async-flow {:id             :db-dump-handler-async-flow ; NOTE do not ever use id that is defined event
-                    :db-path        [:async-flow :db-dump-handler]
-                    :first-dispatch [:reset-conn new-db true]
-                    :rules          [{:when       :seen?
-                                      :events     :success-reset-conn
-                                      :dispatch-n [[:remote/start-event-sync]
-                                                   [:db/sync]
-                                                   [:remote/connected]]}
-                                     (merge {:when     :seen-all-of?
-                                             :events   [:success-reset-conn
-                                                        :remote/start-event-sync
-                                                        :db/sync
-                                                        :remote/connected]
-                                             :halt?    true}
-                                            (when-not existing-tx
-                                              {:dispatch [:sentry/end-tx sentry-tx]}))]}})))
+  (fn-traced [{:keys [db]} [_ datoms]]
+             (let [existing-tx     (sentry/transaction-get-current)
+                   sentry-tx       (if existing-tx
+                                     existing-tx
+                                     (sentry/transaction-start "db-dump-handler"))
+                   conversion-span (sentry/span-start sentry-tx "convert-datoms")
+                   ;; TODO: this new-db should be derived from an internal representation transact event instead.
+                   new-db          (d/db-with common-db/empty-db
+                                      (into [] (map datom->tx-entry) datoms))                   ]
+               (sentry/span-finish conversion-span)
+               {:db         db
+                :async-flow {:id             :db-dump-handler-async-flow ; NOTE do not ever use id that is defined event
+                             :db-path        [:async-flow :db-dump-handler]
+                             :first-dispatch [:reset-conn new-db true]
+                             :rules          [{:when       :seen?
+                                               :events     :success-reset-conn
+                                               :dispatch-n [[:remote/start-event-sync]
+                                                            [:db/sync]
+                                                            [:remote/connected]]}
+                                              {:when       :seen-all-of?
+                                               :events     [:success-reset-conn
+                                                            :remote/start-event-sync
+                                                            :db/sync
+                                                            :remote/connected]
+                                               :dispatch-n (cond-> [[:stage/success-db-load]]
+                                                             (not existing-tx) (conj [:sentry/end-tx sentry-tx]))
+                                               :halt?      true}]}})))
 
 
 (reg-event-fx

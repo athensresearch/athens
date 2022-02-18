@@ -72,7 +72,7 @@
 
                                      ;; if nth time, remember dark/light theme
                                      {:when       :seen?
-                                      :events     :reset-conn
+                                      :events     :stage/success-db-load
                                       :dispatch-n [[:fs/update-write-db]
                                                    [:db/sync]
                                                    ;; [:restore-navigation]  ; This functionality is there but unreliable we can use it once we make it reliable
@@ -90,12 +90,12 @@
                                       :dispatch [:sentry/end-tx boot-tx]
                                       :halt?    true}
 
+                                     ;; halt when started connecting to remote
                                      {:when       :seen?
-                                      :events     :remote/connection-failed
-                                      :dispatch-n [[:db-picker/remove-selection]
+                                      :events     [:stage/fail-db-load]
+                                      :dispatch-n [[:posthog/set-super-properties]
+                                                   [:loading/unset]
                                                    [:sentry/end-tx boot-tx]]
-                                      ;; This event ends the async flow unsuccessfully
-                                      ;; and tries to reboot on a different db.
                                       :halt?      true}
 
                                      ;; whether first or nth time, update athens pages
