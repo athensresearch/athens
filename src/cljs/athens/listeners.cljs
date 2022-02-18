@@ -103,14 +103,15 @@
                                            KeyCodes.ZERO      (dispatch [:zoom/reset])
                                            KeyCodes.K         (dispatch [:athena/toggle])
                                            KeyCodes.G         (dispatch [:devtool/toggle])
-                                           KeyCodes.Z         (let [editing-uid    @(subscribe [:editing/uid])
-                                                                    selected-items @(subscribe [::select-subs/items])]
-                                                                ;; editing/uid must be nil or selected-items must be non-empty
-                                                                (when (or (nil? editing-uid)
-                                                                          (not-empty selected-items))
-                                                                  (if shift
-                                                                    (dispatch [:redo])
-                                                                    (dispatch [:undo]))))
+                                           KeyCodes.Z         (do
+                                                                ;; Disable the default undo behaviour.
+                                                                ;; Chrome has a textarea undo that does not behave like
+                                                                ;; we want undo to behave.
+                                                                (.. e preventDefault)
+                                                                ;; Dispatch our custom undo/redo.
+                                                                (if shift
+                                                                  (dispatch [:redo])
+                                                                  (dispatch [:undo])))
                                            KeyCodes.BACKSLASH (if shift
                                                                 (dispatch [:right-sidebar/toggle])
                                                                 (dispatch [:left-sidebar/toggle]))

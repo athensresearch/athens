@@ -22,9 +22,6 @@ test('undo input test', async ({ page }) => {
     await expect(page.locator('.block:has-text("two")')).toBeVisible();
     await expect(page.locator('.block:has-text("three")')).toBeVisible();
 
-    // Exit the textarea, default undo inside it is weird.
-    await page.keyboard.press("Escape");
-
     // Undo once, removing the last block input and split.
     await page.keyboard.press(undoShortcut);
 
