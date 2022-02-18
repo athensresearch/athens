@@ -203,8 +203,8 @@
                                :else
                                (do (dispatch [:athena/toggle])
                                    (if (:node/title item)
-                                      (router/navigate-page (:node/title item))
-                                      (router/navigate-uid  (:block/uid item)))
+                                     (router/navigate-page (:node/title item))
+                                     (router/navigate-uid  (:block/uid item)))
                                    (dispatch [:editing/uid (:block/uid item)])))
 
       (= key KeyCodes.UP)
