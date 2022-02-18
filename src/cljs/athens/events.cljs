@@ -833,7 +833,7 @@
     {:fs/write! nil}))
 
 
-(def USE_OLD_UNDO_FOR_LOCAL? true)
+(def USE_OLD_UNDO_FOR_LOCAL? false)
 
 
 (reg-event-fx
