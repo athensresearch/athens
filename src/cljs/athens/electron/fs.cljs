@@ -78,9 +78,14 @@
   (fn [_ [_ {:keys [db-path]}]]
     (let [datoms (-> (.readFileSync (utils/fs) db-path)
                      dt/read-transit-str)]
-      {:dispatch-n [[:reset-conn datoms]
-                    [:fs/watch db-path]
-                    [:stage/success-db-load]]})))
+      {:async-flow {:id             :fs-read-and-watch-async-flow
+                    :db-path        [:async-flow :fs/read-and-watch]
+                    :first-dispatch [:reset-conn datoms]
+                    :rules          [{:when       :seen?
+                                      :events     :success-reset-conn
+                                      :dispatch-n [[:fs/watch db-path]
+                                                   [:stage/success-db-load]]
+                                      :halt?      true}]}})))
 
 
 (rf/reg-event-fx
