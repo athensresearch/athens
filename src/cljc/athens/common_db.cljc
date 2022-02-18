@@ -829,7 +829,9 @@
   [db tx-data]
   #?(:cljs
      (as-> tx-data $
-           (wrap-span "block-uid-nil-eater"
+           ;; Hasn't really found any problems in a while, and
+           ;; does a full index scan so it's pretty slow.
+           #_(wrap-span "block-uid-nil-eater"
                       (block-uid-nil-eater db $))
            (wrap-span "linkmaker"
                       (linkmaker db $))
