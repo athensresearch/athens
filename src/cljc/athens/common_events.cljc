@@ -35,17 +35,6 @@
      :event/args {:datoms datoms}}))
 
 
-;; undo-redo events
-
-(defn build-undo-redo-event
-  "Builds `:datascript/undo-redo`"
-  [redo?]
-  (let [event-id (utils/gen-event-id)]
-    {:event/id   event-id
-     :event/type :datascript/undo-redo
-     :event/args {:redo? redo?}}))
-
-
 ;; - presence events
 
 (defn build-presence-hello-event

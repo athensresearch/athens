@@ -7,7 +7,6 @@
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.composite :as composite-ops]
     [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common-events.resolver.undo   :as undo-resolver]
     [athens.common-events.schema          :as schema]
@@ -606,7 +605,6 @@
 ;; - athens.electron.images/dnd-image (needs file upload)
 ;; - :upload/roam-edn (needs internal representation)
 ;; - athens.self-hosted.client/db-dump-handler (needs internal representation)
-;; - :undo / :redo
 ;; No other reframe events should be calling this event.
 (reg-event-fx
   :transact
@@ -833,65 +831,48 @@
     {:fs/write! nil}))
 
 
-(def USE_OLD_UNDO_FOR_LOCAL? false)
-
-
 (reg-event-fx
   :undo
   [(interceptors/sentry-span "undo")]
   (fn [{:keys [db]} _]
-    (let [local? (not (db-picker/remote-db? db))]
-      (log/debug ":undo: local?" local?)
-      (if (and local? USE_OLD_UNDO_FOR_LOCAL?)
-
-        (let [undo-event (common-events/build-undo-redo-event  false)
-              tx-data    (resolver/resolve-event-to-tx db/history undo-event)]
-          {:fx [[:dispatch [:transact tx-data]]]})
-
-        (try
-          (log/debug ":undo count" (undo/count-undo db))
-          (if-some [[undo db'] (undo/pop-undo db)]
-            (let [[evt-dsdb evt] undo
-                  evt-id         (:event/id evt)
-                  dsdb           @db/dsdb
-                  undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
-                  undo-evt-id    (:event/id undo-evt)
-                  db''           (undo/push-redo db' undo-evt-id [dsdb undo-evt])]
-              (log/debug ":undo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
-              {:db db''
-               :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
-            {})
-          (catch :default _
-            {:fx [[:dispatch [:alert/js "Undo for this operation not supported in Lan-Party, yet."]]]}))))))
+    (log/debug ":undo")
+    (try
+      (log/debug ":undo count" (undo/count-undo db))
+      (if-some [[undo db'] (undo/pop-undo db)]
+        (let [[evt-dsdb evt] undo
+              evt-id         (:event/id evt)
+              dsdb           @db/dsdb
+              undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
+              undo-evt-id    (:event/id undo-evt)
+              db''           (undo/push-redo db' undo-evt-id [dsdb undo-evt])]
+          (log/debug ":undo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
+          {:db db''
+           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
+        {})
+      (catch :default _
+        {:fx [[:dispatch [:alert/js "Undo for this operation not supported in Lan-Party, yet."]]]}))))
 
 
 (reg-event-fx
   :redo
   [(interceptors/sentry-span "redo")]
   (fn [{:keys [db]} _]
-    (let [local? (not (db-picker/remote-db? db))]
-      (log/debug ":redo local?" local?)
-      (if (and local? USE_OLD_UNDO_FOR_LOCAL?)
-
-        (let [redo-event (common-events/build-undo-redo-event  true)
-              tx-data    (resolver/resolve-event-to-tx db/history redo-event)]
-          {:fx [[:dispatch [:transact tx-data]]]})
-
-        (try
-          (log/debug ":redo count" (undo/count-redo db))
-          (if-some [[redo db'] (undo/pop-redo db)]
-            (let [[evt-dsdb evt] redo
-                  evt-id         (:event/id evt)
-                  dsdb           @db/dsdb
-                  undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
-                  undo-evt-id    (:event/id undo-evt)
-                  db''           (undo/push-undo db' undo-evt-id [dsdb undo-evt])]
-              (log/debug ":redo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
-              {:db db''
-               :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
-            {})
-          (catch :default _
-            {:fx [[:dispatch [:alert/js "Redo for this operation not supported in Lan-Party, yet."]]]}))))))
+    (log/debug ":redo")
+    (try
+      (log/debug ":redo count" (undo/count-redo db))
+      (if-some [[redo db'] (undo/pop-redo db)]
+        (let [[evt-dsdb evt] redo
+              evt-id         (:event/id evt)
+              dsdb           @db/dsdb
+              undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
+              undo-evt-id    (:event/id undo-evt)
+              db''           (undo/push-undo db' undo-evt-id [dsdb undo-evt])]
+          (log/debug ":redo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
+          {:db db''
+           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
+        {})
+      (catch :default _
+        {:fx [[:dispatch [:alert/js "Redo for this operation not supported in Lan-Party, yet."]]]}))))
 
 
 (reg-event-fx
