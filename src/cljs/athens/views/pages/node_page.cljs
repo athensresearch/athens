@@ -395,9 +395,9 @@
           (doall
             (for [{:keys [node/title block/string block/uid]} parents]
               [breadcrumb {:key       (str "breadcrumb-" uid)
-                           :on-click #(do (let [new-B (db/get-block [:block/uid uid])
-                                                new-P (drop-last parents)]
-                                            (swap! state assoc :block new-B :parents new-P)))}
+                           :on-click #(let [new-B (db/get-block [:block/uid uid])
+                                            new-P (drop-last parents)]
+                                        (swap! state assoc :block new-B :parents new-P))}
                [parse-and-render (or title string) uid]]))]
          [:div.block-embed
           [blocks/block-el

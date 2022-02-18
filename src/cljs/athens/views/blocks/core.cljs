@@ -168,12 +168,12 @@
                      parents
                      (conj parents block))]
                [breadcrumbs/breadcrumb {:key       (str "breadcrumb-" uid)
-                                        :on-click #(do (let [new-B (db/get-block [:block/uid uid])
-                                                             new-P (concat
-                                                                     (take-while (fn [b] (not= (:block/uid b) uid)) parents)
-                                                                     [breadcrumb-block])]
-                                                         (.. % stopPropagation)
-                                                         (swap! state assoc :block new-B :parents new-P :focus? false)))}
+                                        :on-click #(let [new-B (db/get-block [:block/uid uid])
+                                                         new-P (concat
+                                                                 (take-while (fn [b] (not= (:block/uid b) uid)) parents)
+                                                                 [breadcrumb-block])]
+                                                     (.. % stopPropagation)
+                                                     (swap! state assoc :block new-B :parents new-P :focus? false))}
                 [parse-renderer/parse-and-render (or title string) uid]]))]]
 
          (when (:open? @state)

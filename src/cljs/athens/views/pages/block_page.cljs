@@ -168,4 +168,4 @@
 (defn page
   [ident]
   (let [block (reactive/get-reactive-block-document ident)]
-    [block-page-el block parents]))
+    [block-page-el block]))
