@@ -691,7 +691,7 @@
                    conversion-span (sentry/span-start sentry-tx "convert-datoms")
                    ;; TODO: this new-db should be derived from an internal representation transact event instead.
                    new-db          (d/db-with common-db/empty-db
-                                      (into [] (map datom->tx-entry) datoms))                   ]
+                                              (into [] (map datom->tx-entry) datoms))]
                (sentry/span-finish conversion-span)
                {:db         db
                 :async-flow {:id             :db-dump-handler-async-flow ; NOTE do not ever use id that is defined event
