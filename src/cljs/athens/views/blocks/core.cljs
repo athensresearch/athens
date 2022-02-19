@@ -454,7 +454,12 @@
            ;; so we avoid rendering it when it's not needed.
            :on-mouse-enter    #(swap! state assoc :show-editable-dom true)
            :on-mouse-leave    #(swap! state assoc :show-editable-dom false)
-           :on-click          (fn [e] (doall (.. e stopPropagation) (rf/dispatch [:editing/uid uid])))
+           :on-click          (fn [e]
+                                ;; in the case that context-menu is open when clicking on block, close context-menu
+                                (when (:context-menu/show @state)
+                                  (swap! state assoc :context-menu/show false))
+                                (.. e stopPropagation)
+                                (rf/dispatch [:editing/uid uid]))
            :on-drag-over      (fn [e] (block-drag-over e block state))
            :on-drag-leave     (fn [e] (block-drag-leave e block state))
            :on-drop           (fn [e] (block-drop e block state))}
