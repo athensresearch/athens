@@ -35,27 +35,24 @@ test.describe("no blocks selected", () => {
 
 })
 
-// test('right-click when one block is selected', async ({ page }) => {
-//     expect(await page.isVisible("text='Copy block ref'"));
-// });
+test('right-click when one block is selected', async ({ page }) => {
+    expect(await page.isVisible("text='Copy block ref'"));
+});
 
-// test.describe("multiple blocks selected", () => {
-//     const testSetup = async (page:Page) => {
-//         // await waitReady(page);
-//         // await page.waitForTimeout(1000);
-//         await saveLastBlockAndEnter(page, "alice");
-//         await saveLastBlockAndEnter(page, "bob");
-//         await page.dragAndDrop("textarea >> text=bob", "textarea >> text=alice");
-//         await rightClickFirstBullet(page);
-//     };
-//
-//     test('right-click when multiple blocks selected', async ({ page }) => {
-//         await testSetup(page);
-//         await page.pause();
-//         // this top expect is true, but it should be false
-//         // expect(await page.isVisible("text='Copy block ref'")).toBe(true);
-//         // this top expect is false, but it should be true
-//         // expect(await page.isVisible("text='Copy block refs'")).toBe(true);
-//     });
-//
-// })
+test.describe("multiple blocks selected", () => {
+    const testSetup = async (page:Page) => {
+        await saveLastBlockAndEnter(page, "alice");
+        await page.waitForTimeout(100);
+        await saveLastBlockAndEnter(page, "bob");
+        await page.waitForTimeout(100);
+        await page.dragAndDrop("textarea >> text=bob", "textarea >> text=alice");
+        await rightClickFirstBullet(page);
+    };
+
+    test('right-click when multiple blocks selected', async ({ page }) => {
+//         await page.pause()
+        await testSetup(page);
+        expect(await page.isVisible("text='Copy block refs'")).toBe(true);
+    });
+
+})
