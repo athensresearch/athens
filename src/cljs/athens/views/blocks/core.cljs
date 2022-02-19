@@ -9,6 +9,7 @@
     [athens.electron.utils                   :as electron.utils]
     [athens.events.selection                 :as select-events]
     [athens.parse-renderer                   :as parse-renderer]
+    [athens.reactive                         :as reactive]
     [athens.router                           :as router]
     [athens.self-hosted.presence.views       :as presence]
     [athens.style                            :as style]
@@ -152,7 +153,7 @@
                          :parent-uids    (set (map :block/uid (:block/parents block)))}]
     (fn [_]
       (let [{:keys [block parents embed-id]} @state
-            block (db/get-block-document (:db/id block))]
+            block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
          [:div (stylefy/use-style reference-breadcrumbs-container-style)
           [:> Toggle {:isOpen (:open? @state)
@@ -167,12 +168,12 @@
                      parents
                      (conj parents block))]
                [breadcrumbs/breadcrumb {:key       (str "breadcrumb-" uid)
-                                        :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
-                                                             new-P (concat
-                                                                     (take-while (fn [b] (not= (:block/uid b) uid)) parents)
-                                                                     [breadcrumb-block])]
-                                                         (.. % stopPropagation)
-                                                         (swap! state assoc :block new-B :parents new-P :focus? false)))}
+                                        :on-click #(let [new-B (db/get-block [:block/uid uid])
+                                                         new-P (concat
+                                                                 (take-while (fn [b] (not= (:block/uid b) uid)) parents)
+                                                                 [breadcrumb-block])]
+                                                     (.. % stopPropagation)
+                                                     (swap! state assoc :block new-B :parents new-P :focus? false))}
                 [parse-renderer/parse-and-render (or title string) uid]]))]]
 
          (when (:open? @state)
@@ -410,11 +411,12 @@
             :string/idle-fn idle-fn)
 
      (fn [block linked-ref-data opts]
-       (let [{:block/keys [uid
+       (let [ident                [:block/uid (or original-uid uid)]
+             {:block/keys [uid
                            string
                            open
                            children
-                           _refs]} block
+                           _refs]} (merge (reactive/get-reactive-block-document ident) block)
              children-uids         (set (map :block/uid children))
              uid-sanitized-block   (s/transform
                                      (specter-recursive-path #(contains? % :block/uid))
@@ -514,8 +516,3 @@
           (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"} :child true}])
           (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"}}])])))))
 
-
-(defn block-component
-  [ident]
-  (let [block (db/get-block-document ident)]
-    [block-el block]))

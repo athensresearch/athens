@@ -6,8 +6,7 @@
     [clojure.string :as string]
     [cognitect.transit :as tr]
     [com.rpl.specter :as s]
-    [goog.dom :refer [getElement setProperties]]
-    [posh.reagent :refer [#_pull]])
+    [goog.dom :refer [getElement setProperties]])
   (:require-macros
     [com.rpl.specter :refer [recursive-path]])
   (:import
