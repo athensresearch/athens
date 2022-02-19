@@ -61,6 +61,8 @@
         (dispatch [:daily-note/next (dates/get-day)])
         (let [notes (safe-pull-many @note-refs)]
           [:div#daily-notes (use-style daily-notes-scroll-area-style)
+           [:h5 "NOTEREFS " @note-refs]
+           [:h5 "NOTES " (count notes)]
            (doall
              (for [{:keys [block/uid]} notes]
                ^{:key uid}
