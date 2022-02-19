@@ -16,8 +16,9 @@
     [athens.common.sentry :refer-macros [wrap-span]]
     [athens.common.utils :as utils]
     [athens.dates :as dates]
-    [athens.db :as db :refer [get-linked-references get-unlinked-references]]
+    [athens.db :as db :refer [get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+    [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.style :refer [color DEPTH-SHADOWS]]
     [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
@@ -388,15 +389,15 @@
                          :parent-uids    (set (map :block/uid (:block/parents block)))}]
     (fn [_]
       (let [{:keys [block parents embed-id]} @state
-            block (db/get-block-document (:db/id block))]
+            block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
          [breadcrumbs-list {:style reference-breadcrumbs-style}
           (doall
             (for [{:keys [node/title block/string block/uid]} parents]
               [breadcrumb {:key       (str "breadcrumb-" uid)
-                           :on-click #(do (let [new-B (db/get-block-document [:block/uid uid])
-                                                new-P (drop-last parents)]
-                                            (swap! state assoc :block new-B :parents new-P)))}
+                           :on-click #(let [new-B (db/get-block [:block/uid uid])
+                                            new-P (drop-last parents)]
+                                        (swap! state assoc :block new-B :parents new-P))}
                [parse-and-render (or title string) uid]]))]
          [:div.block-embed
           [blocks/block-el
@@ -406,8 +407,10 @@
 
 
 (defn linked-ref-el
-  [state daily-notes? linked-refs]
-  (let [linked? "Linked References"]
+  [state daily-notes? title]
+  (let [linked? "Linked References"
+        linked-refs (wrap-span "get-reactive-linked-references"
+                               (reactive/get-reactive-linked-references [:node/title title]))]
     (when (or (and daily-notes? (not-empty linked-refs))
               (not daily-notes?))
       [:section (use-style references-style)
@@ -514,7 +517,7 @@
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
         block-uid     (r/atom nil)]
-    (fn [node editing-uid linked-refs]
+    (fn [node]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
         (reset! unlinked-refs [])
@@ -559,7 +562,7 @@
              [autosize/textarea
               {:value       (:title/local @state)
                :id          (str "editable-uid-" uid)
-               :class       (when (= editing-uid uid) "is-editing")
+               :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
                :on-blur     (fn [_]
                               ;; add title Untitled-n for empty titles
                               (when (empty? (:title/local @state))
@@ -584,16 +587,13 @@
 
          ;; References
          [perf-mon/hoc-perfmon {:span-name "linked-ref-el"}
-          [linked-ref-el state on-daily-notes? linked-refs]]
+          [linked-ref-el state on-daily-notes? title]]
          [perf-mon/hoc-perfmon {:span-name "unlinked-ref-el"}
           [unlinked-ref-el state on-daily-notes? unlinked-refs title]]]))))
 
 
 (defn page
   [ident]
-  (let [{:keys [#_block/uid node/title] :as node} (wrap-span "db/get-node-document"
-                                                             (db/get-node-document ident))
-        editing-uid   @(subscribe [:editing/uid])
-        linked-refs   (wrap-span "get-linked-references"
-                                 (get-linked-references title))]
-    [node-page-el node editing-uid linked-refs]))
+  (let [node (wrap-span "db/get-reactive-node-document"
+                        (reactive/get-reactive-node-document ident))]
+    [node-page-el node]))

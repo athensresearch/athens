@@ -2,9 +2,9 @@
   (:require
     [athens.common-db              :as common-db]
     [athens.db                     :as db]
+    [athens.reactive               :as reactive]
     [athens.views.pages.block-page :as block-page]
     [athens.views.pages.node-page  :as node-page]
-    [posh.reagent                  :refer [pull]]
     [re-frame.core                 :as rf]))
 
 
@@ -21,7 +21,7 @@
   "Can be a block or a node page."
   []
   (let [uid (rf/subscribe [:current-route/uid])
-        {:keys [node/title block/string db/id]} @(pull db/dsdb '[*] [:block/uid @uid])]
+        {:keys [node/title block/string db/id]} (reactive/get-reactive-block-or-page-by-uid @uid)]
     (cond
       title [node-page/page id]
       string [block-page/page id]

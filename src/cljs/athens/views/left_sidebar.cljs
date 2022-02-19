@@ -1,10 +1,9 @@
 (ns athens.views.left-sidebar
   (:require
-    [athens.db :as db]
+    [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.style :refer [color OPACITIES]]
     [athens.util :refer [mouse-offset vertical-center]]
-    [posh.reagent :refer [q]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
@@ -151,13 +150,7 @@
 (defn left-sidebar
   []
   (let [open? (subscribe [:left-sidebar/open])
-        shortcuts (->> @(q '[:find ?order ?title ?uid
-                             :where
-                             [?e :page/sidebar ?order]
-                             [?e :node/title ?title]
-                             [?e :block/uid ?uid]] db/dsdb)
-                       seq
-                       (sort-by first))]
+        shortcuts (reactive/get-reactive-shortcuts)]
     ;; (when @open?
 
     ;; IF EXPANDED
