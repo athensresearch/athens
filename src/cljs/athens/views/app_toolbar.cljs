@@ -37,7 +37,8 @@
       [:<>
        (when @merge-open?
          [db-modal/merge-modal merge-open?])
-       [:> AppToolbar {:style (unzoom)
+       [:> AppToolbar {:className "app-toolbar"
+                       :style (unzoom)
                        :os os
                        :isElectron electron?
                        :route @route-name

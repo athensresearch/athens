@@ -1,4 +1,5 @@
 import { Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 // NOTE: this is not supported by Playwright right now.
 export const createLocalAthensDB = async (page:Page, dbName:string) => {
@@ -33,7 +34,9 @@ export const getTitle = async (page:Page) => {
 };
 
 export const waitReady = async (page:Page) => {
-    await getTitle(page);
+    await page.waitForTimeout(1000);
+    expect(await page.isVisible(".app-toolbar")).toBeTruthy();
+    expect(await getTitle(page)).toBeTruthy();
 };
 
 export const saveLastBlock = async (page:Page, text:string) => {
