@@ -6,6 +6,7 @@
     [athens.common.logging       :as log]
     [athens.common.sentry        :refer-macros [wrap-span]]
     [athens.db                   :as db]
+    [athens.reactive             :as reactive]
     [athens.self-hosted.client   :as client]
     [cljs-http.client            :as http]
     [cljs.core.async             :refer [go <!]]
@@ -34,11 +35,14 @@
 
 (rf/reg-fx
   :reset-conn!
-  (fn [new-db]
+  (fn [[new-db skip-health-check?]]
+    (reactive/unwatch!)
     (wrap-span "ds/reset-conn"
                (d/reset-conn! db/dsdb new-db))
-    (wrap-span "db/health-check"
-               (common-db/health-check db/dsdb))
+    (when-not skip-health-check?
+      (wrap-span "db/health-check"
+                 (common-db/health-check db/dsdb)))
+    (reactive/watch!)
     (rf/dispatch [:success-reset-conn])))
 
 

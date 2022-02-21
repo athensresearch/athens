@@ -789,7 +789,7 @@
 (defn textarea-key-down
   [e uid state]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
-  (when (= uid @(subscribe [:editing/uid]))
+  (when @(subscribe [:editing/is-editing uid])
     (let [d-event (destruct-key-down e)
           {:keys [meta ctrl key-code]} d-event]
 
