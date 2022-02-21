@@ -838,7 +838,7 @@
            (wrap-span "orderkeeper"
                       (orderkeeper db $)))
      :clj (->> tx-data
-               (block-uid-nil-eater db)
+               #_(block-uid-nil-eater db)
                (linkmaker db)
                (orderkeeper db))))
 
