@@ -2,7 +2,6 @@
   (:require
     [athens.common-db                    :as common-db]
     [athens.common-events.graph.ops      :as graph-ops]
-    [athens.common-events.resolver       :as resolver]
     [athens.common-events.resolver.order :as order]
     [athens.common.logging               :as log]
     [athens.common.utils                 :as utils]
@@ -350,7 +349,7 @@
     (resolve-atomic-op-to-tx db (if (:op/atomic? event)
                                   event
                                   op))
-    (resolver/resolve-event-to-tx db event)))
+    (throw (ex-info "Can't resolve event, only Atomic Graph Ops are allowed." event))))
 
 
 (defn resolve-transact!
