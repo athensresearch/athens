@@ -82,6 +82,9 @@ export const inputInAthena = async (page:Page, query:string) => {
     await page.fill('[placeholder="Find or Create Page"]', query);
 }
 
+
+export const pageTitleLocator = ".node-page > header > h1 > span";
+
 export const createPage = async (page:Page, title:string) => {
     await inputInAthena(page, title);
 
@@ -90,6 +93,9 @@ export const createPage = async (page:Page, title:string) => {
         page.press('[placeholder="Find or Create Page"]', 'Enter'),
         page.waitForNavigation()
     ]);
+
+    // Wait for the page to show the title.
+    await page.locator(`${pageTitleLocator}:has-text("${title}")`).waitFor();
 }
 
 export const deleteCurrentPage = async (page:Page) => {

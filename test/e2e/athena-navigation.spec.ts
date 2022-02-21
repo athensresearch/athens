@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from './electron-test';
-import { deleteCurrentPage, inputInAthena } from "./utils";
+import { deleteCurrentPage, inputInAthena, pageTitleLocator } from "./utils";
 
 
 test('athena create new page then enter', async ({ page }) => {
@@ -9,8 +9,10 @@ test('athena create new page then enter', async ({ page }) => {
 
   // Press Enter
   await Promise.all([
-    page.press('[placeholder="Find or Create Page"]', 'Enter')]);
-  await expect(page.locator(".node-page > header > h1 > textarea")).toHaveValue(title);
+    page.press('[placeholder="Find or Create Page"]', 'Enter'),
+    page.waitForNavigation()
+  ]);
+  await expect(page.locator(pageTitleLocator)).toHaveText(title);
 
   await deleteCurrentPage(page);
 });
@@ -18,10 +20,12 @@ test('athena create new page then enter', async ({ page }) => {
 test('athena create new page then click create page', async ({ page }) => {
   const title = 'create-click';
   await inputInAthena(page, title);
-  // Click text=Create Page: arst
+
   await Promise.all([
-    page.click('text=Create Page: ' + title)]);
-  await expect(page.locator(".node-page > header > h1 > textarea")).toHaveValue(title);
+    page.click('text=Create Page: ' + title),
+    page.waitForNavigation()
+  ]);
+  await expect(page.locator(pageTitleLocator)).toHaveText(title);
 
   await deleteCurrentPage(page);
 });
