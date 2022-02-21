@@ -29,6 +29,9 @@
    :block/remote-id     {:db/unique :db.unique/identity}})
 
 
+(def empty-db (d/empty-db schema))
+
+
 (defn e-by-av
   [db a v]
   (-> (d/datoms db :avet a v)
@@ -826,14 +829,16 @@
   [db tx-data]
   #?(:cljs
      (as-> tx-data $
-           (wrap-span "block-uid-nil-eater"
+           ;; Hasn't really found any problems in a while, and
+           ;; does a full index scan so it's pretty slow.
+           #_(wrap-span "block-uid-nil-eater"
                       (block-uid-nil-eater db $))
            (wrap-span "linkmaker"
                       (linkmaker db $))
            (wrap-span "orderkeeper"
                       (orderkeeper db $)))
      :clj (->> tx-data
-               (block-uid-nil-eater db)
+               #_(block-uid-nil-eater db)
                (linkmaker db)
                (orderkeeper db))))
 

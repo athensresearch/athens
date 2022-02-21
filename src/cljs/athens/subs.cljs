@@ -101,6 +101,10 @@
     (:merge-prompt db)))
 
 
+;; Note: always prefer a subscription to :editing/is-editing over
+;; :editing/uid with a manual check.
+;; If you check manually, the component around the subscription will
+;; re-render every time :editing/uid changes (aka very often.)
 (rf/reg-sub
   :editing/uid
   (fn-traced [db _]
