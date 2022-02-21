@@ -219,8 +219,8 @@
 
 
 (defn inline-linked-refs-el
-  [block state]
-  (let [refs (db/get-linked-block-references block)]
+  [state uid]
+  (let [refs (reactive/get-reactive-linked-references [:block/uid uid])]
     (when (not-empty refs)
       [:div (stylefy/use-style references-style {:key "Inline Linked References"})
        [:section
@@ -501,7 +501,7 @@
           (when (and (> (count _refs) 0)
                      (not= :block-embed? opts)
                      (:inline-refs/open @state))
-            [inline-linked-refs-el block state])
+            [inline-linked-refs-el state uid])
 
           ;; Children
           (when (and (seq children)
