@@ -77,12 +77,13 @@ export const waitForBoot = async (page:Page) => {
     await page.waitForSelector("text=Find");
 }
 
-export const createPage = async (page:Page, title:string) => {
-    // Invoke Athena
+export const inputInAthena = async (page:Page, query:string) => {
     await page.click('button:has-text("Find or create a page")');
+    await page.fill('[placeholder="Find or Create Page"]', query);
+}
 
-    // Fill [placeholder="Find or Create Page"]
-    await page.fill('[placeholder="Find or Create Page"]', title);
+export const createPage = async (page:Page, title:string) => {
+    await inputInAthena(page, title);
 
     // Press Enter
     await Promise.all([
