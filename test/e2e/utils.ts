@@ -42,13 +42,16 @@ export const saveLastBlock = async (page:Page, text:string) => {
 };
 
 export const saveLastBlockAndEnter = async (page:Page, text:string) => {
+    if (text=="") {
+        // This is a side effect of how we're waiting for the new block to appear below.
+        // If someone finds a better way to do this you can remove this restriction.
+        throw new Error("Cannot use saveLastBlockAndEnter with empty string.");
+    }
     await inputInLastBlock(page, text);
     await page.press(lastBlockSelector, 'Enter');
-    // Wait a bit for transaction and focus events to be resolved between saves.
-    // Without waiting, it's possible for multiple calls to end up in the same block instead of
-    // different blocks, because by the time the second call runs the new block hasn't appeared yet.
+    // Wait for the new block to be visible.
     // TODO: we shouldn't need to do this, instead we should have deterministic states from input.
-    await page.waitForTimeout(200);
+    await page.locator('.textarea.is-editing:text-is("")').waitFor();
 };
 
 export const indentLastBlock = async (page:Page) => {
