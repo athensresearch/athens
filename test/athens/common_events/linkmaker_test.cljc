@@ -5,7 +5,6 @@
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging :as log]
     [clojure.test                         :as t]
