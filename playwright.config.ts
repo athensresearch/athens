@@ -15,7 +15,7 @@ const outputDir = path.join(__dirname, 'test-results');
 const config: PlaywrightTestConfig = {
   outputDir,
   testDir: './test/e2e',
-  timeout: 10000,
+  timeout: 30000,
   globalTimeout: 5400000,
   workers: process.env.CI ? 1 : undefined,
   forbidOnly: !!process.env.CI,
