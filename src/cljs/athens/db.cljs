@@ -611,18 +611,6 @@
   (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
-(defntrace get-linked-block-references
-  "For block-page references UI."
-  [block]
-  (->> (:block/_refs block)
-       (mapv :db/id)
-       merge-parents-and-block
-       group-by-parent
-       (sort-by #(-> % first second))
-       (map #(vector (ffirst %) (second %)))
-       vec))
-
-
 (defntrace get-unlinked-references
   "For node-page references UI."
   [title]
