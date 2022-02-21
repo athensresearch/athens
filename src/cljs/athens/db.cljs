@@ -321,8 +321,9 @@
 
 (defntrace get-node-document
   [id db]
-  (->> (d/pull db node-document-pull-vector id)
-       sort-block-children))
+  (when (d/entity db id)
+    (->> (d/pull db node-document-pull-vector id)
+         sort-block-children)))
 
 
 (defntrace get-roam-node-document
@@ -353,8 +354,9 @@
 
 (defntrace get-parents-recursively
   [id]
-  (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
-       shape-parent-query))
+  (when (d/entity @dsdb id)
+    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
+         shape-parent-query)))
 
 
 (defntrace get-root-parent-page
@@ -368,7 +370,8 @@
 
 (defntrace get-block
   [id]
-  (d/pull @dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
+  (when (d/entity @dsdb id)
+    (d/pull @dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id)))
 
 
 (defntrace get-parent
