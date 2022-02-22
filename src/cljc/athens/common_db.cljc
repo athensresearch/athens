@@ -184,31 +184,33 @@
 (defn get-block
   "Fetches whole block based on `:db/id`."
   [db eid]
-  (d/pull db '[:db/id
-               :node/title
-               :block/uid
-               :block/order
-               :block/string
-               :block/open
-               :block/refs
-               :block/_refs
-               {:block/children [:block/uid
-                                 :block/order]}]
-          eid))
+  (when (d/entity db eid)
+    (d/pull db '[:db/id
+                 :node/title
+                 :block/uid
+                 :block/order
+                 :block/string
+                 :block/open
+                 :block/refs
+                 :block/_refs
+                 {:block/children [:block/uid
+                                   :block/order]}]
+            eid)))
 
 
 (defn get-page
   "Fetches whole page based on `:db/id`."
   [db eid]
-  (d/pull db '[:db/id
-               :node/title
-               :block/uid
-               :page/sidebar
-               :block/refs
-               :block/_refs
-               {:block/children [:block/uid
-                                 :block/order]}]
-          eid))
+  (when (d/entity db eid)
+    (d/pull db '[:db/id
+                 :node/title
+                 :block/uid
+                 :page/sidebar
+                 :block/refs
+                 :block/_refs
+                 {:block/children [:block/uid
+                                   :block/order]}]
+            eid)))
 
 
 (defn get-parent-eid
@@ -231,12 +233,13 @@
 (defn get-children-uids
   "Fetches page or block sorted children uids based on eid lookup."
   [db eid]
-  (->> (d/pull db '[{:block/children [:block/uid
-                                      :block/order]}]
-               eid)
-       :block/children
-       (sort-by :block/order)
-       (mapv :block/uid)))
+  (when (d/entity db eid)
+    (->> (d/pull db '[{:block/children [:block/uid
+                                        :block/order]}]
+                 eid)
+         :block/children
+         (sort-by :block/order)
+         (mapv :block/uid))))
 
 
 (defn prev-sib
@@ -314,9 +317,10 @@
 (defn get-page-document
   "Retrieves whole page 'document', meaning with children."
   [db eid]
-  (-> db
-      (d/pull node-document-pull-vector eid)
-      sort-block-children))
+  (when (d/entity db eid)
+    (-> db
+        (d/pull node-document-pull-vector eid)
+        sort-block-children)))
 
 
 (defn uid-and-embed-id
@@ -371,14 +375,15 @@
 
 (defn deepest-child-block
   [db id]
-  (let [document (->> (d/pull db '[:block/order :block/uid {:block/children ...}] id)
-                      sort-block-children)]
-    (loop [block document]
-      (let [{:block/keys [children]} block
-            n (count children)]
-        (if (zero? n)
-          block
-          (recur (get children (dec n))))))))
+  (when (d/entity db id)
+    (let [document (->> (d/pull db '[:block/order :block/uid {:block/children ...}] id)
+                        sort-block-children)]
+      (loop [block document]
+        (let [{:block/keys [children]} block
+              n (count children)]
+          (if (zero? n)
+            block
+            (recur (get children (dec n)))))))))
 
 
 (defn prev-block-uid
@@ -428,26 +433,28 @@
 (defn get-internal-representation
   "Returns internal representation for eid in db."
   [db eid]
-  (let [rename-ks            {:block/open :block/open?
-                              :node/title :page/title}
-        remove-ks-on-match [[:block/order (constantly true)]
-                            [:block/open? :block/open?]
-                            [:block/uid   :page/title]]]
-    (->> (d/pull db block-document-pull-vector-for-copy eid)
-         sort-block-children
-         (walk/postwalk-replace rename-ks)
-         (walk/prewalk (fn [node]
-                         (if (map? node)
-                           (reduce dissoc-on-match node remove-ks-on-match)
-                           node))))))
+  (when (d/entity db eid)
+    (let [rename-ks            {:block/open :block/open?
+                                :node/title :page/title}
+          remove-ks-on-match [[:block/order (constantly true)]
+                              [:block/open? :block/open?]
+                              [:block/uid   :page/title]]]
+      (->> (d/pull db block-document-pull-vector-for-copy eid)
+           sort-block-children
+           (walk/postwalk-replace rename-ks)
+           (walk/prewalk (fn [node]
+                           (if (map? node)
+                             (reduce dissoc-on-match node remove-ks-on-match)
+                             node)))))))
 
 
 (defn get-linked-refs-by-page-title
   [db page-title]
-  (->> (d/pull db '[* :block/_refs] [:node/title page-title])
-       :block/_refs
-       (mapv :db/id)
-       (mapv #(d/pull db '[:db/id :node/title :block/uid :block/string] %))))
+  (when (d/entity db [:node/title page-title])
+    (->> (d/pull db '[* :block/_refs] [:node/title page-title])
+         :block/_refs
+         (mapv :db/id)
+         (mapv #(d/pull db '[:db/id :node/title :block/uid :block/string] %)))))
 
 
 (defn get-all-pages
