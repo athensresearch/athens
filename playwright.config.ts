@@ -1,18 +1,8 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
 import * as path from 'path';
 
-// Electron setup taken from https://gist.github.com/UberMouse/facbe751c3ecb9b31e8b4f6221567b7a
-// mentioned in https://github.com/microsoft/playwright/issues/8208#issuecomment-948093888.
-//
-// Some more useful sources on this topic:
-// - replacing spectron with playwright: https://github.com/electron-userland/spectron/issues/896
-// - playwright repo electron tests: https://github.com/microsoft/playwright/tree/main/tests/electron
-// - playwright electron support: https://playwright.dev/docs/api/class-electronapplication
-//   and https://playwright.dev/docs/api/class-electron
-// - playwright+electron starter: https://github.com/spaceagetv/electron-playwright-example
-
 const outputDir = path.join(__dirname, 'test-results');
-const config: PlaywrightTestConfig = {
+export const baseConfig: PlaywrightTestConfig = {
   outputDir,
   testDir: './test/e2e',
   timeout: 30000,
@@ -25,21 +15,24 @@ const config: PlaywrightTestConfig = {
     [ 'dot' ],
     [ 'json', { outputFile: path.join(outputDir, 'report.json') } ],
   ] : 'line',
-  projects: [{
-    name: 'chromium',
-    use: {
-      browserName: 'chromium',
-      trace: process.env.CI ? 'on-first-retry' : 'on'
-    },
-    metadata: {
-      platform: process.platform,
-      headful: true,
-      browserName: 'electron',
-      channel: undefined,
-      mode: 'default',
-      video: false,
-    }
-  }],
+};
+
+const config: PlaywrightTestConfig = {
+  ...baseConfig,
+  webServer: {
+    command: 'yarn client:e2e:server',
+    // NB: This is the same port as the shadow-cljs web app server,
+    // so it will be reused if available.
+    port: 3000,
+    timeout: 120 * 1000,
+    reuseExistingServer: !process.env.CI,
+  },
+  use: {
+    baseURL: 'http://localhost:3000',
+    browserName: 'chromium',
+    // TODO: headless mode doesn't work, why?
+    headless: false,
+  }
 };
 
 export default config;

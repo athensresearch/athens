@@ -1,6 +1,9 @@
 import { Page } from '@playwright/test';
 
+// Set in playwright.electron.config.ts
+export const isElectron = process.env.ELECTRON_PLAYWRIGHT_CONFIG == "true";
 export const isMac = process.platform === "darwin";
+
 
 // NOTE: this is not supported by Playwright right now.
 export const createLocalAthensDB = async (page:Page, dbName:string) => {
@@ -72,6 +75,9 @@ export const goToDailyPages = async (page:Page) => {
 }
 
 export const waitForBoot = async (page:Page) => {
+    if (!isElectron){
+        await page.goto('/');
+    }
     // Wait for an element that signals the app has finished loading.
     // Normally on e2e tests we'd load a page, but on a electron app we should rely
     // only on visible behaviour.
