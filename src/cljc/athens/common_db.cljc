@@ -268,6 +268,13 @@
       (conj :node/title :page/sidebar)))
 
 
+(defn get-block-document
+  "Fetches whole block and whole children"
+  [db id]
+  (->> (d/pull db block-document-pull-vector id)
+       sort-block-children))
+
+
 (defn get-page-uid
   "Finds page `:block/uid` by `page-title`."
   [db page-title]
