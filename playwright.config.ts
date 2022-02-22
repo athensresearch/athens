@@ -7,7 +7,6 @@ export const baseConfig: PlaywrightTestConfig = {
   testDir: './test/e2e',
   timeout: 30000,
   globalTimeout: 5400000,
-  workers: process.env.CI ? 1 : undefined,
   forbidOnly: !!process.env.CI,
   preserveOutput: process.env.CI ? 'failures-only' : 'always',
   retries: process.env.CI ? 3 : 0,

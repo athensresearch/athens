@@ -16,6 +16,7 @@ process.env.ELECTRON_PLAYWRIGHT_CONFIG = "true";
 
 const config: PlaywrightTestConfig = {
   ...baseConfig,
+  workers: 1,
   use: {},
   projects: [{
     name: 'chromium',
