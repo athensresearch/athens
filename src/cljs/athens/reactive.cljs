@@ -43,6 +43,7 @@
 
 
 ;; Ratoms
+;; NB: p/pull will not throw on missing ident, and will update the ratom when it exists.
 
 (defn get-reactive-linked-references
   "For node and block page references UI."
