@@ -4,12 +4,11 @@
     ["katex" :as katex]
     ["katex/dist/contrib/mhchem"]
     [athens.config :as config]
-    [athens.db :as db]
     [athens.parser.impl :as parser-impl]
+    [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.style :refer [color OPACITIES]]
     [clojure.string :as str]
-    [datascript.core :as d]
     [instaparse.core :as insta]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -99,7 +98,7 @@
 
 (defn render-block-ref
   [{:keys [from title]} ref-uid uid]
-  (let [block (d/pull @db/dsdb '[:block/string] [:block/uid ref-uid])]
+  (let [block (reactive/get-reactive-block-or-page-by-uid ref-uid)]
     (if block
       [:span (assoc (use-style block-ref {:class "block-ref"})
                     :title (str/replace from
