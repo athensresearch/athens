@@ -23,8 +23,8 @@
     <div id="app">
     </div>
     <script>
+      var userAgent = navigator.userAgent.toLowerCase();
       function isElectron() {
-        var userAgent = navigator.userAgent.toLowerCase();
         return userAgent.indexOf("electron/") > -1
       }
       function show10x() {
@@ -32,7 +32,7 @@
         localStorage.setItem("day8.re-frame-10x.using-trace?","\"true\"")
       }
       function isBrowserSupported() {
-        return window.chrome !== undefined;
+        return userAgent.indexOf("chrome/") > -1;
       }
       function showUnsupportedBrowserWarning() {
           let warnDiv = window.document.createElement("div");

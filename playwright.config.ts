@@ -30,8 +30,7 @@ const config: PlaywrightTestConfig = {
   use: {
     baseURL: 'http://localhost:3000',
     browserName: 'chromium',
-    // TODO: headless mode doesn't work, why?
-    headless: false,
+    headless: true,
   }
 };
 
