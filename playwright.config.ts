@@ -10,10 +10,6 @@ export const baseConfig: PlaywrightTestConfig = {
   forbidOnly: !!process.env.CI,
   preserveOutput: process.env.CI ? 'failures-only' : 'always',
   retries: process.env.CI ? 3 : 0,
-  reporter: process.env.CI ? [
-    [ 'dot' ],
-    [ 'json', { outputFile: path.join(outputDir, 'report.json') } ],
-  ] : 'line',
 };
 
 const config: PlaywrightTestConfig = {
