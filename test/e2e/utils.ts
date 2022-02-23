@@ -116,6 +116,8 @@ export const deleteCurrentPage = async (page:Page) => {
 
 export const todaysDate = async (page:Page) => {
     // This gets today's date as formatted by athens itself.
+    // TODO: this doesn't work in the prod build, disabled usage for now.
+    // Need to match the date formatting logic to use again.
     const todaysDate = await page.evaluate(`athens.dates.get_day()`);
     const dateTitle = todaysDate.arr[3];
     return dateTitle;
