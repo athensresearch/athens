@@ -113,20 +113,3 @@ export const deleteCurrentPage = async (page:Page) => {
     await page.click('button:has-text("Delete Page")');
     await page.click('button:nth-child(6)');
 }
-
-export const todaysDate = async (page:Page) => {
-    // This gets today's date as formatted by athens itself.
-    const todaysDate = await page.evaluate(`athens.dates.get_day()`);
-    const dateTitle = todaysDate.arr[3];
-    return dateTitle;
-};
-
-export const getTitle = async (page:Page) => {
-    const titleLocator = await page.locator("h1 >> nth=0");
-    const titleText = await titleLocator.innerText();
-    return titleText;
-};
-
-export const waitReady = async (page:Page) => {
-    await getTitle(page);
-};
