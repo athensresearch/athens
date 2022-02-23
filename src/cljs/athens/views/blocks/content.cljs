@@ -351,8 +351,6 @@
       (rf/dispatch [::select-events/clear]))))
 
 
-
-
 (defn global-mouseup
   "Detach global mouseup listener (self)."
   [_]
