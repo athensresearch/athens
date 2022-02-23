@@ -2,6 +2,7 @@ import * as path from 'path';
 import type { Fixtures } from "@playwright/test";
 import { test as base } from "@playwright/test";
 import { BrowserContext, ElectronApplication, Page, _electron } from "playwright";
+import { isElectron } from './utils';
 
 // athens.listeners/prevent-save and athens.electron.fs/write-db check for this
 // variable in local storage and will not perform saves or warn about unsaved changes.
@@ -53,5 +54,7 @@ export const electronFixtures: Fixtures<ElectronTestFixtures> = {
 };
 
 // @ts-ignore some error about a string type now having `undefined` as part of it's union
-export const test = base.extend<ElectronTestFixtures>(electronFixtures);
-
+// export const test = base.extend<ElectronTestFixtures>(electronFixtures);
+const electronTest = base.extend<ElectronTestFixtures>(electronFixtures);
+const browserTest = base;
+export const test = isElectron ? electronTest : browserTest;
