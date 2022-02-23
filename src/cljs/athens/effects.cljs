@@ -36,6 +36,8 @@
 (rf/reg-fx
   :reset-conn!
   (fn [[new-db skip-health-check?]]
+    ;; Remove the reactive watchers will resetting the conn to prevent
+    ;; the watchers from processing a massive tx-report.
     (reactive/unwatch!)
     (wrap-span "ds/reset-conn"
                (d/reset-conn! db/dsdb new-db))
