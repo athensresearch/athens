@@ -14,32 +14,45 @@
 
 
 (defn unwatch!
-  "Unwatch the global datascript database."
+  "Unwatch the global datascript database.
+  While unwatched, all get-reactive-* fns will return non-reactive pulls and queries."
   []
   ;; Watching a new conn will remove all old watchers.
-  ;; You can verify this by calling print-posh-state.
+  ;; You can verify this by printing watch-state.
   (p/posh! (d/create-conn)))
+
+
+(defn init!
+  "Initialize the reactive watchers.
+  Must be called before watch-state or any of the get-reactive-* fns, or these will throw."
+  []
+  ;; Add a remove the watcher to the global datascript db once.
+  ;; This will leave the posh datom connected to it, even after unwatch.
+  (watch!)
+  (unwatch!))
 
 
 (defn watch-state
   []
-  (try
-    (-> (p/get-posh-atom db/dsdb)
-        deref
-        ;; all keys
-        ;; (:schema :filters :return :retrieve :txs :cache :dbs
-        ;; :schemas :ratoms :changed :graph :dcfg :reactions :conns)
+  (-> (p/get-posh-atom db/dsdb)
+      deref
+      ;; all keys
+      ;; (:schema :filters :return :retrieve :txs :cache :dbs
+      ;; :schemas :ratoms :changed :graph :dcfg :reactions :conns)
 
-        ;; These keys don't matter much.
-        (dissoc :schema :filters :dbs :conns :schemas :dcfg))
-    ;; get-posh-atom will throw if not watching.
-    (catch :default _)))
+      ;; These keys don't matter much.
+      (dissoc :schema :filters :dbs :conns :schemas :dcfg)))
 
 
 (defn ratoms
   "Returns current reactive atoms."
   []
   (-> (watch-state) :ratoms))
+
+
+;; Initialization
+
+(init!)
 
 
 ;; Ratoms
