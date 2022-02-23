@@ -120,3 +120,13 @@ export const todaysDate = async (page:Page) => {
     const dateTitle = todaysDate.arr[3];
     return dateTitle;
 };
+
+export const getTitle = async (page:Page) => {
+    const titleLocator = await page.locator("h1 >> nth=0");
+    const titleText = await titleLocator.innerText();
+    return titleText;
+};
+
+export const waitReady = async (page:Page) => {
+    await getTitle(page);
+};
