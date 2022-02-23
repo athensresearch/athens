@@ -202,7 +202,9 @@
                                ;; else open in main view
                                :else
                                (do (dispatch [:athena/toggle])
-                                   (router/navigate-page (:node/title item))
+                                   (if (:node/title item)
+                                     (router/navigate-page (:node/title item))
+                                     (router/navigate-uid  (:block/uid item)))
                                    (dispatch [:editing/uid (:block/uid item)])))
 
       (= key KeyCodes.UP)
@@ -298,10 +300,11 @@
                                            [:div (use-style results-list-style)
                                             (doall
                                               (for [[i x] (map-indexed list results)
-                                                    :let  [parent (:block/parent x)
-                                                           title  (or (:node/title parent) (:node/title x))
-                                                           uid    (or (:block/uid parent) (:block/uid x))
-                                                           string (:block/string x)]]
+                                                    :let  [block-uid (:block/uid x)
+                                                           parent    (:block/parent x)
+                                                           title     (or (:node/title parent) (:node/title x))
+                                                           uid       (or (:block/uid parent) (:block/uid x))
+                                                           string    (:block/string x)]]
                                                 (if (nil? x)
                                                   ^{:key i}
                                                   [:div (use-style result-style {:on-click (fn [_]
@@ -325,7 +328,10 @@
                                                                                                                   :query        query}]
                                                                                                (dispatch [:athena/toggle])
                                                                                                (dispatch [:athena/update-recent-items selected-page])
-                                                                                               (router/navigate-page title e)))
+                                                                                               (if parent
+                                                                                                 (router/navigate-uid block-uid)
+                                                                                                 (router/navigate-page title e))))
+
                                                                                  :class    (when (= i index) "selected")})
                                                    [:div (use-style result-body-style)
 

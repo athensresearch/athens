@@ -565,13 +565,6 @@
                                                                                       (mapv :block/uid))]
                                                           (dispatch [::select-events/set-items children]))
 
-      ;; When undo no longer makes changes for local textarea, do datascript undo.
-      (= key-code KeyCodes.Z) (let [{:string/keys [local previous]} @state]
-                                (when (= local previous)
-                                  (if shift
-                                    (dispatch [:redo])
-                                    (dispatch [:undo]))))
-
       (= key-code KeyCodes.B) (surround-and-set e state "**")
 
       (= key-code KeyCodes.I) (surround-and-set e state "*" 1)
