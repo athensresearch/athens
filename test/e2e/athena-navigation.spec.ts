@@ -1,10 +1,11 @@
 import { expect } from '@playwright/test';
 import { test } from './electron-test';
-import { deleteCurrentPage, inputInAthena, pageTitleLocator } from "./utils";
+import { deleteCurrentPage, inputInAthena, pageTitleLocator, waitForBoot } from "./utils";
 
 
 test('athena create new page then enter', async ({ page }) => {
-  const title = 'create-enter'
+  const title = 'create-enter';
+  await waitForBoot(page);
   await inputInAthena(page, title);
 
   // Press Enter
@@ -19,6 +20,7 @@ test('athena create new page then enter', async ({ page }) => {
 
 test('athena create new page then click create page', async ({ page }) => {
   const title = 'create-click';
+  await waitForBoot(page);
   await inputInAthena(page, title);
 
   await Promise.all([
@@ -31,6 +33,7 @@ test('athena create new page then click create page', async ({ page }) => {
 });
 
 test('athena search block then enter on result', async ({ page }) => {
+  await waitForBoot(page);
   await inputInAthena(page, 'welcome');
 
   // Press ArrowDown
@@ -44,6 +47,7 @@ test('athena search block then enter on result', async ({ page }) => {
 });
 
 test('athena search block then click on result', async ({ page }) => {
+  await waitForBoot(page);
   await inputInAthena(page, 'welcome');
   // Click text=WelcomeWelcome to Athens, Open-Source Networked Thought!
   await page.click('text=WelcomeWelcome to Athens, Open-Source Networked Thought!');

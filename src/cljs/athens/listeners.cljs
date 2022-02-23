@@ -186,7 +186,7 @@
   (let [uids @(subscribe [::select-subs/items])]
     (when (not-empty uids)
       (let [copy-data      (->> uids
-                                (map #(db/get-block [:block/uid %]))
+                                (map #(common-db/get-block-document @db/dsdb [:block/uid %]))
                                 (map #(blocks-to-clipboard-data 0 %))
                                 (apply str))
             clipboard-data (.. e -event_ -clipboardData)

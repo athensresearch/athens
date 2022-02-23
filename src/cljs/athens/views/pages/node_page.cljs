@@ -369,7 +369,8 @@
                                            (when (contains? @(subscribe [:right-sidebar/items]) uid)
                                              (dispatch [:right-sidebar/close-item uid]))
                                            ;; if page being deleted is open, navigate to all pages
-                                           (when (= @(subscribe [:current-route/page-title]) title)
+                                           (when (or (= @(subscribe [:current-route/page-title]) title)
+                                                     (= @(subscribe [:current-route/uid]) uid))
                                              (router/navigate :pages))
                                            ;; if daily note, delete page and remove from daily notes, otherwise just delete page
                                            (if daily-note?
