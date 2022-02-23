@@ -348,7 +348,11 @@
              target-uid
              (not= source-uid target-uid))
       (find-selected-items e source-uid target-uid)
-      (rf/dispatch [::select-events/clear]))))
+      (do
+        (rf/dispatch [::select-events/clear])
+        (rf/dispatch [:editing/uid target-uid])))))
+
+
 
 
 (defn global-mouseup
