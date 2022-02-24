@@ -399,8 +399,9 @@
                         2 "1.7em"
                         3 "1.3em"
                         "1em")]
-        [:div {:class ["block-content"]
-               :style {:font-size font-size}}
+        [:div {:class     ["block-content"]
+               :style     {:font-size font-size}
+               :on-click  (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
          ;; When block is in editing mode or the editing DOM elements are rendered
          (when (or (:show-editable-dom @state) @editing?)
