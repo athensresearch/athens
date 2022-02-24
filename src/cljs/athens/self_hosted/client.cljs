@@ -64,7 +64,7 @@
        (rf/dispatch [:remote/connection-failed])))))
 
 
-(defn close-reconnect-timer!
+(defn- close-reconnect-timer!
   []
   (when-let [timer-id @reconnect-timer]
     (js/clearTimeout timer-id)
