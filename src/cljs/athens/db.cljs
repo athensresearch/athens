@@ -583,7 +583,7 @@
          :where
          [?e :block/string ?s]
          [(re-find ?regex ?s)]]
-       dsdb
+       @dsdb
        pattern))
 
 
