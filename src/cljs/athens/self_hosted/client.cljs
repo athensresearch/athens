@@ -69,8 +69,7 @@
   (when-let [timer-id @reconnect-timer]
     (js/clearTimeout timer-id)
     (reset! reconnect-timer nil)
-    (reset! reconnect-counter -1)
-    (rf/dispatch [:loading/unset])))
+    (reset! reconnect-counter -1)))
 
 
 (defn open?
