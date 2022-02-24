@@ -64,13 +64,12 @@
        (rf/dispatch [:remote/connection-failed])))))
 
 
-(defn- close-reconnect-timer!
+(defn close-reconnect-timer!
   []
   (when-let [timer-id @reconnect-timer]
     (js/clearTimeout timer-id)
     (reset! reconnect-timer nil)
-    (reset! reconnect-counter -1)
-    (rf/dispatch [:loading/unset])))
+    (reset! reconnect-counter -1)))
 
 
 (defn open?

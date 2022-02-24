@@ -513,10 +513,15 @@
 
 ;; Connection status
 
-(reg-event-db
+(reg-event-fx
   :conn-status
-  (fn [db [_ status]]
-    (assoc db :connection-status status)))
+  (fn [{:keys [db]} [_ to-status]]
+    (let [from-status (:connection-status db)]
+      {:db (assoc db :connection-status to-status)
+       :dispatch-n [(condp = [from-status to-status]
+                      [:reconnecting :connected] [:loading/unset]
+                      [:connected :reconnecting] [:loading/set]
+                      nil)]})))
 
 
 ;; Daily Notes
