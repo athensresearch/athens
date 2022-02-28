@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.17](https://github.com/athensresearch/athens/compare/v2.0.0-beta.16...v2.0.0-beta.17) (2022-02-28)
+
+
+### Bug Fixes
+
+* handle loading states on reconnect in a sane way ([f6eee39](https://github.com/athensresearch/athens/commit/f6eee3901645b91ed77727119091bdef06830cfd))
+* query needs db value, not conn ([e8b6d0e](https://github.com/athensresearch/athens/commit/e8b6d0e7e2c247e2735bee4ce2abba27db0dbed9))
+* revert visibility change to fn ([4b81e11](https://github.com/athensresearch/athens/commit/4b81e118a4e6dbb8da316a0ba4c764d2187f5507))
+
+
+* add more block context menu tests ([acc58e8](https://github.com/athensresearch/athens/commit/acc58e86cca33d3cf809b98914554031a3603ff9))
+* fix click out expectations ([0d48659](https://github.com/athensresearch/athens/commit/0d48659e9e5088907ddecd494c531fc26a6f6e52))
+
 ## [2.0.0-beta.16](https://github.com/athensresearch/athens/compare/v2.0.0-beta.15...v2.0.0-beta.16) (2022-02-23)
 
 
