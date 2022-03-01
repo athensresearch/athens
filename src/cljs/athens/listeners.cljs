@@ -223,13 +223,11 @@
     EventType.BEFOREUNLOAD
     (fn [e]
       (let [synced? @(subscribe [:db/synced])
-            editing? @(subscribe [:editing/uid])
             ;; See test/e2e/electron-test.ts for details about this flag.
             e2e-ignore-save? (= (js/localStorage.getItem "E2E_IGNORE_SAVE") "true")
             remote? (electron.utils/remote-db? @(subscribe [:db-picker/selected-db]))]
         (cond
-          (and (or (not synced?)
-                   (not (= nil editing?)))
+          (and (not synced?)
                (not @force-leave)
                (not e2e-ignore-save?))
           (do
@@ -238,7 +236,7 @@
             ;; that allows closing the window.
             (dispatch [:confirm/js
                        (str "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. "
-                            "Try refreshing or quitting again once the sync is complete. Make sure you exit out of any block you may be editing. "
+                            "Try refreshing or quitting again once the sync is complete. "
                             "Press Cancel to wait, or OK to leave without saving (will cause data loss!).")
                        (fn []
                          (reset! force-leave true)
