@@ -464,13 +464,19 @@
          (mapv #(d/pull db '[:db/id :node/title :block/uid :block/string] %)))))
 
 
+(def all-pages-pull-vector
+  [:block/uid :node/title :edit/time :create/time
+   ;; Get all block refs, we need them to count totals.
+   ;; Without specifying a limit pull will only return first 1000.
+   ;; https://docs.datomic.com/on-prem/query/pull.html#limit-option
+   [:block/_refs :limit nil]])
+
+
 (defn get-all-pages
   [db]
-  (->> (d/q '[:find [?e ...]
-              :where
-              [?e :node/title ?t]]
-            db)
-       (d/pull-many db '[* :block/_refs])))
+  (->> (d/datoms db :aevt :node/title)
+       (map first)
+       (d/pull-many db all-pages-pull-vector)))
 
 
 (defn compat-position
