@@ -171,16 +171,6 @@
         (get-children-uids-recursively db uid)))
 
 
-(defn get-ref-ids
-  [db pattern]
-  (d/q '[:find [?e ...]
-         :where
-         [?e :block/string ?s]
-         [(re-find ?regex ?s)]
-         :in $ ?regex]
-       db pattern))
-
-
 (defn get-block
   "Fetches whole block based on `:db/id`."
   [db eid]
@@ -303,22 +293,39 @@
 
 (defn replace-linked-refs-tx
   "For a given block, unlinks [[brackets]], #[[brackets]], #brackets, or ((brackets))."
-  [db blocks]
-  (let [deleted-blocks (sequence (map #(assoc % :block/pattern (patterns/linked (or (:node/title %) (:block/uid %)))))
-                                 blocks)
-        block-refs-ids (sequence (comp (map #(:block/pattern %))
-                                       (mapcat #(get-ref-ids db %))
-                                       (distinct))
-                                 deleted-blocks)
-        block-refs     (d/pull-many db [:db/id :block/string] block-refs-ids)]
+  [db refered-blocks]
+  (let [referencing-blocks-ids (sequence (comp (mapcat #(:block/_refs %))
+                                               (map :db/id)
+                                               (distinct))
+                                         refered-blocks)
+        referencing-blocks     (d/pull-many db [:db/id
+                                                :block/string
+                                                :node/title]
+                                            referencing-blocks-ids)]
     (into []
-          (map (fn [block-ref]
-                 (let [updated-content (reduce (fn [content {:keys [block/pattern block/string node/title]}]
-                                                 (string/replace content pattern (or title string)))
-                                               (:block/string block-ref)
-                                               deleted-blocks)]
-                   (assoc block-ref :block/string updated-content))))
-          block-refs)))
+          (map (fn [referencing-block]
+                 (let [updated-string-content (reduce (fn [content {:keys [block/string node/title]}]
+                                                        (when content
+                                                          (string/replace content
+                                                                          (if title
+                                                                            (str "[[" title "]]")
+                                                                            (str "((" string "))"))
+                                                                          (or title string))))
+                                                      (:block/string referencing-block)
+                                                      refered-blocks)
+                       updated-title-content  (reduce (fn [content {:keys [block/string node/title]}]
+                                                        (when content
+                                                          (string/replace content
+                                                                          (if title
+                                                                            (str "[[" title "]]")
+                                                                            (str "((" string "))"))
+                                                                          (or title string))))
+                                                      (:node/title referencing-block)
+                                                      refered-blocks)]
+                   (cond-> referencing-block
+                     (seq updated-string-content) (assoc :block/string updated-string-content)
+                     (seq updated-title-content)  (assoc :node/title updated-title-content)))))
+          referencing-blocks)))
 
 
 (defn get-page-document

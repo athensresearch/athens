@@ -170,3 +170,37 @@
         (t/is (= (common-db/get-sidebar-titles @@fixture/connection)
                  [test-page-1-title])
               "Undo restored shortcuts")))))
+
+
+(t/deftest nested-page-link-delete-snafu
+  (let [page-title       "page title"
+        wrong-page-title (str "[[" page-title "]]")
+        block-1-uid      "block-uid-1-1"
+        block-1-txt      "## header2"
+        block-2-uid      "block-uid-1-2"
+        block-2-txt      (str "[[" wrong-page-title "]]")
+        block-3-uid      "block-uid-1-3"
+        block-3-txt      (str "[[" page-title "]]")
+        setup-repr       [{:page/title     page-title
+                           :block/children [{:block/uid    "random-block"
+                                             :block/string "with text"}]}
+                          {:page/title     wrong-page-title
+                           :block/children [{:block/uid    "block-uid-1"
+                                             :block/string "some meaningless text"}]}
+                          {:page/title     "some other page"
+                           :block/children [{:block/uid    block-1-uid
+                                             :block/string block-1-txt}
+                                            {:block/uid    block-2-uid
+                                             :block/string block-2-txt}
+                                            {:block/uid    block-3-uid
+                                             :block/string block-3-txt}]}]]
+    (t/testing "remove the page with nested page link"
+      (fixture/setup! setup-repr)
+      (fixture/op-resolve-transact! (atomic-graph-ops/make-page-remove-op wrong-page-title))
+      ;; we didn't modify random shit
+      (t/is (= block-1-txt (:block/string (common-db/get-block @@fixture/connection [:block/uid block-1-uid]))))
+      ;; normal link stays intact
+      (t/is block-3-txt (:block/string (common-db/get-block @@fixture/connection [:block/uid block-3-uid])))
+      ;; wrong link was stripped of `[[]]`
+      (t/is block-3-txt (:block/string (common-db/get-block @@fixture/connection [:block/uid block-2-uid])))
+      (fixture/teardown! setup-repr))))
