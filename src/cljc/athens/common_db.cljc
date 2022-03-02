@@ -171,16 +171,6 @@
         (get-children-uids-recursively db uid)))
 
 
-(defn get-ref-ids
-  [db pattern]
-  (d/q '[:find [?e ...]
-         :where
-         [?e :block/string ?s]
-         [(re-find ?regex ?s)]
-         :in $ ?regex]
-       db pattern))
-
-
 (defn get-block
   "Fetches whole block based on `:db/id`."
   [db eid]
