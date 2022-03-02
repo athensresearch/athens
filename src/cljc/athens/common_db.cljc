@@ -304,19 +304,21 @@
 (defn replace-linked-refs-tx
   "For a given block, unlinks [[brackets]], #[[brackets]], #brackets, or ((brackets))."
   [db blocks]
-  (let [deleted-blocks (sequence (map #(assoc % :block/pattern (patterns/linked (or (:node/title %) (:block/uid %)))))
-                                 blocks)
-        block-refs-ids (sequence (comp (map #(:block/pattern %))
-                                       (mapcat #(get-ref-ids db %))
+  (let [block-refs-ids (sequence (comp (mapcat #(:block/_refs %))
+                                       (map :db/id)
                                        (distinct))
-                                 deleted-blocks)
+                                 blocks)
         block-refs     (d/pull-many db [:db/id :block/string] block-refs-ids)]
     (into []
           (map (fn [block-ref]
-                 (let [updated-content (reduce (fn [content {:keys [block/pattern block/string node/title]}]
-                                                 (string/replace content pattern (or title string)))
+                 (let [updated-content (reduce (fn [content {:keys [block/string node/title]}]
+                                                 (string/replace content
+                                                                 (if title
+                                                                   (str "[[" title "]]")
+                                                                   (str "((" string "))"))
+                                                                 (or title string)))
                                                (:block/string block-ref)
-                                               deleted-blocks)]
+                                               blocks)]
                    (assoc block-ref :block/string updated-content))))
           block-refs)))
 
