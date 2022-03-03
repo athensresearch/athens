@@ -1,0 +1,37 @@
+digraph re_frame_events_fail {
+    label = "re-frame events monitoring: failure scenario";
+
+    subgraph cluster_sentry {
+        label = "Sentry";
+        sentry_tx_start [label = "Start TX"];
+        sentry_tx_stop [label = "Finish TX"];
+    }
+
+    subgraph cluster_async {
+        label = "re-frame-async-flow"
+        rf_async_start [label = "re-frame-async-flow-start"];
+        rf_async_update [label = "re-frame-async-flow-update"];
+        rf_async_stop [label = "re-frame-async-flow-stop"];
+    }
+
+    subgraph cluster_events_fx {
+        label = "re-frame events and fx handler";
+
+        rf_event [label = "re-frame event"];
+
+        do_fx1 [label = "do-fx-1"];
+        do_fxn [label = "do-fx-n"];
+
+        // ok_fx1 [label = "success-fx-1"];
+        fail_fx1 [label = "fail-fx-1"];
+
+        ok_fxn [label = "success-fx-n"];
+    }
+
+    rf_event -> sentry_tx_start [label = "1"];
+    rf_event -> rf_async_start [label = "2"];
+    rf_event -> do_fx1 [label = "3"];
+    do_fx1 -> fail_fx1 [label = "4"; color = red];
+    fail_fx1 -> rf_async_stop [label = "5"];
+    rf_async_stop -> sentry_tx_stop [label = "6"];
+}
