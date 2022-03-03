@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.18](https://github.com/athensresearch/athens/compare/v2.0.0-beta.17...v2.0.0-beta.18) (2022-03-03)
+
+
+### Features
+
+* directly show children on inline refs ([00b39e4](https://github.com/athensresearch/athens/commit/00b39e4dfd2960dedb4ddc9f45e218538e519021))
+* don't warn on exit while editing ([d6911fc](https://github.com/athensresearch/athens/commit/d6911fc9807ab5049dcaeb0451fa0cde00b47eaf))
+
+
+### Bug Fixes
+
+* also unlink `:node/title` contents when unlinking ([2e1e45b](https://github.com/athensresearch/athens/commit/2e1e45ba2280f2ceade98928b88b2484f982802e))
+* Case of nested page links ([491e2e8](https://github.com/athensresearch/athens/commit/491e2e8b678aff7d7dece7d351498b3e9f567159))
+* show more than 1000 links in all page listing ([e538bdb](https://github.com/athensresearch/athens/commit/e538bdb440e865f7f8c5e5a2986e6efa759e2df1))
+
+
+### Refactors
+
+* dead code is dead code. ([4866c57](https://github.com/athensresearch/athens/commit/4866c57556dc5c3cebe3b6eb56b226fd15473353))
+* Improved readability, better naming. ([3b4788b](https://github.com/athensresearch/athens/commit/3b4788b7be3d6340e11f00e375e0b85f3150f732))
+
 ## [2.0.0-beta.17](https://github.com/athensresearch/athens/compare/v2.0.0-beta.16...v2.0.0-beta.17) (2022-02-28)
 
 
