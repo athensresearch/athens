@@ -140,13 +140,17 @@
   [block parent-state]
   (let [orig-uid        (:block/uid block)
         state           (r/cursor parent-state [:inline-refs/states orig-uid])
+        has-children?   (-> block :block/children boolean)
+        parents         (cond-> (:block/parents block)
+                          ;; If the ref has children, move it to breadcrumbs and show children.
+                          has-children? (conj block))
         ;; Reset state on parent each time the component is created.
         ;; To clear state, open/close the inline refs.
         _               (reset! state {:block     block
                                        :embed-id  (random-uuid)
                                        :open?     true
-                                       :parents   (:block/parents block)
-                                       :focus?    true})
+                                       :parents   parents
+                                       :focus?    (not has-children?)})
         linked-ref-data {:linked-ref     true
                          :initial-open   false
                          :linked-ref-uid (:block/uid block)
@@ -180,7 +184,7 @@
            (if (:focus? @state)
 
              ;; Display the single child block only when focusing.
-             ;; This is the default behaviour, for brevity.
+             ;; This is the default behaviour for a ref without children, for brevity.
              [:div.block-embed
               [block-el
                (util/recursively-modify-block-for-embed block embed-id)
@@ -188,7 +192,7 @@
                {:block-embed? true}]]
 
 
-             ;; Otherwise display children of the parent directly if user clicked a breadcrumb.
+             ;; Otherwise display children of the parent directly.
              (for [child (:block/children block)]
                [:<> {:key (:db/id child)}
                 [block-el
