@@ -17,6 +17,7 @@
     [athens.db                            :as db]
     [athens.electron.db-picker            :as db-picker]
     [athens.electron.images               :as images]
+    [athens.electron.monitoring.core]
     [athens.electron.utils                :as electron.utils]
     [athens.events.remote                 :as events-remote]
     [athens.events.sentry]
@@ -248,18 +249,21 @@
     (update db :left-sidebar/open not)))
 
 
-(reg-event-db
+(reg-event-fx
   :right-sidebar/toggle
   [(interceptors/sentry-span "right-sidebar/toggle")]
-  (fn [db _]
-    (update db :right-sidebar/open not)))
+  (fn [{:keys [db]} _]
+    (let [closing? (:right-sidebar/open db)]
+      {:db       (update db :right-sidebar/open not)
+       :dispatch [:posthog/report-feature :right-sidebar (not closing?)]})))
 
 
-(reg-event-db
+(reg-event-fx
   :right-sidebar/toggle-item
   [(interceptors/sentry-span "right-sidebar/toggle-item")]
-  (fn [db [_ item]]
-    (update-in db [:right-sidebar/items item :open] not)))
+  (fn [{:keys [db]} [_ item]]
+    {:db       (update-in db [:right-sidebar/items item :open] not)
+     :dispatch [:posthog/report-feature :right-sidebar true]}))
 
 
 (reg-event-db
@@ -291,25 +295,30 @@
 
 
 ;; TODO: dec all indices > closed item
-(reg-event-db
+(reg-event-fx
   :right-sidebar/close-item
   [(interceptors/sentry-span "right-sidebar/close-item")]
-  (fn [db [_ uid]]
-    (let [{:right-sidebar/keys [items]} db]
-      (cond-> (update db :right-sidebar/items dissoc uid)
-        (= 1 (count items)) (assoc :right-sidebar/open false)))))
+  (fn [{:keys [db]} [_ uid]]
+    (let [{:right-sidebar/keys
+           [items]}  db
+          last-item? (= 1 (count items))
+          new-db     (cond-> (update db :right-sidebar/items dissoc uid)
+                       last-item? (assoc :right-sidebar/open false))]
+      {:db       new-db
+       :dispatch [:posthog/report-feature :right-sidebar (not last-item?)]})))
 
 
-(reg-event-db
+(reg-event-fx
   :right-sidebar/navigate-item
   [(interceptors/sentry-span "right-sidebar/navigate-item")]
-  (fn [db [_ uid breadcrumb-uid]]
+  (fn [{:keys [db]} [_ uid breadcrumb-uid]]
     (let [block      (d/pull @db/dsdb '[:node/title :block/string] [:block/uid breadcrumb-uid])
           item-index (get-in db [:right-sidebar/items uid :index])
           new-item   (merge block {:open true :index item-index})]
-      (-> db
-          (update-in [:right-sidebar/items] dissoc uid)
-          (update-in [:right-sidebar/items] assoc breadcrumb-uid new-item)))))
+      {:db       (-> db
+                     (update-in [:right-sidebar/items] dissoc uid)
+                     (update-in [:right-sidebar/items] assoc breadcrumb-uid new-item))
+       :dispatch [:posthog/report-feature :right-sidebar true]})))
 
 
 ;; TODO: change right sidebar items from map to datascript
@@ -332,8 +341,10 @@
                                                 [(get-in inc-items [k1 :index]) k2]
                                                 [(get-in inc-items [k2 :index]) k1]))) inc-items)]
       {:db         (assoc db :right-sidebar/items sorted-items)
-       :dispatch-n [(when (not (:right-sidebar/open db)) [:right-sidebar/toggle])
-                    [:right-sidebar/scroll-top]]})))
+       :dispatch-n [(when (not (:right-sidebar/open db))
+                      [:right-sidebar/toggle])
+                    [:right-sidebar/scroll-top]
+                    [:posthog/report-feature :right-sidebar true]]})))
 
 
 (reg-event-fx
@@ -356,8 +367,10 @@
                                                  [(get-in inc-items [k1 :index]) k2]
                                                  [(get-in inc-items [k2 :index]) k1]))) inc-items)]
       {:db         (assoc db :right-sidebar/items sorted-items)
-       :dispatch-n [(when (not (:right-sidebar/open db)) [:right-sidebar/toggle])
-                    [:right-sidebar/scroll-top]]})))
+       :dispatch-n [(when (not (:right-sidebar/open db))
+                      [:right-sidebar/toggle])
+                    [:right-sidebar/scroll-top]
+                    [:posthog/report-feature :right-sidebar true]]})))
 
 
 (reg-event-fx
