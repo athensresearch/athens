@@ -1,7 +1,67 @@
 (ns athens.common-events
   "Event as Verbs executed on Knowledge Graph"
   (:require
-    [athens.common.utils :as utils]))
+    [athens.common.utils :as utils]
+    [cognitect.transit :as transit]
+    #?(:cljs [com.cognitect.transit.types :as ty]))
+  #?(:clj
+     (:import
+       (java.io
+         ByteArrayInputStream
+         ByteArrayOutputStream))))
+
+
+;; Limits
+
+(def max-event-size-in-bytes (* 1 1000 1000)) ; 1 MB
+
+(defn valid-serialized-event?
+  [serialized-event]
+  (< (count serialized-event) max-event-size-in-bytes))
+
+
+(defn validate-serialized-event
+  [serialized-event]
+  (when-not (valid-serialized-event? serialized-event)
+    (ex-info "Serialized event is larger than 10 MB" {})))
+
+
+;; serialization and limits
+
+(def serialization-type :json)
+
+
+(defn serialize
+  [event]
+  (let [writer #?(:cljs (transit/writer serialization-type)
+                  :clj  (transit/writer (ByteArrayOutputStream. 4096)
+                                        serialization-type))]
+    (transit/write writer event)))
+
+
+;; Really shouldn't need these two, but we still send datoms via db-dump.
+#?(:cljs
+   ;; see https://github.com/cognitect/transit-cljs/issues/41#issuecomment-503287258
+   (extend-type ty/UUID IUUID))
+
+
+(def ^:private datom-reader
+  (transit/read-handler
+    (fn [[e a v tx added]]
+      {:e     e
+       :a     a
+       :v     v
+       :tx    tx
+       :added added})))
+
+
+(defn deserialize
+  [serialized-event]
+  (let [opts {:handlers {:datom datom-reader}}
+        reader #?(:cljs (transit/reader serialization-type opts)
+                  :clj  (transit/reader (ByteArrayInputStream. (.getBytes serialized-event))
+                                        serialization-type opts))]
+    (transit/read reader serialized-event)))
 
 
 ;; building events

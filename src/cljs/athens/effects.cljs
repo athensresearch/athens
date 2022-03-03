@@ -217,7 +217,10 @@
       ;; valid event let's send it
       (do
         (log/debug "Sending event:" (pr-str event))
-        (client/send! event))
+        (let [ret (client/send! event)]
+          (when (= :rejected (:result ret))
+            (rf/dispatch [:remote/reject-forwarded-event event])
+            (log/warn "Tried to send invalid event. Error:" (pr-str (:reason ret))))))
       (let [explanation (-> schema/event
                             (m/explain event)
                             (me/humanize))]
