@@ -294,16 +294,16 @@
 (defn replace-linked-refs-tx
   "For a given block, unlinks [[brackets]], #[[brackets]], #brackets, or ((brackets))."
   [db refered-blocks]
-  (let [referencing-blocks-ids (sequence (comp (mapcat #(:block/_refs %))
-                                               (map :db/id)
-                                               (distinct))
-                                         refered-blocks)
-        referencing-blocks     (d/pull-many db [:db/id
-                                                :block/string
-                                                :node/title]
-                                            referencing-blocks-ids)]
+  (let [refering-blocks-ids (sequence (comp (mapcat #(:block/_refs %))
+                                            (map :db/id)
+                                            (distinct))
+                                      refered-blocks)
+        refering-blocks     (d/pull-many db [:db/id
+                                             :block/string
+                                             :node/title]
+                                         refering-blocks-ids)]
     (into []
-          (map (fn [referencing-block]
+          (map (fn [refering-block]
                  (let [updated-string-content (reduce (fn [content {:keys [block/string node/title]}]
                                                         (when content
                                                           (string/replace content
@@ -311,7 +311,7 @@
                                                                             (str "[[" title "]]")
                                                                             (str "((" string "))"))
                                                                           (or title string))))
-                                                      (:block/string referencing-block)
+                                                      (:block/string refering-block)
                                                       refered-blocks)
                        updated-title-content  (reduce (fn [content {:keys [block/string node/title]}]
                                                         (when content
@@ -320,12 +320,12 @@
                                                                             (str "[[" title "]]")
                                                                             (str "((" string "))"))
                                                                           (or title string))))
-                                                      (:node/title referencing-block)
+                                                      (:node/title refering-block)
                                                       refered-blocks)]
-                   (cond-> referencing-block
+                   (cond-> refering-block
                      (seq updated-string-content) (assoc :block/string updated-string-content)
                      (seq updated-title-content)  (assoc :node/title updated-title-content)))))
-          referencing-blocks)))
+          refering-blocks)))
 
 
 (defn get-page-document
