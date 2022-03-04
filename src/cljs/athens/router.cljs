@@ -2,7 +2,6 @@
   (:require
     [athens.common-db            :as common-db]
     [athens.common.logging       :as log]
-    [athens.common.sentry        :refer-macros [wrap-span]]
     [athens.dates                :as dates]
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
@@ -44,7 +43,6 @@
 ;; events
 (rf/reg-event-fx
   :navigate
-  [(interceptors/sentry-span "navigate")]
   (fn [{:keys [db]} [_ & route]]
     (log/debug ":navigate route:" (pr-str route))
     (let [db-id       (-> db db-picker/selected-db :id)
@@ -66,7 +64,6 @@
 
 (rf/reg-event-fx
   :navigated
-  [(interceptors/sentry-span "navigated")]
   (fn [{:keys [db]} [_ new-match]]
     (log/debug "navigated, new-match:" (pr-str new-match))
     (let [sentry-tx      (sentry/transaction-get-current)
@@ -123,7 +120,6 @@
 ;; doesn't reliably work. notably, Daily Notes are often not remembered as last open page, leading to incorrect restore
 (reg-event-fx
   :restore-navigation
-  [(interceptors/sentry-span "restore-navigation")]
   (fn [{:keys [db]} _]
     (let [prev-title (-> db db-picker/selected-db :current-route/title)
           prev-uid   (-> db db-picker/selected-db :current-route/uid)]

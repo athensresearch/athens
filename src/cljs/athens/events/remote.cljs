@@ -222,7 +222,6 @@
 
 (rf/reg-event-db
   :remote/start-event-sync
-  [(interceptors/sentry-span ":remote/start-event-sync")]
   (fn [db _]
     (assoc db
            :remote/event-sync (event-sync/create-state :athens [:memory :server])
@@ -231,21 +230,19 @@
 
 (rf/reg-event-db
   :remote/stop-event-sync
-  [(interceptors/sentry-span ":remote/stop-event-sync")]
   (fn [db _]
     (dissoc db :remote/event-sync :remote/rollback-tx-data)))
 
 
 (rf/reg-event-fx
   :remote/clear-server-event
-  [(interceptors/sentry-span ":remote/clear-server-event")]
   (fn [{db :db} [_ event]]
     {:db (update db :remote/event-sync #(event-sync/remove % :server (:event/id event) event))}))
 
 
 (rf/reg-event-fx
   :remote/reject-forwarded-event
-  [(interceptors/sentry-span ":remote/apply-forwarded-event")]
+  [(interceptors/sentry-span ":remote/reject-forwarded-event")]
   (fn [{db :db} [_ event]]
     (log/debug ":remote/reject-forwarded-event event:" (pr-str event))
     (let [[db']      (-> [db db/dsdb]
