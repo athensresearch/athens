@@ -13,7 +13,6 @@
     ["@material-ui/icons/Link" :default Link]
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
     [athens.common-db :as common-db]
-    [athens.common.sentry :refer-macros [wrap-span]]
     [athens.common.utils :as utils]
     [athens.dates :as dates]
     [athens.db :as db :refer [get-unlinked-references]]

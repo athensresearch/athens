@@ -5,7 +5,6 @@
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.db                            :as db]
     [athens.electron.utils                :as utils]
-    [athens.interceptors                  :as interceptors]
     [datascript.core                      :as d]
     [datascript.transit                   :as dt]
     [goog.functions                       :refer [debounce]]

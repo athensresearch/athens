@@ -64,6 +64,7 @@
 
 (rf/reg-event-fx
   :navigated
+  [(interceptors/sentry-span "navigated")]
   (fn [{:keys [db]} [_ new-match]]
     (log/debug "navigated, new-match:" (pr-str new-match))
     (let [sentry-tx      (sentry/transaction-get-current)
