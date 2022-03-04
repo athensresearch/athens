@@ -410,8 +410,7 @@
 (defn linked-ref-el
   [state daily-notes? title]
   (let [linked? "Linked References"
-        linked-refs (wrap-span "get-reactive-linked-references"
-                               (reactive/get-reactive-linked-references [:node/title title]))]
+        linked-refs (reactive/get-reactive-linked-references [:node/title title])]
     (when (or (and daily-notes? (not-empty linked-refs))
               (not daily-notes?))
       [:section (use-style references-style)
@@ -595,6 +594,5 @@
 
 (defn page
   [ident]
-  (let [node (wrap-span "db/get-reactive-node-document"
-                        (reactive/get-reactive-node-document ident))]
+  (let [node (reactive/get-reactive-node-document ident)]
     [node-page-el node]))

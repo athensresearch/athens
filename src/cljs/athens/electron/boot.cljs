@@ -1,6 +1,5 @@
 (ns athens.electron.boot
   (:require
-    [athens.common.sentry      :refer-macros [wrap-span]]
     [athens.db                 :as db]
     [athens.electron.db-picker :as db-picker]
     [athens.electron.utils     :as utils]
@@ -13,8 +12,7 @@
   [(rf/inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} _]
     (let [boot-tx             (sentry/transaction-start "boot-sequence")
-          init-app-db         (wrap-span "db/init-app-db"
-                                         (db/init-app-db local-storage))
+          init-app-db         (db/init-app-db local-storage)
           all-dbs             (db-picker/all-dbs init-app-db)
           selected-db         (db-picker/selected-db init-app-db)
           default-db          (utils/get-default-db)

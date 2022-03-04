@@ -39,11 +39,9 @@
     ;; Remove the reactive watchers will resetting the conn to prevent
     ;; the watchers from processing a massive tx-report.
     (reactive/unwatch!)
-    (wrap-span "ds/reset-conn"
-               (d/reset-conn! db/dsdb new-db))
+    (d/reset-conn! db/dsdb new-db)
     (when-not skip-health-check?
-      (wrap-span "db/health-check"
-                 (common-db/health-check db/dsdb)))
+      (common-db/health-check db/dsdb))
     (reactive/watch!)
     (rf/dispatch [:success-reset-conn])))
 

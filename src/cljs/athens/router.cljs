@@ -134,8 +134,7 @@
 (rf/reg-fx
   :navigate!
   (fn-traced [route]
-             (wrap-span "push-state"
-                        (apply rfee/push-state route))))
+             (apply rfee/push-state route)))
 
 
 ;; router definition
