@@ -582,14 +582,11 @@
            [:div
             (for [{:block/keys [uid] :as child} children]
               ^{:key uid}
-              [perf-mon/hoc-perfmon {:span-name "block-el"}
-               [blocks/block-el child]])])
+              [blocks/block-el child])])
 
          ;; References
-         [perf-mon/hoc-perfmon {:span-name "linked-ref-el"}
-          [linked-ref-el state on-daily-notes? title]]
-         [perf-mon/hoc-perfmon {:span-name "unlinked-ref-el"}
-          [unlinked-ref-el state on-daily-notes? unlinked-refs title]]]))))
+         [linked-ref-el state on-daily-notes? title]
+         [unlinked-ref-el state on-daily-notes? unlinked-refs title]]))))
 
 
 (defn page
