@@ -1073,9 +1073,9 @@
     (log/debug ":backspace/delete-merge-block args:" (pr-str args))
     (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block")
           op          (graph-ops/build-block-remove-merge-op @db/dsdb
-                                       uid
-                                       prev-block-uid
-                                       value)
+                                                             uid
+                                                             prev-block-uid
+                                                             value)
           event       (common-events/build-atomic-event  op)]
       {:fx [(transact-async-flow :backspace-delete-merge-block event sentry-tx
                                  [(focus-on-uid prev-block-uid embed-id
@@ -1088,10 +1088,10 @@
     (log/debug ":backspace/delete-merge-block-with-save args:" (pr-str args))
     (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block-with-save")
           op          (graph-ops/build-block-merge-with-updated-op @db/dsdb
-                                             uid
-                                             prev-block-uid
-                                             value
-                                             local-update)
+                                                                   uid
+                                                                   prev-block-uid
+                                                                   value
+                                                                   local-update)
           event       (common-events/build-atomic-event  op)]
       {:fx [(transact-async-flow :backspace-delete-merge-block-with-save event sentry-tx
                                  [(focus-on-uid prev-block-uid embed-id (count local-update))])]})))
@@ -1106,7 +1106,7 @@
     (log/debug ":enter/add-child args:" (pr-str args))
     (let [sentry-tx   (close-and-get-sentry-tx "enter/add-child")
           position    (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
-                                                                      :relation  :first})
+                                                           :relation  :first})
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [(transact-async-flow :enter-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
 
@@ -1117,11 +1117,11 @@
     (log/debug ":enter/split-block" (pr-str args))
     (let [sentry-tx   (close-and-get-sentry-tx "enter/split-block")
           op          (graph-ops/build-block-split-op @db/dsdb
-                                {:old-block-uid uid
-                                 :new-block-uid new-uid
-                                 :string        value
-                                 :index         index
-                                 :relation      relation})
+                                                      {:old-block-uid uid
+                                                       :new-block-uid new-uid
+                                                       :string        value
+                                                       :index         index
+                                                       :relation      relation})
           event       (common-events/build-atomic-event op)]
       {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
 
@@ -1132,7 +1132,7 @@
     (log/debug ":enter/bump-up args" (pr-str args))
     (let [sentry-tx   (close-and-get-sentry-tx "enter/bump-up")
           position    (common-db/compat-position @db/dsdb {:block/uid uid
-                                                                      :relation  :before})
+                                                           :relation  :before})
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
       {:fx [(transact-async-flow :enter-bump-up event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
 
@@ -1148,7 +1148,7 @@
           block-open-op           (atomic-graph-ops/make-block-open-op block-uid
                                                                        true)
           position                (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
-                                                                                  :relation  :first})
+                                                                       :relation  :first})
           add-child-op            (atomic-graph-ops/make-block-new-op new-uid position)
           open-block-add-child-op (composite-ops/make-consequence-op {:op/type :open-block-add-child}
                                                                      [block-open-op
