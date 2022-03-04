@@ -1,4 +1,8 @@
 (ns athens.reactive
+  "Functions that will reactively update Reagent components when their DataScript data changes.
+  Also contains functions to start, stop, and inspect the reactive watchers.
+  Functions in this namespace should be used very deliberately to avoid performance overheads.
+  No other namespace should import posh.reagent."
   (:require
     [athens.common.utils :as utils]
     [athens.db :as db]
