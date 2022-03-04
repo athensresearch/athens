@@ -23,7 +23,7 @@
 
 (rf/reg-fx
   :posthog/capture-event!
-  (fn [event-name opts-map]
+    (fn [{:keys [event-name opts-map]}]
     (when-not (js/posthog.has_opted_out_capturing)
       (js/posthog.capture event-name (clj->js opts-map)))))
 
