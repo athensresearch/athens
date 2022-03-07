@@ -2,7 +2,7 @@
   (:require
     [athens.common-db            :as common-db]
     [athens.common.logging       :as log]
-    [athens.common.sentry        :refer-macros [wrap-span]]
+    [athens.common.sentry        :refer-macros [wrap-span wrap-span-no-new-tx]]
     [athens.dates                :as dates]
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
@@ -138,7 +138,7 @@
 (rf/reg-fx
   :navigate!
   (fn-traced [route]
-             (wrap-span "push-state"
+             (wrap-span-no-new-tx "push-state"
                         (apply rfee/push-state route))))
 
 

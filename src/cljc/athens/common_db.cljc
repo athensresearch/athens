@@ -13,7 +13,7 @@
     [datascript.core              :as d])
   #?(:cljs
      (:require-macros
-       [athens.common.sentry :as sentry-m :refer [wrap-span]])))
+       [athens.common.sentry :as sentry-m :refer [wrap-span wrap-span-no-new-tx]])))
 
 
 (def schema
@@ -888,31 +888,31 @@
   ;; But rerunning them after replaying all events helps us find events that produce
   ;; states that need fixing.
   (log/info "Knowledge graph health check...")
-  (let [linkmaker-txs       #?(:cljs (wrap-span "linkmaker"
+  (let [linkmaker-txs       #?(:cljs (wrap-span-no-new-tx "linkmaker"
                                                 (linkmaker @conn))
                                :clj (linkmaker @conn))
-        orderkeeper-txs     #?(:cljs (wrap-span "orderkeeper"
+        orderkeeper-txs     #?(:cljs (wrap-span-no-new-tx "orderkeeper"
                                                 (orderkeeper @conn))
                                :clj (orderkeeper @conn))
-        block-nil-eater-txs #?(:cljs (wrap-span "nil-eater"
+        block-nil-eater-txs #?(:cljs (wrap-span-no-new-tx "nil-eater"
                                                 (block-uid-nil-eater @conn))
                                :clj (block-uid-nil-eater @conn))]
     (when-not (empty? linkmaker-txs)
       (log/warn "linkmaker fixes#:" (count linkmaker-txs))
       (log/info "linkmaker fixes:" (pr-str linkmaker-txs))
-      #?(:cljs (wrap-span "transact linkmaker"
+      #?(:cljs (wrap-span-no-new-tx "transact linkmaker"
                           (d/transact! conn linkmaker-txs))
          :clj (d/transact! conn linkmaker-txs)))
     (when-not (empty? orderkeeper-txs)
       (log/warn "orderkeeper fixes#:" (count orderkeeper-txs))
       (log/info "orderkeeper fixes:" (pr-str orderkeeper-txs))
-      #?(:cljs (wrap-span "transact orderkeeper"
+      #?(:cljs (wrap-span-no-new-tx "transact orderkeeper"
                           (d/transact! conn orderkeeper-txs))
          :clj (d/transact! conn orderkeeper-txs)))
     (when-not (empty? block-nil-eater-txs)
       (log/warn "block-uid-nil-eater fixes#:" (count block-nil-eater-txs))
       (log/info "block-uid-nil-eater fixes:" (pr-str block-nil-eater-txs))
-      #?(:cljs (wrap-span "transact nil-eater"
+      #?(:cljs (wrap-span-no-new-tx "transact nil-eater"
                           (d/transact! conn block-nil-eater-txs))
          :clj (d/transact! conn block-nil-eater-txs)))
     (log/info "✅ Knowledge graph health check.")))

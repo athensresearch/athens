@@ -4,7 +4,7 @@
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
     [athens.common.logging       :as log]
-    [athens.common.sentry        :refer-macros [wrap-span]]
+    [athens.common.sentry        :refer-macros [wrap-span wrap-span-no-new-tx]]
     [athens.db                   :as db]
     [athens.reactive             :as reactive]
     [athens.self-hosted.client   :as client]
@@ -39,10 +39,10 @@
     ;; Remove the reactive watchers will resetting the conn to prevent
     ;; the watchers from processing a massive tx-report.
     (reactive/unwatch!)
-    (wrap-span "ds/reset-conn"
+    (wrap-span-no-new-tx "ds/reset-conn"
                (d/reset-conn! db/dsdb new-db))
     (when-not skip-health-check?
-      (wrap-span "db/health-check"
+      (wrap-span-no-new-tx "db/health-check"
                  (common-db/health-check db/dsdb)))
     (reactive/watch!)
     (rf/dispatch [:success-reset-conn])))

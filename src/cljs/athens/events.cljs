@@ -11,7 +11,7 @@
     [athens.common-events.resolver.undo   :as undo-resolver]
     [athens.common-events.schema          :as schema]
     [athens.common.logging                :as log]
-    [athens.common.sentry                 :refer-macros [wrap-span]]
+    [athens.common.sentry                 :refer-macros [wrap-span wrap-span-no-new-tx]]
     [athens.common.utils                  :as common.utils]
     [athens.dates                         :as dates]
     [athens.db                            :as db]
@@ -1029,7 +1029,7 @@
   (fn [_ [_ uid]]
     (log/debug ":backspace/delete-only-child:" (pr-str uid))
     (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-only-child")
-          op          (wrap-span "build-block-remove-op"
+          op          (wrap-span-no-new-tx "build-block-remove-op"
                                  (graph-ops/build-block-remove-op @db/dsdb uid))
           event       (common-events/build-atomic-event op)]
       {:fx [(transact-async-flow :backspace-delete-only-child event sentry-tx [[:editing/uid nil]])]})))
@@ -1113,7 +1113,7 @@
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
     (log/debug ":backspace/delete-merge-block args:" (pr-str args))
     (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block")
-          op          (wrap-span "build-block-remove-merge-op"
+          op          (wrap-span-no-new-tx "build-block-remove-merge-op"
                                  (graph-ops/build-block-remove-merge-op @db/dsdb
                                                                         uid
                                                                         prev-block-uid
@@ -1129,7 +1129,7 @@
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id local-update] :as args}]]
     (log/debug ":backspace/delete-merge-block-with-save args:" (pr-str args))
     (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block-with-save")
-          op          (wrap-span "build-block-merge-with-updated-op"
+          op          (wrap-span-no-new-tx "build-block-merge-with-updated-op"
                                  (graph-ops/build-block-merge-with-updated-op @db/dsdb
                                                                               uid
                                                                               prev-block-uid
@@ -1148,7 +1148,7 @@
   (fn [_ [_ {:keys [block new-uid embed-id] :as args}]]
     (log/debug ":enter/add-child args:" (pr-str args))
     (let [sentry-tx   (close-and-get-sentry-tx "enter/add-child")
-          position    (wrap-span "compat-position"
+          position    (wrap-span-no-new-tx "compat-position"
                                  (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
                                                                       :relation  :first}))
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
@@ -1160,7 +1160,7 @@
   (fn [_ [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
     (let [sentry-tx   (close-and-get-sentry-tx "enter/split-block")
-          op          (wrap-span "build-block-split-op"
+          op          (wrap-span-no-new-tx "build-block-split-op"
                                  (graph-ops/build-block-split-op @db/dsdb
                                                                  {:old-block-uid uid
                                                                   :new-block-uid new-uid
@@ -1176,7 +1176,7 @@
   (fn [_ [_ {:keys [uid new-uid embed-id] :as args}]]
     (log/debug ":enter/bump-up args" (pr-str args))
     (let [sentry-tx   (close-and-get-sentry-tx "enter/bump-up")
-          position    (wrap-span "compat-position"
+          position    (wrap-span-no-new-tx "compat-position"
                                  (common-db/compat-position @db/dsdb {:block/uid uid
                                                                       :relation  :before}))
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
@@ -1193,7 +1193,7 @@
           block-uid               (:block/uid block)
           block-open-op           (atomic-graph-ops/make-block-open-op block-uid
                                                                        true)
-          position                (wrap-span "compat-position"
+          position                (wrap-span-no-new-tx "compat-position"
                                              (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
                                                                                   :relation  :first}))
           add-child-op            (atomic-graph-ops/make-block-new-op new-uid position)
@@ -1350,13 +1350,13 @@
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
     (let [sentry-tx                     (close-and-get-sentry-tx "indent")
-          block                         (wrap-span "get-block"
+          block                         (wrap-span-no-new-tx "get-block"
                                                    (common-db/get-block @db/dsdb [:block/uid uid]))
           block-zero?                   (zero? (:block/order block))
           [prev-block-uid
-           target-rel]                  (wrap-span "get-prev-block-uid-and-target-rel"
+           target-rel]                  (wrap-span-no-new-tx "get-prev-block-uid-and-target-rel"
                                                    (get-prev-block-uid-and-target-rel uid))
-          sib-block                     (wrap-span "get-block-sib-block"
+          sib-block                     (wrap-span-no-new-tx "get-block-sib-block"
                                                    (common-db/get-block @db/dsdb [:block/uid prev-block-uid]))
           ;; if sibling block is closed with children, open
           {sib-open     :block/open
@@ -1393,11 +1393,11 @@
           f-uid                    (first sanitized-selected-uids)
           dsdb                     @db/dsdb
           [prev-block-uid
-           target-rel]             (wrap-span "get-prev-block-uid-and-target-rel"
+           target-rel]             (wrap-span-no-new-tx "get-prev-block-uid-and-target-rel"
                                               (get-prev-block-uid-and-target-rel f-uid))
-          same-parent?             (wrap-span "same-parent"
+          same-parent?             (wrap-span-no-new-tx "same-parent"
                                               (common-db/same-parent? dsdb sanitized-selected-uids))
-          first-block-order        (:block/order (wrap-span "get-block"
+          first-block-order        (:block/order (wrap-span-no-new-tx "get-block"
                                                             (common-db/get-block dsdb [:block/uid f-uid])))
           block-zero?              (zero? first-block-order)]
       (log/debug ":indent/multi same-parent?" same-parent?
@@ -1416,7 +1416,7 @@
   (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
     (log/debug ":unindent args" (pr-str args))
     (let [sentry-tx                 (close-and-get-sentry-tx "unindent")
-          parent                    (wrap-span "parent"
+          parent                    (wrap-span-no-new-tx "parent"
                                                (common-db/get-parent @db/dsdb
                                                                      (common-db/e-by-av @db/dsdb :block/uid uid)))
           is-parent-root-embed?     (= (some-> d-key-down
@@ -1446,15 +1446,15 @@
   (fn [{:keys [db]} [_ {:keys [uids]}]]
     (log/debug ":unindent/multi" uids)
     (let [sentry-tx                   (close-and-get-sentry-tx "unindent/multi")
-          [f-uid f-embed-id]          (wrap-span "uid-and-embed-id"
+          [f-uid f-embed-id]          (wrap-span-no-new-tx "uid-and-embed-id"
                                                  (common-db/uid-and-embed-id (first uids)))
           sanitized-selected-uids     (mapv (comp
                                               first
                                               common-db/uid-and-embed-id) uids)
           {parent-title :node/title
-           parent-uid   :block/uid}   (wrap-span "get-parent"
+           parent-uid   :block/uid}   (wrap-span-no-new-tx "get-parent"
                                                  (common-db/get-parent @db/dsdb [:block/uid f-uid]))
-          same-parent?                (wrap-span "same-parent"
+          same-parent?                (wrap-span-no-new-tx "same-parent"
                                                  (common-db/same-parent? @db/dsdb sanitized-selected-uids))
           is-parent-root-embed?       (when same-parent?
                                         (some-> "#editable-uid-"
