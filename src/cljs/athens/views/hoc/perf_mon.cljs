@@ -30,7 +30,7 @@
   "Higher Order Component for Performance Monitoring with Sentry which does not create new tx if it does not exist"
   [{:keys [span-name]} _component]
   (let [tx-present? (sentry/tx-running?)
-        sentry-tx   (if tx-present?
+        sentry-tx   (when tx-present?
                       (sentry/transaction-get-current))
         sentry-span (sentry/span-start sentry-tx span-name false)
         did-mount   (fn [_this]

@@ -43,11 +43,12 @@
          (athens.utils.sentry/transaction-finish sentry-tx#)))
      result#))
 
+
 (defn span-start
   [_span-name]
   #?(:clj  nil
      :cljs (let [tx-running?  (sentry/tx-running?)
-                 sentry-tx    (if tx-running?
+                 sentry-tx    (when tx-running?
                                 (sentry/transaction-get-current))
                  active-span  (sentry/span-active)
                  current-span (when sentry-tx

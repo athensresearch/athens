@@ -49,20 +49,20 @@
 
 
 (defn sentry-span-no-new-tx
-  "Wraps Event Handler into Sentry Span for measurement."
+  "Wraps Event Handler into Sentry Span for measurement when there is no running tx."
   [span-name]
   (rf/->interceptor
     :id     :sentry-span
     :before (fn [context]
               (let [tx-running?   (sentry/tx-running?)
-                    auto-tx       (if tx-running?
+                    auto-tx       (when tx-running?
                                     (sentry/transaction-get-current))
                     existing-span (sentry/span-active)
                     sentry-span   (sentry/span-start (or existing-span
                                                          auto-tx)
                                                      span-name)]
                 (cond-> (assoc context :sentry-span sentry-span)
-                        (not tx-running?) (assoc :sentry-auto-tx auto-tx))))
+                  (not tx-running?) (assoc :sentry-auto-tx auto-tx))))
     :after  (fn [context]
               (let [sentry-span (:sentry-span context)
                     auto-tx     (:sentry-auto-tx context)]
@@ -71,7 +71,7 @@
                 (when auto-tx
                   (sentry/transaction-finish auto-tx))
                 (cond-> (dissoc context :sentry-span)
-                        auto-tx (dissoc :sentry-auto-tx))))))
+                  auto-tx (dissoc :sentry-auto-tx))))))
 
 
 (rf/reg-global-interceptor persist-db)

@@ -40,10 +40,10 @@
     ;; the watchers from processing a massive tx-report.
     (reactive/unwatch!)
     (wrap-span-no-new-tx "ds/reset-conn"
-               (d/reset-conn! db/dsdb new-db))
+                         (d/reset-conn! db/dsdb new-db))
     (when-not skip-health-check?
       (wrap-span-no-new-tx "db/health-check"
-                 (common-db/health-check db/dsdb)))
+                           (common-db/health-check db/dsdb)))
     (reactive/watch!)
     (rf/dispatch [:success-reset-conn])))
 

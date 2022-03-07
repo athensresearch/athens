@@ -2,7 +2,7 @@
   (:require
     [athens.common-db            :as common-db]
     [athens.common.logging       :as log]
-    [athens.common.sentry        :refer-macros [wrap-span wrap-span-no-new-tx]]
+    [athens.common.sentry        :refer-macros [wrap-span-no-new-tx]]
     [athens.dates                :as dates]
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
@@ -139,7 +139,7 @@
   :navigate!
   (fn-traced [route]
              (wrap-span-no-new-tx "push-state"
-                        (apply rfee/push-state route))))
+                                  (apply rfee/push-state route))))
 
 
 ;; router definition
