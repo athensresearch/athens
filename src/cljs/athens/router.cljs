@@ -44,7 +44,7 @@
 ;; events
 (rf/reg-event-fx
   :navigate
-  [(interceptors/sentry-span "navigate")]
+  [(interceptors/sentry-span-no-new-tx "navigate")]
   (fn [{:keys [db]} [_ & route]]
     (log/debug ":navigate route:" (pr-str route))
     (let [db-id       (-> db db-picker/selected-db :id)
@@ -123,7 +123,7 @@
 ;; doesn't reliably work. notably, Daily Notes are often not remembered as last open page, leading to incorrect restore
 (reg-event-fx
   :restore-navigation
-  [(interceptors/sentry-span "restore-navigation")]
+  [(interceptors/sentry-span-no-new-tx "restore-navigation")]
   (fn [{:keys [db]} _]
     (let [prev-title (-> db db-picker/selected-db :current-route/title)
           prev-uid   (-> db db-picker/selected-db :current-route/uid)]
