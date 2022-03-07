@@ -48,8 +48,7 @@
   #?(:clj  nil
      :cljs (let [tx-running?  (sentry/tx-running?)
                  sentry-tx    (if tx-running?
-                                (sentry/transaction-get-current)
-                                (sentry/transaction-start (str _span-name "-defntrace-auto-tx")))
+                                (sentry/transaction-get-current))
                  active-span  (sentry/span-active)
                  current-span (when sentry-tx
                                 (sentry/span-start (or active-span
