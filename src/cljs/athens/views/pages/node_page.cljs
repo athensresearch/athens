@@ -587,9 +587,9 @@
                [blocks/block-el child]])])
 
          ;; References
-         [perf-mon/hoc-perfmon {:span-name "linked-ref-el"}
+         [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
           [linked-ref-el state on-daily-notes? title]]
-         [perf-mon/hoc-perfmon {:span-name "unlinked-ref-el"}
+         [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
           [unlinked-ref-el state on-daily-notes? unlinked-refs title]]]))))
 
 
