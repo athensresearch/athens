@@ -13,7 +13,7 @@
     ["@material-ui/icons/Link" :default Link]
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
     [athens.common-db :as common-db]
-    [athens.common.sentry :refer-macros [wrap-span]]
+    [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
     [athens.common.utils :as utils]
     [athens.dates :as dates]
     [athens.db :as db :refer [get-unlinked-references]]
@@ -410,8 +410,8 @@
 (defn linked-ref-el
   [state daily-notes? title]
   (let [linked? "Linked References"
-        linked-refs (wrap-span "get-reactive-linked-references"
-                               (reactive/get-reactive-linked-references [:node/title title]))]
+        linked-refs (wrap-span-no-new-tx "get-reactive-linked-references"
+                                         (reactive/get-reactive-linked-references [:node/title title]))]
     (when (or (and daily-notes? (not-empty linked-refs))
               (not daily-notes?))
       [:section (use-style references-style)
@@ -587,14 +587,14 @@
                [blocks/block-el child]])])
 
          ;; References
-         [perf-mon/hoc-perfmon {:span-name "linked-ref-el"}
+         [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
           [linked-ref-el state on-daily-notes? title]]
-         [perf-mon/hoc-perfmon {:span-name "unlinked-ref-el"}
+         [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
           [unlinked-ref-el state on-daily-notes? unlinked-refs title]]]))))
 
 
 (defn page
   [ident]
-  (let [node (wrap-span "db/get-reactive-node-document"
-                        (reactive/get-reactive-node-document ident))]
+  (let [node (wrap-span-no-new-tx "db/get-reactive-node-document"
+                                  (reactive/get-reactive-node-document ident))]
     [node-page-el node]))
