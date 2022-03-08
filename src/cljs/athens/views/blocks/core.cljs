@@ -3,6 +3,9 @@
     ["/components/Block/components/Anchor"   :refer [Anchor]]
     ["/components/Block/components/Toggle"   :refer [Toggle]]
     ["/components/Button/Button"             :refer [Button]]
+    [athens.views.comments.core :as comments]
+    [athens.views.comments.inline :as inline-comments]
+    [athens.views.comments.right-side :as right-side]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -505,6 +508,12 @@
                      (not= :block-embed? opts)
                      (:inline-refs/open @state))
             [inline-linked-refs-el state uid])
+
+          (when (= uid "72adc4063")
+            [inline-comments/inline-comments comments/mock-data])
+
+          (when (= uid "72adc4063")
+            [right-side/right-side-comments comments/mock-data])
 
           ;; Children
           (when (and (seq children)
