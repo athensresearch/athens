@@ -510,7 +510,8 @@
             [inline-linked-refs-el state uid])
 
           (when (= uid "72adc4063")
-            [inline-comments/inline-comments comments/mock-data])
+            [inline-comments/inline-comments comments/mock-data-with-author-and-time])
+            ;;[inline-comments/inline-comments comments/mock-data])
 
           (when (= uid "72adc4063")
             [right-side/right-side-comments comments/mock-data])
