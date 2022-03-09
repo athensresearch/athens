@@ -49,7 +49,7 @@
        (run! io/delete-file)))
 
 
-(defn- save!
+(defn save!
   [persist-base-path db id]
   (let [path (id->path persist-base-path id)]
     (io/make-parents path)
