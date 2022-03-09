@@ -12,13 +12,13 @@
 (def counter (atom 0))
 
 
-(defn is-persisted-file?
+(defn- is-persisted-file?
   [path]
   (and (-> path io/file .isFile)
        (str/ends-with? path extension)))
 
 
-(defn id->path
+(defn- id->path
   [persist-base-path id]
   (->> [id extension]
        str/join
@@ -26,14 +26,14 @@
        .getAbsolutePath))
 
 
-(defn path->id
+(defn- path->id
   [path]
   (if (is-persisted-file? path)
     (-> path io/file .getName (str/replace extension ""))
     (throw (ex-info "Path is not for a persisted file" {:path path}))))
 
 
-(defn persisted
+(defn- persisted
   [persist-base-path]
   (->> persist-base-path
        io/file
@@ -42,14 +42,14 @@
        (filter is-persisted-file?)))
 
 
-(defn delete-others!
+(defn- delete-others!
   [persist-base-path id]
   (->> (persisted persist-base-path)
        (remove #{(id->path persist-base-path id)})
        (run! io/delete-file)))
 
 
-(defn save!
+(defn- save!
   [persist-base-path db id]
   (let [path (id->path persist-base-path id)]
     (io/make-parents path)
