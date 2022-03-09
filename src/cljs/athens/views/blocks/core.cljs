@@ -509,12 +509,55 @@
                      (:inline-refs/open @state))
             [inline-linked-refs-el state uid])
 
-          (when (= uid "72adc4063")
-            [inline-comments/inline-comments comments/mock-data-with-author-and-time])
+          #_(when (= uid "72adc4063")
+              [inline-comments/inline-comments comments/mock-data-with-author-and-time])
             ;;[inline-comments/inline-comments comments/mock-data])
 
-          (when (= uid "72adc4063")
-            [right-side/right-side-comments comments/mock-data])
+          #_(when (= uid "72adc4063")
+              [right-side/right-side-comments comments/mock-data])
+
+          ;; Sync comm comments start ----
+
+          ;; Inline comments
+
+          ;; interaction-1
+          (when (= "655e5a0d0" uid)
+            [inline-comments/inline-comments comments/sync-meet-interaction-1])
+
+          ;; interaction-2
+          (when (= "e5f5fb553" uid)
+            [inline-comments/inline-comments comments/sync-meet-interaction-2])
+
+          ;; interaction-3
+          (when (= "dfd115c99" uid)
+            [inline-comments/inline-comments comments/sync-meet-interaction-3])
+
+          ;; interaction-4
+          (when (= "040652b10" uid)
+            [inline-comments/inline-comments comments/sync-meet-interaction-4])
+
+          ;; Right side comments
+
+          ;; interaction-1
+          (when (= "655e5a0d0" uid)
+            [right-side/right-side-comments comments/sync-meet-interaction-1])
+
+          ;; interaction-2
+          (when (= "e5f5fb553" uid)
+            [right-side/right-side-comments comments/sync-meet-interaction-2])
+
+          ;; interaction-3
+          (when (= "dfd115c99" uid)
+            [right-side/right-side-comments comments/sync-meet-interaction-3])
+
+          ;; interaction-4
+          (when (= "040652b10" uid)
+            [right-side/right-side-comments comments/sync-meet-interaction-4])
+
+
+
+
+          ;; Sync comm comments end ----
 
           ;; Children
           (when (and (seq children)
