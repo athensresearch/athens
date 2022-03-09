@@ -513,11 +513,11 @@
               [inline-comments/inline-comments comments/mock-data-with-author-and-time])
             ;;[inline-comments/inline-comments comments/mock-data])
 
-          #_(when @(rf/subscribe [:comment/show-comment-textarea? uid])
-              [right-side/comment-textarea])
+          (when @(rf/subscribe [:comment/show-comment-textarea? uid])
+            [right-side/right-side-comments [] uid])
 
-          (when (= uid "72adc4063")
-            [right-side/right-side-comments comments/mock-data])
+          #_(when (= uid "72adc4063")
+              [right-side/right-side-comments comments/mock-data])
 
           ;; Children
           (when (and (seq children)

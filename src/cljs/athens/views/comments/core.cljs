@@ -31,21 +31,17 @@
   (fn [db [_ uid]]
     (= uid (:comment/show-comment-textarea db))))
 
-;; subscribe for a block's comments
-#_
-(rf/reg-sub
-  :comment/show-comment-textarea?
-  (fn [db [_ uid]]
-    (prn "SUB" uid)))
-
-;; add to reframe or datascript?
-;; all content should be in datascript (even the right sidebar should be in datascript arguably).
-;; more atomic ops for adding comments?
-
 (rf/reg-event-fx
   :comment/show-comment-textarea
   (fn [{:keys [db]} [_ uid]]
     {:db (assoc db :comment/show-comment-textarea uid)}))
+
+
+(rf/reg-event-fx
+  :comment/write-comment
+  (fn [_ [_ uid comment-string]]
+    ;; TODO create effect
+    {:fx [[:TODO uid comment-string]]}))
 
 
 (def mock-data

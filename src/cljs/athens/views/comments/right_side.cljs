@@ -9,40 +9,38 @@
   {:position "absolute"
    :right    "-400px"
    :border-radius "10px"
-   :border "1px solid gray"})
+   :border "1px solid gray"
+   :width "300px"})
 
 
 (def comments-styles
-  {:padding "5px 0 5px 0"
-   :width "300px"})
+  {:padding "5px 0 5px 0"})
 
-(def comment-textarea-styles
-  {:position "absolute"
-   :right    "-400px"
-   :border-radius "10px"
-   :border "1px solid gray"
-   :padding "5px 0 5px 0"
-   :width "300px"})
 
-#_(defn comment-textarea
-    []
-    [:div (stylefy/use-style comment-textarea-styles)
-     "write here"])
+(defn comment-textarea
+  [uid]
+  (let [comment-string (reagent.core/atom "")]
+    (fn [uid]
+      [:div
+       [textinput/textinput {:placeholder "Add a comment..." :style {:width "100%"}
+                             :on-change (fn [e] (reset! comment-string (.. e -target -value)))
+                             :value @comment-string}]
+       [:> Button {:style {:float "right"}
+                   :on-click (fn [_]
+                               (re-frame.core/dispatch [:comment/write-comment uid @comment-string]))}
+        "Send"]])))
 
 
 (defn right-side-comments
-  [data]
+  [data uid]
   [:div.comments (stylefy/use-style right-side-comments-styles)
    (for [item data]
      [:<>
       [:div.comment (stylefy/use-style comments-styles)
-
        [:span (stylefy/use-style {:margin "0 0 0 5px"})
         (:string item)]]
       (when (not= item (last data))
         [:hr {:style {:margin 0}}])])
-   [:div
-    [textinput/textinput {:placeholder "Add a comment..." :style {:width "100%"}}]
-    [:> Button {:style {:float "right"}} "Send"]]])
+   [comment-textarea uid]])
 
 
