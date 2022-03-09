@@ -81,8 +81,8 @@
 
 (comment
   ;; Matches what's on src/clj/config.default.edn in [:datascript :persist-base-path]
-  ;; On the docker setup there's a config override to /srv/athens/persist
-  (def persist-base-path "./athens-data/persist/")
+  ;; On the docker setup there's a config override to /srv/athens/datascript/persist
+  (def persist-base-path "./athens-data/datascript/persist/")
 
   (persisted persist-base-path)
 

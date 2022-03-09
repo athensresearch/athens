@@ -2,7 +2,7 @@
  ;; Default fluree address and datascript path on dev setup.
  ;; The official Docker Compose file overwrites these values.
  :fluree     {:servers ["http://localhost:8090"]}
- :datascript {:persist-base-path "./athens-data/persist/"}
+ :datascript {:persist-base-path "./athens-data/datascript/persist/"}
  :in-memory? false
  ;; :password   "SuchWow"
  ;; :nrepl      {:port 8877}
