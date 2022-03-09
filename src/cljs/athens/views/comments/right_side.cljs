@@ -25,9 +25,11 @@
        [textinput/textinput {:placeholder "Add a comment..." :style {:width "100%"}
                              :on-change (fn [e] (reset! comment-string (.. e -target -value)))
                              :value @comment-string}]
-       [:> Button {:style {:float "right"}
+       [:> Button {:style    {:float "right"}
                    :on-click (fn [_]
-                               (re-frame.core/dispatch [:comment/write-comment uid @comment-string]))}
+                               (re-frame.core/dispatch [:comment/write-comment uid @comment-string])
+                               (re-frame.core/dispatch [:comment/hide-comment-textarea])
+                               (reset! comment-string nil))}
         "Send"]])))
 
 

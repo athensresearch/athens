@@ -36,6 +36,10 @@
   (fn [{:keys [db]} [_ uid]]
     {:db (assoc db :comment/show-comment-textarea uid)}))
 
+(rf/reg-event-fx
+  :comment/hide-comment-textarea
+  (fn [{:keys [db]} [_ uid]]
+    {:db (assoc db :comment/show-comment-textarea nil)}))
 
 (rf/reg-event-fx
   :comment/write-comment
