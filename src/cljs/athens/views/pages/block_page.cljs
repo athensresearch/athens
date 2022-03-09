@@ -10,7 +10,7 @@
     [athens.views.pages.node-page :as node-page]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :as rf :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -80,9 +80,14 @@
   "If block is in main, navigate to page. If in right sidebar, replace right sidebar item."
   [e uid breadcrumb-uid]
   (let [right-sidebar? (.. e -target (closest ".right-sidebar"))]
-    (if right-sidebar?
-      (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
-      (router/navigate-uid breadcrumb-uid e))))
+    (rf/dispatch [:reporting/navigation {:source :main-block-page-breadcrumb
+                                         :target (str "block/" breadcrumb-uid)
+                                         :pane   (if right-sidebar?
+                                                   :right-pane
+                                                   :main-pane)}])
+     (if right-sidebar?
+       (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
+       (router/navigate-uid breadcrumb-uid e))))
 
 
 (defn linked-refs-el
@@ -98,14 +103,22 @@
         ;; [:> Button {:disabled true} [(r/adapt-react-class FilterList)]]]
         [:div (use-style node-page/references-list-style)
          (doall
-           (for [[group-title group] linked-refs]
-             [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
+          (for [[group-title group] linked-refs]
+            [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
               [:h4 (use-style node-page/references-group-title-style)
-               [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title))}
+               [:a {:on-click (fn [e]
+                                (let [shift?       (.-shiftKey e)
+                                      parsed-title (parse-renderer/parse-title group-title)]
+                                  (rf/dispatch [:reporting/navigation {:source :main-block-page-linked-refs
+                                                                       :target (str "page/" parsed-title)
+                                                                       :pane   (if shift?
+                                                                                 :right-pane
+                                                                                 :main-pane)}])
+                                  (router/navigate-page parsed-title)))}
                 group-title]]
               (doall
-                (for [block group]
-                  [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
+               (for [block group]
+                 [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
                    [node-page/ref-comp block]]))]))]]])))
 
 
@@ -124,7 +137,7 @@
 
 
 (defn block-page-el
-  [_ _ _ _]
+  [_block]
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})]
     (fn [block]
@@ -142,7 +155,11 @@
                 {:on-click (fn [e]
                              (.. e preventDefault)
                              (if (.. e -shiftKey)
-                               (router/navigate-uid uid e)
+                               (do
+                                 (rf/dispatch [:reporting/navigation {:source :block-page-title
+                                                                      :target (str "block/" uid)
+                                                                      :pane   :right-pane}])
+                                 (router/navigate-uid uid e))
                                (dispatch [:editing/uid uid])))})
           [autosize/textarea
            {:id          (str "editable-uid-" uid)
