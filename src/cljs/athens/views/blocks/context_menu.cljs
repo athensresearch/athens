@@ -52,6 +52,10 @@
   (.. e preventDefault)
   (swap! state assoc :context-menu/show false))
 
+(defn handle-click-comment
+  [uid state]
+  (re-frame.core/dispatch [:comment/show-comment-textarea uid])
+  (swap! state assoc :context-menu/show false))
 
 (defn context-menu-el
   "Only option in context menu right now is copy block ref(s)."
@@ -81,4 +85,7 @@
                                           "Copy block ref"
                                           "Copy block refs")]
                                        [:> Button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
-                                        "Copy unformatted"]]])))})))
+                                        "Copy unformatted"]
+                                       (when (empty? selected-items)
+                                         [:> Button {:on-mouse-down (fn [e] (handle-click-comment uid state))}
+                                          "Comment"])]])))})))
