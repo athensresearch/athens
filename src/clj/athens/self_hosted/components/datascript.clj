@@ -46,6 +46,8 @@
             (atomic/resolve-transact! conn data)
             (swap! total inc)
             (reset! last-id id)
+            (when (persistence/throttled-save! persist-base-path conn data)
+              (log/info "Persisted DataScript db as of event id" id))
             (catch Error err
               (log/warn "Event that we've failed to process was:"
                         (with-out-str
@@ -57,11 +59,7 @@
                           (pp/pprint data)))
               (log/error ex "Exception during processing" (pr-str id)))))
         (log/info "✅ Replayed" @total "events.")
-        (common-db/health-check conn)
-        (when (and @last-id persist-base-path (not id))
-          (log/info "Persisting initial DataScript db...")
-          (persistence/save! persist-base-path @conn @last-id)
-          (log/info "Persisted DataScript db as of event id" @last-id)))
+        (common-db/health-check conn))
       (assoc component :conn conn)))
 
 
