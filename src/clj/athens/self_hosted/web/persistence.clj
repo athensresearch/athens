@@ -1,5 +1,5 @@
 (ns athens.self-hosted.web.persistence
-  (:refer-clojure :exclude [load])
+  (:refer-clojure :exclude [load list])
   (:require
     [clojure.data.json :as json]
     [clojure.java.io :as io]
@@ -8,8 +8,6 @@
 
 
 (def extension ".json")
-(def frequency 100)
-(def counter (atom 0))
 
 
 (defn- is-persisted-file?
@@ -33,7 +31,7 @@
     (throw (ex-info "Path is not for a persisted file" {:path path}))))
 
 
-(defn- persisted
+(defn- list
   [persist-base-path]
   (->> persist-base-path
        io/file
@@ -44,7 +42,7 @@
 
 (defn- delete-others!
   [persist-base-path id]
-  (->> (persisted persist-base-path)
+  (->> (list persist-base-path)
        (remove #{(id->path persist-base-path id)})
        (run! io/delete-file)))
 
@@ -57,12 +55,13 @@
          d/serializable
          json/write-str
          (spit path))
+    (delete-others! persist-base-path id)
     path))
 
 
 (defn load
   [persist-base-path]
-  (when-some [path (-> (persisted persist-base-path) first)]
+  (when-some [path (-> (list persist-base-path) first)]
     [(-> path
          slurp
          json/read-str
@@ -70,11 +69,14 @@
      (path->id path)]))
 
 
-(defn persist!
+(def frequency 100)
+(def counter (atom 0))
+
+
+(defn throttled-save!
   [persist-base-path conn {:event/keys [id] :as _event}]
   (when (>= (swap! counter inc) frequency)
     (save! persist-base-path @conn id)
-    (delete-others! persist-base-path id)
     (reset! counter 0)
     [@conn id]))
 
@@ -84,7 +86,7 @@
   ;; On the docker setup there's a config override to /srv/athens/datascript/persist
   (def persist-base-path "./athens-data/datascript/persist/")
 
-  (persisted persist-base-path)
+  (list persist-base-path)
 
   (load persist-base-path)
 
@@ -95,6 +97,6 @@
 
   (delete-others! persist-base-path "456")
 
-  (persist! persist-base-path (d/create-conn) {:event/id "123"})
+  (throttled-save! persist-base-path (d/create-conn) {:event/id "123"})
   ;;
   )

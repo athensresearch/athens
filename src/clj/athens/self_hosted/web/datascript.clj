@@ -40,7 +40,7 @@
         (event-log/add-event! fluree id event))
       (atomic-resolver/resolve-transact! conn event)
       (when-some [persist-base-path (-> config :config :datascript :persist-base-path)]
-        (when (persistence/persist! persist-base-path conn event)
+        (when (persistence/throttled-save! persist-base-path conn event)
           (log/info "Persisted DataScript db as of event id" id)))
       (common-events/build-event-accepted id)
       (catch ExceptionInfo ex
