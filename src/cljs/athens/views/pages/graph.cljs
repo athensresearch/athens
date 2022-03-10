@@ -465,7 +465,14 @@
                                     (.fill ctx)))
               ;; node actions
               :onNodeClick      (fn [^js node ^js event]
-                                  (router/navigate-page (.. node -label) event))
+                                  (let [title  (.-label node)
+                                        shift? (.-shiftKey event)]
+                                    (rf/dispatch [:reporting/navigation {:source :graph
+                                                                         :target (str "page/" title)
+                                                                         :pane   (if shift?
+                                                                                 :right-pane
+                                                                                 :main-pane)}])
+                                    (router/navigate-page (.. node -label) event)))
               :onNodeHover      (fn [^js node]
                                   (let [_          (reset! highlight-nodes #{})
                                         _          (reset! highlight-links #{})
