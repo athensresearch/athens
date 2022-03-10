@@ -516,7 +516,7 @@
 
           ;; show inline comments
           (when comment
-            [inline-comments/inline-comments comment])
+            [inline-comments/inline-comments comment uid])
 
           ;; right side comments
           (when comment
