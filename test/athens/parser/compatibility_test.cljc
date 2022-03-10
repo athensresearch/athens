@@ -342,3 +342,15 @@
            (sut/staged-parser->ast "$$a b $ c$$")))))
 
 
+(t/deftest allow-starting-with-empty-line
+  (t/are [text-in ast] (= ast (sut/block-parser->ast text-in))
+    "\nText"
+    [:block
+     [:newline "\n"]
+     [:paragraph-text "Text"]]
+
+    "> \n> More"
+    [:block
+     [:block-quote
+      [:newline "\n"]
+      [:paragraph-text "More"]]]))
