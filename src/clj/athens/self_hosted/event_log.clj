@@ -76,6 +76,21 @@
                          :where  [["?event" "event/id", event-id]]})))
 
 
+(defn last-event-id
+  [fluree]
+  (-> fluree
+      :conn-atom
+      deref
+      (fdb/db ledger)
+      (fdb/query {:selectOne {"?event" ["*"]}
+                  :where     [["?event" "event/id", "?id"]]
+                  :opts      {:orderBy ["DESC" "?event"]
+                              :limit   1}})
+      deref
+      deserialize
+      first))
+
+
 (defn events
   "Returns a lazy-seq of all events in conn up to now, starting at optional event-id.
   Can potentially be very large, so don't hold on to the seq head while
