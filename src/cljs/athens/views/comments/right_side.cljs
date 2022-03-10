@@ -2,7 +2,8 @@
   (:require [stylefy.core :as stylefy]
             [athens.views.textinput :as textinput]
             ["/components/Button/Button" :refer [Button]]
-            ["/components/Input/Input" :refer [Input]]))
+            ["/components/Input/Input" :refer [Input]]
+            [re-frame.core :as rf]))
 
 
 (def right-side-comments-styles
@@ -21,16 +22,17 @@
   [uid]
   (let [comment-string (reagent.core/atom "")]
     (fn [uid]
-      [:div
-       [textinput/textinput {:placeholder "Add a comment..." :style {:width "100%"}
-                             :on-change (fn [e] (reset! comment-string (.. e -target -value)))
-                             :value @comment-string}]
-       [:> Button {:style    {:float "right"}
-                   :on-click (fn [_]
-                               (re-frame.core/dispatch [:comment/write-comment uid @comment-string])
-                               (re-frame.core/dispatch [:comment/hide-comment-textarea])
-                               (reset! comment-string nil))}
-        "Send"]])))
+      (let [username @(rf/subscribe [:username])]
+        [:div
+         [textinput/textinput {:placeholder "Add a comment..." :style {:width "100%"}
+                               :on-change (fn [e] (reset! comment-string (.. e -target -value)))
+                               :value @comment-string}]
+         [:> Button {:style    {:float "right"}
+                     :on-click (fn [_]
+                                 (re-frame.core/dispatch [:comment/write-comment uid @comment-string username])
+                                 (re-frame.core/dispatch [:comment/hide-comment-textarea])
+                                 (reset! comment-string nil))}
+          "Send"]]))))
 
 
 (defn right-side-comments

@@ -18,7 +18,8 @@
    :page/remove  ; ✓
    :shortcut/new
    :shortcut/remove
-   :shortcut/move])
+   :shortcut/move
+   :comment/add])
 
 
 ;; Identity
@@ -95,6 +96,18 @@
     [:map
      block-id
      [:block/position block-position]]]])
+
+
+(def op-new-comment
+  [:map
+   [:op/args
+     [:map
+       block-id
+       [:new-comment [:map
+                       [:author string?]
+                       [:string   string?]
+                       [:time     string?]]]]]])
+
 
 
 ;; Page
@@ -193,6 +206,7 @@
                      [:shortcut/new    (with-common op-shortcut-new)]
                      [:shortcut/remove (with-common op-shortcut-remove)]
                      [:shortcut/move   (with-common op-shortcut-move)]
+                     [:comment/add     (with-common op-new-comment)]
                      [:composite/consequence [:ref ::composite-op]]]
      ::composite-op [:map
                      [:op/type [:enum :composite/consequence]]

@@ -65,6 +65,16 @@
    :op/args    {:block/uid      block-uid
                 :block/position position}})
 
+(defn make-comment-add-op
+  "Creates a comment/add op
+   - block/uid
+   - new-comment - comment to be added to the vector of comments"
+  [block-uid new-comment]
+  {:op/type    :comment/add
+   :op/atomic? true
+   :op/args    {:block/uid   block-uid
+                :new-comment new-comment}})
+
 
 ;; Page Ops
 

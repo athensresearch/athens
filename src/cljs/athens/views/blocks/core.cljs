@@ -423,6 +423,7 @@
                            string
                            open
                            children
+                           comment
                            _refs]} (merge (reactive/get-reactive-block-document ident) block)
              children-uids         (set (map :block/uid children))
              uid-sanitized-block   (s/transform
@@ -503,21 +504,25 @@
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
 
+
+          (when @(rf/subscribe [:comment/show-comment-textarea? uid])
+            [right-side/right-side-comments [] uid])
+
           ;; Inline refs
           (when (and (> (count _refs) 0)
                      (not= :block-embed? opts)
                      (:inline-refs/open @state))
             [inline-linked-refs-el state uid])
 
-          #_(when (= uid "72adc4063")
-              [inline-comments/inline-comments comments/mock-data-with-author-and-time])
-            ;;[inline-comments/inline-comments comments/mock-data])
+          ;; show inline comments
+          (when comment
+            [inline-comments/inline-comments comment])
 
-          (when @(rf/subscribe [:comment/show-comment-textarea? uid])
-            [right-side/right-side-comments [] uid])
+          ;; right side comments
+          (when comment
+            [right-side/right-side-comments comment uid])
 
-          #_(when (= uid "72adc4063")
-              [right-side/right-side-comments comments/mock-data])
+          
 
           ;; Children
           (when (and (seq children)

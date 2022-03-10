@@ -88,7 +88,7 @@
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/_refs
+  '[:db/id :block/uid :block/string :block/open :block/_refs :block/comment
     {:block/children [:block/uid :block/order]}])
 
 
