@@ -34,7 +34,9 @@
                                         (if ref-block-exists?
                                           ref-block
                                           (throw (ex-info "Ref block does not exist" {:block/uid ref-uid})))
-                                        (common-db/get-parent db [:block/uid ref-uid]))
+                                        (if-let [parent (common-db/get-parent db [:block/uid ref-uid])]
+                                          parent
+                                          (throw (ex-info "Ref block does not have parent" {:block/uid ref-uid}))))
         now                           (utils/now-ts)
         new-block                     {:block/uid    uid
                                        :block/string ""
@@ -100,7 +102,9 @@
                                             (if ref-block-exists?
                                               ref-block
                                               (throw (ex-info "Ref block does not exist" {:block/uid ref-uid})))
-                                            (common-db/get-parent db [:block/uid ref-uid]))
+                                            (if-let [parent (common-db/get-parent db [:block/uid ref-uid])]
+                                              parent
+                                              (throw (ex-info "Ref block does not have parent" {:block/uid ref-uid}))))
         same-parent?                      (= new-parent-block-uid old-parent-block-uid)
         now                               (utils/now-ts)
         updated-block'                    (if same-parent?
