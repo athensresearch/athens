@@ -73,7 +73,7 @@
 (defn- event-id->subject-id
   [db event-id]
   (first @(fdb/query db {:select "?event"
-                         :where  [["?event" "event/id", event-id]]})))
+                         :where  [["?event" "event/id", (str event-id)]]})))
 
 
 (defn last-event-id

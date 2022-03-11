@@ -4,7 +4,10 @@
     [clojure.data.json :as json]
     [clojure.java.io :as io]
     [clojure.string :as str]
-    [datascript.core :as d]))
+    [datascript.core :as d])
+  (:import
+    (java.util
+      UUID)))
 
 
 (def extension ".json")
@@ -27,7 +30,7 @@
 (defn- path->id
   [path]
   (if (is-persisted-file? path)
-    (-> path io/file .getName (str/replace extension ""))
+    (-> path io/file .getName (str/replace extension "") UUID/fromString)
     (throw (ex-info "Path is not for a persisted file" {:path path}))))
 
 
