@@ -113,6 +113,7 @@
           ;; This is a terrible way to do what we want.
           ;; Instead we should filter out all the events we don't care about on the fluree query.
           ;; But when I (filipe) tried to do that, it made each events-page query take 30s instead of 0.3s.
+          ;; See https://github.com/fluree/db/issues/160
           ;; This seems good enough for now.
           ;; TODO: figure out a performant way to do this.
           (drop-while (fn [[id]]
