@@ -37,9 +37,9 @@
                       (when sentry-span
                         (sentry/span-finish sentry-span false)))]
     (when sentry-span
-      (log/debug "hoc-perfmon-no-new-tx:" span-name "setup-finished")
-      (r/create-class
-        {:display-name        "hoc-perfmon-no-new-tx"
-         :reagent-render      (fn [{:keys [_span-name]} component]
-                                [:<> component])
-         :component-did-mount did-mount}))))
+      (log/debug "hoc-perfmon-no-new-tx:" span-name "setup-finished"))
+    (r/create-class
+      {:display-name        "hoc-perfmon-no-new-tx"
+       :reagent-render      (fn [{:keys [_span-name]} component]
+                              [:<> component])
+       :component-did-mount did-mount})))
