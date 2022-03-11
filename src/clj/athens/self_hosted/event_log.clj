@@ -57,12 +57,10 @@
 (defn- events-page
   "Returns a seq of events in page-number for all events in db split by page-size.
   If starting-subject-id is non-nil, only events after that one are returned."
-  ([db starting-subject-id page-size page-number]
+  ([db page-size page-number]
    @(fdb/query db
                {:select {"?event" ["*"]}
-                :where  [["?event" "event/id", "?id"]
-                         (when starting-subject-id
-                           {:filter [(str "(> ?event " starting-subject-id ")")]})]
+                :where  [["?event" "event/id", "?id"]]
                 ;; Subject ID (?event here) is a monotonically incrementing bigint,
                 ;; so ordering by that gives us event insertion order since events are immutable.
                 :opts   {:orderBy ["ASC", "?event"]
@@ -96,17 +94,32 @@
   Can potentially be very large, so don't hold on to the seq head while
   processing, and don't use fns that realize the whole coll (e.g. count)."
   ([fluree]
-   (events fluree nil))
-  ([fluree event-id]
    (let [db (fdb/db (-> fluree :conn-atom deref) ledger)
-         starting-subject-id (when event-id
-                               (if-some [subject-id (event-id->subject-id db event-id)]
-                                 subject-id
-                                 (throw (ex-info "Cannot find starting id" {:event-id event-id}))))
-         f (partial events-page db starting-subject-id 100)]
+         f  (partial events-page db 100)]
      ;; TODO: use `iteration` once clojure 1.11.0 is out, much simpler and standard
      ;; https://github.com/clojure/clojure/blob/master/changes.md#34-iteration
-     (map deserialize (utils/range-mapcat-while f empty?)))))
+     (->> (utils/range-mapcat-while f empty?)
+          (map deserialize))))
+  ([fluree event-id]
+   (let [db (fdb/db (-> fluree :conn-atom deref) ledger)
+         f  (partial events-page db 100)]
+     (when-not (event-id->subject-id db event-id)
+       (throw (ex-info "Cannot find starting id" {:event-id event-id})))
+     (->> (utils/range-mapcat-while f empty?)
+          (map deserialize)
+          ;; The point here is to get all events since event-id.
+          ;; We're getting all the events, dropping every one until the first one we care about,
+          ;; then dropping that one too.
+          ;; This is a terrible way to do what we want.
+          ;; Instead we should filter out all the events we don't care about on the fluree query.
+          ;; But when I (filipe) tried to do that, it made each events-page query take 30s instead of 0.3s.
+          ;; This seems good enough for now.
+          ;; TODO: figure out a performant way to do this.
+          (drop-while (fn [[id]]
+                        (if event-id
+                          (not= event-id id)
+                          false)))
+          (drop 1)))))
 
 
 (defn double-write?
@@ -178,7 +191,7 @@
            (reset! block (add-event! fluree id data)))
          (log/info "✅ Populated fresh ledger.")
          (log/info "Bringing local ledger to to date with latest transactions...")
-         (events-page (fdb/db conn ledger {:syncTo @block}) nil 1 0)
+         (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
          (log/info "✅ Fluree local ledger up to date.")
          (log/info "✅ Fluree ledger for event-log created."))))))
 
@@ -268,11 +281,11 @@
   ;; Create ledger if not present.
   (ensure-ledger! fluree-comp)
 
-  ;; What are the current events in the ledger?
-  (events fluree-comp)
+  ;; What's the first event in the ledger?
+  (take 1 (events fluree-comp))
 
-  ;; What are the events since this event-id?
-  (events fluree-comp "71b7ac32-11d2-4b14-bc72-a791a50a6e03")
+  ;; What's the first event since this event-id?
+  (take 1 (events fluree-comp (UUID/fromString "e6dad544-ef29-43b5-911e-9c4bfdca3fda")))
 
   ;; Add a few events.
   (def my-events [["uuid-2" [1 2 3]]
@@ -294,7 +307,7 @@
   (count (recovered-events fluree-comp))
 
   ;; Debug event recovery
-  (events-page (fdb/db (-> fluree-comp :conn-atom deref) ledger) nil 1 1)
+  (events-page (fdb/db (-> fluree-comp :conn-atom deref) ledger) 1 1)
   (recover-block-events (-> fluree-comp :conn-atom deref) 3)
   (take 3 (recovered-events fluree-comp))
   (take 3 (events fluree-comp))
