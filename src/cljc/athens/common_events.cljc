@@ -13,7 +13,13 @@
 
 ;; Limits
 
-(def max-event-size-in-bytes (* 1 1000 1000)) ; 1 MB
+;; Fluree default max size over websocket is ~2mb.
+;; There doesn't seem to be a max for nginx
+;; https://serverfault.com/questions/1034906/can-nginx-limit-incoming-websocket-message-size
+;; Was able to transmit 500mb over websocket from the server to client.
+;; Let's settle on a nice sensible 1MB limit for now.
+(def max-event-size-in-bytes (* 1 1000 1000))
+
 
 (defn valid-serialized-event?
   [serialized-event]
@@ -24,6 +30,15 @@
   [serialized-event]
   (when-not (valid-serialized-event? serialized-event)
     (ex-info "Serialized event is larger than 10 MB" {})))
+
+
+(defn ignore-serialized-event-validation?
+  [event]
+  (-> event :event/type
+      ;; db-dump is sending the whole database and can (easily) go over max-event-size-in-bytes.
+      ;; Only real solution for this is to break down the db-dump into smaller pieces,
+      ;; possibly transitioning to partial loading by default in the future.
+      #{:datascript/db-dump}))
 
 
 ;; serialization and limits

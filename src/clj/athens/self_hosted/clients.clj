@@ -54,7 +54,8 @@
       (let [type             (common-events/find-event-or-atomic-op-type data)
             status           (:event/status data)
             serialized-event (common-events/serialize data)
-            errors           (common-events/validate-serialized-event serialized-event)]
+            errors           (when-not (common-events/ignore-serialized-event-validation? data)
+                               (common-events/validate-serialized-event serialized-event))]
         (if errors
           (log/error "Not sending invalid event to username:" username
                      ", event-id:" (:event/id data)
