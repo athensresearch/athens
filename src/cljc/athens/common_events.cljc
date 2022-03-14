@@ -28,18 +28,7 @@
 
 ;; serialization and limits
 
-(def serialization-type :json)
-
-
-(defn serialize
-  [event]
-  (let [writer #?(:cljs (transit/writer serialization-type)
-                  :clj  (transit/writer (ByteArrayOutputStream. 4096)
-                                        serialization-type))]
-    (transit/write writer event)))
-
-
-;; Really shouldn't need these two, but we still send datoms via db-dump.
+;; Really shouldn't need these UUID and datom-reader, but we still send datoms via db-dump.
 #?(:cljs
    ;; see https://github.com/cognitect/transit-cljs/issues/41#issuecomment-503287258
    (extend-type ty/UUID IUUID))
@@ -55,13 +44,27 @@
        :added added})))
 
 
+(def serialization-type :json)
+(def serialization-opts {:handlers {:datom datom-reader}})
+
+
+(defn serialize
+  [event]
+  #?(:cljs (-> (transit/writer serialization-type)
+               (transit/write event))
+     :clj  (let [out    (ByteArrayOutputStream. 4096)
+                 writer (transit/writer out serialization-type)]
+             (transit/write writer event)
+             (.toString out))))
+
+
 (defn deserialize
   [serialized-event]
-  (let [opts {:handlers {:datom datom-reader}}
-        reader #?(:cljs (transit/reader serialization-type opts)
-                  :clj  (transit/reader (ByteArrayInputStream. (.getBytes serialized-event))
-                                        serialization-type opts))]
-    (transit/read reader serialized-event)))
+  #?(:cljs (-> (transit/reader serialization-type serialization-opts)
+               (transit/write serialized-event))
+     :clj  (let [in     (ByteArrayInputStream. (.getBytes serialized-event))
+                 reader (transit/reader in serialization-type serialization-opts)]
+             (transit/read reader))))
 
 
 ;; building events
