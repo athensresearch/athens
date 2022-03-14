@@ -96,14 +96,26 @@
    [:span {:class "formatting"} "]]"]])
 
 
+(defn- block-breadcrumb-string
+  [parents]
+  (->> parents
+       (map #(or (:node/title %)
+                 (:block/string %)))
+       (str/join " >\n")))
+
+
 (defn render-block-ref
   [{:keys [from title]} ref-uid uid]
-  (let [block (reactive/get-reactive-block-or-page-by-uid ref-uid)]
+  (let [block     (reactive/get-reactive-block-or-page-by-uid ref-uid)
+        parents   (reactive/get-reactive-parents-recursively [:block/uid ref-uid])
+        bc-string (block-breadcrumb-string parents)]
     (if block
       [:span (assoc (use-style block-ref {:class "block-ref"})
-                    :title (str/replace from
-                                        (str "((" ref-uid "))")
-                                        (str "((" (:block/string block) "))")))
+                    :title (-> from
+                               (str/replace "]("
+                                            "]\n---\n(")
+                               (str/replace (str "((" ref-uid "))")
+                                            bc-string)))
        [:span {:class    "contents"
                :on-click #(router/navigate-uid ref-uid %)}
         (cond
