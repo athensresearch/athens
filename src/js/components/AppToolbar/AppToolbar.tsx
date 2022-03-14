@@ -167,6 +167,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isRightSidebarOpen,
     isCommandBarOpen,
     isMergeDialogOpen,
+    isShowInlineComments,
+    isShowRightSideComments,
     onPressCommandBar: handlePressCommandBar,
     onPressDailyNotes: handlePressDailyNotes,
     onPressAllPages: handlePressAllPages,
@@ -181,6 +183,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressRightSidebarToggle: handlePressRightSidebarToggle,
     onPressMinimize: handlePressMinimize,
     onPressMaximizeRestore: handlePressMaximizeRestore,
+    onToggleInlineComments: handleToggleInlineComments,
+    onToggleRightSideComments: handleToggleRightSideComments,
     onPressClose: handlePressClose,
     databaseMenu,
     presenceDetails,
@@ -207,6 +211,18 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       <Button isPressed={route === '/all-pages'} onClick={handlePressAllPages}><FileCopy /></Button>
       <Button isPressed={route === '/graph'} onClick={handlePressGraph}><BubbleChart /></Button>
       <AthenaButton isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></AthenaButton>
+      <input
+        type="checkbox"
+        value={isShowInlineComments}
+        onClick={handleToggleInlineComments}
+        >
+      </input>
+      <input
+        type="checkbox"
+        value={isShowRightSideComments}
+        onClick={handleToggleRightSideComments}
+        >
+      </input>
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
       {presenceDetails}

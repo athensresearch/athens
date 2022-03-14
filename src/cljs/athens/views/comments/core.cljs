@@ -54,6 +54,29 @@
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
+(rf/reg-sub
+  :comment/show-inline-comments?
+  (fn [db [_]]
+    (= true (:comment/show-inline-comments db))))
+
+(rf/reg-sub
+  :comment/show-right-side-comments?
+  (fn [db [_]]
+    (= true (:comment/show-right-side-comments db))))
+
+(rf/reg-event-fx
+  :comment/show-inline-comments
+  (fn [{:keys [db]} [_]]
+    (let [current-state (:comment/show-inline-comments db)]
+      {:db (assoc db :comment/show-inline-comments (not current-state))})))
+
+(rf/reg-event-fx
+  :comment/show-right-side-comments
+  (fn [{:keys [db]} [_]]
+    (let [current-state (:comment/show-right-side-comments db)]
+      {:db (assoc db :comment/show-right-side-comments (not current-state))})))
+
+
 (def mock-data
   [{:string "[[Brandon Toner]] Agree with the jumpiness"}
    {:string "[[Matt Vogel]] Also experiencing this. Someone closed the parent of the block I was on (I was not zoomed in) and I got kicked out of the block"}])

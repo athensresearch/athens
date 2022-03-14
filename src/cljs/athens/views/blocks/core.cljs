@@ -514,12 +514,15 @@
                      (:inline-refs/open @state))
             [inline-linked-refs-el state uid])
 
+          ;; Show comments only when the toggle for them is on
           ;; show inline comments
-          (when comment
+          (when (and @(rf/subscribe [:comment/show-inline-comments?])
+                     comment)
             [inline-comments/inline-comments comment uid])
 
           ;; right side comments
-          (when comment
+          (when (and @(rf/subscribe [:comment/show-right-side-comments?])
+                     comment)
             [right-side/right-side-comments comment uid])
 
           

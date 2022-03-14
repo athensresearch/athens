@@ -15,24 +15,28 @@
 
 (defn app-toolbar
   []
-  (let [left-open?        (subscribe [:left-sidebar/open])
-        right-open?       (subscribe [:right-sidebar/open])
-        route-name        (subscribe [:current-route/name])
-        os                (util/get-os)
-        electron?         electron.utils/electron?
-        theme-dark        (subscribe [:theme/dark])
-        win-focused?      (if electron?
-                            (subscribe [:win-focused?])
-                            (r/atom false))
-        win-maximized?    (if electron?
-                            (subscribe [:win-maximized?])
-                            (r/atom false))
-        win-fullscreen?   (if electron?
-                            (subscribe [:win-fullscreen?])
-                            (r/atom false))
-        merge-open?       (reagent.core/atom false)
+  (let [left-open?          (subscribe [:left-sidebar/open])
+        right-open?         (subscribe [:right-sidebar/open])
+        route-name          (subscribe [:current-route/name])
+        os                  (util/get-os)
+        electron?           electron.utils/electron?
+        theme-dark          (subscribe [:theme/dark])
+        win-focused?        (if electron?
+                              (subscribe [:win-focused?])
+                              (r/atom false))
+        win-maximized?      (if electron?
+                              (subscribe [:win-maximized?])
+                              (r/atom false))
+        win-fullscreen?     (if electron?
+                              (subscribe [:win-fullscreen?])
+                              (r/atom false))
+        merge-open?         (reagent.core/atom false)
 
-        selected-db       (subscribe [:db-picker/selected-db])]
+        selected-db         (subscribe [:db-picker/selected-db])
+        inline-comments     (subscribe [:comment/show-inline-comments?])
+        right-side-comments (subscribe [:comment/show-right-side-comments?])]
+
+
     (fn []
       [:<>
        (when @merge-open?
@@ -48,7 +52,11 @@
                        :isThemeDark @theme-dark
                        :isLeftSidebarOpen @left-open?
                        :isRightSidebarOpen @right-open?
+                       :isShowInlineComments @inline-comments
+                       :isShowRightSideComments @right-side-comments
                        :isCommandBarOpen @(subscribe [:athena/open])
+                       :onToggleInlineComments #(dispatch [:comment/show-inline-comments])
+                       :onToggleRightSideComments #(dispatch [:comment/show-right-side-comments])
                        :onPressLeftSidebarToggle #(dispatch [:left-sidebar/toggle])
                        :onPressHistoryBack #(.back js/window.history)
                        :onPressHistoryForward #(.forward js/window.history)
