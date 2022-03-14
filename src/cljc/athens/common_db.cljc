@@ -549,6 +549,21 @@
       (throw (ex-info fail-msg position)))))
 
 
+(defn position->uid+parent
+  [db {:keys [relation block/uid page/title] :as position}]
+  ;; Validate the position itself before determining the parent.
+  (validate-position db position)
+  (let [;; Pages must be referenced by title but internally we still use uids for them.
+        uid                     (or uid (get-page-uid db title))
+        {parent-uid :block/uid} (if (#{:first :last} relation)
+                                  ;; We already know the blocks exists because of validate-position
+                                  (get-block db [:block/uid uid])
+                                  (if-let [parent (get-parent db [:block/uid uid])]
+                                    parent
+                                    (throw (ex-info "Ref block does not have parent" {:block/uid uid}))))]
+    [uid parent-uid]))
+
+
 (defn extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]
