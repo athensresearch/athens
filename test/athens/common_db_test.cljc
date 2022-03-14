@@ -3,9 +3,10 @@
     [athens.common-db :as common-db]
     [clojure.test     :as t]
     [datascript.core  :as d])
-  (:import
-    (clojure.lang
-      ExceptionInfo)))
+  #?(:clj
+     (:import
+       (clojure.lang
+         ExceptionInfo))))
 
 
 (t/deftest get-internal-representation
@@ -155,23 +156,27 @@
 
     (t/testing "throws"
       (t/testing "missing title"
-        (t/is (thrown-with-msg? ExceptionInfo
+        (t/is (thrown-with-msg? #?(:cljs js/Error
+                                   :clj ExceptionInfo)
                                 #"Location title does not exist"
                 (common-db/position->uid+parent db {:page/title "missing-title"
                                                     :relation   :first}))))
       (t/testing "missing uid"
-        (t/is (thrown-with-msg? ExceptionInfo
+        (t/is (thrown-with-msg? #?(:cljs js/Error
+                                   :clj ExceptionInfo)
                                 #"Location uid does not exist"
                 (common-db/position->uid+parent db {:block/uid "missing-uid"
 
                                                     :relation :first}))))
       (t/testing "uid instead of page"
-        (t/is (thrown-with-msg? ExceptionInfo
+        (t/is (thrown-with-msg? #?(:cljs js/Error
+                                   :clj ExceptionInfo)
                                 #"Location uid is a page"
                 (common-db/position->uid+parent db {:block/uid "page-uid"
                                                     :relation  :first}))))
       (t/testing "block has no parent"
-        (t/is (thrown-with-msg? ExceptionInfo
+        (t/is (thrown-with-msg? #?(:cljs js/Error
+                                   :clj ExceptionInfo)
                                 #"Ref block does not have parent"
                 (common-db/position->uid+parent db {:block/uid "no-parent"
                                                     :relation  :after})))))))
