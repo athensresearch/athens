@@ -65,13 +65,13 @@
     (= true (:comment/show-right-side-comments db))))
 
 (rf/reg-event-fx
-  :comment/show-inline-comments
+  :comment/toggle-inline-comments
   (fn [{:keys [db]} [_]]
     (let [current-state (:comment/show-inline-comments db)]
       {:db (assoc db :comment/show-inline-comments (not current-state))})))
 
 (rf/reg-event-fx
-  :comment/show-right-side-comments
+  :comment/toggle-right-side-comments
   (fn [{:keys [db]} [_]]
     (let [current-state (:comment/show-right-side-comments db)]
       {:db (assoc db :comment/show-right-side-comments (not current-state))})))

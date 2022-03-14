@@ -183,8 +183,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressRightSidebarToggle: handlePressRightSidebarToggle,
     onPressMinimize: handlePressMinimize,
     onPressMaximizeRestore: handlePressMaximizeRestore,
-    onToggleInlineComments: handleToggleInlineComments,
-    onToggleRightSideComments: handleToggleRightSideComments,
+    onClickInlineComments: handleClickInlineComments,
+    onClickRightSideComments: handleClickRightSideComments,
     onPressClose: handlePressClose,
     databaseMenu,
     presenceDetails,
@@ -211,18 +211,14 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       <Button isPressed={route === '/all-pages'} onClick={handlePressAllPages}><FileCopy /></Button>
       <Button isPressed={route === '/graph'} onClick={handlePressGraph}><BubbleChart /></Button>
       <AthenaButton isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></AthenaButton>
-      <input
-        type="checkbox"
-        value={isShowInlineComments}
-        onClick={handleToggleInlineComments}
-        >
-      </input>
-      <input
-        type="checkbox"
-        value={isShowRightSideComments}
-        onClick={handleToggleRightSideComments}
-        >
-      </input>
+      <Button
+        onClick={handleClickInlineComments}>
+        {isShowInlineComments ? <ToggleOn/> : <ToggleOff/>}
+      </Button>
+      <Button
+        onClick={handleClickRightSideComments}>
+        {isShowRightSideComments ? <ToggleOn/> : <ToggleOff/>}
+      </Button>
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
       {presenceDetails}

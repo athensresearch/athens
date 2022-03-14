@@ -55,8 +55,8 @@
                        :isShowInlineComments @inline-comments
                        :isShowRightSideComments @right-side-comments
                        :isCommandBarOpen @(subscribe [:athena/open])
-                       :onToggleInlineComments #(dispatch [:comment/show-inline-comments])
-                       :onToggleRightSideComments #(dispatch [:comment/show-right-side-comments])
+                       :onClickInlineComments #(dispatch [:comment/toggle-inline-comments])
+                       :onClickRightSideComments #(dispatch [:comment/toggle-right-side-comments])
                        :onPressLeftSidebarToggle #(dispatch [:left-sidebar/toggle])
                        :onPressHistoryBack #(.back js/window.history)
                        :onPressHistoryForward #(.forward js/window.history)
