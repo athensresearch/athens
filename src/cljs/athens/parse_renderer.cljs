@@ -10,7 +10,6 @@
     [athens.style :refer [color OPACITIES]]
     [clojure.string :as str]
     [instaparse.core :as insta]
-    [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
 
