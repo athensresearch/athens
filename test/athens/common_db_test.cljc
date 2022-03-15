@@ -2,7 +2,11 @@
   (:require
     [athens.common-db :as common-db]
     [clojure.test     :as t]
-    [datascript.core  :as d]))
+    [datascript.core  :as d])
+  #?(:clj
+     (:import
+       (clojure.lang
+         ExceptionInfo))))
 
 
 (t/deftest get-internal-representation
@@ -111,6 +115,71 @@
         (t/is (= (common-db/get-position db "2-2")
                  {:block/uid "2-1"
                   :relation  :after}))))))
+
+
+(t/deftest position->uid+parent
+  (let [tx-data [{:node/title     "a page"
+                  :block/uid      "page-uid"
+                  :block/children [{:block/uid   "1"
+                                    :block/order 0}
+                                   {:block/uid      "2"
+                                    :block/order    1
+                                    :block/children [{:block/uid   "2-1"
+                                                      :block/order 0}
+                                                     {:block/uid   "2-2"
+                                                      :block/order 1}]}]}
+                 {:block/uid "no-parent"}]
+        db      (-> common-db/empty-db
+                    (d/db-with tx-data))]
+
+    (t/testing "page parent"
+      (t/testing "first block"
+        (t/is (= (common-db/position->uid+parent db {:page/title "a page"
+                                                     :relation   :first})
+                 ["page-uid" "page-uid"])))
+
+      (t/testing "non-first block"
+        (t/is (= (common-db/position->uid+parent db {:block/uid "1"
+                                                     :relation  :after})
+                 ["1" "page-uid"]))))
+
+    (t/testing "block parent"
+      (t/testing "first block"
+        (t/is (= (common-db/position->uid+parent db {:block/uid "2"
+                                                     :relation  :first})
+                 ["2" "2"])))
+
+      (t/testing "non-first block"
+        (t/is (= (common-db/position->uid+parent db {:block/uid "2-1"
+                                                     :relation  :after})
+                 ["2-1" "2"]))))
+
+    (t/testing "throws"
+      (t/testing "missing title"
+        (t/is (thrown-with-msg? #?(:cljs js/Error
+                                   :clj ExceptionInfo)
+                                #"Location title does not exist"
+                (common-db/position->uid+parent db {:page/title "missing-title"
+                                                    :relation   :first}))))
+      (t/testing "missing uid"
+        (t/is (thrown-with-msg? #?(:cljs js/Error
+                                   :clj ExceptionInfo)
+                                #"Location uid does not exist"
+                (common-db/position->uid+parent db {:block/uid "missing-uid"
+
+                                                    :relation :first}))))
+      (t/testing "uid instead of page"
+        (t/is (thrown-with-msg? #?(:cljs js/Error
+                                   :clj ExceptionInfo)
+                                #"Location uid is a page"
+                (common-db/position->uid+parent db {:block/uid "page-uid"
+                                                    :relation  :first}))))
+      (t/testing "block has no parent"
+        (t/is (thrown-with-msg? #?(:cljs js/Error
+                                   :clj ExceptionInfo)
+                                #"Ref block does not have parent"
+                (common-db/position->uid+parent db {:block/uid "no-parent"
+                                                    :relation  :after})))))))
 
 
 (t/deftest get-shortcut-neighbors

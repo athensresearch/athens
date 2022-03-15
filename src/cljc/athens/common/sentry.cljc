@@ -25,13 +25,31 @@
      result#))
 
 
+(defmacro wrap-span-no-new-tx
+  [span-name body]
+  `(let [tx-running?#  (athens.utils.sentry/tx-running?)
+         sentry-tx#    (if tx-running?#
+                         (athens.utils.sentry/transaction-get-current))
+         active-span#  (athens.utils.sentry/span-active)
+         current-span# (when sentry-tx#
+                         (athens.utils.sentry/span-start (or active-span#
+                                                             sentry-tx#)
+                                                         (str ~span-name "-wrap-span")
+                                                         false))
+         result#       ~body]
+     (when current-span#
+       (athens.utils.sentry/span-finish current-span# false)
+       (when-not tx-running?#
+         (athens.utils.sentry/transaction-finish sentry-tx#)))
+     result#))
+
+
 (defn span-start
   [_span-name]
   #?(:clj  nil
      :cljs (let [tx-running?  (sentry/tx-running?)
-                 sentry-tx    (if tx-running?
-                                (sentry/transaction-get-current)
-                                (sentry/transaction-start (str _span-name "-defntrace-auto-tx")))
+                 sentry-tx    (when tx-running?
+                                (sentry/transaction-get-current))
                  active-span  (sentry/span-active)
                  current-span (when sentry-tx
                                 (sentry/span-start (or active-span

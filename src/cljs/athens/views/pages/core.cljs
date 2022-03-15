@@ -43,9 +43,9 @@
                              {:on-scroll (when (= @route-name :home)
                                            #(rf/dispatch [:daily-note/scroll]))})
      (case @route-name
-       :settings      [perf-mon/hoc-perfmon {:span-name "pages/settings"}
+       :settings      [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/settings"}
                        [settings/page]]
-       :pages         [perf-mon/hoc-perfmon {:span-name "pages/all-pages"}
+       :pages         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/all-pages"}
                        [all-pages/page]]
        :page          [perf-mon/hoc-perfmon {:span-name "pages/page"}
                        [page/page]]
@@ -53,7 +53,7 @@
                        [page/page-by-title]]
        :home          [perf-mon/hoc-perfmon {:span-name "pages/home-page"}
                        [daily-notes/page]]
-       :graph         [perf-mon/hoc-perfmon {:span-name "pages/graph"}
+       :graph         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/graph"}
                        [graph/page]]
-       [perf-mon/hoc-perfmon {:span-name "pages/default"}
+       [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/default"}
         [daily-notes/page]])]))

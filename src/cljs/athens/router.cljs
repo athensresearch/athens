@@ -2,7 +2,7 @@
   (:require
     [athens.common-db            :as common-db]
     [athens.common.logging       :as log]
-    [athens.common.sentry        :refer-macros [wrap-span]]
+    [athens.common.sentry        :refer-macros [wrap-span-no-new-tx]]
     [athens.dates                :as dates]
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
@@ -44,7 +44,7 @@
 ;; events
 (rf/reg-event-fx
   :navigate
-  [(interceptors/sentry-span "navigate")]
+  [(interceptors/sentry-span-no-new-tx "navigate")]
   (fn [{:keys [db]} [_ & route]]
     (log/debug ":navigate route:" (pr-str route))
     (let [db-id       (-> db db-picker/selected-db :id)
@@ -123,7 +123,7 @@
 ;; doesn't reliably work. notably, Daily Notes are often not remembered as last open page, leading to incorrect restore
 (reg-event-fx
   :restore-navigation
-  [(interceptors/sentry-span "restore-navigation")]
+  [(interceptors/sentry-span-no-new-tx "restore-navigation")]
   (fn [{:keys [db]} _]
     (let [prev-title (-> db db-picker/selected-db :current-route/title)
           prev-uid   (-> db db-picker/selected-db :current-route/uid)]
@@ -138,8 +138,8 @@
 (rf/reg-fx
   :navigate!
   (fn-traced [route]
-             (wrap-span "push-state"
-                        (apply rfee/push-state route))))
+             (wrap-span-no-new-tx "push-state"
+                                  (apply rfee/push-state route))))
 
 
 ;; router definition

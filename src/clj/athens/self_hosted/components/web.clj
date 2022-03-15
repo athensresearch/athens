@@ -24,7 +24,7 @@
 
 (defn- valid-event-handler
   "Processes valid event received from the client."
-  [datascript fluree in-memory? server-password channel username {:event/keys [id type] :as data}]
+  [datascript fluree config channel username {:event/keys [id type] :as data}]
   (if (and (false? username)
            (not= :presence/hello type))
     (do
@@ -34,10 +34,10 @@
                                                                  {:protocol-error :client-not-introduced})))
     (if-let [result (cond
                       (contains? presence/supported-event-types type)
-                      (presence/presence-handler (:conn datascript) server-password channel data)
+                      (presence/presence-handler (:conn datascript) (-> config :config :password) channel data)
 
                       (= :op/atomic type)
-                      (datascript/atomic-op-handler (:conn datascript) fluree in-memory? channel data)
+                      (datascript/atomic-op-handler datascript fluree config channel data)
 
                       :else
                       (do
@@ -55,7 +55,7 @@
 
 
 (defn- make-receive-handler
-  [datascript fluree in-memory? server-password]
+  [datascript fluree config]
   (fn receive-handler
     [channel msg]
     (let [username (clients/get-client-username channel)
@@ -84,7 +84,7 @@
         (let [{:event/keys [id type]} data]
           (log/info "Received valid event" "username:" username ", event-id:" id ", type:" (common-events/find-event-or-atomic-op-type data))
           (let [{:event/keys [status]
-                 :as         result} (valid-event-handler datascript fluree in-memory? server-password channel username data)]
+                 :as         result} (valid-event-handler datascript fluree config channel username data)]
             (log/debug "username:" username ", event-id:" id ", processed with status:" status)
             ;; forward to everyone if accepted
             (when (and (= :accepted status)
@@ -96,19 +96,19 @@
 
 
 (defn- make-websocket-handler
-  [datascript fluree in-memory? server-password]
+  [datascript fluree config]
   (fn websocket-handler
     [request]
     (http/as-channel request
                      {:on-close   close-handler
-                      :on-receive (make-receive-handler datascript fluree in-memory? server-password)})))
+                      :on-receive (make-receive-handler datascript fluree config)})))
 
 
 (defn- make-ws-route
-  [datascript fluree in-memory? server-password]
+  [datascript fluree config]
   (compojure/routes
     (compojure/GET "/ws" []
-                   (make-websocket-handler datascript fluree in-memory? server-password))))
+                   (make-websocket-handler datascript fluree config))))
 
 
 (compojure/defroutes health-check-route
@@ -119,9 +119,9 @@
 
 
 (defn make-handler
-  [datascript fluree in-memory? server-password]
+  [datascript fluree config]
   (compojure/routes health-check-route
-                    (make-ws-route datascript fluree in-memory? server-password)))
+                    (make-ws-route datascript fluree config)))
 
 
 (defrecord WebServer
@@ -135,15 +135,13 @@
       (do
         (log/warn "Server already started, it's ok. Though it means we're not managing it properly.")
         component)
-      (let [{http-conf       :http
-             server-password :password
-             in-memory?      :in-memory?}
-            (:config config)]
-        (log/info "Starting WebServer with config:" (pr-str http-conf)
-                  "in-memory?" (pr-str in-memory?)
-                  "password?" (boolean server-password))
+      (let [;; select only the fields we care about, and redact the password from the config before printing it
+            printable-config (-> config :config (select-keys [:http :fluree :datascript :nrepl :password]))
+            printable-config' (update printable-config :password #(if (string? %) "<redacted>" %))]
+        (log/info "Starting WebServer with config:" (pr-str printable-config'))
         (assoc component :httpkit
-               (http/run-server (make-handler datascript fluree in-memory? server-password) http-conf)))))
+               (http/run-server (make-handler datascript fluree config)
+                                (-> config :config :http))))))
 
 
   (stop

@@ -13,7 +13,7 @@
     [datascript.core              :as d])
   #?(:cljs
      (:require-macros
-       [athens.common.sentry :as sentry-m :refer [wrap-span]])))
+       [athens.common.sentry :as sentry-m :refer [wrap-span wrap-span-no-new-tx]])))
 
 
 (def schema
@@ -549,6 +549,21 @@
       (throw (ex-info fail-msg position)))))
 
 
+(defn position->uid+parent
+  [db {:keys [relation block/uid page/title] :as position}]
+  ;; Validate the position itself before determining the parent.
+  (validate-position db position)
+  (let [;; Pages must be referenced by title but internally we still use uids for them.
+        uid                     (or uid (get-page-uid db title))
+        {parent-uid :block/uid} (if (#{:first :last} relation)
+                                  ;; We already know the blocks exists because of validate-position
+                                  (get-block db [:block/uid uid])
+                                  (if-let [parent (get-parent db [:block/uid uid])]
+                                    parent
+                                    (throw (ex-info "Ref block does not have parent" {:block/uid uid}))))]
+    [uid parent-uid]))
+
+
 (defn extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]
@@ -888,31 +903,31 @@
   ;; But rerunning them after replaying all events helps us find events that produce
   ;; states that need fixing.
   (log/info "Knowledge graph health check...")
-  (let [linkmaker-txs       #?(:cljs (wrap-span "linkmaker"
-                                                (linkmaker @conn))
+  (let [linkmaker-txs       #?(:cljs (wrap-span-no-new-tx "linkmaker"
+                                                          (linkmaker @conn))
                                :clj (linkmaker @conn))
-        orderkeeper-txs     #?(:cljs (wrap-span "orderkeeper"
-                                                (orderkeeper @conn))
+        orderkeeper-txs     #?(:cljs (wrap-span-no-new-tx "orderkeeper"
+                                                          (orderkeeper @conn))
                                :clj (orderkeeper @conn))
-        block-nil-eater-txs #?(:cljs (wrap-span "nil-eater"
-                                                (block-uid-nil-eater @conn))
+        block-nil-eater-txs #?(:cljs (wrap-span-no-new-tx "nil-eater"
+                                                          (block-uid-nil-eater @conn))
                                :clj (block-uid-nil-eater @conn))]
     (when-not (empty? linkmaker-txs)
       (log/warn "linkmaker fixes#:" (count linkmaker-txs))
       (log/info "linkmaker fixes:" (pr-str linkmaker-txs))
-      #?(:cljs (wrap-span "transact linkmaker"
-                          (d/transact! conn linkmaker-txs))
+      #?(:cljs (wrap-span-no-new-tx "transact linkmaker"
+                                    (d/transact! conn linkmaker-txs))
          :clj (d/transact! conn linkmaker-txs)))
     (when-not (empty? orderkeeper-txs)
       (log/warn "orderkeeper fixes#:" (count orderkeeper-txs))
       (log/info "orderkeeper fixes:" (pr-str orderkeeper-txs))
-      #?(:cljs (wrap-span "transact orderkeeper"
-                          (d/transact! conn orderkeeper-txs))
+      #?(:cljs (wrap-span-no-new-tx "transact orderkeeper"
+                                    (d/transact! conn orderkeeper-txs))
          :clj (d/transact! conn orderkeeper-txs)))
     (when-not (empty? block-nil-eater-txs)
       (log/warn "block-uid-nil-eater fixes#:" (count block-nil-eater-txs))
       (log/info "block-uid-nil-eater fixes:" (pr-str block-nil-eater-txs))
-      #?(:cljs (wrap-span "transact nil-eater"
-                          (d/transact! conn block-nil-eater-txs))
+      #?(:cljs (wrap-span-no-new-tx "transact nil-eater"
+                                    (d/transact! conn block-nil-eater-txs))
          :clj (d/transact! conn block-nil-eater-txs)))
     (log/info "✅ Knowledge graph health check.")))

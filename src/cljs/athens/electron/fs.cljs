@@ -74,7 +74,7 @@
 
 (rf/reg-event-fx
   :fs/read-and-watch
-  [(interceptors/sentry-span "fs/read-and-watch")]
+  [(interceptors/sentry-span-no-new-tx "fs/read-and-watch")]
   (fn [_ [_ {:keys [db-path]}]]
     (let [datoms (-> (.readFileSync (utils/fs) db-path)
                      dt/read-transit-str)]
