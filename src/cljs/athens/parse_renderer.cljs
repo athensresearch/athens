@@ -98,8 +98,15 @@
 
      :else
      (into [:span {:on-click (fn [e]
-                               (.. e stopPropagation) ; prevent bubbling up click handler for nested links
-                               (router/navigate-page (parse-title title-coll) e))}]
+                               (let [parsed-title (parse-title title-coll)
+                                     shift?       (.-shiftKey e)]
+                                 (.. e stopPropagation) ; prevent bubbling up click handler for nested links
+                                 (rf/dispatch [:reporting/navigation {:source :pr-page-link
+                                                                      :target :page
+                                                                      :pane   (if shift?
+                                                                                :right-pane
+                                                                                :main-pane)}])
+                                 (router/navigate-page parsed-title e)))}]
            title-coll))
    [:span {:class "formatting"} "]]"]])
 
@@ -212,7 +219,7 @@
                                                                     (let [parsed-title (parse-title title-coll)
                                                                           shift?       (.-shiftKey e)]
                                                                       (rf/dispatch [:reporting/navigation {:source :pr-hashtag
-                                                                                                           :target :page
+                                                                                                           :target :hashtag
                                                                                                            :pane   (if shift?
                                                                                                                      :right-pane
                                                                                                                      :main-pane)}])

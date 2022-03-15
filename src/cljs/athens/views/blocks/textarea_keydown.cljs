@@ -21,7 +21,7 @@
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [throttle #_debounce]]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
+    [re-frame.core :as rf :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       KeyCodes)))
@@ -598,7 +598,13 @@
                                        (nil? (re-find #"(?s)\]" link)))
                                   (let [eid (db/e-by-av :node/title link)]
                                     (if eid
-                                      (router/navigate-page link e)
+                                      (do
+                                        (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-open
+                                                                             :target :page
+                                                                             :pane   (if shift
+                                                                                       :right-pane
+                                                                                       :main-pane)}])
+                                        (router/navigate-page link e))
                                       (let [block-uid (common.utils/gen-block-uid)]
                                         (.blur target)
                                         (dispatch [:page/new {:title     link
@@ -610,7 +616,13 @@
                                        (re-find #"(?s)\s" tail))
                                   (let [eid (db/e-by-av :node/title hashtag)]
                                     (if eid
-                                      (router/navigate-page hashtag e)
+                                      (do
+                                        (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-open
+                                                                             :target :hashtag
+                                                                             :pane   (if shift
+                                                                                       :right-pane
+                                                                                       :main-pane)}])
+                                        (router/navigate-page hashtag e))
                                       (let [block-uid (common.utils/gen-block-uid)]
                                         (.blur target)
                                         (dispatch [:page/new {:title     link

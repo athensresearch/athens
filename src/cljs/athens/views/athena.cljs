@@ -207,19 +207,21 @@
                                (do (dispatch [:athena/toggle])
                                    (dispatch [:right-sidebar/open-page (:node/title item)])
                                    (dispatch [:reporting/navigation {:source :athena
-                                                                     :target (str "page/" query)
+                                                                     :target :page
                                                                      :pane   :right-pane}]))
                                ;; else open in main view
                                :else
                                (let [title (:node/title item)
                                      uid   (:block/uid item)]
                                  (dispatch [:athena/toggle])
+                                 (dispatch [:reporting/navigation {:source :athena
+                                                                   :target (if title
+                                                                             :page
+                                                                             :block)
+                                                                   :pane   :main-pane}])
                                  (if title
                                    (router/navigate-page title)
                                    (router/navigate-uid uid))
-                                 (dispatch [:reporting/navigation {:source :athena
-                                                                   :target (str "page/" title)
-                                                                   :pane   :main-pane}])
                                  (dispatch [:editing/uid uid])))
 
       (= key KeyCodes.UP)
@@ -270,7 +272,11 @@
             (when x
               (let [{:keys [query :node/title :block/string]} x]
                 [:div (use-style result-style {:key      i
-                                               :on-click #(router/navigate-page title %)})
+                                               :on-click (fn [e]
+                                                           (rf/dispatch [:reporting/navigation {:source :athena
+                                                                                                :target :page
+                                                                                                :pane   :main-pane}])
+                                                           (router/navigate-page title e))})
                  [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
                  (when string
                    [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
@@ -325,8 +331,8 @@
                                          (dispatch [:athena/update-recent-items selected-page])
                                          (dispatch [:reporting/navigation {:source :athena
                                                                            :target (if parent
-                                                                                     (str "block/" block-uid)
-                                                                                     (str "page/" title))
+                                                                                     :block
+                                                                                     :page)
                                                                            :pane   (if shift?
                                                                                      :right-pane
                                                                                      :main-pane)}])
