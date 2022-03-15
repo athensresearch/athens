@@ -113,15 +113,19 @@
              pages)))
 
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :all-pages/sort-by
-  (fn [db [_ column-id]]
-    (let [sorted-column (get-sorted-by db)]
-      (if (= column-id sorted-column)
-        (update db :all-pages/sort-order-ascending? not)
-        (-> db
-            (assoc :all-pages/sorted-by column-id)
-            (assoc :all-pages/sort-order-ascending? (= column-id :title)))))))
+  (fn [{:keys [db]} [_ column-id]]
+    (let [sorted-column (get-sorted-by db)
+          db'           (if (= column-id sorted-column)
+                          (update db :all-pages/sort-order-ascending? not)
+                          (-> db
+                              (assoc :all-pages/sorted-by column-id)
+                              (assoc :all-pages/sort-order-ascending? (= column-id :title))))]
+      {:db db'
+       :dispatch [:posthog/report-feature :all-pages]})))
+
+
 
 
 ;; Components
