@@ -88,7 +88,7 @@
                 shift
                 alt]
          :as   destruct-keys} (util/destruct-key-down e)
-        editing-uid         @(subscribe [:editing/uid])]
+        editing-uid           @(subscribe [:editing/uid])]
     (cond
       (util/navigate-key? destruct-keys) (condp = key-code
                                            KeyCodes.LEFT  (when (nil? editing-uid)
@@ -115,7 +115,11 @@
                                            KeyCodes.BACKSLASH (if shift
                                                                 (dispatch [:right-sidebar/toggle])
                                                                 (dispatch [:left-sidebar/toggle]))
-                                           KeyCodes.COMMA     (router/navigate :settings)
+                                           KeyCodes.COMMA     (do
+                                                                (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-comma
+                                                                                                     :target :settings
+                                                                                                     :pane   :main-pane}])
+                                                                (router/navigate :settings))
                                            KeyCodes.T         (util/toggle-10x)
                                            nil)
       alt                                (condp = key-code
@@ -124,8 +128,16 @@
                                                                                              :target :home
                                                                                              :pane   :main-pane}])
                                                         (router/nav-daily-notes))
-                                           KeyCodes.G (router/navigate :graph)
-                                           KeyCodes.A (router/navigate :pages)
+                                           KeyCodes.G (do
+                                                        (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-g
+                                                                                             :target :graph
+                                                                                             :pane   :main-pane}])
+                                                        (router/navigate :graph))
+                                           KeyCodes.A (do
+                                                        (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-comma
+                                                                                             :target :all-pages
+                                                                                             :pane   :main-pane}])
+                                                        (router/navigate :pages))
                                            KeyCodes.T (dispatch [:theme/toggle])
                                            nil))))
 
