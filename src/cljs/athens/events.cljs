@@ -236,11 +236,12 @@
     (update db :devtool/open not)))
 
 
-(reg-event-db
+(reg-event-fx
   :help/toggle
   [(interceptors/sentry-span-no-new-tx "help/toggle")]
-  (fn [db _]
-    (update db :help/open? not)))
+  (fn [{:keys [db]} _]
+    {:db (update db :help/open? not)
+     :dispatch [:posthog/report-feature :help]}))
 
 
 (reg-event-fx
