@@ -213,11 +213,12 @@
       {:dispatch [:transact tx-data]})))
 
 
-(reg-event-db
+(reg-event-fx
   :athena/toggle
   [(interceptors/sentry-span-no-new-tx "athena/toggle")]
-  (fn [db _]
-    (update db :athena/open not)))
+  (fn [{:keys [db]} _]
+    {:db (update db :athena/open not)
+     :dispatch [:posthog/report-feature :athena]}))
 
 
 (reg-event-db
