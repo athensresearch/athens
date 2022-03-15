@@ -55,25 +55,72 @@
 
 
 (defn- events-page
-  "Returns a seq of events in page-number for all events in db split by page-size."
-  [db page-size page-number]
-  @(fdb/query db
-              {:select {"?event" ["*"]}
-               :where  [["?event" "event/id", "?id"]]
-               ;; Subject (?event here) is a monotonically incrementing bigint,
-               ;; so ordering by that gives us insertion order.
-               :opts   {:orderBy ["ASC", "?event"]
-                        :limit   page-size
-                        :offset  (* page-size page-number)}}))
+  "Returns a seq of events in page-number for all events in db split by page-size.
+  If starting-subject-id is non-nil, only events after that one are returned."
+  ([db page-size page-number]
+   @(fdb/query db
+               {:select {"?event" ["*"]}
+                :where  [["?event" "event/id", "?id"]]
+                ;; Subject ID (?event here) is a monotonically incrementing bigint,
+                ;; so ordering by that gives us event insertion order since events are immutable.
+                :opts   {:orderBy ["ASC", "?event"]
+                         :limit   page-size
+                         :offset  (* page-size page-number)}})))
+
+
+(defn- event-id->subject-id
+  [db event-id]
+  (first @(fdb/query db {:select "?event"
+                         :where  [["?event" "event/id", (str event-id)]]})))
+
+
+(defn last-event-id
+  [fluree]
+  (-> fluree
+      :conn-atom
+      deref
+      (fdb/db ledger)
+      (fdb/query {:selectOne {"?event" ["*"]}
+                  :where     [["?event" "event/id", "?id"]]
+                  :opts      {:orderBy ["DESC" "?event"]
+                              :limit   1}})
+      deref
+      deserialize
+      first))
 
 
 (defn events
-  "Returns a lazy-seq of all events in conn up to now.
+  "Returns a lazy-seq of all events in conn up to now, starting at optional event-id.
   Can potentially be very large, so don't hold on to the seq head while
   processing, and don't use fns that realize the whole coll (e.g. count)."
-  [fluree]
-  (let [f (partial events-page (fdb/db (-> fluree :conn-atom deref) ledger) 100)]
-    (map deserialize (utils/range-mapcat-while f empty?))))
+  ([fluree]
+   (let [db (fdb/db (-> fluree :conn-atom deref) ledger)
+         f  (partial events-page db 100)]
+     ;; TODO: use `iteration` once clojure 1.11.0 is out, much simpler and standard
+     ;; https://github.com/clojure/clojure/blob/master/changes.md#34-iteration
+     (->> (utils/range-mapcat-while f empty?)
+          (map deserialize))))
+  ([fluree event-id]
+   (let [db (fdb/db (-> fluree :conn-atom deref) ledger)
+         f  (partial events-page db 100)]
+     (when-not (event-id->subject-id db event-id)
+       (throw (ex-info "Cannot find starting id" {:event-id event-id})))
+     (->> (utils/range-mapcat-while f empty?)
+          (map deserialize)
+          ;; The point here is to get all events since event-id.
+          ;; We're getting all the events, dropping every one until the first one we care about,
+          ;; then dropping that one too.
+          ;; This is a terrible way to do what we want.
+          ;; Instead we should filter out all the events we don't care about on the fluree query.
+          ;; But when I (filipe) tried to do that, it made each events-page query take 30s instead of 0.3s.
+          ;; See https://github.com/fluree/db/issues/160
+          ;; This seems good enough for now.
+          ;; TODO: figure out a performant way to do this.
+          (drop-while (fn [[id]]
+                        (if event-id
+                          (not= event-id id)
+                          false)))
+          (drop 1)))))
 
 
 (defn double-write?
@@ -235,8 +282,11 @@
   ;; Create ledger if not present.
   (ensure-ledger! fluree-comp)
 
-  ;; What are the current events in the ledger?
-  (events fluree-comp)
+  ;; What's the first event in the ledger?
+  (take 1 (events fluree-comp))
+
+  ;; What's the first event since this event-id?
+  (take 1 (events fluree-comp (UUID/fromString "e6dad544-ef29-43b5-911e-9c4bfdca3fda")))
 
   ;; Add a few events.
   (def my-events [["uuid-2" [1 2 3]]
