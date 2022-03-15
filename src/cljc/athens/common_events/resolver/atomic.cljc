@@ -18,36 +18,22 @@
 
 (defmethod resolve-atomic-op-to-tx :block/new
   [db {:op/keys [args]}]
-  (let [{:block/keys [uid position]}  args
-        {relation  :relation
-         ref-uid   :block/uid
-         ref-title :page/title}       position
-        _valid-position               (common-db/validate-position db position)
-        ref-title->uid                (common-db/get-page-uid db ref-title)
-        ;; Pages must be referenced by title but internally we still use uids for them.
-        ref-uid                       (or ref-uid ref-title->uid)
-        ref-parent?                   (#{:first :last} relation)
-        ref-block-exists?             (int? (common-db/e-by-av db :block/uid ref-uid))
-        ref-block                     (when ref-block-exists?
-                                        (common-db/get-block db [:block/uid ref-uid]))
-        {parent-block-uid :block/uid} (if ref-parent?
-                                        (if ref-block-exists?
-                                          ref-block
-                                          (throw (ex-info "Ref block does not exist" {:block/uid ref-uid})))
-                                        (common-db/get-parent db [:block/uid ref-uid]))
-        now                           (utils/now-ts)
-        new-block                     {:block/uid    uid
-                                       :block/string ""
-                                       :block/open   true
-                                       :create/time  now
-                                       :edit/time    now}
-        children                      (common-db/get-children-uids db [:block/uid parent-block-uid])
-        children'                     (order/insert children uid relation ref-uid)
-        reorder                       (order/reorder children children' order/block-map-fn)
-        children-tx                   (concat [new-block] reorder)
-        tx-data                       [{:block/uid      parent-block-uid
-                                        :block/children children-tx
-                                        :edit/time      now}]]
+  (let [{:block/keys [uid position]} args
+        {:keys [relation]}           position
+        [ref-uid parent-uid]         (common-db/position->uid+parent db position)
+        now                          (utils/now-ts)
+        new-block                    {:block/uid    uid
+                                      :block/string ""
+                                      :block/open   true
+                                      :create/time  now
+                                      :edit/time    now}
+        children                     (common-db/get-children-uids db [:block/uid parent-uid])
+        children'                    (order/insert children uid relation ref-uid)
+        reorder                      (order/reorder children children' order/block-map-fn)
+        children-tx                  (concat [new-block] reorder)
+        tx-data                      [{:block/uid      parent-uid
+                                       :block/children children-tx
+                                       :edit/time      now}]]
     tx-data))
 
 
@@ -81,49 +67,35 @@
 (defmethod resolve-atomic-op-to-tx :block/move
   [db {:op/keys [args]}]
   (log/debug "atomic-resolver :block/move args:" (pr-str args))
-  (let [{:block/keys [uid position]}      args
-        {relation  :relation
-         ref-uid   :block/uid
-         ref-title :page/title}           position
-        _valid-position                   (common-db/validate-position db position)
-        _valid-block-uid                  (when (common-db/get-page-title db uid)
-                                            (throw (ex-info "Block to be moved is a page, cannot move pages." args)))
-        ref-title->uid                    (common-db/get-page-uid db ref-title)
-        ;; Pages must be referenced by title but internally we still use uids for them.
-        ref-uid                           (or ref-uid ref-title->uid)
-        {old-parent-block-uid :block/uid} (common-db/get-parent db [:block/uid uid])
-        ref-parent?                       (#{:first :last} relation)
-        ref-block-exists?                 (int? (common-db/e-by-av db :block/uid ref-uid))
-        ref-block                         (when ref-block-exists?
-                                            (common-db/get-block db [:block/uid ref-uid]))
-        {new-parent-block-uid :block/uid} (if ref-parent?
-                                            (if ref-block-exists?
-                                              ref-block
-                                              (throw (ex-info "Ref block does not exist" {:block/uid ref-uid})))
-                                            (common-db/get-parent db [:block/uid ref-uid]))
-        same-parent?                      (= new-parent-block-uid old-parent-block-uid)
-        now                               (utils/now-ts)
-        updated-block'                    (if same-parent?
-                                            [{:block/uid uid
-                                              :edit/time now}]
-                                            [[:db/retract [:block/uid old-parent-block-uid] :block/children [:block/uid uid]]
-                                             {:block/uid      new-parent-block-uid
-                                              :block/children [{:block/uid uid
-                                                                :edit/time now}]
-                                              :edit/time      now}])
-        reorder                           (if same-parent?
-                                            (let [children  (common-db/get-children-uids db [:block/uid old-parent-block-uid])
-                                                  children' (order/move-within children uid relation ref-uid)
-                                                  reorder   (order/reorder children children' order/block-map-fn)]
-                                              reorder)
+  (let [{:block/keys [uid position]} args
+        _valid-block-uid             (when (common-db/get-page-title db uid)
+                                       (throw (ex-info "Block to be moved is a page, cannot move pages." args)))
+        {:keys [relation]}           position
+        [ref-uid new-parent-uid]     (common-db/position->uid+parent db position)
+        {old-parent-uid :block/uid}  (common-db/get-parent db [:block/uid uid])
+        same-parent?                 (= new-parent-uid old-parent-uid)
+        now                          (utils/now-ts)
+        updated-block'               (if same-parent?
+                                       [{:block/uid uid
+                                         :edit/time now}]
+                                       [[:db/retract [:block/uid old-parent-uid] :block/children [:block/uid uid]]
+                                        {:block/uid      new-parent-uid
+                                         :block/children [{:block/uid uid
+                                                           :edit/time now}]
+                                         :edit/time      now}])
+        reorder                      (if same-parent?
+                                       (let [children  (common-db/get-children-uids db [:block/uid old-parent-uid])
+                                             children' (order/move-within children uid relation ref-uid)
+                                             reorder   (order/reorder children children' order/block-map-fn)]
+                                         reorder)
 
-                                            (let [origin-children         (common-db/get-children-uids db [:block/uid old-parent-block-uid])
-                                                  destination-children    (common-db/get-children-uids db [:block/uid new-parent-block-uid])
-                                                  [origin-children'
-                                                   destination-children'] (order/move-between origin-children destination-children uid relation ref-uid)
-                                                  reorder-origin          (order/reorder origin-children origin-children' order/block-map-fn)
-                                                  reorder-destination     (order/reorder destination-children destination-children' order/block-map-fn)]
-                                              (concat reorder-origin reorder-destination)))]
+                                       (let [origin-children         (common-db/get-children-uids db [:block/uid old-parent-uid])
+                                             destination-children    (common-db/get-children-uids db [:block/uid new-parent-uid])
+                                             [origin-children'
+                                              destination-children'] (order/move-between origin-children destination-children uid relation ref-uid)
+                                             reorder-origin          (order/reorder origin-children origin-children' order/block-map-fn)
+                                             reorder-destination     (order/reorder destination-children destination-children' order/block-map-fn)]
+                                         (concat reorder-origin reorder-destination)))]
     (into updated-block' reorder)))
 
 

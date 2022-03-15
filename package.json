@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "2.0.0-beta.18",
+  "version": "2.0.0-beta.20",
   "description": "An open-source knowledege graph for research and notetaking",
   "repository": {
     "type": "git",
@@ -54,7 +54,7 @@
     "server:test": "clojure -X:test",
     "server:test:only": "clojure -M:test --var",
     "server:repl": "clojure -A:repl",
-    "server:wipe": "rimraf athens-data/fluree",
+    "server:wipe": "rimraf athens-data/fluree athens-data/datascript",
     "// cli scripts": "",
     "cli:save": "clojure -M:athens-cli save",
     "cli:load": "clojure -M:athens-cli load",

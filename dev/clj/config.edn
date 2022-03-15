@@ -1,5 +1,3 @@
-;; TODO: load default configs and merge into real ones
 {;; :password   "SuchWow"
  ;; :in-memory? true
- :fluree     {:servers ["http://localhost:8090"]}
- :nrepl      {:port 8877}}
+ :nrepl {:port 8877}}

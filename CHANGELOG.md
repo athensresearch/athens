@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.20](https://github.com/athensresearch/athens/compare/v2.0.0-beta.19...v2.0.0-beta.20) (2022-03-11)
+
+
+### Bug Fixes
+
+* HOC perf mon to always show forwarded comp. ([719eb7b](https://github.com/athensresearch/athens/commit/719eb7b50ccb83798dad71ba6f53a4f5924726d8))
+
+
+* cljstyle fix ([e86e0d7](https://github.com/athensresearch/athens/commit/e86e0d71af2c0cb89fa0900773c05178bb4a3eb1))
+
+## [2.0.0-beta.19](https://github.com/athensresearch/athens/compare/v2.0.0-beta.18...v2.0.0-beta.19) (2022-03-10)
+
+
+### Features
+
+* Feature monitoring: right-sidebar usage ([f92d19b](https://github.com/athensresearch/athens/commit/f92d19bb0388d1f9dbc6e61cbd9fa479531afb13))
+
+
+### Bug Fixes
+
+* Allow to start with empty line. ([1095dc5](https://github.com/athensresearch/athens/commit/1095dc5bc9df23b23b507d098d8d5ea3fbfe530c))
+
+
+* testing new behavior ([22361aa](https://github.com/athensresearch/athens/commit/22361aa33c57cd0bd36a4a307ceb690109924582))
+
 ## [2.0.0-beta.18](https://github.com/athensresearch/athens/compare/v2.0.0-beta.17...v2.0.0-beta.18) (2022-03-03)
 
 
