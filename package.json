@@ -54,7 +54,7 @@
     "server:test": "clojure -X:test",
     "server:test:only": "clojure -M:test --var",
     "server:repl": "clojure -A:repl",
-    "server:wipe": "rimraf athens-data/fluree",
+    "server:wipe": "rimraf athens-data/fluree athens-data/datascript",
     "// cli scripts": "",
     "cli:save": "clojure -M:athens-cli save",
     "cli:load": "clojure -M:athens-cli load",
