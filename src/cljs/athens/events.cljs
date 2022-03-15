@@ -242,11 +242,12 @@
     (update db :help/open? not)))
 
 
-(reg-event-db
+(reg-event-fx
   :left-sidebar/toggle
   [(interceptors/sentry-span-no-new-tx "left-sidebar/toggle")]
-  (fn [db _]
-    (update db :left-sidebar/open not)))
+  (fn [{:keys [db]} _]
+    {:db (update db :left-sidebar/open not)
+     :dispatch [:posthog/report-feature :left-sidebar]}))
 
 
 (reg-event-fx
@@ -838,7 +839,8 @@
                                                                             {:page/title target-name
                                                                              :relation relation})
           event (common-events/build-atomic-event drop-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :left-sidebar]]]})))
 
 
 (reg-event-fx
