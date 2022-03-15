@@ -9,7 +9,7 @@
     [athens.util :as util]
     [clojure.string :as string]
     [goog.events :as events]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
+    [re-frame.core :as rf :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       EventType
@@ -87,8 +87,8 @@
                 meta
                 shift
                 alt]
-         :as destruct-keys}    (util/destruct-key-down e)
-        editing-uid            @(subscribe [:editing/uid])]
+         :as   destruct-keys} (util/destruct-key-down e)
+        editing-uid         @(subscribe [:editing/uid])]
     (cond
       (util/navigate-key? destruct-keys) (condp = key-code
                                            KeyCodes.LEFT  (when (nil? editing-uid)
@@ -118,12 +118,16 @@
                                            KeyCodes.COMMA     (router/navigate :settings)
                                            KeyCodes.T         (util/toggle-10x)
                                            nil)
-      alt                               (condp = key-code
-                                          KeyCodes.D     (router/nav-daily-notes)
-                                          KeyCodes.G     (router/navigate :graph)
-                                          KeyCodes.A     (router/navigate :pages)
-                                          KeyCodes.T     (dispatch [:theme/toggle])
-                                          nil))))
+      alt                                (condp = key-code
+                                           KeyCodes.D (do
+                                                        (rf/dispatch [:reporting/navigation {:source :kbd-alt-d
+                                                                                             :target :home
+                                                                                             :pane   :main-pane}])
+                                                        (router/nav-daily-notes))
+                                           KeyCodes.G (router/navigate :graph)
+                                           KeyCodes.A (router/navigate :pages)
+                                           KeyCodes.T (dispatch [:theme/toggle])
+                                           nil))))
 
 
 ;; -- Clipboard ----------------------------------------------------------
