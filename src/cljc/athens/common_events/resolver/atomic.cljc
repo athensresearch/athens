@@ -225,10 +225,14 @@
         comment-vec         (if (seq block-has-comments)
                               (conj block-has-comments new-comment)
                               [new-comment])
+        tx-comments         {:block/uid      (:block/uid new-comment)
+                             :block/string   (:string new-comment)
+                             :block/type     :comment
+                             :comment/parent uid}
         updated-block       {:block/uid      uid
                              :block/comment  comment-vec
                              :edit/time      (utils/now-ts)}]
-    [updated-block]))
+    [tx-comments updated-block]))
 
 
 (defmethod resolve-atomic-op-to-tx :page/new

@@ -3,7 +3,8 @@
             [athens.views.comments.right-side :as right-side]
             [athens.common-events.graph.atomic :as atomic-graph-ops]
             [re-frame.core :as rf]
-            [athens.common-events :as common-events]))
+            [athens.common-events :as common-events]
+            [athens.common.utils :as common.utils]))
 
 ;; user presses "Comment" from context-menu
 ;; place to write comment appears
@@ -46,9 +47,11 @@
 (rf/reg-event-fx
   :comment/write-comment
   (fn [_ [_ uid comment-string author]]
-    (let [new-comment     {:string    comment-string
-                           :author    author
-                           :time      "12:09 pm"}
+    (let [new-comment {:block/uid (common.utils/gen-block-uid)
+                       :block/type :comment
+                       :string      comment-string
+                       :author      author
+                       :time        "12:09 pm"}
           event           (common-events/build-atomic-event
                             (atomic-graph-ops/make-comment-add-op uid new-comment))]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))

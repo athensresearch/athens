@@ -434,25 +434,41 @@
       ;; protect against orphaned nodes
       :else                 nil)))
 
+(defn search-comments
+  [query]
+  (let [case-insensitive-query (re-case-insensitive query)
+        filtered-datoms        (d/filter @dsdb
+                                  (fn [db datom]
+                                    (let [entity    (d/entity db (:e datom))
+                                          comment?  (= :comment (:block/type entity))]
+                                      (when comment?
+                                         (re-find case-insensitive-query (:block/string entity))))))
+        strings                 (d/datoms filtered-datoms :aevt :block/string)
+        filtered-e              (map #(:e %) strings)
+        results                 (d/pull-many @dsdb '[:db/id :block/uid :block/string :comment/parent] filtered-e)]
+    results))
 
 (defn search-in-block-content
   ([query] (search-in-block-content query 20))
   ([query n]
    (if (string/blank? query)
      (vector)
-     (let [case-insensitive-query (re-case-insensitive query)]
-       (->>
-         (d/datoms @dsdb :aevt :block/string)
-         (sequence
-           (comp
-             (filter #(re-find case-insensitive-query (:v %)))
-             (take n)
-             (map #(:e %))))
-         (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
-         (sequence
-           (comp
-             (keep get-root-parent-node-from-block)
-             (map #(dissoc % :block/_children)))))))))
+     (let [case-insensitive-query (re-case-insensitive query)
+           block-search-result    (->>
+                                    (d/datoms @dsdb :aevt :block/string)
+                                    (sequence
+                                      (comp
+                                        (filter #(re-find case-insensitive-query (:v %)))
+                                        (take n)
+                                        (map #(:e %))))
+                                    (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
+                                    (sequence
+                                      (comp
+                                        (keep get-root-parent-node-from-block)
+                                        (map #(dissoc % :block/_children)))))
+           comment-result          (search-comments query)
+           result                  (concat block-search-result comment-result)]
+       result))))
 
 
 (defn nth-sibling

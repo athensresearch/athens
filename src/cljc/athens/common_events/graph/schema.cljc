@@ -104,7 +104,9 @@
      [:map
        block-id
        [:new-comment [:map
-                       [:author string?]
+                       block-id
+                       [:block/type [:enum :comment]]
+                       [:author   string?]
                        [:string   string?]
                        [:time     string?]]]]]])
 
