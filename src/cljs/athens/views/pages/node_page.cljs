@@ -284,7 +284,7 @@
           (let [cancel-fn  #(swap! state merge init-state)
                 confirm-fn (fn []
                              (rf/dispatch [:reporting/navigation {:source :page-title-merge
-                                                                  :target (str "page/" local)
+                                                                  :target :page
                                                                   :pane   :main-pane}])
                              (router/navigate-page local)
                              (rf/dispatch [:page/merge {:from-name initial
@@ -441,7 +441,7 @@
                                  (let [shift?       (.-shiftKey e)
                                        parsed-title (parse-renderer/parse-title group-title)]
                                    (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs
-                                                                        :target (str "page/" parsed-title)
+                                                                        :target :page
                                                                         :pane   (if shift?
                                                                                   :right-pane
                                                                                   :main-pane)}])
@@ -500,7 +500,7 @@
                                  (let [shift?       (.-shiftKey e)
                                        parsed-title (parse-renderer/parse-title group-title)]
                                    (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs
-                                                                        :target (str "page/" parsed-title)
+                                                                        :target :page
                                                                         :pane   (if shift?
                                                                                   :right-pane
                                                                                   :main-pane)}])
@@ -578,8 +578,8 @@
                                          (do
                                            (rf/dispatch [:reporting/navigation {:source :page-title
                                                                                 :target (if title
-                                                                                          (str "page/" title)
-                                                                                          (str "block/" uid))
+                                                                                          :page
+                                                                                          :block)
                                                                                 :pane   :right-pane}])
                                            (if title
                                              (router/navigate-page title e)

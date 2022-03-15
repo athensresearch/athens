@@ -116,7 +116,7 @@
                       {:on-click      (fn [e]
                                         (let [shift? (.-shiftKey e)]
                                           (rf/dispatch [:reporting/navigation {:source :left-sidebar
-                                                                               :target (str "page/" title)
+                                                                               :target :page
                                                                                :pane   (if shift?
                                                                                          :right-pane
                                                                                          :main-pane)}])
@@ -172,9 +172,9 @@
          [:h2 (use-sub-style shortcuts-list-style :heading)
           "Shortcuts"]
          (doall
-          (for [sh shortcuts]
-            ^{:key (str "left-sidebar-" (second sh))}
-            [shortcut-component sh]))]
+           (for [sh shortcuts]
+             ^{:key (str "left-sidebar-" (second sh))}
+             [shortcut-component sh]))]
 
         ;; LOGO + BOTTOM BUTTONS
         [:footer (use-sub-style left-sidebar-style :footer)

@@ -80,14 +80,14 @@
   "If block is in main, navigate to page. If in right sidebar, replace right sidebar item."
   [e uid breadcrumb-uid]
   (let [right-sidebar? (.. e -target (closest ".right-sidebar"))]
-    (rf/dispatch [:reporting/navigation {:source :main-block-page-breadcrumb
-                                         :target (str "block/" breadcrumb-uid)
+    (rf/dispatch [:reporting/navigation {:source :block-page-breadcrumb
+                                         :target :block
                                          :pane   (if right-sidebar?
                                                    :right-pane
                                                    :main-pane)}])
-     (if right-sidebar?
-       (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
-       (router/navigate-uid breadcrumb-uid e))))
+    (if right-sidebar?
+      (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
+      (router/navigate-uid breadcrumb-uid e))))
 
 
 (defn linked-refs-el
@@ -103,22 +103,22 @@
         ;; [:> Button {:disabled true} [(r/adapt-react-class FilterList)]]]
         [:div (use-style node-page/references-list-style)
          (doall
-          (for [[group-title group] linked-refs]
-            [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
+           (for [[group-title group] linked-refs]
+             [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
               [:h4 (use-style node-page/references-group-title-style)
                [:a {:on-click (fn [e]
                                 (let [shift?       (.-shiftKey e)
                                       parsed-title (parse-renderer/parse-title group-title)]
-                                  (rf/dispatch [:reporting/navigation {:source :main-block-page-linked-refs
-                                                                       :target (str "page/" parsed-title)
+                                  (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
+                                                                       :target :page
                                                                        :pane   (if shift?
                                                                                  :right-pane
                                                                                  :main-pane)}])
                                   (router/navigate-page parsed-title)))}
                 group-title]]
               (doall
-               (for [block group]
-                 [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
+                (for [block group]
+                  [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
                    [node-page/ref-comp block]]))]))]]])))
 
 
@@ -156,8 +156,8 @@
                              (.. e preventDefault)
                              (if (.. e -shiftKey)
                                (do
-                                 (rf/dispatch [:reporting/navigation {:source :block-page-title
-                                                                      :target (str "block/" uid)
+                                 (rf/dispatch [:reporting/navigation {:source :block-page
+                                                                      :target :block
                                                                       :pane   :right-pane}])
                                  (router/navigate-uid uid e))
                                (dispatch [:editing/uid uid])))})

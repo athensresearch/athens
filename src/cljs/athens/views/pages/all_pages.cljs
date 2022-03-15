@@ -155,20 +155,20 @@
             [sortable-header :created "Created" {:date? true}]]]
           [:tbody
            (doall
-            (for [{:keys    [block/uid node/title block/_refs]
-                   modified :edit/time
-                   created  :create/time} sorted-pages]
-              [:tr {:key uid}
-               [:td {:class    "title"
-                     :on-click (fn [e]
-                                 (let [shift? (.-shiftKey e)]
-                                   (rf/dispatch [:reporting/navigation {:source :all-pages
-                                                                        :target (str "page/" title)
-                                                                        :pane   (if shift?
-                                                                                  :right-pane
-                                                                                  :main-pane)}])
-                                   (router/navigate-page title e)))}
+             (for [{:keys    [block/uid node/title block/_refs]
+                    modified :edit/time
+                    created  :create/time} sorted-pages]
+               [:tr {:key uid}
+                [:td {:class    "title"
+                      :on-click (fn [e]
+                                  (let [shift? (.-shiftKey e)]
+                                    (rf/dispatch [:reporting/navigation {:source :all-pages
+                                                                         :target :page
+                                                                         :pane   (if shift?
+                                                                                   :right-pane
+                                                                                   :main-pane)}])
+                                    (router/navigate-page title e)))}
                  title]
-               [:td {:class "links"} (count _refs)]
-               [:td {:class "date"} (dates/date-string modified)]
-               [:td {:class "date"} (dates/date-string created)]]))]]]))))
+                [:td {:class "links"} (count _refs)]
+                [:td {:class "date"} (dates/date-string modified)]
+                [:td {:class "date"} (dates/date-string created)]]))]]]))))
