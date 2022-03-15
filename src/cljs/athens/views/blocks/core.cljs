@@ -483,7 +483,14 @@
                                                "closed-with-children")
                        :block block
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
-                       :on-click        (fn [e] (router/navigate-uid uid e))
+                       :on-click        (fn [e]
+                                          (let [shift? (.-shiftKey e)]
+                                            (rf/dispatch [:reporting/navigation {:source :block-dot
+                                                                                 :target :block
+                                                                                 :pane   (if shift?
+                                                                                           :right-pane
+                                                                                           :main-pane)}])
+                                            (router/navigate-uid uid e)))
                        :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
                        :on-drag-start   (fn [e] (bullet-drag-start e uid state))
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]

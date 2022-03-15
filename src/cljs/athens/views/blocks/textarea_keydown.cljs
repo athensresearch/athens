@@ -634,9 +634,21 @@
                                        (nil? (re-find #"(?s)\(" block-ref))
                                        (nil? (re-find #"(?s)\)" block-ref))
                                        (db/e-by-av :block/uid block-ref))
-                                  (router/navigate-uid block-ref e)
+                                  (do
+                                    (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-open
+                                                                         :target :block
+                                                                         :pane   (if shift
+                                                                                   :right-pane
+                                                                                   :main-pane)}])
+                                    (router/navigate-uid block-ref e))
 
-                                  :else (router/navigate-uid uid e))))))
+                                  :else (do
+                                          (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-open
+                                                                               :target :block
+                                                                               :pane   (if shift
+                                                                                         :right-pane
+                                                                                         :main-pane)}])
+                                          (router/navigate-uid uid e)))))))
 
 
 (defn pair-char?
