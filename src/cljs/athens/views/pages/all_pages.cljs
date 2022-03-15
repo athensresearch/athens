@@ -126,8 +126,6 @@
        :dispatch [:posthog/report-feature :all-pages]})))
 
 
-
-
 ;; Components
 
 (defn- sortable-header
