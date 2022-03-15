@@ -634,8 +634,9 @@
   :theme/toggle
   [(interceptors/sentry-span-no-new-tx "theme/toggle")]
   (fn [{:keys [db]} _]
-    {:db       (update-in db [:athens/persist :theme/dark] not)
-     :dispatch [:theme/set]}))
+    {:db         (update-in db [:athens/persist :theme/dark] not)
+     :dispatch-n [[:theme/set]
+                  [:posthog/report-feature :theme]]}))
 
 
 ;; Datascript
