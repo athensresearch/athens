@@ -599,7 +599,7 @@
                                   (let [eid (db/e-by-av :node/title link)]
                                     (if eid
                                       (do
-                                        (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-open
+                                        (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-o
                                                                              :target :page
                                                                              :pane   (if shift
                                                                                        :right-pane
@@ -617,7 +617,7 @@
                                   (let [eid (db/e-by-av :node/title hashtag)]
                                     (if eid
                                       (do
-                                        (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-open
+                                        (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-o
                                                                              :target :hashtag
                                                                              :pane   (if shift
                                                                                        :right-pane
@@ -635,7 +635,7 @@
                                        (nil? (re-find #"(?s)\)" block-ref))
                                        (db/e-by-av :block/uid block-ref))
                                   (do
-                                    (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-open
+                                    (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-o
                                                                          :target :block
                                                                          :pane   (if shift
                                                                                    :right-pane
@@ -643,7 +643,7 @@
                                     (router/navigate-uid block-ref e))
 
                                   :else (do
-                                          (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-open
+                                          (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-o
                                                                                :target :block
                                                                                :pane   (if shift
                                                                                          :right-pane

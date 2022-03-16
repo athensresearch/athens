@@ -129,12 +129,12 @@
                                                                                              :pane   :main-pane}])
                                                         (router/nav-daily-notes))
                                            KeyCodes.G (do
-                                                        (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-g
+                                                        (rf/dispatch [:reporting/navigation {:source :kbd-alt-g
                                                                                              :target :graph
                                                                                              :pane   :main-pane}])
                                                         (router/navigate :graph))
                                            KeyCodes.A (do
-                                                        (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-comma
+                                                        (rf/dispatch [:reporting/navigation {:source :kbd-alt-a
                                                                                              :target :all-pages
                                                                                              :pane   :main-pane}])
                                                         (router/navigate :pages))

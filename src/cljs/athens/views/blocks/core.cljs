@@ -485,7 +485,7 @@
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
                        :on-click        (fn [e]
                                           (let [shift? (.-shiftKey e)]
-                                            (rf/dispatch [:reporting/navigation {:source :block-dot
+                                            (rf/dispatch [:reporting/navigation {:source :block-bullet
                                                                                  :target :block
                                                                                  :pane   (if shift?
                                                                                            :right-pane
