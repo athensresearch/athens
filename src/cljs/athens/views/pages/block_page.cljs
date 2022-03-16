@@ -128,7 +128,7 @@
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})]
     (fn [block]
-      (let [{:block/keys [string children uid] :db/keys [id]} block]
+      (let [{:block/keys [string children uid comment] :db/keys [id]} block]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
@@ -156,7 +156,8 @@
             [:wbr]
             [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]
 
-         [athens.views.comments.inline/inline-comments (:block/comment block) uid]
+         (when (pos? (:block/comment block))
+           [athens.views.comments.inline/inline-comments (:block/comment block) uid])
          ;; Children
          [:div (for [child children]
                  (let [{:keys [db/id]} child]

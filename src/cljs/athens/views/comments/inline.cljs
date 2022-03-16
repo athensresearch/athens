@@ -102,14 +102,16 @@
 
 (defn inline-comments
   [data uid]
-  (let [state (reagent.core/atom {:hide? true})]
+  (let [state        (reagent.core/atom {:hide? true})
+        num-comments (count data)]
     (fn [data uid]
       [:<>
        ;; add time, author, and preview
        [:div {:style {:margin-left "30px"}}
         [:> Button {:on-click #(swap! state update :hide? not)}
          [:> Comment]
-         (count data)]]
+         num-comments]]
+
        (when-not (:hide? @state)
          [:div.comments (stylefy/use-style comments-styles)
           (for [item data]
