@@ -577,7 +577,7 @@
                                          (.. e preventDefault)
                                          (if (or daily-note? shift?)
                                            (do
-                                             (rf/dispatch [:reporting/navigation {:source :page-title
+                                             (rf/dispatch [:reporting/navigation {:source :page-title ;; NOTE: this might be also used in right-pane situation
                                                                                   :target (if title
                                                                                             :page
                                                                                             :block)
