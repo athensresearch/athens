@@ -89,6 +89,7 @@
 
 (def block-document-pull-vector
   '[:db/id :block/uid :block/string :block/open :block/_refs :block/comment
+    :block/type
     {:block/children [:block/uid :block/order]}])
 
 

@@ -355,7 +355,7 @@
 (defntrace get-parents-recursively
   [id]
   (when (d/entity @dsdb id)
-    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
+    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...} :block/type] id)
          shape-parent-query)))
 
 
@@ -371,7 +371,9 @@
 (defntrace get-block
   [id]
   (when (d/entity @dsdb id)
-    (d/pull @dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id)))
+    (d/pull @dsdb '[:db/id :node/title :block/uid :block/order :block/string
+                    :block/comment
+                    {:block/children [:block/uid :block/order]} :block/open] id)))
 
 
 (defntrace get-parent
