@@ -33,3 +33,20 @@
   (fn [{:keys [_db]} [_ feature on?]]
     {:posthog/capture-event! {:event-name (str "feature/" (name feature))
                               :opts-map   {feature on?}}}))
+
+
+(rf/reg-event-fx
+  :reporting/navigation
+  (fn [{:keys [_db]} [_ {:keys [source target pane]}]]
+    {:posthog/capture-event! {:event-name "feature/navigate"
+                              :opts-map   {:source source
+                                           :target target
+                                           :pane   pane}}}))
+
+
+(rf/reg-event-fx
+  :reporting/page.create
+  (fn [{:keys [_db]} [_ {:keys [source count]}]]
+    {:posthog/capture-event! {:event-name "feature/page.create"
+                              :opts-map   {:source        source
+                                           :pages-created count}}}))

@@ -9,7 +9,7 @@
     [athens.style              :as style :refer [color OPACITIES]]
     [clojure.string            :refer [lower-case]]
     [garden.selectors          :as selectors]
-    [re-frame.core             :as rf :refer [dispatch subscribe]]
+    [re-frame.core             :as rf]
     [stylefy.core              :as stylefy :refer [use-style]]))
 
 
@@ -132,9 +132,9 @@
   ([column-id label]
    (sortable-header column-id label {:date? false}))
   ([column-id label {:keys [date?]}]
-   (let [sorted-by @(subscribe [:all-pages/sorted-by])
-         growing?  @(subscribe [:all-pages/sort-order-ascending?])]
-     [:th {:on-click #(dispatch [:all-pages/sort-by column-id])
+   (let [sorted-by @(rf/subscribe [:all-pages/sorted-by])
+         growing?  @(rf/subscribe [:all-pages/sort-order-ascending?])]
+     [:th {:on-click #(rf/dispatch [:all-pages/sort-by column-id])
            :class ["sortable" (when date? "date")]}
       [:div.wrap-label
        [:h5 label]
@@ -146,7 +146,7 @@
   []
   (let [all-pages (common-db/get-all-pages @db/dsdb)]
     (fn []
-      (let [sorted-pages @(subscribe [:all-pages/sorted all-pages])]
+      (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
         [:div (use-style page-style)
          [:table (use-style table-style)
           [:thead
@@ -162,7 +162,14 @@
                     created  :create/time} sorted-pages]
                [:tr {:key uid}
                 [:td {:class    "title"
-                      :on-click #(router/navigate-page title %)}
+                      :on-click (fn [e]
+                                  (let [shift? (.-shiftKey e)]
+                                    (rf/dispatch [:reporting/navigation {:source :all-pages
+                                                                         :target :page
+                                                                         :pane   (if shift?
+                                                                                   :right-pane
+                                                                                   :main-pane)}])
+                                    (router/navigate-page title e)))}
                  title]
                 [:td {:class "links"} (count _refs)]
                 [:td {:class "date"} (dates/date-string modified)]
