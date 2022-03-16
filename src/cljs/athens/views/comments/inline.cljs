@@ -70,6 +70,10 @@
                                    [:> Button {:on-mouse-down #(copy-comment-uid comment-data state)}
                                     "Copy comment uid"]]])})))
 
+(def author-style {:font-size "80%" :margin-right "15px" :color "gray"})
+(def content-style {:font-size "90%"})
+(def time-style {:font-size "80%" :color "gray"})
+
 (defn comment-el
   [item]
   (let [{:keys [string time author block/uid]} item
@@ -90,12 +94,13 @@
         (when (:comment/show? @state)
           [show-comment-context-menu item state])
 
-        [:span (stylefy/use-style {:font-size "80%" :margin-right "15px" :color "gray"})
+        [:span (stylefy/use-style author-style)
          author]
-        [:span (stylefy/use-style {:font-size "90%"})
+        [:span (stylefy/use-style content-style)
          ;; In future this should be rendered differently for reply type and ref-type
          [athens.parse-renderer/parse-and-render string uid]]
-        [:div (stylefy/use-style {:font-size "80%" :color "gray" :float "right"})
+        [:div (merge (stylefy/use-style time-style)
+                     {:style {:float "right"}})
          (when (pos? linked-refs-count)
            [:span {:style {:margin-right "30px"}} linked-refs-count])
          [:span time]]]])))
@@ -103,14 +108,27 @@
 (defn inline-comments
   [data uid]
   (let [state        (reagent.core/atom {:hide? true})
-        num-comments (count data)]
+        num-comments (count data)
+        first-comment (first data)
+        {:keys [author string time]} first-comment]
     (fn [data uid]
       [:<>
        ;; add time, author, and preview
-       [:div {:style {:margin-left "30px"}}
-        [:> Button {:on-click #(swap! state update :hide? not)}
-         [:> Comment]
-         num-comments]]
+       [:div {}
+        [:> Button {:style    (merge comments-styles {:width "95%" :font-weight "normal"})
+                    :on-click #(swap! state update :hide? not)}
+         (if (:hide? @state)
+           [:<>
+            [:> Comment]
+            num-comments
+            [:div (stylefy/use-style {:width "100%"})
+             [:span (stylefy/use-style {:margin-right "5px" :font-size "90%" :color "gray"}) (str "@" author)]
+             [:span (stylefy/use-style (merge {:overflow      "hidden"
+                                               :text-overflow "ellipsis"
+                                               :white-space   "nowrap"}
+                                              content-style)) string]]
+            [:span (stylefy/use-style time-style) time]]
+           [:span (stylefy/use-style {:margin-left "30px" :font-style "90%" }) "Hide Comments"])]]
 
        (when-not (:hide? @state)
          [:div.comments (stylefy/use-style comments-styles)
