@@ -1597,7 +1597,8 @@
                                                             uid
                                                             new-str)
           event              (common-events/build-atomic-event op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :unlinked-references]]]})))
 
 
 (reg-event-fx
@@ -1615,7 +1616,8 @@
           link-all-op         (composite-ops/make-consequence-op {:op/type :block/unlinked-refs-link-all}
                                                                  block-save-ops)
           event              (common-events/build-atomic-event link-all-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :unlinked-references]]]})))
 
 
 (rf/reg-event-fx
