@@ -64,10 +64,11 @@
     (-> db :athens/persist :graph-conf)))
 
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :graph/set-conf
-  (fn [db [_ k v]]
-    (update-in db [:athens/persist :graph-conf] #(assoc % k v))))
+  (fn [{:keys [db]} [_ k v]]
+    {:db (update-in db [:athens/persist :graph-conf] #(assoc % k v))
+     :dispatch [:posthog/report-feature :graph]}))
 
 
 (rf/reg-sub

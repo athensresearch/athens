@@ -2,6 +2,52 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.23](https://github.com/athensresearch/athens/compare/v2.0.0-beta.22...v2.0.0-beta.23) (2022-03-15)
+
+
+### Bug Fixes
+
+* docker path is /srv/ not /src/ ([#2083](https://github.com/athensresearch/athens/issues/2083)) ([bfb3fde](https://github.com/athensresearch/athens/commit/bfb3fdef2a55539c10ae2508853ab2077ca8e9a7))
+
+## [2.0.0-beta.22](https://github.com/athensresearch/athens/compare/v2.0.0-beta.21...v2.0.0-beta.22) (2022-03-15)
+
+
+### Bug Fixes
+
+* default config should use docker values ([73e5224](https://github.com/athensresearch/athens/commit/73e5224d4a88291b4e670af3dcc81e6f6b3dfea6))
+
+## [2.0.0-beta.21](https://github.com/athensresearch/athens/compare/v2.0.0-beta.20...v2.0.0-beta.21) (2022-03-15)
+
+
+### Features
+
+* add :datascript :persist-base-path to server config ([712759d](https://github.com/athensresearch/athens/commit/712759dabe37e4f5a6a61ebc1733e594021c65db))
+* add athens.self-hosted.web.persistence ns ([5b7c664](https://github.com/athensresearch/athens/commit/5b7c6643d45aaa3fab2c0727c282efed65ed58f6))
+* allow cli load to resume from last event ([e82a71b](https://github.com/athensresearch/athens/commit/e82a71b6d6d2f98e92caf04c3cdbcf993b7b25db))
+* block-ref's breadcrumb in tooltip ([109610e](https://github.com/athensresearch/athens/commit/109610e048d574e7734156ef1ea3cc733df08daa))
+* incremental snapshotting on load ([3a69a27](https://github.com/athensresearch/athens/commit/3a69a27dcdac623cf971fdf69ba3b2a85d07d132))
+* persist server datascript db ([7d2fd6b](https://github.com/athensresearch/athens/commit/7d2fd6b4ddbb8984b0176d26cab98043a83f09ac))
+
+
+### Bug Fixes
+
+* cljs throws js stuff ([2c99f48](https://github.com/athensresearch/athens/commit/2c99f4852f3a60184b709278cb022deec9040936))
+* event-id should be a uuid ([858642c](https://github.com/athensresearch/athens/commit/858642c7812d4e2cf5daa26f65cff5d0ff2341a3))
+* throw when ref-block does not have parent ([5bbafa9](https://github.com/athensresearch/athens/commit/5bbafa924649ed21b9c692b8864a6bfdf76d1b72))
+* time logging should be in double ([e04e553](https://github.com/athensresearch/athens/commit/e04e5533990f3d47417c73885ffae4bc10860e0b))
+* workaround slow fluree filter ([4be370d](https://github.com/athensresearch/athens/commit/4be370d52932e1570a67c927fb6abcd9a37a38b5))
+
+
+### Refactors
+
+* make most persistence ns fns private ([4e420ea](https://github.com/athensresearch/athens/commit/4e420ea7eeb37fa8ad8a311a98a6055ff3bd1283))
+* move stuff around after thinking more ([b518f8d](https://github.com/athensresearch/athens/commit/b518f8df909cf46d7f8b87490811efd03099acb9))
+* Remove unused namespace reference ([34c7596](https://github.com/athensresearch/athens/commit/34c7596f570eca2b7955bf4f66ac99a9e329a03c))
+* use /datascript/persist instead of just /persist/ ([f62f829](https://github.com/athensresearch/athens/commit/f62f829f2cf9347446571ab3c9594443237d2ed3))
+
+
+* refactor and test position->uid+parent ([48786cd](https://github.com/athensresearch/athens/commit/48786cd69df368796f88caa070428de1f8074181))
+
 ## [2.0.0-beta.20](https://github.com/athensresearch/athens/compare/v2.0.0-beta.19...v2.0.0-beta.20) (2022-03-11)
 
 
