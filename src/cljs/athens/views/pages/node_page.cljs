@@ -440,7 +440,7 @@
                 [:a {:on-click (fn [e]
                                  (let [shift?       (.-shiftKey e)
                                        parsed-title (parse-renderer/parse-title group-title)]
-                                   (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ;; NOTE: this might be also used in right-pane situation
+                                   (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
                                                                         :target :page
                                                                         :pane   (if shift?
                                                                                   :right-pane
@@ -499,7 +499,7 @@
                 [:a {:on-click (fn [e]
                                  (let [shift?       (.-shiftKey e)
                                        parsed-title (parse-renderer/parse-title group-title)]
-                                   (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ;; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
+                                   (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
                                                                         :target :page
                                                                         :pane   (if shift?
                                                                                   :right-pane
@@ -577,7 +577,7 @@
                                          (.. e preventDefault)
                                          (if (or daily-note? shift?)
                                            (do
-                                             (rf/dispatch [:reporting/navigation {:source :page-title ;; NOTE: this might be also used in right-pane situation
+                                             (rf/dispatch [:reporting/navigation {:source :page-title ; NOTE: this might be also used in right-pane situation
                                                                                   :target (if title
                                                                                             :page
                                                                                             :block)
