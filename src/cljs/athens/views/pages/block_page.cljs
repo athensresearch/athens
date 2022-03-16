@@ -156,7 +156,7 @@
             [:wbr]
             [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]
 
-         [athens.views.comments.inline/inline-comments comment uid]
+         [athens.views.comments.inline/inline-comments (:block/comment block) uid]
          ;; Children
          [:div (for [child children]
                  (let [{:keys [db/id]} child]

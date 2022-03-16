@@ -77,4 +77,3 @@
             [comment-el item])
           [inline-comment-textarea uid]])])))
 
-
