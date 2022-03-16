@@ -434,8 +434,8 @@
        (when (get @state linked?)
          [:div (use-style references-list-style)
           (doall
-           (for [[group-title group] linked-refs]
-             [:div (use-style references-group-style {:key (str "group-" group-title)})
+            (for [[group-title group] linked-refs]
+              [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
                 [:a {:on-click (fn [e]
                                  (let [shift?       (.-shiftKey e)
@@ -448,12 +448,12 @@
                                    (router/navigate-page parsed-title e)))}
                  group-title]]
                (doall
-                (for [block group]
-                  ^{:key (str "ref-" (:block/uid block))}
-                  [:div {:style {:display         "flex"
-                                 :flex            "1 1 100%"
-                                 :justify-content "space-between"
-                                 :align-items     "flex-start"}}
+                 (for [block group]
+                   ^{:key (str "ref-" (:block/uid block))}
+                   [:div {:style {:display         "flex"
+                                  :flex            "1 1 100%"
+                                  :justify-content "space-between"
+                                  :align-items     "flex-start"}}
                     [:div (use-style references-group-block-style)
                      [ref-comp block]]]))]))])])))
 
@@ -493,8 +493,8 @@
        (when (get @state unlinked?)
          [:div (use-style references-list-style)
           (doall
-           (for [[[group-title] group] @unlinked-refs]
-             [:div (use-style references-group-style {:key (str "group-" group-title)})
+            (for [[[group-title] group] @unlinked-refs]
+              [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
                 [:a {:on-click (fn [e]
                                  (let [shift?       (.-shiftKey e)
@@ -507,11 +507,11 @@
                                    (router/navigate-page parsed-title e)))}
                  group-title]]
                (doall
-                (for [block group]
-                  ^{:key (str "ref-" (:block/uid block))}
-                  [:div {:style {:display         "flex"
-                                 :justify-content "space-between"
-                                 :align-items     "flex-start"}}
+                 (for [block group]
+                   ^{:key (str "ref-" (:block/uid block))}
+                   [:div {:style {:display         "flex"
+                                  :justify-content "space-between"
+                                  :align-items     "flex-start"}}
                     [:div (merge
                             (use-style references-group-block-style)
                             {:style {:max-width "90%"}})
