@@ -55,7 +55,8 @@
           [:span (stylefy/use-style {:font-size "80%" :margin-right "15px" :color "gray"})
             author]
           [:span (stylefy/use-style {:font-size "90%"})
-           string]
+           ;; In future this should be rendered differently for reply type and ref-type
+           [athens.parse-renderer/parse-and-render string uid]]
           [:span (stylefy/use-style {:font-size "80%" :color "gray" :float "right"})
            time]]]))
     [inline-comment-textarea uid]]])

@@ -54,7 +54,7 @@
      [:<>
       [:div.comment (stylefy/use-style comments-styles)
        [:span (stylefy/use-style {:margin "0 0 0 5px"})
-        (:string item)]]
+        [athens.parse-renderer/parse-and-render (:string item) uid] ]]
       (when (not= item (last data))
         [:hr {:style {:margin 0}}])])
    [right-side-comment-textarea uid]])
