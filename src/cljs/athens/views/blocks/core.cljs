@@ -273,11 +273,11 @@
                                dragging?           nil
                                is-selected?        nil
                                (or (neg? y)
-                                   (< y middle-y)) :before
+                                   (< y middle-y))         :before
+                               (< middle-y y)              :after
                                (or (not open)
                                    (and (empty? children)
-                                        (< 50 x))) :first
-                               (< middle-y y)      :after)]
+                                        (< 50 x)))         :first)]
     (when target
       (swap! state assoc :drag-target target))))
 
@@ -348,6 +348,7 @@
                                      (or (= effect-allowed "link")
                                          (= effect-allowed "move")))
         selected-items           @(rf/subscribe [::select-subs/items])]
+    (println "drag target" drag-target "target uid" target-uid)
 
     (cond
       (re-find img-regex datatype) (when electron.utils/electron?
