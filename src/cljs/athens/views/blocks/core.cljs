@@ -274,7 +274,8 @@
                                is-selected?        nil
                                (or (neg? y)
                                    (< y middle-y))         :before
-                               (< middle-y y)              :after
+                               (and (< middle-y y)
+                                    (> 50 x))              :after
                                (or (not open)
                                    (and (empty? children)
                                         (< 50 x)))         :first)]
