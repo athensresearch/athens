@@ -349,7 +349,6 @@
                                      (or (= effect-allowed "link")
                                          (= effect-allowed "move")))
         selected-items           @(rf/subscribe [::select-subs/items])]
-    (println "drag target" drag-target "target uid" target-uid)
 
     (cond
       (re-find img-regex datatype) (when electron.utils/electron?
