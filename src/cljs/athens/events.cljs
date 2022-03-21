@@ -1535,14 +1535,32 @@
   :paste-internal
   [(interceptors/sentry-span-no-new-tx "paste-internal")]
   (fn [_ [_ uid local-str internal-representation]]
-    (let [[uid]  (db/uid-and-embed-id uid)
-          op     (bfs/build-paste-op @db/dsdb
-                                     uid
-                                     local-str
-                                     internal-representation)
-          event  (common-events/build-atomic-event op)]
+    (let [[uid]            (db/uid-and-embed-id uid)
+          op               (bfs/build-paste-op @db/dsdb
+                                               uid
+                                               local-str
+                                               internal-representation)
+          page-new-ops     (graph-ops/contains-op? op :page/new)
+          block-new-ops    (graph-ops/contains-op? op :block/new)
+          event            (common-events/build-atomic-event op)]
       (log/debug "paste internal event is" (pr-str event))
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
+
+                           (seq page-new-ops)
+                           (conj [:reporting/page.create {:source :paste-internal
+                                                          :count  (->> page-new-ops
+                                                                       (map :op/args)
+                                                                       (map :page/title)
+                                                                       set
+                                                                       count)}])
+
+                           (seq block-new-ops)
+                           (conj [:reporting/block.create {:source :paste-internal
+                                                           :count  (->> block-new-ops
+                                                                        (map :op/args)
+                                                                        (map :block/uid)
+                                                                        set
+                                                                        count)}]))]]})))
 
 
 (reg-event-fx

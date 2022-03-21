@@ -50,3 +50,11 @@
     {:posthog/capture-event! {:event-name "feature/page.create"
                               :opts-map   {:source        source
                                            :pages-created count}}}))
+
+
+(rf/reg-event-fx
+  :reporting/block.create
+  (fn [{:keys [_db]} [_ {:keys [source count]}]]
+    {:posthog/capture-event! {:event-name "feature/block.create"
+                              :opts-map   {:source         source
+                                           :blocks-created count}}}))
