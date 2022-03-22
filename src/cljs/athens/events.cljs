@@ -1088,22 +1088,25 @@
     (log/debug ":block/save args" (pr-str args))
     (let [local?       (not (db-picker/remote-db? db))
           block-eid    (common-db/e-by-av @db/dsdb :block/uid uid)
+          old-string   (->> block-eid
+                            (d/entity @db/dsdb)
+                            :block/string)
           do-nothing?  (or (not block-eid)
-                           (= string (->> block-eid (d/entity @db/dsdb) :block/string)))
+                           (= old-string string))
           op           (graph-ops/build-block-save-op @db/dsdb uid string)
           page-new-ops (graph-ops/contains-op? op :page/new)
+          new-titles   (->> page-new-ops
+                            (map :op/args)
+                            (map :page/title)
+                            set)
           event        (common-events/build-atomic-event op)]
       (log/debug ":block/save local?" local?
                  ", do-nothing?" do-nothing?)
       (when-not do-nothing?
         {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
-                             (seq page-new-ops)
+                             (seq new-titles)
                              (conj [:reporting/page.create {:source :block-save
-                                                            :count  (->> page-new-ops
-                                                                         (map :op/args)
-                                                                         (map :page/title)
-                                                                         set
-                                                                         count)}]))]]}))))
+                                                            :count  (count new-titles)}]))]]}))))
 
 
 (reg-event-fx
