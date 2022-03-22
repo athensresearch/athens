@@ -1098,7 +1098,7 @@
       (when-not do-nothing?
         {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
                              (seq page-new-ops)
-                             (conj [:reporting/page.create {:source :redo
+                             (conj [:reporting/page.create {:source :block-save
                                                             :count  (->> page-new-ops
                                                                          (map :op/args)
                                                                          (map :page/title)
