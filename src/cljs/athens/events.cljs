@@ -857,7 +857,6 @@
   :undo
   [(interceptors/sentry-span-no-new-tx "undo")]
   (fn [{:keys [db]} _]
-    (log/debug ":undo")
     (try
       (log/debug ":undo count" (undo/count-undo db))
       (if-some [[undo db'] (undo/pop-undo db)]
@@ -865,11 +864,27 @@
               evt-id         (:event/id evt)
               dsdb           @db/dsdb
               undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
+              page-new-ops   (graph-ops/contains-op? (:event/op undo-evt) :page/new)
+              block-new-ops  (graph-ops/contains-op? (:event/op undo-evt) :block/new)
               undo-evt-id    (:event/id undo-evt)
               db''           (undo/push-redo db' undo-evt-id [dsdb undo-evt])]
           (log/debug ":undo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
           {:db db''
-           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
+           :fx [[:dispatch-n (cond-> [[:resolve-transact-forward undo-evt]]
+                               (seq page-new-ops)
+                               (conj [:reporting/page.create {:source :undo
+                                                              :count  (->> page-new-ops
+                                                                           (map :op/args)
+                                                                           (map :page/title)
+                                                                           set
+                                                                           count)}])
+                               (seq block-new-ops)
+                               (conj [:reporting/block.create {:source :undo
+                                                               :count  (->> block-new-ops
+                                                                            (map :op/args)
+                                                                            (map :block/uid)
+                                                                            set
+                                                                            count)}]))]]})
         {})
       (catch :default _
         {:fx [[:dispatch [:alert/js "Undo for this operation not supported in Lan-Party, yet."]]]}))))
@@ -887,11 +902,27 @@
               evt-id         (:event/id evt)
               dsdb           @db/dsdb
               undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
+              page-new-ops   (graph-ops/contains-op? (:event/op undo-evt) :page/new)
+              block-new-ops  (graph-ops/contains-op? (:event/op undo-evt) :block/new)
               undo-evt-id    (:event/id undo-evt)
               db''           (undo/push-undo db' undo-evt-id [dsdb undo-evt])]
           (log/debug ":redo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
           {:db db''
-           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
+           :fx [[:dispatch-n (cond-> [[:resolve-transact-forward undo-evt]]
+                               (seq page-new-ops)
+                               (conj [:reporting/page.create {:source :redo
+                                                              :count  (->> page-new-ops
+                                                                           (map :op/args)
+                                                                           (map :page/title)
+                                                                           set
+                                                                           count)}])
+                               (seq block-new-ops)
+                               (conj [:reporting/block.create {:source :redo
+                                                               :count  (->> block-new-ops
+                                                                            (map :op/args)
+                                                                            (map :block/uid)
+                                                                            set
+                                                                            count)}]))]]})
         {})
       (catch :default _
         {:fx [[:dispatch [:alert/js "Redo for this operation not supported in Lan-Party, yet."]]]}))))
