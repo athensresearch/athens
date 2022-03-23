@@ -9,7 +9,7 @@
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
-    [re-frame.core :refer [dispatch]]))
+    [re-frame.core :as rf]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -625,8 +625,10 @@
 
 (defn transact-state-for-uid
   "uid -> Current block
-   state -> Look at state atom in block-el"
-  [uid state]
+   state -> Look at state atom in block-el
+   source -> reporting source"
+  [uid state source]
   (let [{:string/keys [local]} @state]
-    (dispatch [:block/save {:uid      uid
-                            :string   local}])))
+    (rf/dispatch [:block/save {:uid    uid
+                               :string local
+                               :source source}])))

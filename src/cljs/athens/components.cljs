@@ -8,7 +8,7 @@
     [athens.util :refer [recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :as rf :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -16,12 +16,13 @@
 (defn todo-on-click
   [uid from-str to-str]
   (let [current-block-content (:block/string (db/get-block [:block/uid uid]))
-        new-block-content     (clojure.string/replace current-block-content
-                                                      from-str
-                                                      to-str)]
-    (dispatch [:block/save {:uid       uid
-                            :string    new-block-content
-                            :add-time? true}])))
+        new-block-content     (str/replace current-block-content
+                                           from-str
+                                           to-str)]
+    (rf/dispatch [:block/save {:uid       uid
+                               :string    new-block-content
+                               :add-time? true
+                               :source    :todo-click}])))
 
 
 (defn span-click-stop

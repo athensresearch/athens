@@ -1073,7 +1073,7 @@
 
 (reg-event-fx
   :block/save
-  (fn [{:keys [db]} [_ {:keys [uid string] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid string source] :as args}]]
     (log/debug ":block/save args" (pr-str args))
     (let [local?      (not (db-picker/remote-db? db))
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
@@ -1090,7 +1090,7 @@
       (when-not do-nothing?
         {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
                              (seq new-titles)
-                             (conj [:reporting/page.create {:source :block-save
+                             (conj [:reporting/page.create {:source (or source :unknown-block-save)
                                                             :count  (count new-titles)}]))]]}))))
 
 
@@ -1563,7 +1563,7 @@
                                                                                                   (str "((" source-uid "))"))]))]
       {:fx [[:dispatch-n [[:resolve-transact-forward atomic-event]
                           [:reporting/block.create {:source :bullet-drop
-                                                    :count  1}] ;; TODO :reporting/block.link
+                                                    :count  1}] ; TODO :reporting/block.link
                           ]]]})))
 
 
