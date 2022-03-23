@@ -58,47 +58,47 @@
         electron?  electron.utils/electron?
         modal      (rf/subscribe [:modal])]
     (fn []
-      [:> ChakraProvider {:theme theme,
-                          :bg "background.basement"}
-       [:> OverlayProvider
-       [:div (merge {:style {:display "contents"}}
-                    (zoom))
-        [help-popup]
-        [alert]
-        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
-          [m-snackbar
-           {:message msg
-            :open (boolean msg)}
-           [:span
-            {:style {:background-color (case type
-                                         :success "green"
-                                         "red")
-                     :padding "10px 20px"
-                     :color "white"}}
-            msg]])
-        [athena-component]
-        (cond
-          (and @loading @modal) [db-modal/window]
+      [:div (merge {:style {:display "contents"}}
+                   (zoom))
+       [:> ChakraProvider {:theme theme,
+                           :bg "background.basement"}
+        [:> OverlayProvider
+         [help-popup]
+         [alert]
+         (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
+           [m-snackbar
+            {:message msg
+             :open (boolean msg)}
+            [:span
+             {:style {:background-color (case type
+                                          :success "green"
+                                          "red")
+                      :padding "10px 20px"
+                      :color "white"}}
+             msg]])
+         [athena-component]
+         (cond
+           (and @loading @modal) [db-modal/window]
 
-          @loading [:> Spinner]
+           @loading [:> Spinner]
 
-          :else [:<>
-                 (when @modal [db-modal/window])
-                 [:> Grid
-                  {:gridTemplateColumns "auto 1fr auto"
-                   :gridTemplateRows "auto 1fr auto"
-                   :grid-template-areas
-                   "'app-header app-header app-header'
+           :else [:<>
+                  (when @modal [db-modal/window])
+                  [:> Grid
+                   {:gridTemplateColumns "auto 1fr auto"
+                    :gridTemplateRows "auto 1fr auto"
+                    :grid-template-areas
+                    "'app-header app-header app-header'
                       'left-sidebar main-content secondary-content'
                     'devtool devtool devtool'"
-                   :height "100vh"
-                   :className [(case os
-                                 :windows "os-windows"
-                                 :mac "os-mac"
-                                 :linux "os-linux")
-                               (when electron? "is-electron")]}
-                  [app-toolbar/app-toolbar]
-                  [left-sidebar/left-sidebar]
-                  [pages/view]
-                  [right-sidebar/right-sidebar]
-                  [devtool-component]]])]]])))
+                    :height "100vh"
+                    :className [(case os
+                                  :windows "os-windows"
+                                  :mac "os-mac"
+                                  :linux "os-linux")
+                                (when electron? "is-electron")]}
+                   [app-toolbar/app-toolbar]
+                   [left-sidebar/left-sidebar]
+                   [pages/view]
+                   [right-sidebar/right-sidebar]
+                   [devtool-component]]])]]])))

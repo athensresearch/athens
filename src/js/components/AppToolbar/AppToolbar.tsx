@@ -28,6 +28,19 @@ import {
 
 import { WindowButtons } from './components/WindowButtons';
 
+const toolbarButtonStyle = {
+  background: 'background.floor',
+  _hover: {
+    bg: 'background.upper'
+  },
+  _active: {
+    bg: 'link'
+  }
+}
+
+const ToolbarButton = ({ children, ...props }) => <Button {...toolbarButtonStyle} {...props}>{children}</Button>
+const ToolbarIconButton = ({ children, ...props }) => <IconButton aria-label="sdf" {...toolbarButtonStyle} {...props}>{children}</IconButton>
+
 const AppToolbarWrapper = ({ children }) => <Flex
   borderBottom="1px solid transparent"
   justifyContent="space-between"
@@ -187,60 +200,75 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         <ButtonGroup size="sm">
           {databaseMenu}
           <Tooltip label="Navigation">
-            <IconButton
+            <ToolbarIconButton
               aria-label="Navigation"
               onClick={handlePressLeftSidebarToggle}
               isActive={isLeftSidebarOpen}
             >
               <MenuIcon />
-            </IconButton>
+            </ToolbarIconButton>
           </Tooltip>
           {isElectron && (
             <>
               <Divider orientation="vertical" />
               <Tooltip
                 label="Go back">
-                <IconButton aria-label="Go back" onClick={handlePressHistoryBack}><ChevronLeft /></IconButton>
+                <ToolbarIconButton aria-label="Go back" onClick={handlePressHistoryBack}><ChevronLeft /></ToolbarIconButton>
               </Tooltip>
               <Tooltip label="Go forward">
-                <IconButton
+                <ToolbarIconButton
                   aria-label="Go forward"
-                  onClick={handlePressHistoryForward}><ChevronRight /></IconButton>
+                  onClick={handlePressHistoryForward}>
+                  <ChevronRight />
+                </ToolbarIconButton>
               </Tooltip>
             </>)
           }
-          <Tooltip label="Daily notes"><IconButton aria-label="Daily notes" isActive={route === '/daily-notes'} onClick={handlePressDailyNotes}><Today /></IconButton></Tooltip>
-          <Tooltip label="All pages"><IconButton
-            aria-label="All pages"
-            isActive={route === '/all-pages'} onClick={handlePressAllPages}><FileCopy /></IconButton></Tooltip>
-          <Tooltip label="Graph"><IconButton
-            aria-label="Graph"
-            isActive={route === '/graph'} onClick={handlePressGraph}><BubbleChart /></IconButton></Tooltip>
-          <Button
+          <Tooltip label="Daily notes">
+            <ToolbarIconButton aria-label="Daily notes" isActive={route === '/daily-notes'} onClick={handlePressDailyNotes}>
+              <Today />
+            </ToolbarIconButton>
+          </Tooltip>
+          <Tooltip label="All pages">
+            <ToolbarIconButton
+              aria-label="All pages"
+              isActive={route === '/all-pages'} onClick={handlePressAllPages}
+            >
+              <FileCopy />
+            </ToolbarIconButton>
+          </Tooltip>
+          <Tooltip label="Graph">
+            <ToolbarIconButton
+              aria-label="Graph"
+              isActive={route === '/graph'} onClick={handlePressGraph}>
+              <BubbleChart />
+            </ToolbarIconButton>
+          </Tooltip>
+          <ToolbarButton
             aria-label="Search"
             leftIcon={<Search />}
             isActive={isCommandBarOpen}
             onClick={handlePressCommandBar}
           >
             Find or create a page
-          </Button>
+          </ToolbarButton>
         </ButtonGroup>
         <ButtonGroup size="sm">
           {presenceDetails}
-          <Tooltip label="Merge"><IconButton aria-label="Merge" isActive={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></IconButton></Tooltip>
-          <Tooltip label="Settings"><IconButton aria-label="Settings" isActive={route === '/settings'} onClick={handlePressSettings}><Settings /></IconButton></Tooltip>
-          <Tooltip label="Toggle theme"><IconButton aria-label="Toggle theme" onClick={handlePressThemeToggle}>
+          <Tooltip label="Merge"><ToolbarIconButton aria-label="Merge" isActive={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></ToolbarIconButton></Tooltip>
+          <Tooltip label="Settings"><ToolbarIconButton aria-label="Settings" isActive={route === '/settings'} onClick={handlePressSettings}><Settings /></ToolbarIconButton></Tooltip>
+          <Tooltip label="Toggle theme"><ToolbarIconButton aria-label="Toggle theme" onClick={handlePressThemeToggle}>
             {isThemeDark ? <ToggleOff /> : <ToggleOn />}
-          </IconButton></Tooltip>
-          <Tooltip label="Help"><IconButton aria-label="Help" isActive={isHelpOpen} onClick={handlePressHelp}><Help /></IconButton></Tooltip>
+          </ToolbarIconButton></Tooltip>
+          <Tooltip label="Help"><ToolbarIconButton aria-label="Help" isActive={isHelpOpen} onClick={handlePressHelp}><Help /></ToolbarIconButton></Tooltip>
           <Divider orientation="vertical" />
-          <Tooltip label="Show right sidebar"><IconButton
+          <Tooltip label="Show right sidebar"><ToolbarIconButton
             aria-label="Show right sidebar"
             isActive={isRightSidebarOpen}
             onClick={handlePressRightSidebarToggle}
           >
             <VerticalSplit />
-          </IconButton>
+          </ToolbarIconButton>
           </Tooltip>
         </ButtonGroup>
       </HStack>

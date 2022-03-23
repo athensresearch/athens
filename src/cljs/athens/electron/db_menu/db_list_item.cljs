@@ -1,12 +1,11 @@
 (ns athens.electron.db-menu.db-list-item
   (:require
-    ["@chakra-ui/react" :refer [VStack Flex Text Button IconButton]]
-    ["@material-ui/icons/Clear" :default Clear]
-    ["@material-ui/icons/Link" :default Link]
-    [athens.electron.db-menu.db-icon :refer [db-icon]]
-    [athens.electron.dialogs :as dialogs]
-    [re-frame.core :refer [dispatch]]
-    ))
+   ["@chakra-ui/react" :refer [VStack Flex Text Button IconButton]]
+   ["@material-ui/icons/Clear" :default Clear]
+   ["@material-ui/icons/Link" :default Link]
+   [athens.electron.db-menu.db-icon :refer [db-icon]]
+   [athens.electron.dialogs :as dialogs]
+   [re-frame.core :refer [dispatch]]))
 
 
 (defn active-db
@@ -31,7 +30,7 @@
      (:name db)]
     [:> Text {:textOverflow "ellipsis"
               :size "sm"
-              :color "feature.secondary"
+              :color "foreground.secondary"
               :overflow "hidden"
               :title (:id db)}
      (when (:is-remote db)

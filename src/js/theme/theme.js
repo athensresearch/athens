@@ -1,4 +1,5 @@
 import { extendTheme } from '@chakra-ui/react'
+import { red } from '@material-ui/core/colors'
 import { spacing } from './spacing'
 
 
@@ -111,6 +112,26 @@ const semanticTokens = {
 }
 
 const components = {
+  Popover: {
+    baseStyle: {
+      content: {
+        bg: 'background.upper',
+        shadow: '0 0.5rem 1rem rgba(0, 0, 0, 0.15)'
+      }
+    }
+  },
+  Modal: {
+    baseStyle: {
+      dialogContainer: {
+        _focus: {
+          outline: 'none'
+        }
+      },
+      dialog: {
+        bg: 'background.upper'
+      }
+    }
+  },
   Button: {
     baseStyle: {
       color: 'feature.primary',

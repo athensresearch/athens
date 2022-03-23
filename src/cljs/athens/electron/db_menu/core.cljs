@@ -34,7 +34,10 @@
                            :synchronising)]
     [:> Popover {:placement "bottom-start"}
      [:> PopoverTrigger
-      [:> IconButton
+      [:> IconButton {:p 0
+                      :bg "background.floor"
+                      :_hover {:bg "background.upper"}
+                      :_active {:bg "background.upper"}}
         ;; DB Icon + Dropdown toggle
        [db-icon {:db     active-db
                  :status sync-status}]]]
@@ -46,11 +49,11 @@
                     :overflowY "auto"
                     :spacing 2}
         ;; Show active DB first
-        [:> Box
-         [db-list-item {:db active-db
-                        :is-current true
-                        :key (:id active-db)}]
-         [current-db-tools {:db active-db} all-dbs]]
+         [:> Box
+          [db-list-item {:db active-db
+                         :is-current true
+                         :key (:id active-db)}]
+          [current-db-tools {:db active-db} all-dbs]]
                     ;; Show all inactive DBs and a separator
          [:> VStack
           {:align "stretch" :spacing 0}
@@ -62,6 +65,7 @@
                              :key key}]
               [:> Divider]]))]
                     ;; Add DB control
+         [:> Divider]
          [:> ButtonGroup {:p 2 :pt 0 :pl 10 :size "sm" :width "100%" :ml 10 :justifyContent "flex-start"}
           [:> Button {:onClick #(dispatch [:modal/toggle])}
            "Add Database"]]]]]]]))

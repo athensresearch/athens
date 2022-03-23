@@ -298,14 +298,13 @@
       (when @athena-open?
         [:> Modal {:maxHeight "60vh"
                    :display "flex"
-                   :_focus {:outline "none"}
+                   :outline "none"
                    :closeOnEsc true
                    :isOpen @athena-open?
                    :onClose #(dispatch [:athena/toggle])}
-         [:> ModalOverlay {:_focus {:outline "none"}}]
+         [:> ModalOverlay]
          [:> ModalContent
           {:width "49rem"
-          :_focus {:outline "none"}
            :bg "background.upper"
            :maxWidth "calc(100vw - 4rem)"}
           [:> Input
