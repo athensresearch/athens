@@ -24,7 +24,7 @@ jobs:
        # Keep version and script up to date!
        - uses: DeLaGuardo/setup-clj-kondo@master
          with:
-           version: '2021.08.06'
+           version: '2022.03.09'
 
        - name: Lint
          run: clj-kondo --lint src

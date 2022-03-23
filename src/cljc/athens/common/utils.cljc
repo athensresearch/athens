@@ -11,8 +11,7 @@
        (java.time
          LocalDateTime)
        (java.util
-         Date
-         UUID))))
+         Date))))
 
 
 (defn now-ts
@@ -25,13 +24,6 @@
   []
   #?(:clj  (/ (.getNano (LocalDateTime/now)) 1000000)
      :cljs (js/performance.now)))
-
-
-#?(:clj
-   (defn random-uuid
-     "CLJ shim for CLJS `random-uuid`."
-     []
-     (UUID/randomUUID)))
 
 
 (defn uuid->string
@@ -69,23 +61,6 @@
                                (println in#)
                                (time (~parser in#))))
      ~@tests))
-
-
-;; Resources on lazy clojure ops.
-;; https://clojuredocs.org/clojure.core/lazy-seq
-;; https://clojuredocs.org/clojure.core/lazy-cat
-;; http://clojure-doc.org/articles/language/laziness.html
-;; https://stackoverflow.com/a/44102122/2116927
-;; The lazy-* fns aren't explicitly used here, but all fns used here are lazy,
-;; so the end result is lazy as well.
-(defn range-mapcat-while
-  "Returns a lazy concatenation of (f i), where i starts at 0 and increases by 1 each iteration.
-   Continues while (stop? (f i)) is false."
-  [f stop?]
-  ;; Concat the result,
-  (apply concat (->> (range)
-                     (map f)
-                     (take-while (complement stop?)))))
 
 
 (defn spy

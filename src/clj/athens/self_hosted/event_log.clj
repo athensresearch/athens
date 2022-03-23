@@ -2,7 +2,6 @@
   (:require
     [athens.async :as athens.async]
     [athens.athens-datoms :as datoms]
-    [athens.common.utils :as utils]
     [athens.self-hosted.event-log-migrations :as migrations]
     [clojure.core.async :as async]
     [clojure.data :as data]
@@ -41,17 +40,18 @@
 
 
 (defn- events-page
-  "Returns a seq of events in page-number for all events in db split by page-size.
-  If starting-subject-id is non-nil, only events after that one are returned."
+  "Returns {:next-page ... :items ...}, where items is a vector of events in
+   page-number for all events in db split by page-size. For use with `iteration`."
   ([db page-size page-number]
-   @(fdb/query db
-               {:select {"?event" ["*"]}
-                :where  [["?event" "event/id", "?id"]]
-                ;; Subject ID (?event here) is a monotonically incrementing bigint,
-                ;; so ordering by that gives us event insertion order since events are immutable.
-                :opts   {:orderBy ["ASC", "?event"]
-                         :limit   page-size
-                         :offset  (* page-size page-number)}})))
+   {:next-page (inc page-number)
+    :items     @(fdb/query db
+                           {:select {"?event" ["*"]}
+                            :where  [["?event" "event/id", "?id"]]
+                            ;; Subject ID (?event here) is a monotonically incrementing bigint,
+                            ;; so ordering by that gives us event insertion order since events are immutable.
+                            :opts   {:orderBy ["ASC", "?event"]
+                                     :limit   page-size
+                                     :offset  (* page-size page-number)}})}))
 
 
 (defn- event-id->subject-id
@@ -80,18 +80,28 @@
   Can potentially be very large, so don't hold on to the seq head while
   processing, and don't use fns that realize the whole coll (e.g. count)."
   ([fluree]
-   (let [db (fdb/db (-> fluree :conn-atom deref) ledger)
-         f  (partial events-page db 100)]
-     ;; TODO: use `iteration` once clojure 1.11.0 is out, much simpler and standard
-     ;; https://github.com/clojure/clojure/blob/master/changes.md#34-iteration
-     (->> (utils/range-mapcat-while f empty?)
+   (let [db   (fdb/db (-> fluree :conn-atom deref) ledger)
+         step (partial events-page db 100)]
+     ;; New core fn added in Clojure 11.
+     ;; See https://www.juxt.pro/blog/new-clojure-iteration for usage example.
+     (->> (iteration step
+                     :kf :next-page
+                     :vf :items
+                     :somef #(-> % :events seq)
+                     :initk 0)
+          (sequence cat)
           (map deserialize))))
   ([fluree event-id]
-   (let [db (fdb/db (-> fluree :conn-atom deref) ledger)
-         f  (partial events-page db 100)]
+   (let [db   (fdb/db (-> fluree :conn-atom deref) ledger)
+         step (partial events-page db 100)]
      (when-not (event-id->subject-id db event-id)
        (throw (ex-info "Cannot find starting id" {:event-id event-id})))
-     (->> (utils/range-mapcat-while f empty?)
+     (->> (iteration step
+                     :kf :next-page
+                     :vf :items
+                     :somef #(-> % :events seq)
+                     :initk 0)
+          (sequence cat)
           (map deserialize)
           ;; The point here is to get all events since event-id.
           ;; We're getting all the events, dropping every one until the first one we care about,
@@ -232,16 +242,18 @@
 
 
 (defn- recover-block-events
-  "Returns a seq of recovered events in conn for block=idx+1 in conn."
+  "Returns {:stop ... :next-page ... :items ...}, where items is a seq of recovered
+  events in conn for block=idx+1 in conn. For use with `iteration`."
   [conn idx]
   (let [res @(fdb/block-query conn ledger {:block (inc idx) :pretty-print true})
         ex-msg (ex-message res)]
+    (println res)
     ;; If the query because the is higher than the total blocks,
     ;; result will be an error map instead of seq.
-    ;; Used with range-mapcat-while so we return ::stop to stop the iteration instead.
     (if (and ex-msg (str/starts-with? ex-msg "Start block is out of range for this ledger."))
-      ::stop
-      (get-block-txs res))))
+      {:stop true}
+      {:next-page (inc idx)
+       :items     (get-block-txs res)})))
 
 
 (defn recovered-events
@@ -250,8 +262,14 @@
   Can potentially be very large, so don't hold on to the seq head while
   processing, and don't use fns that realize the whole coll (e.g. count)."
   [fluree]
-  (let [f (partial recover-block-events (-> fluree :conn-atom deref))]
-    (map deserialize (utils/range-mapcat-while f #(= % ::stop)))))
+  (let [step (partial recover-block-events (-> fluree :conn-atom deref))]
+    (->> (iteration step
+                    :kf :next-page
+                    :vf :items
+                    :somef #(-> % :stop not)
+                    :initk 0)
+         (sequence cat)
+         (map deserialize))))
 
 
 (comment

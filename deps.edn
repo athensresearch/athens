@@ -1,7 +1,7 @@
 {:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen" "test"]
 
  :deps
- {org.clojure/clojure                   #:mvn{:version "1.10.3"}
+ {org.clojure/clojure                   #:mvn{:version "1.11.0"}
   org.clojure/clojurescript             #:mvn{:version "1.10.879"}
   org.clojure/tools.cli                 #:mvn{:version "1.0.206"}
   thheller/shadow-cljs                  #:mvn{:version "2.15.3"}
@@ -67,8 +67,8 @@
   :clj-kondo
   {:extra-deps {borkdude/clj-kondo
                 #:git{:url "https://github.com/borkdude/clj-kondo"
-                      :sha "9bb69c3188f7efe6e17d392def89e89ec9d85ae5"
-                      :tag "v2021.08.06"}}
+                      :sha "8937af7f4372c0d2264735ebc1439d0b61030872"
+                      :tag "v2022.03.09"}}
    :main-opts  ["-m" "clj-kondo.main"]}
 
   :outdated
