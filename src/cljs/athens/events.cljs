@@ -1496,12 +1496,16 @@
                                                                         (:block/uid parent)
                                                                         :after
                                                                         local-string)
+          new-titles                (graph-ops/ops->new-page-titles block-save-block-move-op)
           event                     (common-events/build-atomic-event block-save-block-move-op)]
 
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid uid embed-id)])
-              [:set-cursor-position [uid start end]]]}))))
+        {:fx (cond-> [(transact-async-flow :unindent event sentry-tx [(focus-on-uid uid embed-id)])
+                      [:set-cursor-position [uid start end]]]
+               (seq new-titles)
+               (conj [:dispatch [:reporting/page.create {:source :unindent
+                                                         :count  (count new-titles)}]]))}))))
 
 
 (reg-event-fx
