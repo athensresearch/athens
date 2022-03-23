@@ -1151,32 +1151,40 @@
   :backspace/delete-merge-block
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
     (log/debug ":backspace/delete-merge-block args:" (pr-str args))
-    (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block")
-          op          (wrap-span-no-new-tx "build-block-remove-merge-op"
-                                           (graph-ops/build-block-remove-merge-op @db/dsdb
-                                                                                  uid
-                                                                                  prev-block-uid
-                                                                                  value))
-          event       (common-events/build-atomic-event  op)]
-      {:fx [(transact-async-flow :backspace-delete-merge-block event sentry-tx
-                                 [(focus-on-uid prev-block-uid embed-id
-                                                (count (:block/string prev-block)))])]})))
+    (let [sentry-tx  (close-and-get-sentry-tx "backspace/delete-merge-block")
+          op         (wrap-span-no-new-tx "build-block-remove-merge-op"
+                                          (graph-ops/build-block-remove-merge-op @db/dsdb
+                                                                                 uid
+                                                                                 prev-block-uid
+                                                                                 value))
+          new-titles (graph-ops/ops->new-page-titles op)
+          event      (common-events/build-atomic-event  op)]
+      {:fx (cond-> [(transact-async-flow :backspace-delete-merge-block event sentry-tx
+                                         [(focus-on-uid prev-block-uid embed-id
+                                                        (count (:block/string prev-block)))])]
+             (seq new-titles)
+             (conj [:dispatch [:reporting/page.create {:source :kbd-backspace-merge
+                                                       :count  (count new-titles)}]]))})))
 
 
 (reg-event-fx
   :backspace/delete-merge-block-with-save
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id local-update] :as args}]]
     (log/debug ":backspace/delete-merge-block-with-save args:" (pr-str args))
-    (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block-with-save")
-          op          (wrap-span-no-new-tx "build-block-merge-with-updated-op"
-                                           (graph-ops/build-block-merge-with-updated-op @db/dsdb
-                                                                                        uid
-                                                                                        prev-block-uid
-                                                                                        value
-                                                                                        local-update))
-          event       (common-events/build-atomic-event  op)]
-      {:fx [(transact-async-flow :backspace-delete-merge-block-with-save event sentry-tx
-                                 [(focus-on-uid prev-block-uid embed-id (count local-update))])]})))
+    (let [sentry-tx  (close-and-get-sentry-tx "backspace/delete-merge-block-with-save")
+          op         (wrap-span-no-new-tx "build-block-merge-with-updated-op"
+                                          (graph-ops/build-block-merge-with-updated-op @db/dsdb
+                                                                                       uid
+                                                                                       prev-block-uid
+                                                                                       value
+                                                                                       local-update))
+          new-titles (graph-ops/ops->new-page-titles op)
+          event      (common-events/build-atomic-event  op)]
+      {:fx (cond-> [(transact-async-flow :backspace-delete-merge-block-with-save event sentry-tx
+                                         [(focus-on-uid prev-block-uid embed-id (count local-update))])]
+             (seq new-titles)
+             (conj [:dispatch [:reporting/page.create  {:source :kbd-backspace-merge-with-save
+                                                        :count  (count new-titles)}]]))})))
 
 
 ;; Atomic events end ==========
