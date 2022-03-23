@@ -3,6 +3,7 @@
     [athens.async :as athens.async]
     [athens.athens-datoms :as datoms]
     [athens.common.utils :as utils]
+    [athens.self-hosted.event-log-migrations :as migrations]
     [clojure.core.async :as async]
     [clojure.data :as data]
     [clojure.data.json :as json]
@@ -16,21 +17,6 @@
 
 
 (def ledger "events/log")
-
-
-(def schema
-  [{:_id :_collection
-    :_collection/name :event
-    :_collection/doc "Athens semantic events."}
-   {:_id :_predicate
-    :_predicate/name :event/id
-    :_predicate/doc "A globally unique event id."
-    :_predicate/unique true
-    :_predicate/type :string}
-   {:_id :_predicate
-    :_predicate/name :event/data
-    :_predicate/doc "Event data serialized as an EDN string."
-    :_predicate/type :string}])
 
 
 (def initial-events
@@ -175,26 +161,28 @@
                            {:id id :response r}))))))))
 
 
-(defn ensure-ledger!
+(defn init!
   ([fluree]
-   (ensure-ledger! fluree initial-events))
+   (init! fluree initial-events))
   ([fluree seed-events]
    (let [conn (-> fluree :conn-atom deref)]
      (log/info "Looking for event-log fluree ledger")
      (when (empty? @(fdb/ledger-info conn ledger))
-       (let [block (atom nil)]
-         (log/info "Fluree ledger for event-log not found, creating" ledger)
-         @(fdb/new-ledger conn ledger)
-         (fdb/wait-for-ledger-ready conn ledger)
-         (reset! block (:block @(fdb/transact conn ledger schema)))
-         (log/info "Populating fresh ledger with initial events...")
-         (doseq [[id data] seed-events]
-           (reset! block (add-event! fluree id data)))
-         (log/info "✅ Populated fresh ledger.")
-         (log/info "Bringing local ledger to to date with latest transactions...")
-         (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
-         (log/info "✅ Fluree local ledger up to date.")
-         (log/info "✅ Fluree ledger for event-log created."))))))
+       (log/info "Fluree ledger for event-log not found, creating" ledger)
+       @(fdb/new-ledger conn ledger)
+       (fdb/wait-for-ledger-ready conn ledger)
+       (migrations/migrate-ledger! conn ledger)
+       (when seed-events
+         (let [block (atom nil)]
+           (log/info "Populating fresh ledger with initial events...")
+           (doseq [[id data] seed-events]
+             (reset! block (add-event! fluree id data)))
+           (log/info "✅ Populated fresh ledger.")
+           (log/info "Bringing local ledger to to date with latest transactions...")
+           (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
+           (log/info "✅ Fluree local ledger up to date.")))
+       (log/info "✅ Fluree ledger for event-log created."))
+     (migrations/migrate-ledger! conn ledger))))
 
 
 #_(defn events-since
@@ -280,7 +268,7 @@
   ((:reconnect-fn fluree-comp))
 
   ;; Create ledger if not present.
-  (ensure-ledger! fluree-comp)
+  (init! fluree-comp)
 
   ;; What's the first event in the ledger?
   (take 1 (events fluree-comp))
@@ -289,7 +277,7 @@
   (take 1 (events fluree-comp (UUID/fromString "e6dad544-ef29-43b5-911e-9c4bfdca3fda")))
 
   ;; Add a few events.
-  (def my-events [["uuid-2" [1 2 3]]
+  (def my-events [["uuid-1" [1 2 3]]
                   ["uuid-2" [4 5 6]]
                   ["uuid-3" [7 8 9]]])
 

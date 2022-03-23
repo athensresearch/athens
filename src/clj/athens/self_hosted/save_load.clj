@@ -36,7 +36,7 @@
 
 (defn- load-events
   [comp previous-events progress total]
-  (event-log/ensure-ledger! comp [])
+  (event-log/init! comp [])
   (doseq [[id data] previous-events]
     (swap! progress inc)
     (log/info "Processing" id (str "#" @progress "/" total))
@@ -91,7 +91,7 @@
       :else
       (do
         (log/info "Recreating ledger...")
-        (event-log/ensure-ledger! comp [])
+        (event-log/init! comp [])
         (log/info "Loading all events...")
         (load-events comp previous-events progress total)))))
 
