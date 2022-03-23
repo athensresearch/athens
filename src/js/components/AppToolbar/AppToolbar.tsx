@@ -31,7 +31,7 @@ import { WindowButtons } from './components/WindowButtons';
 const toolbarButtonStyle = {
   background: 'background.floor',
   _hover: {
-    bg: 'background.upper'
+    bg: 'background.attic'
   },
   _active: {
     bg: 'link'
@@ -247,8 +247,15 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           <ToolbarButton
             aria-label="Search"
             leftIcon={<Search />}
+            pl="0.5rem"
             isActive={isCommandBarOpen}
             onClick={handlePressCommandBar}
+            border="1px solid"
+            borderColor="background.attic"
+            _active={{
+              bg: 'link',
+              borderColor: "link"
+            }}
           >
             Find or create a page
           </ToolbarButton>

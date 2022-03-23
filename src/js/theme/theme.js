@@ -5,6 +5,8 @@ import { spacing } from './spacing'
 
 const colors = {
   // Old theme values
+
+  // light theme
   linkLight: "#0071DB",
   highlightLight: "#F9A132",
   textHighlightLight: "#ffdb8a",
@@ -16,12 +18,6 @@ const colors = {
   backgroundMinus1Light: "#FAF8F6",
   backgroundMinus2Light: "#EFEDEB",
 
-  backgroundMinu2Dark: "#151515",
-  backgroundMinus1Dark: "#111",
-  backgroundColorDark: "#1A1A1A",
-  backgroundPlus1Dark: "#222",
-  backgroundPlus2Dark: "#333",
-
   confirmationLight: "#009E23",
   headerLight: "#322F38",
   bodyLight: "#433F38",
@@ -29,10 +25,18 @@ const colors = {
   errorLight: "#fd5243",
   shadowLight: "#000",
 
-  linkDark: "#0071DB",
+  // dark theme
+  backgroundMinu2Dark: "#151515",
+  backgroundMinus1Dark: "#111",
+  backgroundColorDark: "#1A1A1A",
+  backgroundPlus1Dark: "#222",
+  backgroundPlus2Dark: "#333",
+
+  linkDark: "#498eda",
   highlightDark: "#FBBE63",
   textHighlightDark: "#FBBE63",
   warningDark: "#DE3C21",
+
   confirmationDark: "#189E36",
   headerDark: "#BABABA",
   bodyDark: "#AAA",
@@ -48,6 +52,7 @@ const semanticTokens = {
       default: 'linkLight',
       _dark: 'linkDark'
     },
+    // separator colors
     "separator.border": {
       default: 'borderLight',
       _dark: 'borderDark'
@@ -56,6 +61,7 @@ const semanticTokens = {
       default: 'borderLight',
       _dark: 'borderDark'
     },
+    // background colors
     "background.floor": {
       default: 'backgroundColorLight',
       _dark: 'backgroundColorDark'
@@ -72,6 +78,7 @@ const semanticTokens = {
       default: 'backgroundPlus2Light',
       _dark: 'backgroundPlus2Dark'
     },
+    // foreground colors
     "foreground.primary": {
       default: 'bodyLight',
       _dark: 'bodyDark'
@@ -80,6 +87,7 @@ const semanticTokens = {
       default: 'headerLight',
       _dark: 'headerDark'
     },
+    // status colors
     error: {
       default: 'errorLight',
       _dark: 'errorDark'
@@ -92,6 +100,7 @@ const semanticTokens = {
       default: 'confirmationLight',
       _dark: 'confirmationDark'
     },
+    // other colors
     headerText: {
       default: 'headerLight',
       _dark: 'headerDark'
@@ -149,6 +158,38 @@ const components = {
       maxW: "320px",
       zIndex: "tooltip",
     }
+  },
+  Table: {
+    baseStyle: {
+      border: 'separator.divider',
+    },
+    variants: {
+      striped: {
+        td: {
+          border: 'none',
+        },
+        thead: {
+          th: {
+            border: 'none'
+          }
+        },
+        tbody: {
+          tr: {
+            "&:nth-of-type(odd)": {
+              td: {
+                background: "background.upper",
+                "&:first-of-type": {
+                  borderLeftRadius: "lg"
+                },
+                "&:last-of-type": {
+                  borderRightRadius: "lg"
+                }
+              },
+            },
+          },
+        },
+      }
+    }
   }
 }
 
@@ -161,7 +202,7 @@ const styles = {
   global: {
     'html, body': {
       bg: 'background.floor',
-      color: 'feature.foreground',
+      color: 'foreground.primary',
     }
   }
 }
