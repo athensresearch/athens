@@ -1206,16 +1206,26 @@
   :enter/split-block
   (fn [_ [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
-    (let [sentry-tx   (close-and-get-sentry-tx "enter/split-block")
-          op          (wrap-span-no-new-tx "build-block-split-op"
-                                           (graph-ops/build-block-split-op @db/dsdb
-                                                                           {:old-block-uid uid
-                                                                            :new-block-uid new-uid
-                                                                            :string        value
-                                                                            :index         index
-                                                                            :relation      relation}))
-          event       (common-events/build-atomic-event op)]
-      {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+    (let [sentry-tx    (close-and-get-sentry-tx "enter/split-block")
+          op           (wrap-span-no-new-tx "build-block-split-op"
+                                            (graph-ops/build-block-split-op @db/dsdb
+                                                                            {:old-block-uid uid
+                                                                             :new-block-uid new-uid
+                                                                             :string        value
+                                                                             :index         index
+                                                                             :relation      relation}))
+          page-new-ops (graph-ops/contains-op? op :page/new)
+          new-titles   (->> page-new-ops
+                            (map :op/args)
+                            (map :page/title)
+                            set)
+          event        (common-events/build-atomic-event op)]
+      {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch-n (cond-> [[:reporting/block.create {:source :enter-split
+                                                            :count  1}]]
+                           (seq new-titles)
+                           (conj [:reporting/page.create {:source :enter-split
+                                                          :count  (count new-titles)}]))]]})))
 
 
 (reg-event-fx
