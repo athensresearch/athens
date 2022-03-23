@@ -1658,8 +1658,12 @@
                                                  text
                                                  (subs value start)))
           op          (graph-ops/build-block-save-op @db/dsdb uid new-string)
+          new-titles  (graph-ops/ops->new-page-titles op)
           event       (common-events/build-atomic-event op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
+                           (seq new-titles)
+                           (conj [:reporting/page.create {:source :paste-verbatim
+                                                          :count  (count new-titles)}]))]]})))
 
 
 (reg-event-fx
