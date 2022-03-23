@@ -559,7 +559,8 @@
   (fn [_ [_ {:keys [uid title]}]]
     (when-not (db/e-by-av :block/uid uid)
       {:dispatch [:page/new {:title     title
-                             :block-uid (common.utils/gen-block-uid)}]})))
+                             :block-uid (common.utils/gen-block-uid)
+                             :source    :auto-make-daily-note}]})))
 
 
 (reg-event-fx
@@ -864,27 +865,20 @@
               evt-id         (:event/id evt)
               dsdb           @db/dsdb
               undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
-              page-new-ops   (graph-ops/contains-op? (:event/op undo-evt) :page/new)
-              block-new-ops  (graph-ops/contains-op? (:event/op undo-evt) :block/new)
+              undo-ops       (:event/op undo-evt)
+              new-titles     (graph-ops/ops->new-page-titles undo-ops)
+              new-uids       (graph-ops/ops->new-block-uids undo-ops)
               undo-evt-id    (:event/id undo-evt)
               db''           (undo/push-redo db' undo-evt-id [dsdb undo-evt])]
           (log/debug ":undo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
           {:db db''
            :fx [[:dispatch-n (cond-> [[:resolve-transact-forward undo-evt]]
-                               (seq page-new-ops)
+                               (seq new-titles)
                                (conj [:reporting/page.create {:source :undo
-                                                              :count  (->> page-new-ops
-                                                                           (map :op/args)
-                                                                           (map :page/title)
-                                                                           set
-                                                                           count)}])
-                               (seq block-new-ops)
+                                                              :count  (count new-titles)}])
+                               (seq new-uids)
                                (conj [:reporting/block.create {:source :undo
-                                                               :count  (->> block-new-ops
-                                                                            (map :op/args)
-                                                                            (map :block/uid)
-                                                                            set
-                                                                            count)}]))]]})
+                                                               :count  (count new-uids)}]))]]})
         {})
       (catch :default _
         {:fx [[:dispatch [:alert/js "Undo for this operation not supported in Lan-Party, yet."]]]}))))
@@ -902,27 +896,20 @@
               evt-id         (:event/id evt)
               dsdb           @db/dsdb
               undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
-              page-new-ops   (graph-ops/contains-op? (:event/op undo-evt) :page/new)
-              block-new-ops  (graph-ops/contains-op? (:event/op undo-evt) :block/new)
+              undo-ops       (:event/op undo-evt)
               undo-evt-id    (:event/id undo-evt)
+              new-titles     (graph-ops/ops->new-page-titles undo-ops)
+              new-uids       (graph-ops/ops->new-block-uids undo-ops)
               db''           (undo/push-undo db' undo-evt-id [dsdb undo-evt])]
           (log/debug ":redo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
           {:db db''
            :fx [[:dispatch-n (cond-> [[:resolve-transact-forward undo-evt]]
-                               (seq page-new-ops)
+                               (seq new-titles)
                                (conj [:reporting/page.create {:source :redo
-                                                              :count  (->> page-new-ops
-                                                                           (map :op/args)
-                                                                           (map :page/title)
-                                                                           set
-                                                                           count)}])
-                               (seq block-new-ops)
+                                                              :count  (count new-titles)}])
+                               (seq new-uids)
                                (conj [:reporting/block.create {:source :redo
-                                                               :count  (->> block-new-ops
-                                                                            (map :op/args)
-                                                                            (map :block/uid)
-                                                                            set
-                                                                            count)}]))]]})
+                                                               :count  (count new-uids)}]))]]})
         {})
       (catch :default _
         {:fx [[:dispatch [:alert/js "Redo for this operation not supported in Lan-Party, yet."]]]}))))
@@ -1088,20 +1075,16 @@
   :block/save
   (fn [{:keys [db]} [_ {:keys [uid string] :as args}]]
     (log/debug ":block/save args" (pr-str args))
-    (let [local?       (not (db-picker/remote-db? db))
-          block-eid    (common-db/e-by-av @db/dsdb :block/uid uid)
-          old-string   (->> block-eid
-                            (d/entity @db/dsdb)
-                            :block/string)
-          do-nothing?  (or (not block-eid)
-                           (= old-string string))
-          op           (graph-ops/build-block-save-op @db/dsdb uid string)
-          page-new-ops (graph-ops/contains-op? op :page/new)
-          new-titles   (->> page-new-ops
-                            (map :op/args)
-                            (map :page/title)
-                            set)
-          event        (common-events/build-atomic-event op)]
+    (let [local?      (not (db-picker/remote-db? db))
+          block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
+          old-string  (->> block-eid
+                           (d/entity @db/dsdb)
+                           :block/string)
+          do-nothing? (or (not block-eid)
+                          (= old-string string))
+          op          (graph-ops/build-block-save-op @db/dsdb uid string)
+          new-titles  (graph-ops/ops->new-page-titles op)
+          event       (common-events/build-atomic-event op)]
       (log/debug ":block/save local?" local?
                  ", do-nothing?" do-nothing?)
       (when-not do-nothing?
@@ -1113,14 +1096,21 @@
 
 (reg-event-fx
   :page/new
-  (fn [_ [_ {:keys [title block-uid shift?] :or {shift? false} :as args}]]
+  (fn [_ [_ {:keys [title block-uid shift? source]
+             :or   {shift? false
+                    source :unknown-page-new}
+             :as   args}]]
     (log/debug ":page/new args" (pr-str args))
-    (let [event (common-events/build-atomic-event (graph-ops/build-page-new-op @db/dsdb
-                                                                               title
-                                                                               block-uid))]
+    (let [new-page-op (graph-ops/build-page-new-op @db/dsdb
+                                                   title
+                                                   block-uid)
+          new-titles  (graph-ops/ops->new-page-titles new-page-op)
+          event       (common-events/build-atomic-event new-page-op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:page/new-followup title shift?]
-                          [:editing/uid block-uid]]]]})))
+                          [:editing/uid block-uid]
+                          [:reporting/page.create {:source source
+                                                   :count  (count new-titles)}]]]]})))
 
 
 (reg-event-fx
@@ -1210,20 +1200,16 @@
   :enter/split-block
   (fn [_ [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
-    (let [sentry-tx    (close-and-get-sentry-tx "enter/split-block")
-          op           (wrap-span-no-new-tx "build-block-split-op"
-                                            (graph-ops/build-block-split-op @db/dsdb
-                                                                            {:old-block-uid uid
-                                                                             :new-block-uid new-uid
-                                                                             :string        value
-                                                                             :index         index
-                                                                             :relation      relation}))
-          page-new-ops (graph-ops/contains-op? op :page/new)
-          new-titles   (->> page-new-ops
-                            (map :op/args)
-                            (map :page/title)
-                            set)
-          event        (common-events/build-atomic-event op)]
+    (let [sentry-tx  (close-and-get-sentry-tx "enter/split-block")
+          op         (wrap-span-no-new-tx "build-block-split-op"
+                                          (graph-ops/build-block-split-op @db/dsdb
+                                                                          {:old-block-uid uid
+                                                                           :new-block-uid new-uid
+                                                                           :string        value
+                                                                           :index         index
+                                                                           :relation      relation}))
+          new-titles (graph-ops/ops->new-page-titles op)
+          event      (common-events/build-atomic-event op)]
       {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])
             [:dispatch-n (cond-> [[:reporting/block.create {:source :enter-split
                                                             :count  1}]]
@@ -1598,32 +1584,24 @@
   :paste-internal
   [(interceptors/sentry-span-no-new-tx "paste-internal")]
   (fn [_ [_ uid local-str internal-representation]]
-    (let [[uid]            (db/uid-and-embed-id uid)
-          op               (bfs/build-paste-op @db/dsdb
-                                               uid
-                                               local-str
-                                               internal-representation)
-          page-new-ops     (graph-ops/contains-op? op :page/new)
-          block-new-ops    (graph-ops/contains-op? op :block/new)
-          event            (common-events/build-atomic-event op)]
+    (let [[uid]      (db/uid-and-embed-id uid)
+          op         (bfs/build-paste-op @db/dsdb
+                                         uid
+                                         local-str
+                                         internal-representation)
+          new-titles (graph-ops/ops->new-page-titles op)
+          new-uids   (graph-ops/ops->new-block-uids op)
+          event      (common-events/build-atomic-event op)]
       (log/debug "paste internal event is" (pr-str event))
       {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
 
-                           (seq page-new-ops)
+                           (seq new-titles)
                            (conj [:reporting/page.create {:source :paste-internal
-                                                          :count  (->> page-new-ops
-                                                                       (map :op/args)
-                                                                       (map :page/title)
-                                                                       set
-                                                                       count)}])
+                                                          :count  (count new-titles)}])
 
-                           (seq block-new-ops)
+                           (seq new-uids)
                            (conj [:reporting/block.create {:source :paste-internal
-                                                           :count  (->> block-new-ops
-                                                                        (map :op/args)
-                                                                        (map :block/uid)
-                                                                        set
-                                                                        count)}]))]]})))
+                                                           :count  (count new-uids)}]))]]})))
 
 
 (reg-event-fx
