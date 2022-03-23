@@ -1079,7 +1079,9 @@
           op          (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
                                                                    :relation  :after})
           event       (common-events/build-atomic-event op)]
-      {:fx [(transact-async-flow :enter-new-block event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+      {:fx [(transact-async-flow :enter-new-block event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch [:reporting/block.create {:source :enter-new-block
+                                                 :count  1}]]]})))
 
 
 (reg-event-fx
@@ -1199,7 +1201,9 @@
                                            (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
                                                                                 :relation  :first}))
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
-      {:fx [(transact-async-flow :enter-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+      {:fx [(transact-async-flow :enter-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch [:reporting/block.create {:source :enter-add-child
+                                                 :count  1}]]]})))
 
 
 (reg-event-fx
@@ -1237,7 +1241,9 @@
                                            (common-db/compat-position @db/dsdb {:block/uid uid
                                                                                 :relation  :before}))
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
-      {:fx [(transact-async-flow :enter-bump-up event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+      {:fx [(transact-async-flow :enter-bump-up event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch [:reporting/block.create {:source :enter-bump-up
+                                                 :count  1}]]]})))
 
 
 (reg-event-fx
@@ -1258,7 +1264,9 @@
                                                                      [block-open-op
                                                                       add-child-op])
           event                   (common-events/build-atomic-event open-block-add-child-op)]
-      {:fx [(transact-async-flow :enter-open-block-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+      {:fx [(transact-async-flow :enter-open-block-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch [:reporting/block.create {:source :enter-open-block-add-child
+                                                 :count  1}]]]})))
 
 
 (defn enter
@@ -1559,7 +1567,10 @@
                                                                                                   :relation target-rel})
                                                              (atomic-graph-ops/make-block-save-op block-uid
                                                                                                   (str "((" source-uid "))"))]))]
-      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+      {:fx [[:dispatch-n [[:resolve-transact-forward atomic-event]
+                          [:reporting/block.create {:source :bullet-drop
+                                                    :count  1}] ;; TODO :reporting/block.link
+                          ]]]})))
 
 
 (reg-event-fx
