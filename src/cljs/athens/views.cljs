@@ -1,39 +1,25 @@
 (ns athens.views
   (:require
-    ["/components/Spinner/Spinner" :refer [Spinner]]
-    ["/components/utils/style/style" :refer [GlobalStyles]]
-    ["@material-ui/core/Snackbar" :as Snackbar]
-    ["@react-aria/overlays" :refer [OverlayProvider]]
-    [athens.config]
-    [athens.electron.db-modal :as db-modal]
-    [athens.electron.utils :as electron.utils]
-    [athens.style :refer [zoom]]
-    [athens.subs]
-    [athens.util :refer [get-os]]
-    [athens.views.app-toolbar :as app-toolbar]
-    [athens.views.athena :refer [athena-component]]
-    [athens.views.devtool :refer [devtool-component]]
-    [athens.views.help :refer [help-popup]]
-    [athens.views.left-sidebar :as left-sidebar]
-    [athens.views.pages.core :as pages]
-    [athens.views.right-sidebar :as right-sidebar]
-    [re-frame.core :as rf]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
-
-
-;; Styles
-
-
-(def app-wrapper-style
-  {:display "grid"
-   :grid-template-areas
-   "'app-header app-header app-header'
-    'left-sidebar main-content secondary-content'
-   'devtool devtool devtool'"
-   :grid-template-columns "auto 1fr auto"
-   :grid-template-rows "auto 1fr auto"
-   :height "100vh"})
+   ["/components/Spinner/Spinner" :refer [Spinner]]
+   ["/theme/theme" :refer [theme]]
+   ["@chakra-ui/react" :refer [ChakraProvider Grid]]
+   ["@material-ui/core/Snackbar" :as Snackbar]
+   ["@react-aria/overlays" :refer [OverlayProvider]]
+   [athens.config]
+   [athens.electron.db-modal :as db-modal]
+   [athens.electron.utils :as electron.utils]
+   [athens.style :refer [zoom]]
+   [athens.subs]
+   [athens.util :refer [get-os]]
+   [athens.views.app-toolbar :as app-toolbar]
+   [athens.views.athena :refer [athena-component]]
+   [athens.views.devtool :refer [devtool-component]]
+   [athens.views.help :refer [help-popup]]
+   [athens.views.left-sidebar :as left-sidebar]
+   [athens.views.pages.core :as pages]
+   [athens.views.right-sidebar :as right-sidebar]
+   [re-frame.core :as rf]
+   [reagent.core :as r]))
 
 
 ;; Components
@@ -72,10 +58,11 @@
         electron?  electron.utils/electron?
         modal      (rf/subscribe [:modal])]
     (fn []
-      [:> OverlayProvider
+      [:> ChakraProvider {:theme theme,
+                          :bg "background.basement"}
+       [:> OverlayProvider
        [:div (merge {:style {:display "contents"}}
                     (zoom))
-        [:> GlobalStyles]
         [help-popup]
         [alert]
         (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
@@ -97,14 +84,21 @@
 
           :else [:<>
                  (when @modal [db-modal/window])
-                 [:div (use-style app-wrapper-style
-                                  {:class [(case os
-                                             :windows "os-windows"
-                                             :mac "os-mac"
-                                             :linux "os-linux")
-                                           (when electron? "is-electron")]})
+                 [:> Grid
+                  {:gridTemplateColumns "auto 1fr auto"
+                   :gridTemplateRows "auto 1fr auto"
+                   :grid-template-areas
+                   "'app-header app-header app-header'
+                      'left-sidebar main-content secondary-content'
+                    'devtool devtool devtool'"
+                   :height "100vh"
+                   :className [(case os
+                                 :windows "os-windows"
+                                 :mac "os-mac"
+                                 :linux "os-linux")
+                               (when electron? "is-electron")]}
                   [app-toolbar/app-toolbar]
                   [left-sidebar/left-sidebar]
                   [pages/view]
                   [right-sidebar/right-sidebar]
-                  [devtool-component]]])]])))
+                  [devtool-component]]])]]])))
