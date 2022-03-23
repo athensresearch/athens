@@ -1,5 +1,6 @@
 (ns athens.components
   (:require
+    ["@chakra-ui/react" :refer [Checkbox]]
     ["@material-ui/icons/Edit" :default Edit]
     [athens.db :as db]
     [athens.parse-renderer :refer [component]]
@@ -29,25 +30,27 @@
    TODO() - might be a good idea to keep an edit icon at top right
      for every component."
   [children]
-  [:span {:on-click (fn [e]
-                      (.. e stopPropagation))}
+  [:span {:style {:display "contents"}
+          :on-click (fn [e] (.. e stopPropagation))}
    children])
 
 
 (defmethod component :todo
   [_content uid]
   [span-click-stop
-   [:input {:type      "checkbox"
-            :checked   false
-            :on-change #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}]])
+   [:> Checkbox {:isChecked false
+                 :verticalAlign "middle"
+                 :transform "translateY(-2px)"
+                 :onChange #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}]])
 
 
 (defmethod component :done
   [_content uid]
   [span-click-stop
-   [:input {:type      "checkbox"
-            :checked   true
-            :on-change #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}]])
+   [:> Checkbox {:isChecked   true
+                 :verticalAlign "middle"
+                 :transform "translateY(-2px)"
+                 :onChange #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}]])
 
 
 (defmethod component :youtube

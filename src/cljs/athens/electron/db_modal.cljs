@@ -7,73 +7,20 @@
     ["@material-ui/icons/Group" :default Group]
     ["@material-ui/icons/MergeType" :default MergeType]
     ["@material-ui/icons/Storage" :default Storage]
+    ["@chakra-ui/react" :refer [Box Text Modal ModalOverlay Divider VStack Heading ModalContent ModalHeader ModalFooter ModalBody ModalCloseButton ButtonGroup]]
     ["react-dom" :as react-dom]
     [athens.electron.dialogs :as dialogs]
     [athens.electron.utils :as utils]
     [athens.events :as events]
-    [athens.style :refer [color]]
     [athens.subs]
     [athens.util :refer [js-event->val]]
-    [athens.views.modal :refer [modal-style]]
     [athens.views.textinput :as textinput]
     [clojure.edn :as edn]
     [datascript.core :as d]
     [komponentit.modal :as modal]
     [re-frame.core :refer [subscribe dispatch] :as rf]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [reagent.core :as r]))
 
-
-(def modal-contents-style
-  {:display         "flex"
-   :padding         "0 1rem 1.5rem 1rem"
-   :flex-direction  "column"
-   :align-items     "center"
-   :justify-content "flex-start"
-   :width           "500px"
-   :height          "17em"
-   ::stylefy/manual [[:p {:max-width  "24rem"
-                          :text-align "center"}]
-                     [:button.toggle-button {:font-size     "18px"
-                                             :align-self    "flex-start"
-                                             :padding-left  "0"
-                                             :margin-bottom "1rem"}]
-                     [:code {:word-break "break-all"}]
-                     [:.MuiTabs-indicator {:background-color "var(--link-color)"}]]})
-
-
-(def picker-style
-  {:display         "grid"
-   :grid-auto-flow "column"
-   :grid-auto-columns "1fr"
-   :border-radius "0.5rem"
-   :flex "0 0 auto"
-   :font-size "1em"
-   :margin "0.25rem 0"
-   :align-self "stretch"
-   :overflow "hidden"
-   :transition "box-shadow 0.2s ease, filter 0.2s ease"
-   :background (color :background-color)
-   :padding "1px"
-   ::stylefy/manual [[:&:hover {}]
-                     [:button {:text-align "center"
-                               :appearance "none"
-                               :border "0"
-                               :border-radius "calc(0.5rem - 1px)"
-                               :padding "0.5rem 0.5rem"
-                               :color "inherit"
-                               :display "flex"
-                               :justify-content "center"
-                               :align-items "center"
-                               :position "relative"
-                               :z-index "0"
-                               :background "inherit"}
-                      [:svg {:margin-inline-end "0.25em" :font-size "1.25em"}]
-                      [:&:hover {:filter "contrast(105%)"}]
-                      [:&:active {:filter "contrast(110%)"}]
-                      [:&.active {:background (color :background-plus-2)
-                                  :z-index "5"
-                                  :box-shadow [["0 1px 5px" (color :shadow-color)]]}]]]})
 
 
 (defn file-cb
@@ -106,53 +53,66 @@
         transformed-roam-db (r/atom nil)
         roam-db-filename    (r/atom "")]
     (fn []
-      [:div (use-style modal-style)
-       [modal/modal
+      [:> Modal {:isOpen open?
+                 :onClose close-modal
+                 :size "lg"}
+       [:> ModalOverlay]
+       [:> ModalContent
+        [:> ModalHeader
+         "Merge from Roam"]
+        [:> ModalCloseButton]
+        (if (nil? @transformed-roam-db)
+          (let [inputRef (atom nil)]
+            [:> ModalBody
+             [:input {:ref #(reset! inputRef %)
+                      :style {:display "none"}
+                      :type "file"
+                      :accept ".edn"
+                      :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
+             [:> Heading {:size "md" :as "h2"} "How to merge from Roam"]
+             [:> Box {:position "relative"
+                      :padding-bottom "56.25%"
+                      :margin         "1rem 0 0"
+                      :borderRadius  "8px"
+                      :overflow "hidden"
+                      :flex "1 1 100%"
+                      :width          "100%"}
+              [:iframe {:src                   "https://www.loom.com/embed/787ed48da52c4149b031efb8e17c0939?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
+                        :frameBorder           "0"
+                        :webkitallowfullscreen "true"
+                        :mozallowfullscreen    "true"
+                        :allowFullScreen       true
+                        :style                 {:position "absolute"
+                                                :top      0
+                                                :left     0
+                                                :width    "100%"
+                                                :height   "100%"}}]]
+             [:> ModalFooter
+              [:> ButtonGroup
+               [:> Button
+                {:onClick #(.click @inputRef)}
+                "Upload database"]]]])
+          (let [roam-pages   (roam-pages @transformed-roam-db)
+                shared-pages (events/get-shared-pages @transformed-roam-db)]
+            [:> ModalBody
+             [:> Text {:size "md"} (str "Your Roam DB had " (count roam-pages)) " pages. " (count shared-pages) " of these pages were also found in your Athens DB. Press Merge to continue merging your DB."]
+             [:> Divider {:my 4}]
+             [:> Heading {:size "md" :as "h3"} "Shared Pages"]
+             [:> VStack {:as "ol"
+                         :align "stretch"
+                         :maxHeight "400px"
+                         :overflowY "auto"}
+              (for [x shared-pages]
+                ^{:key x}
+                [:li [:> Text (str "[[" x "]]")]])]
+             [:> ModalFooter
+              [:> ButtonGroup
+               [:> Button {:variant  "outline"
+                           :onClick (fn []
+                                      (dispatch [:upload/roam-edn @transformed-roam-db @roam-db-filename])
+                                      (close-modal))}
 
-        {:title    [:div.modal__title
-                    [:> MergeType]
-                    [:h4 "Merge Roam DB"]
-                    [:> Button {:on-click close-modal}
-                     [:> Close]]]
-
-         :content  [:div (use-style (merge modal-contents-style))
-                    (if (nil? @transformed-roam-db)
-                      [:<>
-                       [:input {:style {:flex "0 0 auto"} :type "file" :accept ".edn" :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
-                       [:div {:style {:position       "relative"
-                                      :padding-bottom "56.25%"
-                                      :margin         "1em 0 0"
-                                      :flex "1 1 100%"
-                                      :width          "100%"}}
-                        [:iframe {:src                   "https://www.loom.com/embed/787ed48da52c4149b031efb8e17c0939"
-                                  :frameBorder           "0"
-                                  :webkitallowfullscreen "true"
-                                  :mozallowfullscreen    "true"
-                                  :allowFullScreen       true
-                                  :style                 {:position "absolute"
-                                                          :top      0
-                                                          :left     0
-                                                          :width    "100%"
-                                                          :height   "100%"}}]]]
-                      (let [roam-pages   (roam-pages @transformed-roam-db)
-                            shared-pages (events/get-shared-pages @transformed-roam-db)]
-                        [:div {:style {:display "flex" :flex-direction "column"}}
-                         [:h6 (str "Your Roam DB had " (count roam-pages)) " pages. " (count shared-pages) " of these pages were also found in your Athens DB. Press Merge to continue merging your DB."]
-                         [:p {:style {:margin "10px 0 0 0"}} "Shared Pages"]
-                         [:ol {:style {:max-height "400px"
-                                       :width      "100%"
-                                       :overflow-y "auto"}}
-                          (for [x shared-pages]
-                            ^{:key x}
-                            [:li (str "[[" x "]]")])]
-                         [:> Button {:style    {:align-self "center"}
-                                     :is-primary  true
-                                     :on-click (fn []
-                                                 (dispatch [:upload/roam-edn @transformed-roam-db @roam-db-filename])
-                                                 (close-modal))}
-                          "Merge"]]))]
-
-         :on-close close-modal}]])))
+                "Merge"]]]]))]])))
 
 
 (defn open-local-comp
@@ -164,7 +124,7 @@
       "No DB Found At"
       "Current Location")]
    [:code {:style {:margin "1rem 0 2rem 0"}} (:id db)]
-   [:div (use-style {:display         "flex"
+   [:div #_ (use-style {:display         "flex"
                      :justify-content "space-between"
                      :align-items     "center"
                      :width           "80%"})
@@ -175,6 +135,9 @@
                 :is-primary  true
                 :on-click #(dialogs/move-dialog!)}
      "Move"]]])
+
+
+     
 
 
 (defn create-new-local
@@ -263,19 +226,19 @@
     (fn []
       (.createPortal
         react-dom
-        (r/as-element [:div (use-style modal-style)
+        (r/as-element [:div #_ (use-style modal-style)
                        [modal/modal
                         {:title    [:div.modal__title
                                     [:> Storage]
                                     [:h4 "Database"]
                                     (when-not @loading
                                       [:> Button {:on-click close-modal} [:> Close]])]
-                         :content  [:div (use-style modal-contents-style)
+                         :content  [:div #_ (use-style modal-contents-style)
                                     ;; TODO: this is hacky, we're just hiding the picker and forcing
                                     ;; tab 2 for the web client. Instead we should use Stuart's
                                     ;; redesigned DB picker.
                                     (when utils/electron?
-                                      [:div (use-style picker-style)
+                                      [:div #_ (use-style picker-style)
                                        [:button {:class (when (= 0 (:tab-value @state)) "active")
                                                  :on-click (fn [] (swap! state assoc :tab-value 0))}
                                         [:> Folder]

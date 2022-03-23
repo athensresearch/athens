@@ -3,7 +3,7 @@
    ["/components/Spinner/Spinner" :refer [Spinner]]
    ["/theme/theme" :refer [theme]]
    ["@chakra-ui/react" :refer [ChakraProvider Grid]]
-   ["@material-ui/core/Snackbar" :as Snackbar]
+  ["@material-ui/core/Snackbar" :as Snackbar]
    ["@react-aria/overlays" :refer [OverlayProvider]]
    [athens.config]
    [athens.electron.db-modal :as db-modal]

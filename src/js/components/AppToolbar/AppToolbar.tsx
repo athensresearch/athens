@@ -1,80 +1,74 @@
 import React from 'react';
-import styled from 'styled-components';
-import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Help, Menu as MenuIcon, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
+import {
+  BubbleChart,
+  ChevronLeft,
+  ChevronRight,
+  FileCopy,
+  Help,
+  Menu as MenuIcon,
+  MergeType,
+  Search,
+  Settings,
+  Storage,
+  Today,
+  ToggleOff,
+  ToggleOn,
+  VerticalSplit
+} from '@material-ui/icons';
 
-import { Button } from '@/Button';
+import {
+  Tooltip,
+  Flex,
+  Button,
+  HStack,
+  Divider,
+  IconButton,
+  ButtonGroup
+} from '@chakra-ui/react';
+
 import { WindowButtons } from './components/WindowButtons';
 
-const AppToolbarWrapper = styled.header`
-  background: var(--color-background);
-  grid-area: app-header;
-  justify-content: flex-start;
-  background-clip: padding-box;
-  background: var(--background-plus-1);
-  color: var(--body-text-color---opacity-high);
-  border-bottom: 1px solid transparent;
-  align-items: center;
-  display: grid;
-  height: 48px;
-  padding-left: 10px;
-  grid-template-columns: auto 1fr auto;
-  transition: border-color 1s ease;
-  z-index: var(--zindex-sticky);
-  grid-auto-flow: column;
-  -webkit-app-region: drag;
+const AppToolbarWrapper = ({ children }) => <Flex
+  borderBottom="1px solid transparent"
+  justifyContent="space-between"
+  py={1}
+  px={1}
+  h={6}
+  zIndex="10"
+  _hover={{
+    transition: 'border-color 0.15s ease',
+    borderBottomColor: 'separator.border'
+  }}
+  sx={{
+    "-webkit-app-region": "drag",
 
-  .is-fullscreen & {
-    height: 44px;
-  }
-
-  svg {
-    font-size: 20px;
-  }
-
-  &:hover {
-    transition: border-color 0.15s ease;
-    border-bottom-color: var(--body-text-color---opacity-lower);
-  }
-
-  button {
-    justify-self: flex-start;
-    -webkit-app-region: no-drag;
-  }
-
-  .os-windows & {
-    background: var(--background-minus-1);
-    padding-left: 10px;
-  }
-
-  .os-mac & {
-    background: var(--background-color---opacity-high);
-    color: var(--body-text-color---opacity-med);
-    padding-left: 88px;
-    padding-right: 22px;
-    height: 52px;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-    backdrop-filter: blur(20px);
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-
-    .is-fullscreen & {
-      padding-left: 22px;
+    ".is-fullscreen &": {
+      height: '44px'
+    },
+    ".os-windows &": {
+      background: 'background.floor',
+      paddingLeft: '10px',
+    },
+    ".os-mac &": {
+      background: 'background.floor',
+      paddingLeft: '88px',
+      paddingRight: '22px',
+      height: '52px',
+      borderTopLeftRadius: '12px',
+      borderTopRightRadius: '12px',
+      backdropFilter: 'blur(20px)',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+    },
+    ".os-mac.is-fullscreen &": {
+      paddingLeft: '22px'
     }
-  }
-`;
-
-const AthenaButton = styled(Button)`
-  ${Button.Wrap} {
-    gap: 0;
-    
-    svg {
-      margin-right: 0;
-    }
-  }
-`;
+  }}
+>
+  {children}
+</Flex>;
 
 export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, DatabaseMenuProps, PresenceDetailsProps {
   /**
@@ -187,77 +181,78 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     ...rest
   } = props;
 
-  return (<AppToolbarWrapper {...rest}>
-    <AppToolbar.MainControls>
-      {databaseMenu}
-      <Button
-        onClick={handlePressLeftSidebarToggle}
-        isPressed={isLeftSidebarOpen}
-      >
-        <MenuIcon />
-      </Button>
-      {isElectron && (
-        <>
-          <AppToolbar.Separator />
-          <Button onClick={handlePressHistoryBack}><ChevronLeft /></Button>
-          <Button onClick={handlePressHistoryForward}><ChevronRight /></Button>
-        </>)
-      }
-      <Button isPressed={route === '/daily-notes'} onClick={handlePressDailyNotes}><Today /></Button>
-      <Button isPressed={route === '/all-pages'} onClick={handlePressAllPages}><FileCopy /></Button>
-      <Button isPressed={route === '/graph'} onClick={handlePressGraph}><BubbleChart /></Button>
-      <AthenaButton isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></AthenaButton>
-    </AppToolbar.MainControls>
-    <AppToolbar.SecondaryControls>
-      {presenceDetails}
-      <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button>
-      <Button isPressed={route === '/settings'} onClick={handlePressSettings}><Settings /></Button>
-      <Button
-        onClick={handlePressThemeToggle}>
-        {isThemeDark ? <ToggleOff /> : <ToggleOn />}
-      </Button>
-      <Button isPressed={isHelpOpen} onClick={handlePressHelp}><Help /></Button>
-      <AppToolbar.Separator />
-      <Button
-        isPressed={isRightSidebarOpen}
-        onClick={handlePressRightSidebarToggle}
-      >
-        <VerticalSplit />
-      </Button>
-    </AppToolbar.SecondaryControls>
-    {isElectron && (os === 'windows' || os === 'linux') && (
-      <WindowButtons
-        os={os}
-        isWinMaximized={isWinMaximized}
-        isWinFullscreen={isWinFullscreen}
-        isWinFocused={isWinFocused}
-        handlePressMinimize={handlePressMinimize}
-        handlePressMaximizeRestore={handlePressMaximizeRestore}
-        handlePressClose={handlePressClose}
-      />)}
-  </AppToolbarWrapper>);
+  return (
+    <AppToolbarWrapper {...rest}>
+      <HStack flex="1" justifyContent="space-between">
+        <ButtonGroup size="sm">
+          {databaseMenu}
+          <Tooltip label="Navigation">
+            <IconButton
+              aria-label="Navigation"
+              onClick={handlePressLeftSidebarToggle}
+              isActive={isLeftSidebarOpen}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Tooltip>
+          {isElectron && (
+            <>
+              <Divider orientation="vertical" />
+              <Tooltip
+                label="Go back">
+                <IconButton aria-label="Go back" onClick={handlePressHistoryBack}><ChevronLeft /></IconButton>
+              </Tooltip>
+              <Tooltip label="Go forward">
+                <IconButton
+                  aria-label="Go forward"
+                  onClick={handlePressHistoryForward}><ChevronRight /></IconButton>
+              </Tooltip>
+            </>)
+          }
+          <Tooltip label="Daily notes"><IconButton aria-label="Daily notes" isActive={route === '/daily-notes'} onClick={handlePressDailyNotes}><Today /></IconButton></Tooltip>
+          <Tooltip label="All pages"><IconButton
+            aria-label="All pages"
+            isActive={route === '/all-pages'} onClick={handlePressAllPages}><FileCopy /></IconButton></Tooltip>
+          <Tooltip label="Graph"><IconButton
+            aria-label="Graph"
+            isActive={route === '/graph'} onClick={handlePressGraph}><BubbleChart /></IconButton></Tooltip>
+          <Button
+            aria-label="Search"
+            leftIcon={<Search />}
+            isActive={isCommandBarOpen}
+            onClick={handlePressCommandBar}
+          >
+            Find or create a page
+          </Button>
+        </ButtonGroup>
+        <ButtonGroup size="sm">
+          {presenceDetails}
+          <Tooltip label="Merge"><IconButton aria-label="Merge" isActive={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></IconButton></Tooltip>
+          <Tooltip label="Settings"><IconButton aria-label="Settings" isActive={route === '/settings'} onClick={handlePressSettings}><Settings /></IconButton></Tooltip>
+          <Tooltip label="Toggle theme"><IconButton aria-label="Toggle theme" onClick={handlePressThemeToggle}>
+            {isThemeDark ? <ToggleOff /> : <ToggleOn />}
+          </IconButton></Tooltip>
+          <Tooltip label="Help"><IconButton aria-label="Help" isActive={isHelpOpen} onClick={handlePressHelp}><Help /></IconButton></Tooltip>
+          <Divider orientation="vertical" />
+          <Tooltip label="Show right sidebar"><IconButton
+            aria-label="Show right sidebar"
+            isActive={isRightSidebarOpen}
+            onClick={handlePressRightSidebarToggle}
+          >
+            <VerticalSplit />
+          </IconButton>
+          </Tooltip>
+        </ButtonGroup>
+      </HStack>
+      {isElectron && (os === 'windows' || os === 'linux') && (
+        <WindowButtons
+          os={os}
+          isWinMaximized={isWinMaximized}
+          isWinFullscreen={isWinFullscreen}
+          isWinFocused={isWinFocused}
+          handlePressMinimize={handlePressMinimize}
+          handlePressMaximizeRestore={handlePressMaximizeRestore}
+          handlePressClose={handlePressClose}
+        />)}
+    </AppToolbarWrapper>);
 };
-
-AppToolbar.Separator = styled.hr`
-  border: 0;
-  margin-inline: 0.125rem;
-  margin-block: 0;
-  block-size: auto;
-`;
-
-AppToolbar.MainControls = styled.div`
-  display: grid;
-  grid-auto-flow: column;
-  grid-gap: 0.25rem;
-  align-items: center;
-`;
-
-AppToolbar.SecondaryControls = styled(AppToolbar.MainControls)`
-  justify-self: flex-end;
-  margin-left: auto;
-
-  button {
-    color: inherit;
-    background: inherit;
-  }
-`;

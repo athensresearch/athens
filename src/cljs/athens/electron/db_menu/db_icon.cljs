@@ -6,6 +6,7 @@
 
 (def db-icon-style
   {:position "relative"
+   :flex "0 0 auto"
    :width "1.75em"
    :height "1.75em"
    ::stylefy/manual [[:text {:font-size "16px"}]]})

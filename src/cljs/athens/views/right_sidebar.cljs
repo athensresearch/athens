@@ -1,5 +1,7 @@
 (ns athens.views.right-sidebar
   (:require
+    ["@chakra-ui/react" :refer [VStack HStack Heading Link Flex Box]]
+    ["framer-motion" :refer [AnimatePresence motion]]
     ["/components/Button/Button" :refer [Button]]
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
     ["@material-ui/icons/ChevronRight" :default ChevronRight]
@@ -18,56 +20,6 @@
 
 
 ;; Styles
-
-
-(def sidebar-style
-  {:justify-self "stretch"
-   :overflow "hidden"
-   :width "0"
-   :grid-area "secondary-content"
-   :display "flex"
-   :justify-content "space-between"
-   :padding-top "2.75rem"
-   :transition-property "width, border, background"
-   :transition-duration "0.35s"
-   :transition-timing-function "ease-out"
-   :box-shadow [["0 -100px 0 " (color :background-minus-1) ", inset 1px 0 " (color :background-minus-1)]]
-   ::stylefy/manual [[:svg {:color (color :body-text-color :opacity-high)}]
-                     [:&.is-closed {:width "0"}]
-                     [:&.is-open {:width "32vw"}]
-                     ["::-webkit-scrollbar" {:background (color :background-minus-1)
-                                             :width "0.5rem"
-                                             :height "0.5rem"}]
-                     ["::-webkit-scrollbar-corner" {:background (color :background-minus-1)}]
-                     ["::-webkit-scrollbar-thumb" {:background (color :background-plus-1)
-                                                   :border-radius "0.5rem"}]]})
-
-
-(def sidebar-content-style
-  {:display "flex"
-   :flex "1 1 32vw"
-   :flex-direction "column"
-   :margin-left "0"
-   :overflow-y "auto"
-   ::stylefy/supports {"overflow-y: overlay"
-                       {:overflow-y "overlay"}}
-   ::stylefy/manual [[:&.is-closed {:margin-left "-32vw"
-                                    :opacity 0}]
-                     [:&.is-open {:opacity 1}]]})
-
-
-(def sidebar-section-heading-style
-  {:font-size "14px"
-   :display "flex"
-   :flex-direction "row"
-   :align-items "center"
-   :min-height "2.75rem"
-   :padding "0.5rem 1rem 0.25rem 1.5rem"
-   ::stylefy/manual [[:h1 {:font-size "inherit"
-                           :margin "0 auto 0 0"
-                           :line-height "1"
-                           :color (color :body-text-color :opacity-med)}]]})
-
 
 (def sidebar-item-style
   {:display "flex"
@@ -151,26 +103,6 @@
                      [:&.is-open [:h2 {:font-weight "500"}]]]})
 
 
-(def panel-drag-handle-style
-  {:cursor           "col-resize"
-   :height           "100%"
-   :position         "absolute"
-   :top              0
-   :width            "1px"
-   :z-index          (:zindex-fixed ZINDICES)
-   :background-color (color :border-color)
-   ::stylefy/manual [[:&:after {:content "''"
-                                :position "absolute"
-                                :background (color :link-color)
-                                :transition "opacity 0.2s ease"
-                                :top 0
-                                :bottom 0
-                                :left 0
-                                :right "-4px"
-                                :opacity 0}]
-                     [:&:hover:after {:opacity 0.5}]
-                     [:&.is-dragging:after {:opacity 1}]]})
-
 
 (def empty-message-style
   {:align-self "center"
@@ -218,53 +150,81 @@
                              (swap! state assoc :dragging false)
                              (dispatch [:right-sidebar/set-width (:width @state)])))]
     (r/create-class
-      {:display-name           "right-sidebar"
-       :component-did-mount    (fn []
-                                 (js/document.addEventListener "mousemove" move-handler)
-                                 (js/document.addEventListener "mouseup" mouse-up-handler))
-       :component-will-unmount (fn []
-                                 (js/document.removeEventListener "mousemove" move-handler)
-                                 (js/document.removeEventListener "mouseup" mouse-up-handler))
-       :reagent-render         (fn [open? items _]
-                                 [:div (merge (use-style sidebar-style
-                                                         {:class ["right-sidebar" (if open? "is-open" "is-closed")]})
-                                              {:style (cond-> {}
-                                                        (:dragging @state) (assoc :transition-duration "0s")
-                                                        open? (assoc :width (str (:width @state) "vw")))})
-                                  [:div (use-style panel-drag-handle-style
-                                                   {:on-mouse-down #(swap! state assoc :dragging true)
-                                                    :class (when (:dragging @state) "is-dragging")})]
-                                  [:div (use-style sidebar-content-style {:class [(if open? "is-open" "is-closed") "right-sidebar-content"]})
-                                   ;; [:header (use-style sidebar-section-heading-style)] ;; Waiting on additional sidebar contents
-                                   ;;  [:h1 "Pages and Blocks"]]
-                                   ;;  [:> Button [:> FilterList]]
-                                   (if (empty? items)
-                                     [empty-message]
-                                     (doall
-                                       (for [[uid {:keys [open node/title block/string is-graph?]}] items]
-                                         ^{:key uid}
-                                         [:article (use-style sidebar-item-style)
-                                          [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
-                                           [:> Button (use-style sidebar-item-toggle-style
-                                                                 {:on-click #(dispatch [:right-sidebar/toggle-item uid])
-                                                                  :class    (when open "is-open")})
-                                            [:> ChevronRight]]
-                                           [:h2
-                                            (cond
-                                              is-graph? [:<> [:> BubbleChart] [parse-renderer/parse-and-render title uid]]
-                                              title     [:<> [:> Description] [parse-renderer/parse-and-render title uid]]
-                                              :else     [:<> [:> FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
-                                           [:div {:class "controls"}
+     {:display-name           "right-sidebar"
+      :component-did-mount    (fn []
+                                (js/document.addEventListener "mousemove" move-handler)
+                                (js/document.addEventListener "mouseup" mouse-up-handler))
+      :component-will-unmount (fn []
+                                (js/document.removeEventListener "mousemove" move-handler)
+                                (js/document.removeEventListener "mouseup" mouse-up-handler))
+      :reagent-render         (fn [open? items _]
+                                [:> AnimatePresence {:initial false}
+                                 (when open?
+                                   [:> (.-div motion)
+                                    {:style {:display "flex"
+                                             :flex-direction "column"
+                                             :height "100%"
+                                             :paddingTop "2.75rem"
+                                             :alignItems "stretch"
+                                             :justifySelf "stretch"
+                                             :justifyContent "space-between"
+                                             :position "relative"
+                                             :gridArea "secondary-content"
+                                             :overflow "hidden"}
+                                     :initial {:width 0
+                                               :opacity 0}
+                                     :animate {:width (str (:width @state) "vw")
+                                               :opacity 1}
+                                     :exit {:width 0
+                                            :opacity 0}}
+                                    [:> Box {:role "separator"
+                                             :aria-orientation "vertical"
+                                             :cursor "col-resize"
+                                             :position "absolute"
+                                             :top 0
+                                             :height "100%"
+                                             :width "1px"
+                                             :zIndex 1
+                                             :bg "separator.border"
+                                             :_hover {:bg "link"}
+                                             :_active {:bg "link"}
+                                             :_after {:content "''"
+                                                      :position "absolute"
+                                                      :inset "-4px"}
+                                             :on-mouse-down #(swap! state assoc :dragging true)
+                                             :class (when (:dragging @state) "is-dragging")}]
+                                    [:> Flex {:flexDirection "column"
+                                              :bg "background.upper"
+                                              :height "100%"
+                                              :width (str (:width @state) "vw")
+                                              :overflowY "overlay"}
+                                     (if (empty? items)
+                                       [empty-message]
+                                       (doall
+                                        (for [[uid {:keys [open node/title block/string is-graph?]}] items]
+                                          ^{:key uid}
+                                          [:article (use-style sidebar-item-style)
+                                           [:header (use-style sidebar-item-heading-style {:class (when open "is-open")})
+                                            [:> Button (use-style sidebar-item-toggle-style
+                                                                  {:on-click #(dispatch [:right-sidebar/toggle-item uid])
+                                                                   :class    (when open "is-open")})
+                                             [:> ChevronRight]]
+                                            [:h2
+                                             (cond
+                                               is-graph? [:<> [:> BubbleChart] [parse-renderer/parse-and-render title uid]]
+                                               title     [:<> [:> Description] [parse-renderer/parse-and-render title uid]]
+                                               :else     [:<> [:> FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
+                                            [:div {:class "controls"}
                                             ;;  [:> Button [:> DragIndicator]]
                                             ;;  [:hr]
-                                            [:> Button {:on-click #(dispatch [:right-sidebar/close-item uid])}
-                                             [:> Close]]]]
-                                          (when open
-                                            [:div (use-style sidebar-item-container-style)
-                                             (cond
-                                               is-graph? [graph/page uid]
-                                               title     [node-page/page [:block/uid uid]]
-                                               :else     [block-page/page [:block/uid uid]])])])))]])})))
+                                             [:> Button {:on-click #(dispatch [:right-sidebar/close-item uid])}
+                                              [:> Close]]]]
+                                           (when open
+                                             [:div (use-style sidebar-item-container-style)
+                                              (cond
+                                                is-graph? [graph/page uid]
+                                                title     [node-page/page [:block/uid uid]]
+                                                :else     [block-page/page [:block/uid uid]])])])))]])])})))
 
 
 (defn right-sidebar

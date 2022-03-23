@@ -1,22 +1,23 @@
 (ns athens.views.blocks.content
   (:require
-    [athens.config :as config]
-    [athens.db :as db]
-    [athens.events.selection :as select-events]
-    [athens.parse-renderer :refer [parse-and-render]]
-    [athens.style :as style]
-    [athens.subs.selection :as select-subs]
-    [athens.util :as util]
-    [athens.views.blocks.internal-representation :as internal-representation]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [clojure.edn :as edn]
-    [clojure.set :as set]
-    [clojure.string :as str]
-    [garden.selectors :as selectors]
-    [goog.events :as goog-events]
-    [komponentit.autosize :as autosize]
-    [re-frame.core :as rf]
-    [stylefy.core :as stylefy])
+   ["@chakra-ui/react" :refer [Box]]
+   [athens.config :as config]
+   [athens.db :as db]
+   [athens.events.selection :as select-events]
+   [athens.parse-renderer :refer [parse-and-render]]
+   [athens.style :as style]
+   [athens.subs.selection :as select-subs]
+   [athens.util :as util]
+   [athens.views.blocks.internal-representation :as internal-representation]
+   [athens.views.blocks.textarea-keydown :as textarea-keydown]
+   [clojure.edn :as edn]
+   [clojure.set :as set]
+   [clojure.string :as str]
+   [garden.selectors :as selectors]
+   [goog.events :as goog-events]
+   [komponentit.autosize :as autosize]
+   [re-frame.core :as rf]
+   [stylefy.core :as stylefy])
   (:import
     (goog.events
       EventType)))
@@ -24,8 +25,41 @@
 
 ;; Styles
 
+
+(def block-inner-content-style {"textarea" {:display "block"
+                                            :lineHeight 0
+                                            :appeareance "none"
+                                            :cursor "text"
+                                            :resize "none"
+                                            :transform "translate3d(0,0,0)"
+                                            :color "inherit"
+                                            :outline "none"
+                                            :overflow "hidden"
+                                            :padding "0"
+                                            :background "background.basement"
+                                            :grid-area "main"
+                                            :min-height "100%"
+                                            :caret-color "link"
+                                            :margin "0"
+                                            :font-size "inherit"
+                                            :border-radius "0.25rem"
+                                            :border "0"
+                                            :opacity "0"
+                                            :font-family "inherit"}
+                                "&:hover:not(.is-editing) textarea" {:lineHeight "2"}
+                                "&.is-editing" {:zIndex 3
+                                                :lineHeight "inherit"
+                                                :opacity 1}
+                                "span.text-run" {:pointerEvents "none"
+                                                 "& > a" {:position "relative"
+                                                          :zIndex 2
+                                                          :pointerEvents "all"}}
+                                "span" {:gridArea "main"}})
+
+
 (def block-content-style
   {:display "grid"
+   :color "foreground.primary"
    :grid-template-areas "'main'"
    :align-items "stretch"
    :justify-content "stretch"
@@ -34,29 +68,13 @@
    :z-index 2
    :flex-grow "1"
    :word-break "break-word"
-   ::stylefy/manual [[:textarea {:display "block"
+   ::stylefy/manual [#_ [:textarea {:display "block"
                                  :line-height 0
                                  :-webkit-appearance "none"
                                  :cursor "text"
-                                 :resize "none"
-                                 :transform "translate3d(0,0,0)"
-                                 :color "inherit"
-                                 :outline "none"
-                                 :overflow "hidden"
-                                 :padding "0"
-                                 :background (style/color :background-minus-1)
-                                 :grid-area "main"
-                                 :min-height "100%"
-                                 :caret-color (style/color :link-color)
-                                 :margin "0"
-                                 :font-size "inherit"
-                                 :border-radius "0.25rem"
-                                 :box-shadow (str "-0.25rem 0 0 0" (style/color :background-minus-1))
-                                 :border "0"
-                                 :opacity "0"
-                                 :font-family "inherit"}]
-                     [:&:hover [:textarea [(selectors/& (selectors/not :.is-editing)) {:line-height 2}]]]
-                     [:.is-editing {:z-index 3
+                                 :resize "none"}]
+                     #_ [:&:hover [:textarea [(selectors/& (selectors/not :.is-editing)) {:line-height 2}]]]
+                     #_ [:.is-editing {:z-index 3
                                     :line-height "inherit"
                                     :opacity "1"}]
                      [:span.text-run
@@ -107,35 +125,6 @@
                      ;; Images
                      [:img {:border-radius "0.25rem"
                             :max-width "calc(100% - 0.25rem)"}]
-                     ;; Checkboxes
-                     ;; TODO: Refactor these complicated styles into clip paths or SVGs
-                     ;; or something nicer than this
-                     [:input [:& (selectors/attr= :type :checkbox) {:appearance "none"
-                                                                    :border-radius "0.25rem"
-                                                                    :cursor "pointer"
-                                                                    :color (style/color :link-color)
-                                                                    :margin-inline-end "0.25rem"
-                                                                    :position "relative"
-                                                                    :top "0.13em"
-                                                                    :width "1rem"
-                                                                    :height "1rem"
-                                                                    :transition "color 0.05s ease, transform 0.05s ease, box-shadow 0.05s ease"
-                                                                    :transform "scale(1)"
-                                                                    :box-shadow "inset 0 0 0 1px"}
-                              [:&:after {:content "''"
-                                         :position "absolute"
-                                         :top "45%"
-                                         :left "20%"
-                                         :width "30%"
-                                         :height "50%"
-                                         :border-width "0 2px 2px 0"
-                                         :border-style "solid"
-                                         :opacity 0
-                                         :transform "rotate(45deg) translate(-40%, -50%)"}]
-                              [:&:checked {:background (style/color :link-color)}
-                               [:&:after {:opacity 1
-                                          :color (style/color :background-color)}]]
-                              [:&:active {:transform "scale(0.9)"}]]]
 
                      [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0"
                                                :color (style/color :body-text-color :opacity-higher)
@@ -399,9 +388,21 @@
                         2 "1.7em"
                         3 "1.3em"
                         "1em")]
-        [:div {:class     ["block-content"]
-               :style     {:font-size font-size}
-               :on-click  (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
+        [:> Box {:class     ["block-content"]
+                 :display "grid"
+                 :background "background.floor"
+                 :color "foreground.primary"
+                 :gridTemplateAreas "'main'"
+                 :alignItems "stretch"
+                 :justifyContent "stretch"
+                 :position "relative"
+                 :overflow "visible"
+                 :zIndex 2
+                 :flexGrow 1
+                 :wordBreak "break-word"
+                 :fontSize font-size
+                 :sx block-inner-content-style
+                 :on-click  (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
          ;; When block is in editing mode or the editing DOM elements are rendered
          (when (or (:show-editable-dom @state) @editing?)
