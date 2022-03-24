@@ -194,7 +194,7 @@
            (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
            (log/info "✅ Fluree local ledger up to date.")))
        (log/info "✅ Fluree ledger for event-log created."))
-     (migrations/migrate-ledger! conn ledger))))
+     (migrate/migrate-ledger! conn ledger event-log-migrations/migrations))))
 
 
 #_(defn events-since
