@@ -25,19 +25,20 @@
 
 (defn serialize
   [id data]
+  (assert (uuid? id))
   {:_id :event
    :event/id (str id)
-   :event/data (pr-str data)})
+   :event/data (pr-str data)
+   ;; Compute the new order number as 1 higher than last.
+   ;; NOTE: is max-pred-val efficient for very large collections? I don't know.
+   #_#_:event/order "#(inc (max-pred-val \"event/order\"))"})
 
 
 (defn deserialize
   [{id   "event/id"
     data "event/data"}]
-  ;; In some running ledgers we have "add Welcome page shortcut" that does not have a UUID
-  ;; So we want the backup to be compatible for these previous version of ledgers.
-  [(if (str/blank? id)
-     (UUID/randomUUID)
-     (UUID/fromString id)) (edn/read-string data)])
+  [(UUID/fromString id)
+   (edn/read-string data)])
 
 
 (defn- events-page
