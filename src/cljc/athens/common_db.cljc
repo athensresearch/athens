@@ -435,7 +435,7 @@
 
 
 (def block-document-pull-vector-for-copy
-  '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
+  '[:node/title :block/uid :block/string :block/open :block/order :block/comment {:block/children ...}])
 
 
 (defn- dissoc-on-match

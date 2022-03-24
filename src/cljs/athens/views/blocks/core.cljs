@@ -508,7 +508,10 @@
           (when @(rf/subscribe [:comment/show-comment-textarea? uid])
             [right-side/right-side-comments [] uid])
 
-          ;; Inline refs
+          (when @(rf/subscribe [:comment/show-comment-textarea? uid])
+            [inline-comments/inline-comments [] uid false])
+
+       ;; Inline refs
           (when (and (> (count _refs) 0)
                      (not= :block-embed? opts)
                      (:inline-refs/open @state))
@@ -518,7 +521,7 @@
           ;; show inline comments
           (when (and @(rf/subscribe [:comment/show-inline-comments?])
                      comment)
-            [inline-comments/inline-comments comment uid])
+            [inline-comments/inline-comments comment uid true])
 
           ;; right side comments
           (when (and @(rf/subscribe [:comment/show-right-side-comments?])

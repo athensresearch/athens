@@ -106,8 +106,8 @@
          [:span time]]]])))
 
 (defn inline-comments
-  [data uid]
-  (let [state        (reagent.core/atom {:hide? true})
+  [data uid hide?]
+  (let [state        (reagent.core/atom {:hide? hide?})
         num-comments (count data)
         first-comment (first data)
         {:keys [author string time]} first-comment]

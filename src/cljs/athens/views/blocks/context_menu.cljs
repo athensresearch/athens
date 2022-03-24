@@ -53,8 +53,9 @@
   (swap! state assoc :context-menu/show false))
 
 (defn handle-click-comment
-  [uid state]
+  [e uid state]
   (re-frame.core/dispatch [:comment/show-comment-textarea uid])
+  (.. e preventDefault)
   (swap! state assoc :context-menu/show false))
 
 (defn context-menu-el
@@ -87,5 +88,5 @@
                                        [:> Button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
                                         "Copy unformatted"]
                                        (when (empty? selected-items)
-                                         [:> Button {:on-mouse-down (fn [e] (handle-click-comment uid state))}
+                                         [:> Button {:on-mouse-down (fn [e] (handle-click-comment e uid state))}
                                           "Comment"])]])))})))

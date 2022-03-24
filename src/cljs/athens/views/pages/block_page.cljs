@@ -157,7 +157,7 @@
             [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]
 
          (when (pos? (count (:block/comment block)))
-           [athens.views.comments.inline/inline-comments (:block/comment block) uid])
+           [athens.views.comments.inline/inline-comments (:block/comment block) uid false])
          ;; Children
          [:div (for [child children]
                  (let [{:keys [db/id]} child]

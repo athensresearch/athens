@@ -9,7 +9,8 @@
     [athens.util :as util]
     [clojure.string :as string]
     [goog.events :as events]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [athens.common.utils :as utils])
   (:import
     (goog.events
       EventType
@@ -179,24 +180,53 @@
      (str left-offset dash string "\n" walk-children))))
 
 
+(defn comment->block-children
+  [comments]
+  (mapv
+    #(let [uid (:block/uid %)
+           {:keys [author
+                   string]}  %
+           new-str (str "[[@" author "]] " string)]
+       {:block/uid    uid
+        :block/string new-str})
+    comments))
+
+
+
 (defn copy
   "If blocks are selected, copy blocks as markdown list.
   Use -event_ because goog events quirk "
   [^js e]
   (let [uids @(subscribe [::select-subs/items])]
     (when (not-empty uids)
-      (let [copy-data      (->> uids
-                                (map #(common-db/get-block-document @db/dsdb [:block/uid %]))
-                                (map #(blocks-to-clipboard-data 0 %))
-                                (apply str))
-            clipboard-data (.. e -event_ -clipboardData)
-            copied-blocks  (mapv
-                             #(common-db/get-internal-representation  @db/dsdb [:block/uid %])
-                             uids)]
+      (let [copy-data          (->> uids
+                                    (map #(common-db/get-block-document @db/dsdb [:block/uid %]))
+                                    (map #(blocks-to-clipboard-data 0 %))
+                                    (apply str))
+            clipboard-data     (.. e -event_ -clipboardData)
+            copied-blocks      (mapv
+                                 #(common-db/get-internal-representation  @db/dsdb [:block/uid %])
+                                 uids)
+            comment-to-blocks  (remove nil? (mapv
+                                              #(let [comments  (:block/comment %)
+                                                     uid       (:block/uid %)
+                                                     block-str (str "((" uid "))")
+                                                     children  (comment->block-children comments)]
+                                                 (when comments
+                                                   {:block/uid      (utils/gen-block-uid)
+                                                    :block/string   block-str
+                                                    :block/children children}))
+                                              copied-blocks))
+            comment-block      {:block/uid      (utils/gen-block-uid)
+                                :block/string   "Poor man's version of comments :)"
+                                :block/children comment-to-blocks}
+            all-blocks         (when (not-empty comment-to-blocks)
+                                 (conj copied-blocks
+                                       comment-block))]
 
         (doto clipboard-data
           (.setData "text/plain" copy-data)
-          (.setData "application/athens-representation" (pr-str copied-blocks))
+          (.setData "application/athens-representation" (pr-str all-blocks))
           (.setData "application/athens" (pr-str {:uids uids})))
         (.preventDefault e)))))
 
