@@ -90,7 +90,8 @@
       (fdb/db ledger)
       (fdb/query {:select "(max ?v)"
                   :where [["?s" "migrations/version" "?v"]]})
-      deref))
+      deref
+      (or 0)))
 
 
 (defn run-migration!
