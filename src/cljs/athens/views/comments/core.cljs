@@ -54,7 +54,8 @@
                        :time        "12:09 pm"}
           event           (common-events/build-atomic-event
                             (atomic-graph-ops/make-comment-add-op uid new-comment))]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature "comments"]]]})))
 
 
 (rf/reg-sub
