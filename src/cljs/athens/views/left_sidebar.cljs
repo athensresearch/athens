@@ -1,12 +1,12 @@
 (ns athens.views.left-sidebar
   (:require
     [athens.reactive :as reactive]
-    [athens.router :as router]
-    [athens.style :refer [color OPACITIES]]
-    [athens.util :refer [mouse-offset vertical-center]]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style use-sub-style]]))
+    [athens.router   :as router]
+    [athens.style    :refer [color OPACITIES]]
+    [athens.util     :as util]
+    [re-frame.core   :as rf]
+    [reagent.core    :as r]
+    [stylefy.core    :as stylefy :refer [use-style use-sub-style]]))
 
 
 ;; Styles
@@ -104,7 +104,7 @@
 
 
 (defn shortcut-component
-  [[_ _ _]]
+  [_]
   (let [drag (r/atom nil)]
     (fn [[order title]]
       [:li
@@ -114,19 +114,25 @@
                                :below {:border-bottom [["1px" "solid" (color :link-color)]]}
                                {}))
                       {:on-click      (fn [e]
-                                        (router/navigate-page title e))
+                                        (let [shift? (.-shiftKey e)]
+                                          (rf/dispatch [:reporting/navigation {:source :left-sidebar
+                                                                               :target :page
+                                                                               :pane   (if shift?
+                                                                                         :right-pane
+                                                                                         :main-pane)}])
+                                          (router/navigate-page title e)))
                        :draggable     true
                        :on-drag-over  (fn [e]
                                         (.. e preventDefault)
-                                        (let [offset       (mouse-offset e)
-                                              middle-y     (vertical-center (.. e -target))
+                                        (let [offset       (util/mouse-offset e)
+                                              middle-y     (util/vertical-center (.. e -target))
                                               ;; find closest li because sometimes event.target is anchor tag
                                               ;; if nextSibling is null, then target is last li and therefore end of list
                                               closest-li   (.. e -target (closest "li"))
                                               next-sibling (.. closest-li -nextElementSibling)
                                               last-child?  (nil? next-sibling)]
                                           (cond
-                                            (> middle-y (:y offset)) (reset! drag :above)
+                                            (> middle-y (:y offset))                   (reset! drag :above)
                                             (and (< middle-y (:y offset)) last-child?) (reset! drag :below))))
                        :on-drag-start (fn [e]
                                         (set! (.. e -dataTransfer -dropEffect) "move")
@@ -141,35 +147,40 @@
                                             (and (= source-order
                                                     (dec order))
                                                  (= @drag :above)) nil
-                                            (= @drag :below)       (dispatch [:left-sidebar/drop source-order order :after])
-                                            :else                  (dispatch [:left-sidebar/drop source-order order :before])))
+                                            (= @drag :below)       (rf/dispatch [:left-sidebar/drop source-order order :after])
+                                            :else                  (rf/dispatch [:left-sidebar/drop source-order order :before])))
                                         (reset! drag nil))})
         title]])))
 
 
 (defn left-sidebar
   []
-  (let [open? (subscribe [:left-sidebar/open])
+  (let [open?     (rf/subscribe [:left-sidebar/open])
         shortcuts (reactive/get-reactive-shortcuts)]
-    ;; (when @open?
+    (fn []
+      [:div (use-style left-sidebar-style
+                       {:class (if @open?
+                                 "is-open"
+                                 "is-closed")})
+       [:div (use-style left-sidebar-content-style
+                        {:class (if @open?
+                                  "is-open"
+                                  "is-closed")})
 
-    ;; IF EXPANDED
-    [:div (use-style left-sidebar-style {:class (if @open? "is-open" "is-closed")})
-     [:div (use-style left-sidebar-content-style {:class (if @open? "is-open" "is-closed")})
+        ;; SHORTCUTS
+        [:ol (use-style shortcuts-list-style)
+         [:h2 (use-sub-style shortcuts-list-style :heading)
+          "Shortcuts"]
+         (doall
+           (for [sh shortcuts]
+             ^{:key (str "left-sidebar-" (second sh))}
+             [shortcut-component sh]))]
 
-      ;; SHORTCUTS
-      [:ol (use-style shortcuts-list-style)
-       [:h2 (use-sub-style shortcuts-list-style :heading) "Shortcuts"]
-       (doall
-         (for [sh shortcuts]
-           ^{:key (str "left-sidebar-" (second sh))}
-           [shortcut-component sh]))]
-
-      ;; LOGO + BOTTOM BUTTONS
-      [:footer (use-sub-style left-sidebar-style :footer)
-       [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens/issues/new/choose" :target "_blank"}) "Athens"]
-       [:h5 (use-style {:align-self "center"})
-        [:a (use-style version-style {:href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
-                                      :target "_blank"})
-         (athens.util/athens-version)]]]]]))
+        ;; LOGO + BOTTOM BUTTONS
+        [:footer (use-sub-style left-sidebar-style :footer)
+         [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens/issues/new/choose" :target "_blank"}) "Athens"]
+         [:h5 (use-style {:align-self "center"})
+          [:a (use-style version-style {:href   "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
+                                        :target "_blank"})
+           (athens.util/athens-version)]]]]])))
 

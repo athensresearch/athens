@@ -276,11 +276,12 @@
                                dragging?           nil
                                is-selected?        nil
                                (or (neg? y)
-                                   (< y middle-y)) :before
+                                   (< y middle-y))         :before
+                               (and (< middle-y y)
+                                    (> 50 x))              :after
                                (or (not open)
                                    (and (empty? children)
-                                        (< 50 x))) :first
-                               (< middle-y y)      :after)]
+                                        (< 50 x)))         :first)]
     (when target
       (swap! state assoc :drag-target target))))
 
@@ -487,7 +488,14 @@
                                                "closed-with-children")
                        :block block
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
-                       :on-click        (fn [e] (router/navigate-uid uid e))
+                       :on-click        (fn [e]
+                                          (let [shift? (.-shiftKey e)]
+                                            (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                 :target :block
+                                                                                 :pane   (if shift?
+                                                                                           :right-pane
+                                                                                           :main-pane)}])
+                                            (router/navigate-uid uid e)))
                        :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
                        :on-drag-start   (fn [e] (bullet-drag-start e uid state))
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]

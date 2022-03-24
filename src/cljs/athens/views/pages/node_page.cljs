@@ -31,7 +31,7 @@
     [datascript.core :as d]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :as rf :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]])
   (:import
@@ -283,10 +283,13 @@
 
           (let [cancel-fn  #(swap! state merge init-state)
                 confirm-fn (fn []
+                             (rf/dispatch [:reporting/navigation {:source :page-title-merge
+                                                                  :target :page
+                                                                  :pane   :main-pane}])
                              (router/navigate-page local)
-                             (dispatch [:page/merge {:from-name initial
-                                                     :to-name   local
-                                                     :callback  cancel-fn}]))]
+                             (rf/dispatch [:page/merge {:from-name initial
+                                                        :to-name   local
+                                                        :callback  cancel-fn}]))]
             ;; display alert
             ;; NOTE: alert should be global reusable component, not local to node_page
             (swap! state assoc
@@ -371,6 +374,9 @@
                                            ;; if page being deleted is open, navigate to all pages
                                            (when (or (= @(subscribe [:current-route/page-title]) title)
                                                      (= @(subscribe [:current-route/uid]) uid))
+                                             (rf/dispatch [:reporting/navigation {:source :page-title-delete
+                                                                                  :target :all-pages
+                                                                                  :pane   :main-pane}])
                                              (router/navigate :pages))
                                            ;; if daily note, delete page and remove from daily notes, otherwise just delete page
                                            (if daily-note?
@@ -409,7 +415,7 @@
 
 (defn linked-ref-el
   [state daily-notes? title]
-  (let [linked? "Linked References"
+  (let [linked?     "Linked References"
         linked-refs (wrap-span-no-new-tx "get-reactive-linked-references"
                                          (reactive/get-reactive-linked-references [:node/title title]))]
     (when (or (and daily-notes? (not-empty linked-refs))
@@ -421,8 +427,8 @@
            [:> KeyboardArrowDown]
            [:> ChevronRight])]
         [(r/adapt-react-class Link)]
-        [:div {:style {:display "flex"
-                       :flex "1 1 100%"
+        [:div {:style {:display         "flex"
+                       :flex            "1 1 100%"
                        :justify-content "space-between"}}
          [:span linked?]]]
        (when (get @state linked?)
@@ -431,15 +437,23 @@
             (for [[group-title group] linked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title) %)}
+                [:a {:on-click (fn [e]
+                                 (let [shift?       (.-shiftKey e)
+                                       parsed-title (parse-renderer/parse-title group-title)]
+                                   (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
+                                                                        :target :page
+                                                                        :pane   (if shift?
+                                                                                  :right-pane
+                                                                                  :main-pane)}])
+                                   (router/navigate-page parsed-title e)))}
                  group-title]]
                (doall
                  (for [block group]
                    ^{:key (str "ref-" (:block/uid block))}
-                   [:div {:style {:display "flex"
-                                  :flex "1 1 100%"
+                   [:div {:style {:display         "flex"
+                                  :flex            "1 1 100%"
                                   :justify-content "space-between"
-                                  :align-items "flex-start"}}
+                                  :align-items     "flex-start"}}
                     [:div (use-style references-group-block-style)
                      [ref-comp block]]]))]))])])))
 
@@ -462,7 +476,7 @@
         [(r/adapt-react-class Link)]
         [:div {:style {:display         "flex"
                        :justify-content "space-between"
-                       :width "100%"}}
+                       :width           "100%"}}
          [:span unlinked?]
          (when (and unlinked? (not-empty @unlinked-refs))
            [:> Button {:style    {:font-size "14px"}
@@ -482,7 +496,15 @@
             (for [[[group-title] group] @unlinked-refs]
               [:div (use-style references-group-style {:key (str "group-" group-title)})
                [:h4 (use-style references-group-title-style)
-                [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title) %)}
+                [:a {:on-click (fn [e]
+                                 (let [shift?       (.-shiftKey e)
+                                       parsed-title (parse-renderer/parse-title group-title)]
+                                   (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
+                                                                        :target :page
+                                                                        :pane   (if shift?
+                                                                                  :right-pane
+                                                                                  :main-pane)}])
+                                   (router/navigate-page parsed-title e)))}
                  group-title]]
                (doall
                  (for [block group]
@@ -514,7 +536,7 @@
   title/local is the value of the textarea.
   We have both, because we want to be able to change the local title without transacting to the db until user confirms.
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
-  [_ _ _ _]
+  [_]
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
         block-uid     (r/atom nil)]
@@ -523,10 +545,10 @@
         (reset! state init-state)
         (reset! unlinked-refs [])
         (reset! block-uid (:block/uid node)))
-      (let [{:block/keys [children uid] title :node/title} node
+      (let [{:block/keys [children uid] title :node/title}                      node
             {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
-            daily-note?  (dates/is-daily-note uid)
-            on-daily-notes? (= :home @(subscribe [:current-route/name]))]
+            daily-note?                                                         (dates/is-daily-note uid)
+            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))]
 
 
         (sync-title title state)
@@ -535,8 +557,8 @@
                                      :data-uid uid})
 
          (when alert-show
-           [:> Dialog {:isOpen true
-                       :title message
+           [:> Dialog {:isOpen    true
+                       :title     message
                        :onConfirm confirm-fn
                        :onDismiss cancel-fn}])
 
@@ -551,10 +573,21 @@
                           {:data-uid uid
                            :class    "page-header"
                            :on-click (fn [e]
-                                       (.. e preventDefault)
-                                       (if (or daily-note? (.. e -shiftKey))
-                                         (router/navigate-uid uid e)
-                                         (dispatch [:editing/uid uid])))})
+                                       (let [shift? (.-shiftKey e)]
+                                         (.. e preventDefault)
+                                         (if (or daily-note? shift?)
+                                           (do
+                                             (rf/dispatch [:reporting/navigation {:source :page-title ; NOTE: this might be also used in right-pane situation
+                                                                                  :target (if title
+                                                                                            :page
+                                                                                            :block)
+                                                                                  :pane   (if shift?
+                                                                                            :right-pane
+                                                                                            :main-pane)}])
+                                             (if title
+                                               (router/navigate-page title e)
+                                               (router/navigate-uid uid e)))
+                                           (dispatch [:editing/uid uid]))))})
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 

@@ -213,11 +213,12 @@
       {:dispatch [:transact tx-data]})))
 
 
-(reg-event-db
+(reg-event-fx
   :athena/toggle
   [(interceptors/sentry-span-no-new-tx "athena/toggle")]
-  (fn [db _]
-    (update db :athena/open not)))
+  (fn [{:keys [db]} _]
+    {:db (update db :athena/open not)
+     :dispatch [:posthog/report-feature :athena]}))
 
 
 (reg-event-db
@@ -235,18 +236,20 @@
     (update db :devtool/open not)))
 
 
-(reg-event-db
+(reg-event-fx
   :help/toggle
   [(interceptors/sentry-span-no-new-tx "help/toggle")]
-  (fn [db _]
-    (update db :help/open? not)))
+  (fn [{:keys [db]} _]
+    {:db (update db :help/open? not)
+     :dispatch [:posthog/report-feature :help]}))
 
 
-(reg-event-db
+(reg-event-fx
   :left-sidebar/toggle
   [(interceptors/sentry-span-no-new-tx "left-sidebar/toggle")]
-  (fn [db _]
-    (update db :left-sidebar/open not)))
+  (fn [{:keys [db]} _]
+    {:db (update db :left-sidebar/open not)
+     :dispatch [:posthog/report-feature :left-sidebar]}))
 
 
 (reg-event-fx
@@ -631,8 +634,9 @@
   :theme/toggle
   [(interceptors/sentry-span-no-new-tx "theme/toggle")]
   (fn [{:keys [db]} _]
-    {:db       (update-in db [:athens/persist :theme/dark] not)
-     :dispatch [:theme/set]}))
+    {:db         (update-in db [:athens/persist :theme/dark] not)
+     :dispatch-n [[:theme/set]
+                  [:posthog/report-feature :theme]]}))
 
 
 ;; Datascript
@@ -838,7 +842,8 @@
                                                                             {:page/title target-name
                                                                              :relation relation})
           event (common-events/build-atomic-event drop-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :left-sidebar]]]})))
 
 
 (reg-event-fx
@@ -1592,7 +1597,8 @@
                                                             uid
                                                             new-str)
           event              (common-events/build-atomic-event op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :unlinked-references]]]})))
 
 
 (reg-event-fx
@@ -1610,7 +1616,8 @@
           link-all-op         (composite-ops/make-consequence-op {:op/type :block/unlinked-refs-link-all}
                                                                  block-save-ops)
           event              (common-events/build-atomic-event link-all-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :unlinked-references]]]})))
 
 
 (rf/reg-event-fx
