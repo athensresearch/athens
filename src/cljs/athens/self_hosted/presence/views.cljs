@@ -44,12 +44,17 @@
 
 
 (defn edit-current-user
-  [js-person]
-  (let [{:keys [username color]} (js->clj js-person :keywordize-keys true)]
+  [js-person current-user]
+  (let [{:keys [username color]} (js->clj js-person :keywordize-keys true)
+        username-updated? (not= username (:username current-user))]
+    (prn "updated?" username-updated?)
     (rf/dispatch [:settings/update :username username])
     (rf/dispatch [:settings/update :color color])
     (rf/dispatch [:presence/send-update {:username username
-                                         :color color}])))
+                                         :color    color}])
+    (when username-updated?
+      (rf/dispatch [:posthog/report-feature "presence.update.username"])
+      (rf/dispatch [:posthog/identify! username]))))
 
 
 ;; Exports
@@ -75,7 +80,7 @@
                                        :host-address              (:url @selected-db)
                                        :handle-copy-host-address copy-host-address-to-clipboard
                                        :handle-press-member       #(go-to-user-block @all-users %)
-                                       :handle-update-profile     #(edit-current-user %)
+                                       :handle-update-profile     #(edit-current-user % current-user')
                                        ;; TODO: show other states when we support them.
                                        :connection-status         "connected"}]))))
 

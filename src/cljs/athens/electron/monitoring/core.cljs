@@ -29,6 +29,13 @@
 
 
 (rf/reg-event-fx
+  :posthog/identify!
+  (fn [{:keys [_db]} [_ id]]
+    (when-not (js/posthog.has_opted_out_capturing)
+      (js/posthog.identify id))))
+
+
+(rf/reg-event-fx
   :posthog/report-feature
   (fn [{:keys [_db]} [_ feature on?]]
     {:posthog/capture-event! {:event-name (str "feature/" (name feature))
