@@ -166,7 +166,6 @@
                      :py 2
                      :color "foreground.secondary"
                      :borderTop "1px solid"
-                     :borderBottom "1px solid"
                      :borderColor "separator.divider"
                      :justifyContent "space-between"}
           [:> Heading {:size "xs"}
@@ -178,6 +177,8 @@
      (when no-query?
        [:> VStack {:align "stretch"
                    :spacing 1
+                   :borderTop "1px solid"
+                   :borderColor "separator.divider"
                    :my 4
                    :px 4
                    :overflowY "overlay"
@@ -201,6 +202,8 @@
 (defn search-results-el
   [{:keys [results query index]}]
   [:> VStack {:align "stretch"
+              :borderTop "1px solid"
+              :borderColor "separator.divider"
               :spacing 1
               :my 4
               :px 4
