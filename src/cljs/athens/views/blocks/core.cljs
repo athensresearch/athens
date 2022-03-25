@@ -3,6 +3,7 @@
    ["/components/Block/components/Anchor"   :refer [Anchor]]
    ["/components/Block/components/Toggle"   :refer [Toggle]]
    ["/components/Button/Button"             :refer [Button]]
+   ["@chakra-ui/react" :refer [Box]]
    [athens.common.logging                   :as log]
    [athens.db                               :as db]
    [athens.electron.images                  :as images]
@@ -36,74 +37,63 @@
 ;; smaller than main content blocks, for instance.
 
 
-(def block-container-style
-  {:display         "flex"
-   :line-height     "2em"
-   :position        "relative"
-   :border-radius   "0.125rem"
-   :justify-content "flex-start"
-   :flex-direction  "column"
-   ::stylefy/manual [[:&.show-tree-indicator:before {:content    "''"
-                                                     :position   "absolute"
-                                                     :width      "1px"
-                                                     :left       "calc(1.375em + 1px)"
-                                                     :top        "2em"
-                                                     :bottom     "0"
-                                                     :opacity    "0"
-                                                     :transform  "translateX(50%)"
-                                                     :transition "background-color 0.2s ease-in-out, opacity 0.2s ease-in-out"
-                                                     :background (style/color :border-color)}]
-                     [:&:hover
-                      :&:focus-within [:&.show-tree-indicator:before {:opacity "1"}]]
-                     [:&:after {:content        "''"
-                                :z-index        -1
-                                :position       "absolute"
-                                :top            "0.75px"
-                                :right          0
-                                :bottom         "0.75px"
-                                :left           0
-                                :opacity        0
-                                :pointer-events "none"
-                                :border-radius  "0.25rem"
-                                :transition     "opacity 0.075s ease"
-                                :background     (style/color :link-color :opacity-lower)}]
-                     [:&.is-selected:after {:opacity 1}]
-                     [:&.is-presence [:.block-content {:padding-right "1rem"}]]
-                     [:.user-avatar {:position "absolute"
-                                     :left "4px"
-                                     :top "4px"}]
-                     [:.block-body {:display               "grid"
-                                    :grid-template-columns "1em 1em 1fr auto"
-                                    :grid-template-rows    "0 1fr 0"
-                                    :grid-template-areas   "
+(def block-container-inner-style
+  {"&.show-tree-indicator:before" {:content    "''"
+                                   :position   "absolute"
+                                   :width      "1px"
+                                   :left       "calc(1.375em + 1px)"
+                                   :top        "2em"
+                                   :bottom     "0"
+                                   :opacity    "0"
+                                   :transform  "translateX(50%)"
+                                   :transition "background-color 0.2s ease-in-out, opacity 0.2s ease-in-out"
+                                   :background "separator.divider"}
+   "&:hover, &:focus-within.show-tree-indicator:before" {:opacity 1}
+   "&:after" {:content        "''"
+              :zIndex        -1
+              :position       "absolute"
+              :top            "0.75px"
+              :right          0
+              :bottom         "0.75px"
+              :left           0
+              :opacity        0
+              :pointerEvents "none"
+              :borderRadius "0.25rem"
+              :transition "opacity 0.075s ease"
+              :background "link"}
+   "&.is-selected:after" {:opacity 1}
+   "&.is-presence .block-content" {:padding-right "1rem"}
+   ".user-avatar" {:position "absolute"
+                   :left "4px"
+                   :top "4px"}
+   ".block-body" {:display               "grid"
+                  :gridTemplateColumns "1em 1em 1fr auto"
+                  :gridTemplateRows    "0 1fr 0"
+                  :gridTemplateAreas   "
                                       'above above above above'
                                       'toggle bullet content refs'
                                       'below below below below'"
-                                    :border-radius         "0.5rem"
-                                    :position              "relative"}
-                      [:&:hover
-                       :&:focus-within ["> .block-toggle" {:opacity "1"}]]
-                      [:button.block-edit-toggle {:position   "absolute"
-                                                  :appearance "none"
-                                                  :width      "100%"
-                                                  :background "none"
-                                                  :border     0
-                                                  :cursor     "text"
-                                                  :display    "block"
-                                                  :z-index    1
-                                                  :top        0
-                                                  :right      0
-                                                  :bottom     0
-                                                  :left       0}]]
-                     [:.block-content {:grid-area  "content"
-                                       :min-height "1.5em"}]
-                     [:&.is-linked-ref {:background-color (style/color :background-plus-2)}]
-                     ;; Inset child blocks
-                     [:.block-container {:margin-left "2rem"
-                                         :grid-area   "body"}]]})
-
-
-(stylefy/class "block-container" block-container-style)
+                  :borderRadius         "0.5rem"
+                  :position              "relative"}
+   "&:hover > .block-toggle, 
+     &:focus-within > .block-toggle" {:opacity "1"}
+   "button.block-edit-toggle" {:position   "absolute"
+                               :appearance "none"
+                               :width      "100%"
+                               :background "none"
+                               :border     0
+                               :cursor     "text"
+                               :display    "block"
+                               :z-index    1
+                               :top        0
+                               :right      0
+                               :bottom     0
+                               :left       0}
+   ".block-content" {:gridArea  "content"
+                     :minHeight "1.5em"}
+  "&.is-linked-ref" {:bg "background-attic"}
+  ".block-container" {:marginLeft "2rem"
+                      :gridArea "body"}})
 
 
 (def dragging-style
@@ -441,26 +431,32 @@
          (when (not= string (:string/previous @state))
            (swap! state assoc :string/previous string :string/local string))
 
-         [:div
-          {:class             ["block-container"
-                               (when (and dragging (not is-selected)) "dragging")
-                               (when is-editing "is-editing")
-                               (when is-selected "is-selected")
-                               (when (and (seq children) open) "show-tree-indicator")
-                               (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
-                               (when is-presence "is-presence")]
-           :data-uid          uid
+         [:> Box {:display         "flex"
+                  :line-height     "2em"
+                  :position        "relative"
+                  :border-radius   "0.125rem"
+                  :justify-content "flex-start"
+                  :flex-direction  "column"
+                  :sx block-container-inner-style
+                  :class ["block-container"
+                          (when (and dragging (not is-selected)) "dragging")
+                          (when is-editing "is-editing")
+                          (when is-selected "is-selected")
+                          (when (and (seq children) open) "show-tree-indicator")
+                          (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
+                          (when is-presence "is-presence")]
+                  :data-uid          uid
            ;; need to know children for selection resolution
-           :data-childrenuids children-uids
+                  :data-childrenuids children-uids
            ;; :show-editable-dom allows us to render the editing elements (like the textarea)
            ;; even when not editing this block. When true, clicking the block content will pass
            ;; the clicks down to the underlying textarea. The textarea is expensive to render,
            ;; so we avoid rendering it when it's not needed.
-           :on-mouse-enter    #(swap! state assoc :show-editable-dom true)
-           :on-mouse-leave    #(swap! state assoc :show-editable-dom false)
-           :on-drag-over      (fn [e] (block-drag-over e block state))
-           :on-drag-leave     (fn [e] (block-drag-leave e block state))
-           :on-drop           (fn [e] (block-drop e block state))}
+                  :on-mouse-enter    #(swap! state assoc :show-editable-dom true)
+                  :on-mouse-leave    #(swap! state assoc :show-editable-dom false)
+                  :on-drag-over      (fn [e] (block-drag-over e block state))
+                  :on-drag-leave     (fn [e] (block-drag-leave e block state))
+                  :on-drop           (fn [e] (block-drop e block state))}
 
           (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
 

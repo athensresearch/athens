@@ -1,6 +1,7 @@
 (ns athens.views.blocks.autocomplete-slash
   (:require
     ["/components/Button/Button" :refer [Button]]
+    ["@chakra-ui/react" :refer [Portal Heading IconButton MenuDivider MenuButton Menu MenuList MenuItem]]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.dropdown :as dropdown]
     [goog.events :as events]
@@ -18,11 +19,12 @@
 (defn slash-menu-el
   [_block state]
   (let [ref (atom nil)
+        clear-search (swap! state assoc :search/type false)
         handle-click-outside (fn [e]
                                (let [{:search/keys [type]} @state]
                                  (when (and (= type :slash)
                                             (not (.. @ref (contains (.. e -target)))))
-                                   (swap! state assoc :search/type false))))]
+                                   clear-search)))]
     (r/create-class
       {:display-name           "slash-menu"
        :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
@@ -36,13 +38,17 @@
                                                                       ;; don't blur textarea when clicking to auto-complete
                                                                       :on-mouse-down (fn [e] (.. e preventDefault))})
                                                   {:style {:position "absolute" :left (+ left 24) :top (+ top 24)}})
-                                      [:div#dropdown-menu (merge (stylefy/use-style dropdown/menu-style) {:style {:max-height "8em"}})
+                                      [:> Menu {:isOpen true
+                                                :isLazy true
+                                                :onClose clear-search}
+                                      [:> MenuList
                                        (doall
-                                         (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
-                                           [:> Button {:key      text
-                                                       :id       (str "dropdown-item-" i)
-                                                       :is-pressed (= i index)
-                                                       :on-click (fn [_] (slash-item-click state block item))}
-                                            [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
+                                        (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
+                                          [:> MenuItem {:key      text
+                                                        :id       (str "dropdown-item-" i)
+                                                        :isActive (= i index)
+                                                        :command  kbd
+                                                        :onClick (fn [_] (slash-item-click state block item))}
+                                           [:<> [(r/adapt-react-class icon)] [:span text]]]))]]])))})))
 
 

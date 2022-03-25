@@ -3,6 +3,7 @@
     ["/components/Block/components/Anchor" :refer [Anchor]]
     ["/components/Button/Button" :refer [Button]]
     ["/components/Dialog/Dialog" :refer [Dialog]]
+    ["@chakra-ui/react" :refer [Portal Heading IconButton MenuDivider MenuButton Menu MenuList MenuItem]]
     ["@material-ui/core/Popover" :as Popover]
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
@@ -25,11 +26,9 @@
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-    [athens.views.dropdown :refer [menu-style menu-separator-style]]
     [athens.views.hoc.perf-mon     :as perf-mon]
     [clojure.string :as str]
     [datascript.core :as d]
-    [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
     [re-frame.core :as rf :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -43,11 +42,6 @@
 ;; --- material ui ---
 
 
-(def m-popover (r/adapt-react-class (.-default Popover)))
-
-
-;; Styles
-
 
 (def page-style
   {:margin "2rem auto"
@@ -56,57 +50,39 @@
    :max-width "55rem"})
 
 
-(def dropdown-style
-  {::stylefy/manual [[:.menu {:background (color :background-plus-2)
-                              :color (color :body-text-color)
-                              :border-radius "calc(0.25rem + 0.25rem)" ; Button corner radius + container padding makes "concentric" container radius
-                              :padding "0.25rem"
-                              :display "inline-flex"
-                              :box-shadow [[(:64 DEPTH-SHADOWS) ", 0 0 0 1px rgba(0, 0, 0, 0.05)"]]}]]})
-
-
 (def page-header-style
   {:position "relative"})
 
 
-(def title-style
-  {:position "relative"
-   :overflow "visible"
-   :flex-grow "1"
-   :margin "0.10em 0 0.10em 1rem"
-   :letter-spacing "-0.03em"
-   :white-space "pre-line"
-   :word-break "break-word"
-   :line-height "1.40em"
-   ::stylefy/manual [[:textarea {:-webkit-appearance "none"
-                                 :cursor             "text"
-                                 :resize             "none"
-                                 :transform          "translate3d(0,0,0)"
-                                 :color              "inherit"
-                                 :font-weight        "inherit"
-                                 :padding            "0"
-                                 :letter-spacing     "inherit"
-                                 :width              "100%"
-                                 :min-height         "100%"
-                                 :caret-color        (color :link-color)
-                                 :background         "transparent"
-                                 :margin             "0"
-                                 :font-size          "inherit"
-                                 :line-height        "inherit"
-                                 :border-radius      "0.25rem"
-                                 :transition         "opacity 0.15s ease"
-                                 :border             "0"
-                                 :font-family        "inherit"
-                                 :visibility         "hidden"
-                                 :position           "absolute"}]
-                     [:textarea ["::-webkit-scrollbar" {:display "none"}]]
-                     [:textarea:focus
-                      :.is-editing {:outline    "none"
-                                    :visibility "visible"
-                                    :position   "relative"}]
-                     [:abbr {:z-index 4}]
-                     [(selectors/+ :.is-editing :span) {:visibility "hidden"
-                                                        :position   "absolute"}]]})
+(def title-inner-style
+  {"textarea" {:appearance "none"
+               :cursor            "text"
+               :resize            "none"
+               :transform         "translate3d(0,0,0)"
+               :color             "inherit"
+               :fontWeight        "inherit"
+               :padding           "0"
+               :letterSpacing     "inherit"
+               :width             "100%"
+               :minHeight         "100%"
+               :caretColor        "link"
+               :background        "transparent"
+               :margin            "0"
+               :fontSize          "inherit"
+               :lineHeight        "inherit"
+               :borderRadius      "0.25rem"
+               :transition        "opacity 0.15s ease"
+               :border            "0"
+               :fontFamily        "inherit"
+               :visibility        "hidden"
+               :position          "absolute"}
+   ["textarea" ["::-webkit-scrollbar" {:display "none"}]]
+   [".is-editing textarea:focus" {:outline "none"
+                                  :visibility "visible"
+                                  :position "relative"}]
+   "abbr" {:z-index 4}
+   ".is-editing span" {:visibility "hidden"
+                       :position   "absolute"}})
 
 
 (def references-style {:margin-top "3em"})
@@ -153,15 +129,6 @@
    ::stylefy/manual [[:&:first-of-type {:border-top "0"
                                         :margin-block-start "0"}]]})
 
-
-(def page-menu-toggle-style
-  {:position "absolute"
-   :left "-1.5rem"
-   :border-radius "1000px"
-   :padding "0.375rem 0.5rem"
-   :color (color :body-text-color :opacity-high)
-   :transform "translateY(-50%)"
-   :top "50%"})
 
 
 ;; Helpers
@@ -335,54 +302,48 @@
 (defn menu-dropdown
   [node daily-note?]
   (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node]
-    (r/with-let [ele (r/atom nil)]
-                [:<>
-                 [:> Button {:class    [(when @ele "is-active")]
-                             :on-click #(reset! ele (.-currentTarget %))
-                             :style    page-menu-toggle-style}
-                  [:> MoreHoriz]]
-                 [m-popover
-                  (merge (use-style dropdown-style)
-                         {:style {:font-size "14px"}
-                          :open            (boolean @ele)
-                          :anchorEl        @ele
-                          :onClose         #(reset! ele nil)
-                          :anchorOrigin    #js{:vertical   "bottom"
-                                               :horizontal "left"}
-                          :marginThreshold 10
-                          :transformOrigin #js{:vertical   "top"
-                                               :horizontal "left"}
-                          :classes {:root "backdrop"
-                                    :paper "menu"}})
-                  [:div (use-style menu-style)
-                   [:<>
-                    (if sidebar
-                      [:> Button {:on-click #(dispatch [:left-sidebar/remove-shortcut title])}
-                       [:> BookmarkBorder]
-                       [:span "Remove Shortcut"]]
-                      [:> Button {:on-click #(dispatch [:left-sidebar/add-shortcut title])}
-                       [:> Bookmark]
-                       [:span "Add Shortcut"]])
-                    [:> Button {:on-click #(dispatch [:right-sidebar/open-item uid true])}
-                     [:> BubbleChart]
-                     [:span "Show Local Graph"]]]
-                   [:hr (use-style menu-separator-style)]
-                   [:> Button {:on-click (fn []
+    [:> Menu
+     [:> MenuButton {:as IconButton
+                     :position "absolute"
+                     :bg "transparent"
+                     :height "2.5rem"
+                     :width "2.5rem"
+                     :right "100%"
+                     :top "0.35rem"
+                     :borderRadius "full"
+                     :sx {"span" {:display "contents"}
+                          "button svg:first-child" {:marginRight "0.25rem"}}}
+      [:> MoreHoriz]]
+     [:> Portal
+      [:> MenuList {:sx {"button svg:first-child" {:marginRight "0.25rem"}}}
+       [:<>
+        (if sidebar
+          [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])}
+           [:> BookmarkBorder]
+           [:span "Remove Shortcut"]]
+          [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])}
+           [:> Bookmark]
+           [:span "Add Shortcut"]])
+        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])}
+         [:> BubbleChart]
+         [:span "Show Local Graph"]]]
+       [:> MenuDivider]
+       [:> MenuItem {:onClick (fn []
                                            ;; if page being deleted is in right sidebar, remove from right sidebar
-                                           (when (contains? @(subscribe [:right-sidebar/items]) uid)
-                                             (dispatch [:right-sidebar/close-item uid]))
+                                (when (contains? @(subscribe [:right-sidebar/items]) uid)
+                                  (dispatch [:right-sidebar/close-item uid]))
                                            ;; if page being deleted is open, navigate to all pages
-                                           (when (or (= @(subscribe [:current-route/page-title]) title)
-                                                     (= @(subscribe [:current-route/uid]) uid))
-                                             (rf/dispatch [:reporting/navigation {:source :page-title-delete
-                                                                                  :target :all-pages
-                                                                                  :pane   :main-pane}])
-                                             (router/navigate :pages))
+                                (when (or (= @(subscribe [:current-route/page-title]) title)
+                                          (= @(subscribe [:current-route/uid]) uid))
+                                  (rf/dispatch [:reporting/navigation {:source :page-title-delete
+                                                                       :target :all-pages
+                                                                       :pane   :main-pane}])
+                                  (router/navigate :pages))
                                            ;; if daily note, delete page and remove from daily notes, otherwise just delete page
-                                           (if daily-note?
-                                             (dispatch [:daily-note/delete uid title])
-                                             (dispatch [:page/delete title])))}
-                    [:> Delete] [:span "Delete Page"]]]]])))
+                                (if daily-note?
+                                  (dispatch [:daily-note/delete uid title])
+                                  (dispatch [:page/delete title])))}
+        [:> Delete] [:span "Delete Page"]]]]]))
 
 
 (defn ref-comp
@@ -530,6 +491,7 @@
                        "Link"])]))]))])])))
 
 
+
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
   "title/initial is the title when a page is first loaded.
@@ -569,25 +531,33 @@
           ;; Dropdown
           [menu-dropdown node daily-note?]
 
-          [:h1 (use-style title-style
-                          {:data-uid uid
-                           :class    "page-header"
-                           :on-click (fn [e]
-                                       (let [shift? (.-shiftKey e)]
-                                         (.. e preventDefault)
-                                         (if (or daily-note? shift?)
-                                           (do
-                                             (rf/dispatch [:reporting/navigation {:source :page-title ; NOTE: this might be also used in right-pane situation
-                                                                                  :target (if title
-                                                                                            :page
-                                                                                            :block)
-                                                                                  :pane   (if shift?
-                                                                                            :right-pane
-                                                                                            :main-pane)}])
-                                             (if title
-                                               (router/navigate-page title e)
-                                               (router/navigate-uid uid e)))
-                                           (dispatch [:editing/uid uid]))))})
+          [:> Heading {:data-uid uid
+                       :class    "page-header"
+                       :position "relative"
+                       :overflow "visible"
+                       :flex-grow "1"
+                       :margin "0.10em 0 0.10em 1rem"
+                       :letter-spacing "-0.03em"
+                       :white-space "pre-line"
+                       :word-break "break-word"
+                       :line-height "1.40em"
+                       :sx title-inner-style
+                       :onClick (fn [e]
+                                  (let [shift? (.-shiftKey e)]
+                                    (.. e preventDefault)
+                                    (if (or daily-note? shift?)
+                                      (do
+                                        (rf/dispatch [:reporting/navigation {:source :page-title ; NOTE: this might be also used in right-pane situation
+                                                                             :target (if title
+                                                                                       :page
+                                                                                       :block)
+                                                                             :pane   (if shift?
+                                                                                       :right-pane
+                                                                                       :main-pane)}])
+                                        (if title
+                                          (router/navigate-page title e)
+                                          (router/navigate-uid uid e)))
+                                      (dispatch [:editing/uid uid]))))}
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 

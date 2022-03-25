@@ -813,10 +813,19 @@
       ;; used for paste, to determine if shift key was held down
       (swap! state assoc :last-keydown d-event)
 
+      (js/console.log @state)
+
       ;; update caret position for search dropdowns and for up/down
       (when (nil? (:search/type @state))
-        (let [caret-position (get-caret-position (.. e -target))]
-          (swap! state assoc :caret-position caret-position)))
+        (let [caret-position (get-caret-position (.. e -target))
+              textarea-position (js/getClientBoundingRect (.. e -target))
+              position {:left (+ (:left caret-position) (:x textarea-position))
+                        :top (+ (:top caret-position) (:y textarea-position))}]
+
+          (js/console.log "caret-position", caret-position)
+          (js/console.log "textarea-position", textarea-position)
+          (js/console.log "position", position)
+          (swap! state assoc :caret-position position)))
 
       ;; dispatch center
       ;; only when nothing is selected or duplicate/events dispatched

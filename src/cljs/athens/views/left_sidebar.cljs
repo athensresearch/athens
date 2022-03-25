@@ -1,6 +1,6 @@
 (ns athens.views.left-sidebar
   (:require
-   ["@chakra-ui/react" :refer [VStack HStack Heading Button Link Flex Box]]
+   ["@chakra-ui/react" :refer [VStack HStack Heading Button Link Flex]]
    ["framer-motion" :refer [AnimatePresence motion]]
    [athens.reactive :as reactive]
    [athens.router   :as router]
@@ -30,18 +30,20 @@
                    :flex "1"
                    :border "none"
                    :justifyContent "flex-start"
-                   :bg "background.floor"
+                   :bg "transparent"
                    :boxShadow "0 0 0 0.25rem transparent"
                    :_focus {:outline "none"}
                    :_hover {:bg "background.upper"}
-                   :onClick (fn [e]
-                              (let [shift? (.-shiftKey e)]
-                                (rf/dispatch [:reporting/navigation {:source :left-sidebar
-                                                                     :target :page
-                                                                     :pane   (if shift?
-                                                                               :right-pane
-                                                                               :main-pane)}])
-                                (router/navigate-page title e)))
+                   :_active {:bg "background.attic"
+                             :transitionDuration "0s"}
+                   :on-click (fn [e]
+                               (let [shift? (.-shiftKey e)]
+                                 (rf/dispatch [:reporting/navigation {:source :left-sidebar
+                                                                      :target :page
+                                                                      :pane   (if shift?
+                                                                                :right-pane
+                                                                                :main-pane)}])
+                                 (router/navigate-page title e)))
                    :draggable     true
                    :on-drag-over  (fn [e]
                                     (.. e preventDefault)
@@ -88,6 +90,7 @@
                    :paddingBottom "2rem"
                    :alignItems "stretch"
                    :gridArea "left-sidebar"
+                   :position "relative"
                    :overflow "hidden"}
            :initial {:width 0
                      :opacity 0}
@@ -104,11 +107,12 @@
                       :spacing "0.25rem"
                       :overflowY "overlay"
                       :sx {:listStyle "none"}}
+           
            [:> Heading {:as "h2"
                         :px "2rem"
-                        :pb "1rem"
-                        :size "md"
-                        :color "feature.secondary"}
+                        :pb "0.5rem"
+                        :size "sm"
+                        :color "foreground.secondary"}
             "Shortcuts"]
            (doall
             (for [sh shortcuts]
@@ -118,6 +122,7 @@
         ;; LOGO + BOTTOM BUTTONS
           [:> HStack {:as "footer"
                       :width expanded-sidebar-width
+                      :fontSize "sm"
                       :px "2rem"
                       :mt "auto"}
            [:> Link {:fontWeight "bold"

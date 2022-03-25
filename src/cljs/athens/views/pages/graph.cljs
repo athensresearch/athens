@@ -325,9 +325,9 @@
                 graph-conf @(subscribe [:graph/conf])
                 graph-ref  (get @graph-ref-map (or local-node-eid :global))]
             ;; set canvas dimensions
-            (swap! dimensions assoc :width (-> dom-node (.. (closest ".graph-page"))
+            (swap! dimensions assoc :width (-> dom-node (.. (closest "#app"))
                                                .-parentNode .-clientWidth))
-            (swap! dimensions assoc :height (-> dom-node (.. (closest ".graph-page"))
+            (swap! dimensions assoc :height (-> dom-node (.. (closest "#app"))
                                                 .-parentNode .-clientHeight))
             ;; set init forces for graph
             (when graph-ref
@@ -491,6 +491,10 @@
                                :db/id))]
      [:div.graph-page
       {:style (merge (when local-node-eid {:min-height "500px"})
-                     {:position "relative"})}
-      [graph-controls local-node-eid]
+                     {:position "fixed"
+                      :top 0
+                      :left 0
+                      :width "100vw"
+                      :height "100vh"})}
+      #_ [graph-controls local-node-eid]
       [graph-root local-node-eid]])))

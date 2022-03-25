@@ -1,13 +1,11 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-    ["/components/Button/Button" :refer [Button]]
-    [athens.style :as style]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [athens.views.dropdown :as dropdown]
-    [clojure.string :as string]
-    [goog.events :as events]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy]))
+  ;;  ["/components/Button/Button" :refer [Button]]
+   ["@chakra-ui/react" :refer [Portal Heading Button IconButton MenuDivider MenuButton VStack Box Menu MenuList Text MenuItem]]
+   [athens.views.blocks.textarea-keydown :as textarea-keydown]
+   [clojure.string :as string]
+   [goog.events :as events]
+   [reagent.core :as r]))
 
 
 (defn inline-item-click
@@ -30,34 +28,37 @@
                                             (not (.. @ref (contains (.. e -target)))))
                                    (swap! state assoc :search/type false))))]
     (r/create-class
-      {:display-name           "inline-search"
-       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
-       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn [block state]
-                                 (let [{:search/keys [query results index type] caret-position :caret-position} @state
-                                       {:keys [left top]} caret-position]
-                                   (when (some #(= % type) [:page :block :hashtag :template])
-                                     [:div (merge (stylefy/use-style dropdown/dropdown-style
-                                                                     {:ref           #(reset! ref %)
-                                                                      ;; don't blur textarea when clicking to auto-complete
-                                                                      :on-mouse-down (fn [e] (.. e preventDefault))})
-                                                  {:style {:position   "absolute"
-                                                           :max-height "20rem"
-                                                           :z-index    (:zindex-popover style/ZINDICES)
-                                                           :top        (+ 24 top)
-                                                           :left       (+ 24 left)}})
-                                      [:div#dropdown-menu (stylefy/use-style dropdown/menu-style)
-                                       (if (or (string/blank? query)
-                                               (empty? results))
-                                         ;; Just using button for styling
-                                         [:> Button (stylefy/use-style {:opacity (style/OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
-                                         (doall
-                                           (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-                                             [:> Button {:key      (str "inline-search-item" uid)
-                                                         :id       (str "dropdown-item-" i)
-                                                         :is-pressed   (= index i)
+     {:display-name           "inline-search"
+      :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
+      :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
+      :reagent-render         (fn [block state]
+                                (let [{:search/keys [query results index type] caret-position :caret-position} @state
+                                      {:keys [left top]} caret-position]
+                                  (when (some #(= % type) [:page :block :hashtag :template])
+                                    [:> Portal
+                                     [:> VStack {:ref #(reset! ref %)
+                                                 ;; don't blur textarea when clicking to auto-complete
+                                                 :on-mouse-down (fn [e] (.. e preventDefault))
+                                                 :position   "absolute"
+                                                 :overflow "auto"
+                                                 :p 1
+                                                 :align "stretch"
+                                                 :justify "stretch"
+                                                 :width "max-content"
+                                                 :bg "background.upper"
+                                                 :maxHeight "20rem"
+                                                 :top (str (+ 24 top) "px")
+                                                 :left (str (+ 24 left) "px")}
+                                      (if (or (string/blank? query)
+                                              (empty? results))
+                                        [:> Text (str "Search for a " (symbol type))]
+                                        (doall
+                                         (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+                                           [:> Button {:key      (str "inline-search-item" uid)
+                                                       :id       (str "dropdown-item-" i)
+                                                       :width "100%"
+                                                       :isActive   (= index i)
                                                          ;; if page link, expand to title. otherwise expand to uid for a block ref
-                                                         :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
-                                                         :style    {:text-align "left"}}
-                                              (or title string)])))]])))})))
+                                                       :onClick (fn [_] (inline-item-click state (:block/uid block) (or title uid)))}
+                                            (or title string)])))]])))})))
 

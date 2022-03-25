@@ -1,6 +1,6 @@
 (ns athens.views.pages.all-pages
   (:require
-  ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button]]
+  ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button Box]]
     ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
     ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
     [athens.common-db          :as common-db]
@@ -63,18 +63,19 @@
 ;; Components
 
 (defn- sortable-header
-  ([column-id label width]
+  ([column-id label width isNumeric]
    (let [sorted-by @(rf/subscribe [:all-pages/sorted-by])
          growing?  @(rf/subscribe [:all-pages/sort-order-ascending?])]
-     [:> Th {:width width}
+     [:> Th {:width width :isNumeric isNumeric}
       [:> Button {:onClick #(rf/dispatch [:all-pages/sort-by column-id])
                   :size "sm"
                   :variant "link"}
-       label
+       (when-not isNumeric label)
        (when (= sorted-by column-id)
          (if growing?
            [:> ArrowDropUp]
-           [:> ArrowDropDown]))]])))
+           [:> ArrowDropDown]))
+       (when isNumeric label)]])))
 
 
 (defn page
@@ -82,35 +83,34 @@
   (let [all-pages (common-db/get-all-pages @db/dsdb)]
     (fn []
       (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
+        [:> Box {:px 4
+                 :margin "5rem auto"}
          [:> Table {:variant "striped"
-                    :margin "5rem auto"
-                    :border "2rem solid transparent"
-                    :flex-basis "100%"
                     :max-width "70rem"}
           [:> Thead
            [:> Tr
             [sortable-header :title "Title"]
-            [sortable-header :links-count "Links" :width "10rem"]
-            [sortable-header :modified "Modified" {:date? true} :width "20rem"]
-            [sortable-header :created "Created" {:date? true} :width "20rem"]]]
+            [sortable-header :links-count "Links" "12rem" true]
+            [sortable-header :modified "Modified" "20rem" false {:date? true}]
+            [sortable-header :created "Created" "20rem" false {:date? true}]]]
           [:> Tbody
            (doall
-             (for [{:keys    [block/uid node/title block/_refs]
-                    modified :edit/time
-                    created  :create/time} sorted-pages]
-               [:> Tr {:key uid}
-                [:> Td
-                 [:> Button {:variant "link"
-                             :color "link"
-                             :onClick (fn [e]
-                                        (let [shift? (.-shiftKey e)]
-                                          (rf/dispatch [:reporting/navigation {:source :all-pages
-                                                                               :target :page
-                                                                               :pane   (if shift?
-                                                                                         :right-pane
-                                                                                         :main-pane)}])
-                                          (router/navigate-page title e)))}
-                  title]]
-                [:> Td {:color "foreground.secondary"} (count _refs)]
-                [:> Td {:color "foreground.secondary"} (dates/date-string modified)]
-                [:> Td {:color "foreground.secondary"} (dates/date-string created)]]))]]))))
+            (for [{:keys    [block/uid node/title block/_refs]
+                   modified :edit/time
+                   created  :create/time} sorted-pages]
+              [:> Tr {:key uid}
+               [:> Td
+                [:> Button {:variant "link"
+                            :color "link"
+                            :onClick (fn [e]
+                                       (let [shift? (.-shiftKey e)]
+                                         (rf/dispatch [:reporting/navigation {:source :all-pages
+                                                                              :target :page
+                                                                              :pane   (if shift?
+                                                                                        :right-pane
+                                                                                        :main-pane)}])
+                                         (router/navigate-page title e)))}
+                 title]]
+               [:> Td {:width "12rem" :color "foreground.secondary" :isNumeric true} (count _refs)]
+               [:> Td {:width "18rem" :color "foreground.secondary"} (dates/date-string modified)]
+               [:> Td {:width "18rem" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))

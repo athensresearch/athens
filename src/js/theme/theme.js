@@ -1,15 +1,33 @@
-import { extendTheme } from '@chakra-ui/react'
-import { red } from '@material-ui/core/colors'
+import { extendTheme, cssVar } from '@chakra-ui/react'
 import { spacing } from './spacing'
 
+const $arrowBg = cssVar("popper-arrow-bg");
+
+const shadows = {
+  focusLight: '0 0 0 3px #0071DB',
+  focusDark: '0 0 0 3px #498eda',
+
+  focusInnerLight: 'inset 0 0 0 3px #0071DB',
+  focusInnerDark: 'inset 0 0 0 3px #498eda',
+
+  page: '0 0.25rem 1rem #00000055',
+}
+
+const radii = {
+  none: '0',
+  sm: '0.25rem',
+  md: '0.5rem',
+  lg: '1rem',
+  full: '9999px',
+}
 
 const colors = {
-  // Old theme values
-
   // light theme
   linkLight: "#0071DB",
+  linkContrastLight: '#fff',
   highlightLight: "#F9A132",
   textHighlightLight: "#ffdb8a",
+  highlightContrastLight: "#000",
   warningLight: "#D20000",
 
   backgroundPlus2Light: "#fff",
@@ -33,8 +51,10 @@ const colors = {
   backgroundPlus2Dark: "#333",
 
   linkDark: "#498eda",
+  linkContrastDark: '#fff',
   highlightDark: "#FBBE63",
   textHighlightDark: "#FBBE63",
+  highlightContrastDark: "#000",
   warningDark: "#DE3C21",
 
   confirmationDark: "#189E36",
@@ -42,10 +62,35 @@ const colors = {
   bodyDark: "#AAA",
   borderDark: "hsla(32, 81%, 90%, 0.08)",
   errorDark: "#fd5243",
-  shadowDark: "#000"
+  shadowDark: "#000",
 }
 
 const semanticTokens = {
+  shadows: {
+    focus: {
+      default: "focusLight",
+      _dark: "focusDark",
+    },
+    focusInner: {
+      default: "focusInnerLight",
+      _dark: "focusInnerDark",
+    },
+    page: {
+      default: "0 0.25rem 1rem #00000055",
+    },
+    menu: {
+      default: "0 0.25rem 1rem #00000055",
+    },
+    popover: {
+      default: "0 0.25rem 1rem #00000055",
+    },
+    tooltip: {
+      default: "0 0.25rem 1rem #00000055",
+    },
+    dialog: {
+      default: "0 0.25rem 1rem #00000055",
+    },
+  },
   colors: {
     transparent: 'transparent',
     brand: {
@@ -80,12 +125,12 @@ const semanticTokens = {
     },
     // foreground colors
     "foreground.primary": {
-      default: 'bodyLight',
-      _dark: 'bodyDark'
+      default: 'hsla(0, 0%, 0%, 0.87)',
+      _dark: 'hsla(0, 0%, 100%, 0.8)'
     },
     "foreground.secondary": {
-      default: 'headerLight',
-      _dark: 'headerDark'
+      default: 'hsla(0, 0%, 0%, 0.57)',
+      _dark: 'hsla(0, 0%, 100%, 0.57)'
     },
     // status colors
     error: {
@@ -113,20 +158,35 @@ const semanticTokens = {
       default: 'highlightLight',
       _dark: 'highlightDark'
     },
+    highlightContrast: {
+      default: 'highlightContrastLight',
+      _dark: 'highlightContrastDark'
+    },
     link: {
       default: 'linkLight',
       _dark: 'linkDark'
+    },
+    linkContrast: {
+      default: 'linkContrastLight',
+      _dark: 'linkContrastDark'
     }
   }
 }
 
 const components = {
   Popover: {
+    parts: [ "arrow", "content" ],
     baseStyle: {
       content: {
-        bg: 'background.upper',
-        shadow: '0 0.5rem 1rem rgba(0, 0, 0, 0.15)'
+        bg: "background.upper",
+        shadow: "popover",
+        [ $arrowBg.variable ]: "colors.background.upper",
       }
+    }
+  },
+  FormLabel: {
+    baseStyle: {
+      color: "foreground.secondary",
     }
   },
   Modal: {
@@ -137,18 +197,89 @@ const components = {
         }
       },
       dialog: {
+        shadow: "dialog",
+        border: "1px solid",
+        borderColor: 'separator.divider',
         bg: 'background.upper'
+      }
+    }
+  },
+  Tabs: {
+    variants: {
+      line: {
+        tabList: {
+          borderBottom: "separator.border"
+        },
+        tab: {
+          color: "link",
+          borderBottom: "2px solid",
+          borderBottomColor: "separator.border",
+          _selected: {
+            bg: 'background.attic',
+            color: 'foreground.primary',
+            borderBottomColor: "foreground.primary"
+          },
+          _focus: {
+            outline: 'none',
+            shadow: 'none'
+          },
+          _focusVisible: {
+            shadow: "focus"
+          }
+        }
       }
     }
   },
   Button: {
     baseStyle: {
       color: 'feature.primary',
+      _active: {
+        transitionDuration: '0s',
+        color: 'linkContrast',
+        bg: 'link',
+      },
+      _focus: {
+        outline: 'none',
+        boxShadow: 'none'
+      },
+      _focusVisible: {
+        outline: 'none',
+        boxShadow: 'focus'
+      }
+    }
+  },
+  IconButton: {
+    baseStyle: {
+      fontSize: "1em",
+      _active: {
+        transitionDuration: '0s',
+        color: 'linkContrast',
+        bg: 'link',
+      },
+      _focus: {
+        outline: 'none',
+        boxShadow: 'none'
+      },
+      _focusVisible: {
+        outline: 'none',
+        boxShadow: 'focus'
+      }
+    }
+  },
+  Menu: {
+    baseStyle: {
+      list: {
+        zIndex: 2,
+        bg: 'background.upper',
+        shadow: 'menu'
+      }
     }
   },
   Tooltip: {
     baseStyle: {
-      bg: 'feature.primary',
+      bg: 'background.attic',
+      color: 'foreground.primary',
+      shadow: 'tooltip',
       px: "8px",
       py: "2px",
       borderRadius: "sm",
@@ -211,4 +342,4 @@ const sizes = {
   ...spacing
 }
 
-export const theme = extendTheme({ config, colors, semanticTokens, spacing, sizes, components, styles });
+export const theme = extendTheme({ config, radii, colors, shadows, semanticTokens, spacing, sizes, components, styles });

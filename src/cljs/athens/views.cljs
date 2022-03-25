@@ -88,6 +88,7 @@
                    {:gridTemplateColumns "auto 1fr auto"
                     :gridTemplateRows "auto 1fr auto"
                     :grid-template-areas
+
                     "'app-header app-header app-header'
                       'left-sidebar main-content secondary-content'
                     'devtool devtool devtool'"

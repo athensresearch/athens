@@ -5,7 +5,6 @@
    [athens.db :as db]
    [athens.events.selection :as select-events]
    [athens.parse-renderer :refer [parse-and-render]]
-   [athens.style :as style]
    [athens.subs.selection :as select-subs]
    [athens.util :as util]
    [athens.views.blocks.internal-representation :as internal-representation]
@@ -13,11 +12,9 @@
    [clojure.edn :as edn]
    [clojure.set :as set]
    [clojure.string :as str]
-   [garden.selectors :as selectors]
    [goog.events :as goog-events]
    [komponentit.autosize :as autosize]
-   [re-frame.core :as rf]
-   [stylefy.core :as stylefy])
+   [re-frame.core :as rf])
   (:import
     (goog.events
       EventType)))
@@ -54,120 +51,58 @@
                                                  "& > a" {:position "relative"
                                                           :zIndex 2
                                                           :pointerEvents "all"}}
-                                "span" {:gridArea "main"}})
-
-
-(def block-content-style
-  {:display "grid"
-   :color "foreground.primary"
-   :grid-template-areas "'main'"
-   :align-items "stretch"
-   :justify-content "stretch"
-   :position "relative"
-   :overflow "visible"
-   :z-index 2
-   :flex-grow "1"
-   :word-break "break-word"
-   ::stylefy/manual [#_ [:textarea {:display "block"
-                                 :line-height 0
-                                 :-webkit-appearance "none"
-                                 :cursor "text"
-                                 :resize "none"}]
-                     #_ [:&:hover [:textarea [(selectors/& (selectors/not :.is-editing)) {:line-height 2}]]]
-                     #_ [:.is-editing {:z-index 3
-                                    :line-height "inherit"
-                                    :opacity "1"}]
-                     [:span.text-run
-                      {:pointer-events "None"}
-                      [:>a {:position "relative"
-                            :z-index 2
-                            :pointer-events "all"}]]
-                     [:span
-                      {:grid-area "main"}
-                      [:>span
-                       :>a {:position "relative"
-                            :z-index 2}]]
-                     [:abbr
-                      {:grid-area "main"
-                       :z-index   4}
-                      [:>span
-                       :>a {:position "relative"
-                            :z-index 2}]]
-                     ;; May want to refactor specific component styles to somewhere else.
-                     ;; Closer to the component perhaps?
-                     ;; Code
-                     [:code :pre {:font-family "IBM Plex Mono"}]
-                     ;; Media Containers
-                     ;; Using a CSS hack/convention here to create a responsive container
-                     ;; of a specific aspect ratio.
-                     ;; TODO: Replace this with the CSS aspect-ratio property once available.
-                     [:.media-16-9 {:height 0
-                                    :width "calc(100% - 0.25rem)"
-                                    :z-index 1
-                                    :transform-origin "right center"
-                                    :transition "all 0.2s ease"
-                                    :padding-bottom (str (* (/ 9 16) 100) "%")
-                                    :margin-block "0.25rem"
-                                    :margin-inline-end "0.25rem"
-                                    :position "relative"}]
-                     ;; Media (YouTube embeds, map embeds, etc.)
-                     [:iframe {:border 0
-                               :box-shadow [["inset 0 0 0 0.125rem" (style/color :background-minus-1)]]
-                               :position "absolute"
-                               :height "100%"
-                               :width "100%"
-                               :cursor "default"
-                               :top 0
-                               :right 0
-                               :left 0
-                               :bottom 0
-                               :border-radius "0.25rem"}]
-                     ;; Images
-                     [:img {:border-radius "0.25rem"
-                            :max-width "calc(100% - 0.25rem)"}]
-
-                     [:h1 :h2 :h3 :h4 :h5 :h6 {:margin "0"
-                                               :color (style/color :body-text-color :opacity-higher)
-                                               :font-weight "500"}]
-                     [:h1 {:padding "0"
-                           :margin-block-start "-0.1em"}]
-                     [:h2 {:padding "0"}]
-                     [:h3 {:padding "0"}]
-                     [:h4 {:padding "0.25em 0"}]
-                     [:h5 {:padding "1em 0"}]
-                     [:h6 {:text-transform "uppercase"
-                           :letter-spacing "0.06em"
-                           :padding "1em 0"}]
-                     [:p {:margin "0"
-                          :padding-bottom "1em"}]
-                     [:blockquote {:margin-inline "0.5em"
-                                   :margin-block "0.125rem"
-                                   :padding-block "calc(0.5em - 0.125rem - 0.125rem)"
-                                   :padding-inline "1.5em"
-                                   :border-radius "0.25em"
-                                   :background (style/color :background-minus-1)
-                                   :border-inline-start [["0.25em solid" (style/color :body-text-color :opacity-lower)]]
-                                   :color (style/color :body-text-color :opacity-high)}
-                      [:p {:padding-bottom "1em"}]
-                      [:p:last-child {:padding-bottom "0"}]]
-                     [:.CodeMirror {:background (style/color :background-minus-1)
-                                    :margin "0.125rem 0.5rem"
-                                    :border-radius "0.25rem"
-                                    :font-size "85%"
-                                    :color (style/color :body-text-color)
-                                    :font-family "IBM Plex Mono"}]
-                     [:.CodeMirror-gutters {:border-right "1px solid transparent"
-                                            :background (style/color :background-minus-1)}]
-                     [:.CodeMirror-cursor {:border-left-color (style/color :link-color)}]
-                     [:.CodeMirror-lines {:padding 0}]
-                     [:.CodeMirror-linenumber {:color (style/color :body-text-color :opacity-med)}]
-
-                     [:mark.contents.highlight {:padding "0 0.2em"
-                                                :border-radius "0.125rem"
-                                                :background-color (style/color :text-highlight-color)}]]})
-
-
-(stylefy/class "block-content" block-content-style)
+                                "span" {:gridArea "main"
+                                        "& > span" {:position "relative"
+                                                    :zIndex 2}}
+                                "abbr" {:gridArea "main"
+                                        :zIndex 4
+                                        "& > span" {:position "relative"
+                                                    :zIndex 2}}
+                                "code, pre" {:fontFamily "IBM Plex Mono"}
+                                ".media-16-9" {:height 0
+                                               :width "calc(100% - 0.25rem)"
+                                               :zIndex 1
+                                               :transformOrigin "right center"
+                                               :transitionDuration "0.2s"
+                                               :transitionTimingFunction "ease-in-out"
+                                               :transitionProperty "common"
+                                               :paddingBottom "56.25%"
+                                               :marginBlock "0.25rem"
+                                               :marginInlineEnd "0.25rem"
+                                               :position "relative"}
+                                "iframe" {:border 0
+                                          :boxShadow "inset 0 0 0 0.125rem"
+                                          :position "absolute"
+                                          :height "100%"
+                                          :width "100%"
+                                          :cursor "default"
+                                          :top 0
+                                          :right 0
+                                          :left 0
+                                          :bottom 0
+                                          :borderRadius "0.25rem"}
+                                "img" {:borderRadius "0.25rem"
+                                       :maxWidth "calc(100% - 0.25rem)"}
+                                "h1" {:fontSize "xl"}
+                                "h2" {:fontSize "lg"}
+                                "h3" {:fontSize "md"}
+                                "h4" {:fontSize "sm"}
+                                "h5" {:fontSize "xs"}
+                                "h6" {:fontSize "xs"}
+                                "blockquote" {:marginInline "0.5em"
+                                              :marginBlock "0.125rem"
+                                              :paddingBlock "calc(0.5em - 0.125rem - 0.125rem)"
+                                              :paddingInline "1.5em"
+                                              :borderRadius "0.25em"
+                                              :background "background.basement"
+                                              :borderInlineStart "1px solid"
+                                              :borderColor "separator.divider"
+                                              :color "foreground.primary"}
+                                "p" {:paddingBottom "1em"
+                                     "&:last-child" {:paddingBottom 0}}
+                                "mark.contents.highlight" {:padding "0 0.2em"
+                                                           :borderRadius "0.125rem"
+                                                           :background "highlight"}})
 
 
 (defn find-selected-items
@@ -388,7 +323,7 @@
                         2 "1.7em"
                         3 "1.3em"
                         "1em")]
-        [:> Box {:class     ["block-content"]
+        [:> Box {:class "block-content"
                  :display "grid"
                  :background "background.floor"
                  :color "foreground.primary"

@@ -1,22 +1,22 @@
 (ns athens.views.right-sidebar
   (:require
-    ["@chakra-ui/react" :refer [VStack HStack Heading Link Flex Box]]
-    ["framer-motion" :refer [AnimatePresence motion]]
-    ["/components/Button/Button" :refer [Button]]
-    ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/ChevronRight" :default ChevronRight]
-    ["@material-ui/icons/Close" :default Close]
-    ["@material-ui/icons/Description" :default Description]
-    ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
-    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
-    [athens.parse-renderer :as parse-renderer]
-    [athens.style :refer [color OPACITIES ZINDICES]]
-    [athens.views.pages.block-page :as block-page]
-    [athens.views.pages.graph :as graph]
-    [athens.views.pages.node-page :as node-page]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   ["/components/Button/Button" :refer [Button]]
+   ["@chakra-ui/react" :refer [Flex Box]]
+   ["@material-ui/icons/BubbleChart" :default BubbleChart]
+   ["@material-ui/icons/ChevronRight" :default ChevronRight]
+   ["@material-ui/icons/Close" :default Close]
+   ["@material-ui/icons/Description" :default Description]
+   ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
+   ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
+   ["framer-motion" :refer [AnimatePresence motion]]
+   [athens.parse-renderer :as parse-renderer]
+   [athens.style :refer [color OPACITIES]]
+   [athens.views.pages.block-page :as block-page]
+   [athens.views.pages.graph :as graph]
+   [athens.views.pages.node-page :as node-page]
+   [re-frame.core :refer [dispatch subscribe]]
+   [reagent.core :as r]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;; Styles
@@ -167,12 +167,17 @@
                                              :paddingTop "2.75rem"
                                              :alignItems "stretch"
                                              :justifySelf "stretch"
+                                             :transformOrigin "right"
                                              :justifyContent "space-between"
                                              :position "relative"
                                              :gridArea "secondary-content"
                                              :overflow "hidden"}
                                      :initial {:width 0
                                                :opacity 0}
+                                     :transition (if (:dragging @state)
+                                                   {:type "tween"
+                                                    :duration 0}
+                                                   nil)
                                      :animate {:width (str (:width @state) "vw")
                                                :opacity 1}
                                      :exit {:width 0

@@ -9,7 +9,6 @@ import {
   MergeType,
   Search,
   Settings,
-  Storage,
   Today,
   ToggleOff,
   ToggleOn,
@@ -17,9 +16,12 @@ import {
 } from '@material-ui/icons';
 
 import {
+  HTMLChakraProps,
+  ThemingProps,
   Tooltip,
   Flex,
   Button,
+  ButtonOptions,
   HStack,
   Divider,
   IconButton,
@@ -28,18 +30,36 @@ import {
 
 import { WindowButtons } from './components/WindowButtons';
 
+interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
+  children: React.ReactChild;
+};
+interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
+  children: React.ReactChild;
+}
+
 const toolbarButtonStyle = {
   background: 'background.floor',
-  _hover: {
-    bg: 'background.attic'
-  },
-  _active: {
-    bg: 'link'
+}
+
+const toolbarIconButtonStyle = {
+  background: 'background.floor',
+  sx: {
+    "svg": {
+      fontSize: "1.5em"
+    }
   }
 }
 
-const ToolbarButton = ({ children, ...props }) => <Button {...toolbarButtonStyle} {...props}>{children}</Button>
-const ToolbarIconButton = ({ children, ...props }) => <IconButton aria-label="sdf" {...toolbarButtonStyle} {...props}>{children}</IconButton>
+const ToolbarButton = React.forwardRef((props: ToolbarButtonProps, ref) => {
+  const { children } = props;
+  return <Button ref={ref as any} {...toolbarButtonStyle} {...props}> {children}</ Button>
+});
+
+const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) => {
+  const { children } = props;
+  return <IconButton aria-label="" ref={ref as any} {...toolbarIconButtonStyle
+  } {...props}>{children}</IconButton>
+});
 
 const AppToolbarWrapper = ({ children }) => <Flex
   borderBottom="1px solid transparent"
@@ -54,7 +74,6 @@ const AppToolbarWrapper = ({ children }) => <Flex
   }}
   sx={{
     "-webkit-app-region": "drag",
-
     ".is-fullscreen &": {
       height: '44px'
     },
@@ -64,7 +83,7 @@ const AppToolbarWrapper = ({ children }) => <Flex
     },
     ".os-mac &": {
       background: 'background.floor',
-      paddingLeft: '88px',
+      paddingLeft: '22px',
       paddingRight: '22px',
       height: '52px',
       borderTopLeftRadius: '12px',
@@ -75,6 +94,7 @@ const AppToolbarWrapper = ({ children }) => <Flex
       left: 0,
       right: 0,
     },
+    ".os-mac.is-electron &": { paddingLeft: "88px" },
     ".os-mac.is-fullscreen &": {
       paddingLeft: '22px'
     }
@@ -83,7 +103,7 @@ const AppToolbarWrapper = ({ children }) => <Flex
   {children}
 </Flex>;
 
-export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, DatabaseMenuProps, PresenceDetailsProps {
+export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
   * The application's current route
   */
@@ -247,14 +267,14 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           <ToolbarButton
             aria-label="Search"
             leftIcon={<Search />}
-            pl="0.5rem"
             isActive={isCommandBarOpen}
             onClick={handlePressCommandBar}
+            pl="0.5rem"
             border="1px solid"
             borderColor="background.attic"
             _active={{
-              bg: 'link',
-              borderColor: "link"
+              bg: 'background.attic',
+              borderColor: "background.attic"
             }}
           >
             Find or create a page

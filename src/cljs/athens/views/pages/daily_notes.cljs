@@ -1,5 +1,6 @@
 (ns athens.views.pages.daily-notes
   (:require
+  ["@chakra-ui/react" :refer [Heading Box]]
     [athens.dates :as dates]
     [athens.reactive :as reactive]
     [athens.style :refer [DEPTH-SHADOWS]]
@@ -60,7 +61,30 @@
              (for [{:keys [block/uid]} notes]
                ^{:key uid}
                [:<>
-                [:div (use-style daily-notes-page-style)
+                [:> Box {:boxShadow "page",
+                         :bg "background.floor"
+                         :alignSelf "stretch"
+                         :justifySelf "stretch"
+                         :margin "1.25rem 2.5rem"
+                         :padding "1rem 2rem"
+                         :borderWidth "1px"
+                         :borderStyle "solid"
+                         :borderColor "separator.divider"
+                         :transitionDuration "0s"
+                         :borderRadius "0.5rem"
+                         :minHeight "calc(100vh - 10rem)"}
                  [node-page/page [:block/uid uid]]]]))
-           [:div (use-style daily-notes-notional-page-style)
-            [:h1 "Earlier"]]])))))
+           [:> Box {:boxShadow "page",
+                    :bg "background.floor"
+                    :alignSelf "stretch"
+                    :justifySelf "stretch"
+                    :margin "1.25rem 2.5rem"
+                    :padding "1rem 2rem"
+                    :borderWidth "1px"
+                    :borderStyle "solid"
+                    :borderColor "separator.divider"
+                    :transitionDuration "0s"
+                    :borderRadius "0.5rem"
+                    :minHeight "calc(100vh - 10rem)"
+                    :opacity "0.5"}
+            [:> Heading {:ml 10} "Earlier"]]])))))

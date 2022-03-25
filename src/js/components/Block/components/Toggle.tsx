@@ -1,4 +1,5 @@
 import React from 'react'
+import { IconButton, Tooltip, Box, Text } from '@chakra-ui/react';
 import styled from 'styled-components';
 import { useFocusRing } from '@react-aria/focus';
 import { mergeProps } from '@react-aria/utils';

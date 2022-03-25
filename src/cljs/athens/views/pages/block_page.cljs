@@ -1,18 +1,19 @@
 (ns athens.views.pages.block-page
   (:require
-    ["@material-ui/icons/Link" :default Link]
-    [athens.parse-renderer :as parse-renderer]
-    [athens.reactive :as reactive]
-    [athens.router :as router]
-    [athens.style :refer [color]]
-    [athens.views.blocks.core :as blocks]
-    [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
-    [athens.views.pages.node-page :as node-page]
-    [garden.selectors :as selectors]
-    [komponentit.autosize :as autosize]
-    [re-frame.core :as rf :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   ["@chakra-ui/react" :refer [Heading IconButton Menu MenuList MenuItem]]
+   ["@material-ui/icons/Link" :default Link]
+   [athens.parse-renderer :as parse-renderer]
+   [athens.reactive :as reactive]
+   [athens.router :as router]
+   [athens.style :refer [color]]
+   [athens.views.blocks.core :as blocks]
+   [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
+   [athens.views.pages.node-page :as node-page]
+   [garden.selectors :as selectors]
+   [komponentit.autosize :as autosize]
+   [re-frame.core :as rf :refer [dispatch subscribe]]
+   [reagent.core :as r]
+   [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;; Styles
@@ -150,17 +151,17 @@
          [parents-el uid id]
 
          ;; Header
-         [:h1 (merge
-                (use-style title-style {:data-uid uid :class "block-header"})
-                {:on-click (fn [e]
-                             (.. e preventDefault)
-                             (if (.. e -shiftKey)
-                               (do
-                                 (rf/dispatch [:reporting/navigation {:source :block-page
-                                                                      :target :block
-                                                                      :pane   :right-pane}])
-                                 (router/navigate-uid uid e))
-                               (dispatch [:editing/uid uid])))})
+         [:> Heading {:size "lg"
+                      :_hover {:textDecoration "underline"}
+                      :onClick (fn [e]
+                                 (.. e preventDefault)
+                                 (if (.. e -shiftKey)
+                                   (do
+                                     (rf/dispatch [:reporting/navigation {:source :block-page
+                                                                          :target :block
+                                                                          :pane   :right-pane}])
+                                     (router/navigate-uid uid e))
+                                   (dispatch [:editing/uid uid])))}
           [autosize/textarea
            {:id          (str "editable-uid-" uid)
             :value       (:string/local @state)

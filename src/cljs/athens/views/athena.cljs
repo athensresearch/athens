@@ -1,6 +1,6 @@
 (ns athens.views.athena
   (:require
-   ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay IconButton Input]]
+   ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Box Heading Text]]
    ["@material-ui/icons/ArrowForward" :default ArrowForward]
    ["@material-ui/icons/Close" :default Close]
    ["@material-ui/icons/Create" :default Create]
@@ -171,7 +171,7 @@
               input-el  (.. e -target)
               ;; Get the result list container which is the last element child
               ;; of the whole athena component
-              result-el (.. input-el (closest "div.athena") -lastElementChild)
+              result-el (.. input-el (closest "section.athena-modal") -lastElementChild)
               ;; Get next element in the result list
               next-el   (nth (array-seq (.. result-el -children)) cur-index)]
           ;; Check if next el is beyond the bounds of the result list and scroll if so
@@ -183,7 +183,7 @@
         (swap! state update :index #(if (= % (dec (count results))) 0 (inc %)))
         (let [cur-index (:index @state)
               input-el  (.. e -target)
-              result-el (.. input-el (closest "div.athena") -lastElementChild)
+              result-el (.. input-el (closest "section.athena-modal") -lastElementChild)
               next-el   (nth (array-seq (.. result-el -children)) cur-index)]
           (scroll-into-view next-el result-el (zero? cur-index))))
 
@@ -192,14 +192,35 @@
 
 ;; Components
 
+(defn result-el
+  [{:keys [title preview prefix icon query on-click active?]}]
+  [:> Button {:borderRadius "none"
+              :justifyContent "flex-start"
+              :px 6
+              :py 10
+              :isActive active?
+              :onClick on-click}
+   [:div (use-style result-body-style)
+    [:> Heading {:as "h4" :size "sm"} prefix (highlight-match query title)]
+    (when preview
+      [:> Text {:color "foreground.secondary"} (highlight-match query preview)])]
+   icon])
+
 
 (defn results-el
   [state]
   (let [no-query? (str/blank? (:query @state))
         recent-items @(subscribe [:athena/get-recent])]
-    [:<> [:div (use-style results-heading-style)
-          [:h5 (if no-query? "Recent" "Results")]
-          [:span (use-style hint-style)
+    [:<> [:> HStack {:fontSize "sm"
+                     :px 6
+                     :py 2
+                     :color "foreground.secondary"
+                     :borderTop "1px solid"
+                     :borderColor "separator.divider"
+                     :justifyContent "space-between"}
+          [:> Heading {:size "xs"}
+           (if no-query? "Recent" "Results")]
+          [:> Text
            "Press "
            [:kbd "shift + enter"]
            " to open in right sidebar."]]
@@ -209,21 +230,23 @@
          (for [[i x] (map-indexed list recent-items)]
            (when x
              (let [{:keys [query :node/title :block/string]} x]
-               [:div (use-style result-style {:key      i
-                                              :on-click (fn [e]
-                                                          (rf/dispatch [:reporting/navigation {:source :athena
-                                                                                               :target :page
-                                                                                               :pane   :main-pane}])
-                                                          (router/navigate-page title e))})
-                [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
-                (when string
-                  [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])
-                [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class ArrowForward)]]]))))])]))
+               [result-el {:key      i
+                           :title title
+                           :query query
+                           :preview string
+                           :on-click (fn [e]
+                                       (rf/dispatch [:reporting/navigation {:source :athena
+                                                                            :target :page
+                                                                            :pane   :main-pane}])
+                                       (router/navigate-page title e))}]))))])]))
+
 
 
 (defn search-results-el
   [{:keys [results query index]}]
-  [:div (use-style results-list-style)
+  [:> VStack {:overflow-y "overlay"
+              :spacing 0
+              :align "stretch"}
    (doall
     (for [[i x] (map-indexed list results)
           :let  [block-uid (:block/uid x)
@@ -233,58 +256,41 @@
                  string    (:block/string x)]]
       (if (nil? x)
         ^{:key i}
-        [:div (use-style result-style
-                         {:on-click (fn [e]
-                                      (let [block-uid (utils/gen-block-uid)
-                                            shift?    (.-shiftKey e)]
-                                        (dispatch [:athena/toggle])
-                                        (dispatch [:page/new {:title     query
-                                                              :block-uid block-uid}])
-                                        (dispatch [:reporting/page.create {:source :athena
-                                                                           :count  1}])
-                                        (dispatch [:reporting/navigation {:source :athena
-                                                                          :target (if parent
-                                                                                    (str "block/" block-uid)
-                                                                                    (str "page/" title))
-                                                                          :pane   (if shift?
-                                                                                    :right-pane
-                                                                                    :main-pane)}])))
-                          :class    (when (= i index) "selected")})
-
-         [:div (use-style result-body-style)
-          [:h4.title (use-sub-style result-style :title)
-           [:b "Create Page: "]
-           query]]
-         [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class Create)]]]
-
-        [:div (use-style result-style
-                         {:key      i
-                          :on-click (fn [e]
-                                      (let [selected-page {:node/title   title
-                                                           :block/uid    uid
-                                                           :block/string string
-                                                           :query        query}
-                                            shift?        (.-shiftKey e)]
-                                        (dispatch [:athena/toggle])
-                                        (dispatch [:athena/update-recent-items selected-page])
-                                        (dispatch [:reporting/navigation {:source :athena
-                                                                          :target (if parent
-                                                                                    :block
-                                                                                    :page)
-                                                                          :pane   (if shift?
-                                                                                    :right-pane
-                                                                                    :main-pane)}])
-                                        (if parent
-                                          (router/navigate-uid block-uid)
-                                          (router/navigate-page title e))))
-
-                          :class (when (= i index) "selected")})
-         [:div (use-style result-body-style)
-
-          [:h4.title (use-sub-style result-style :title) (highlight-match query title)]
-          (when string
-            [:span.preview (use-sub-style result-style :preview) (highlight-match query string)])]
-         [:span.link-leader (use-sub-style result-style :link-leader) [(r/adapt-react-class ArrowForward)]]])))])
+        [result-el {:key      i
+                    :title    query
+                    :prefix   "Create page "
+                    :preview  nil
+                    :query    query
+                    :active?  (= i index)
+                    :on-click (fn [e]
+                                (rf/dispatch [:athena/toggle])
+                                (rf/dispatch [:right-sidebar/open-page (:node/title x) e])
+                                (rf/dispatch [:reporting/navigation {:source :athena
+                                                                     :target :page
+                                                                     :pane   :right-pane}]))}]
+        [result-el {:key i
+                    :title title
+                    :query query
+                    :preview string
+                    :active? (= i index)
+                    :on-click (fn [e]
+                                (let [selected-page {:node/title   title
+                                                     :block/uid    uid
+                                                     :block/string string
+                                                     :query        query}
+                                      shift?        (.-shiftKey e)]
+                                  (dispatch [:athena/toggle])
+                                  (dispatch [:athena/update-recent-items selected-page])
+                                  (dispatch [:reporting/navigation {:source :athena
+                                                                    :target (if parent
+                                                                              :block
+                                                                              :page)
+                                                                    :pane   (if shift?
+                                                                              :right-pane
+                                                                              :main-pane)}])
+                                  (if parent
+                                    (router/navigate-uid block-uid)
+                                    (router/navigate-page title e))))}])))])
 
 
 (defn athena-component
@@ -303,10 +309,10 @@
                    :isOpen @athena-open?
                    :onClose #(dispatch [:athena/toggle])}
          [:> ModalOverlay]
-         [:> ModalContent
-          {:width "49rem"
-           :bg "background.upper"
-           :maxWidth "calc(100vw - 4rem)"}
+         [:> ModalContent {:width "49rem"
+                           :class "athena-modal"
+                           :bg "background.upper"
+                           :maxWidth "calc(100vw - 4rem)"}
           [:> Input
            {:type "search"
             :width "100%"
@@ -315,35 +321,35 @@
             :fontWeight "300"
             :lineHeight "1.3"
             :letterSpacing "-0.03em"
-            :borderRadius "0.25rem 0.25rem 0 0"
+            :borderRadius "inherit"
             :color "inherit"
             :height "auto"
             :padding "1.5rem 4rem 1.5rem 1.5rem"
             :cursor "text"
-            :id          "athena-input"
-            :auto-focus  true
-            :required    true
+            :id "athena-input"
+            :auto-focus true
+            :required true
             :_focus {:outline "none"}
             :sx {"::-webkit-search-cancel-button" {:display "none"}}
             :placeholder "Find or Create Page"
-            :onChange   (fn [e] (search-handler (.. e -target -value)))
-            :onKeyDown (fn [e] (key-down-handler e state))}]
-          [:> IconButton {:background "none"
-                          :color "inherit"
-                          :position "absolute"
-                          :transition "opacity 0.1s ease, background 0.1s ease"
-                          :cursor "pointer"
-                          :border 0
-                          :right "2rem"
-                          :placeItems "center"
-                          :placeContent "center"
-                          :height "2.5rem"
-                          :width "2.5rem"
-                          :borderRadius "1000px"
-                          :display "flex"
-                          :transform "translate(0%, -50%)"
-                          :top "50%"
-                          :onClick #(set! (.-value (getElement "athena-input")) nil)}
-           [:> Close]]]
-         [results-el state]
-         [search-results-el @state]]))))
+            :on-change   (fn [e] (search-handler (.. e -target -value)))
+            :on-key-down (fn [e] (key-down-handler e state))}]
+          (when (:query @state)
+            [:> IconButton {:background "none"
+                            :color "inherit"
+                            :position "absolute"
+                            :transition "opacity 0.1s ease, background 0.1s ease"
+                            :cursor "pointer"
+                            :border 0
+                            :right "2rem"
+                            :placeItems "center"
+                            :placeContent "center"
+                            :height "2.5rem"
+                            :width "2.5rem"
+                            :borderRadius "1000px"
+                            :display "flex"
+                            :top "2rem"
+                            :onClick #(set! (.-value (getElement "athena-input")) nil)}
+             [:> Close]])
+          [results-el state]
+          [search-results-el @state]]]))))
