@@ -263,11 +263,12 @@
                                dragging?           nil
                                is-selected?        nil
                                (or (neg? y)
-                                   (< y middle-y)) :before
+                                   (< y middle-y))         :before
+                               (and (< middle-y y)
+                                    (> 50 x))              :after
                                (or (not open)
                                    (and (empty? children)
-                                        (< 50 x))) :first
-                               (< middle-y y)      :after)]
+                                        (< 50 x)))         :first)]
     (when target
       (swap! state assoc :drag-target target))))
 
