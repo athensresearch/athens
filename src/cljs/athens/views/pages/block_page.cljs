@@ -1,60 +1,16 @@
 (ns athens.views.pages.block-page
   (:require
-   ["@chakra-ui/react" :refer [Heading IconButton Menu MenuList MenuItem]]
+   ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink Heading]]
    ["@material-ui/icons/Link" :default Link]
    [athens.parse-renderer :as parse-renderer]
    [athens.reactive :as reactive]
    [athens.router :as router]
-   [athens.style :refer [color]]
    [athens.views.blocks.core :as blocks]
-   [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
    [athens.views.pages.node-page :as node-page]
-   [garden.selectors :as selectors]
    [komponentit.autosize :as autosize]
    [re-frame.core :as rf :refer [dispatch subscribe]]
    [reagent.core :as r]
    [stylefy.core :as stylefy :refer [use-style]]))
-
-
-;; Styles
-
-
-(def title-style
-  {:position        "relative"
-   :overflow        "visible"
-   :flex-grow       "1"
-   :margin          "0.1em 0"
-   :letter-spacing  "-0.03em"
-   :word-break      "break-word"
-   :line-height     "1.4em"
-   ::stylefy/manual [[:textarea {:-webkit-appearance "none"
-                                 :cursor             "text"
-                                 :resize             "none"
-                                 :transform          "translate3d(0,0,0)"
-                                 :color              "inherit"
-                                 :font-weight        "inherit"
-                                 :padding            "0"
-                                 :letter-spacing     "inherit"
-                                 :width              "100%"
-                                 :min-height         "100%"
-                                 :caret-color        (color :link-color)
-                                 :background         "transparent"
-                                 :margin             "0"
-                                 :font-size          "inherit"
-                                 :line-height        "inherit"
-                                 :border-radius      "0.25rem"
-                                 :transition         "opacity 0.15s ease"
-                                 :border             "0"
-                                 :font-family        "inherit"
-                                 :visibility         "hidden"
-                                 :position           "absolute"}]
-                     [:textarea ["::-webkit-scrollbar" {:display "none"}]]
-                     [:textarea:focus
-                      :.is-editing {:outline    "none"
-                                    :visibility "visible"
-                                    :position   "relative"}]
-                     [(selectors/+ :.is-editing :span) {:visibility "hidden"
-                                                        :position   "absolute"}]]})
 
 
 ;; Helpers
@@ -104,37 +60,36 @@
         ;; [:> Button {:disabled true} [(r/adapt-react-class FilterList)]]]
         [:div (use-style node-page/references-list-style)
          (doall
-           (for [[group-title group] linked-refs]
-             [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
-              [:h4 (use-style node-page/references-group-title-style)
-               [:a {:on-click (fn [e]
-                                (let [shift?       (.-shiftKey e)
-                                      parsed-title (parse-renderer/parse-title group-title)]
-                                  (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
-                                                                       :target :page
-                                                                       :pane   (if shift?
-                                                                                 :right-pane
-                                                                                 :main-pane)}])
-                                  (router/navigate-page parsed-title)))}
-                group-title]]
-              (doall
-                (for [block group]
-                  [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
-                   [node-page/ref-comp block]]))]))]]])))
+          (for [[group-title group] linked-refs]
+            [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
+             [:h4 (use-style node-page/references-group-title-style)
+              [:a {:on-click (fn [e]
+                               (let [shift?       (.-shiftKey e)
+                                     parsed-title (parse-renderer/parse-title group-title)]
+                                 (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
+                                                                      :target :page
+                                                                      :pane   (if shift?
+                                                                                :right-pane
+                                                                                :main-pane)}])
+                                 (router/navigate-page parsed-title)))}
+               group-title]]
+             (doall
+              (for [block group]
+                [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
+                 [node-page/ref-comp block]]))]))]]])))
 
 
 (defn parents-el
   [uid id]
   (let [parents (reactive/get-reactive-parents-recursively id)]
-    [:span {:style {:color "gray"}}
-     [breadcrumbs-list {:style {:font-size "1.2rem"}}
-      (doall
-        (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
-          ^{:key breadcrumb-uid}
-          [breadcrumb {:key (str "breadcrumb-" breadcrumb-uid)
-                       :on-click #(breadcrumb-handle-click % uid breadcrumb-uid)}
-           [:span {:style {:pointer-events "none"}}
-            [parse-renderer/parse-and-render (or title string)]]]))]]))
+    [:> Breadcrumb
+     (doall
+      (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
+        ^{:key breadcrumb-uid}
+        [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
+         [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid)}
+          [:span {:style {:pointer-events "none"}}
+           [parse-renderer/parse-and-render (or title string)]]]]))]))
 
 
 (defn block-page-el

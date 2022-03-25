@@ -106,7 +106,8 @@
                       :py "1rem"
                       :spacing "0.25rem"
                       :overflowY "overlay"
-                      :sx {:listStyle "none"}}
+                      :sx {:listStyle "none"
+                           "-webkit-app-region" "no-drag"}}
            
            [:> Heading {:as "h2"
                         :px "2rem"

@@ -1,17 +1,12 @@
 (ns athens.views.pages.node-page
   (:require
     ["/components/Block/components/Anchor" :refer [Anchor]]
-    ["/components/Button/Button" :refer [Button]]
     ["/components/Dialog/Dialog" :refer [Dialog]]
-    ["@chakra-ui/react" :refer [Portal Heading IconButton MenuDivider MenuButton Menu MenuList MenuItem]]
-    ["@material-ui/core/Popover" :as Popover]
+    ["@chakra-ui/react" :refer [Box Button Portal Heading IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton]]
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/ChevronRight" :default ChevronRight]
     ["@material-ui/icons/Delete" :default Delete]
-    ["@material-ui/icons/KeyboardArrowDown" :default KeyboardArrowDown]
-    ["@material-ui/icons/Link" :default Link]
     ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
     [athens.common-db :as common-db]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
@@ -21,7 +16,7 @@
     [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
     [athens.reactive :as reactive]
     [athens.router :as router]
-    [athens.style :refer [color DEPTH-SHADOWS]]
+    [athens.style :refer [color ]]
     [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
@@ -45,7 +40,7 @@
 
 (def page-style
   {:margin "2rem auto"
-   :padding "1rem 2rem 10rem 2rem"
+   :padding "1rem 2rem 10rem 3rem"
    :flex-basis "100%"
    :max-width "55rem"})
 
@@ -381,67 +376,62 @@
                                          (reactive/get-reactive-linked-references [:node/title title]))]
     (when (or (and daily-notes? (not-empty linked-refs))
               (not daily-notes?))
-      [:section (use-style references-style)
-       [:h4 (use-style references-heading-style)
-        [:> Button {:on-click (fn [] (swap! state update linked? not))}
-         (if (get @state linked?)
-           [:> KeyboardArrowDown]
-           [:> ChevronRight])]
-        [(r/adapt-react-class Link)]
-        [:div {:style {:display         "flex"
-                       :flex            "1 1 100%"
-                       :justify-content "space-between"}}
-         [:span linked?]]]
-       (when (get @state linked?)
-         [:div (use-style references-list-style)
-          (doall
-            (for [[group-title group] linked-refs]
-              [:div (use-style references-group-style {:key (str "group-" group-title)})
-               [:h4 (use-style references-group-title-style)
-                [:a {:on-click (fn [e]
-                                 (let [shift?       (.-shiftKey e)
-                                       parsed-title (parse-renderer/parse-title group-title)]
-                                   (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
-                                                                        :target :page
-                                                                        :pane   (if shift?
-                                                                                  :right-pane
-                                                                                  :main-pane)}])
-                                   (router/navigate-page parsed-title e)))}
-                 group-title]]
-               (doall
-                 (for [block group]
-                   ^{:key (str "ref-" (:block/uid block))}
-                   [:div {:style {:display         "flex"
-                                  :flex            "1 1 100%"
-                                  :justify-content "space-between"
-                                  :align-items     "flex-start"}}
-                    [:div (use-style references-group-block-style)
-                     [ref-comp block]]]))]))])])))
+      [:> Accordion {:index (if (get @state linked?) 0 nil)}
+       [:> AccordionItem
+        [:h2
+         [:> AccordionButton {:onClick (fn [] (swap! state update linked? not))}
+         [:> AccordionIcon]
+          linked?]]
+        [:> AccordionPanel
+         (doall
+          (for [[group-title group] linked-refs]
+            [:div (use-style references-group-style {:key (str "group-" group-title)})
+             [:h4 (use-style references-group-title-style)
+              [:a {:on-click (fn [e]
+                               (let [shift?       (.-shiftKey e)
+                                     parsed-title (parse-renderer/parse-title group-title)]
+                                 (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
+                                                                      :target :page
+                                                                      :pane   (if shift?
+                                                                                :right-pane
+                                                                                :main-pane)}])
+                                 (router/navigate-page parsed-title e)))}
+               group-title]]
+             (doall
+              (for [block group]
+                ^{:key (str "ref-" (:block/uid block))}
+                [:div {:style {:display         "flex"
+                               :flex            "1 1 100%"
+                               :justify-content "space-between"
+                               :align-items     "flex-start"}}
+                 [:div (use-style references-group-block-style)
+                  [ref-comp block]]]))]))]]])))
 
 
 (defn unlinked-ref-el
   [state daily-notes? unlinked-refs title]
   (let [unlinked? "Unlinked References"]
     (when (not daily-notes?)
-      [:section (use-style references-style)
-       [:h4 (use-style references-heading-style)
-        [:> Button {:on-click (fn []
-                                (if (get @state unlinked?)
-                                  (swap! state assoc unlinked? false)
-                                  (let [un-refs (get-unlinked-references (escape-str title))]
-                                    (swap! state assoc unlinked? true)
-                                    (reset! unlinked-refs un-refs))))}
-         (if (get @state unlinked?)
-           [:> KeyboardArrowDown]
-           [:> ChevronRight])]
-        [(r/adapt-react-class Link)]
-        [:div {:style {:display         "flex"
-                       :justify-content "space-between"
-                       :width           "100%"}}
-         [:span unlinked?]
-         (when (and unlinked? (not-empty @unlinked-refs))
-           [:> Button {:style    {:font-size "14px"}
-                       :on-click (fn []
+       [:> Accordion {:index (if (get @state unlinked?) 0 nil)}
+        [:> AccordionItem
+         [:> Box {:as "h2"
+                  :position "relative"}
+          [:> AccordionButton
+           {:onClick (fn []
+                       (if (get @state unlinked?)
+                         (swap! state assoc unlinked? false)
+                         (let [un-refs (get-unlinked-references (escape-str title))]
+                           (swap! state assoc unlinked? true)
+                           (reset! unlinked-refs un-refs))))}
+           [:> AccordionIcon]
+           unlinked?]
+          (when (and unlinked? (not-empty @unlinked-refs))
+            [:> Button {:position "absolute"
+                        :size "sm"
+                        :fontSize "sm"
+                        :top 1
+                        :right 1
+                        :onClick (fn []
                                    (let [unlinked-str-ids (->> @unlinked-refs
                                                                (mapcat second)
                                                                (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
@@ -450,45 +440,45 @@
                                    (swap! state assoc unlinked? false)
 
                                    (reset! unlinked-refs []))}
-            "Link All"])]]
-       (when (get @state unlinked?)
+             "Link All"])]
+        [:> AccordionPanel
          [:div (use-style references-list-style)
           (doall
-            (for [[[group-title] group] @unlinked-refs]
-              [:div (use-style references-group-style {:key (str "group-" group-title)})
-               [:h4 (use-style references-group-title-style)
-                [:a {:on-click (fn [e]
-                                 (let [shift?       (.-shiftKey e)
-                                       parsed-title (parse-renderer/parse-title group-title)]
-                                   (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
-                                                                        :target :page
-                                                                        :pane   (if shift?
-                                                                                  :right-pane
-                                                                                  :main-pane)}])
-                                   (router/navigate-page parsed-title e)))}
-                 group-title]]
-               (doall
-                 (for [block group]
-                   ^{:key (str "ref-" (:block/uid block))}
-                   [:div {:style {:display         "flex"
-                                  :justify-content "space-between"
-                                  :align-items     "flex-start"}}
-                    [:div (merge
-                            (use-style references-group-block-style)
-                            {:style {:max-width "90%"}})
-                     [ref-comp block]]
-                    (when unlinked?
-                      [:> Button {:style    {:margin-top "1.5em"}
-                                  :on-click (fn []
-                                              (let [hm                (into (hash-map) @unlinked-refs)
-                                                    new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
-                                                                                                                  (= uid (:block/uid block)))
-                                                                                                                %))
-                                                                           seq)]
+           (for [[[group-title] group] @unlinked-refs]
+             [:div (use-style references-group-style {:key (str "group-" group-title)})
+              [:h4 (use-style references-group-title-style)
+               [:a {:on-click (fn [e]
+                                (let [shift?       (.-shiftKey e)
+                                      parsed-title (parse-renderer/parse-title group-title)]
+                                  (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
+                                                                       :target :page
+                                                                       :pane   (if shift?
+                                                                                 :right-pane
+                                                                                 :main-pane)}])
+                                  (router/navigate-page parsed-title e)))}
+                group-title]]
+              (doall
+               (for [block group]
+                 ^{:key (str "ref-" (:block/uid block))}
+                 [:div {:style {:display         "flex"
+                                :justify-content "space-between"
+                                :align-items     "flex-start"}}
+                  [:div (merge
+                         (use-style references-group-block-style)
+                         {:style {:max-width "90%"}})
+                   [ref-comp block]]
+                  (when unlinked?
+                    [:> Button {:style    {:margin-top "1.5em"}
+                                :on-click (fn []
+                                            (let [hm                (into (hash-map) @unlinked-refs)
+                                                  new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
+                                                                                                                (= uid (:block/uid block)))
+                                                                                                              %))
+                                                                         seq)]
                                                 ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
-                                                (reset! unlinked-refs new-unlinked-refs)
-                                                (dispatch [:unlinked-references/link block title])))}
-                       "Link"])]))]))])])))
+                                              (reset! unlinked-refs new-unlinked-refs)
+                                              (dispatch [:unlinked-references/link block title])))}
+                     "Link"])]))]))]]]])))
 
 
 
@@ -530,7 +520,7 @@
 
           ;; Dropdown
           [menu-dropdown node daily-note?]
-
+          
           [:> Heading {:data-uid uid
                        :class    "page-header"
                        :position "relative"
@@ -541,23 +531,7 @@
                        :white-space "pre-line"
                        :word-break "break-word"
                        :line-height "1.40em"
-                       :sx title-inner-style
-                       :onClick (fn [e]
-                                  (let [shift? (.-shiftKey e)]
-                                    (.. e preventDefault)
-                                    (if (or daily-note? shift?)
-                                      (do
-                                        (rf/dispatch [:reporting/navigation {:source :page-title ; NOTE: this might be also used in right-pane situation
-                                                                             :target (if title
-                                                                                       :page
-                                                                                       :block)
-                                                                             :pane   (if shift?
-                                                                                       :right-pane
-                                                                                       :main-pane)}])
-                                        (if title
-                                          (router/navigate-page title e)
-                                          (router/navigate-uid uid e)))
-                                      (dispatch [:editing/uid uid]))))}
+                       :sx title-inner-style}
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 
@@ -590,10 +564,11 @@
                [blocks/block-el child]])])
 
          ;; References
-         [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
-          [linked-ref-el state on-daily-notes? title]]
-         [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
-          [unlinked-ref-el state on-daily-notes? unlinked-refs title]]]))))
+         [:> Box {:py 10}
+          [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
+           [linked-ref-el state on-daily-notes? title]]
+          [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
+           [unlinked-ref-el state on-daily-notes? unlinked-refs title]]]]))))
 
 
 (defn page

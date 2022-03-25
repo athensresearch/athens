@@ -3,7 +3,7 @@
    ["/components/Spinner/Spinner" :refer [Spinner]]
    ["/theme/theme" :refer [theme]]
    ["@chakra-ui/react" :refer [ChakraProvider Grid]]
-  ["@material-ui/core/Snackbar" :as Snackbar]
+   ["@material-ui/core/Snackbar" :as Snackbar]
    ["@react-aria/overlays" :refer [OverlayProvider]]
    [athens.config]
    [athens.electron.db-modal :as db-modal]
@@ -88,11 +88,12 @@
                    {:gridTemplateColumns "auto 1fr auto"
                     :gridTemplateRows "auto 1fr auto"
                     :grid-template-areas
-
                     "'app-header app-header app-header'
                       'left-sidebar main-content secondary-content'
                     'devtool devtool devtool'"
                     :height "100vh"
+                    :overflow "hidden"
+                    :sx {"-webkit-app-region" "drag"}
                     :className [(case os
                                   :windows "os-windows"
                                   :mac "os-mac"

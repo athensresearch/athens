@@ -7,8 +7,8 @@ const shadows = {
   focusLight: '0 0 0 3px #0071DB',
   focusDark: '0 0 0 3px #498eda',
 
-  focusInnerLight: 'inset 0 0 0 3px #0071DB',
-  focusInnerDark: 'inset 0 0 0 3px #498eda',
+  focusInsetLight: 'inset 0 0 0 3px #0071DB',
+  focusInsetDark: 'inset 0 0 0 3px #498eda',
 
   page: '0 0.25rem 1rem #00000055',
 }
@@ -36,6 +36,8 @@ const colors = {
   backgroundMinus1Light: "#FAF8F6",
   backgroundMinus2Light: "#EFEDEB",
 
+  backgroundVibrancyLight: "#ffffff55",
+
   confirmationLight: "#009E23",
   headerLight: "#322F38",
   bodyLight: "#433F38",
@@ -49,6 +51,8 @@ const colors = {
   backgroundColorDark: "#1A1A1A",
   backgroundPlus1Dark: "#222",
   backgroundPlus2Dark: "#333",
+
+  backgroundVibrancyDark: "#222222cc",
 
   linkDark: "#498eda",
   linkContrastDark: '#fff',
@@ -71,9 +75,15 @@ const semanticTokens = {
       default: "focusLight",
       _dark: "focusDark",
     },
-    focusInner: {
-      default: "focusInnerLight",
-      _dark: "focusInnerDark",
+    focusInset: {
+      default: "focusInsetLight",
+      _dark: "focusInsetDark",
+    },
+    focusPlaceholder: {
+      default: '0 0 0 3px transparent'
+    },
+    focusPlaceholderInset: {
+      default: 'inset 0 0 0 3px transparent'
     },
     page: {
       default: "0 0.25rem 1rem #00000055",
@@ -99,12 +109,12 @@ const semanticTokens = {
     },
     // separator colors
     "separator.border": {
-      default: 'borderLight',
-      _dark: 'borderDark'
+      default: '00000011',
+      _dark: '#ffffff55'
     },
     "separator.divider": {
-      default: 'borderLight',
-      _dark: 'borderDark'
+      default: '#00000011',
+      _dark: '#ffffff22'
     },
     // background colors
     "background.floor": {
@@ -122,6 +132,10 @@ const semanticTokens = {
     "background.attic": {
       default: 'backgroundPlus2Light',
       _dark: 'backgroundPlus2Dark'
+    },
+    "background.vibrancy": {
+      default: 'backgroundVibrancyLight',
+      _dark: 'backgroundVibrancyDark'
     },
     // foreground colors
     "foreground.primary": {
@@ -174,65 +188,31 @@ const semanticTokens = {
 }
 
 const components = {
-  Popover: {
-    parts: [ "arrow", "content" ],
+  Accordion: {
     baseStyle: {
-      content: {
-        bg: "background.upper",
-        shadow: "popover",
-        [ $arrowBg.variable ]: "colors.background.upper",
-      }
-    }
-  },
-  FormLabel: {
-    baseStyle: {
-      color: "foreground.secondary",
-    }
-  },
-  Modal: {
-    baseStyle: {
-      dialogContainer: {
+      button: {
+        borderRadius: "sm",
         _focus: {
-          outline: 'none'
+          outline: "none",
+          boxShadow: "none",
+        },
+        _focusVisible: {
+          outline: "none",
+          boxShadow: "focusInset"
         }
-      },
-      dialog: {
-        shadow: "dialog",
-        border: "1px solid",
-        borderColor: 'separator.divider',
-        bg: 'background.upper'
       }
     }
   },
-  Tabs: {
-    variants: {
-      line: {
-        tabList: {
-          borderBottom: "separator.border"
-        },
-        tab: {
-          color: "link",
-          borderBottom: "2px solid",
-          borderBottomColor: "separator.border",
-          _selected: {
-            bg: 'background.attic',
-            color: 'foreground.primary',
-            borderBottomColor: "foreground.primary"
-          },
-          _focus: {
-            outline: 'none',
-            shadow: 'none'
-          },
-          _focusVisible: {
-            shadow: "focus"
-          }
-        }
+  Breadcrumb: {
+    baseStyle: {
+      separator: {
+        color: 'separator.border'
       }
     }
   },
   Button: {
     baseStyle: {
-      color: 'feature.primary',
+      color: 'foreground.primary',
       _active: {
         transitionDuration: '0s',
         color: 'linkContrast',
@@ -246,6 +226,11 @@ const components = {
         outline: 'none',
         boxShadow: 'focus'
       }
+    }
+  },
+  FormLabel: {
+    baseStyle: {
+      color: "foreground.secondary",
     }
   },
   IconButton: {
@@ -275,19 +260,29 @@ const components = {
       }
     }
   },
-  Tooltip: {
+  Modal: {
     baseStyle: {
-      bg: 'background.attic',
-      color: 'foreground.primary',
-      shadow: 'tooltip',
-      px: "8px",
-      py: "2px",
-      borderRadius: "sm",
-      fontWeight: "medium",
-      fontSize: "sm",
-      boxShadow: "md",
-      maxW: "320px",
-      zIndex: "tooltip",
+      dialogContainer: {
+        _focus: {
+          outline: 'none'
+        }
+      },
+      dialog: {
+        shadow: "dialog",
+        border: "1px solid",
+        borderColor: 'separator.divider',
+        bg: 'background.upper'
+      }
+    }
+  },
+  Popover: {
+    parts: [ "arrow", "content" ],
+    baseStyle: {
+      content: {
+        bg: "background.upper",
+        shadow: "popover",
+        [ $arrowBg.variable ]: "colors.background.upper",
+      }
     }
   },
   Table: {
@@ -321,7 +316,48 @@ const components = {
         },
       }
     }
-  }
+  },
+  Tabs: {
+    variants: {
+      line: {
+        tabList: {
+          borderBottom: "separator.border"
+        },
+        tab: {
+          color: "link",
+          borderBottom: "2px solid",
+          borderBottomColor: "separator.border",
+          _selected: {
+            bg: 'background.attic',
+            color: 'foreground.primary',
+            borderBottomColor: "foreground.primary"
+          },
+          _focus: {
+            outline: 'none',
+            shadow: 'none'
+          },
+          _focusVisible: {
+            shadow: "focus"
+          }
+        }
+      }
+    }
+  },
+  Tooltip: {
+    baseStyle: {
+      bg: 'background.attic',
+      color: 'foreground.primary',
+      shadow: 'tooltip',
+      px: "8px",
+      py: "2px",
+      borderRadius: "sm",
+      fontWeight: "medium",
+      fontSize: "sm",
+      boxShadow: "md",
+      maxW: "320px",
+      zIndex: "tooltip",
+    }
+  },
 }
 
 const config = {

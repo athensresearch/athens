@@ -1,13 +1,11 @@
 (ns athens.views.athena
   (:require
    ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Box Heading Text]]
-   ["@material-ui/icons/ArrowForward" :default ArrowForward]
    ["@material-ui/icons/Close" :default Close]
-   ["@material-ui/icons/Create" :default Create]
    [athens.common.utils :as utils]
    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
    [athens.router       :as router]
-   [athens.style        :refer [color OPACITIES]]
+   [athens.style        :refer [color]]
    [athens.subs]
    [athens.util         :refer [scroll-into-view]]
    [clojure.string      :as str]
@@ -15,7 +13,7 @@
    [goog.events         :as events]
    [re-frame.core       :as rf :refer [subscribe dispatch]]
    [reagent.core        :as r]
-   [stylefy.core        :as stylefy :refer [use-style use-sub-style]])
+   [stylefy.core        :as stylefy :refer [use-style]])
   (:import
    (goog.events
     KeyCodes)))
@@ -23,67 +21,9 @@
 
 ;; Styles
 
-
-(def results-list-style
-  {:background    (color :background-color)
-   :overflow-y "auto"
-   :max-height "100%"})
-
-
-(def results-heading-style
-  {:padding "0.25rem 1.125rem"
-   :background (color :background-plus-2)
-   :display "flex"
-   :position "sticky"
-   :flex-wrap "wrap"
-   :gap "0.5rem"
-   :align-items "center"
-   :top "0"
-   :justify-content "space-between"
-   :box-shadow [["0 1px 0 0 " (color :border-color)]]
-   :border-top [["1px solid" (color :border-color)]]})
-
-
-(def result-style
-  {:display "flex"
-   :padding "0.75rem 2rem"
-   :background (color :background-plus-1)
-   :color (color :body-text-color)
-   :transition "all .05s ease"
-   :border-top [["1px solid " (color :border-color)]]
-   ::stylefy/sub-styles {:title {:font-size "1rem"
-                                 :margin "0"
-                                 :color (color :header-text-color)
-                                 :font-weight "500"}
-                         :preview {:white-space "wrap"
-                                   :word-break "break-word"
-                                   :color (color :body-text-color :opacity-med)}
-                         :link-leader {:color "transparent"
-                                       :margin "auto auto"}}
-   ::stylefy/manual [[:b {:font-weight "500"
-                          :opacity (:opacity-high OPACITIES)}]
-                     [:&.selected :&:hover {:background (color :link-color)
-                                            :color "#fff"} ; Intentionally not a theme value, because we don't have a semantic way to contrast with :link-color
-                      [:.title :.preview :.link-leader :.result-highlight {:color "inherit"}]]]})
-
-
-(def result-body-style
-  {:flex "1 1 100%"
-   :display "flex"
-   :flex-direction "column"
-   :justify-content "center"
-   :align-items "flex-start"})
-
-
 (def result-highlight-style
   {:color (color :body-text-color)
    :font-weight "500"})
-
-
-(def hint-style
-  {:color "inherit"
-   :opacity (:opacity-med OPACITIES)
-   :font-size "14px"})
 
 
 ;; Utilities
@@ -194,16 +134,26 @@
 
 (defn result-el
   [{:keys [title preview prefix icon query on-click active?]}]
-  [:> Button {:borderRadius "none"
-              :justifyContent "flex-start"
-              :px 6
-              :py 10
+  [:> Button {:justifyContent "flex-start"
+              :fontWeight "normal"
+              :display "flex"
+              :height "auto"
+              :textAlign "start"
+              :flexDirection "row"
+              :bg "transparent"
+              :px 3
+              :py 3
               :isActive active?
               :onClick on-click}
-   [:div (use-style result-body-style)
-    [:> Heading {:as "h4" :size "sm"} prefix (highlight-match query title)]
+   [:> VStack {:align "stretch"
+               :spacing 1
+               :overflow "hidden"}
+    [:> Heading {:as "h4"
+                 :size "sm"} prefix (highlight-match query title)]
     (when preview
-      [:> Text {:color "foreground.secondary"} (highlight-match query preview)])]
+      [:> Text {:color "foreground.secondary"
+                :textOverflow "ellipsis"
+                :overflow "hidden"} (highlight-match query preview)])]
    icon])
 
 
@@ -216,6 +166,7 @@
                      :py 2
                      :color "foreground.secondary"
                      :borderTop "1px solid"
+                     :borderBottom "1px solid"
                      :borderColor "separator.divider"
                      :justifyContent "space-between"}
           [:> Heading {:size "xs"}
@@ -225,7 +176,12 @@
            [:kbd "shift + enter"]
            " to open in right sidebar."]]
      (when no-query?
-       [:div (use-style results-list-style)
+       [:> VStack {:align "stretch"
+                   :spacing 1
+                   :my 4
+                   :px 4
+                   :overflowY "overlay"
+                   :_empty {:display "none"}}
         (doall
          (for [[i x] (map-indexed list recent-items)]
            (when x
@@ -244,9 +200,12 @@
 
 (defn search-results-el
   [{:keys [results query index]}]
-  [:> VStack {:overflow-y "overlay"
-              :spacing 0
-              :align "stretch"}
+  [:> VStack {:align "stretch"
+              :spacing 1
+              :my 4
+              :px 4
+              :overflowY "overlay"
+              :_empty {:display "none"}}
    (doall
     (for [[i x] (map-indexed list results)
           :let  [block-uid (:block/uid x)
@@ -304,6 +263,7 @@
       (when @athena-open?
         [:> Modal {:maxHeight "60vh"
                    :display "flex"
+                   :scrollBehavior "inside"
                    :outline "none"
                    :closeOnEsc true
                    :isOpen @athena-open?
@@ -311,7 +271,9 @@
          [:> ModalOverlay]
          [:> ModalContent {:width "49rem"
                            :class "athena-modal"
-                           :bg "background.upper"
+                           :overflow "hidden"
+                           :backdropFilter "blur(20px)"
+                           :bg "background.vibrancy"
                            :maxWidth "calc(100vw - 4rem)"}
           [:> Input
            {:type "search"
@@ -321,8 +283,9 @@
             :fontWeight "300"
             :lineHeight "1.3"
             :letterSpacing "-0.03em"
-            :borderRadius "inherit"
             :color "inherit"
+            :background "none"
+            :borderRadius 0
             :height "auto"
             :padding "1.5rem 4rem 1.5rem 1.5rem"
             :cursor "text"

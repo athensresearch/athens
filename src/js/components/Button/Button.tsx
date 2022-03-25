@@ -1,11 +1,8 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import { classnames } from '@/utils/classnames';
-import { useFocusRing } from '@react-aria/focus'
 import { useFocusRingEl } from '@/utils/useFocusRingEl';
 import { mergeProps } from '@react-aria/utils';
-import { DOMRoot } from '@/utils/config';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /**

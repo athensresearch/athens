@@ -25,7 +25,8 @@ import {
   HStack,
   Divider,
   IconButton,
-  ButtonGroup
+  ButtonGroup,
+  useColorMode
 } from '@chakra-ui/react';
 
 import { WindowButtons } from './components/WindowButtons';
@@ -61,7 +62,7 @@ const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) 
   } {...props}>{children}</IconButton>
 });
 
-const AppToolbarWrapper = ({ children }) => <Flex
+const AppToolbarWrapper = ({ children, ...props }) => <Flex
   borderBottom="1px solid transparent"
   justifyContent="space-between"
   py={1}
@@ -69,10 +70,13 @@ const AppToolbarWrapper = ({ children }) => <Flex
   h={6}
   zIndex="10"
   _hover={{
-    transition: 'border-color 0.15s ease',
-    borderBottomColor: 'separator.border'
+    transition: 'border-color 0.2s ease',
+    borderBottomColor: 'separator.divider'
   }}
   sx={{
+    "&.is-right-sidebar-open": {
+      borderBottomColor: 'separator.divider'
+    },
     "-webkit-app-region": "drag",
     ".is-fullscreen &": {
       height: '44px'
@@ -99,6 +103,7 @@ const AppToolbarWrapper = ({ children }) => <Flex
       paddingLeft: '22px'
     }
   }}
+  {...props}
 >
   {children}
 </Flex>;
@@ -214,8 +219,10 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     ...rest
   } = props;
 
+  const { toggleColorMode } = useColorMode()
+
   return (
-    <AppToolbarWrapper {...rest}>
+    <AppToolbarWrapper className={isRightSidebarOpen ? 'is-right-sidebar-open' : ''} {...rest}>
       <HStack flex="1" justifyContent="space-between">
         <ButtonGroup size="sm">
           {databaseMenu}
@@ -284,9 +291,14 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           {presenceDetails}
           <Tooltip label="Merge"><ToolbarIconButton aria-label="Merge" isActive={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></ToolbarIconButton></Tooltip>
           <Tooltip label="Settings"><ToolbarIconButton aria-label="Settings" isActive={route === '/settings'} onClick={handlePressSettings}><Settings /></ToolbarIconButton></Tooltip>
-          <Tooltip label="Toggle theme"><ToolbarIconButton aria-label="Toggle theme" onClick={handlePressThemeToggle}>
-            {isThemeDark ? <ToggleOff /> : <ToggleOn />}
-          </ToolbarIconButton></Tooltip>
+          <Tooltip label="Toggle theme">
+            <ToolbarIconButton onClick={() => {
+              toggleColorMode()
+              handlePressThemeToggle()
+            }}>
+              {isThemeDark ? <ToggleOff /> : <ToggleOn />}
+            </ToolbarIconButton>
+          </Tooltip>
           <Tooltip label="Help"><ToolbarIconButton aria-label="Help" isActive={isHelpOpen} onClick={handlePressHelp}><Help /></ToolbarIconButton></Tooltip>
           <Divider orientation="vertical" />
           <Tooltip label="Show right sidebar"><ToolbarIconButton
