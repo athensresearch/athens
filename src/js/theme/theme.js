@@ -147,9 +147,9 @@ const semanticTokens = {
       _dark: 'hsla(0, 0%, 100%, 0.57)'
     },
     // status colors
-    error: {
-      default: 'errorLight',
-      _dark: 'errorDark'
+    danger: {
+      default: 'red',
+      _dark: 'red'
     },
     warning: {
       default: 'warningLight',
@@ -225,6 +225,16 @@ const components = {
       _focusVisible: {
         outline: 'none',
         boxShadow: 'focus'
+      }
+    },
+    variants: {
+      link: {
+        color: "foreground.primary"
+      }
+    },
+    colorSchemes: {
+      danger: {
+        color: "danger"
       }
     }
   },

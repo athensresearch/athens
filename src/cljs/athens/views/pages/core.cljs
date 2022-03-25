@@ -1,15 +1,13 @@
 (ns athens.views.pages.core
   (:require
-    [athens.style :as style]
    ["@chakra-ui/react" :refer [Box]]
-    [athens.views.hoc.perf-mon :as perf-mon]
-    [athens.views.pages.all-pages :as all-pages]
-    [athens.views.pages.daily-notes :as daily-notes]
-    [athens.views.pages.graph :as graph]
-    [athens.views.pages.page :as page]
-    [athens.views.pages.settings :as settings]
-    [re-frame.core :as rf]
-    [stylefy.core :as stylefy]))
+   [athens.views.hoc.perf-mon :as perf-mon]
+   [athens.views.pages.all-pages :as all-pages]
+   [athens.views.pages.daily-notes :as daily-notes]
+   [athens.views.pages.graph :as graph]
+   [athens.views.pages.page :as page]
+   [athens.views.pages.settings :as settings]
+   [re-frame.core :as rf]))
 
 ;; View
 

@@ -303,12 +303,6 @@
      [shortcut (:shortcut item)])])
 
 
-;; Help popup UI
-;; Why the escape handler?
-;; Because when disabled the modal autofocus (which moves the modal to the top when
-;; opened and causes other issues like moving into the top the modal when clicking outside
-;; of it from the top), the escape handler from the modal itself doesn't work.
-;; Because of that, our own escape handler is added.
 (defn help-popup
   []
   (r/with-let [open? (subscribe [:help/open?])
