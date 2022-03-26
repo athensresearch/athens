@@ -17,8 +17,7 @@
    [goog.dom.selection          :refer [setCursorPosition]]
    [malli.core                  :as m]
    [malli.error                 :as me]
-   [re-frame.core               :as rf]
-   [stylefy.core                :as stylefy]))
+   [re-frame.core               :as rf]))
 
 
 ;; Effects

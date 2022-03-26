@@ -1,7 +1,7 @@
 (ns athens.events
   (:require
-   ["@chakra-ui/react" :refer [createStandaloneToast]]
    ["/theme/theme" :refer [theme]]
+   ["@chakra-ui/react" :refer [createStandaloneToast]]
    [athens.athens-datoms                 :as athens-datoms]
    [athens.common-db                     :as common-db]
    [athens.common-events                 :as common-events]

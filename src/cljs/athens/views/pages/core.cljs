@@ -1,7 +1,7 @@
 (ns athens.views.pages.core
   (:require
-   ["@chakra-ui/react" :refer [Box createStandaloneToast]]
    ["/theme/theme" :refer [theme]]
+   ["@chakra-ui/react" :refer [Box createStandaloneToast]]
    [athens.views.hoc.perf-mon :as perf-mon]
    [athens.views.pages.all-pages :as all-pages]
    [athens.views.pages.daily-notes :as daily-notes]

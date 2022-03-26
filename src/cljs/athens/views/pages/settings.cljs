@@ -1,7 +1,7 @@
 (ns athens.views.pages.settings
   (:require
-   ["@chakra-ui/react" :refer [createStandaloneToast Text Heading Box FormControl FormLabel ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
    ["/theme/theme" :refer [theme]]
+   ["@chakra-ui/react" :refer [createStandaloneToast Text Heading Box FormControl FormLabel ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
    [athens.db :refer [default-athens-persist]]
    [cljs-http.client :as http]
    [cljs.core.async :refer [<!]]

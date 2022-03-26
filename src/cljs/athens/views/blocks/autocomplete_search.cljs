@@ -1,7 +1,6 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-  ;;  ["/components/Button/Button" :refer [Button]]
-   ["@chakra-ui/react" :refer [Portal Heading Button IconButton MenuDivider MenuButton VStack Box Menu MenuList Text MenuItem]]
+   ["@chakra-ui/react" :refer [Portal Button VStack Text]]
    [athens.views.blocks.textarea-keydown :as textarea-keydown]
    [clojure.string :as string]
    [goog.events :as events]

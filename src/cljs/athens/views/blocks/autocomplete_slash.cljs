@@ -1,7 +1,6 @@
 (ns athens.views.blocks.autocomplete-slash
   (:require
-    ["/components/Button/Button" :refer [Button]]
-    ["@chakra-ui/react" :refer [Portal Heading IconButton MenuDivider MenuButton Menu MenuList MenuItem]]
+    ["@chakra-ui/react" :refer [Menu MenuList MenuItem]]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.dropdown :as dropdown]
     [goog.events :as events]

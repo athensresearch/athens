@@ -69,7 +69,7 @@
      (when (:is-remote db)
        [:> Link])
      (:id db)]]
-   (if on-remove
+   (when on-remove
      [:> IconButton 
       {:onClick on-remove
        :size "sm"

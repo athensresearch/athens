@@ -119,7 +119,7 @@
                                        [empty-message]
                                        [:> Accordion {:allowMultiple true}
                                        (doall
-                                        (for [[uid {:keys [open node/title block/string is-graph?]}] items]
+                                        (for [[uid {:keys [node/title block/string is-graph?]}] items]
                                           ^{:key uid}
                                           [:> AccordionItem {:_first {:borderTop 0}}
                                            [:> Box {:as "h2" :position "relative"}
