@@ -1,6 +1,6 @@
 (ns athens.views.left-sidebar
   (:require
-   ["@chakra-ui/react" :refer [VStack HStack Heading Button Link Flex]]
+   ["@chakra-ui/react" :refer [VStack Flex Heading Button Link Flex]]
    ["framer-motion" :refer [AnimatePresence motion]]
    [athens.reactive :as reactive]
    [athens.router   :as router]
@@ -11,7 +11,7 @@
 
 ;; Components
 
-(def expanded-sidebar-width "18rem")
+(def expanded-sidebar-width "clamp(12rem, 25vw, 18rem)")
 
 (defn shortcut-component
   [_]
@@ -25,11 +25,16 @@
        [:> Button {:variant "link"
                    :borderWidth "1px"
                    :p "1rem"
+                   :display "block"
                    :py "0.5rem"
                    :mx "1rem"
+                   :textAlign "left"
+                   :justifyContent "flex-start"
+                   :overflow "hidden"
+                   :whiteSpace "nowrap"
+                   :textOverflow "ellipsis"
                    :flex "1"
                    :border "none"
-                   :justifyContent "flex-start"
                    :bg "transparent"
                    :boxShadow "0 0 0 0.25rem transparent"
                    :_focus {:outline "none"}
@@ -84,10 +89,9 @@
        (when @open?
          [:> (.-div motion)
           {:style {:display "flex"
+                  ;;  :paddingTop "7.5rem"
                    :flex-direction "column"
                    :height "100%"
-                   :paddingTop "7rem"
-                   :paddingBottom "2rem"
                    :alignItems "stretch"
                    :gridArea "left-sidebar"
                    :position "relative"
@@ -104,11 +108,11 @@
                       :align "stretch"
                       :width expanded-sidebar-width
                       :py "1rem"
+                      :paddingTop "7rem"
                       :spacing "0.25rem"
                       :overflowY "overlay"
                       :sx {:listStyle "none"
-                           "-webkit-app-region" "no-drag"}}
-           
+                           :WebkitAppRegion "no-drag"}}
            [:> Heading {:as "h2"
                         :px "2rem"
                         :pb "0.5rem"
@@ -121,16 +125,20 @@
               [shortcut-component sh]))]
 
         ;; LOGO + BOTTOM BUTTONS
-          [:> HStack {:as "footer"
-                      :width expanded-sidebar-width
-                      :fontSize "sm"
-                      :px "2rem"
-                      :mt "auto"}
+          [:> Flex {:as "footer"
+                    :width expanded-sidebar-width
+                    :flexWrap "wrap"
+                    :gap "0.25em 0.5em"
+                    :fontSize "sm"
+                    :p "2rem"
+                    :mt "auto"}
            [:> Link {:fontWeight "bold"
+                     :display "inline-block"
                      :href "https://github.com/athensresearch/athens/issues/new/choose"
                      :target "_blank"}
             "Athens"]
            [:> Link {:color "foreground.secondary"
+                     :display "inline-block"
                      :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
                      :target "_blank"}
             (athens.util/athens-version)]]])])))

@@ -40,10 +40,14 @@ interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'
 
 const toolbarButtonStyle = {
   background: 'background.floor',
+  color: "foreground.secondary",
+  WebkitAppRegion: "no-drag",
 }
 
 const toolbarIconButtonStyle = {
   background: 'background.floor',
+  color: "foreground.secondary",
+  WebkitAppRegion: "no-drag",
   sx: {
     "svg": {
       fontSize: "1.5em"
@@ -65,19 +69,21 @@ const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) 
 const AppToolbarWrapper = ({ children, ...props }) => <Flex
   borderBottom="1px solid transparent"
   justifyContent="space-between"
+  overflow="hidden"
   py={1}
   px={1}
   h={6}
-  zIndex="10"
+  zIndex="3"
+  userSelect="none"
   transition='border-color 0.5s ease'
   _hover={{
     borderBottomColor: 'separator.divider'
   }}
   sx={{
+    WebkitAppRegion: "drag",
     "&.is-right-sidebar-open": {
       borderBottomColor: 'separator.divider'
     },
-    "-webkit-app-region": "drag",
     ".is-fullscreen &": {
       height: '44px'
     },

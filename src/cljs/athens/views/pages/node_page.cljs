@@ -2,7 +2,7 @@
   (:require
     ["/components/Block/components/Anchor" :refer [Anchor]]
     ["/components/Dialog/Dialog" :refer [Dialog]]
-    ["@chakra-ui/react" :refer [Box Button Portal Heading IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton]]
+    ["@chakra-ui/react" :refer [Box Button Portal Heading IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink]]
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
     ["@material-ui/icons/BubbleChart" :default BubbleChart]
@@ -20,7 +20,6 @@
     [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [athens.views.breadcrumbs :refer [breadcrumbs-list breadcrumb]]
     [athens.views.hoc.perf-mon     :as perf-mon]
     [clojure.string :as str]
     [datascript.core :as d]
@@ -71,7 +70,7 @@
                :fontFamily        "inherit"
                :visibility        "hidden"
                :position          "absolute"}
-   ["textarea" ["::-webkit-scrollbar" {:display "none"}]]
+   ["textarea" ["::WebkitScrollbar" {:display "none"}]]
    [".is-editing textarea:focus" {:outline "none"
                                   :visibility "visible"
                                   :position "relative"}]
@@ -109,11 +108,6 @@
    :padding "1rem 0.5rem"
    :border-radius "0.25rem"
    :margin "0.5em 0"})
-
-
-(def reference-breadcrumbs-style
-  {:font-size "12px"
-   :padding "0.25rem calc(2rem - 0.5em)"})
 
 
 (def references-group-block-style
@@ -354,14 +348,16 @@
       (let [{:keys [block parents embed-id]} @state
             block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
-         [breadcrumbs-list {:style reference-breadcrumbs-style}
+         [:> Breadcrumb {:fontSize "0.65em"
+                         :pl 6}
           (doall
-            (for [{:keys [node/title block/string block/uid]} parents]
-              [breadcrumb {:key       (str "breadcrumb-" uid)
-                           :on-click #(let [new-B (db/get-block [:block/uid uid])
-                                            new-P (drop-last parents)]
-                                        (swap! state assoc :block new-B :parents new-P))}
-               [parse-and-render (or title string) uid]]))]
+           (for [{:keys [node/title block/string block/uid]} parents]
+             [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
+              [:> BreadcrumbLink
+               {:onClick #(let [new-B (db/get-block [:block/uid uid])
+                                new-P (drop-last parents)]
+                            (swap! state assoc :block new-B :parents new-P))}
+               [parse-and-render (or title string) uid]]]))]
          [:div.block-embed
           [blocks/block-el
            (recursively-modify-block-for-embed block embed-id)

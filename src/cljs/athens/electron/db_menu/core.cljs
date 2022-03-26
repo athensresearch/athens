@@ -1,6 +1,6 @@
 (ns athens.electron.db-menu.core
   (:require
-   ["@chakra-ui/react" :refer [Box IconButton VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button Divider]]
+   ["@chakra-ui/react" :refer [Box IconButton Tooltip VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button Divider]]
    ["react-focus-lock" :default FocusLock]
    [athens.electron.db-menu.db-icon :refer [db-icon]]
    [athens.electron.db-menu.db-list-item :refer [db-list-item]]
@@ -11,17 +11,13 @@
 
 (defn current-db-tools
   ([{:keys [db]} all-dbs]
-   (if (:is-remote db)
-     [:> ButtonGroup {:size "sm" :pl 10  :ml "auto" :width "100%"}
-      [:> Button "Import"]
-      [:> Button "Copy Link"]
-      [:> Button "Remove"]]
-     [:> ButtonGroup {:size "sm"  :pl 10 :ml "auto" :width "100%"}
+   (when-not (:is-remote db)
+     [:> ButtonGroup {:size "xs"  :pl 10 :ml "auto" :width "100%"}
       [:> Button {:onClick #(dialogs/move-dialog!)} "Move"]
-      [:> Button {:onClick #(if (= 1 (count all-dbs))
-                              (js/alert "Can't remove last db from the list")
-                              (dialogs/delete-dialog! db))}
-       "Remove"]])))
+      [:> Tooltip {:label "Can't remove last database" :placement "right" :isDisabled (< 1 (count all-dbs))}
+       [:> Button {:isDisabled (= 1 (count all-dbs))
+                   :onClick #(dialogs/delete-dialog! db)}
+        "Remove"]]])))
 
 
 (defn db-menu

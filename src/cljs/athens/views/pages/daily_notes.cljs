@@ -1,40 +1,10 @@
 (ns athens.views.pages.daily-notes
   (:require
-  ["@chakra-ui/react" :refer [Heading Box]]
-    [athens.dates :as dates]
-    [athens.reactive :as reactive]
-    [athens.style :refer [DEPTH-SHADOWS]]
-    [athens.views.pages.node-page :as node-page]
-    [re-frame.core :refer [dispatch subscribe]]
-    [stylefy.core :refer [use-style]]))
-
-
-;; Styles
-
-
-(def daily-notes-scroll-area-style
-  {:min-height "calc(100vh + 1px)"
-   :display        "flex"
-   :padding        "1.25rem 0"
-   :align-items    "stretch"
-   :flex           "1 1 100%"
-   :flex-direction "column"})
-
-
-(def daily-notes-page-style
-  {:box-shadow (:16 DEPTH-SHADOWS)
-   :align-self "stretch"
-   :justify-self "stretch"
-   :margin "1.25rem 2.5rem"
-   :padding "1rem 2rem"
-   :transition-duration "0s"
-   :border-radius "0.5rem"
-   :min-height "calc(100vh - 10rem)"})
-
-
-(def daily-notes-notional-page-style
-  (merge daily-notes-page-style {:box-shadow (:4 DEPTH-SHADOWS)
-                                 :opacity "0.5"}))
+   ["@chakra-ui/react" :refer [Heading Box VStack]]
+   [athens.dates :as dates]
+   [athens.reactive :as reactive]
+   [athens.views.pages.node-page :as node-page]
+   [re-frame.core :refer [dispatch subscribe]]))
 
 
 (defn reactive-pull-many
@@ -56,24 +26,31 @@
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (dates/get-day)])
         (let [notes (reactive-pull-many @note-refs)]
-          [:div#daily-notes (use-style daily-notes-scroll-area-style)
+          [:> VStack {:id "daily-notes"
+                      :minHeight "calc(100vh + 1px)"
+                      :display        "flex"
+                      :gap            "2.5rem"
+                      :py             "1.25rem"
+                      :px             "2.5rem"
+                      :alignItems    "stretch"
+                      :flex           "1 1 100%"
+                      :flexDirection "column"}
            (doall
-             (for [{:keys [block/uid]} notes]
-               ^{:key uid}
-               [:<>
-                [:> Box {:boxShadow "page",
-                         :bg "background.floor"
-                         :alignSelf "stretch"
-                         :justifySelf "stretch"
-                         :margin "1.25rem 2.5rem"
-                         :padding "1rem 2rem"
-                         :borderWidth "1px"
-                         :borderStyle "solid"
-                         :borderColor "separator.divider"
-                         :transitionDuration "0s"
-                         :borderRadius "0.5rem"
-                         :minHeight "calc(100vh - 10rem)"}
-                 [node-page/page [:block/uid uid]]]]))
+            (for [{:keys [block/uid]} notes]
+              ^{:key uid}
+              [:<>
+               [:> Box {:boxShadow "page",
+                        :bg "background.floor"
+                        :alignSelf "stretch"
+                        :justifySelf "stretch"
+                        :px "2rem"
+                        :borderWidth "1px"
+                        :borderStyle "solid"
+                        :borderColor "separator.divider"
+                        :transitionDuration "0s"
+                        :borderRadius "0.5rem"
+                        :minHeight "calc(100vh - 10rem)"}
+                [node-page/page [:block/uid uid]]]]))
            [:> Box {:boxShadow "page",
                     :bg "background.floor"
                     :alignSelf "stretch"

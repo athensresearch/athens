@@ -1,6 +1,6 @@
 (ns athens.views.right-sidebar
   (:require
-   ["@chakra-ui/react" :refer [Flex Box IconButton Accordion AccordionItem AccordionButton AccordionIcon AccordionPanel]]
+   ["@chakra-ui/react" :refer [Flex Text Box AddIcon IconButton Accordion AccordionItem AccordionButton AccordionIcon AccordionPanel]]
    ["@material-ui/icons/BubbleChart" :default BubbleChart]
    ["@material-ui/icons/Close" :default Close]
    ["@material-ui/icons/Description" :default Description]
@@ -8,38 +8,31 @@
    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
    ["framer-motion" :refer [AnimatePresence motion]]
    [athens.parse-renderer :as parse-renderer]
-   [athens.style :refer [color OPACITIES]]
    [athens.views.pages.block-page :as block-page]
    [athens.views.pages.graph :as graph]
    [athens.views.pages.node-page :as node-page]
    [re-frame.core :refer [dispatch subscribe]]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]))
-
-(def empty-message-style
-  {:align-self "center"
-   :display "flex"
-   :flex-direction "column"
-   :margin "auto auto"
-   :align-items "center"
-   :text-align "center"
-   :color (color :body-text-color :opacity-med)
-   :font-size "80%"
-   :border-radius "0.5rem"
-   :line-height 1.3
-   ::stylefy/manual [[:svg {:opacity (:opacity-low OPACITIES)
-                            :font-size "1000%"}]
-                     [:p {:max-width "13em"}]]})
-
+   [reagent.core :as r]))
 
 ;; Components
 
 
 (defn empty-message
   []
-  [:div (use-style empty-message-style)
-   [:> VerticalSplit]
-   [:p
+  [:> Box {:alignSelf "center"
+           :display "flex"
+           :flexDirection "column"
+           :margin "auto"
+           :padding 5
+           :gap "1rem"
+           :alignItems "center"
+           :textAlign "center"
+           :color "foreground.secondary"
+           :fontSize "80%"
+           :borderRadius "0.5rem"
+           :lineHeight 1.3}
+   [:> VerticalSplit {:style {:width "4rem" :height "4rem"}}]
+   [:> Text {:maxWidth "15em"}
     "Hold " [:kbd "shift"] " when clicking a page link to view the page in the sidebar."]])
 
 
@@ -74,7 +67,7 @@
                                  (when open?
                                    [:> (.-div motion)
                                     {:style {:display "flex"
-                                             :sx {"-webkit-app-region" "no-drag"}
+                                             :WebkitAppRegion "no-drag"
                                              :flex-direction "column"
                                              :height "100%"
                                              :paddingTop "3.25rem"
@@ -107,10 +100,12 @@
                                              :transitionTimingFunction "ease-in-out"
                                              :transitionProperty "common"
                                              :bg "separator.divider"
+                                             :sx {:WebkitAppRegion "no-drag"}
                                              :_hover {:bg "link"}
                                              :_active {:bg "link"}
                                              :_after {:content "''"
                                                       :position "absolute"
+                                                      :sx {:WebkitAppRegion "no-drag"}
                                                       :inset "-4px"}
                                              :on-mouse-down #(swap! state assoc :dragging true)
                                              :class (when (:dragging @state) "is-dragging")}]
@@ -129,7 +124,7 @@
                                           [:> AccordionItem {:_first {:borderTop 0}}
                                            [:> Box {:as "h2" :position "relative"}
                                             [:> AccordionButton
-                                             [:> AccordionIcon]
+                                             [:> AccordionIcon {:as AddIcon}]
                                              (cond
                                                is-graph? [:<> [:> BubbleChart] [parse-renderer/parse-and-render title uid]]
                                                title     [:<> [:> Description] [parse-renderer/parse-and-render title uid]]

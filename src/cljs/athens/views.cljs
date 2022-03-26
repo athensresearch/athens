@@ -1,9 +1,7 @@
 (ns athens.views
   (:require
-   ["/components/Spinner/Spinner" :refer [Spinner]]
    ["/theme/theme" :refer [theme]]
-   ["@chakra-ui/react" :refer [ChakraProvider Grid]]
-   ["@material-ui/core/Snackbar" :as Snackbar]
+   ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center]]
    ["@react-aria/overlays" :refer [OverlayProvider]]
    [athens.config]
    [athens.electron.db-modal :as db-modal]
@@ -18,8 +16,7 @@
    [athens.views.left-sidebar :as left-sidebar]
    [athens.views.pages.core :as pages]
    [athens.views.right-sidebar :as right-sidebar]
-   [re-frame.core :as rf]
-   [reagent.core :as r]))
+   [re-frame.core :as rf]))
 
 
 ;; Components
@@ -31,24 +28,6 @@
     (when-not (nil? @alert-)
       (js/alert (str @alert-))
       (rf/dispatch [:alert/unset]))))
-
-
-;; Snackbar
-
-(def m-snackbar (r/adapt-react-class (.-default Snackbar)))
-
-
-(rf/reg-sub
-  :db/snack-msg
-  (fn [db]
-    (:db/snack-msg db)))
-
-
-(rf/reg-event-db
-  :show-snack-msg
-  (fn [db [_ msg-opts]]
-    (js/setTimeout #(rf/dispatch [:show-snack-msg {}]) 4000)
-    (assoc db :db/snack-msg msg-opts)))
 
 
 (defn main
@@ -65,22 +44,21 @@
         [:> OverlayProvider
          [help-popup]
          [alert]
-         (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
-           [m-snackbar
-            {:message msg
-             :open (boolean msg)}
-            [:span
-             {:style {:background-color (case type
-                                          :success "green"
-                                          "red")
-                      :padding "10px 20px"
-                      :color "white"}}
-             msg]])
          [athena-component]
          (cond
            (and @loading @modal) [db-modal/window]
 
-           @loading [:> Spinner]
+           @loading
+           [:> Center {:height "100vh"}
+            [:> Flex {:width 28
+                      :flexDirection "column"
+                      :gap 2
+                      :color "foreground.secondary"
+                      :borderRadius "lg"
+                      :placeItems "center"
+                      :placeContent "center"
+                      :height 28}
+             [:> Spinner {:size "xl"}]]]
 
            :else [:<>
                   (when @modal [db-modal/window])
@@ -93,7 +71,7 @@
                     'devtool devtool devtool'"
                     :height "100vh"
                     :overflow "hidden"
-                    :sx {"-webkit-app-region" "drag"}
+                    :sx {"WebkitAppRegion" "drag"}
                     :className [(case os
                                   :windows "os-windows"
                                   :mac "os-mac"

@@ -1,6 +1,6 @@
 (ns athens.electron.db-modal
   (:require
-    ["@chakra-ui/react" :refer [VStack FormControl FormLabel Input Button Box Tabs Tab TabList TabPanel TabPanels Text Modal ModalOverlay Divider VStack Heading ModalContent ModalHeader ModalFooter ModalBody ModalCloseButton ButtonGroup]]
+    ["@chakra-ui/react" :refer [HStack VStack FormControl FormLabel Input Button Box Tabs Tab TabList TabPanel TabPanels Text Modal ModalOverlay Divider VStack Heading ModalContent ModalHeader ModalFooter ModalBody ModalCloseButton ButtonGroup]]
     [athens.electron.dialogs :as dialogs]
     [athens.electron.utils :as utils]
     [athens.events :as events]
@@ -108,7 +108,8 @@
 
 (defn form-container
   [content footer]
-  [:<>
+  [:> Box {:as "form"
+           :display "contents"}
    [:> Box {:p 5 :pt 4}
     content]
    [:> ModalFooter {:borderTop "1px solid"
@@ -124,22 +125,25 @@
    [:> FormControl {:isReadOnly true}
     [:> FormLabel (if @loading
                     "No DB Found At"
-                    "Current Location")]
-    [:> Text {:as "output"
-              :borderRadius "md"
-              :cursor "default"
-              :bg "background.floor"
-              :color "foreground.secondary"
-              :py 1.5
-              :px 2.5
-              :display "flex"}
-     (:id db)]]
+                    "Current database location")]
+    [:> HStack
+     [:> Text {:as "output"
+               :borderRadius "md"
+               :cursor "default"
+               :bg "background.floor"
+               :color "foreground.secondary"
+               :flex "1 1 100%"
+               :py 1.5
+               :px 2.5
+               :display "flex"}
+      (:id db)]
+     [:> Button {:isDisabled @loading
+                 :size "sm"
+                 :onClick #(dialogs/move-dialog!)}
+      "Move"]]]
    [:> ButtonGroup
     [:> Button {:onClick #(dialogs/open-dialog!)}
-     "Open"]
-    [:> Button {:isDisabled @loading
-                :onClick #(dialogs/move-dialog!)}
-     "Move"]]])
+     "Open from file"]]])
 
 
 
@@ -162,8 +166,8 @@
 
 (defn join-remote-comp
   []
-  (let [name     (r/atom "RTC")
-        address  (r/atom "localhost:3010")
+  (let [name     (r/atom "")
+        address  (r/atom "")
         password (r/atom "")]
     (fn []
       [form-container
@@ -172,7 +176,7 @@
          [:> FormControl
           [:> FormLabel "Database name"]
           [:> Input {:value @name
-                     :onChange #(swap! name assoc :input (js-event->val %))}]]
+                     :onChange #(reset! name (js-event->val %))}]]
          [:> FormControl
           [:> FormLabel "Remote address"]
           [:> Input {:value @address
@@ -183,11 +187,12 @@
                      :type "password"
                      :onChange #(reset! password (js-event->val %))}]]]
         doall)
-        [:> ButtonGroup
-         [:> Button {:isDisabled   (or (clojure.string/blank? @name)
-                                       (clojure.string/blank? @address))
-                     :onClick   #(rf/dispatch [:db-picker/add-and-select-db (utils/self-hosted-db @name @address @password)])}
-          "Join"]]])))
+       [:> ButtonGroup
+        [:> Button {:type "submit"
+                    :isDisabled (or (clojure.string/blank? @name)
+                                    (clojure.string/blank? @address))
+                    :onClick   #(rf/dispatch [:db-picker/add-and-select-db (utils/self-hosted-db @name @address @password)])}
+         "Join"]]])))
 
 
 (defn window

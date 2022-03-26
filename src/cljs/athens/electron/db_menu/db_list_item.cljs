@@ -50,6 +50,7 @@
               :height "auto"
               :align "stretch"
               :justifyContent "stretch"
+              :_focusVisible {:boxShadow "focusInset"}
               :textAlign "left"}
    [db-icon {:db db}]
    [:> VStack {:align "stretch"
@@ -62,15 +63,17 @@
               :overflow "hidden"} (:name db)]
     [:> Text {:textOverflow "ellipsis"
               :size "sm"
-              :color "feature.secondary"
+              :color "foreground.secondary"
               :overflow "hidden"
               :title (:id db)}
      (when (:is-remote db)
        [:> Link])
      (:id db)]]
    (if on-remove
-     [:> IconButton
-      {:onClick on-remove}
+     [:> IconButton 
+      {:onClick on-remove
+       :size "sm"
+       :bg "transparent"}
       [:> Clear]])])
 
 

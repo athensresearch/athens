@@ -1,17 +1,15 @@
 (ns athens.components
   (:require
-    ["@chakra-ui/react" :refer [Checkbox]]
-    ["@material-ui/icons/Edit" :default Edit]
-    [athens.db :as db]
-    [athens.parse-renderer :refer [component]]
-    [athens.reactive :as reactive]
-    [athens.style :refer [color]]
-    [athens.util :refer [recursively-modify-block-for-embed]]
-    [athens.views.blocks.core :as blocks]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   ["@chakra-ui/react" :refer [Checkbox Box Button]]
+   ["@material-ui/icons/Edit" :default Edit]
+   [athens.db :as db]
+   [athens.parse-renderer :refer [component]]
+   [athens.reactive :as reactive]
+   [athens.util :refer [recursively-modify-block-for-embed]]
+   [athens.views.blocks.core :as blocks]
+   [clojure.string :as str]
+   [re-frame.core :refer [dispatch subscribe]]
+   [reagent.core :as r]))
 
 
 (defn todo-on-click
@@ -71,23 +69,9 @@
 (defmethod component :self
   [content _uid]
   [span-click-stop
-   [:button {:style {:color       "red"
-                     :font-family "IBM Plex Mono"}}
+   [:> Button {:variant "link"
+               :color "red"}
     content]])
-
-
-(def block-embed-adjustments
-  {:background (color :background-minus-2 :opacity-med)
-   :position   "relative"
-   ::stylefy/manual [[:>.block-container {:margin-left "0"
-                                          :padding-right "1.3rem"
-                                          ::stylefy/manual [[:textarea {:background "transparent"}]]}]
-                     [:>svg              {:position   "absolute"
-                                          :right      "5px"
-                                          :top        "5px"
-                                          :font-size  "1rem"
-                                          :z-index    "5"
-                                          :cursor     "pointer"}]]})
 
 
 (defmethod component :block-embed
@@ -99,7 +83,18 @@
     ;; todo -- not reactive. some cases where delete then ctrl-z doesn't work
     (if (db/e-by-av :block/uid block-uid)
       (r/with-let [embed-id (random-uuid)]
-                  [:div.block-embed (use-style block-embed-adjustments)
+                  [:> Box {:class "block-embed"
+                           :bg "background.basement"
+                           :position "relative"
+                           :sx {"> .block-container" {:ml 0
+                                                      :pr "1.3rem"
+                                                      "textarea" {:background "transparent"}}
+                                "> svg" {:position "absolute"
+                                         :right "5px"
+                                         :top "5px"
+                                         :fontSize "1rem"
+                                         :zIndex "5"
+                                         :cursor "pointer"}}}
                    (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
                      [:<>
                       [blocks/block-el

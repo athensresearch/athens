@@ -1,6 +1,7 @@
 (ns athens.views.pages.core
   (:require
-   ["@chakra-ui/react" :refer [Box]]
+   ["@chakra-ui/react" :refer [Box createStandaloneToast]]
+   ["/theme/theme" :refer [theme]]
    [athens.views.hoc.perf-mon :as perf-mon]
    [athens.views.pages.all-pages :as all-pages]
    [athens.views.pages.daily-notes :as daily-notes]
@@ -9,6 +10,10 @@
    [athens.views.pages.settings :as settings]
    [re-frame.core :as rf]))
 
+
+(def toast (createStandaloneToast {:theme theme}))
+
+
 ;; View
 
 (defn view
@@ -16,7 +21,8 @@
   (let [route-name (rf/subscribe [:current-route/name])]
     ;; TODO: create a UI to inform the player of the connection status
     (when (= @(rf/subscribe [:connection-status]) :reconnecting)
-      (rf/dispatch [:alert/js "Oops! Connection Lost. Reconnecting..."]))
+      (toast (clj->js {:status "info"
+                       :title "Reconnecting to server..."})))
     [:> Box {:flex "1 1 100%"
              :position "relative"
              :gridArea "main-content"
@@ -26,15 +32,16 @@
              :display "flex"
              :overflowY "overlay"
              :sx {"&:before" {:content "''"
-                              :position "absolute"
+                              :position "fixed"
+                              :zIndex "-1"
                               :inset 0
                               :top "3.25rem"
-                              "-webkit-app-region" "no-drag"}
-                  "::-webkit-scrollbar" {:background "background.basement"
+                              :WebkitAppRegion "no-drag"}
+                  "::WebkitScrollbar" {:background "background.basement"
                                          :width "0.5rem"
                                          :height "0.5rem"}
-                  "::-webkit-scrollbar-corner" {:bg "background.basement"}
-                  "::-webkit-scrollbar-thumb" {:bg "background.upper"
+                  "::WebkitScrollbar-corner" {:bg "background.basement"}
+                  "::WebkitScrollbar-thumb" {:bg "background.upper"
                                                :borderRadius "full"}}
              :on-scroll (when (= @route-name :home)
                           #(rf/dispatch [:daily-note/scroll]))}

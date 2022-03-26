@@ -1,8 +1,7 @@
 (ns athens.views.pages.settings
   (:require
-   ["@chakra-ui/react" :refer [Text Heading Box FormControl FormLabel ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
-   ["@material-ui/icons/Check" :default Check]
-   ["@material-ui/icons/NotInterested" :default NotInterested]
+   ["@chakra-ui/react" :refer [createStandaloneToast Text Heading Box FormControl FormLabel ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
+   ["/theme/theme" :refer [theme]]
    [athens.db :refer [default-athens-persist]]
    [cljs-http.client :as http]
    [cljs.core.async :refer [<!]]
@@ -10,6 +9,10 @@
    [reagent.core :as r])
   (:require-macros
    [cljs.core.async.macros :refer [go]]))
+
+
+(def toast
+  (createStandaloneToast {:theme theme}))
 
 
 ;; Helpers
@@ -24,17 +27,24 @@
 
             ;; Open Collective Lambda finds email associated with Athens
             (and (:success resp) (true? (:email_exists (:body resp))))
-            (update-fn @value)
+            (do (update-fn @value)
+                (toast (clj->js {:title "Account connected"
+                                 :status "success"})))
 
             ;; Open Collective Lambda doesn't find email
             (and (:success resp) (false? (:email_exists (:body resp))))
             (do
               (update-fn nil)
-              (js/alert "No OpenCollective account was found with this email address."))
-
+              
+              (toast (clj->js {:title "Account not found"
+                               :status "error"
+                               :description "No OpenCollective account was found with this email address."})))
+              
             ;; Something else, e.g. networking error
-            :else
-            (js/alert (str "Unexpected error" resp)))))))
+              :else
+              (toast (clj->js {:title "Unknown error"
+                               :status "error"
+                               :description resp})))))))
 
 
 (defn handle-reset-email

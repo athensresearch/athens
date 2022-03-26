@@ -1,4 +1,5 @@
 import { extendTheme, cssVar } from '@chakra-ui/react'
+import { readableColor } from 'polished';
 import { spacing } from './spacing'
 
 const $arrowBg = cssVar("popper-arrow-bg");
@@ -102,7 +103,6 @@ const semanticTokens = {
     },
   },
   colors: {
-    transparent: 'transparent',
     brand: {
       default: 'linkLight',
       _dark: 'linkDark'
@@ -188,6 +188,13 @@ const semanticTokens = {
 }
 
 const components = {
+  Avatar: {
+    baseStyle: {
+      container: {
+        borderColor: "background.floor"
+      },
+    }
+  },
   Accordion: {
     baseStyle: {
       button: {
@@ -200,7 +207,7 @@ const components = {
           outline: "none",
           boxShadow: "focusInset"
         }
-      }
+      },
     }
   },
   Breadcrumb: {
@@ -264,15 +271,26 @@ const components = {
   Menu: {
     baseStyle: {
       list: {
-        zIndex: 2,
+        zIndex: 3,
         bg: 'background.upper',
         shadow: 'menu'
+      },
+      groupTitle: {
+        color: "foreground.secondary"
+      }
+    },
+    sizes: {
+      sm: {
+        item: {
+          padding: '0.5rem 1rem',
+        }
       }
     }
   },
   Modal: {
     baseStyle: {
       dialogContainer: {
+        WebkitAppRegion: 'no-drag',
         _focus: {
           outline: 'none'
         }
@@ -293,6 +311,16 @@ const components = {
         shadow: "popover",
         [ $arrowBg.variable ]: "colors.background.upper",
       }
+    }
+  },
+  Spinner: {
+    baseStyle: ({ thickness }) => ({
+      flexShrink: 0,
+      color: "separator.border",
+      borderWidth: thickness,
+    }),
+    defaultProps: {
+      thickness: '1.5px',
     }
   },
   Table: {
