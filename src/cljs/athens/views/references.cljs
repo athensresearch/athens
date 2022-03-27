@@ -5,8 +5,7 @@
 
 (defn references-container
   ([_ children]
-     [:> Box {:as "section"
-              :key "Inline Linked References"
+     [:> Box {:as "aside"
               :ml 6
               :borderRadius "md"
               :background "background.basement"}

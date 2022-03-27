@@ -1,10 +1,7 @@
 (ns athens.views.right-sidebar
   (:require
    ["@chakra-ui/react" :refer [Flex Text Box AddIcon IconButton Accordion AccordionItem AccordionButton AccordionIcon AccordionPanel]]
-   ["@material-ui/icons/BubbleChart" :default BubbleChart]
    ["@material-ui/icons/Close" :default Close]
-   ["@material-ui/icons/Description" :default Description]
-   ["@material-ui/icons/FiberManualRecord" :default FiberManualRecord]
    ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
    ["framer-motion" :refer [AnimatePresence motion]]
    [athens.parse-renderer :as parse-renderer]
@@ -123,12 +120,10 @@
                                           ^{:key uid}
                                           [:> AccordionItem {:_first {:borderTop 0}}
                                            [:> Box {:as "h2" :position "relative"}
-                                            [:> AccordionButton
+                                            [:> AccordionButton {:borderBottom "1px solid"
+                                                                 :borderBottomColor "separator.divider"}
                                              [:> AccordionIcon {:as AddIcon}]
-                                             (cond
-                                               is-graph? [:<> [:> BubbleChart] [parse-renderer/parse-and-render title uid]]
-                                               title     [:<> [:> Description] [parse-renderer/parse-and-render title uid]]
-                                               :else     [:<> [:> FiberManualRecord] [parse-renderer/parse-and-render string uid]])]
+                                             [parse-renderer/parse-and-render (or title string) uid]]
                                             [:> IconButton {:size "sm"
                                                             :position "absolute"
                                                             :right 1

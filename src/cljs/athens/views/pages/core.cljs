@@ -1,7 +1,7 @@
 (ns athens.views.pages.core
   (:require
-   ["/theme/theme" :refer [theme]]
-   ["@chakra-ui/react" :refer [Box createStandaloneToast]]
+   ["@chakra-ui/react" :refer [Box]]
+   [athens.util :refer [toast]]
    [athens.views.hoc.perf-mon :as perf-mon]
    [athens.views.pages.all-pages :as all-pages]
    [athens.views.pages.daily-notes :as daily-notes]
@@ -9,9 +9,6 @@
    [athens.views.pages.page :as page]
    [athens.views.pages.settings :as settings]
    [re-frame.core :as rf]))
-
-
-(def toast (createStandaloneToast (clj->js {:theme theme})))
 
 
 

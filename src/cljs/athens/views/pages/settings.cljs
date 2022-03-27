@@ -1,18 +1,14 @@
 (ns athens.views.pages.settings
   (:require
-   ["/theme/theme" :refer [theme]]
-   ["@chakra-ui/react" :refer [createStandaloneToast Text Heading Box FormControl FormLabel ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
+   ["@chakra-ui/react" :refer [Text Heading Box FormControl FormLabel ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
    [athens.db :refer [default-athens-persist]]
+   [athens.util :refer [toast]]
    [cljs-http.client :as http]
    [cljs.core.async :refer [<!]]
    [re-frame.core :refer [subscribe dispatch reg-event-fx]]
    [reagent.core :as r])
   (:require-macros
    [cljs.core.async.macros :refer [go]]))
-
-
-(def toast
-  (createStandaloneToast {:theme theme}))
 
 
 ;; Helpers

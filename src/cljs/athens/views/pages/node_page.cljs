@@ -2,7 +2,7 @@
   (:require
    ["/components/Block/components/Anchor" :refer [Anchor]]
    ["/components/Dialog/Dialog" :refer [Dialog]]
-   ["@chakra-ui/react" :refer [Box Button Portal Heading IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+   ["@chakra-ui/react" :refer [Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
    ["@material-ui/icons/Bookmark" :default Bookmark]
    ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
    ["@material-ui/icons/BubbleChart" :default BubbleChart]
@@ -20,8 +20,9 @@
    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
    [athens.views.blocks.core :as blocks]
    [athens.views.blocks.textarea-keydown :as textarea-keydown]
-   [athens.views.references :refer [reference-group reference-block]]
    [athens.views.hoc.perf-mon     :as perf-mon]
+   [athens.views.pages.header :refer [editable-title-container]]
+   [athens.views.references :refer [reference-group reference-block]]
    [clojure.string :as str]
    [datascript.core :as d]
    [komponentit.autosize :as autosize]
@@ -36,37 +37,6 @@
 
 (def page-header-style
   {:position "relative"})
-
-
-(def title-inner-style
-  {"textarea" {:appearance "none"
-               :cursor            "text"
-               :resize            "none"
-               :transform         "translate3d(0,0,0)"
-               :color             "inherit"
-               :fontWeight        "inherit"
-               :padding           "0"
-               :letterSpacing     "inherit"
-               :width             "100%"
-               :minHeight         "100%"
-               :caretColor        "link"
-               :background        "transparent"
-               :margin            "0"
-               :fontSize          "inherit"
-               :lineHeight        "inherit"
-               :borderRadius      "0.25rem"
-               :transition        "opacity 0.15s ease"
-               :border            "0"
-               :fontFamily        "inherit"
-               :visibility        "hidden"
-               :position          "absolute"}
-   ["textarea" ["::WebkitScrollbar" {:display "none"}]]
-   [".is-editing textarea:focus" {:outline "none"
-                                  :visibility "visible"
-                                  :position "relative"}]
-   "abbr" {:z-index 4}
-   ".is-editing span" {:visibility "hidden"
-                       :position   "absolute"}})
 
 
 (def references-style {:margin-top "3em"})
@@ -377,7 +347,8 @@
                      :align "stretch"}
           (doall
            (for [[group-title group] linked-refs]
-             [reference-group {:title group-title
+             [reference-group {:key (str "group-" group-title)
+                               :title group-title
                                :on-click-title (fn [e]
                                                  (let [shift?       (.-shiftKey e)
                                                        parsed-title (parse-renderer/parse-title group-title)]
@@ -501,20 +472,9 @@
           ;; Dropdown
           [menu-dropdown node daily-note?]
 
-          [:> Heading {:data-uid uid
-                       :class    "page-header"
-                       :position "relative"
-                       :overflow "visible"
-                       :flex-grow "1"
-                       :margin "0.10em 0 0.10em 1rem"
-                       :letter-spacing "-0.03em"
-                       :white-space "pre-line"
-                       :word-break "break-word"
-                       :line-height "1.40em"
-                       :sx title-inner-style}
+          [editable-title-container
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
-
 
            (when-not daily-note?
              [autosize/textarea

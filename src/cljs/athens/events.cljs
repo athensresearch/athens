@@ -1,7 +1,5 @@
 (ns athens.events
   (:require
-   ["/theme/theme" :refer [theme]]
-   ["@chakra-ui/react" :refer [createStandaloneToast]]
    [athens.athens-datoms                 :as athens-datoms]
    [athens.common-db                     :as common-db]
    [athens.common-events                 :as common-events]
@@ -37,10 +35,6 @@
    [malli.core                           :as m]
    [malli.error                          :as me]
    [re-frame.core                        :as rf :refer [reg-event-db reg-event-fx subscribe]]))
-
-
-(def toast (createStandaloneToast (clj->js {:theme theme})))
-
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -872,7 +866,7 @@
           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
        {})
      (catch :default _
-       {:fx (toast (clj->js {:status "error"
+       {:fx (util/toast (clj->js {:status "error"
                             :title "Couldn't undo"
                             :description "Undo for this operation not supported in Lan-Party, yet."}))}))))
 
@@ -896,7 +890,7 @@
           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
        {})
      (catch :default _
-       {:fx (toast (clj->js {:status "error"
+       {:fx (util/toast (clj->js {:status "error"
                             :title "Couldn't redo"
                             :description "Redo for this operation not supported in Lan-Party, yet."}))}))))
 
@@ -1567,7 +1561,7 @@
                      (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
                items)
          {})
-       {:fx (toast (clj->js {:status "error"
+       {:fx (util/toast (clj->js {:status "error"
                             :title "Couldn't paste"
                             :description "Image paste is not supported in Lan-Party, yet."}))}))))
 

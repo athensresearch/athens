@@ -1,8 +1,9 @@
 (ns athens.views.pages.daily-notes
   (:require
-   ["@chakra-ui/react" :refer [Heading Box VStack]]
+   ["@chakra-ui/react" :refer [Box VStack]]
    [athens.dates :as dates]
    [athens.reactive :as reactive]
+   [athens.views.pages.header :refer [title-container]]
    [athens.views.pages.node-page :as node-page]
    [re-frame.core :refer [dispatch subscribe]]))
 
@@ -14,6 +15,26 @@
   Bug: It's still possible for a day to not get created. The UI for this just shows an empty page without a title. Acceptable bug :)"
   [ids]
   (keep #(reactive/get-reactive-block-document [:block/uid %]) ids))
+
+
+
+(defn daily-notes-page
+  ([props children]
+  (let [{:keys [real?]} props]
+  [:> Box {:boxShadow "page",
+           :bg "background.floor"
+           :alignSelf "stretch"
+           :justifySelf "stretch"
+           :opacity (if real? 1 0.5)
+           :px 14
+           :py 14
+           :borderWidth "1px"
+           :borderStyle "solid"
+           :borderColor "separator.divider"
+           :transitionDuration "0s"
+           :borderRadius "0.5rem"
+           :minHeight "calc(100vh - 10rem)"}
+   children])))
 
 
 ;; Components
@@ -37,31 +58,8 @@
                       :flexDirection "column"}
            (doall
             (for [{:keys [block/uid]} notes]
-              ^{:key uid}
-              [:<>
-               [:> Box {:boxShadow "page",
-                        :bg "background.floor"
-                        :alignSelf "stretch"
-                        :justifySelf "stretch"
-                        :px "2rem"
-                        :borderWidth "1px"
-                        :borderStyle "solid"
-                        :borderColor "separator.divider"
-                        :transitionDuration "0s"
-                        :borderRadius "0.5rem"
-                        :minHeight "calc(100vh - 10rem)"}
-                [node-page/page [:block/uid uid]]]]))
-           [:> Box {:boxShadow "page",
-                    :bg "background.floor"
-                    :alignSelf "stretch"
-                    :justifySelf "stretch"
-                    :margin "1.25rem 2.5rem"
-                    :padding "1rem 2rem"
-                    :borderWidth "1px"
-                    :borderStyle "solid"
-                    :borderColor "separator.divider"
-                    :transitionDuration "0s"
-                    :borderRadius "0.5rem"
-                    :minHeight "calc(100vh - 10rem)"
-                    :opacity "0.5"}
-            [:> Heading {:ml 10} "Earlier"]]])))))
+              [daily-notes-page {:key uid
+                                 :real? true}
+               [node-page/page [:block/uid uid]]]))
+           [daily-notes-page {:real? false}
+            [title-container "Earlier"]]])))))

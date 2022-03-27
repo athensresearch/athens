@@ -1,7 +1,7 @@
 (ns athens.views
   (:require
    ["/theme/theme" :refer [theme]]
-   ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center createStandaloneToast]]
+   ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center]]
    ["@react-aria/overlays" :refer [OverlayProvider]]
    [athens.config]
    [athens.electron.db-modal :as db-modal]

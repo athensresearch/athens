@@ -37,6 +37,7 @@
                    :flex "1"
                    :border "none"
                    :bg "transparent"
+                   :borderRadius "md"
                    :boxShadow "0 0 0 0.25rem transparent"
                    :_focus {:outline "none"}
                    :_hover {:bg "background.upper"}

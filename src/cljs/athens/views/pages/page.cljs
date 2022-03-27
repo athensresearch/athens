@@ -44,3 +44,9 @@
        title [node-page/page id]
        string [block-page/page id]
        :else [:h3 "404: This page doesn't exist"])]))
+
+
+(defn editable-title-container
+  [props children]
+  [:> Box (merge props {:as "header"})
+   children])
