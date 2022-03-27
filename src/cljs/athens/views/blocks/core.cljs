@@ -2,8 +2,7 @@
   (:require
    ["/components/Block/components/Anchor"   :refer [Anchor]]
    ["/components/Block/components/Toggle"   :refer [Toggle]]
-   ["/components/Button/Button"             :refer [Button]]
-   ["@chakra-ui/react" :refer [Box]]
+   ["@chakra-ui/react" :refer [Box Button]]
    [athens.common.logging                   :as log]
    [athens.db                               :as db]
    [athens.electron.images                  :as images]
@@ -13,16 +12,16 @@
    [athens.reactive                         :as reactive]
    [athens.router                           :as router]
    [athens.self-hosted.presence.views       :as presence]
-   [athens.style                            :as style]
    [athens.subs.selection                   :as select-subs]
    [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
    [athens.views.blocks.autocomplete-search :as autocomplete-search]
    [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
    [athens.views.blocks.bullet              :refer [bullet-drag-start bullet-drag-end]]
    [athens.views.blocks.content             :as content]
-   [athens.views.blocks.context-menu        :as context-menu]
+   [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
    [athens.views.breadcrumbs                :as breadcrumbs]
+   [athens.views.references                 :refer [reference-group reference-block]]
    [com.rpl.specter                         :as s]
    [goog.functions                          :as gfns]
    [re-frame.core                           :as rf]
@@ -89,11 +88,15 @@
                                :right      0
                                :bottom     0
                                :left       0}
+   ".block-embed" {:borderRadius "sm"
+                   :sx {"--block-surface-color" "background.basement"}
+                   :bg "background.basement"
+                   ".block-container" {:marginLeft 0.5}}
    ".block-content" {:gridArea  "content"
                      :minHeight "1.5em"}
-  "&.is-linked-ref" {:bg "background-attic"}
-  ".block-container" {:marginLeft "2rem"
-                      :gridArea "body"}})
+   "&.is-linked-ref" {:bg "background-attic"}
+   ".block-container" {:marginLeft "2rem"
+                       :gridArea "body"}})
 
 
 (def dragging-style
@@ -191,55 +194,37 @@
                  {:block-embed? true}]])))]))))
 
 
-(def references-style
-  {:padding-left "2em"})
-
-
-(def references-list-style
-  {:font-size "14px"})
-
-
-(def references-group-style
-  {:background (style/color :background-minus-2 :opacity-med)
-   :padding "0rem 0.5rem"
-   :border-radius "0.25rem"
-   :margin "0.5em 0"})
-
-
-(def references-group-block-style
-  {:width "100%"
-   ::stylefy/manual [[:&:first-of-type {:border-top "0"
-                                        :margin-block-start "0"}]]})
-
-
 (defn inline-linked-refs-el
   [state uid]
   (let [refs (reactive/get-reactive-linked-references [:block/uid uid])]
     (when (not-empty refs)
-      [:div (stylefy/use-style references-style {:key "Inline Linked References"})
-       [:section
-        [:div (stylefy/use-style references-list-style)
-         (doall
-           (for [[group-title group] refs]
-             [:div (stylefy/use-style references-group-style {:key (str "group-" group-title)})
-              (doall
-                (for [block' group]
-                  [:div (stylefy/use-style references-group-block-style {:key (str "ref-" (:block/uid block'))})
-                   [ref-comp block' state]]))]))]]])))
+      [:> Box {:as "section"
+               :key "Inline Linked References"
+               :background "background.basement"}
+        (doall
+         (for [[group-title group] refs]
+           [reference-group {:title group-title
+                             :key (str "group-" group-title)}
+            (doall
+             (for [block' group]
+               [reference-block {:key (str "ref-" (:block/uid block'))}
+                [ref-comp block' state]]))]))])))
 
 
 ;; Components
 
 (defn block-refs-count-el
-  [count click-fn]
-  [:div (stylefy/use-style {:margin-left "1em"
-                            :grid-area "refs"
-                            :z-index (:zindex-dropdown style/ZINDICES)
-                            :visibility (when-not (pos? count) "hidden")})
-   [:> Button {:on-click  (fn [e]
-                            (.. e stopPropagation)
-                            (click-fn e))}
-    count]])
+  [count click-fn active?]
+   [:> Button {:gridArea "refs"
+               :size "sm"
+               :isActive active?
+               :ml "1em"
+               :zIndex 10
+               :visibility (if (pos? count) "visible" "hidden")
+               :onClick (fn [e]
+                          (.. e stopPropagation)
+                          (click-fn e))}
+    count])
 
 
 (defn block-drag-over
@@ -438,7 +423,10 @@
                   :border-radius   "0.125rem"
                   :justify-content "flex-start"
                   :flex-direction  "column"
-                  :sx block-container-inner-style
+                  :background "var(--block-surface-color)"
+                  :opacity (if dragging 0.5 1.0)
+                  :sx (merge block-container-inner-style
+                             {"--block-surface-color" "background.floor"})
                   :class ["block-container"
                           (when (and dragging (not is-selected)) "dragging")
                           (when is-editing "is-editing")
@@ -447,12 +435,12 @@
                           (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
                           (when is-presence "is-presence")]
                   :data-uid          uid
-           ;; need to know children for selection resolution
+                  ;; need to know children for selection resolution
                   :data-childrenuids children-uids
-           ;; :show-editable-dom allows us to render the editing elements (like the textarea)
-           ;; even when not editing this block. When true, clicking the block content will pass
-           ;; the clicks down to the underlying textarea. The textarea is expensive to render,
-           ;; so we avoid rendering it when it's not needed.
+                  ;; :show-editable-dom allows us to render the editing elements (like the textarea)
+                  ;; even when not editing this block. When true, clicking the block content will pass
+                  ;; the clicks down to the underlying textarea. The textarea is expensive to render,
+                  ;; so we avoid rendering it when it's not needed.
                   :on-mouse-enter    #(swap! state assoc :show-editable-dom true)
                   :on-mouse-leave    #(swap! state assoc :show-editable-dom false)
                   :on-drag-over      (fn [e] (block-drag-over e block state))
@@ -472,14 +460,14 @@
                                      (if (true? linked-ref)
                                        (swap! state update :linked-ref/open not)
                                        (toggle uid (not open))))}])
-           (when (:context-menu/show @state)
-             [context-menu/context-menu-el uid-sanitized-block state])
            [:> Anchor {:isClosedWithChildren (when (and (seq children)
                                                         (or (and (true? linked-ref) (not (:linked-ref/open @state)))
                                                             (and (false? linked-ref) (not open))))
                                                "closed-with-children")
                        :block block
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
+                       :onCopyRefs #(handle-copy-refs nil uid state)
+                       :onCopyUnformatted #(handle-copy-unformatted uid state)
                        :on-click        (fn [e]
                                           (let [shift? (.-shiftKey e)]
                                             (rf/dispatch [:reporting/navigation {:source :block-bullet
@@ -488,18 +476,21 @@
                                                                                            :right-pane
                                                                                            :main-pane)}])
                                             (router/navigate-uid uid e)))
-                       :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
+                       ;; :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
                        :on-drag-start   (fn [e] (bullet-drag-start e uid state))
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
            [content/block-content-el block state]
-
+           
            [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
-             [block-refs-count-el (count _refs) (fn [e]
-                                                  (if (.. e -shiftKey)
-                                                    (rf/dispatch [:right-sidebar/open-item uid])
-                                                    (swap! state update :inline-refs/open not)))])]
+             [block-refs-count-el
+              (count _refs)
+              (fn [e]
+                (if (.. e -shiftKey)
+                  (rf/dispatch [:right-sidebar/open-item uid])
+                  (swap! state update :inline-refs/open not)))
+              (:inline-refs/open @state)])]
 
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]

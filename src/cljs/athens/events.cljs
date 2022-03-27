@@ -39,7 +39,8 @@
    [re-frame.core                        :as rf :refer [reg-event-db reg-event-fx subscribe]]))
 
 
-(def toast (createStandaloneToast {:theme theme}))
+(def toast (createStandaloneToast (clj->js {:theme theme})))
+
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -871,9 +872,9 @@
           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
        {})
      (catch :default _
-       {:fx (toast clj->js {:status "error"
+       {:fx (toast (clj->js {:status "error"
                             :title "Couldn't undo"
-                            :description "Undo for this operation not supported in Lan-Party, yet."})}))))
+                            :description "Undo for this operation not supported in Lan-Party, yet."}))}))))
 
 
 (reg-event-fx
@@ -895,9 +896,9 @@
           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
        {})
      (catch :default _
-       {:fx (toast clj->js {:status "error"
+       {:fx (toast (clj->js {:status "error"
                             :title "Couldn't redo"
-                            :description "Redo for this operation not supported in Lan-Party, yet."})}))))
+                            :description "Redo for this operation not supported in Lan-Party, yet."}))}))))
 
 
 (reg-event-fx
@@ -1566,9 +1567,9 @@
                      (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
                items)
          {})
-       {:fx (toast clj->js {:status "error"
+       {:fx (toast (clj->js {:status "error"
                             :title "Couldn't paste"
-                            :description "Image paste is not supported in Lan-Party, yet."})}))))
+                            :description "Image paste is not supported in Lan-Party, yet."}))}))))
 
 
 (reg-event-fx

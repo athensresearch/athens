@@ -1,8 +1,7 @@
 (ns athens.self-hosted.presence.views
   (:require
    ["/components/PresenceDetails/PresenceDetails" :refer [PresenceDetails]]
-   ["/theme/theme" :refer [theme]]
-   ["@chakra-ui/react" :refer [Avatar AvatarGroup createStandaloneToast]]
+   ["@chakra-ui/react" :refer [Avatar AvatarGroup]]
    [athens.self-hosted.presence.events]
    [athens.self-hosted.presence.fx]
    [athens.self-hosted.presence.subs]
@@ -10,9 +9,6 @@
    [re-frame.core :as rf]
    [reagent.core :as r]))
 
-
-(def toast
-  (createStandaloneToast {:theme theme}))
 
 (defn user->person
   [{:keys [session-id username color]
@@ -27,8 +23,8 @@
 (defn copy-host-address-to-clipboard
   [host-address]
   (.. js/navigator -clipboard (writeText host-address))
-  (toast (clj->js {:status "info"
-                   :title "Host address copied to clipboard"})))
+  (util/toast (clj->js {:status "info"
+                        :title "Host address copied to clipboard"})))
 
 
 (defn go-to-user-block
@@ -41,7 +37,7 @@
              (if page-uid
                 ;; TODO: if we support navigating to a block, it should be added here.
                (rf/dispatch [:navigate :page {:id page-uid}])
-               (toast (clj->js {:title "User is not on any page"
+               (util/toast (clj->js {:title "User is not on any page"
                                 :status "warning"})))))
 
 

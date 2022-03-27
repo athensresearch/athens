@@ -24,6 +24,7 @@
                 :borderBottomColor (when (:below @drag) "brand")}
        [:> Button {:variant "link"
                    :borderWidth "1px"
+                   :color "foreground.primary"
                    :p "1rem"
                    :display "block"
                    :py "0.5rem"

@@ -11,7 +11,8 @@
    [re-frame.core :as rf]))
 
 
-(def toast (createStandaloneToast {:theme theme}))
+(def toast (createStandaloneToast (clj->js {:theme theme})))
+
 
 
 ;; View
@@ -24,6 +25,7 @@
       (toast (clj->js {:status "info"
                        :title "Reconnecting to server..."})))
     [:> Box {:flex "1 1 100%"
+    
              :position "relative"
              :gridArea "main-content"
              :alignItems "flex-start"
@@ -31,18 +33,24 @@
              :paddingTop "3.25rem"
              :display "flex"
              :overflowY "overlay"
-             :sx {"&:before" {:content "''"
+             :sx {:maskImage "linear-gradient(to bottom,
+              transparent, 
+              transparent 3rem, 
+              black 5rem, 
+              black calc(100vh - 5rem), 
+              transparent 100vh)"
+             "&:before" {:content "''"
                               :position "fixed"
                               :zIndex "-1"
                               :inset 0
                               :top "3.25rem"
                               :WebkitAppRegion "no-drag"}
                   "::WebkitScrollbar" {:background "background.basement"
-                                         :width "0.5rem"
-                                         :height "0.5rem"}
+                                       :width "0.5rem"
+                                       :height "0.5rem"}
                   "::WebkitScrollbar-corner" {:bg "background.basement"}
                   "::WebkitScrollbar-thumb" {:bg "background.upper"
-                                               :borderRadius "full"}}
+                                             :borderRadius "full"}}
              :on-scroll (when (= @route-name :home)
                           #(rf/dispatch [:daily-note/scroll]))}
      (case @route-name

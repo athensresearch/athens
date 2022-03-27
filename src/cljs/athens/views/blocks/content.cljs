@@ -33,7 +33,7 @@
                                             :outline "none"
                                             :overflow "hidden"
                                             :padding "0"
-                                            :background "background.basement"
+                                            :background "var(--block-surface-color)"
                                             :grid-area "main"
                                             :min-height "100%"
                                             :caret-color "link"
@@ -43,8 +43,9 @@
                                             :border "0"
                                             :opacity "0"
                                             :font-family "inherit"}
-                                "&:hover:not(.is-editing) textarea" {:lineHeight "2"}
-                                "&.is-editing" {:zIndex 3
+                                "&:hover textarea:not(.is-editing)" {:lineHeight "2"}
+                                "textarea.is-editing + *" {:opacity "0"}
+                                ".is-editing" {:zIndex 3
                                                 :lineHeight "inherit"
                                                 :opacity 1}
                                 "span.text-run" {:pointerEvents "none"
@@ -58,7 +59,7 @@
                                         :zIndex 4
                                         "& > span" {:position "relative"
                                                     :zIndex 2}}
-                                "code, pre" {:fontFamily "IBM Plex Mono"}
+                                "code, pre" {:fontFamily "code"}
                                 ".media-16-9" {:height 0
                                                :width "calc(100% - 0.25rem)"
                                                :zIndex 1
@@ -325,7 +326,7 @@
                         "1em")]
         [:> Box {:class "block-content"
                  :display "grid"
-                 :background "background.floor"
+                 :background "var(--block-surface-color)"
                  :color "foreground.primary"
                  :gridTemplateAreas "'main'"
                  :alignItems "stretch"

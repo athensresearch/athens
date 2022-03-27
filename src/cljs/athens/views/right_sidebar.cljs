@@ -69,8 +69,8 @@
                                     {:style {:display "flex"
                                              :WebkitAppRegion "no-drag"
                                              :flex-direction "column"
-                                             :height "100%"
-                                             :paddingTop "3.25rem"
+                                             :height "calc(100% - 3.25rem)"
+                                             :marginTop "3.25rem"
                                              :alignItems "stretch"
                                              :justifySelf "stretch"
                                              :transformOrigin "right"
@@ -93,7 +93,7 @@
                                              :cursor "col-resize"
                                              :position "absolute"
                                              :top 0
-                                             :height "100%"
+                                             :bottom 0
                                              :width "1px"
                                              :zIndex 1
                                              :transitionDuration "0.2s"

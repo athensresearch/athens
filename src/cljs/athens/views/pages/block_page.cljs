@@ -9,6 +9,7 @@
    [athens.views.pages.node-page :as node-page]
    [komponentit.autosize :as autosize]
    [re-frame.core :as rf :refer [dispatch subscribe]]
+   [athens.views.references :refer [reference-group reference-block]]
    [reagent.core :as r]
    [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -57,7 +58,6 @@
          [(r/adapt-react-class Link)]
          [:span "Linked References"]]
         ;; Hide button until feature is implemented
-        ;; [:> Button {:disabled true} [(r/adapt-react-class FilterList)]]]
         [:div (use-style node-page/references-list-style)
          (doall
           (for [[group-title group] linked-refs]
@@ -72,11 +72,10 @@
                                                                                 :right-pane
                                                                                 :main-pane)}])
                                  (router/navigate-page parsed-title)))}
-               group-title]]
              (doall
               (for [block group]
                 [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
-                 [node-page/ref-comp block]]))]))]]])))
+                 [node-page/ref-comp block]]))]]]))]]])))
 
 
 (defn parents-el
@@ -101,7 +100,7 @@
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:div.block-page (use-style node-page/page-style {:data-uid uid})
+        [:<>
          ;; Parent Context
          [parents-el uid id]
 

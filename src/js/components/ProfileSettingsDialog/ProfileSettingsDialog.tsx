@@ -2,8 +2,23 @@ import React from 'react';
 
 import {
   keyframes,
-  Modal, ModalOverlay, ModalFooter, Center, Flex, Box,
-  ButtonGroup, ModalHeader, ModalCloseButton, ModalContent, ModalBody, Text, Heading, VStack, Divider, FormControl, FormHelperText, Input, Avatar, AvatarGroup, Menu, MenuDivider, MenuButton, MenuList, MenuGroup, MenuItem, Button, Popover, PopoverTrigger, PopoverContent, Portal, PopoverBody, AvatarBadge
+  Modal,
+  ModalOverlay,
+  ModalFooter,
+  Center,
+  Flex,
+  Box,
+  ButtonGroup,
+  ModalHeader,
+  ModalCloseButton,
+  ModalContent,
+  ModalBody,
+  Text,
+  FormControl,
+  FormHelperText,
+  Input,
+  Avatar,
+  Button
 } from '@chakra-ui/react';
 
 import { HexColorPicker } from "react-colorful";

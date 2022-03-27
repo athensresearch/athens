@@ -29,9 +29,9 @@
           [:> VStack {:id "daily-notes"
                       :minHeight "calc(100vh + 1px)"
                       :display        "flex"
-                      :gap            "2.5rem"
-                      :py             "1.25rem"
-                      :px             "2.5rem"
+                      :gap            "1.5rem"
+                      :py             "2rem"
+                      :px             "2rem"
                       :alignItems    "stretch"
                       :flex           "1 1 100%"
                       :flexDirection "column"}

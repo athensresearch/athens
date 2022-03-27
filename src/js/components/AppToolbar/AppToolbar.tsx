@@ -88,21 +88,24 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
       height: '44px'
     },
     ".os-windows &": {
-      background: 'background.floor',
+      "&:hover": {
+        background: 'background.floor',
+      },
       paddingLeft: '10px',
     },
     ".os-mac &": {
-      background: 'background.floor',
       paddingLeft: '22px',
       paddingRight: '22px',
       height: '52px',
       borderTopLeftRadius: '12px',
       borderTopRightRadius: '12px',
-      backdropFilter: 'blur(20px)',
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
+      "&:hover": {
+        background: 'background.floor',
+      },
     },
     ".os-mac.is-electron &": { paddingLeft: "88px" },
     ".os-mac.is-fullscreen &": {

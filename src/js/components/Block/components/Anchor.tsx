@@ -1,97 +1,12 @@
 import React, { ReactNode } from 'react';
-import { IconButton, Portal, Popover, PopoverArrow, PopoverTrigger, Box, Text, PopoverContent } from '@chakra-ui/react';
-
-// export const AnchorButton = styled.button`
-//   flex-shrink: 0;
-//   grid-area: bullet;
-//   position: relative;
-//   z-index: 2;
-//   cursor: pointer;
-//   appearance: none;
-//   border: 0;
-//   background: transparent;
-//   transition: all 0.05s ease;
-//   color: inherit;
-//   margin-right: 0.25em;
-//   display: flex;
-//   place-items: center;
-//   place-content: center;
-//   padding: 0;
-//   height: 2em;
-//   width: 1em;
-
-//   svg {
-//     pointer-events: none;
-//     transform: scale(1.0001); // Prevents the bullet being squished
-//     overflow: visible; // Prevents the bullet being cropped
-//     width: 1em;
-//     height: 1em;
-//     color: var(--user-color, var(--body-text-color---opacity-low));
-
-//     * {
-//       vector-effect: non-scaling-stroke;
-//     }
-//   }
-
-//   circle {
-//     fill: currentColor;
-//     transition: fill 0.05s ease, opacity 0.05s ease;
-//   }
-
-//   &:focus {
-//     outline: none;
-//   }
-
-//   &:before {
-//     content: '';
-//     inset: 0.25rem -0.125rem;
-//     z-index: -1;
-//     transition: opacity 0.1s ease;
-//     position: absolute;
-//     border-radius: 0.25rem;
-//     opacity: 0;
-//     background: var(--background-plus-2);
-//     box-shadow: var(--depth-shadow-8);
-//   }
-
-//   &:hover {
-//     color: var(--link-color);
-//     z-index: 100;
-//   }
-
-//   &:hover,
-//   &:hover:before,
-//   &:focus-visible:before {
-//     opacity: 1;
-//   }
-
-//   &.closed-with-children {
-//     circle {
-//       stroke: var(--body-text-color);
-//       fill: var(--body-text-color---opacity-low);
-//       r: 5;
-//       stroke-width: 2px;
-//       opacity: var(--opacity-med);
-//     }
-//   }
-
-//   &:hover svg {
-//     transform: scale(1.3);
-//   }
-
-//   &.dragging {
-//     z-index: 1;
-//     cursor: grabbing;
-//     color: var(--body-text-color);
-//   }
-// `;
+import { Menu, MenuList, MenuItem, MenuGroup, MenuDivider, MenuButton, IconButton, Portal, Box, Text } from '@chakra-ui/react';
 
 const anchorElements = {
   circle: <svg viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="4" />
   </svg>,
   dash: <svg viewBox="0 0 1 1">
-    <line x1="-1" y1="0" x2="1" y2="0" stroke="currentColor" strokeWidth="0.5" />
+    <line x1="-1" y1="0" x2="1" y2="0" />
   </svg>
 }
 
@@ -152,6 +67,10 @@ export interface AnchorProps {
   isClosedWithChildren: boolean;
   block: any;
   shouldShowDebugDetails: boolean;
+  as: ReactNode;
+  onContextMenu: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  onCopyRefs: () => void;
+  onCopyUnformatted: () => void;
 }
 
 interface AnchorButtonProps {
@@ -200,10 +119,18 @@ const AnchorButton = React.forwardRef((props: AnchorButtonProps, ref) => {
         }
       },
       "circle": {
+        transformOrigin: 'center',
+        transition: 'all 0.15s ease-in-out',
+        stroke: "transparent",
+        strokeWidth: "0.125em",
         fill: "currentColor",
+        ...isClosedWithChildren && ({
+          transform: "scale(1.25)",
+          stroke: 'currentColor',
+          fill: "none",
+        })
       }
-    }
-    }
+    }}
     {...props}
   >
     {children}
@@ -216,32 +143,44 @@ const AnchorButton = React.forwardRef((props: AnchorButtonProps, ref) => {
  * A handle and indicator of a block's position in the document
 */
 export const Anchor = (props: AnchorProps) => {
-  const { isClosedWithChildren, anchorElement, shouldShowDebugDetails, block } = props;
+  const { isClosedWithChildren,
+    anchorElement,
+    shouldShowDebugDetails,
+    onCopyRefs,
+    onCopyUnformatted,
+    block } = props;
 
-  const anchor = (<AnchorButton isClosedWithChildren={isClosedWithChildren}>
-    {anchorElements[ anchorElement ] || anchorElements[ 'circle' ]}
-  </AnchorButton>);
+  const [ isOpen, setIsOpen ] = React.useState(false);
 
-  if (!shouldShowDebugDetails) {
-    return anchor
-  } else {
-    return (
-      <Popover
-        size="sm"
-        isLazy={true}
-        trigger="hover"
-        placement="right-start"
+  return (
+    <Menu isOpen={isOpen} onClose={() => setIsOpen(false)}>
+      <AnchorButton
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsOpen(true);
+        }}
+        isClosedWithChildren={isClosedWithChildren}
+        {...props}
+        as={MenuButton}
       >
-        <PopoverTrigger>
-          {anchor}
-        </PopoverTrigger>
-        <Portal>
-          <PopoverContent width="8rem">
-            <PopoverArrow />
-            <Box p={1}>{propertiesList(block)}</Box>
-          </PopoverContent>
-        </Portal>
-      </Popover>
-    )
-  }
+        {anchorElements[ anchorElement ] || anchorElements[ 'circle' ]}
+      </AnchorButton>
+      <Portal>
+        <MenuList>
+          <MenuItem onClick={onCopyRefs}>Copy block refs</MenuItem>
+          <MenuItem onClick={onCopyUnformatted}>Copy unformatted</MenuItem>
+          {shouldShowDebugDetails && (
+            <>
+              <MenuDivider />
+              <MenuGroup title="Debug details">
+                <Box px={4} pb={3}>
+                  {propertiesList(block)}
+                </Box>
+              </MenuGroup>
+            </>)}
+        </MenuList>
+      </Portal>
+    </Menu>
+  )
 };

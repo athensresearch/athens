@@ -14,6 +14,10 @@ const shadows = {
   page: '0 0.25rem 1rem #00000055',
 }
 
+const fonts = {
+  code: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
+}
+
 const radii = {
   none: '0',
   sm: '0.25rem',
@@ -36,13 +40,8 @@ const colors = {
   backgroundColorLight: "#F6F6F6",
   backgroundMinus1Light: "#FAF8F6",
   backgroundMinus2Light: "#EFEDEB",
-
   backgroundVibrancyLight: "#ffffff55",
 
-  confirmationLight: "#009E23",
-  headerLight: "#322F38",
-  bodyLight: "#433F38",
-  borderLight: "hsla(32, 81%, 10:  0.08)",
   errorLight: "#fd5243",
   shadowLight: "#000",
 
@@ -52,7 +51,6 @@ const colors = {
   backgroundColorDark: "#1A1A1A",
   backgroundPlus1Dark: "#222",
   backgroundPlus2Dark: "#333",
-
   backgroundVibrancyDark: "#222222cc",
 
   linkDark: "#498eda",
@@ -62,10 +60,6 @@ const colors = {
   highlightContrastDark: "#000",
   warningDark: "#DE3C21",
 
-  confirmationDark: "#189E36",
-  headerDark: "#BABABA",
-  bodyDark: "#AAA",
-  borderDark: "hsla(32, 81%, 90%, 0.08)",
   errorDark: "#fd5243",
   shadowDark: "#000",
 }
@@ -148,22 +142,22 @@ const semanticTokens = {
     },
     // status colors
     danger: {
-      default: 'red',
-      _dark: 'red'
+      default: 'warningLight',
+      _dark: 'warningDark'
+    },
+    info: {
+      default: 'linkLight',
+      _dark: 'linkDark'
     },
     warning: {
       default: 'warningLight',
       _dark: 'warningDark'
     },
-    confirmation: {
+    success: {
       default: 'confirmationLight',
       _dark: 'confirmationDark'
     },
     // other colors
-    headerText: {
-      default: 'headerLight',
-      _dark: 'headerDark'
-    },
     textHighlight: {
       default: 'textHighlightLight',
       _dark: 'textHighlightDark'
@@ -183,17 +177,64 @@ const semanticTokens = {
     linkContrast: {
       default: 'linkContrastLight',
       _dark: 'linkContrastDark'
+    },
+    // block content colors
+    "ref.feature": {
+      default: "#fbbe6322",
+      _dark: "#fbbe6322",
+    }
+  }
+}
+
+const makeAvatarColor = (bg, color) => {
+  if (bg && color) {
+    return {
+      col: bg,
+      color: color,
+    }
+  } else if (bg && !color) {
+    return {
+      bg: bg,
+      color: readableColor(bg)
+    }
+  } else if (color && !bg) {
+    return {
+      bg: readableColor(color),
+      color: color,
     }
   }
 }
 
 const components = {
-  Avatar: {
-    baseStyle: {
-      container: {
-        borderColor: "background.floor"
-      },
+  Alert: {
+    variants: {
+      // variant used by toasts
+      solid: ({ colorScheme }) => ({
+        container: {
+          bg: 'background.vibrancy',
+          backdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: "separator.divider",
+          color: "foreground.primary",
+        },
+        title: {
+          fontWeight: "normal"
+        },
+        icon: {
+          color: colorScheme || "info"
+        }
+      })
     }
+  },
+  Avatar: {
+    baseStyle: ({ bg, color }) => {
+      return {
+        container: {
+          borderColor: "background.floor",
+          ...makeAvatarColor(bg, color)
+        },
+      }
+    },
   },
   Accordion: {
     baseStyle: {
@@ -214,16 +255,14 @@ const components = {
     baseStyle: {
       separator: {
         color: 'separator.border'
-      }
+      },
     }
   },
   Button: {
     baseStyle: {
       color: 'foreground.primary',
       _active: {
-        transitionDuration: '0s',
-        color: 'linkContrast',
-        bg: 'link',
+        transitionDuration: "0s",
       },
       _focus: {
         outline: 'none',
@@ -236,7 +275,14 @@ const components = {
     },
     variants: {
       link: {
-        color: "foreground.primary"
+        color: "link",
+        borderRadius: "unset"
+      },
+      solid: {
+        _active: {
+          color: 'foreground.primary',
+          bg: 'background.attic',
+        },
       }
     },
     colorSchemes: {
@@ -254,9 +300,7 @@ const components = {
     baseStyle: {
       fontSize: "1em",
       _active: {
-        transitionDuration: '0s',
-        color: 'linkContrast',
-        bg: 'link',
+        transitionDuration: "0s",
       },
       _focus: {
         outline: 'none',
@@ -266,17 +310,30 @@ const components = {
         outline: 'none',
         boxShadow: 'focus'
       }
+    },
+    variants: {
+      solid: {
+        _active: {
+          color: 'linkContrast',
+          bg: 'link',
+        },
+      }
     }
   },
   Menu: {
     baseStyle: {
       list: {
         zIndex: 3,
+        overflow: 'hidden',
+        py: 0,
         bg: 'background.upper',
         shadow: 'menu'
       },
       groupTitle: {
-        color: "foreground.secondary"
+        color: "foreground.secondary",
+        textTransform: "uppercase",
+        fontSize: "0.75em",
+        fontWeight: "bold",
       }
     },
     sizes: {
@@ -416,4 +473,4 @@ const sizes = {
   ...spacing
 }
 
-export const theme = extendTheme({ config, radii, colors, shadows, semanticTokens, spacing, sizes, components, styles });
+export const theme = extendTheme({ config, radii, fonts, colors, shadows, semanticTokens, spacing, sizes, components, styles });

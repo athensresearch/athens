@@ -1,47 +1,37 @@
 (ns athens.views.pages.node-page
   (:require
-    ["/components/Block/components/Anchor" :refer [Anchor]]
-    ["/components/Dialog/Dialog" :refer [Dialog]]
-    ["@chakra-ui/react" :refer [Box Button Portal Heading IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink]]
-    ["@material-ui/icons/Bookmark" :default Bookmark]
-    ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
-    ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/Delete" :default Delete]
-    ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
-    [athens.common-db :as common-db]
-    [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
-    [athens.common.utils :as utils]
-    [athens.dates :as dates]
-    [athens.db :as db :refer [get-unlinked-references]]
-    [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
-    [athens.reactive :as reactive]
-    [athens.router :as router]
-    [athens.style :refer [color ]]
-    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
-    [athens.views.blocks.core :as blocks]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [athens.views.hoc.perf-mon     :as perf-mon]
-    [clojure.string :as str]
-    [datascript.core :as d]
-    [komponentit.autosize :as autosize]
-    [re-frame.core :as rf :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]])
+   ["/components/Block/components/Anchor" :refer [Anchor]]
+   ["/components/Dialog/Dialog" :refer [Dialog]]
+   ["@chakra-ui/react" :refer [Box Button Portal Heading IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+   ["@material-ui/icons/Bookmark" :default Bookmark]
+   ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
+   ["@material-ui/icons/BubbleChart" :default BubbleChart]
+   ["@material-ui/icons/Delete" :default Delete]
+   ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
+   [athens.common-db :as common-db]
+   [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
+   [athens.common.utils :as utils]
+   [athens.dates :as dates]
+   [athens.db :as db :refer [get-unlinked-references]]
+   [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+   [athens.reactive :as reactive]
+   [athens.router :as router]
+   [athens.style :refer [color]]
+   [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
+   [athens.views.blocks.core :as blocks]
+   [athens.views.blocks.textarea-keydown :as textarea-keydown]
+   [athens.views.references :refer [reference-group reference-block]]
+   [athens.views.hoc.perf-mon     :as perf-mon]
+   [clojure.string :as str]
+   [datascript.core :as d]
+   [komponentit.autosize :as autosize]
+   [re-frame.core :as rf :refer [dispatch subscribe]]
+   [reagent.core :as r]
+   [stylefy.core :as stylefy :refer [use-style]])
   (:import
-    (goog.events
-      KeyCodes)))
+   (goog.events
+    KeyCodes)))
 
-
-;; -------------------------------------------------------------------
-;; --- material ui ---
-
-
-
-(def page-style
-  {:margin "2rem auto"
-   :padding "1rem 2rem 10rem 3rem"
-   :flex-basis "100%"
-   :max-width "55rem"})
 
 
 (def page-header-style
@@ -259,10 +249,12 @@
 
 (defn placeholder-block-el
   [parent-uid]
-  [:div {:class "block-container"}
-   [:div {:style {:display "flex"}}
+  [:> Box {:class "block-container"}
+   [:> Box {:display "flex"}
     [:> Anchor]
-    [:span {:on-click #(handle-new-first-child-block-click parent-uid)} "Click here to add content..."]]])
+    [:> Button {:variant "link"
+                :onClick #(handle-new-first-child-block-click parent-uid)}
+     "Click here to add content..."]]])
 
 
 (defn sync-title
@@ -290,7 +282,9 @@
 
 (defn menu-dropdown
   [node daily-note?]
-  (let [{:block/keys [uid] sidebar :page/sidebar title :node/title} node]
+  (let [{:block/keys [uid] sidebar
+         :page/sidebar title
+         :node/title} node]
     [:> Menu
      [:> MenuButton {:as IconButton
                      :position "absolute"
@@ -348,8 +342,7 @@
       (let [{:keys [block parents embed-id]} @state
             block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
-         [:> Breadcrumb {:fontSize "0.65em"
-                         :pl 6}
+         [:> Breadcrumb {:fontSize "0.7em" :pl 6}
           (doall
            (for [{:keys [node/title block/string block/uid]} parents]
              [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
@@ -358,7 +351,7 @@
                                 new-P (drop-last parents)]
                             (swap! state assoc :block new-B :parents new-P))}
                [parse-and-render (or title string) uid]]]))]
-         [:div.block-embed
+         [:> Box {:class "block-embed"}
           [blocks/block-el
            (recursively-modify-block-for-embed block embed-id)
            linked-ref-data
@@ -376,106 +369,100 @@
        [:> AccordionItem
         [:h2
          [:> AccordionButton {:onClick (fn [] (swap! state update linked? not))}
-         [:> AccordionIcon]
+          [:> AccordionIcon]
           linked?]]
-        [:> AccordionPanel
-         (doall
-          (for [[group-title group] linked-refs]
-            [:div (use-style references-group-style {:key (str "group-" group-title)})
-             [:h4 (use-style references-group-title-style)
-              [:a {:on-click (fn [e]
-                               (let [shift?       (.-shiftKey e)
-                                     parsed-title (parse-renderer/parse-title group-title)]
-                                 (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
-                                                                      :target :page
-                                                                      :pane   (if shift?
-                                                                                :right-pane
-                                                                                :main-pane)}])
-                                 (router/navigate-page parsed-title e)))}
-               group-title]]
-             (doall
-              (for [block group]
-                ^{:key (str "ref-" (:block/uid block))}
-                [:div {:style {:display         "flex"
-                               :flex            "1 1 100%"
-                               :justify-content "space-between"
-                               :align-items     "flex-start"}}
-                 [:div (use-style references-group-block-style)
-                  [ref-comp block]]]))]))]]])))
+        [:> AccordionPanel {:px 0}
+         [:> VStack {:spacing 6
+                     :pl 1
+                     :align "stretch"}
+          (doall
+           (for [[group-title group] linked-refs]
+             [reference-group {:title group-title
+                               :on-click-title (fn [e]
+                                                 (let [shift?       (.-shiftKey e)
+                                                       parsed-title (parse-renderer/parse-title group-title)]
+                                                   (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
+                                                                                        :target :page
+                                                                                        :pane   (if shift?
+                                                                                                  :right-pane
+                                                                                                  :main-pane)}])
+                                                   (router/navigate-page parsed-title e)))}
+              (doall
+               (for [block group]
+                [reference-block {:key (str "ref-" (:block/uid block))}
+                 [ref-comp block]]))]))]]]])))
+
 
 
 (defn unlinked-ref-el
   [state daily-notes? unlinked-refs title]
   (let [unlinked? "Unlinked References"]
     (when (not daily-notes?)
-       [:> Accordion {:index (if (get @state unlinked?) 0 nil)}
-        [:> AccordionItem
-         [:> Box {:as "h2"
-                  :position "relative"}
-          [:> AccordionButton
-           {:onClick (fn []
-                       (if (get @state unlinked?)
-                         (swap! state assoc unlinked? false)
-                         (let [un-refs (get-unlinked-references (escape-str title))]
-                           (swap! state assoc unlinked? true)
-                           (reset! unlinked-refs un-refs))))}
-           [:> AccordionIcon]
-           unlinked?]
-          (when (and unlinked? (not-empty @unlinked-refs))
-            [:> Button {:position "absolute"
-                        :size "sm"
-                        :fontSize "sm"
-                        :top 1
-                        :right 1
-                        :onClick (fn []
-                                   (let [unlinked-str-ids (->> @unlinked-refs
-                                                               (mapcat second)
-                                                               (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
-                                     (dispatch [:unlinked-references/link-all unlinked-str-ids title]))
+      [:> Accordion {:index (if (get @state unlinked?) 0 nil)}
+       [:> AccordionItem
+        [:> Box {:as "h2" :position "relative"}
+         [:> AccordionButton {:onClick (fn []
+                                         (if (get @state unlinked?)
+                                           (swap! state assoc unlinked? false)
+                                           (let [un-refs (get-unlinked-references (escape-str title))]
+                                             (swap! state assoc unlinked? true)
+                                             (reset! unlinked-refs un-refs))))}
+          [:> AccordionIcon]
+          unlinked?]
+         (when (and unlinked? (not-empty @unlinked-refs))
+           [:> Button {:position "absolute"
+                       :size "xs"
+                       :top 1
+                       :right 1
+                       :onClick (fn []
+                                  (let [unlinked-str-ids (->> @unlinked-refs
+                                                              (mapcat second)
+                                                              (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
+                                    (dispatch [:unlinked-references/link-all unlinked-str-ids title]))
 
-                                   (swap! state assoc unlinked? false)
+                                  (swap! state assoc unlinked? false)
 
-                                   (reset! unlinked-refs []))}
-             "Link All"])]
-        [:> AccordionPanel
-         [:div (use-style references-list-style)
+                                  (reset! unlinked-refs []))}
+            "Link All"])]
+        [:> AccordionPanel {:px 0}
+         [:> VStack {:spacing 6
+                     :pl 1
+                     :align "stretch"}
           (doall
            (for [[[group-title] group] @unlinked-refs]
-             [:div (use-style references-group-style {:key (str "group-" group-title)})
-              [:h4 (use-style references-group-title-style)
-               [:a {:on-click (fn [e]
-                                (let [shift?       (.-shiftKey e)
-                                      parsed-title (parse-renderer/parse-title group-title)]
-                                  (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
-                                                                       :target :page
-                                                                       :pane   (if shift?
-                                                                                 :right-pane
-                                                                                 :main-pane)}])
-                                  (router/navigate-page parsed-title e)))}
-                group-title]]
+             [reference-group
+              {:title group-title
+               :on-click-title (fn [e]
+                                 (let [shift?       (.-shiftKey e)
+                                       parsed-title (parse-renderer/parse-title group-title)]
+                                   (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
+                                                                        :target :page
+                                                                        :pane   (if shift?
+                                                                                  :right-pane
+                                                                                  :main-pane)}])
+                                   (router/navigate-page parsed-title e)))}
               (doall
                (for [block group]
-                 ^{:key (str "ref-" (:block/uid block))}
-                 [:div {:style {:display         "flex"
-                                :justify-content "space-between"
-                                :align-items     "flex-start"}}
-                  [:div (merge
-                         (use-style references-group-block-style)
-                         {:style {:max-width "90%"}})
-                   [ref-comp block]]
-                  (when unlinked?
-                    [:> Button {:style    {:margin-top "1.5em"}
-                                :on-click (fn []
-                                            (let [hm                (into (hash-map) @unlinked-refs)
-                                                  new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
-                                                                                                                (= uid (:block/uid block)))
-                                                                                                              %))
-                                                                         seq)]
-                                                ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
-                                              (reset! unlinked-refs new-unlinked-refs)
-                                              (dispatch [:unlinked-references/link block title])))}
-                     "Link"])]))]))]]]])))
-
+                 [reference-block
+                  {:key (str "ref-" (:block/uid block))
+                   :actions (when unlinked?
+                              [:> Button {:marginTop "1.5em"
+                                          :size "xs"
+                                          :flex "0 0"
+                                          :float "right"
+                                          :variant "link"
+                                          :onClick (fn []
+                                                     (let [hm                (into (hash-map) @unlinked-refs)
+                                                           new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
+                                                                                                                         (= uid (:block/uid block)))
+                                                                                                                       %))
+                                                                                  seq)]
+                                                       ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
+                                                       (reset! unlinked-refs new-unlinked-refs)
+                                                       (dispatch [:unlinked-references/link block title])))}
+                               "Link"])}
+                  [ref-comp block]]))]))]]]])))
+           
 
 
 ;; TODO: where to put page-level link filters?
@@ -498,11 +485,9 @@
             daily-note?                                                         (dates/is-daily-note uid)
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))]
 
-
         (sync-title title state)
 
-        [:div (use-style page-style {:class    ["node-page"]
-                                     :data-uid uid})
+        [:<>
 
          (when alert-show
            [:> Dialog {:isOpen    true
@@ -510,13 +495,12 @@
                        :onConfirm confirm-fn
                        :onDismiss cancel-fn}])
 
-
          ;; Header
          [:header (use-style page-header-style)
 
           ;; Dropdown
           [menu-dropdown node daily-note?]
-          
+
           [:> Heading {:data-uid uid
                        :class    "page-header"
                        :position "relative"

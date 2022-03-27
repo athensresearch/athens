@@ -84,24 +84,26 @@
     (fn []
       (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
         [:> Box {:px 4
-                 :margin "5rem auto"}
-         [:> Table {:variant "striped"
-                    :max-width "70rem"}
+                 :margin "2rem auto 5rem"}
+         [:> Table {:variant "striped"}
           [:> Thead
            [:> Tr
             [sortable-header :title "Title"]
             [sortable-header :links-count "Links" "12rem" true]
-            [sortable-header :modified "Modified" "20rem" false {:date? true}]
-            [sortable-header :created "Created" "20rem" false {:date? true}]]]
+            [sortable-header :modified "Modified" "16rem" false {:date? true}]
+            [sortable-header :created "Created" "16rem" false {:date? true}]]]
           [:> Tbody
            (doall
             (for [{:keys    [block/uid node/title block/_refs]
                    modified :edit/time
                    created  :create/time} sorted-pages]
               [:> Tr {:key uid}
-               [:> Td
+               [:> Td {:overflow "hidden"}
                 [:> Button {:variant "link"
                             :color "link"
+                            :display "block"
+                            :maxWidth "100%"
+                            :whiteSpace "nowrap"
                             :onClick (fn [e]
                                        (let [shift? (.-shiftKey e)]
                                          (rf/dispatch [:reporting/navigation {:source :all-pages
@@ -111,6 +113,6 @@
                                                                                         :main-pane)}])
                                          (router/navigate-page title e)))}
                  title]]
-               [:> Td {:width "12rem" :color "foreground.secondary" :isNumeric true} (count _refs)]
-               [:> Td {:width "18rem" :color "foreground.secondary"} (dates/date-string modified)]
-               [:> Td {:width "18rem" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))
+               [:> Td {:width "12rem" :whiteSpace "nowrap" :color "foreground.secondary" :isNumeric true} (count _refs)]
+               [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string modified)]
+               [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))

@@ -1,13 +1,12 @@
 import styled, { keyframes } from "styled-components";
 import React from "react";
 
-import { Text, Heading, VStack, Divider, Avatar, AvatarGroup, Menu, MenuDivider, MenuButton, MenuList, MenuGroup, MenuItem, Button, Popover, PopoverTrigger, PopoverContent, Portal, PopoverBody } from '@chakra-ui/react';
+import { Text, Tooltip, Avatar, AvatarGroup, Menu, MenuDivider, MenuButton, MenuList, MenuGroup, MenuItem, Button, Portal } from '@chakra-ui/react';
 
 import { RefreshDouble, Lock } from "iconoir-react";
 
 import { ProfileSettingsDialog } from "@/ProfileSettingsDialog";
 import { ConnectedGraphConnection } from "@/Icons/ConnectedGraphConnection";
-import { ConnectedGraphHost } from "@/Icons/ConnectedGraphHost";
 import { Icon } from "@/Icons/Icon";
 
 const rotate = keyframes`
@@ -79,12 +78,42 @@ export interface PresenceDetailsProps {
   connectionStatus: ConnectionStatus;
   defaultOpen?: boolean;
 }
-
-interface PresenceDetailsPopoverProps {
-  children: React.ReactNode;
-  isOpen: boolean;
-  onClose: () => void;
+interface ConnectionButtonProps {
+  connectionStatus: ConnectionStatus;
+  showablePersons: Person[];
 }
+
+const ConnectionButton = React.forwardRef((props: ConnectionButtonProps, ref) => {
+  const { connectionStatus, showablePersons } = props;
+  return (
+    <Tooltip label={showablePersons.length + " members online"}>
+      <Button
+        ref={ref as any}
+        as={MenuButton}
+        bg="transparent"
+        borderRadius="full"
+        px={1}
+        _hover={{
+          bg: "background.upper",
+        }}
+      >
+        {connectionStatus === "connected" && (
+          showablePersons.length > 0 && (
+            <AvatarGroup size="xs" max={5}>
+              {showablePersons.map((member) => (
+                <Avatar
+                  key={member.personId}
+                  name={member.username}
+                  bg={member.color} />
+              ))}
+            </AvatarGroup>
+          )
+        )}
+      </Button>
+    </Tooltip>
+  )
+});
+
 
 export const PresenceDetails = (props: PresenceDetailsProps) => {
   const {
@@ -96,7 +125,6 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
     handlePressMember,
     handleUpdateProfile,
     connectionStatus,
-    defaultOpen,
   } = props;
   const showablePersons = [ ...currentPageMembers, ...differentPageMembers ];
   const [ shouldShowProfileSettings, setShouldShowProfileSettings ] = React.useState(false);
@@ -106,26 +134,10 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
   ) : (
     <>
       <Menu placement="bottom-end" size="sm">
-        <MenuButton>
-          <Button
-            bg="transparent"
-            borderRadius="full"
-            px={1}
-            _hover={{
-              bg: "background.upper",
-            }}
-          >
-            {connectionStatus === "connected" && (
-              showablePersons.length > 0 && (
-                <AvatarGroup size="xs" max={5}>
-                  {showablePersons.map((member) => (
-                    <Avatar key={member.personId} name={member.username} bg={member.color} />
-                  ))}
-                </AvatarGroup>
-              )
-            )}
-          </Button>
-        </MenuButton>
+        <ConnectionButton
+          connectionStatus={connectionStatus}
+          showablePersons={showablePersons}
+        />
         <Portal>
           <MenuList>
             <>
@@ -190,7 +202,7 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
                           marginBlock={-1}
                           size="xs"
                           name={member.username}
-                          color={member.color}
+                          bg={member.color}
                         />}
                       >
                         {member.username}
