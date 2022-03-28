@@ -1,11 +1,11 @@
 import React, { ReactNode } from 'react';
-import { Menu, MenuList, MenuItem, MenuGroup, MenuDivider, MenuButton, IconButton, Portal, Box, Text } from '@chakra-ui/react';
+import { Menu, MenuList, MenuItem, MenuGroup, MenuDivider, MenuButton, IconButton, Portal, Box, Text, ButtonProps } from '@chakra-ui/react';
 
-const anchorElements = {
-  circle: <svg viewBox="0 0 24 24">
+const ANCHORS = {
+  CIRCLE: <svg viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="4" />
   </svg>,
-  dash: <svg viewBox="0 0 1 1">
+  DASH: <svg viewBox="0 0 1 1">
     <line x1="-1" y1="0" x2="1" y2="0" />
   </svg>
 }
@@ -71,42 +71,37 @@ export interface AnchorProps {
   onContextMenu: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
   onCopyRefs: () => void;
   onCopyUnformatted: () => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  onClick: () => void;
 }
 
-interface AnchorButtonProps {
-  children: ReactNode;
-  isClosedWithChildren: boolean;
-}
-
-const AnchorButton = React.forwardRef((props: AnchorButtonProps, ref) => {
-  const { children, isClosedWithChildren } = props;
-
-  return (<IconButton
-    ref={ref as any}
-    bg="transparent"
-    aria-label="Block anchor"
-    className={[ 'anchor', isClosedWithChildren && 'closed-with-children' ].filter(Boolean).join(' ')}
-    draggable={true}
-    gridArea="bullet"
-    flexShrink={0}
-    position='relative'
-    appearance="none"
-    border="0"
-    color="inherit"
-    mr={0.25}
-    display="flex"
-    placeItems="center"
-    placeContent="center"
-    zIndex={2}
-    minWidth="0"
-    minHeight="0"
-    h="2em"
-    w="1.25em"
-    fontSize="inherit"
-    mx="-0.125em"
-    size="sm"
-    p={0}
-    sx={{
+const anchorButtonStyleProps = (isClosedWithChildren) => {
+  return ({
+    bg: "transparent",
+    "aria-label": "Block anchor",
+    className: [ 'anchor', isClosedWithChildren && 'closed-with-children' ].filter(Boolean).join(' '),
+    draggable: true,
+    gridArea: "bullet",
+    flexShrink: 0,
+    position: 'relative',
+    appearance: "none",
+    border: "0",
+    color: "inherit",
+    mr: 0.25,
+    display: "flex",
+    placeItems: "center",
+    placeContent: "center",
+    zIndex: 2,
+    minWidth: "0",
+    minHeight: "0",
+    h: "2em",
+    w: "1.25em",
+    fontSize: "inherit",
+    mx: "-0.125em",
+    size: "sm",
+    p: 0,
+    sx: {
       "svg": {
         pointerEvents: "none",
         transform: "scale(1.0001)", // Prevents the bullet being squished
@@ -130,13 +125,9 @@ const AnchorButton = React.forwardRef((props: AnchorButtonProps, ref) => {
           fill: "none",
         })
       }
-    }}
-    {...props}
-  >
-    {children}
-  </IconButton>);
-}
-);
+    }
+  })
+};
 
 
 /**
@@ -148,24 +139,33 @@ export const Anchor = (props: AnchorProps) => {
     shouldShowDebugDetails,
     onCopyRefs,
     onCopyUnformatted,
+    onContextMenu,
+    onDragStart,
+    onDragEnd,
+    onClick,
     block } = props;
 
   const [ isOpen, setIsOpen ] = React.useState(false);
 
   return (
     <Menu isOpen={isOpen} onClose={() => setIsOpen(false)}>
-      <AnchorButton
+      <IconButton
+        {...anchorButtonStyleProps(isClosedWithChildren)}
+        onDragStart={onDragStart}
+        onClick={onClick}
+        onDragEnd={onDragEnd}
+        onContextMenu={onContextMenu}
+        isClosedWithChildren={isClosedWithChildren}
         onContextMenu={(e) => {
+          console.log(e);
           e.preventDefault();
           e.stopPropagation();
           setIsOpen(true);
         }}
-        isClosedWithChildren={isClosedWithChildren}
-        {...props}
         as={MenuButton}
       >
-        {anchorElements[ anchorElement ] || anchorElements[ 'circle' ]}
-      </AnchorButton>
+        {ANCHORS[ anchorElement ] || ANCHORS.CIRCLE}
+      </IconButton>
       <Portal>
         <MenuList>
           <MenuItem onClick={onCopyRefs}>Copy block refs</MenuItem>
