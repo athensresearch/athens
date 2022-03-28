@@ -5,6 +5,7 @@
   If a migration fails, it should throw an error.
   A good way to make something interruptible is to ensure its idempotent."
   (:require
+    [athens.self-hosted.fluree.utils :as fu]
     [clojure.string :as str]
     [clojure.tools.logging :as log]
     [fluree.db.api :as fdb]))
@@ -14,12 +15,8 @@
 
 (defn get-predicate-values
   [conn ledger predicate]
-  (-> conn
-      (fdb/db ledger)
-      (fdb/query {:select "?o"
-                  :where  [["?s" predicate "?o"]]})
-      deref
-      set))
+  (set (fu/query conn ledger {:select "?o"
+                              :where  [["?s" predicate "?o"]]})))
 
 
 (defn internal-name?
@@ -67,7 +64,7 @@
 (defn migrate-to-1
   [conn ledger]
   (when-not ((collections conn ledger) "migrations")
-    @(fdb/transact conn ledger migration-1-schema)))
+    (fu/transact! conn ledger migration-1-schema)))
 
 
 (def bootstrap-migrations
@@ -80,8 +77,8 @@
 
 (defn set-migration-version!
   [conn ledger version]
-  @(fdb/transact conn ledger [{:_id :migrations
-                               :migrations/version version}]))
+  (fu/transact! conn ledger [{:_id :migrations
+                              :migrations/version version}]))
 
 
 (defn get-current-version

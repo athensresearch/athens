@@ -3,6 +3,7 @@
     [athens.async :as athens.async]
     [athens.athens-datoms :as datoms]
     [athens.self-hosted.event-log-migrations :as event-log-migrations]
+    [athens.self-hosted.fluree.utils :as fu]
     [athens.self-hosted.migrate :as migrate]
     [clojure.core.async :as async]
     [clojure.data :as data]
