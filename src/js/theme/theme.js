@@ -213,9 +213,16 @@ const components = {
         container: {
           bg: 'background.vibrancy',
           backdropFilter: "blur(20px)",
-          border: "1px solid",
-          borderColor: "separator.divider",
           color: "foreground.primary",
+          _after: {
+            content: "''",
+            position: "absolute",
+            inset: 0,
+            borderRadius: "inherit",
+            background: colorScheme,
+            opacity: 0.1,
+            zIndex: -1,
+          }
         },
         title: {
           fontWeight: "normal"
