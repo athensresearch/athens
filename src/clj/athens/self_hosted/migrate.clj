@@ -83,12 +83,11 @@
 
 (defn get-current-version
   [conn ledger]
-  (-> conn
-      (fdb/db ledger)
-      (fdb/query {:select "(max ?v)"
-                  :where [["?s" "migrations/version" "?v"]]})
-      deref
-      (or 0)))
+  (let [ret (fu/query conn ledger {:select "(max ?v)"
+                                   :where [["?s" "migrations/version" "?v"]]})]
+    (if (ex-message ret)
+      0
+      (or ret 0))))
 
 
 (defn run-migration!
