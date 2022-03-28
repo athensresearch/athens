@@ -55,7 +55,7 @@
 
 (ns athens.views.blocks.autocomplete-slash
   (:require
-    ["/components/Button/Button" :refer [Button]]
+    ["@chakra-ui/react" :refer [Portal Menu MenuList MenuItem]]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [goog.events :as events]
     [reagent.core :as r]))
@@ -83,19 +83,23 @@
       :reagent-render         (fn [block state]
                                 (let [{:search/keys [index results type] caret-position :caret-position} @state
                                       {:keys [left top]} caret-position]
-                                  (when (= type :slash)
-                                    [:div
-                                     {:ref #(reset! ref %)
-                                      ;; don't blur textarea when clicking to auto-complete
-                                      :on-mouse-down (fn [e] (.. e preventDefault))
-                                      :style {:position "absolute" :left (+ left 24) :top (+ top 24)}}
-                                     [:div#dropdown-menu {:style {:max-height "8em"}}
-                                      (doall
-                                       (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
-                                         [:> Button {:key      text
-                                                     :id       (str "dropdown-item-" i)
-                                                     :is-pressed (= i index)
-                                                     :on-click (fn [_] (slash-item-click state block item))}
-                                          [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
+                                  [:> Portal
+                                   [:> Menu {:isOpen (= type :slash)
+                                             :ref #(reset! ref %)
+                                             ;; don't blur textarea when clicking to auto-complete
+                                             :on-mouse-down (fn [e] (.. e preventDefault))}
+                                    [:> MenuList {:position "absolute"
+                                                  :left (+ left 0)
+                                                  :top (+ top 24)}
+                                     (doall
+                                      (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
+                                        [:> MenuItem {:key      text
+                                                      :id       (str "dropdown-item-" i)
+                                                      :isActive (= i index)
+                                                      :command  kbd
+                                                      :onClick (fn [_] (slash-item-click state block item))}
+                                         [:<>
+                                          [(r/adapt-react-class icon)]
+                                          [:span text]]]))]]]))})))
 
 

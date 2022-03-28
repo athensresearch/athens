@@ -347,6 +347,7 @@ const components = {
       sm: {
         item: {
           padding: '0.5rem 1rem',
+          fontSize: "sm"
         }
       }
     }

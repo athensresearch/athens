@@ -1,27 +1,28 @@
 (ns athens.views.blocks.textarea-keydown
   (:require
-    ["@material-ui/icons/DesktopWindows" :default DesktopWindows]
-    ["@material-ui/icons/Done" :default Done]
-    ["@material-ui/icons/FlipToFront" :default FlipToFront]
-    ["@material-ui/icons/Timer" :default Timer]
-    ["@material-ui/icons/Today" :default Today]
-    ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
-    ["@material-ui/icons/YouTube" :default YouTube]
-    [athens.common-db :as common-db]
-    [athens.common.utils :as common.utils]
-    [athens.dates :as dates]
-    [athens.db :as db]
-    [athens.events.selection :as select-events]
-    [athens.router :as router]
-    [athens.subs.selection :as select-subs]
-    [athens.util :as util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
-    [athens.views.blocks.internal-representation :as internal-representation]
-    [clojure.string :refer [replace-first blank? includes? lower-case]]
-    [goog.dom :refer [getElement]]
-    [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
-    [goog.events.KeyCodes :refer [isCharacterKey]]
-    [goog.functions :refer [throttle #_debounce]]
-    [re-frame.core :as rf :refer [dispatch dispatch-sync subscribe]])
+   ["@material-ui/icons/DesktopWindows" :default DesktopWindows]
+   ["@material-ui/icons/Done" :default Done]
+   ["@material-ui/icons/FlipToFront" :default FlipToFront]
+   ["@material-ui/icons/Timer" :default Timer]
+   ["@material-ui/icons/Today" :default Today]
+   ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
+   ["@material-ui/icons/YouTube" :default YouTube]
+   [athens.common-db :as common-db]
+   [athens.common.utils :as common.utils]
+   [athens.dates :as dates]
+   [athens.db :as db]
+   [athens.events.selection :as select-events]
+   [athens.router :as router]
+   [athens.subs.selection :as select-subs]
+   [athens.util :as util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
+   [athens.views.blocks.internal-representation :as internal-representation]
+   [clojure.string :refer [replace-first blank? includes? lower-case]]
+   [goog.dom :refer [getElement]]
+   [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
+   [goog.events.KeyCodes :refer [isCharacterKey]]
+   [goog.functions :refer [throttle #_debounce]]
+   [goog.style :refer [getClientPosition]]
+   [re-frame.core :as rf :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       KeyCodes)))
@@ -813,18 +814,13 @@
       ;; used for paste, to determine if shift key was held down
       (swap! state assoc :last-keydown d-event)
 
-      (js/console.log @state)
-
       ;; update caret position for search dropdowns and for up/down
       (when (nil? (:search/type @state))
+        
         (let [caret-position (get-caret-position (.. e -target))
-              textarea-position (js/getClientBoundingRect (.. e -target))
-              position {:left (+ (:left caret-position) (:x textarea-position))
-                        :top (+ (:top caret-position) (:y textarea-position))}]
-
-          (js/console.log "caret-position", caret-position)
-          (js/console.log "textarea-position", textarea-position)
-          (js/console.log "position", position)
+              textarea-position (js->clj (getClientPosition (.. e -target)) :keywordize-keys true)
+              position {:left (+ (:left caret-position) (.. textarea-position -x))
+                        :top (+ (:top caret-position) (.. textarea-position -y))}]
           (swap! state assoc :caret-position position)))
 
       ;; dispatch center
