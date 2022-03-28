@@ -90,6 +90,7 @@ const ConnectionButton = React.forwardRef((props: ConnectionButtonProps, ref) =>
       <Button
         ref={ref as any}
         as={MenuButton}
+        size="sm"
         bg="transparent"
         borderRadius="full"
         px={1}
