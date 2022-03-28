@@ -3,15 +3,14 @@ import { IconButton } from '@chakra-ui/react';
 
 interface ToggleProps extends React.HTMLAttributes<HTMLButtonElement> {
   isOpen: boolean;
+  onClick: () => void;
 }
 
 /**
  * Button to toggle the visibility of a block's child blocks.
  */
 export const Toggle = React.forwardRef((props: ToggleProps, ref) => {
-  const {
-    isOpen,
-  } = props;
+  const { isOpen, onClick } = props;
 
   return (
     <IconButton
@@ -42,7 +41,7 @@ export const Toggle = React.forwardRef((props: ToggleProps, ref) => {
       sx={{
         "svg": {
           pointerEvents: "none",
-          overflow: "visible", // Prevents the bullet being cropped
+          overflow: "visible",
           width: "1em",
           height: "1em",
           color: "foreground.secondary",
@@ -54,7 +53,7 @@ export const Toggle = React.forwardRef((props: ToggleProps, ref) => {
           }
         },
       }}
-      {...props}
+      onClick={onClick}
     >
       <svg
         width="24"
