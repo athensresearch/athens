@@ -17,7 +17,14 @@
       UUID)))
 
 
-(def ledger "events/log")
+(def default-ledger "events/log")
+
+
+(defn fluree-comp->ledger
+  [fluree]
+  (-> fluree
+      :ledger
+      (or default-ledger)))
 
 
 (def initial-events
@@ -31,8 +38,9 @@
    :event/id (str id)
    :event/data (pr-str data)
    ;; Compute the new order number as 1 higher than last.
+   ;; This will be 1 if there are no events yet.
    ;; NOTE: is max-pred-val efficient for very large collections? I don't know.
-   #_#_:event/order "#(inc (max-pred-val \"event/order\"))"})
+   :event/order "#(inc (max-pred-val \"event/order\"))"})
 
 
 (defn deserialize
@@ -45,22 +53,24 @@
 (defn- events-page
   "Returns {:next-page ... :items ...}, where items is a vector of events in
    page-number for all events in db split by page-size. For use with `iteration`."
-  ([db page-size page-number]
+  ([db since-order page-size page-number]
    {:next-page (inc page-number)
-    :items     @(fdb/query db
-                           {:select {"?event" ["*"]}
-                            :where  [["?event" "event/id", "?id"]]
-                            ;; Subject ID (?event here) is a monotonically incrementing bigint,
-                            ;; so ordering by that gives us event insertion order since events are immutable.
-                            :opts   {:orderBy ["ASC", "?event"]
-                                     :limit   page-size
-                                     :offset  (* page-size page-number)}})}))
+    :items     (fu/query db
+                         {:select {"?event" ["*"]}
+                          :where  [["?event" "event/id", "?id"]
+                                   ["?event" "event/order" (str "#(> ?order " since-order ")")]]
+                          ;; Subject ID (?event here) is a monotonically incrementing bigint,
+                          ;; so ordering by that gives us event insertion order since events are immutable.
+                          :opts   {:orderBy ["ASC", "?order"]
+                                   :limit   page-size
+                                   :offset  (* page-size page-number)}})}))
 
 
-(defn- event-id->subject-id
+(defn- event-id->order
   [db event-id]
-  (first @(fdb/query db {:select "?event"
-                         :where  [["?event" "event/id", (str event-id)]]})))
+  (first (fu/query db {:select "?order"
+                       :where  [["?event" "event/id", (str event-id)]
+                                ["?event" "event/order" "?order"]]})))
 
 
 (defn last-event-id
@@ -68,12 +78,12 @@
   (-> fluree
       :conn-atom
       deref
-      (fdb/db ledger)
-      (fdb/query {:selectOne {"?event" ["*"]}
-                  :where     [["?event" "event/id", "?id"]]
-                  :opts      {:orderBy ["DESC" "?event"]
-                              :limit   1}})
-      deref
+      (fdb/db (fluree-comp->ledger fluree))
+      (fu/query {:selectOne {"?event" ["*"]}
+                 :where     [["?event" "event/id" "?id"]
+                             ["?event" "event/order" "?order"]]
+                 :opts      {:orderBy ["DESC" "?order"]
+                             :limit   1}})
       deserialize
       first))
 
@@ -82,44 +92,27 @@
   "Returns a lazy-seq of all events in conn up to now, starting at optional event-id.
   Can potentially be very large, so don't hold on to the seq head while
   processing, and don't use fns that realize the whole coll (e.g. count)."
-  ([fluree]
-   (let [db   (fdb/db (-> fluree :conn-atom deref) ledger)
-         step (partial events-page db 100)]
-     ;; New core fn added in Clojure 11.
-     ;; See https://www.juxt.pro/blog/new-clojure-iteration for usage example.
-     (->> (iteration step
-                     :kf :next-page
-                     :vf :items
-                     :somef #(-> % :events seq)
-                     :initk 0)
-          (sequence cat)
-          (map deserialize))))
-  ([fluree event-id]
-   (let [db   (fdb/db (-> fluree :conn-atom deref) ledger)
-         step (partial events-page db 100)]
-     (when-not (event-id->subject-id db event-id)
-       (throw (ex-info "Cannot find starting id" {:event-id event-id})))
-     (->> (iteration step
-                     :kf :next-page
-                     :vf :items
-                     :somef #(-> % :events seq)
-                     :initk 0)
-          (sequence cat)
-          (map deserialize)
-          ;; The point here is to get all events since event-id.
-          ;; We're getting all the events, dropping every one until the first one we care about,
-          ;; then dropping that one too.
-          ;; This is a terrible way to do what we want.
-          ;; Instead we should filter out all the events we don't care about on the fluree query.
-          ;; But when I (filipe) tried to do that, it made each events-page query take 30s instead of 0.3s.
-          ;; See https://github.com/fluree/db/issues/160
-          ;; This seems good enough for now.
-          ;; TODO: figure out a performant way to do this.
-          (drop-while (fn [[id]]
-                        (if event-id
-                          (not= event-id id)
-                          false)))
-          (drop 1)))))
+  [fluree & {:keys [since-event-id since-order]}]
+  (let [db           (fdb/db (-> fluree :conn-atom deref)
+                             (fluree-comp->ledger fluree))
+        since-order' (cond
+                       since-order    since-order
+                       since-event-id (or (event-id->order db since-event-id)
+                                          (throw (ex-info "Cannot find starting id"
+                                                          {:since-event-id since-event-id})))
+                       ;; First order number is 1, so if we start
+                       ;; on 0 we will get all events.
+                       :else          0)
+        step         (partial events-page db since-order' 100)]
+    ;; New core fn added in Clojure 11.
+    ;; See https://www.juxt.pro/blog/new-clojure-iteration for usage example.
+    (->> (iteration step
+                    :kf :next-page
+                    :vf :items
+                    :somef #(-> % :items seq)
+                    :initk 0)
+         (sequence cat)
+         (map deserialize))))
 
 
 (defn double-write?
@@ -147,6 +140,7 @@
        (throw (ex-info (str "add-event! timed-out 3 times on " id)
                        {:id id}))
        (let [conn                (-> fluree :conn-atom deref)
+             ledger              (fluree-comp->ledger fluree)
              ch                  (fdb/transact-async conn ledger [(serialize id data)])
              {:keys [status block]
               :as   r}           (async/<!! (athens.async/with-timeout ch timeout :timed-out))]
@@ -178,7 +172,8 @@
   ([fluree]
    (init! fluree initial-events))
   ([fluree seed-events]
-   (let [conn (-> fluree :conn-atom deref)]
+   (let [conn (-> fluree :conn-atom deref)
+         ledger (fluree-comp->ledger fluree)]
      (log/info "Looking for event-log fluree ledger")
      (when (empty? @(fdb/ledger-info conn ledger))
        (log/info "Fluree ledger for event-log not found, creating" ledger)
@@ -192,7 +187,7 @@
              (reset! block (add-event! fluree id data)))
            (log/info "✅ Populated fresh ledger.")
            (log/info "Bringing local ledger to to date with latest transactions...")
-           (events-page (fdb/db conn ledger {:syncTo @block}) 1 0)
+           (fu/wait-for-block conn ledger @block)
            (log/info "✅ Fluree local ledger up to date.")))
        (log/info "✅ Fluree ledger for event-log created."))
      (migrate/migrate-ledger! conn ledger event-log-migrations/migrations))))
@@ -248,7 +243,7 @@
   "Returns {:stop ... :next-page ... :items ...}, where items is a seq of recovered
   events in conn for block=idx+1 in conn. For use with `iteration`."
   [conn idx]
-  (let [res @(fdb/block-query conn ledger {:block (inc idx) :pretty-print true})
+  (let [res @(fdb/block-query conn default-ledger {:block (inc idx) :pretty-print true})
         ex-msg (ex-message res)]
     (println res)
     ;; If the query because the is higher than the total blocks,
@@ -317,7 +312,6 @@
   (count (recovered-events fluree-comp))
 
   ;; Debug event recovery
-  (events-page (fdb/db (-> fluree-comp :conn-atom deref) ledger) 1 1)
   (recover-block-events (-> fluree-comp :conn-atom deref) 3)
   (take 3 (recovered-events fluree-comp))
   (take 3 (events fluree-comp))
@@ -327,4 +321,4 @@
              (take 3 (events fluree-comp)))
 
   ;; Delete ledger.
-  @(fdb/delete-ledger (-> fluree-comp :conn-atom deref) ledger))
+  @(fdb/delete-ledger (-> fluree-comp :conn-atom deref) default-ledger))

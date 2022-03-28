@@ -1,5 +1,6 @@
 (ns athens.self-hosted.fluree.utils
   (:require
+    [clojure.core.async :as async]
     [fluree.db.api :as fdb]))
 
 
@@ -20,12 +21,6 @@
        (query q-data))))
 
 
-(defn sync-to
-  [conn ledger block]
-  (query conn ledger
-         ;; Look up the first collection name.
-         ;; This can be any query, the cheaper the better, all that
-         ;; matters is the :syncTo option.
-         {:selectOne "?o"
-          :where     [["?s" "_collection/name" "?o"]]
-          :opts      {:syncTo block}}))
+(defn wait-for-block
+  [conn ledger expected-block]
+  (async/<!! (fdb/db conn ledger {:syncTo expected-block})))

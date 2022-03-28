@@ -95,11 +95,74 @@
 ;; Adds a order number for fast partial event queries via a filter in a where-triple.
 ;; Existing events are updated to contain the right order number.
 
+(def migration-3-schema
+  [{:_id :_predicate
+    :_predicate/name :event/order
+    ;; TODO: the "strictly increasing" condition could be validated via specs:
+    ;; - collection spec to ensure order is there
+    ;; - predicate spec to ensure the new number is bigger than the max
+    ;; This validation isn't happening here, we're just transacting "correct" data.
+    :_predicate/doc "Strictly increasing big int for event ordering."
+    :_predicate/unique true
+    :_predicate/type :bigint
+    :_predicate/spec [[:_fn/name :immutable]]}])
+
+
+(defn add-order!
+  [conn ledger sid]
+  (fu/transact! conn ledger [{:_id sid
+                              ;; Would be nice to do multiple order numbers in the same tx,
+                              ;; but max-pred-val seems to compute to the value before the tx
+                              ;; and thus will be the same for all events in the tx.
+                              :event/order "#(inc (max-pred-val \"event/order\"))"}]))
+
+
+(defn sid+order-page
+  "Returns {:next-page ... :items ...}, where items is a vector of [subject-id order] in
+  page-number for all events with an event/id in db, ordered by subject-id, split by page-size.
+  Before event/order was added, events were ordered by subject-id as it's a strictly increasing
+  bigint that acts as insertion order.
+  Events without event/order will return nil as order. For use with `iteration`."
+  ([db page-size page-number]
+   {:next-page (inc page-number)
+    :items     (fu/query db {:select ["?event" "?order"]
+                             :where  [["?event" "event/id", "?id"]
+                                      {:optional [["?event" "event/order" "?order"]]}]
+                             :opts   {:orderBy ["ASC", "?event"]
+                                      :limit   page-size
+                                      :offset  (* page-size page-number)}})}))
+
+
+(defn sids-with-missing-order
+  [conn ledger]
+  (let [db   (fdb/db conn ledger)
+        step (partial sid+order-page db 1)]
+    (->> (iteration step
+                    :kf :next-page
+                    :vf :items
+                    :somef #(-> % :items seq)
+                    :initk 0)
+         (sequence cat)
+         ;; Remove items that have a non-nil order in [sid order]
+         (remove second)
+         (map first))))
+
+
+(defn migrate-to-3
+  [conn ledger]
+  (when-not ((migrate/predicates conn ledger) "event/order")
+    (->> (fu/transact! conn ledger migration-3-schema)
+         :block
+         ;; Force sync to ensure query recognizes the new schema predicate.
+         (fu/wait-for-block conn ledger)))
+  (run! (partial add-order! conn ledger)
+        (sids-with-missing-order conn ledger)))
+
 
 (def migrations
   [[1 migrate-to-1]
    [2 migrate-to-2]
-   ;; [3 migrate-to-3]
+   [3 migrate-to-3]
    ;; [4 migrate-to-4]
    ])
 
@@ -141,4 +204,14 @@
   (fu/transact! conn ledger [{:_id [:event/id (nth ids 1)]
                               :event/id (str (random-uuid))
                               :event/data "10"}])
+
+  ;; Migration 3
+  ;; The events inserted above don't have an order id
+  (all-events)
+
+  ;; Running the migration should add it.
+  (migrate-to-3 conn ledger)
+  (all-events)
+
+  ;;
   )

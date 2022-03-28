@@ -57,6 +57,9 @@ jobs:
        - uses: ./.github/custom-actions/clojure-env
        - uses: ./.github/custom-actions/node-env
 
+       - name: Start Fluree process
+         run: yarn server:fluree
+
        - name: Run JVM tests
          run: yarn server:test
 
