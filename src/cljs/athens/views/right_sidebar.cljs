@@ -107,7 +107,7 @@
                                              :on-mouse-down #(swap! state assoc :dragging true)
                                              :class (when (:dragging @state) "is-dragging")}]
                                     [:> Flex {:flexDirection "column"
-                                              :bg "background.upper"
+                                              ;; :bg "background.upper"
                                               :flex 1;
                                               :maxHeight "calc(100vh - 3.25rem - 1px)"
                                               :width (str (:width @state) "vw")
@@ -118,16 +118,17 @@
                                        (doall
                                         (for [[uid {:keys [node/title block/string is-graph?]}] items]
                                           ^{:key uid}
-                                          [:> AccordionItem {:_first {:borderTop 0}}
+                                          [:> AccordionItem {:_first {:borderTop 0} :borderBottom 0}
                                            [:> Box {:as "h2" :position "relative"}
                                             [:> AccordionButton {:borderBottom "1px solid"
                                                                  :borderBottomColor "separator.divider"}
                                              [:> AccordionIcon {:as AddIcon}]
                                              [parse-renderer/parse-and-render (or title string) uid]]
-                                            [:> IconButton {:size "sm"
+                                            [:> IconButton {:size "xs"
                                                             :position "absolute"
-                                                            :right 1
-                                                            :top 1
+                                                            :color "foreground.secondary"
+                                                            :right 5
+                                                            :top 2
                                                             :background "transparent"
                                                             :onClick #(dispatch [:right-sidebar/close-item uid])}
                                              [:> Close]]]

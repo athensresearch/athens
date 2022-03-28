@@ -6,26 +6,21 @@
       and customizations are based on that where as global doesn't have an explicit root
 
       Relies on material ui comps for user inputs."}
-  athens.views.pages.graph
+ athens.views.pages.graph
   (:require
-    ["@material-ui/core/ExpansionPanel" :as ExpansionPanel]
-    ["@material-ui/core/ExpansionPanelDetails" :as ExpansionPanelDetails]
-    ["@material-ui/core/ExpansionPanelSummary" :as ExpansionPanelSummary]
-    ["@material-ui/core/Slider" :as Slider]
-    ["@material-ui/core/Switch" :as Switch]
-    ["@material-ui/icons/KeyboardArrowRight" :default KeyboardArrowRight]
-    ["@material-ui/icons/KeyboardArrowUp" :default KeyboardArrowUp]
-    ["react-force-graph-2d" :as ForceGraph2D]
-    [athens.dates :as dates]
-    [athens.db :as db]
-    [athens.router :as router]
-    [athens.style :as styles]
-    [clojure.set :as set]
-    [datascript.core :as d]
-    [re-frame.core :as rf :refer [subscribe]]
-    [reagent.core :as r]
-    [reagent.dom :as dom]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   ["@chakra-ui/react" :refer [Box Accordion AccordionButton AccordionItem AccordionPanel AccordionIcon]]
+   ["@material-ui/core/Slider" :as OldSlider]
+   ["@material-ui/core/Switch" :as OldSwitch]
+   ["react-force-graph-2d" :as ForceGraph2D]
+   [athens.dates :as dates]
+   [athens.db :as db]
+   [athens.router :as router]
+   [athens.style :as styles]
+   [clojure.set :as set]
+   [datascript.core :as d]
+   [re-frame.core :as rf :refer [subscribe]]
+   [reagent.core :as r]
+   [reagent.dom :as dom]))
 
 
 ;; all graph refs(react refs) reside in this atom
@@ -38,19 +33,9 @@
 ;; --- material ui ---
 
 
-(def m-slider (r/adapt-react-class (.-default Slider)))
+(def m-slider (r/adapt-react-class (.-default OldSlider)))
 
-
-(def m-expansion-panel (r/adapt-react-class (.-default ExpansionPanel)))
-
-
-(def m-expansion-panel-details (r/adapt-react-class (.-default ExpansionPanelDetails)))
-
-
-(def m-expansion-panel-summary (r/adapt-react-class (.-default ExpansionPanelSummary)))
-
-
-(def m-switch (r/adapt-react-class (.-default Switch)))
+(def m-switch (r/adapt-react-class (.-default OldSwitch)))
 
 
 ;; -------------------------------------------------------------------
@@ -59,28 +44,28 @@
 
 
 (rf/reg-sub
-  :graph/conf
-  (fn [db _]
-    (-> db :athens/persist :graph-conf)))
+ :graph/conf
+ (fn [db _]
+   (-> db :athens/persist :graph-conf)))
 
 
 (rf/reg-event-fx
-  :graph/set-conf
-  (fn [{:keys [db]} [_ k v]]
-    {:db (update-in db [:athens/persist :graph-conf] #(assoc % k v))
-     :dispatch [:posthog/report-feature :graph]}))
+ :graph/set-conf
+ (fn [{:keys [db]} [_ k v]]
+   {:db (update-in db [:athens/persist :graph-conf] #(assoc % k v))
+    :dispatch [:posthog/report-feature :graph]}))
 
 
 (rf/reg-sub
-  :graph/ref
-  (fn [db [_ key]]
-    (get-in db [:graph-ref key])))
+ :graph/ref
+ (fn [db [_ key]]
+   (get-in db [:graph-ref key])))
 
 
 (rf/reg-event-db
-  :graph/set-graph-ref
-  (fn [db [_ key val]]
-    (assoc-in db [:graph-ref key] val)))
+ :graph/set-graph-ref
+ (fn [db [_ key val]]
+   (assoc-in db [:graph-ref key] val)))
 
 
 ;; -------------------------------------------------------------------
@@ -173,54 +158,30 @@
 ;; -------------------------------------------------------------------
 ;; --- comps ---
 
-
-(defn graph-control-style
-  [theme]
-  {:position        "absolute"
-   :right           "10px"
-   :font-size       "14px"
-   :z-index         2
-   ::stylefy/manual [[:.MuiExpansionPanelDetails-root {:flex-flow "column"
-                                                       :color     "grey"}
-                      [:.switch {:display         "flex"
-                                 :justify-content "space-between"
-                                 :align-items     "center"}]]
-                     [:.MuiSvgIcon-root {:font-size "1.2rem"}]
-                     [:.MuiExpansionPanelSummary-content {:justify-content "space-between"}
-                      [:&.Mui-expanded {:margin     "24px 0"
-                                        :min-height "unset"}]]
-                     [:.MuiExpansionPanelSummary-root
-                      [:&.Mui-expanded {:min-height "unset"}]]
-                     [:.MuiPaper-root {:background (:graph-control-bg theme)
-                                       :color      (:graph-control-color theme)
-                                       :margin     "10px 0 2px 0"}
-                      [:&.Mui-expanded {:margin "0 0 5px 0"}]]]})
-
-
 (defn expansion-panel
   [{:keys [heading controls]} local-node-eid]
-  (r/with-let [is-open? (r/atom false)]
-              (let [graph-conf @(subscribe [:graph/conf])
-                    graph-ref  (get @graph-ref-map (or local-node-eid :global))]
-                [m-expansion-panel
-                 [m-expansion-panel-summary
-                  {:onClick #(swap! is-open? not)}
-                  [:<> [:span heading] (if @is-open? [:> KeyboardArrowUp] [:> KeyboardArrowRight])]]
-                 [m-expansion-panel-details
-                  (doall
-                    (for [{:keys [key comp label onChange no-simulation-reheat? props class]} controls]
-                      ^{:key key}
-                      [:div {:class class} label
-                       [comp
-                        (merge
-                          props
-                          {:value    (key graph-conf)
-                           :color    "primary"
-                           :onChange (fn [_ n-val]
-                                       (and onChange (onChange n-val))
-                                       (rf/dispatch [:graph/set-conf key n-val])
-                                       (when-not no-simulation-reheat?
-                                         (.d3ReheatSimulation graph-ref)))})]]))]])))
+  (let [graph-conf @(subscribe [:graph/conf])
+        graph-ref  (get @graph-ref-map (or local-node-eid :global))]
+    [:> AccordionItem
+     [:> AccordionButton
+      [:> AccordionIcon]
+      heading]
+     [:> AccordionPanel
+      (doall
+       (for [{:keys [key comp label onChange no-simulation-reheat? props class]} controls]
+         ^{:key key}
+         [:div {:class class} label
+          [comp
+           (merge
+            props
+            {:value    (key graph-conf)
+             :color    "primary"
+             :onChange (fn [_ n-val]
+                         (and onChange (onChange n-val))
+                         (rf/dispatch [:graph/set-conf key n-val])
+                         (when-not no-simulation-reheat?
+                           (.d3ReheatSimulation graph-ref)))})]]))]]))
+
 
 
 (defn graph-controls
@@ -232,7 +193,6 @@
    (fn []
      (let [graph-conf     @(subscribe [:graph/conf])
            graph-ref      (get @graph-ref-map (or local-node-eid :global))
-           theme          (if @(rf/subscribe [:theme/dark]) styles/THEME-DARK styles/THEME-LIGHT)
 
            ;; code theme
            ;; category -- for eg node-section and section related data
@@ -297,15 +257,19 @@
                             :no-simulation-reheat? true}]
            local-section  {:heading  "Local options"
                            :controls local-controls}]
-       [:div (use-style (graph-control-style theme))
+       [:> Accordion {:width "14em"
+                      :position "fixed"
+                      :allowMultiple true
+                      :top "4rem"
+                      :right 0}
         (doall
-          (for [{:keys [heading] :as section} (remove nil? [(when-not local-node-eid
-                                                              node-section)
-                                                            force-section
-                                                            (when local-node-eid
-                                                              local-section)])]
-            ^{:key heading}
-            [expansion-panel section local-node-eid]))]))))
+         (for [{:keys [heading] :as section} (remove nil? [(when-not local-node-eid
+                                                             node-section)
+                                                           force-section
+                                                           (when local-node-eid
+                                                             local-section)])]
+           ^{:key heading}
+           [expansion-panel section local-node-eid]))]))))
 
 
 (defn graph-root
@@ -319,166 +283,166 @@
          highlight-links (r/atom #{})
          dimensions      (r/atom {})]
      (r/create-class
-       {:component-did-mount
-        (fn [this]
-          (let [dom-node   (dom/dom-node this)
-                graph-conf @(subscribe [:graph/conf])
-                graph-ref  (get @graph-ref-map (or local-node-eid :global))]
+      {:component-did-mount
+       (fn [this]
+         (let [dom-node   (dom/dom-node this)
+               graph-conf @(subscribe [:graph/conf])
+               graph-ref  (get @graph-ref-map (or local-node-eid :global))]
             ;; set canvas dimensions
-            (swap! dimensions assoc :width (-> dom-node (.. (closest "#app"))
-                                               .-parentNode .-clientWidth))
-            (swap! dimensions assoc :height (-> dom-node (.. (closest "#app"))
-                                                .-parentNode .-clientHeight))
+           (swap! dimensions assoc :width (-> dom-node (.. (closest "#app"))
+                                              .-parentNode .-clientWidth))
+           (swap! dimensions assoc :height (-> dom-node (.. (closest "#app"))
+                                               .-parentNode .-clientHeight))
             ;; set init forces for graph
-            (when graph-ref
-              (.. (.. graph-ref (d3Force "charge"))
-                  (distanceMax (/ (min (:width @dimensions)
-                                       (:height @dimensions))
-                                  2)))
-              (let [c-force (.. graph-ref (d3Force "center"))]
-                (c-force (/ (:width @dimensions) 2) (/ (:height @dimensions) 2)))
+           (when graph-ref
+             (.. (.. graph-ref (d3Force "charge"))
+                 (distanceMax (/ (min (:width @dimensions)
+                                      (:height @dimensions))
+                                 2)))
+             (let [c-force (.. graph-ref (d3Force "center"))]
+               (c-force (/ (:width @dimensions) 2) (/ (:height @dimensions) 2)))
 
-              (.. (.. graph-ref (d3Force "charge")) (strength (:charge-strength graph-conf)))
-              (.. (.. graph-ref (d3Force "link")) (distance (:link-distance graph-conf)))
-              (.d3ReheatSimulation graph-ref))))
+             (.. (.. graph-ref (d3Force "charge")) (strength (:charge-strength graph-conf)))
+             (.. (.. graph-ref (d3Force "link")) (distance (:link-distance graph-conf)))
+             (.d3ReheatSimulation graph-ref))))
 
-        :component-will-unmount
-        (fn [_this]
-          (swap! graph-ref-map assoc (or local-node-eid :global) nil))
+       :component-will-unmount
+       (fn [_this]
+         (swap! graph-ref-map assoc (or local-node-eid :global) nil))
 
-        :reagent-render
-        (fn [local-node-eid]
-          (let [dark?                            @(rf/subscribe [:theme/dark])
-                graph-conf                       @(subscribe [:graph/conf])
-                all-links                        (build-links)
-                all-nodes-with-links             (->> all-links (mapcat #(vals %)) set)
-                linked-nodes-without-daily-notes (->> all-links
-                                                      (remove (fn [link]
-                                                                (or (dates/is-daily-note (get link "source-uid"))
-                                                                    (dates/is-daily-note (get link "target-uid")))))
-                                                      (mapcat #(vals %))
-                                                      set)
-                nodes                            (cond->> (if local-node-eid
-                                                            (->> (n-level-linked all-links local-node-eid (:local-depth graph-conf))
-                                                                 (d/q '[:find ?e ?u ?t (count ?r)
-                                                                        :in $ [?e ...]
-                                                                        :where
-                                                                        [?e :node/title ?t]
-                                                                        [?e :block/uid ?u]
-                                                                        [?r :block/refs ?e]]
-                                                                      @db/dsdb)
-                                                                 (map (fn [[e u t _val]]
-                                                                        {"id"    e
-                                                                         "uid"   u
-                                                                         "label" t
-                                                                         "val"   (if (= e local-node-eid) 8 1)}))
-                                                                 (remove (fn [node-obj]
-                                                                           (nil? (get node-obj "uid"))))
-                                                                 doall)
-                                                            (build-nodes))
+       :reagent-render
+       (fn [local-node-eid]
+         (let [dark?                            @(rf/subscribe [:theme/dark])
+               graph-conf                       @(subscribe [:graph/conf])
+               all-links                        (build-links)
+               all-nodes-with-links             (->> all-links (mapcat #(vals %)) set)
+               linked-nodes-without-daily-notes (->> all-links
+                                                     (remove (fn [link]
+                                                               (or (dates/is-daily-note (get link "source-uid"))
+                                                                   (dates/is-daily-note (get link "target-uid")))))
+                                                     (mapcat #(vals %))
+                                                     set)
+               nodes                            (cond->> (if local-node-eid
+                                                           (->> (n-level-linked all-links local-node-eid (:local-depth graph-conf))
+                                                                (d/q '[:find ?e ?u ?t (count ?r)
+                                                                       :in $ [?e ...]
+                                                                       :where
+                                                                       [?e :node/title ?t]
+                                                                       [?e :block/uid ?u]
+                                                                       [?r :block/refs ?e]]
+                                                                     @db/dsdb)
+                                                                (map (fn [[e u t _val]]
+                                                                       {"id"    e
+                                                                        "uid"   u
+                                                                        "label" t
+                                                                        "val"   (if (= e local-node-eid) 8 1)}))
+                                                                (remove (fn [node-obj]
+                                                                          (nil? (get node-obj "uid"))))
+                                                                doall)
+                                                           (build-nodes))
 
-                                                   (not (:daily-notes? graph-conf))
-                                                   (remove (fn [node]
-                                                             (dates/is-daily-note (get node "uid"))))
+                                                  (not (:daily-notes? graph-conf))
+                                                  (remove (fn [node]
+                                                            (dates/is-daily-note (get node "uid"))))
 
-                                                   (not (:orphans? graph-conf))
-                                                   (filter (fn [node]
-                                                             (contains? all-nodes-with-links (get node "id"))))
+                                                  (not (:orphans? graph-conf))
+                                                  (filter (fn [node]
+                                                            (contains? all-nodes-with-links (get node "id"))))
 
-                                                   (and (not (:daily-notes? graph-conf))
-                                                        (not (:orphans? graph-conf)))
-                                                   (filter (fn [node]
-                                                             (contains? linked-nodes-without-daily-notes (get node "id")))))
-
-                filtered-nodes-set               (->> nodes (map #(get % "id")) set)
-
-                links                            (cond->> all-links
-
-                                                   (or local-node-eid
-                                                       (not (:daily-notes? graph-conf))
+                                                  (and (not (:daily-notes? graph-conf))
                                                        (not (:orphans? graph-conf)))
-                                                   (filter (fn [link-obj]
-                                                             (and (contains? filtered-nodes-set (get link-obj "source"))
-                                                                  (contains? filtered-nodes-set (get link-obj "target")))))
+                                                  (filter (fn [node]
+                                                            (contains? linked-nodes-without-daily-notes (get node "id")))))
 
-                                                   (and local-node-eid
-                                                        (:root-links-only? graph-conf)
-                                                        (= (:local-depth graph-conf) 1))
-                                                   (filter (fn [link-obj]
-                                                             (or (= (get link-obj "source") local-node-eid)
-                                                                 (= (get link-obj "target") local-node-eid))))
+               filtered-nodes-set               (->> nodes (map #(get % "id")) set)
 
-                                                   true
-                                                   (filter (fn [link-obj]
-                                                             (or (contains? filtered-nodes-set (get link-obj "source"))
-                                                                 (contains? filtered-nodes-set (get link-obj "target"))))))
+               links                            (cond->> all-links
 
-                theme                            (if dark?
-                                                   styles/THEME-DARK
-                                                   styles/THEME-LIGHT)]
-            [:> ForceGraph2D
-             {:graphData        {:nodes nodes
-                                 :links links}
+                                                  (or local-node-eid
+                                                      (not (:daily-notes? graph-conf))
+                                                      (not (:orphans? graph-conf)))
+                                                  (filter (fn [link-obj]
+                                                            (and (contains? filtered-nodes-set (get link-obj "source"))
+                                                                 (contains? filtered-nodes-set (get link-obj "target")))))
+
+                                                  (and local-node-eid
+                                                       (:root-links-only? graph-conf)
+                                                       (= (:local-depth graph-conf) 1))
+                                                  (filter (fn [link-obj]
+                                                            (or (= (get link-obj "source") local-node-eid)
+                                                                (= (get link-obj "target") local-node-eid))))
+
+                                                  true
+                                                  (filter (fn [link-obj]
+                                                            (or (contains? filtered-nodes-set (get link-obj "source"))
+                                                                (contains? filtered-nodes-set (get link-obj "target"))))))
+
+               theme                            (if dark?
+                                                  styles/THEME-DARK
+                                                  styles/THEME-LIGHT)]
+           [:> ForceGraph2D
+            {:graphData        {:nodes nodes
+                                :links links}
               ;; example data
-              #_{:nodes [{"id" "foo", "name" "name1", "val" 1}
-                         {"id" "bar", "name" "name2", "val" 10}]
-                 :links [{"source" "foo", "target" "bar"}]}
-              :width            (:width  @dimensions)
-              :height           (:height @dimensions)
-              :ref              #(swap! graph-ref-map assoc (or local-node-eid :global) %)
+             #_{:nodes [{"id" "foo", "name" "name1", "val" 1}
+                        {"id" "bar", "name" "name2", "val" 10}]
+                :links [{"source" "foo", "target" "bar"}]}
+             :width            (:width  @dimensions)
+             :height           (:height @dimensions)
+             :ref              #(swap! graph-ref-map assoc (or local-node-eid :global) %)
               ;; link
-              :linkColor        (fn [] (:graph-link-normal theme))
+             :linkColor        (fn [] (:graph-link-normal theme))
               ;; node
-              :nodeCanvasObject (fn [^js node ^js ctx global-scale]
-                                  (let [label            (.. node -label)
-                                        val              (.. node -val)
-                                        node-id          (.. node -id)
-                                        x                (.. node -x)
-                                        y                (.. node -y)
-                                        scale-factor     3
-                                        font-size        (/ 10 global-scale)
-                                        text-width       (.. ctx (measureText label) -width)
-                                        radius           (max 1.3 (-> (js/Math.sqrt val)
-                                                                      (/ global-scale)
-                                                                      (* scale-factor)))
-                                        highlighted?     (contains? @highlight-nodes node-id)
-                                        local-root-node? (and local-node-eid node-id (= local-node-eid node-id))]
+             :nodeCanvasObject (fn [^js node ^js ctx global-scale]
+                                 (let [label            (.. node -label)
+                                       val              (.. node -val)
+                                       node-id          (.. node -id)
+                                       x                (.. node -x)
+                                       y                (.. node -y)
+                                       scale-factor     3
+                                       font-size        (/ 10 global-scale)
+                                       text-width       (.. ctx (measureText label) -width)
+                                       radius           (max 1.3 (-> (js/Math.sqrt val)
+                                                                     (/ global-scale)
+                                                                     (* scale-factor)))
+                                       highlighted?     (contains? @highlight-nodes node-id)
+                                       local-root-node? (and local-node-eid node-id (= local-node-eid node-id))]
 
                                     ;; node color
-                                    (set! (.-fillStyle ctx)
-                                          (cond
-                                            local-root-node? (:graph-node-hlt theme)
-                                            (and highlighted? (not local-node-eid)) (:graph-node-hlt theme)
-                                            :else (:graph-node-normal theme)))
+                                   (set! (.-fillStyle ctx)
+                                         (cond
+                                           local-root-node? (:graph-node-hlt theme)
+                                           (and highlighted? (not local-node-eid)) (:graph-node-hlt theme)
+                                           :else (:graph-node-normal theme)))
 
                                     ;; text
-                                    (when (> global-scale 1.75)
-                                      (set! (.-font ctx) (str (when (and highlighted? (not local-node-eid))
-                                                                "bold ")
-                                                              font-size "px IBM Plex Sans, Sans-Serif"))
-                                      (.fillText ctx label
-                                                 (- x (/ text-width 2))
-                                                 (+ y radius font-size)))
+                                   (when (> global-scale 1.75)
+                                     (set! (.-font ctx) (str (when (and highlighted? (not local-node-eid))
+                                                               "bold ")
+                                                             font-size "px IBM Plex Sans, Sans-Serif"))
+                                     (.fillText ctx label
+                                                (- x (/ text-width 2))
+                                                (+ y radius font-size)))
 
-                                    (.beginPath ctx)
+                                   (.beginPath ctx)
                                     ;; https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/arc
-                                    (.arc ctx x y radius 0 (* js/Math.PI 2))
-                                    (.fill ctx)))
+                                   (.arc ctx x y radius 0 (* js/Math.PI 2))
+                                   (.fill ctx)))
               ;; node actions
-              :onNodeClick (fn [^js node ^js event]
-                             (let [shift? (.-shiftKey event)]
-                               (rf/dispatch [:reporting/navigation {:source :graph
-                                                                    :target :page
-                                                                    :pane   (if shift?
-                                                                              :right-pane
-                                                                              :main-pane)}])
-                               (router/navigate-page (.. node -label) event)))
-              :onNodeHover (fn [^js node]
-                             (let [_          (reset! highlight-nodes #{})
-                                   _          (reset! highlight-links #{})
-                                   graph-conf @(rf/subscribe [:graph/conf])]
-                               (when-let [node-id (some-> node (.. -id))]
-                                 (reset! highlight-nodes (n-level-linked all-links node-id (:hlt-link-levels graph-conf))))))}]))}))))
+             :onNodeClick (fn [^js node ^js event]
+                            (let [shift? (.-shiftKey event)]
+                              (rf/dispatch [:reporting/navigation {:source :graph
+                                                                   :target :page
+                                                                   :pane   (if shift?
+                                                                             :right-pane
+                                                                             :main-pane)}])
+                              (router/navigate-page (.. node -label) event)))
+             :onNodeHover (fn [^js node]
+                            (let [_          (reset! highlight-nodes #{})
+                                  _          (reset! highlight-links #{})
+                                  graph-conf @(rf/subscribe [:graph/conf])]
+                              (when-let [node-id (some-> node (.. -id))]
+                                (reset! highlight-nodes (n-level-linked all-links node-id (:hlt-link-levels graph-conf))))))}]))}))))
 
 
 (defn page
@@ -489,12 +453,12 @@
    (let [local-node-eid (when block-uid
                           (->> [:block/uid block-uid] (d/pull @db/dsdb '[:db/id])
                                :db/id))]
-     [:div.graph-page
-      {:style (merge (when local-node-eid {:min-height "500px"})
-                     {:position "fixed"
-                      :top 0
-                      :left 0
-                      :width "100vw"
-                      :height "100vh"})}
-      #_ [graph-controls local-node-eid]
-      [graph-root local-node-eid]])))
+     [:> Box {:class "graph-page"
+              :gridColumn "1 / -1"
+              :position "fixed"
+              :top 0
+              :left 0
+              :width "100vw"
+              :height "100vh"}
+      [graph-root local-node-eid]
+      [graph-controls local-node-eid]])))

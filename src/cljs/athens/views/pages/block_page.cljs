@@ -1,17 +1,16 @@
 (ns athens.views.pages.block-page
   (:require
-   ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink]]
-   ["@material-ui/icons/Link" :default Link]
+   ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
    [athens.parse-renderer :as parse-renderer]
    [athens.reactive :as reactive]
    [athens.router :as router]
    [athens.views.blocks.core :as blocks]
-   [athens.views.pages.header :refer [editable-title-container]]
+   [athens.views.pages.header :refer [page-header editable-title-container]]
    [athens.views.pages.node-page :as node-page]
+   [athens.views.references :refer [reference-group reference-block]]
    [komponentit.autosize :as autosize]
    [re-frame.core :as rf :refer [dispatch subscribe]]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]]))
+   [reagent.core :as r]))
 
 
 ;; Helpers
@@ -52,30 +51,32 @@
   [id]
   (let [linked-refs (reactive/get-reactive-linked-references id)]
     (when (seq linked-refs)
-      [:div (use-style node-page/references-style {:key "Linked References"})
-       [:section
-        [:h4 (use-style node-page/references-heading-style)
-         [(r/adapt-react-class Link)]
-         [:span "Linked References"]]
-        ;; Hide button until feature is implemented
-        [:div (use-style node-page/references-list-style)
-         (doall
-          (for [[group-title group] linked-refs]
-            [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
-             [:h4 (use-style node-page/references-group-title-style)
-              [:a {:on-click (fn [e]
-                               (let [shift?       (.-shiftKey e)
-                                     parsed-title (parse-renderer/parse-title group-title)]
-                                 (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
-                                                                      :target :page
-                                                                      :pane   (if shift?
-                                                                                :right-pane
-                                                                                :main-pane)}])
-                                 (router/navigate-page parsed-title)))}
-             (doall
-              (for [block group]
-                [:div (use-style node-page/references-group-block-style {:key (str "ref-" (:block/uid block))})
-                 [node-page/ref-comp block]]))]]]))]]])))
+      [:> Accordion
+        [:> AccordionItem
+         [:h2
+          [:> AccordionButton
+           [:> AccordionIcon "LinkedReferences"]]]
+         [:> AccordionPanel {:px 0}
+          [:> VStack {:spacing 6
+                      :pl 1
+                      :align "stretch"}
+           (doall
+            (for [[group-title group] linked-refs]
+              [reference-group {:key (str "group-" group-title)
+                                :title group-title
+                                :on-click-title (fn [e]
+                                                  (let [shift?       (.-shiftKey e)
+                                                        parsed-title (parse-renderer/parse-title group-title)]
+                                                    (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
+                                                                                         :target :page
+                                                                                         :pane   (if shift?
+                                                                                                   :right-pane
+                                                                                                   :main-pane)}])
+                                                    (router/navigate-page parsed-title)))}
+               (doall
+                (for [block group]
+                  [reference-block {:key (str "ref-" (:block/uid block))}
+                   [node-page/ref-comp block]]))]))]]]])))
 
 
 (defn parents-el
@@ -105,6 +106,7 @@
          [parents-el uid id]
 
          ;; Header
+         [page-header
          [editable-title-container {:onClick (fn [e]
                                                (.. e preventDefault)
                                                (if (.. e -shiftKey)
@@ -126,7 +128,7 @@
              :on-change   (fn [e] (block-page-change e uid state))}]
            (if (clojure.string/blank? (:string/local @state))
              [:wbr]
-             [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]]
+             [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]]]
 
          ;; Children
           [:div (for [child children]

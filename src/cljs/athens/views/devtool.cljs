@@ -8,7 +8,6 @@
     [athens.config :as config]
     [athens.db :as db :refer [dsdb]]
     [athens.style :refer [color]]
-    [athens.views.textinput :refer [textinput-style]]
     [cljs.pprint :as pp]
     [clojure.core.protocols :as core-p]
     [clojure.datafy :refer [nav datafy]]
@@ -114,11 +113,11 @@
 
 
 (def query-input-style
-  (merge textinput-style {:width "100%"
-                          :min-height "2.5rem"
-                          :font-size "12px"
-                          :background (color :background-color)
-                          :font-family "IBM Plex Mono"}))
+  {:width "100%"
+   :min-height "2.5rem"
+   :font-size "12px"
+   :background (color :background-color)
+   :font-family "IBM Plex Mono"})
 
 
 ;; Components

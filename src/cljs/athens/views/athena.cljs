@@ -5,25 +5,17 @@
    [athens.common.utils :as utils]
    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
    [athens.router       :as router]
-   [athens.style        :refer [color]]
    [athens.subs]
    [athens.util         :refer [scroll-into-view]]
    [clojure.string      :as str]
    [goog.dom            :refer [getElement]]
    [goog.events         :as events]
    [re-frame.core       :as rf :refer [subscribe dispatch]]
-   [reagent.core        :as r]
-   [stylefy.core        :as stylefy :refer [use-style]])
+   [reagent.core        :as r])
   (:import
    (goog.events
     KeyCodes)))
 
-
-;; Styles
-
-(def result-highlight-style
-  {:color (color :body-text-color)
-   :font-weight "500"})
 
 
 ;; Utilities
@@ -35,7 +27,8 @@
     (doall
      (map-indexed (fn [i part]
                     (if (re-find query-pattern part)
-                      [:span.result-highlight (use-style result-highlight-style {:key i}) part]
+                      [:> Text {:class "result-highlight"
+                                :key i} part]
                       part))
                   (str/split txt query-pattern)))))
 

@@ -22,7 +22,7 @@
       (toast (clj->js {:status "info"
                        :title "Reconnecting to server..."})))
     [:> Box {:flex "1 1 100%"
-    
+
              :position "relative"
              :gridArea "main-content"
              :alignItems "flex-start"
@@ -31,11 +31,12 @@
              :display "flex"
              :overflowY "overlay"
              :sx {:maskImage "linear-gradient(to bottom,
-              transparent, 
+              transparent,
               transparent 3rem, 
               black 5rem, 
               black calc(100vh - 5rem), 
-              transparent 100vh)"
+              #000000f0 calc(100vh - 4rem), 
+              #00000088 100vh)"
              "&:before" {:content "''"
                               :position "fixed"
                               :zIndex "-1"

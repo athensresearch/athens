@@ -17,9 +17,9 @@
     [:> Box
      {:as "rect"
       :fill "var(--link-color)"
-      :height "24"
+      :height "100%"
+      :width "100%"
       :rx "4"
-      :width "24"
       :x "0"
       :y "0"}]
     [:> Box

@@ -25,7 +25,7 @@
 
 (def block-inner-content-style {"textarea" {:display "block"
                                             :lineHeight 0
-                                            :appeareance "none"
+                                            :appearance "none"
                                             :cursor "text"
                                             :resize "none"
                                             :transform "translate3d(0,0,0)"
@@ -36,7 +36,6 @@
                                             :background "var(--block-surface-color)"
                                             :grid-area "main"
                                             :min-height "100%"
-                                            :caret-color "link"
                                             :margin "0"
                                             :font-size "inherit"
                                             :border-radius "0.25rem"
@@ -59,7 +58,8 @@
                                         :zIndex 4
                                         "& > span" {:position "relative"
                                                     :zIndex 2}}
-                                "code, pre" {:fontFamily "code"}
+                                "code, pre" {:fontFamily "code"
+                                :fontSize "0.85em"}
                                 ".media-16-9" {:height 0
                                                :width "calc(100% - 0.25rem)"
                                                :zIndex 1

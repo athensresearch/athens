@@ -1,8 +1,9 @@
 (ns athens.views.blocks.core
   (:require
    ["/components/Block/components/Anchor"   :refer [Anchor]]
+   ["/components/Block/components/SlashMenu" :refer [SlashMenu]]
    ["/components/Block/components/Toggle"   :refer [Toggle]]
-   ["@chakra-ui/react" :refer [Box Button]]
+   ["@chakra-ui/react" :refer [Box Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
    [athens.common.logging                   :as log]
    [athens.db                               :as db]
    [athens.electron.images                  :as images]
@@ -20,13 +21,11 @@
    [athens.views.blocks.content             :as content]
    [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-   [athens.views.breadcrumbs                :as breadcrumbs]
    [athens.views.references                 :refer [reference-group reference-block]]
    [com.rpl.specter                         :as s]
    [goog.functions                          :as gfns]
    [re-frame.core                           :as rf]
-   [reagent.core                            :as r]
-   [stylefy.core                            :as stylefy]))
+   [reagent.core                            :as r]))
 
 
 ;; Styles
@@ -99,34 +98,12 @@
                        :gridArea "body"}})
 
 
-(def dragging-style
-  {:opacity "0.25"})
-
-
-(stylefy/class "dragging" dragging-style)
-
-
 ;; Inline refs
 
 ;; block-el depends on inline-linked-refs-el, which in turn depends on block-el
 ;; It would be nicer to have inline refs code in a different file, but it's
 ;; much easier to resolve the circular dependency if they are on the same one.
 (declare block-el)
-
-
-(def reference-breadcrumbs-style
-  {:font-size "12px"
-   :padding "0 0.25em"})
-
-
-(def reference-breadcrumbs-container-style
-  {:padding-left          "0.5em"
-   :display               "grid"
-   :grid-template-columns "1em 1fr"
-   :grid-template-rows    "1fr"
-   :grid-template-areas   "'toggle breadcrumbs'"
-   :border-radius         "0.5rem"
-   :position              "relative"})
 
 
 (defn ref-comp
@@ -152,26 +129,26 @@
       (let [{:keys [block parents embed-id]} @state
             block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
-         [:div (stylefy/use-style reference-breadcrumbs-container-style)
+         [:> HStack
           [:> Toggle {:isOpen (:open? @state)
                       :on-click (fn [e]
                                   (.. e stopPropagation)
                                   (swap! state update :open? not))}]
 
-          [breadcrumbs/breadcrumbs-list {:style reference-breadcrumbs-style}
+          [:> Breadcrumb {:fontSize "0.7em" :pl 6}
            (doall
              (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
                    (if (or (:open? @state) (not (:focus? @state)))
                      parents
                      (conj parents block))]
-               [breadcrumbs/breadcrumb {:key       (str "breadcrumb-" uid)
-                                        :on-click #(let [new-B (db/get-block [:block/uid uid])
-                                                         new-P (concat
-                                                                 (take-while (fn [b] (not= (:block/uid b) uid)) parents)
-                                                                 [breadcrumb-block])]
-                                                     (.. % stopPropagation)
-                                                     (swap! state assoc :block new-B :parents new-P :focus? false))}
-                [parse-renderer/parse-and-render (or title string) uid]]))]]
+               [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
+               [:> BreadcrumbLink {:onClick #(let [new-B (db/get-block [:block/uid uid])
+                                                   new-P (concat
+                                                          (take-while (fn [b] (not= (:block/uid b) uid)) parents)
+                                                          [breadcrumb-block])]
+                                               (.. % stopPropagation)
+                                               (swap! state assoc :block new-B :parents new-P :focus? false))}
+                [parse-renderer/parse-and-render (or title string) uid]]]))]]
 
          (when (:open? @state)
            (if (:focus? @state)
@@ -200,6 +177,10 @@
     (when (not-empty refs)
       [:> Box {:as "section"
                :key "Inline Linked References"
+               :zIndex 2
+               :ml 6
+               :pl 2
+               :borderRadius "10px solid red"
                :background "background.basement"}
         (doall
          (for [[group-title group] refs]
@@ -216,11 +197,13 @@
 (defn block-refs-count-el
   [count click-fn active?]
    [:> Button {:gridArea "refs"
-               :size "sm"
-               :isActive active?
+               :size "xs"
                :ml "1em"
+               :mt 1
+               :mr 1
                :zIndex 10
                :visibility (if (pos? count) "visible" "hidden")
+               :isActive active?
                :onClick (fn [e]
                           (.. e stopPropagation)
                           (click-fn e))}
@@ -447,7 +430,7 @@
                   :on-drag-leave     (fn [e] (block-drag-leave e block state))
                   :on-drop           (fn [e] (block-drop e block state))}
 
-          (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
+          (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
           [:div.block-body
            (when (seq children)
@@ -455,11 +438,11 @@
                                          (and (false? linked-ref) open))
                                    true
                                    false)
-                         :on-click (fn [e]
-                                     (.. e stopPropagation)
-                                     (if (true? linked-ref)
-                                       (swap! state update :linked-ref/open not)
-                                       (toggle uid (not open))))}])
+                         :onClick (fn [e]
+                                    (.. e stopPropagation)
+                                    (if (true? linked-ref)
+                                      (swap! state update :linked-ref/open not)
+                                      (toggle uid (not open))))}])
            [:> Anchor {:isClosedWithChildren (when (and (seq children)
                                                         (or (and (true? linked-ref) (not (:linked-ref/open @state)))
                                                             (and (false? linked-ref) (not open))))
@@ -468,19 +451,19 @@
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
                        :onCopyRefs #(handle-copy-refs nil uid state)
                        :onCopyUnformatted #(handle-copy-unformatted uid state)
-                       :on-click        (fn [e]
-                                          (let [shift? (.-shiftKey e)]
-                                            (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                 :target :block
-                                                                                 :pane   (if shift?
-                                                                                           :right-pane
-                                                                                           :main-pane)}])
-                                            (router/navigate-uid uid e)))
+                       :onClick        (fn [e]
+                                         (let [shift? (.-shiftKey e)]
+                                           (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                :target :block
+                                                                                :pane   (if shift?
+                                                                                          :right-pane
+                                                                                          :main-pane)}])
+                                           (router/navigate-uid uid e)))
                        ;; :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
                        :on-drag-start   (fn [e] (bullet-drag-start e uid state))
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
            [content/block-content-el block state]
-           
+
            [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
@@ -491,6 +474,7 @@
                   (rf/dispatch [:right-sidebar/open-item uid])
                   (swap! state update :inline-refs/open not)))
               (:inline-refs/open @state)])]
+
 
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
@@ -511,6 +495,6 @@
                 (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
                 opts]]))
 
-          (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"} :child true}])
-          (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"}}])])))))
+          (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
+          (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])])))))
 

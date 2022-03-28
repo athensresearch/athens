@@ -43,7 +43,7 @@
         transformed-roam-db (r/atom nil)
         roam-db-filename    (r/atom "")]
     (fn []
-      [:> Modal {:isOpen open?
+      [:> Modal {:isOpen @open?
                  :onClose close-modal
                  :closeOnOverlayClick false
                  :size "lg"}

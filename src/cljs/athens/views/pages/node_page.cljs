@@ -16,68 +16,20 @@
    [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
    [athens.reactive :as reactive]
    [athens.router :as router]
-   [athens.style :refer [color]]
    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
    [athens.views.blocks.core :as blocks]
    [athens.views.blocks.textarea-keydown :as textarea-keydown]
    [athens.views.hoc.perf-mon     :as perf-mon]
-   [athens.views.pages.header :refer [editable-title-container]]
+   [athens.views.pages.header :refer [page-header editable-title-container]]
    [athens.views.references :refer [reference-group reference-block]]
    [clojure.string :as str]
    [datascript.core :as d]
    [komponentit.autosize :as autosize]
    [re-frame.core :as rf :refer [dispatch subscribe]]
-   [reagent.core :as r]
-   [stylefy.core :as stylefy :refer [use-style]])
+   [reagent.core :as r])
   (:import
    (goog.events
     KeyCodes)))
-
-
-
-(def page-header-style
-  {:position "relative"})
-
-
-(def references-style {:margin-top "3em"})
-
-
-(def references-heading-style
-  {:font-weight "normal"
-   :display "flex"
-   :padding "0 0.5rem 0 0"
-   :align-items "center"
-   ::stylefy/manual [[:svg {:margin-right "0.25em"
-                            :font-size "1rem"}]]})
-
-
-(def references-list-style
-  {:font-size "14px"})
-
-
-(def references-group-title-style
-  {:color (color :link-color)
-   :margin "0 1.5rem"
-   :font-weight "500"
-   ::stylefy/manual [[:a:hover {:cursor "pointer"
-                                :text-decoration "underline"}]]})
-
-
-(def references-group-style
-  {:background (color :background-minus-2 :opacity-med)
-   :padding "1rem 0.5rem"
-   :border-radius "0.25rem"
-   :margin "0.5em 0"})
-
-
-(def references-group-block-style
-  {:border-top [["1px solid " (color :border-color)]]
-   :width "100%"
-   :padding-block-start "1em"
-   :margin-block-start "1em"
-   ::stylefy/manual [[:&:first-of-type {:border-top "0"
-                                        :margin-block-start "0"}]]})
-
 
 
 ;; Helpers
@@ -467,7 +419,7 @@
                        :onDismiss cancel-fn}])
 
          ;; Header
-         [:header (use-style page-header-style)
+         [page-header
 
           ;; Dropdown
           [menu-dropdown node daily-note?]

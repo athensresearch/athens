@@ -8,10 +8,18 @@
    :fontSize "2rem"
    :overflow "visible"
    :flex-grow "1"
-   :margin "0.5em 0"
+   :margin "0"
    :whiteSpace "pre-line"
    :wordBreak "break-word"
    :fontWeight "bold"})
+
+
+(defn page-header
+  ([_ children]
+  [:> Box {:as "header"
+           :class "page-header"
+           :position "relative"}
+   children]))
 
 
 (defn title-container

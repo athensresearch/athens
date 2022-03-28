@@ -26,8 +26,8 @@
            :alignSelf "stretch"
            :justifySelf "stretch"
            :opacity (if real? 1 0.5)
-           :px 14
-           :py 14
+           :px {:sm 6 :md 12}
+           :py {:sm 6 :md 12}
            :borderWidth "1px"
            :borderStyle "solid"
            :borderColor "separator.divider"

@@ -1,18 +1,16 @@
 ^:cljstyle/ignore
 (ns athens.parse-renderer
   (:require
-   ["@chakra-ui/react" :refer [Link Button Text]]
+   ["@chakra-ui/react" :refer [Link Button Text Box]]
    ["katex" :as katex]
    ["katex/dist/contrib/mhchem"]
    [athens.config :as config]
    [athens.parser.impl :as parser-impl]
    [athens.reactive :as reactive]
    [athens.router :as router]
-   [athens.style :refer [color OPACITIES]]
    [clojure.string :as str]
    [instaparse.core :as insta]
-   [re-frame.core :as rf]
-   [stylefy.core :as stylefy :refer [use-style]]))
+   [re-frame.core :as rf]))
 
 
 (declare parse-and-render)
@@ -43,23 +41,6 @@
                 :_hover {:background "background.upper"
                          :cursor "alias"}})
 
-
-;; Styles
-
-(def page-link
-  {:cursor "pointer"
-   :text-decoration "none"
-   :color (color :link-color)
-   :display "inline"
-   :border-radius "0.25rem"
-   ::stylefy/manual [[:.formatting {:color (color :body-text-color)
-                                    :opacity (:opacity-low OPACITIES)}]
-                     [:&:hover {:z-index 1
-                                :background (color :link-color :opacity-lower)
-                                :box-shadow (str "0px 0px 0px 1px " (color :link-color :opacity-lower))}]]})
-
-
-(def image {:border-radius "0.125rem"})
 
 
 (defn parse-title
@@ -252,9 +233,11 @@
     :block-ref            (fn [{_from :from :as attr} ref-uid]
                             (render-block-ref attr ref-uid uid))
     :url-image            (fn [{url :src alt :alt}]
-                            [:img (use-style image {:class "url-image"
-                                                    :alt   alt
-                                                    :src   url})])
+                            [:> Box {:class "url-image"
+                                     :as "img"
+                                     :borderRadius "md"
+                                     :alt   alt
+                                     :src   url}])
     :url-link             (fn [{url :url} text]
                             [:> Button
                              (merge link-props {:class  "url-link"
