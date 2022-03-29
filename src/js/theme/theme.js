@@ -84,7 +84,8 @@ const semanticTokens = {
       default: 'inset 0 0 0 3px transparent'
     },
     page: {
-      default: "0 0.25rem 1rem #00000055",
+      default: "0 0.25rem 1rem #00000022",
+      _dark: "0 0.25rem 1rem #00000055",
     },
     menu: {
       default: "0 0.25rem 1rem #00000055",
@@ -142,6 +143,15 @@ const semanticTokens = {
     "foreground.secondary": {
       default: 'hsla(0, 0%, 0%, 0.57)',
       _dark: 'hsla(0, 0%, 100%, 0.57)'
+    },
+    // interactions
+    "interaction.surface.hover": {
+      default: 'hsla(0, 0%, 0%, 0.04)',
+      _dark: 'hsla(0, 0%, 100%, 0.08)',
+    },
+    "interaction.surface.active": {
+      default: 'hsla(0, 0%, 0%, 0.12)',
+      _dark: 'hsla(0, 0%, 100%, 0.16)',
     },
     // status colors
     danger: {
@@ -270,11 +280,12 @@ const components = {
   },
   Button: {
     baseStyle: {
+      transitionProperty: 'common',
+      transitionTimingFunction: 'ease-in-out',
       "& > .chakra-button__icon svg": {
         height: "1.5em",
         width: "1.5em",
       },
-      color: 'foreground.primary',
       _active: {
         transitionDuration: "0s",
       },
@@ -293,9 +304,27 @@ const components = {
         borderRadius: "1px"
       },
       solid: {
+        _hover: {
+          bg: "interaction.surface.hover"
+        },
         _active: {
           color: 'foreground.primary',
-          bg: 'background.attic',
+          bg: 'interaction.surface.active',
+        },
+      },
+      outline: {
+        bg: "transparent",
+        borderWidth: "1px",
+        borderStyle: "solid",
+        borderColor: "interaction.surface.hover",
+        _hover: {
+          borderColor: "transparent",
+          bg: "interaction.surface.hover",
+        },
+        _active: {
+          color: 'foreground.primary',
+          bg: 'interaction.surface.active',
+          borderColor: "transparent",
         },
       }
     },

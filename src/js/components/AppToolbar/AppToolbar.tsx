@@ -286,7 +286,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     },
     {
       label: 'Show right sidebar',
-      isActive: isRightSidebarOpen,
       onClick: handlePressRightSidebarToggle,
       icon: <RightSidebarIcon />
     }
@@ -301,7 +300,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
             <ToolbarIconButton
               aria-label="Navigation"
               onClick={handlePressLeftSidebarToggle}
-              isActive={isLeftSidebarOpen}
             >
               <MenuIcon />
             </ToolbarIconButton>
@@ -354,16 +352,11 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           </Tooltip>
           <ToolbarButton
             aria-label="Search"
+            variant="outline"
             leftIcon={<SearchIcon />}
             isActive={isCommandBarOpen}
             onClick={handlePressCommandBar}
             pl="0.5rem"
-            border="1px solid"
-            borderColor="background.attic"
-            _active={{
-              bg: 'background.attic',
-              borderColor: "background.attic"
-            }}
           >
             Find or create a page
           </ToolbarButton>
