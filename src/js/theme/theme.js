@@ -1,7 +1,6 @@
 import { extendTheme, cssVar } from '@chakra-ui/react'
 import { readableColor } from 'polished';
 import { spacing } from './spacing'
-import { mode } from "@chakra-ui/theme-tools"
 
 const $arrowBg = cssVar("popper-arrow-bg");
 
@@ -52,7 +51,7 @@ const colors = {
   backgroundColorDark: "#1A1A1A",
   backgroundPlus1Dark: "#222",
   backgroundPlus2Dark: "#333",
-  backgroundVibrancyDark: "#222222cc",
+  backgroundVibrancyDark: "#222222aa",
 
   linkDark: "#498eda",
   linkContrastDark: '#fff',
@@ -97,7 +96,7 @@ const semanticTokens = {
       default: "0 0.25rem 1rem #00000055",
     },
     dialog: {
-      default: "0 0.25rem 1rem #00000055",
+      default: "0 0.25rem 1rem #00000022",
     },
   },
   colors: {
@@ -112,7 +111,7 @@ const semanticTokens = {
     },
     "separator.divider": {
       default: '#00000011',
-      _dark: '#ffffff22'
+      _dark: '#ffffff11'
     },
     // background colors
     "background.floor": {

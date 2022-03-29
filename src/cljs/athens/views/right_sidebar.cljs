@@ -1,8 +1,8 @@
 (ns athens.views.right-sidebar
   (:require
+   ["/components/Icons/icons" :refer [RightSidebarAdd]]
    ["@chakra-ui/react" :refer [Flex Text Box AddIcon IconButton Accordion AccordionItem AccordionButton AccordionIcon AccordionPanel]]
    ["@material-ui/icons/Close" :default Close]
-   ["@material-ui/icons/VerticalSplit" :default VerticalSplit]
    ["framer-motion" :refer [AnimatePresence motion]]
    [athens.parse-renderer :as parse-renderer]
    [athens.views.pages.block-page :as block-page]
@@ -28,7 +28,7 @@
            :fontSize "80%"
            :borderRadius "0.5rem"
            :lineHeight 1.3}
-   [:> VerticalSplit {:style {:width "4rem" :height "4rem"}}]
+   [:> RightSidebarAdd {:boxSize "4rem"}]
    [:> Text {:maxWidth "15em"}
     "Hold " [:kbd "shift"] " when clicking a page link to view the page in the sidebar."]])
 

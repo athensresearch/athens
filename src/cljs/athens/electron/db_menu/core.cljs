@@ -47,33 +47,40 @@
                   :status sync-status}]]]
     ;; Dropdown menu
       [:> Portal
-       [:> PopoverContent
+       [:> PopoverContent {:overflow-y "auto"}
         [:> FocusLock
          [:> VStack {:align "stretch"
-                     :overflowY "auto"
+                     :overflow "hidden"
                      :spacing 0}
         ;; Show active DB first
-          [:> Box
+          [:> Box {:bg "background.floor"
+                   :pb 4}
            [db-list-item {:db active-db
                           :is-current true
                           :key (:id active-db)}]
            [current-db-tools {:db active-db} all-dbs merge-open?]]
                     ;; Show all inactive DBs and a separator
-          [:> VStack {:align "stretch" :pt 2}
-           [:> Heading {:fontSize "xs"
-                        :pt 4
-                        :px 10
-                        :letterSpacing "wide"
-                        :textTransform "uppercase"
-                        :fontWeight "medium"
-                        :color "foreground.secondary"}
-            "Other databases"]
+          [:> Heading {:fontSize "xs"
+                       :py 4
+                       :pb 3
+                       :borderTop "1px solid"
+                       :borderTopColor "separator.divider"
+                      ;;  :bg "background.floor"
+                       :px 10
+                       :letterSpacing "wide"
+                       :textTransform "uppercase"
+                       :fontWeight "bold"
+                       :color "foreground.secondary"}
+           "Other databases"]
+          [:> VStack {:align "stretch"
+                      :spacing 0
+                      :overflow-y "auto"}
            {:align "stretch" :spacing 0}
            (doall
             (for [[key db] inactive-dbs]
-               [db-list-item {:db db
-                              :is-current false
-                              :key key}]))]
+              [db-list-item {:db db
+                             :is-current false
+                             :key key}]))]
                     ;; Add DB control
           [:> ButtonGroup {:borderTop "1px solid" :borderTopColor "separator.divider" :p 2 :pt 0 :pl 10 :size "sm" :width "100%" :ml 10 :justifyContent "flex-start"}
            [:> Button {:onClick #(dispatch [:modal/toggle])}

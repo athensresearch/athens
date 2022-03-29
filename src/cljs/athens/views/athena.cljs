@@ -292,7 +292,8 @@
           :auto-focus true
           :required true
           :_focus {:outline "none"}
-          :sx {"::-webkit-search-cancel-button" {:display "none"}}
+          :sx {"::placeholder" {:color "foreground.secondary"}
+               "::-webkit-search-cancel-button" {:display "none"}}
           :placeholder "Find or Create Page"
           :on-change   (fn [e] (search-handler (.. e -target -value)))
           :on-key-down (fn [e] (key-down-handler e state))}]

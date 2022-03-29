@@ -22,7 +22,9 @@
            :bottom 0
            :right 0
            :borderRadius "full"
-           :sx {"svg" {:fontSize "1em"}}}
+           :sx {"svg" {:fontSize "1em"
+                       :background "background.floor"
+                       :borderRadius "full"}}}
    (cond
      (= status :closed) [:> Tooltip
                          {:label "Disconnected"}

@@ -1,19 +1,15 @@
 import React from 'react';
+
+import { RightSidebar, MenuIcon, Settings } from '@/icons/icons';
+
 import {
   BubbleChart,
   ChevronLeft,
   ChevronRight,
   FileCopy,
-  Help,
-  Menu as MenuIcon,
-  MergeType,
   Search,
-  Settings,
   MoreHoriz,
   Today,
-  ToggleOff,
-  ToggleOn,
-  VerticalSplit
 } from '@material-ui/icons';
 
 import {
@@ -35,6 +31,8 @@ import {
   useColorMode,
   useMediaQuery
 } from '@chakra-ui/react';
+
+import { MoonIcon, SunIcon, QuestionIcon } from '@chakra-ui/icons';
 
 import { WindowButtons } from './components/WindowButtons';
 
@@ -162,10 +160,6 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   */
   isCommandBarOpen: boolean;
   /**
-  * Whether the merge from roam dialog is open
-  */
-  isMergeDialogOpen: boolean;
-  /**
   * Whether the choose database dialog is open
   */
   isDatabaseDialogOpen: boolean;
@@ -191,7 +185,6 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   onPressGraph(): void;
   onPressHelp(): void;
   onPressThemeToggle(): void;
-  onPressMerge(): void;
   onPressSettings(): void;
   onPressHistoryBack(): void;
   onPressHistoryForward(): void;
@@ -245,14 +238,12 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isLeftSidebarOpen,
     isRightSidebarOpen,
     isCommandBarOpen,
-    isMergeDialogOpen,
     onPressCommandBar: handlePressCommandBar,
     onPressDailyNotes: handlePressDailyNotes,
     onPressAllPages: handlePressAllPages,
     onPressGraph: handlePressGraph,
     onPressHelp: handlePressHelp,
     onPressThemeToggle: handlePressThemeToggle,
-    onPressMerge: handlePressMerge,
     onPressSettings: handlePressSettings,
     onPressHistoryBack: handlePressHistoryBack,
     onPressHistoryForward: handlePressHistoryForward,
@@ -269,38 +260,33 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   const { toggleColorMode } = useColorMode()
   const [ canShowFullSecondaryMenu ] = useMediaQuery('(min-width: 900px)');
 
-  const secondaryTools = [ {
-    label: "Merge",
-    isActive: isMergeDialogOpen,
-    onClick: handlePressMerge,
-    icon: <MergeType />
-  },
-  {
-    label: "Settings",
-    isActive: route === '/settings',
-    onClick: handlePressSettings,
-    icon: <Settings />
-  },
-  {
-    label: "Help",
-    isActive: isHelpOpen,
-    onClick: handlePressHelp,
-    icon: <Help />
-  },
-  {
-    label: "Toggle theme",
-    onClick: () => {
-      toggleColorMode()
-      handlePressThemeToggle()
+  const secondaryTools = [
+    {
+      label: "Settings",
+      isActive: route === '/settings',
+      onClick: handlePressSettings,
+      icon: <Settings />
     },
-    icon: isThemeDark ? <ToggleOff /> : <ToggleOn />
-  },
-  {
-    label: 'Show right sidebar',
-    isActive: isRightSidebarOpen,
-    onClick: handlePressRightSidebarToggle,
-    icon: <VerticalSplit />
-  }
+    {
+      label: "Help",
+      isActive: isHelpOpen,
+      onClick: handlePressHelp,
+      icon: <QuestionIcon />
+    },
+    {
+      label: "Toggle theme",
+      onClick: () => {
+        toggleColorMode()
+        handlePressThemeToggle()
+      },
+      icon: isThemeDark ? <MoonIcon /> : <SunIcon />
+    },
+    {
+      label: 'Show right sidebar',
+      isActive: isRightSidebarOpen,
+      onClick: handlePressRightSidebarToggle,
+      icon: <RightSidebar />
+    }
   ];
 
   return (
