@@ -233,3 +233,11 @@
     router
     on-navigate
     {:use-fragment true}))
+
+
+(reg-event-fx
+  :init-router
+  (fn [{:keys [db]} _]
+    (init-routes!)
+    {}))
+

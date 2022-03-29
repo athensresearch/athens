@@ -76,7 +76,8 @@
                                       :dispatch-n [[:fs/update-write-db]
                                                    [:db/sync]
                                                    ;; [:restore-navigation]  ; This functionality is there but unreliable we can use it once we make it reliable
-                                                   [:navigate :home]
+                                                   ;;[:navigate :home]
+                                                   [:init-router]
                                                    [:reset-undo-redo]
                                                    [:posthog/set-super-properties]
                                                    [:loading/unset]]}
