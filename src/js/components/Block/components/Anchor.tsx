@@ -95,7 +95,7 @@ const anchorButtonStyleProps = (isClosedWithChildren) => {
     minWidth: "0",
     minHeight: "0",
     h: "2em",
-    w: "100%",
+    w: "fit-content",
     fontSize: "inherit",
     mx: "-0.125em",
     size: "sm",
@@ -154,7 +154,6 @@ export const Anchor = (props: AnchorProps) => {
         onClick={onClick}
         onDragEnd={onDragEnd}
         onContextMenu={onContextMenu}
-        isClosedWithChildren={isClosedWithChildren}
         onContextMenu={(e) => {
           console.log(e);
           e.preventDefault();

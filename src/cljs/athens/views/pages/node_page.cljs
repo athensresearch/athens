@@ -171,12 +171,17 @@
 
 (defn placeholder-block-el
   [parent-uid]
-  [:> Box {:class "block-container"}
-   [:> Box {:display "flex"}
-    [:> Anchor]
-    [:> Button {:variant "link"
-                :onClick #(handle-new-first-child-block-click parent-uid)}
-     "Click here to add content..."]]])
+  [:> Box {:class "block-container"
+           :pl "1em"
+           :display "flex"}
+   [:> Anchor]
+   [:> Button {:variant "link"
+               :flex "1 1 100%"
+               :pl 1
+               :textAlign "left"
+               :justifyContent "flex-start"
+               :onClick #(handle-new-first-child-block-click parent-uid)}
+    "Click here to add content..."]])
 
 
 (defn sync-title

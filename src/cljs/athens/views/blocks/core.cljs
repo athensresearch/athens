@@ -1,7 +1,6 @@
 (ns athens.views.blocks.core
   (:require
    ["/components/Block/components/Anchor"   :refer [Anchor]]
-   ["/components/Block/components/SlashMenu" :refer [SlashMenu]]
    ["/components/Block/components/Toggle"   :refer [Toggle]]
    ["@chakra-ui/react" :refer [Box Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
    [athens.common.logging                   :as log]
