@@ -25,7 +25,6 @@ export const Toggle = React.forwardRef((props: ToggleProps, ref) => {
       appearance="none"
       border="0"
       color="inherit"
-      mr={0.25}
       display="flex"
       placeItems="center"
       placeContent="center"
@@ -33,7 +32,7 @@ export const Toggle = React.forwardRef((props: ToggleProps, ref) => {
       minWidth="0"
       minHeight="0"
       h="2em"
-      w="1.25em"
+      w="100%"
       fontSize="inherit"
       mx="-0.125em"
       size="sm"
