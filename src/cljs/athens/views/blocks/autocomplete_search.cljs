@@ -18,12 +18,10 @@
 
 (defn inline-search-el
   [_block state]
-  (js/console.log _block state)
   (fn [block state]
     (let [open? (some #(= % type) [:page :block :hashtag :template])
           {:search/keys [query results index type] caret-position :caret-position} @state
           {:keys [left top]} caret-position]
-      (js/console.log results index type)
       (when open?
         [:> Menu {:isOpen open?
                   :autoSelect false

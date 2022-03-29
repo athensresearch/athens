@@ -270,6 +270,10 @@ const components = {
   },
   Button: {
     baseStyle: {
+      "& > .chakra-button__icon svg": {
+        height: "1.5em",
+        width: "1.5em",
+      },
       color: 'foreground.primary',
       _active: {
         transitionDuration: "0s",
@@ -351,7 +355,7 @@ const components = {
         },
         "svg": {
           flexShrink: 0,
-          fontSize: "0.8em",
+          fontSize: "1.5em",
           marginInlineEnd: "0.75rem"
         }
       }

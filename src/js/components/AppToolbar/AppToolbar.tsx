@@ -1,15 +1,21 @@
 import React from 'react';
 
-import { RightSidebar, MenuIcon, Settings } from '@/icons/icons';
+import {
+  RightSidebarIcon,
+  SearchIcon,
+  MenuIcon,
+  HelpIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  AllPagesIcon,
+  SettingsIcon,
+  ContrastIcon,
+  DailyNotesIcon
+} from '@/Icons/Icons';
 
 import {
   BubbleChart,
-  ChevronLeft,
-  ChevronRight,
-  FileCopy,
-  Search,
   MoreHoriz,
-  Today,
 } from '@material-ui/icons';
 
 import {
@@ -25,14 +31,11 @@ import {
   Button,
   ButtonOptions,
   HStack,
-  Divider,
   IconButton,
   ButtonGroup,
   useColorMode,
   useMediaQuery
 } from '@chakra-ui/react';
-
-import { MoonIcon, SunIcon, QuestionIcon } from '@chakra-ui/icons';
 
 import { WindowButtons } from './components/WindowButtons';
 
@@ -262,16 +265,10 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
   const secondaryTools = [
     {
-      label: "Settings",
-      isActive: route === '/settings',
-      onClick: handlePressSettings,
-      icon: <Settings />
-    },
-    {
       label: "Help",
       isActive: isHelpOpen,
       onClick: handlePressHelp,
-      icon: <QuestionIcon />
+      icon: <HelpIcon />
     },
     {
       label: "Toggle theme",
@@ -279,13 +276,19 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         toggleColorMode()
         handlePressThemeToggle()
       },
-      icon: isThemeDark ? <MoonIcon /> : <SunIcon />
+      icon: <ContrastIcon />
+    },
+    {
+      label: "Settings",
+      isActive: route === '/settings',
+      onClick: handlePressSettings,
+      icon: <SettingsIcon />
     },
     {
       label: 'Show right sidebar',
       isActive: isRightSidebarOpen,
       onClick: handlePressRightSidebarToggle,
-      icon: <RightSidebar />
+      icon: <RightSidebarIcon />
     }
   ];
 
@@ -304,23 +307,24 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
             </ToolbarIconButton>
           </Tooltip>
           {isElectron && (
-            <>
-              <Divider orientation="vertical" />
+            <ButtonGroup isAttached size="sm">
               <Tooltip
                 label="Go back">
                 <ToolbarIconButton
                   aria-label="Go back"
                   onClick={handlePressHistoryBack}
-                ><ChevronLeft /></ToolbarIconButton>
+                >
+                  <ChevronLeftIcon />
+                </ToolbarIconButton>
               </Tooltip>
               <Tooltip label="Go forward">
                 <ToolbarIconButton
                   aria-label="Go forward"
                   onClick={handlePressHistoryForward}>
-                  <ChevronRight />
+                  <ChevronRightIcon />
                 </ToolbarIconButton>
               </Tooltip>
-            </>)
+            </ButtonGroup>)
           }
           <Tooltip label="Daily notes">
             <ToolbarIconButton
@@ -328,7 +332,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               isDisabled={route === '/daily-notes'}
               isActive={route === '/daily-notes'}
               onClick={handlePressDailyNotes}>
-              <Today />
+              <DailyNotesIcon />
             </ToolbarIconButton>
           </Tooltip>
           <Tooltip label="All pages">
@@ -337,7 +341,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               isDisabled={route === '/all-pages'}
               isActive={route === '/all-pages'} onClick={handlePressAllPages}
             >
-              <FileCopy />
+              <AllPagesIcon />
             </ToolbarIconButton>
           </Tooltip>
           <Tooltip label="Graph">
@@ -350,7 +354,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           </Tooltip>
           <ToolbarButton
             aria-label="Search"
-            leftIcon={<Search />}
+            leftIcon={<SearchIcon />}
             isActive={isCommandBarOpen}
             onClick={handlePressCommandBar}
             pl="0.5rem"

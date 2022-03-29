@@ -38,10 +38,7 @@
      [:> Popover {:placement "bottom-start"}
       [:> PopoverTrigger
        [:> IconButton {:p 0
-                       :bg "background.floor"
-
-                       :_hover {:bg "background.upper"}
-                       :_active {:bg "background.upper"}}
+                       :bg "background.floor"}
         ;; DB Icon + Dropdown toggle
         [db-icon {:db     active-db
                   :status sync-status}]]]
