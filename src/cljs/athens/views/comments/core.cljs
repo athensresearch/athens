@@ -2,9 +2,14 @@
   (:require [athens.views.comments.inline :as inline]
             [athens.views.comments.right-side :as right-side]
             [athens.common-events.graph.atomic :as atomic-graph-ops]
+            [athens.common-events.graph.ops :as graph-ops]
+            [athens.common-events.graph.composite :as composite-ops]
             [re-frame.core :as rf]
             [athens.common-events :as common-events]
-            [athens.common.utils :as common.utils]))
+            [athens.common.utils :as common.utils]
+            [athens.common-db :as common-db]
+            [athens.db :as db]
+            [athens.common-events.graph.composite :as composite]))
 
 ;; user presses "Comment" from context-menu
 ;; place to write comment appears
@@ -44,16 +49,54 @@
   (fn [{:keys [db]} [_ uid]]
     {:db (assoc db :comment/show-comment-textarea nil)}))
 
+(defn show-comments-actively-block
+  [db page-title last-block]
+  (if (not= "Actively show comments on this page. NOTE: Please do not create a sibling block after this block."
+            (:block/string last-block))
+    (let [new-block-uid      (common.utils/gen-block-uid)
+          new-block-op       (atomic-graph-ops/make-block-new-op new-block-uid {:page/title page-title
+                                                                                :relation   :last})
+          new-block-save-op  (graph-ops/build-block-save-op @db/dsdb new-block-uid "Actively show comments on this page. NOTE: Please do not create a sibling block after this block.")]
+      [new-block-uid [new-block-op new-block-save-op]])
+    nil))
+
 (rf/reg-event-fx
   :comment/write-comment
-  (fn [_ [_ uid comment-string author]]
-    (let [new-comment {:block/uid (common.utils/gen-block-uid)
-                       :block/type :comment
-                       :string      comment-string
-                       :author      author
-                       :time        "12:09 pm"}
-          event           (common-events/build-atomic-event
-                            (atomic-graph-ops/make-comment-add-op uid new-comment))]
+  (fn [{db :db} [_ uid comment-string author]]
+    (let [new-comment               {:block/uid (common.utils/gen-block-uid)
+                                     :block/type :comment
+                                     :string      comment-string
+                                     :author      author
+                                     :time        "12:09 pm"}
+          parent-page-title         (:node/title (db/get-root-parent-page uid))
+          last-block-uid            (last
+                                      (common-db/get-children-uids @db/dsdb
+                                                                   [:node/title parent-page-title]))
+          last-block                (common-db/get-block @db/dsdb [:block/uid last-block-uid])
+          [show-comments-uid
+           show-comments-op]        (show-comments-actively-block db parent-page-title last-block)
+          new-active-block-rel     (if show-comments-uid
+                                     show-comments-uid
+                                     last-block-uid)
+          new-active-block-uid      (common.utils/gen-block-uid)
+          new-active-block-op       (atomic-graph-ops/make-block-new-op new-active-block-uid {:block/uid new-active-block-rel
+                                                                                              :relation  :last})
+          new-active-block-save-op  (graph-ops/build-block-save-op @db/dsdb
+                                                                   new-active-block-uid
+                                                                   (str  "**((" uid "))**" "\n"
+                                                                        "*[[@" author "]]: " comment-string "*"))
+          comment-add-op            (atomic-graph-ops/make-comment-add-op uid new-comment)
+          active-comment-ops        (composite/make-consequence-op {:op/type :active-comments-op}
+                                                                   (concat (if show-comments-uid
+                                                                             show-comments-op
+                                                                             [])
+                                                                           [new-active-block-op
+                                                                            new-active-block-save-op
+                                                                            comment-add-op]))
+
+          event                     (common-events/build-atomic-event active-comment-ops)]
+
+
       {:fx [[:dispatch [:resolve-transact-forward event]]
             [:dispatch [:posthog/report-feature "comments"]]]})))
 
