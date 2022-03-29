@@ -21,20 +21,21 @@
 (defn daily-notes-page
   ([props children]
   (let [{:keys [real?]} props]
-  [:> Box {:boxShadow "page",
-           :bg "background.floor"
-           :alignSelf "stretch"
-           :justifySelf "stretch"
-           :opacity (if real? 1 0.5)
-           :px {:sm 6 :md 12}
-           :py {:sm 6 :md 12}
-           :borderWidth "1px"
-           :borderStyle "solid"
-           :borderColor "separator.divider"
-           :transitionDuration "0s"
-           :borderRadius "0.5rem"
-           :minHeight "calc(100vh - 10rem)"}
-   children])))
+    [:> Box {:class "node-page daily-notes"
+             :boxShadow "page",
+             :bg "background.floor"
+             :alignSelf "stretch"
+             :justifySelf "stretch"
+             :opacity (if real? 1 0.5)
+             :px {:sm 6 :md 12}
+             :py {:sm 6 :md 12}
+             :borderWidth "1px"
+             :borderStyle "solid"
+             :borderColor "separator.divider"
+             :transitionDuration "0s"
+             :borderRadius "0.5rem"
+             :minHeight "calc(100vh - 10rem)"}
+     children])))
 
 
 ;; Components

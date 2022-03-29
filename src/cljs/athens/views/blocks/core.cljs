@@ -46,20 +46,18 @@
                                    :transform  "translateX(50%)"
                                    :transition "background-color 0.2s ease-in-out, opacity 0.2s ease-in-out"
                                    :background "separator.divider"}
-   "&:hover, &:focus-within.show-tree-indicator:before" {:opacity 1}
+   "&:hover.show-tree-indicator:before,
+    &:focus-within.show-tree-indicator:before" {:opacity 1}
    "&:after" {:content        "''"
-              :zIndex        -1
+              :zIndex         0
               :position       "absolute"
-              :top            "0.75px"
-              :right          0
-              :bottom         "0.75px"
-              :left           0
+              :inset          "1px 0"
               :opacity        0
-              :pointerEvents "none"
-              :borderRadius "0.25rem"
-              :transition "opacity 0.075s ease"
+              :pointerEvents  "none"
+              :borderRadius   "sm"
+              :transition "opacity 0.075s ease-in-out"
               :background "link"}
-   "&.is-selected:after" {:opacity 1}
+   "&.is-selected:after" {:opacity 0.2}
    "&.is-presence .block-content" {:padding-right "1rem"}
    ".user-avatar" {:position "absolute"
                    :left "4px"
