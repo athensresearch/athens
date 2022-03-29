@@ -444,7 +444,7 @@
                                                         (or (and (true? linked-ref) (not (:linked-ref/open @state)))
                                                             (and (false? linked-ref) (not open))))
                                                "closed-with-children")
-                       :block block
+                       :block uid-sanitized-block
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
                        :onCopyRefs #(handle-copy-refs nil uid state)
                        :onCopyUnformatted #(handle-copy-unformatted uid state)

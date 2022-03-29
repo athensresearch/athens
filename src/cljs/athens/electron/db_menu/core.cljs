@@ -1,6 +1,6 @@
 (ns athens.electron.db-menu.core
   (:require
-   ["@chakra-ui/react" :refer [Box IconButton Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button Divider]]
+   ["@chakra-ui/react" :refer [Box IconButton Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button]]
    ["react-focus-lock" :default FocusLock]
    [athens.electron.db-menu.db-icon :refer [db-icon]]
    [athens.electron.db-menu.db-list-item :refer [db-list-item]]
@@ -26,7 +26,6 @@
 (defn db-menu
   []
   (let [all-dbs          @(subscribe [:db-picker/all-dbs])
-        active-db        @(subscribe [:db-picker/selected-db])
         merge-open?      (r/atom false)
         active-db        @(subscribe [:db-picker/selected-db])
         inactive-dbs     (dissoc all-dbs (:id active-db))
