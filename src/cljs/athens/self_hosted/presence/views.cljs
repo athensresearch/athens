@@ -1,13 +1,13 @@
 (ns athens.self-hosted.presence.views
   (:require
-   ["/components/PresenceDetails/PresenceDetails" :refer [PresenceDetails]]
-   ["@chakra-ui/react" :refer [Avatar AvatarGroup]]
-   [athens.self-hosted.presence.events]
-   [athens.self-hosted.presence.fx]
-   [athens.self-hosted.presence.subs]
-   [athens.util :as util]
-   [re-frame.core :as rf]
-   [reagent.core :as r]))
+    ["/components/PresenceDetails/PresenceDetails" :refer [PresenceDetails]]
+    ["@chakra-ui/react" :refer [Avatar AvatarGroup]]
+    [athens.self-hosted.presence.events]
+    [athens.self-hosted.presence.fx]
+    [athens.self-hosted.presence.subs]
+    [athens.util :as util]
+    [re-frame.core :as rf]
+    [reagent.core :as r]))
 
 
 (defn user->person
@@ -34,11 +34,11 @@
         (->> (js->clj js-person :keywordize-keys true)
              :personId
              (get all-users))]
-             (if page-uid
-                ;; TODO: if we support navigating to a block, it should be added here.
-               (rf/dispatch [:navigate :page {:id page-uid}])
-               (util/toast (clj->js {:title "User is not on any page"
-                                :status "warning"})))))
+    (if page-uid
+      ;; TODO: if we support navigating to a block, it should be added here.
+      (rf/dispatch [:navigate :page {:id page-uid}])
+      (util/toast (clj->js {:title "User is not on any page"
+                            :status "warning"})))))
 
 
 (defn edit-current-user
@@ -63,19 +63,19 @@
                                             vals
                                             (map user->person)
                                             (remove nil?))]
-    (fn []
-      (let [current-user'          (user->person @current-user)
-            current-page-members   (others-seq @same-page)
-            different-page-members (others-seq @diff-page)]
-        [:> PresenceDetails {:current-user              current-user'
-                             :current-page-members      current-page-members
-                             :different-page-members    different-page-members
-                             :host-address              (:url @selected-db)
-                             :handle-copy-host-address copy-host-address-to-clipboard
-                             :handle-press-member       #(go-to-user-block @all-users %)
-                             :handle-update-profile     #(edit-current-user %)
+              (fn []
+                (let [current-user'          (user->person @current-user)
+                      current-page-members   (others-seq @same-page)
+                      different-page-members (others-seq @diff-page)]
+                  [:> PresenceDetails {:current-user              current-user'
+                                       :current-page-members      current-page-members
+                                       :different-page-members    different-page-members
+                                       :host-address              (:url @selected-db)
+                                       :handle-copy-host-address copy-host-address-to-clipboard
+                                       :handle-press-member       #(go-to-user-block @all-users %)
+                                       :handle-update-profile     #(edit-current-user %)
                                        ;; TODO: show other states when we support them.
-                             :connection-status         "connected"}]))))
+                                       :connection-status         "connected"}]))))
 
 
 ;; inline
@@ -85,17 +85,17 @@
   (let [users (rf/subscribe [:presence/has-presence (util/embed-uid->original-uid uid)])]
     (when (seq @users)
       (into
-       [:> AvatarGroup {:max 3
-                        :zIndex 2
-                        :size "xs"
-                        :position "absolute"
-                        :right "-1.5rem"
-                        :top "0.25rem"}
-        (->> @users
-             (map user->person)
-             (remove nil?)
-             (map (fn [{:keys [personId] :as person}]
-                    [:> Avatar {:key personId
-                                :bg (:color person)
-                                :name (:username person)}])))]))))
+        [:> AvatarGroup {:max 3
+                         :zIndex 2
+                         :size "xs"
+                         :position "absolute"
+                         :right "-1.5rem"
+                         :top "0.25rem"}
+         (->> @users
+              (map user->person)
+              (remove nil?)
+              (map (fn [{:keys [personId] :as person}]
+                     [:> Avatar {:key personId
+                                 :bg (:color person)
+                                 :name (:username person)}])))]))))
 

@@ -1,15 +1,15 @@
 (ns athens.components
   (:require
-   ["@chakra-ui/react" :refer [Checkbox Box Button]]
-   ["@material-ui/icons/Edit" :default Edit]
-   [athens.db :as db]
-   [athens.parse-renderer :refer [component]]
-   [athens.reactive :as reactive]
-   [athens.util :refer [recursively-modify-block-for-embed]]
-   [athens.views.blocks.core :as blocks]
-   [clojure.string :as str]
-   [re-frame.core :refer [dispatch subscribe]]
-   [reagent.core :as r]))
+    ["@chakra-ui/react" :refer [Checkbox Box Button]]
+    ["@material-ui/icons/Edit" :default Edit]
+    [athens.db :as db]
+    [athens.parse-renderer :refer [component]]
+    [athens.reactive :as reactive]
+    [athens.util :refer [recursively-modify-block-for-embed]]
+    [athens.views.blocks.core :as blocks]
+    [clojure.string :as str]
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]))
 
 
 (defn todo-on-click

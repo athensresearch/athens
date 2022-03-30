@@ -1,7 +1,8 @@
 (ns athens.electron.db-menu.db-icon
   (:require
-   ["@chakra-ui/react" :refer [Box]]
-   [athens.electron.db-menu.status-indicator :refer [status-indicator]]))
+    ["@chakra-ui/react" :refer [Box]]
+    [athens.electron.db-menu.status-indicator :refer [status-indicator]]))
+
 
 (defn db-icon
   [{:keys [db status]}]

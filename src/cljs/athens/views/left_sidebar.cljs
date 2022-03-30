@@ -1,17 +1,18 @@
 (ns athens.views.left-sidebar
   (:require
-   ["@chakra-ui/react" :refer [VStack Flex Heading Button Link Flex]]
-   ["framer-motion" :refer [AnimatePresence motion]]
-   [athens.reactive :as reactive]
-   [athens.router   :as router]
-   [athens.util     :as util]
-   [re-frame.core   :as rf]
-   [reagent.core    :as r]))
+    ["@chakra-ui/react" :refer [VStack Flex Heading Button Link Flex]]
+    ["framer-motion" :refer [AnimatePresence motion]]
+    [athens.reactive :as reactive]
+    [athens.router   :as router]
+    [athens.util     :as util]
+    [re-frame.core   :as rf]
+    [reagent.core    :as r]))
 
 
 ;; Components
 
 (def expanded-sidebar-width "clamp(12rem, 25vw, 18rem)")
+
 
 (defn shortcut-component
   [_]
@@ -56,8 +57,8 @@
                                     (.. e preventDefault)
                                     (let [offset       (util/mouse-offset e)
                                           middle-y     (util/vertical-center (.. e -target))
-                                       ;; find closest li because sometimes event.target is anchor tag
-                                       ;; if nextSibling is null, then target is last li and therefore end of list
+                                          ;; find closest li because sometimes event.target is anchor tag
+                                          ;; if nextSibling is null, then target is last li and therefore end of list
                                           closest-li   (.. e -target (closest "li"))
                                           next-sibling (.. closest-li -nextElementSibling)
                                           last-child?  (nil? next-sibling)]
@@ -82,6 +83,7 @@
                                     (reset! drag nil))}
         title]])))
 
+
 (defn left-sidebar
   []
   (let [open?     (rf/subscribe [:left-sidebar/open])
@@ -91,7 +93,7 @@
        (when @open?
          [:> (.-div motion)
           {:style {:display "flex"
-                  ;;  :paddingTop "7.5rem"
+                   ;;  :paddingTop "7.5rem"
                    :flex-direction "column"
                    :height "100%"
                    :alignItems "stretch"
@@ -105,7 +107,7 @@
            :exit {:width 0
                   :opacity 0}}
 
-        ;; SHORTCUTS
+          ;; SHORTCUTS
           [:> VStack {:as "ol"
                       :align "stretch"
                       :width expanded-sidebar-width
@@ -122,11 +124,11 @@
                         :color "foreground.secondary"}
             "Shortcuts"]
            (doall
-            (for [sh shortcuts]
-              ^{:key (str "left-sidebar-" (second sh))}
-              [shortcut-component sh]))]
+             (for [sh shortcuts]
+               ^{:key (str "left-sidebar-" (second sh))}
+               [shortcut-component sh]))]
 
-        ;; LOGO + BOTTOM BUTTONS
+          ;; LOGO + BOTTOM BUTTONS
           [:> Flex {:as "footer"
                     :width expanded-sidebar-width
                     :flexWrap "wrap"

@@ -1,23 +1,23 @@
 (ns athens.effects
   (:require
-   [athens.async                :as async]
-   [athens.common-db            :as common-db]
-   [athens.common-events.schema :as schema]
-   [athens.common.logging       :as log]
-   [athens.common.sentry        :refer-macros [wrap-span wrap-span-no-new-tx]]
-   [athens.db                   :as db]
-   [athens.reactive             :as reactive]
-   [athens.self-hosted.client   :as client]
-   [cljs-http.client            :as http]
-   [cljs.core.async             :refer [go <!]]
-   [cljs.core.async.interop     :refer [<p!]]
-   [com.stuartsierra.component  :as component]
-   [datascript.core             :as d]
-   [day8.re-frame.async-flow-fx]
-   [goog.dom.selection          :refer [setCursorPosition]]
-   [malli.core                  :as m]
-   [malli.error                 :as me]
-   [re-frame.core               :as rf]))
+    [athens.async                :as async]
+    [athens.common-db            :as common-db]
+    [athens.common-events.schema :as schema]
+    [athens.common.logging       :as log]
+    [athens.common.sentry        :refer-macros [wrap-span wrap-span-no-new-tx]]
+    [athens.db                   :as db]
+    [athens.reactive             :as reactive]
+    [athens.self-hosted.client   :as client]
+    [cljs-http.client            :as http]
+    [cljs.core.async             :refer [go <!]]
+    [cljs.core.async.interop     :refer [<p!]]
+    [com.stuartsierra.component  :as component]
+    [datascript.core             :as d]
+    [day8.re-frame.async-flow-fx]
+    [goog.dom.selection          :refer [setCursorPosition]]
+    [malli.core                  :as m]
+    [malli.error                 :as me]
+    [re-frame.core               :as rf]))
 
 
 ;; Effects

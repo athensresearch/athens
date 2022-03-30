@@ -1,10 +1,10 @@
 (ns athens.views.help
   (:require
-   ["@chakra-ui/react" :refer [Text Heading Box Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
-   [athens.util :as util]
-   [clojure.string :as str]
-   [re-frame.core :refer [dispatch subscribe]]
-   [reagent.core :as r]))
+    ["@chakra-ui/react" :refer [Text Heading Box Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
+    [athens.util :as util]
+    [clojure.string :as str]
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]))
 
 
 ;; Helpers to create the help content
@@ -54,11 +54,11 @@
               :userSelect "all"
               :wordBreak  "break-word"}
      (as-> template t
-       (str/split t #"\$text")
-       (interleave t (concat faded-texts [nil]))
-       (map insert-spaces t)
-       (add-keys t)
-       (into [:<>] t))]))
+           (str/split t #"\$text")
+           (interleave t (concat faded-texts [nil]))
+           (map insert-spaces t)
+           (add-keys t)
+           (into [:<>] t))]))
 
 
 ;; Help content
@@ -185,7 +185,7 @@
                                     :color "highlightContrast"
                                     :borderRadius "0.1rem"
                                     :padding "0 0.125em"}
-                                    "Athens"]
+                           "Athens"]
              :shortcut    "mod+h"}]}
    {:name  "Graph"
     :items [{:description "Open Node in Sidebar"
@@ -223,25 +223,26 @@
                              (str/replace #"minus" "-")
                              (str/replace #"plus" "+")))
         keys           (as-> shortcut-str s
-                         (str/split s #"\+")
-                         (map key-to-display s))]
+                             (str/split s #"\+")
+                             (map key-to-display s))]
     [:> Box {:display "flex"
              :alignItems "center"
              :gap "0.3rem"}
 
      (doall
-      (for [key keys]
-        ^{:key key}
-        [:> Text {:fontFamily "inherit"
-                  :display "inline-flex"
-                  :gap "0.3em"
-                  :textTransform "uppercase"
-                  :fontSize "0.8em"
-                  :paddingInline "0.35em"
-                  :background "background.basement"
-                  :borderRadius "0.25rem"
-                  :fontWeight 600}
-         key]))]))
+       (for [key keys]
+         ^{:key key}
+         [:> Text {:fontFamily "inherit"
+                   :display "inline-flex"
+                   :gap "0.3em"
+                   :textTransform "uppercase"
+                   :fontSize "0.8em"
+                   :paddingInline "0.35em"
+                   :background "background.basement"
+                   :borderRadius "0.25rem"
+                   :fontWeight 600}
+          key]))]))
+
 
 (defn help-section
   [title & children]
@@ -256,9 +257,9 @@
                 :padding "1rem 1.5rem"}
     title]
    (doall
-    (for [child children]
-      ^{:key (hash child)}
-      child))])
+     (for [child children]
+       ^{:key (hash child)}
+       child))])
 
 
 (defn help-section-group
@@ -276,9 +277,9 @@
     title]
    [:div
     (doall
-     (for [child children]
-       ^{:key (hash child)}
-       child))]])
+      (for [child children]
+        ^{:key (hash child)}
+        child))]])
 
 
 (defn help-item
@@ -307,28 +308,28 @@
   []
   (r/with-let [open? (subscribe [:help/open?])
                close #(dispatch [:help/toggle])]
-    [:> Modal {:isOpen             @open?
-               :onClose          close
-               :scrollBehavior "outside"
-               :size "full"}
-     [:> ModalOverlay]
-     [:> ModalContent {:maxWidth "calc(100% - 8rem)"
-                       :width "max-content"
-                       :my "4rem"}
-      [:> ModalHeader "Help"
-       [:> ModalCloseButton]]
-      [:> ModalBody {:flexDirection "column"}
-       (doall
-        (for [section content]
-          ^{:key section}
-          [help-section (:name section)
-           (doall
-            (for [group (:groups section)]
-              ^{:key group}
-              [help-section-group (:name group)
-               (doall
-                (for [item (:items group)]
-                  ^{:key item}
-                  [help-item item]))]))]))]]]))
+              [:> Modal {:isOpen             @open?
+                         :onClose          close
+                         :scrollBehavior "outside"
+                         :size "full"}
+               [:> ModalOverlay]
+               [:> ModalContent {:maxWidth "calc(100% - 8rem)"
+                                 :width "max-content"
+                                 :my "4rem"}
+                [:> ModalHeader "Help"
+                 [:> ModalCloseButton]]
+                [:> ModalBody {:flexDirection "column"}
+                 (doall
+                   (for [section content]
+                     ^{:key section}
+                     [help-section (:name section)
+                      (doall
+                        (for [group (:groups section)]
+                          ^{:key group}
+                          [help-section-group (:name group)
+                           (doall
+                             (for [item (:items group)]
+                               ^{:key item}
+                               [help-item item]))]))]))]]]))
 
 

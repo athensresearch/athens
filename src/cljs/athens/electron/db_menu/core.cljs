@@ -1,13 +1,14 @@
 (ns athens.electron.db-menu.core
   (:require
-   ["@chakra-ui/react" :refer [Box IconButton Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button]]
-   ["react-focus-lock" :default FocusLock]
-   [athens.electron.db-menu.db-icon :refer [db-icon]]
-   [athens.electron.db-menu.db-list-item :refer [db-list-item]]
-   [athens.electron.db-modal :as db-modal]
-   [athens.electron.dialogs :as dialogs]
-   [re-frame.core :refer [dispatch subscribe]]
-   [reagent.core :as r]))
+    ["@chakra-ui/react" :refer [Box IconButton Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button]]
+    ["react-focus-lock" :default FocusLock]
+    [athens.electron.db-menu.db-icon :refer [db-icon]]
+    [athens.electron.db-menu.db-list-item :refer [db-list-item]]
+    [athens.electron.db-modal :as db-modal]
+    [athens.electron.dialogs :as dialogs]
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]))
+
 
 ;; Components
 
@@ -41,27 +42,27 @@
         ;; DB Icon + Dropdown toggle
         [db-icon {:db     active-db
                   :status sync-status}]]]
-    ;; Dropdown menu
+      ;; Dropdown menu
       [:> Portal
        [:> PopoverContent {:overflow-y "auto"}
         [:> FocusLock
          [:> VStack {:align "stretch"
                      :overflow "hidden"
                      :spacing 0}
-        ;; Show active DB first
+          ;; Show active DB first
           [:> Box {:bg "background.floor"
                    :pb 4}
            [db-list-item {:db active-db
                           :is-current true
                           :key (:id active-db)}]
            [current-db-tools {:db active-db} all-dbs merge-open?]]
-                    ;; Show all inactive DBs and a separator
+          ;; Show all inactive DBs and a separator
           [:> Heading {:fontSize "xs"
                        :py 4
                        :pb 3
                        :borderTop "1px solid"
                        :borderTopColor "separator.divider"
-                      ;;  :bg "background.floor"
+                       ;;  :bg "background.floor"
                        :px 10
                        :letterSpacing "wide"
                        :textTransform "uppercase"
@@ -73,11 +74,11 @@
                       :overflow-y "auto"}
            {:align "stretch" :spacing 0}
            (doall
-            (for [[key db] inactive-dbs]
-              [db-list-item {:db db
-                             :is-current false
-                             :key key}]))]
-                    ;; Add DB control
+             (for [[key db] inactive-dbs]
+               [db-list-item {:db db
+                              :is-current false
+                              :key key}]))]
+          ;; Add DB control
           [:> ButtonGroup {:borderTop "1px solid" :borderTopColor "separator.divider" :p 2 :pt 0 :pl 10 :size "sm" :width "100%" :ml 10 :justifyContent "flex-start"}
            [:> Button {:onClick #(dispatch [:modal/toggle])}
             "Add Database"]]]]]]]]))

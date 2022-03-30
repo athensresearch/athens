@@ -1,11 +1,11 @@
 (ns athens.views.blocks.context-menu
   (:require
-   [athens.db :as db]
-   [athens.listeners :as listeners]
-   [athens.subs.selection :as select-subs]
-   [athens.util :refer [toast]]
-   [clojure.string :as string]
-   [re-frame.core :as rf]))
+    [athens.db :as db]
+    [athens.listeners :as listeners]
+    [athens.subs.selection :as select-subs]
+    [athens.util :refer [toast]]
+    [clojure.string :as string]
+    [re-frame.core :as rf]))
 
 
 (defn handle-copy-refs

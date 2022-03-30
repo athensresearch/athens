@@ -1,21 +1,20 @@
 (ns athens.views.athena
   (:require
-   ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
-   ["@material-ui/icons/Close" :default Close]
-   [athens.common.utils :as utils]
-   [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
-   [athens.router       :as router]
-   [athens.subs]
-   [athens.util         :refer [scroll-into-view]]
-   [clojure.string      :as str]
-   [goog.dom            :refer [getElement]]
-   [goog.events         :as events]
-   [re-frame.core       :as rf :refer [subscribe dispatch]]
-   [reagent.core        :as r])
+    ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
+    ["@material-ui/icons/Close" :default Close]
+    [athens.common.utils :as utils]
+    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
+    [athens.router       :as router]
+    [athens.subs]
+    [athens.util         :refer [scroll-into-view]]
+    [clojure.string      :as str]
+    [goog.dom            :refer [getElement]]
+    [goog.events         :as events]
+    [re-frame.core       :as rf :refer [subscribe dispatch]]
+    [reagent.core        :as r])
   (:import
-   (goog.events
-    KeyCodes)))
-
+    (goog.events
+      KeyCodes)))
 
 
 ;; Utilities
@@ -25,12 +24,12 @@
   [query txt]
   (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
     (doall
-     (map-indexed (fn [i part]
-                    (if (re-find query-pattern part)
-                      [:> Text {:class "result-highlight"
-                                :key i} part]
-                      part))
-                  (str/split txt query-pattern)))))
+      (map-indexed (fn [i part]
+                     (if (re-find query-pattern part)
+                       [:> Text {:class "result-highlight"
+                                 :key i} part]
+                       part))
+                   (str/split txt query-pattern)))))
 
 
 (defn create-search-handler
@@ -43,10 +42,10 @@
       (reset! state {:index   0
                      :query   query
                      :results (vec
-                               (concat
-                                [(search-exact-node-title query)]
-                                (search-in-node-title query 20 true)
-                                (search-in-block-content query)))}))))
+                                (concat
+                                  [(search-exact-node-title query)]
+                                  (search-in-node-title query 20 true)
+                                  (search-in-block-content query)))}))))
 
 
 (defn key-down-handler
@@ -179,19 +178,18 @@
                    :overflowY "overlay"
                    :_empty {:display "none"}}
         (doall
-         (for [[i x] (map-indexed list recent-items)]
-           (when x
-             (let [{:keys [query :node/title :block/string]} x]
-               [result-el {:key      i
-                           :title title
-                           :query query
-                           :preview string
-                           :on-click (fn [e]
-                                       (rf/dispatch [:reporting/navigation {:source :athena
-                                                                            :target :page
-                                                                            :pane   :main-pane}])
-                                       (router/navigate-page title e))}]))))])]))
-
+          (for [[i x] (map-indexed list recent-items)]
+            (when x
+              (let [{:keys [query :node/title :block/string]} x]
+                [result-el {:key      i
+                            :title title
+                            :query query
+                            :preview string
+                            :on-click (fn [e]
+                                        (rf/dispatch [:reporting/navigation {:source :athena
+                                                                             :target :page
+                                                                             :pane   :main-pane}])
+                                        (router/navigate-page title e))}]))))])]))
 
 
 (defn search-results-el
@@ -207,49 +205,49 @@
               :overflowY "overlay"
               :_empty {:display "none"}}
    (doall
-    (for [[i x] (map-indexed list results)
-          :let  [block-uid (:block/uid x)
-                 parent    (:block/parent x)
-                 title     (or (:node/title parent) (:node/title x))
-                 uid       (or (:block/uid parent) (:block/uid x))
-                 string    (:block/string x)]]
-      (if (nil? x)
-        ^{:key i}
-        [result-el {:key      i
-                    :title    query
-                    :prefix   "Create page "
-                    :preview  nil
-                    :query    query
-                    :active?  (= i index)
-                    :on-click (fn [e]
-                                (rf/dispatch [:athena/toggle])
-                                (rf/dispatch [:right-sidebar/open-page (:node/title x) e])
-                                (rf/dispatch [:reporting/navigation {:source :athena
-                                                                     :target :page
-                                                                     :pane   :right-pane}]))}]
-        [result-el {:key i
-                    :title title
-                    :query query
-                    :preview string
-                    :active? (= i index)
-                    :on-click (fn [e]
-                                (let [selected-page {:node/title   title
-                                                     :block/uid    uid
-                                                     :block/string string
-                                                     :query        query}
-                                      shift?        (.-shiftKey e)]
-                                  (dispatch [:athena/toggle])
-                                  (dispatch [:athena/update-recent-items selected-page])
-                                  (dispatch [:reporting/navigation {:source :athena
-                                                                    :target (if parent
-                                                                              :block
-                                                                              :page)
-                                                                    :pane   (if shift?
-                                                                              :right-pane
-                                                                              :main-pane)}])
-                                  (if parent
-                                    (router/navigate-uid block-uid)
-                                    (router/navigate-page title e))))}])))])
+     (for [[i x] (map-indexed list results)
+           :let  [block-uid (:block/uid x)
+                  parent    (:block/parent x)
+                  title     (or (:node/title parent) (:node/title x))
+                  uid       (or (:block/uid parent) (:block/uid x))
+                  string    (:block/string x)]]
+       (if (nil? x)
+         ^{:key i}
+         [result-el {:key      i
+                     :title    query
+                     :prefix   "Create page "
+                     :preview  nil
+                     :query    query
+                     :active?  (= i index)
+                     :on-click (fn [e]
+                                 (rf/dispatch [:athena/toggle])
+                                 (rf/dispatch [:right-sidebar/open-page (:node/title x) e])
+                                 (rf/dispatch [:reporting/navigation {:source :athena
+                                                                      :target :page
+                                                                      :pane   :right-pane}]))}]
+         [result-el {:key i
+                     :title title
+                     :query query
+                     :preview string
+                     :active? (= i index)
+                     :on-click (fn [e]
+                                 (let [selected-page {:node/title   title
+                                                      :block/uid    uid
+                                                      :block/string string
+                                                      :query        query}
+                                       shift?        (.-shiftKey e)]
+                                   (dispatch [:athena/toggle])
+                                   (dispatch [:athena/update-recent-items selected-page])
+                                   (dispatch [:reporting/navigation {:source :athena
+                                                                     :target (if parent
+                                                                               :block
+                                                                               :page)
+                                                                     :pane   (if shift?
+                                                                               :right-pane
+                                                                               :main-pane)}])
+                                   (if parent
+                                     (router/navigate-uid block-uid)
+                                     (router/navigate-page title e))))}])))])
 
 
 (defn athena-component

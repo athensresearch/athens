@@ -1,14 +1,14 @@
 (ns athens.util
   (:require
-   ["/textarea" :as getCaretCoordinates]
-   ["/theme/theme" :refer [theme]]
-   ["@chakra-ui/react" :refer [createStandaloneToast]]
-   [athens.config :as config]
-   [athens.electron.utils :as electron.utils]
-   [clojure.string :as string]
-   [cognitect.transit :as tr]
-   [com.rpl.specter :as s]
-   [goog.dom :refer [getElement setProperties]])
+    ["/textarea" :as getCaretCoordinates]
+    ["/theme/theme" :refer [theme]]
+    ["@chakra-ui/react" :refer [createStandaloneToast]]
+    [athens.config :as config]
+    [athens.electron.utils :as electron.utils]
+    [clojure.string :as string]
+    [cognitect.transit :as tr]
+    [com.rpl.specter :as s]
+    [goog.dom :refer [getElement setProperties]])
   (:require-macros
     [com.rpl.specter :refer [recursive-path]])
   (:import
@@ -17,7 +17,6 @@
 
 
 (def toast (createStandaloneToast (clj->js {:theme theme})))
-
 
 
 ;; Electron ipcMain Channels

@@ -1,14 +1,14 @@
 (ns athens.views.pages.settings
   (:require
-   ["@chakra-ui/react" :refer [Text Heading Box FormControl FormLabel ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
-   [athens.db :refer [default-athens-persist]]
-   [athens.util :refer [toast]]
-   [cljs-http.client :as http]
-   [cljs.core.async :refer [<!]]
-   [re-frame.core :refer [subscribe dispatch reg-event-fx]]
-   [reagent.core :as r])
+    ["@chakra-ui/react" :refer [Text Heading Box FormControl FormLabel ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
+    [athens.db :refer [default-athens-persist]]
+    [athens.util :refer [toast]]
+    [cljs-http.client :as http]
+    [cljs.core.async :refer [<!]]
+    [re-frame.core :refer [subscribe dispatch reg-event-fx]]
+    [reagent.core :as r])
   (:require-macros
-   [cljs.core.async.macros :refer [go]]))
+    [cljs.core.async.macros :refer [go]]))
 
 
 ;; Helpers
@@ -31,16 +31,16 @@
             (and (:success resp) (false? (:email_exists (:body resp))))
             (do
               (update-fn nil)
-              
+
               (toast (clj->js {:title "Account not found"
                                :status "error"
                                :description "No OpenCollective account was found with this email address."})))
-              
+
             ;; Something else, e.g. networking error
-              :else
-              (toast (clj->js {:title "Unknown error"
-                               :status "error"
-                               :description resp})))))))
+            :else
+            (toast (clj->js {:title "Unknown error"
+                             :status "error"
+                             :description resp})))))))
 
 
 (defn handle-reset-email
@@ -80,21 +80,27 @@
   [:> Heading {:size "md"}
    children])
 
-(defn header [children]
+
+(defn header
+  [children]
   [:> Box {:gridArea "header"} children])
+
 
 (defn glance
   [children]
   [:> Box children])
 
+
 (defn form
   [children]
   [:> Box {:gridArea "form"} children])
 
+
 (defn help
   [children]
-  [:> Text {:color "foreground.secondary" 
-  :gridArea "help"} children])
+  [:> Text {:color "foreground.secondary"
+            :gridArea "help"} children])
+
 
 (defn setting-wrapper
   ([children]
@@ -201,7 +207,6 @@
      [:> Button {:isDisabled true} "Backup my DB to the cloud"]]]])
 
 
-
 (defn reset-settings-comp
   [reset-fn]
   [setting-wrapper
@@ -218,16 +223,16 @@
 
 
 (reg-event-fx
- :settings/update
- (fn [{:keys [db]} [_ k v]]
-   {:db (assoc-in db [:athens/persist :settings k] v)}))
+  :settings/update
+  (fn [{:keys [db]} [_ k v]]
+    {:db (assoc-in db [:athens/persist :settings k] v)}))
 
 
 (reg-event-fx
- :settings/reset
- (fn [{:keys [db]} _]
-   {:db (assoc db :athens/persist default-athens-persist)
-    :dispatch [:boot]}))
+  :settings/reset
+  (fn [{:keys [db]} _]
+    {:db (assoc db :athens/persist default-athens-persist)
+     :dispatch [:boot]}))
 
 
 (defn page

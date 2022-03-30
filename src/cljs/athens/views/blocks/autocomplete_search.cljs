@@ -1,8 +1,8 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-   ["@chakra-ui/react" :refer [Portal Text Menu MenuList MenuItem]]
-   [athens.views.blocks.textarea-keydown :as textarea-keydown]
-   [clojure.string :as string]))
+    ["@chakra-ui/react" :refer [Portal Text Menu MenuList MenuItem]]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [clojure.string :as string]))
 
 
 (defn inline-item-click
@@ -35,11 +35,11 @@
                    (empty? results))
              [:> Text (str "Search for a " (symbol type))]
              (doall
-              (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-                [:> MenuItem {:key      (str "inline-search-item-" uid)
-                              :id       (str "dropdown-item-" i)
-                              :class (when (= i index) "isActive")
-                                                         ;; if page link, expand to title. otherwise expand to uid for a block ref
-                              :onClick (fn [_] (inline-item-click state (:block/uid block) (or title uid)))}
-                 (or title string)])))]]]))))
-                 
+               (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+                 [:> MenuItem {:key      (str "inline-search-item-" uid)
+                               :id       (str "dropdown-item-" i)
+                               :class (when (= i index) "isActive")
+                               ;; if page link, expand to title. otherwise expand to uid for a block ref
+                               :onClick (fn [_] (inline-item-click state (:block/uid block) (or title uid)))}
+                  (or title string)])))]]]))))
+

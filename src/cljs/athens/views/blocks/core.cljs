@@ -1,32 +1,32 @@
 (ns athens.views.blocks.core
   (:require
-   ["/components/Block/components/Anchor"   :refer [Anchor]]
-   ["/components/Block/components/Toggle"   :refer [Toggle]]
-   ["@chakra-ui/react" :refer [VStack Box Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
-   [athens.common.logging                   :as log]
-   [athens.db                               :as db]
-   [athens.electron.images                  :as images]
-   [athens.electron.utils                   :as electron.utils]
-   [athens.events.selection                 :as select-events]
-   [athens.parse-renderer                   :as parse-renderer]
-   [athens.reactive                         :as reactive]
-   [athens.router                           :as router]
-   [athens.self-hosted.presence.views       :as presence]
-   [athens.subs.selection                   :as select-subs]
-   [athens.util                             :as util :refer [mouse-offset vertical-center 
-   ; specter-recursive-path
-   ]]
-   [athens.views.blocks.autocomplete-search :as autocomplete-search]
-   [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
-   [athens.views.blocks.bullet              :refer [bullet-drag-start bullet-drag-end]]
-   [athens.views.blocks.content             :as content]
-   [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
-   [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-   [athens.views.references                 :refer [reference-group reference-block]]
-   ;; [com.rpl.specter                         :as s]
-   [goog.functions                          :as gfns]
-   [re-frame.core                           :as rf]
-   [reagent.core                            :as r]))
+    ["/components/Block/components/Anchor"   :refer [Anchor]]
+    ["/components/Block/components/Toggle"   :refer [Toggle]]
+    ["@chakra-ui/react" :refer [VStack Box Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    [athens.common.logging                   :as log]
+    [athens.db                               :as db]
+    [athens.electron.images                  :as images]
+    [athens.electron.utils                   :as electron.utils]
+    [athens.events.selection                 :as select-events]
+    [athens.parse-renderer                   :as parse-renderer]
+    [athens.reactive                         :as reactive]
+    [athens.router                           :as router]
+    [athens.self-hosted.presence.views       :as presence]
+    [athens.subs.selection                   :as select-subs]
+    [athens.util                             :as util :refer [mouse-offset vertical-center
+                                                              ;; specter-recursive-path
+                                                              ]]
+    [athens.views.blocks.autocomplete-search :as autocomplete-search]
+    [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
+    [athens.views.blocks.bullet              :refer [bullet-drag-start bullet-drag-end]]
+    [athens.views.blocks.content             :as content]
+    [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
+    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+    [athens.views.references                 :refer [reference-group reference-block]]
+    ;; [com.rpl.specter                         :as s]
+    [goog.functions                          :as gfns]
+    [re-frame.core                           :as rf]
+    [reagent.core                            :as r]))
 
 
 ;; Styles
@@ -143,8 +143,8 @@
                [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
                 [:> BreadcrumbLink {:onClick #(let [new-B (db/get-block [:block/uid uid])
                                                     new-P (concat
-                                                           (take-while (fn [b] (not= (:block/uid b) uid)) parents)
-                                                           [breadcrumb-block])]
+                                                            (take-while (fn [b] (not= (:block/uid b) uid)) parents)
+                                                            [breadcrumb-block])]
                                                 (.. % stopPropagation)
                                                 (swap! state assoc :block new-B :parents new-P :focus? false))}
                  [parse-renderer/parse-and-render (or title string) uid]]]))]]
@@ -186,31 +186,31 @@
                   :borderRadius "sm"
                   :background "background.basement"}
        (doall
-        (for [[group-title group] refs]
-          [reference-group {:title group-title
-                            :key (str "group-" group-title)}
-           (doall
-            (for [block' group]
-              [reference-block {:key (str "ref-" (:block/uid block'))}
-               [ref-comp block' state]]))]))])))
+         (for [[group-title group] refs]
+           [reference-group {:title group-title
+                             :key (str "group-" group-title)}
+            (doall
+              (for [block' group]
+                [reference-block {:key (str "ref-" (:block/uid block'))}
+                 [ref-comp block' state]]))]))])))
 
 
 ;; Components
 
 (defn block-refs-count-el
   [count click-fn active?]
-   [:> Button {:gridArea "refs"
-               :size "xs"
-               :ml "1em"
-               :mt 1
-               :mr 1
-               :zIndex 10
-               :visibility (if (pos? count) "visible" "hidden")
-               :isActive active?
-               :onClick (fn [e]
-                          (.. e stopPropagation)
-                          (click-fn e))}
-    count])
+  [:> Button {:gridArea "refs"
+              :size "xs"
+              :ml "1em"
+              :mt 1
+              :mr 1
+              :zIndex 10
+              :visibility (if (pos? count) "visible" "hidden")
+              :isActive active?
+              :onClick (fn [e]
+                         (.. e stopPropagation)
+                         (click-fn e))}
+   count])
 
 
 (defn block-drag-over
@@ -438,15 +438,15 @@
           [:div.block-body
            (when (seq children)
              [:> Toggle {:isOpen (if (or (and (true? linked-ref) (:linked-ref/open @state))
-                                             (and (false? linked-ref) open))
-                                       true
-                                       false)
-                             :onClick (fn [e]
-                                        (.. e stopPropagation)
-                                        (if (true? linked-ref)
-                                          (swap! state update :linked-ref/open not)
-                                          (toggle uid (not open))))}])
-            [:> Anchor {:isClosedWithChildren (when (and (seq children)
+                                         (and (false? linked-ref) open))
+                                   true
+                                   false)
+                         :onClick (fn [e]
+                                    (.. e stopPropagation)
+                                    (if (true? linked-ref)
+                                      (swap! state update :linked-ref/open not)
+                                      (toggle uid (not open))))}])
+           [:> Anchor {:isClosedWithChildren (when (and (seq children)
                                                         (or (and (true? linked-ref) (not (:linked-ref/open @state)))
                                                             (and (false? linked-ref) (not open))))
                                                "closed-with-children")
@@ -468,7 +468,7 @@
 
            [presence/inline-presence-el uid]
 
-            (when (and (> (count _refs) 0) (not= :block-embed? opts))
+           (when (and (> (count _refs) 0) (not= :block-embed? opts))
              [block-refs-count-el
               (count _refs)
               (fn [e]
@@ -478,11 +478,11 @@
               (:inline-refs/open @state)])]
 
 
-           [autocomplete-search/inline-search-el block state]
+          [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
 
           ;; Inline refs
-           (when (and (> (count _refs) 0)
+          (when (and (> (count _refs) 0)
                      (not= :block-embed? opts)
                      (:inline-refs/open @state))
             [inline-linked-refs-el state uid])

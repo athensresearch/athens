@@ -1,9 +1,9 @@
 (ns athens.electron.db-menu.status-indicator
   (:require
-   ["@chakra-ui/react" :refer [Box Tooltip]]
-   ["@material-ui/icons/CheckCircle" :default CheckCircle]
-   ["@material-ui/icons/Error" :default Error]
-   ["@material-ui/icons/Sync" :default Sync]))
+    ["@chakra-ui/react" :refer [Box Tooltip]]
+    ["@material-ui/icons/CheckCircle" :default CheckCircle]
+    ["@material-ui/icons/Error" :default Error]
+    ["@material-ui/icons/Sync" :default Sync]))
 
 
 (defn status-indicator

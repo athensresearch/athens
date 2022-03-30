@@ -1,16 +1,16 @@
 (ns athens.views.pages.block-page
   (:require
-   ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
-   [athens.parse-renderer :as parse-renderer]
-   [athens.reactive :as reactive]
-   [athens.router :as router]
-   [athens.views.blocks.core :as blocks]
-   [athens.views.pages.header :refer [page-header editable-title-container]]
-   [athens.views.pages.node-page :as node-page]
-   [athens.views.references :refer [reference-group reference-block]]
-   [komponentit.autosize :as autosize]
-   [re-frame.core :as rf :refer [dispatch subscribe]]
-   [reagent.core :as r]))
+    ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
+    [athens.parse-renderer :as parse-renderer]
+    [athens.reactive :as reactive]
+    [athens.router :as router]
+    [athens.views.blocks.core :as blocks]
+    [athens.views.pages.header :refer [page-header editable-title-container]]
+    [athens.views.pages.node-page :as node-page]
+    [athens.views.references :refer [reference-group reference-block]]
+    [komponentit.autosize :as autosize]
+    [re-frame.core :as rf :refer [dispatch subscribe]]
+    [reagent.core :as r]))
 
 
 ;; Helpers
@@ -52,15 +52,15 @@
   (let [linked-refs (reactive/get-reactive-linked-references id)]
     (when (seq linked-refs)
       [:> Accordion
-        [:> AccordionItem
-         [:h2
-          [:> AccordionButton
-           [:> AccordionIcon "LinkedReferences"]]]
-         [:> AccordionPanel {:px 0}
-          [:> VStack {:spacing 6
-                      :pl 6
-                      :align "stretch"}
-           (doall
+       [:> AccordionItem
+        [:h2
+         [:> AccordionButton
+          [:> AccordionIcon "LinkedReferences"]]]
+        [:> AccordionPanel {:px 0}
+         [:> VStack {:spacing 6
+                     :pl 6
+                     :align "stretch"}
+          (doall
             (for [[group-title group] linked-refs]
               [reference-group {:key (str "group-" group-title)
                                 :title group-title
@@ -74,9 +74,9 @@
                                                                                                    :main-pane)}])
                                                     (router/navigate-page parsed-title)))}
                (doall
-                (for [block group]
-                  [reference-block {:key (str "ref-" (:block/uid block))}
-                   [node-page/ref-comp block]]))]))]]]])))
+                 (for [block group]
+                   [reference-block {:key (str "ref-" (:block/uid block))}
+                    [node-page/ref-comp block]]))]))]]]])))
 
 
 (defn parents-el
@@ -84,12 +84,12 @@
   (let [parents (reactive/get-reactive-parents-recursively id)]
     [:> Breadcrumb
      (doall
-      (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
-        ^{:key breadcrumb-uid}
-        [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
-         [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid)}
-          [:span {:style {:pointer-events "none"}}
-           [parse-renderer/parse-and-render (or title string)]]]]))]))
+       (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
+         ^{:key breadcrumb-uid}
+         [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
+          [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid)}
+           [:span {:style {:pointer-events "none"}}
+            [parse-renderer/parse-and-render (or title string)]]]]))]))
 
 
 (defn block-page-el
@@ -107,36 +107,36 @@
 
          ;; Header
          [page-header
-         [editable-title-container {:onClick (fn [e]
-                                               (.. e preventDefault)
-                                               (if (.. e -shiftKey)
-                                                 (do
-                                                   (rf/dispatch [:reporting/navigation {:source :block-page
-                                                                                        :target :block
-                                                                                        :pane   :right-pane}])
-                                                   (router/navigate-uid uid e))
+          [editable-title-container {:onClick (fn [e]
+                                                (.. e preventDefault)
+                                                (if (.. e -shiftKey)
+                                                  (do
+                                                    (rf/dispatch [:reporting/navigation {:source :block-page
+                                                                                         :target :block
+                                                                                         :pane   :right-pane}])
+                                                    (router/navigate-uid uid e))
 
-                                                 (dispatch [:editing/uid uid])))}
-          [:<>
-           [autosize/textarea
-            {:id          (str "editable-uid-" uid)
-             :value       (:string/local @state)
-             :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
-             :auto-focus  true
-             :on-blur     (fn [_] (persist-textarea-string @state uid))
-             :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
-             :on-change   (fn [e] (block-page-change e uid state))}]
-           (if (clojure.string/blank? (:string/local @state))
-             [:wbr]
-             [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]]]
+                                                  (dispatch [:editing/uid uid])))}
+           [:<>
+            [autosize/textarea
+             {:id          (str "editable-uid-" uid)
+              :value       (:string/local @state)
+              :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
+              :auto-focus  true
+              :on-blur     (fn [_] (persist-textarea-string @state uid))
+              :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
+              :on-change   (fn [e] (block-page-change e uid state))}]
+            (if (clojure.string/blank? (:string/local @state))
+              [:wbr]
+              [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]]]
 
          ;; Children
-          [:div (for [child children]
-                  (let [{:keys [db/id]} child]
-                    ^{:key id} [blocks/block-el child]))]
+         [:div (for [child children]
+                 (let [{:keys [db/id]} child]
+                   ^{:key id} [blocks/block-el child]))]
 
          ;; Refs
-          [linked-refs-el id]]))))
+         [linked-refs-el id]]))))
 
 
 (defn page

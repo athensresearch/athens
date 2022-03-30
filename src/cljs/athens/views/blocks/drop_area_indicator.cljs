@@ -1,6 +1,7 @@
 (ns athens.views.blocks.drop-area-indicator
   (:require
-   ["@chakra-ui/react" :refer [Box]]))
+    ["@chakra-ui/react" :refer [Box]]))
+
 
 (defn drop-area-indicator
   ([{:keys [placement child?]}]

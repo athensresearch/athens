@@ -1,92 +1,92 @@
 (ns athens.events
   (:require
-   [athens.athens-datoms                 :as athens-datoms]
-   [athens.common-db                     :as common-db]
-   [athens.common-events                 :as common-events]
-   [athens.common-events.bfs             :as bfs]
-   [athens.common-events.graph.atomic    :as atomic-graph-ops]
-   [athens.common-events.graph.composite :as composite-ops]
-   [athens.common-events.graph.ops       :as graph-ops]
-   [athens.common-events.resolver.atomic :as atomic-resolver]
-   [athens.common-events.resolver.undo   :as undo-resolver]
-   [athens.common-events.schema          :as schema]
-   [athens.common.logging                :as log]
-   [athens.common.sentry                 :refer-macros [wrap-span-no-new-tx]]
-   [athens.common.utils                  :as common.utils]
-   [athens.dates                         :as dates]
-   [athens.db                            :as db]
-   [athens.electron.db-picker            :as db-picker]
-   [athens.electron.images               :as images]
-   [athens.electron.monitoring.core]
-   [athens.electron.utils                :as electron.utils]
-   [athens.events.remote                 :as events-remote]
-   [athens.events.sentry]
-   [athens.interceptors                  :as interceptors]
-   [athens.patterns                      :as patterns]
-   [athens.undo                          :as undo]
-   [athens.util                          :as util]
-   [athens.utils.sentry                  :as sentry]
-   [athens.views.blocks.textarea-keydown :as textarea-keydown]
-   [clojure.string                       :as string]
-   [datascript.core                      :as d]
-   [day8.re-frame.async-flow-fx]
-   [day8.re-frame.tracing                :refer-macros [fn-traced]]
-   [goog.dom                             :refer [getElement]]
-   [malli.core                           :as m]
-   [malli.error                          :as me]
-   [re-frame.core                        :as rf :refer [reg-event-db reg-event-fx subscribe]]))
+    [athens.athens-datoms                 :as athens-datoms]
+    [athens.common-db                     :as common-db]
+    [athens.common-events                 :as common-events]
+    [athens.common-events.bfs             :as bfs]
+    [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.graph.composite :as composite-ops]
+    [athens.common-events.graph.ops       :as graph-ops]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common-events.resolver.undo   :as undo-resolver]
+    [athens.common-events.schema          :as schema]
+    [athens.common.logging                :as log]
+    [athens.common.sentry                 :refer-macros [wrap-span-no-new-tx]]
+    [athens.common.utils                  :as common.utils]
+    [athens.dates                         :as dates]
+    [athens.db                            :as db]
+    [athens.electron.db-picker            :as db-picker]
+    [athens.electron.images               :as images]
+    [athens.electron.monitoring.core]
+    [athens.electron.utils                :as electron.utils]
+    [athens.events.remote                 :as events-remote]
+    [athens.events.sentry]
+    [athens.interceptors                  :as interceptors]
+    [athens.patterns                      :as patterns]
+    [athens.undo                          :as undo]
+    [athens.util                          :as util]
+    [athens.utils.sentry                  :as sentry]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [clojure.string                       :as string]
+    [datascript.core                      :as d]
+    [day8.re-frame.async-flow-fx]
+    [day8.re-frame.tracing                :refer-macros [fn-traced]]
+    [goog.dom                             :refer [getElement]]
+    [malli.core                           :as m]
+    [malli.error                          :as me]
+    [re-frame.core                        :as rf :refer [reg-event-db reg-event-fx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
 
 (reg-event-fx
- :create-in-memory-conn
- (fn [_ _]
-   (let [conn (d/create-conn common-db/schema)]
-     (doseq [[_id data] athens-datoms/welcome-events]
-       (atomic-resolver/resolve-transact! conn data))
-     {:async-flow {:id             :db-in-mem-load
-                   :db-path        [:async-flow :db/in-mem-load]
-                   :first-dispatch [:reset-conn @conn]
-                   :rules          [{:when     :seen?
-                                     :events   :success-reset-conn
-                                     :dispatch [:stage/success-db-load]
-                                     :halt?    true}]}})))
+  :create-in-memory-conn
+  (fn [_ _]
+    (let [conn (d/create-conn common-db/schema)]
+      (doseq [[_id data] athens-datoms/welcome-events]
+        (atomic-resolver/resolve-transact! conn data))
+      {:async-flow {:id             :db-in-mem-load
+                    :db-path        [:async-flow :db/in-mem-load]
+                    :first-dispatch [:reset-conn @conn]
+                    :rules          [{:when     :seen?
+                                      :events   :success-reset-conn
+                                      :dispatch [:stage/success-db-load]
+                                      :halt?    true}]}})))
 
 
 (rf/reg-event-db
- :stage/success-db-load
- (fn [db]
-   (js/console.debug ":stage/success-db-load")
-   db))
+  :stage/success-db-load
+  (fn [db]
+    (js/console.debug ":stage/success-db-load")
+    db))
 
 
 (rf/reg-event-db
- :stage/fail-db-load
- (fn [db]
-   (js/console.debug ":stage/fail-db-load")
-   db))
+  :stage/fail-db-load
+  (fn [db]
+    (js/console.debug ":stage/fail-db-load")
+    db))
 
 
 (reg-event-db
- :init-rfdb
- [(interceptors/sentry-span-no-new-tx "init-rfdb")]
- (fn [_ _]
-   db/rfdb))
+  :init-rfdb
+  [(interceptors/sentry-span-no-new-tx "init-rfdb")]
+  (fn [_ _]
+    db/rfdb))
 
 
 (reg-event-db
- :db/sync
- [(interceptors/sentry-span-no-new-tx "db/sync")]
- (fn [db [_]]
-   (assoc db :db/synced true)))
+  :db/sync
+  [(interceptors/sentry-span-no-new-tx "db/sync")]
+  (fn [db [_]]
+    (assoc db :db/synced true)))
 
 
 (reg-event-db
- :db/not-synced
- [(interceptors/sentry-span-no-new-tx "db/not-synced")]
- (fn [db [_]]
-   (assoc db :db/synced false)))
+  :db/not-synced
+  [(interceptors/sentry-span-no-new-tx "db/not-synced")]
+  (fn [db [_]]
+    (assoc db :db/synced false)))
 
 
 (defn shared-blocks-excl-date-pages
@@ -199,217 +199,217 @@
 
 
 (reg-event-fx
- :upload/roam-edn
- [(interceptors/sentry-span-no-new-tx "upload/roam-edn")]
- (fn [_ [_ transformed-dates-roam-db roam-db-filename]]
-   (let [shared-pages   (get-shared-pages transformed-dates-roam-db)
-         merge-shared   (mapv (fn [x] (merge-shared-page [:node/title x] transformed-dates-roam-db roam-db-filename))
-                              shared-pages)
-         merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
-                             (map (fn [x] (db/get-roam-node-document [:node/title x] transformed-dates-roam-db))))
-         tx-data        (concat merge-shared merge-unshared)]
+  :upload/roam-edn
+  [(interceptors/sentry-span-no-new-tx "upload/roam-edn")]
+  (fn [_ [_ transformed-dates-roam-db roam-db-filename]]
+    (let [shared-pages   (get-shared-pages transformed-dates-roam-db)
+          merge-shared   (mapv (fn [x] (merge-shared-page [:node/title x] transformed-dates-roam-db roam-db-filename))
+                               shared-pages)
+          merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
+                              (map (fn [x] (db/get-roam-node-document [:node/title x] transformed-dates-roam-db))))
+          tx-data        (concat merge-shared merge-unshared)]
       ;; TODO: this functionality needs to create a internal representation event instead.
       ;; That will cause it to work in RTC and remove the need to transact directly to the in-memory db.
-     {:dispatch [:transact tx-data]})))
+      {:dispatch [:transact tx-data]})))
 
 
 (reg-event-fx
- :athena/toggle
- [(interceptors/sentry-span-no-new-tx "athena/toggle")]
- (fn [{:keys [db]} _]
-   {:db (update db :athena/open not)
-    :dispatch [:posthog/report-feature :athena]}))
+  :athena/toggle
+  [(interceptors/sentry-span-no-new-tx "athena/toggle")]
+  (fn [{:keys [db]} _]
+    {:db (update db :athena/open not)
+     :dispatch [:posthog/report-feature :athena]}))
 
 
 (reg-event-db
- :athena/update-recent-items
- [(interceptors/sentry-span-no-new-tx "athena/undate-recent-items")]
- (fn-traced [db [_ selected-page]]
-            (when (nil? ((set (:athena/recent-items db)) selected-page))
-              (update db :athena/recent-items conj selected-page))))
+  :athena/update-recent-items
+  [(interceptors/sentry-span-no-new-tx "athena/undate-recent-items")]
+  (fn-traced [db [_ selected-page]]
+             (when (nil? ((set (:athena/recent-items db)) selected-page))
+               (update db :athena/recent-items conj selected-page))))
 
 
 (reg-event-db
- :devtool/toggle
- [(interceptors/sentry-span-no-new-tx "devtool/toggle")]
- (fn [db _]
-   (update db :devtool/open not)))
+  :devtool/toggle
+  [(interceptors/sentry-span-no-new-tx "devtool/toggle")]
+  (fn [db _]
+    (update db :devtool/open not)))
 
 
 (reg-event-fx
- :help/toggle
- [(interceptors/sentry-span-no-new-tx "help/toggle")]
- (fn [{:keys [db]} _]
-   {:db (update db :help/open? not)
-    :dispatch [:posthog/report-feature :help]}))
+  :help/toggle
+  [(interceptors/sentry-span-no-new-tx "help/toggle")]
+  (fn [{:keys [db]} _]
+    {:db (update db :help/open? not)
+     :dispatch [:posthog/report-feature :help]}))
 
 
 (reg-event-fx
- :left-sidebar/toggle
- [(interceptors/sentry-span-no-new-tx "left-sidebar/toggle")]
- (fn [{:keys [db]} _]
-   {:db (update db :left-sidebar/open not)
-    :dispatch [:posthog/report-feature :left-sidebar]}))
+  :left-sidebar/toggle
+  [(interceptors/sentry-span-no-new-tx "left-sidebar/toggle")]
+  (fn [{:keys [db]} _]
+    {:db (update db :left-sidebar/open not)
+     :dispatch [:posthog/report-feature :left-sidebar]}))
 
 
 (reg-event-fx
- :right-sidebar/toggle
- [(interceptors/sentry-span-no-new-tx "right-sidebar/toggle")]
- (fn [{:keys [db]} _]
-   (let [closing? (:right-sidebar/open db)]
-     {:db       (update db :right-sidebar/open not)
-      :dispatch [:posthog/report-feature :right-sidebar (not closing?)]})))
+  :right-sidebar/toggle
+  [(interceptors/sentry-span-no-new-tx "right-sidebar/toggle")]
+  (fn [{:keys [db]} _]
+    (let [closing? (:right-sidebar/open db)]
+      {:db       (update db :right-sidebar/open not)
+       :dispatch [:posthog/report-feature :right-sidebar (not closing?)]})))
 
 
 (reg-event-fx
- :right-sidebar/toggle-item
- [(interceptors/sentry-span-no-new-tx "right-sidebar/toggle-item")]
- (fn [{:keys [db]} [_ item]]
-   {:db       (update-in db [:right-sidebar/items item :open] not)
-    :dispatch [:posthog/report-feature :right-sidebar true]}))
+  :right-sidebar/toggle-item
+  [(interceptors/sentry-span-no-new-tx "right-sidebar/toggle-item")]
+  (fn [{:keys [db]} [_ item]]
+    {:db       (update-in db [:right-sidebar/items item :open] not)
+     :dispatch [:posthog/report-feature :right-sidebar true]}))
 
 
 (reg-event-db
- :right-sidebar/set-width
- [(interceptors/sentry-span-no-new-tx "right-sidebar/set-width")]
- (fn [db [_ width]]
-   (assoc db :right-sidebar/width width)))
+  :right-sidebar/set-width
+  [(interceptors/sentry-span-no-new-tx "right-sidebar/set-width")]
+  (fn [db [_ width]]
+    (assoc db :right-sidebar/width width)))
 
 
 (reg-event-db
- :mouse-down/set
- (fn [db _]
-   (assoc db :mouse-down true)))
+  :mouse-down/set
+  (fn [db _]
+    (assoc db :mouse-down true)))
 
 
 (reg-event-db
- :mouse-down/unset
- (fn [db _]
-   (assoc db :mouse-down false)))
+  :mouse-down/unset
+  (fn [db _]
+    (assoc db :mouse-down false)))
 
 
 ;; no ops -- does not do anything
 ;; useful in situations where there is no dispatch value
 (reg-event-fx
- :no-op
- (fn [_ _]
-   (log/warn "Called :no-op re-frame event, this shouldn't be happening.")
-   {}))
+  :no-op
+  (fn [_ _]
+    (log/warn "Called :no-op re-frame event, this shouldn't be happening.")
+    {}))
 
 
 ;; TODO: dec all indices > closed item
 (reg-event-fx
- :right-sidebar/close-item
- [(interceptors/sentry-span-no-new-tx "right-sidebar/close-item")]
- (fn [{:keys [db]} [_ uid]]
-   (let [{:right-sidebar/keys
-          [items]}  db
-         last-item? (= 1 (count items))
-         new-db     (cond-> (update db :right-sidebar/items dissoc uid)
-                      last-item? (assoc :right-sidebar/open false))]
-     {:db       new-db
-      :dispatch [:posthog/report-feature :right-sidebar (not last-item?)]})))
+  :right-sidebar/close-item
+  [(interceptors/sentry-span-no-new-tx "right-sidebar/close-item")]
+  (fn [{:keys [db]} [_ uid]]
+    (let [{:right-sidebar/keys
+           [items]}  db
+          last-item? (= 1 (count items))
+          new-db     (cond-> (update db :right-sidebar/items dissoc uid)
+                       last-item? (assoc :right-sidebar/open false))]
+      {:db       new-db
+       :dispatch [:posthog/report-feature :right-sidebar (not last-item?)]})))
 
 
 (reg-event-fx
- :right-sidebar/navigate-item
- [(interceptors/sentry-span-no-new-tx "right-sidebar/navigate-item")]
- (fn [{:keys [db]} [_ uid breadcrumb-uid]]
-   (let [block      (d/pull @db/dsdb '[:node/title :block/string] [:block/uid breadcrumb-uid])
-         item-index (get-in db [:right-sidebar/items uid :index])
-         new-item   (merge block {:open true :index item-index})]
-     {:db       (-> db
-                    (update-in [:right-sidebar/items] dissoc uid)
-                    (update-in [:right-sidebar/items] assoc breadcrumb-uid new-item))
-      :dispatch [:posthog/report-feature :right-sidebar true]})))
+  :right-sidebar/navigate-item
+  [(interceptors/sentry-span-no-new-tx "right-sidebar/navigate-item")]
+  (fn [{:keys [db]} [_ uid breadcrumb-uid]]
+    (let [block      (d/pull @db/dsdb '[:node/title :block/string] [:block/uid breadcrumb-uid])
+          item-index (get-in db [:right-sidebar/items uid :index])
+          new-item   (merge block {:open true :index item-index})]
+      {:db       (-> db
+                     (update-in [:right-sidebar/items] dissoc uid)
+                     (update-in [:right-sidebar/items] assoc breadcrumb-uid new-item))
+       :dispatch [:posthog/report-feature :right-sidebar true]})))
 
 
 ;; TODO: change right sidebar items from map to datascript
 (reg-event-fx
- :right-sidebar/open-item
- [(interceptors/sentry-span-no-new-tx "right-sidebar/open-item")]
- (fn [{:keys [db]} [_ uid is-graph?]]
-   (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
-         new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
+  :right-sidebar/open-item
+  [(interceptors/sentry-span-no-new-tx "right-sidebar/open-item")]
+  (fn [{:keys [db]} [_ uid is-graph?]]
+    (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
+          new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
           ;; Avoid a memory leak by forgetting the comparison function
           ;; that is stored in the sorted map
           ;; `(assoc (:right-sidebar/items db) uid new-item)`
-         new-items (into {}
-                         (assoc (:right-sidebar/items db) uid new-item))
-         inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
-                              {}
-                              new-items)
-         sorted-items (into (sorted-map-by (fn [k1 k2]
-                                             (compare
-                                              [(get-in inc-items [k1 :index]) k2]
-                                              [(get-in inc-items [k2 :index]) k1]))) inc-items)]
-     {:db         (assoc db :right-sidebar/items sorted-items)
-      :dispatch-n [(when (not (:right-sidebar/open db))
-                     [:right-sidebar/toggle])
-                   [:right-sidebar/scroll-top]
-                   [:posthog/report-feature :right-sidebar true]]})))
-
-
-(reg-event-fx
- :right-sidebar/open-page
- [(interceptors/sentry-span-no-new-tx "right-sidebar/open-page")]
- (fn [{:keys [db]} [_ page-title is-graph?]]
-   (let [{:keys [:block/uid]
-          :as   block} (d/pull @db/dsdb '[:block/uid :node/title :block/string] [:node/title page-title])
-         new-item      (merge block {:open true :index -1 :is-graph? is-graph?})
-          ;; Avoid a memory leak by forgetting the comparison function
-          ;; that is stored in the sorted map
-          ;; `(assoc (:right-sidebar/items db) uid new-item)`
-         new-items     (into {}
-                             (assoc (:right-sidebar/items db) uid new-item))
-         inc-items     (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
-                                  {}
-                                  new-items)
-         sorted-items  (into (sorted-map-by (fn [k1 k2]
+          new-items (into {}
+                          (assoc (:right-sidebar/items db) uid new-item))
+          inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
+                               {}
+                               new-items)
+          sorted-items (into (sorted-map-by (fn [k1 k2]
                                               (compare
-                                               [(get-in inc-items [k1 :index]) k2]
-                                               [(get-in inc-items [k2 :index]) k1]))) inc-items)]
-     {:db         (assoc db :right-sidebar/items sorted-items)
-      :dispatch-n [(when (not (:right-sidebar/open db))
-                     [:right-sidebar/toggle])
-                   [:right-sidebar/scroll-top]
-                   [:posthog/report-feature :right-sidebar true]]})))
+                                                [(get-in inc-items [k1 :index]) k2]
+                                                [(get-in inc-items [k2 :index]) k1]))) inc-items)]
+      {:db         (assoc db :right-sidebar/items sorted-items)
+       :dispatch-n [(when (not (:right-sidebar/open db))
+                      [:right-sidebar/toggle])
+                    [:right-sidebar/scroll-top]
+                    [:posthog/report-feature :right-sidebar true]]})))
 
 
 (reg-event-fx
- :right-sidebar/scroll-top
- [(interceptors/sentry-span-no-new-tx "right-sidebar/scroll-top")]
- (fn []
-   {:right-sidebar/scroll-top nil}))
+  :right-sidebar/open-page
+  [(interceptors/sentry-span-no-new-tx "right-sidebar/open-page")]
+  (fn [{:keys [db]} [_ page-title is-graph?]]
+    (let [{:keys [:block/uid]
+           :as   block} (d/pull @db/dsdb '[:block/uid :node/title :block/string] [:node/title page-title])
+          new-item      (merge block {:open true :index -1 :is-graph? is-graph?})
+          ;; Avoid a memory leak by forgetting the comparison function
+          ;; that is stored in the sorted map
+          ;; `(assoc (:right-sidebar/items db) uid new-item)`
+          new-items     (into {}
+                              (assoc (:right-sidebar/items db) uid new-item))
+          inc-items     (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
+                                   {}
+                                   new-items)
+          sorted-items  (into (sorted-map-by (fn [k1 k2]
+                                               (compare
+                                                 [(get-in inc-items [k1 :index]) k2]
+                                                 [(get-in inc-items [k2 :index]) k1]))) inc-items)]
+      {:db         (assoc db :right-sidebar/items sorted-items)
+       :dispatch-n [(when (not (:right-sidebar/open db))
+                      [:right-sidebar/toggle])
+                    [:right-sidebar/scroll-top]
+                    [:posthog/report-feature :right-sidebar true]]})))
 
 
 (reg-event-fx
- :editing/uid
- [(interceptors/sentry-span-no-new-tx "editing/uid")]
- (fn [{:keys [db]} [_ uid index]]
-   (let [remote? (db-picker/remote-db? db)]
-     {:db            (assoc db :editing/uid uid)
-      :editing/focus [uid index]
-      :dispatch-n    [(when (and uid remote?)
-                        [:presence/send-update {:block-uid (util/embed-uid->original-uid uid)}])]})))
+  :right-sidebar/scroll-top
+  [(interceptors/sentry-span-no-new-tx "right-sidebar/scroll-top")]
+  (fn []
+    {:right-sidebar/scroll-top nil}))
 
 
 (reg-event-fx
- :editing/target
- [(interceptors/sentry-span-no-new-tx "editing/target")]
- (fn [_ [_ target]]
-   (let [uid (-> (.. target -id)
-                 (string/split "editable-uid-")
-                 second)]
-     {:dispatch [:editing/uid uid]})))
+  :editing/uid
+  [(interceptors/sentry-span-no-new-tx "editing/uid")]
+  (fn [{:keys [db]} [_ uid index]]
+    (let [remote? (db-picker/remote-db? db)]
+      {:db            (assoc db :editing/uid uid)
+       :editing/focus [uid index]
+       :dispatch-n    [(when (and uid remote?)
+                         [:presence/send-update {:block-uid (util/embed-uid->original-uid uid)}])]})))
 
 
 (reg-event-fx
- :editing/first-child
- [(interceptors/sentry-span-no-new-tx "editing/first-child")]
- (fn [_ [_ uid]]
-   (when-let [first-block-uid (db/get-first-child-uid uid @db/dsdb)]
-     {:dispatch [:editing/uid first-block-uid]})))
+  :editing/target
+  [(interceptors/sentry-span-no-new-tx "editing/target")]
+  (fn [_ [_ target]]
+    (let [uid (-> (.. target -id)
+                  (string/split "editable-uid-")
+                  second)]
+      {:dispatch [:editing/uid uid]})))
+
+
+(reg-event-fx
+  :editing/first-child
+  [(interceptors/sentry-span-no-new-tx "editing/first-child")]
+  (fn [_ [_ uid]]
+    (when-let [first-block-uid (db/get-first-child-uid uid @db/dsdb)]
+      {:dispatch [:editing/uid first-block-uid]})))
 
 
 (defn select-up
@@ -451,153 +451,153 @@
 
 
 (reg-event-db
- :selected/up
- [(interceptors/sentry-span-no-new-tx "selected/up")]
- (fn [db [_ selected-items]]
-   (assoc-in db [:selection :items] (select-up selected-items))))
+  :selected/up
+  [(interceptors/sentry-span-no-new-tx "selected/up")]
+  (fn [db [_ selected-items]]
+    (assoc-in db [:selection :items] (select-up selected-items))))
 
 
 ;; using a set or a hash map, we would need a secondary editing/uid to maintain the head/tail position
 ;; this would let us know if the operation is additive or subtractive
 (reg-event-db
- :selected/down
- [(interceptors/sentry-span-no-new-tx "selected/down")]
- (fn [db [_ selected-items]]
-   (let [last-item         (last selected-items)
-         next-block-uid    (db/next-block-uid last-item true)
-         ordered-selection (cond-> (into [] selected-items)
-                             next-block-uid (into [next-block-uid]))]
-     (log/debug ":selected/down, new-selection:" (pr-str ordered-selection))
-     (assoc-in db [:selection :items] ordered-selection))))
+  :selected/down
+  [(interceptors/sentry-span-no-new-tx "selected/down")]
+  (fn [db [_ selected-items]]
+    (let [last-item         (last selected-items)
+          next-block-uid    (db/next-block-uid last-item true)
+          ordered-selection (cond-> (into [] selected-items)
+                              next-block-uid (into [next-block-uid]))]
+      (log/debug ":selected/down, new-selection:" (pr-str ordered-selection))
+      (assoc-in db [:selection :items] ordered-selection))))
 
 
 ;; Alerts
 
 (reg-event-db
- :alert/unset
- (fn-traced [db]
-            (assoc db :alert nil)))
+  :alert/unset
+  (fn-traced [db]
+             (assoc db :alert nil)))
 
 
 ;; Use native js/alert rather than custom UI alert
 (reg-event-fx
- :alert/js
- (fn [_ [_ message]]
-   {:alert/js! message}))
+  :alert/js
+  (fn [_ [_ message]]
+    {:alert/js! message}))
 
 
 (reg-event-fx
- :confirm/js
- (fn [_ [_ message true-cb false-cb]]
-   {:confirm/js! [message true-cb false-cb]}))
+  :confirm/js
+  (fn [_ [_ message true-cb false-cb]]
+    {:confirm/js! [message true-cb false-cb]}))
 
 
 ;; Modal
 
 
 (reg-event-db
- :modal/toggle
- (fn [db _]
-   (update db :modal not)))
+  :modal/toggle
+  (fn [db _]
+    (update db :modal not)))
 
 
 ;; Loading
 
 (reg-event-db
- :loading/set
- (fn-traced [db]
-            (assoc-in db [:loading?] true)))
+  :loading/set
+  (fn-traced [db]
+             (assoc-in db [:loading?] true)))
 
 
 (reg-event-db
- :loading/unset
- (fn-traced [db]
-            (assoc-in db [:loading?] false)))
+  :loading/unset
+  (fn-traced [db]
+             (assoc-in db [:loading?] false)))
 
 
 (reg-event-db
- :tooltip/uid
- (fn [db [_ uid]]
-   (assoc db :tooltip/uid uid)))
+  :tooltip/uid
+  (fn [db [_ uid]]
+    (assoc db :tooltip/uid uid)))
 
 
 ;; Connection status
 
 (reg-event-fx
- :conn-status
- (fn [{:keys [db]} [_ to-status]]
-   (let [from-status (:connection-status db)]
-     {:db (assoc db :connection-status to-status)
-      :dispatch-n [(condp = [from-status to-status]
-                     [:reconnecting :connected] [:loading/unset]
-                     [:connected :reconnecting] [:loading/set]
-                     nil)]})))
+  :conn-status
+  (fn [{:keys [db]} [_ to-status]]
+    (let [from-status (:connection-status db)]
+      {:db (assoc db :connection-status to-status)
+       :dispatch-n [(condp = [from-status to-status]
+                      [:reconnecting :connected] [:loading/unset]
+                      [:connected :reconnecting] [:loading/set]
+                      nil)]})))
 
 
 ;; Daily Notes
 
 (reg-event-db
- :daily-note/reset
- (fn [db [_ uid]]
-   (assoc db :daily-notes/items uid)))
+  :daily-note/reset
+  (fn [db [_ uid]]
+    (assoc db :daily-notes/items uid)))
 
 
 (reg-event-db
- :daily-note/add
- (fn [db [_ uid]]
-   (update db :daily-notes/items (comp rseq sort distinct conj) uid)))
+  :daily-note/add
+  (fn [db [_ uid]]
+    (update db :daily-notes/items (comp rseq sort distinct conj) uid)))
 
 
 (reg-event-fx
- :daily-note/ensure-day
- (fn [_ [_ {:keys [uid title]}]]
-   (when-not (db/e-by-av :block/uid uid)
-     {:dispatch [:page/new {:title     title
-                            :block-uid (common.utils/gen-block-uid)}]})))
+  :daily-note/ensure-day
+  (fn [_ [_ {:keys [uid title]}]]
+    (when-not (db/e-by-av :block/uid uid)
+      {:dispatch [:page/new {:title     title
+                             :block-uid (common.utils/gen-block-uid)}]})))
 
 
 (reg-event-fx
- :daily-note/prev
- (fn [{:keys [db]} [_ {:keys [uid] :as day}]]
-   (let [new-db (update db :daily-notes/items (fn [items]
-                                                (into [uid] items)))]
-     {:db       new-db
-      :dispatch [:daily-note/ensure-day day]})))
+  :daily-note/prev
+  (fn [{:keys [db]} [_ {:keys [uid] :as day}]]
+    (let [new-db (update db :daily-notes/items (fn [items]
+                                                 (into [uid] items)))]
+      {:db       new-db
+       :dispatch [:daily-note/ensure-day day]})))
 
 
 (reg-event-fx
- :daily-note/next
- (fn [_ [_ {:keys [uid] :as day}]]
-   {:dispatch-n [[:daily-note/ensure-day day]
-                 [:daily-note/add uid]]}))
+  :daily-note/next
+  (fn [_ [_ {:keys [uid] :as day}]]
+    {:dispatch-n [[:daily-note/ensure-day day]
+                  [:daily-note/add uid]]}))
 
 
 (reg-event-fx
- :daily-note/delete
- (fn [{:keys [db]} [_ uid title]]
-   (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ; Filter current date from daily note vec
-         new-db (assoc db :daily-notes/items filtered-dn)]
-     {:fx [[:dispatch [:page/delete title]]]
-      :db new-db})))
+  :daily-note/delete
+  (fn [{:keys [db]} [_ uid title]]
+    (let [filtered-dn        (filterv #(not= % uid) (:daily-notes/items db)) ; Filter current date from daily note vec
+          new-db (assoc db :daily-notes/items filtered-dn)]
+      {:fx [[:dispatch [:page/delete title]]]
+       :db new-db})))
 
 
 (reg-event-fx
- :daily-note/scroll
- (fn [_ [_]]
-   (let [daily-notes @(subscribe [:daily-notes/items])
-         el          (getElement "daily-notes")]
-     (when el
-       (let [offset-top   (.. el -offsetTop)
-             rect         (.. el getBoundingClientRect)
-             from-bottom  (.. rect -bottom)
-             from-top     (.. rect -top)
-             doc-height   (.. js/document -documentElement -scrollHeight)
-             top-delta    (- offset-top from-top)
-             bottom-delta (- from-bottom doc-height)]
+  :daily-note/scroll
+  (fn [_ [_]]
+    (let [daily-notes @(subscribe [:daily-notes/items])
+          el          (getElement "daily-notes")]
+      (when el
+        (let [offset-top   (.. el -offsetTop)
+              rect         (.. el getBoundingClientRect)
+              from-bottom  (.. rect -bottom)
+              from-top     (.. rect -top)
+              doc-height   (.. js/document -documentElement -scrollHeight)
+              top-delta    (- offset-top from-top)
+              bottom-delta (- from-bottom doc-height)]
           ;; Don't allow user to scroll up for now.
-         (cond
-           (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
-           (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))))
+          (cond
+            (< top-delta 1) nil #_(dispatch [:daily-note/prev (get-day (uid-to-date (first daily-notes)) -1)])
+            (< bottom-delta 1) {:fx [[:dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last daily-notes)) 1)]]]}))))))
 
 
 ;; -- event-fx and Datascript Transactions -------------------------------
@@ -606,31 +606,31 @@
 
 
 (reg-event-fx
- :http-success/get-db
- [(interceptors/sentry-span-no-new-tx "http-success/get-db")]
- (fn [_ [_ json-str]]
-   (let [datoms (db/str-to-db-tx json-str)
-         new-db (d/db-with common-db/empty-db datoms)]
-     {:dispatch [:reset-conn new-db]})))
+  :http-success/get-db
+  [(interceptors/sentry-span-no-new-tx "http-success/get-db")]
+  (fn [_ [_ json-str]]
+    (let [datoms (db/str-to-db-tx json-str)
+          new-db (d/db-with common-db/empty-db datoms)]
+      {:dispatch [:reset-conn new-db]})))
 
 
 (reg-event-fx
- :theme/set
- [(interceptors/sentry-span-no-new-tx "theme/set")]
- (fn [{:keys [db]} _]
-   (util/switch-body-classes (if (-> db :athens/persist :theme/dark)
-                               ["is-theme-light" "is-theme-dark"]
-                               ["is-theme-dark" "is-theme-light"]))
-   {}))
+  :theme/set
+  [(interceptors/sentry-span-no-new-tx "theme/set")]
+  (fn [{:keys [db]} _]
+    (util/switch-body-classes (if (-> db :athens/persist :theme/dark)
+                                ["is-theme-light" "is-theme-dark"]
+                                ["is-theme-dark" "is-theme-light"]))
+    {}))
 
 
 (reg-event-fx
- :theme/toggle
- [(interceptors/sentry-span-no-new-tx "theme/toggle")]
- (fn [{:keys [db]} _]
-   {:db         (update-in db [:athens/persist :theme/dark] not)
-    :dispatch-n [[:theme/set]
-                 [:posthog/report-feature :theme]]}))
+  :theme/toggle
+  [(interceptors/sentry-span-no-new-tx "theme/toggle")]
+  (fn [{:keys [db]} _]
+    {:db         (update-in db [:athens/persist :theme/dark] not)
+     :dispatch-n [[:theme/set]
+                  [:posthog/report-feature :theme]]}))
 
 
 ;; Datascript
@@ -642,22 +642,22 @@
 ;; - :upload/roam-edn (needs internal representation)
 ;; No other reframe events should be calling this event.
 (reg-event-fx
- :transact
- [(interceptors/sentry-span "transact")]
- (fn-traced [_ [_ tx-data]]
-            (let [synced?   @(subscribe [:db/synced])
-                  electron? electron.utils/electron?]
-              (if (and synced? electron?)
-                {:fx [[:transact! tx-data]
-                      [:dispatch [:db/not-synced]]
-                      [:dispatch [:save]]]}
-                {:fx [[:transact! tx-data]]}))))
+  :transact
+  [(interceptors/sentry-span "transact")]
+  (fn-traced [_ [_ tx-data]]
+             (let [synced?   @(subscribe [:db/synced])
+                   electron? electron.utils/electron?]
+               (if (and synced? electron?)
+                 {:fx [[:transact! tx-data]
+                       [:dispatch [:db/not-synced]]
+                       [:dispatch [:save]]]}
+                 {:fx [[:transact! tx-data]]}))))
 
 
 (rf/reg-event-fx
- :success-transact
- (fn [_ _]
-   {}))
+  :success-transact
+  (fn [_ _]
+    {}))
 
 
 ;; These events are used for async flows, so we know when changes are in the
@@ -665,29 +665,29 @@
 ;; If you need to know which event was resolved, check the arg as
 ;; shown in https://github.com/day8/re-frame-async-flow-fx#advanced-use.
 (rf/reg-event-fx
- :success-resolve-forward-transact
- (fn [_ [_ _event]]
-   {}))
+  :success-resolve-forward-transact
+  (fn [_ [_ _event]]
+    {}))
 
 
 (rf/reg-event-fx
- :fail-resolve-transact-forward
- (fn [_ [_ _event]]
-   {}))
+  :fail-resolve-transact-forward
+  (fn [_ [_ _event]]
+    {}))
 
 
 (reg-event-fx
- :reset-conn
- [(interceptors/sentry-span-no-new-tx "reset-conn")]
- (fn-traced [_ [_ db skip-health-check?]]
-            {:reset-conn! [db skip-health-check?]}))
+  :reset-conn
+  [(interceptors/sentry-span-no-new-tx "reset-conn")]
+  (fn-traced [_ [_ db skip-health-check?]]
+             {:reset-conn! [db skip-health-check?]}))
 
 
 (rf/reg-event-fx
- :success-reset-conn
- (fn [_ _]
-   (js/console.debug ":success-reset-conn")
-   {}))
+  :success-reset-conn
+  (fn [_ _]
+    (js/console.debug ":success-reset-conn")
+    {}))
 
 
 (defn datom->tx-entry
@@ -696,226 +696,226 @@
 
 
 (rf/reg-event-fx
- :db-dump-handler
- (fn-traced [{:keys [db]} [_ datoms]]
-            (let [existing-tx     (sentry/transaction-get-current)
-                  sentry-tx       (if existing-tx
-                                    existing-tx
-                                    (sentry/transaction-start "db-dump-handler"))
-                  conversion-span (sentry/span-start sentry-tx "convert-datoms")
+  :db-dump-handler
+  (fn-traced [{:keys [db]} [_ datoms]]
+             (let [existing-tx     (sentry/transaction-get-current)
+                   sentry-tx       (if existing-tx
+                                     existing-tx
+                                     (sentry/transaction-start "db-dump-handler"))
+                   conversion-span (sentry/span-start sentry-tx "convert-datoms")
                    ;; TODO: this new-db should be derived from an internal representation transact event instead.
-                  new-db          (d/db-with common-db/empty-db
-                                             (into [] (map datom->tx-entry) datoms))]
-              (sentry/span-finish conversion-span)
-              {:db         db
-               :async-flow {:id             :db-dump-handler-async-flow ; NOTE do not ever use id that is defined event
-                            :db-path        [:async-flow :db-dump-handler]
-                            :first-dispatch [:reset-conn new-db true]
-                            :rules          [{:when       :seen?
-                                              :events     :success-reset-conn
-                                              :dispatch-n [[:remote/start-event-sync]
-                                                           [:db/sync]
-                                                           [:remote/connected]]}
-                                             {:when       :seen-all-of?
-                                              :events     [:success-reset-conn
-                                                           :remote/start-event-sync
-                                                           :db/sync
-                                                           :remote/connected]
-                                              :dispatch-n (cond-> [[:stage/success-db-load]]
-                                                            (not existing-tx) (conj [:sentry/end-tx sentry-tx]))
-                                              :halt?      true}]}})))
+                   new-db          (d/db-with common-db/empty-db
+                                              (into [] (map datom->tx-entry) datoms))]
+               (sentry/span-finish conversion-span)
+               {:db         db
+                :async-flow {:id             :db-dump-handler-async-flow ; NOTE do not ever use id that is defined event
+                             :db-path        [:async-flow :db-dump-handler]
+                             :first-dispatch [:reset-conn new-db true]
+                             :rules          [{:when       :seen?
+                                               :events     :success-reset-conn
+                                               :dispatch-n [[:remote/start-event-sync]
+                                                            [:db/sync]
+                                                            [:remote/connected]]}
+                                              {:when       :seen-all-of?
+                                               :events     [:success-reset-conn
+                                                            :remote/start-event-sync
+                                                            :db/sync
+                                                            :remote/connected]
+                                               :dispatch-n (cond-> [[:stage/success-db-load]]
+                                                             (not existing-tx) (conj [:sentry/end-tx sentry-tx]))
+                                               :halt?      true}]}})))
 
 
 (reg-event-fx
- :electron-sync
- [(interceptors/sentry-span-no-new-tx "electron-sync")]
- (fn [_ _]
-   (let [synced?   @(subscribe [:db/synced])
-         electron? electron.utils/electron?]
-     (merge {}
-            (when (and synced? electron?)
-              {:fx [[:dispatch [:db/not-synced]]
-                    [:dispatch [:save]]]})))))
+  :electron-sync
+  [(interceptors/sentry-span-no-new-tx "electron-sync")]
+  (fn [_ _]
+    (let [synced?   @(subscribe [:db/synced])
+          electron? electron.utils/electron?]
+      (merge {}
+             (when (and synced? electron?)
+               {:fx [[:dispatch [:db/not-synced]]
+                     [:dispatch [:save]]]})))))
 
 
 (reg-event-fx
- :resolve-transact-forward
- [(interceptors/sentry-span "resolve-transact-forward")]
- (fn [{:keys [db]} [_ event]]
-   (let [remote? (db-picker/remote-db? db)
-         valid?  (schema/valid-event? event)
-         dsdb    @db/dsdb
-         undo?   (undo-resolver/undo? event)]
-     (log/debug ":resolve-transact-forward event:" (pr-str event)
-                "remote?" (pr-str remote?)
-                "valid?" (pr-str valid?)
-                "undo?" (pr-str undo?))
-     (if-not valid?
+  :resolve-transact-forward
+  [(interceptors/sentry-span "resolve-transact-forward")]
+  (fn [{:keys [db]} [_ event]]
+    (let [remote? (db-picker/remote-db? db)
+          valid?  (schema/valid-event? event)
+          dsdb    @db/dsdb
+          undo?   (undo-resolver/undo? event)]
+      (log/debug ":resolve-transact-forward event:" (pr-str event)
+                 "remote?" (pr-str remote?)
+                 "valid?" (pr-str valid?)
+                 "undo?" (pr-str undo?))
+      (if-not valid?
         ;; Don't try to process invalid events, just log them.
-       (let [explanation (-> schema/event
-                             (m/explain event)
-                             (me/humanize))]
-         (log/warn "Not sending invalid event. Error:" (pr-str explanation)
-                   "\nInvalid event was:" (pr-str event))
-         {:fx [[:dispatch [:fail-resolve-forward-transact event]]]})
+        (let [explanation (-> schema/event
+                              (m/explain event)
+                              (me/humanize))]
+          (log/warn "Not sending invalid event. Error:" (pr-str explanation)
+                    "\nInvalid event was:" (pr-str event))
+          {:fx [[:dispatch [:fail-resolve-forward-transact event]]]})
 
 
-       (try
+        (try
           ;; Seems valid, lets process it.
-         (let [;; First, resolve it into dsdb.
-               db' (if remote?
+          (let [;; First, resolve it into dsdb.
+                db' (if remote?
                       ;; Remote db events have to be managed via the synchronizer in events.remote.
-                     (first (events-remote/add-memory-event! [db db/dsdb] event))
-                     (do
+                      (first (events-remote/add-memory-event! [db db/dsdb] event))
+                      (do
                         ;; For local dbs, just transact it directly into dsdb.
-                       (atomic-resolver/resolve-transact! db/dsdb event)
-                       db))
+                        (atomic-resolver/resolve-transact! db/dsdb event)
+                        db))
 
                 ;; Then figure out the undo situation.
-               db'' (if undo?
+                db'' (if undo?
                        ;; For undos, let the undo/redo handlers manage db state.
-                      db'
+                       db'
                        ;; Otherwise wipe the redo stack and add the new event.
-                      (-> db'
-                          undo/reset-redo
-                          (undo/push-undo (:event/id event) [dsdb event])))]
+                       (-> db'
+                           undo/reset-redo
+                           (undo/push-undo (:event/id event) [dsdb event])))]
 
             ;; Wrap it up.
-           (merge
-            {:db db''
-             :fx [;; Local dbs will need to be synced via electron.
-                  (when-not remote? [:dispatch [:electron-sync]])
+            (merge
+              {:db db''
+               :fx [;; Local dbs will need to be synced via electron.
+                    (when-not remote? [:dispatch [:electron-sync]])
                     ;; Remote dbs just wait for the event to be confirmed by the server.
-                  (when remote?     [:dispatch [:db/not-synced]])
+                    (when remote?     [:dispatch [:db/not-synced]])
                     ;; Processing has finished successfully at this point, signal the async flows.
-                  [:dispatch [:success-resolve-forward-transact event]]]}
+                    [:dispatch [:success-resolve-forward-transact event]]]}
               ;; Remote dbs need to actually send the event via the network.
-            (when remote? {:remote/send-event-fx! event})))
+              (when remote? {:remote/send-event-fx! event})))
 
           ;; Bork bork, still need to clean up.
-         (catch :default e
-           (log/error ":resolve-transact-forward failed with event " event " with error " e)
-           {:fx [[:dispatch [:fail-resolve-forward-transact event]]]}))))))
+          (catch :default e
+            (log/error ":resolve-transact-forward failed with event " event " with error " e)
+            {:fx [[:dispatch [:fail-resolve-forward-transact event]]]}))))))
 
 
 (reg-event-fx
- :page/delete
- [(interceptors/sentry-span "page/delete")]
- (fn [_ [_ title]]
-   (log/debug ":page/delete:" title)
-   (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-remove-op title))]
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+  :page/delete
+  [(interceptors/sentry-span "page/delete")]
+  (fn [_ [_ title]]
+    (log/debug ":page/delete:" title)
+    (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-remove-op title))]
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
- :left-sidebar/add-shortcut
- [(interceptors/sentry-span-no-new-tx "left-sidebar/add-shortcut")]
- (fn [_ [_ name]]
-   (log/debug ":page/add-shortcut:" name)
-   (let [add-shortcut-op (atomic-graph-ops/make-shortcut-new-op name)
-         event           (common-events/build-atomic-event add-shortcut-op)]
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+  :left-sidebar/add-shortcut
+  [(interceptors/sentry-span-no-new-tx "left-sidebar/add-shortcut")]
+  (fn [_ [_ name]]
+    (log/debug ":page/add-shortcut:" name)
+    (let [add-shortcut-op (atomic-graph-ops/make-shortcut-new-op name)
+          event           (common-events/build-atomic-event add-shortcut-op)]
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
- :left-sidebar/remove-shortcut
- [(interceptors/sentry-span-no-new-tx "left-sidebar/remove-shortcut")]
- (fn [_ [_ name]]
-   (log/debug ":page/remove-shortcut:" name)
-   (let [remove-shortcut-op (atomic-graph-ops/make-shortcut-remove-op name)
-         event              (common-events/build-atomic-event remove-shortcut-op)]
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+  :left-sidebar/remove-shortcut
+  [(interceptors/sentry-span-no-new-tx "left-sidebar/remove-shortcut")]
+  (fn [_ [_ name]]
+    (log/debug ":page/remove-shortcut:" name)
+    (let [remove-shortcut-op (atomic-graph-ops/make-shortcut-remove-op name)
+          event              (common-events/build-atomic-event remove-shortcut-op)]
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
- :left-sidebar/drop
- [(interceptors/sentry-span-no-new-tx "left-sidebar/drop")]
- (fn [_ [_ source-order target-order relation]]
-   (let [[source-name target-name] (common-db/find-source-target-title @db/dsdb source-order target-order)
-         drop-op                   (atomic-graph-ops/make-shortcut-move-op source-name
-                                                                           {:page/title target-name
-                                                                            :relation relation})
-         event (common-events/build-atomic-event drop-op)]
-     {:fx [[:dispatch [:resolve-transact-forward event]]
-           [:dispatch [:posthog/report-feature :left-sidebar]]]})))
+  :left-sidebar/drop
+  [(interceptors/sentry-span-no-new-tx "left-sidebar/drop")]
+  (fn [_ [_ source-order target-order relation]]
+    (let [[source-name target-name] (common-db/find-source-target-title @db/dsdb source-order target-order)
+          drop-op                   (atomic-graph-ops/make-shortcut-move-op source-name
+                                                                            {:page/title target-name
+                                                                             :relation relation})
+          event (common-events/build-atomic-event drop-op)]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :left-sidebar]]]})))
 
 
 (reg-event-fx
- :save
- [(interceptors/sentry-span-no-new-tx "save")]
- (fn [_ _]
-   {:fs/write! nil}))
+  :save
+  [(interceptors/sentry-span-no-new-tx "save")]
+  (fn [_ _]
+    {:fs/write! nil}))
 
 
 (reg-event-fx
- :undo
- [(interceptors/sentry-span-no-new-tx "undo")]
- (fn [{:keys [db]} _]
-   (log/debug ":undo")
-   (try
-     (log/debug ":undo count" (undo/count-undo db))
-     (if-some [[undo db'] (undo/pop-undo db)]
-       (let [[evt-dsdb evt] undo
-             evt-id         (:event/id evt)
-             dsdb           @db/dsdb
-             undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
-             undo-evt-id    (:event/id undo-evt)
-             db''           (undo/push-redo db' undo-evt-id [dsdb undo-evt])]
-         (log/debug ":undo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
-         {:db db''
-          :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
-       {})
-     (catch :default _
-       {:fx (util/toast (clj->js {:status "error"
-                            :title "Couldn't undo"
-                            :description "Undo for this operation not supported in Lan-Party, yet."}))}))))
+  :undo
+  [(interceptors/sentry-span-no-new-tx "undo")]
+  (fn [{:keys [db]} _]
+    (log/debug ":undo")
+    (try
+      (log/debug ":undo count" (undo/count-undo db))
+      (if-some [[undo db'] (undo/pop-undo db)]
+        (let [[evt-dsdb evt] undo
+              evt-id         (:event/id evt)
+              dsdb           @db/dsdb
+              undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
+              undo-evt-id    (:event/id undo-evt)
+              db''           (undo/push-redo db' undo-evt-id [dsdb undo-evt])]
+          (log/debug ":undo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
+          {:db db''
+           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
+        {})
+      (catch :default _
+        {:fx (util/toast (clj->js {:status "error"
+                                   :title "Couldn't undo"
+                                   :description "Undo for this operation not supported in Lan-Party, yet."}))}))))
 
 
 (reg-event-fx
- :redo
- [(interceptors/sentry-span-no-new-tx "redo")]
- (fn [{:keys [db]} _]
-   (log/debug ":redo")
-   (try
-     (log/debug ":redo count" (undo/count-redo db))
-     (if-some [[redo db'] (undo/pop-redo db)]
-       (let [[evt-dsdb evt] redo
-             evt-id         (:event/id evt)
-             dsdb           @db/dsdb
-             undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
-             undo-evt-id    (:event/id undo-evt)
-             db''           (undo/push-undo db' undo-evt-id [dsdb undo-evt])]
-         (log/debug ":redo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
-         {:db db''
-          :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
-       {})
-     (catch :default _
-       {:fx (util/toast (clj->js {:status "error"
-                            :title "Couldn't redo"
-                            :description "Redo for this operation not supported in Lan-Party, yet."}))}))))
+  :redo
+  [(interceptors/sentry-span-no-new-tx "redo")]
+  (fn [{:keys [db]} _]
+    (log/debug ":redo")
+    (try
+      (log/debug ":redo count" (undo/count-redo db))
+      (if-some [[redo db'] (undo/pop-redo db)]
+        (let [[evt-dsdb evt] redo
+              evt-id         (:event/id evt)
+              dsdb           @db/dsdb
+              undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
+              undo-evt-id    (:event/id undo-evt)
+              db''           (undo/push-undo db' undo-evt-id [dsdb undo-evt])]
+          (log/debug ":redo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
+          {:db db''
+           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
+        {})
+      (catch :default _
+        {:fx (util/toast (clj->js {:status "error"
+                                   :title "Couldn't redo"
+                                   :description "Redo for this operation not supported in Lan-Party, yet."}))}))))
 
 
 (reg-event-fx
- :reset-undo-redo
- [(interceptors/sentry-span-no-new-tx "reset-undo-redo")]
- (fn [{:keys [db]} _]
-   {:db (undo/reset db)}))
+  :reset-undo-redo
+  [(interceptors/sentry-span-no-new-tx "reset-undo-redo")]
+  (fn [{:keys [db]} _]
+    {:db (undo/reset db)}))
 
 
 (reg-event-fx
- :up
- [(interceptors/sentry-span-no-new-tx "up")]
- (fn [_ [_ uid target-pos]]
-   (let [prev-block-uid (db/prev-block-uid uid)]
-     {:dispatch [:editing/uid (or prev-block-uid uid) target-pos]})))
+  :up
+  [(interceptors/sentry-span-no-new-tx "up")]
+  (fn [_ [_ uid target-pos]]
+    (let [prev-block-uid (db/prev-block-uid uid)]
+      {:dispatch [:editing/uid (or prev-block-uid uid) target-pos]})))
 
 
 (reg-event-fx
- :down
- [(interceptors/sentry-span-no-new-tx "down")]
- (fn [_ [_ uid target-pos]]
-   (let [next-block-uid (db/next-block-uid uid)]
-     {:dispatch [:editing/uid (or next-block-uid uid) target-pos]})))
+  :down
+  [(interceptors/sentry-span-no-new-tx "down")]
+  (fn [_ [_ uid target-pos]]
+    (let [next-block-uid (db/next-block-uid uid)]
+      {:dispatch [:editing/uid (or next-block-uid uid) target-pos]})))
 
 
 (defn backspace
@@ -978,10 +978,10 @@
 ;; will pick db value of backspace/delete instead of current state
 ;; which might not be same as blur is not yet called
 (reg-event-fx
- :backspace
- [(interceptors/sentry-span-no-new-tx "backspace")]
- (fn [_ [_ uid value maybe-local-updates]]
-   (backspace uid value maybe-local-updates)))
+  :backspace
+  [(interceptors/sentry-span-no-new-tx "backspace")]
+  (fn [_ [_ uid value maybe-local-updates]]
+    (backspace uid value maybe-local-updates)))
 
 
 ;; Atomic events start ==========
@@ -1028,183 +1028,183 @@
 
 
 (reg-event-fx
- :backspace/delete-only-child
- (fn [_ [_ uid]]
-   (log/debug ":backspace/delete-only-child:" (pr-str uid))
-   (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-only-child")
-         op          (wrap-span-no-new-tx "build-block-remove-op"
-                                          (graph-ops/build-block-remove-op @db/dsdb uid))
-         event       (common-events/build-atomic-event op)]
-     {:fx [(transact-async-flow :backspace-delete-only-child event sentry-tx [[:editing/uid nil]])]})))
+  :backspace/delete-only-child
+  (fn [_ [_ uid]]
+    (log/debug ":backspace/delete-only-child:" (pr-str uid))
+    (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-only-child")
+          op          (wrap-span-no-new-tx "build-block-remove-op"
+                                           (graph-ops/build-block-remove-op @db/dsdb uid))
+          event       (common-events/build-atomic-event op)]
+      {:fx [(transact-async-flow :backspace-delete-only-child event sentry-tx [[:editing/uid nil]])]})))
 
 
 (reg-event-fx
- :enter/new-block
- (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
-   (log/debug ":enter/new-block" (pr-str block) (pr-str parent) (pr-str new-uid))
-   (let [sentry-tx   (close-and-get-sentry-tx "enter/new-block")
-         op          (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
-                                                                  :relation  :after})
-         event       (common-events/build-atomic-event op)]
-     {:fx [(transact-async-flow :enter-new-block event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+  :enter/new-block
+  (fn [_ [_ {:keys [block parent new-uid embed-id]}]]
+    (log/debug ":enter/new-block" (pr-str block) (pr-str parent) (pr-str new-uid))
+    (let [sentry-tx   (close-and-get-sentry-tx "enter/new-block")
+          op          (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
+                                                                   :relation  :after})
+          event       (common-events/build-atomic-event op)]
+      {:fx [(transact-async-flow :enter-new-block event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
 
 
 (reg-event-fx
- :block/save
- (fn [{:keys [db]} [_ {:keys [uid string] :as args}]]
-   (log/debug ":block/save args" (pr-str args))
-   (let [local?      (not (db-picker/remote-db? db))
-         block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
-         do-nothing? (or (not block-eid)
-                         (= string (->> block-eid (d/entity @db/dsdb) :block/string)))
-         op          (graph-ops/build-block-save-op @db/dsdb uid string)
-         event       (common-events/build-atomic-event op)]
-     (log/debug ":block/save local?" local?
-                ", do-nothing?" do-nothing?)
-     (when-not do-nothing?
-       {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
+  :block/save
+  (fn [{:keys [db]} [_ {:keys [uid string] :as args}]]
+    (log/debug ":block/save args" (pr-str args))
+    (let [local?      (not (db-picker/remote-db? db))
+          block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
+          do-nothing? (or (not block-eid)
+                          (= string (->> block-eid (d/entity @db/dsdb) :block/string)))
+          op          (graph-ops/build-block-save-op @db/dsdb uid string)
+          event       (common-events/build-atomic-event op)]
+      (log/debug ":block/save local?" local?
+                 ", do-nothing?" do-nothing?)
+      (when-not do-nothing?
+        {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
 
 
 (reg-event-fx
- :page/new
- (fn [_ [_ {:keys [title block-uid shift?] :or {shift? false} :as args}]]
-   (log/debug ":page/new args" (pr-str args))
-   (let [event (common-events/build-atomic-event (graph-ops/build-page-new-op @db/dsdb
-                                                                              title
-                                                                              block-uid))]
-     {:fx [[:dispatch-n [[:resolve-transact-forward event]
-                         [:page/new-followup title shift?]
-                         [:editing/uid block-uid]]]]})))
+  :page/new
+  (fn [_ [_ {:keys [title block-uid shift?] :or {shift? false} :as args}]]
+    (log/debug ":page/new args" (pr-str args))
+    (let [event (common-events/build-atomic-event (graph-ops/build-page-new-op @db/dsdb
+                                                                               title
+                                                                               block-uid))]
+      {:fx [[:dispatch-n [[:resolve-transact-forward event]
+                          [:page/new-followup title shift?]
+                          [:editing/uid block-uid]]]]})))
 
 
 (reg-event-fx
- :page/rename
- (fn [_ [_ {:keys [old-name new-name callback] :as args}]]
-   (log/debug ":page/rename args:" (pr-str (select-keys args [:old-name :new-name])))
-   (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-rename-op old-name new-name))]
-     {:fx [[:dispatch [:resolve-transact-forward event]]
-           [:invoke-callback callback]]})))
+  :page/rename
+  (fn [_ [_ {:keys [old-name new-name callback] :as args}]]
+    (log/debug ":page/rename args:" (pr-str (select-keys args [:old-name :new-name])))
+    (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-rename-op old-name new-name))]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:invoke-callback callback]]})))
 
 
 (reg-event-fx
- :page/merge
- (fn [_ [_ {:keys [from-name to-name callback] :as args}]]
-   (log/debug ":page/merge args:" (pr-str (select-keys args [:from-name :to-name])))
-   (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-merge-op from-name to-name))]
-     {:fx [[:dispatch [:resolve-transact-forward event]]
-           [:invoke-callback callback]]})))
+  :page/merge
+  (fn [_ [_ {:keys [from-name to-name callback] :as args}]]
+    (log/debug ":page/merge args:" (pr-str (select-keys args [:from-name :to-name])))
+    (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-merge-op from-name to-name))]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:invoke-callback callback]]})))
 
 
 (reg-event-fx
- :page/new-followup
- (fn [_ [_ title shift?]]
-   (log/debug ":page/new-followup title" title "shift?" shift?)
-   (let [page-uid (common-db/get-page-uid @db/dsdb title)]
-     {:fx [[:dispatch-n [(cond
-                           shift?
-                           [:right-sidebar/open-item page-uid]
+  :page/new-followup
+  (fn [_ [_ title shift?]]
+    (log/debug ":page/new-followup title" title "shift?" shift?)
+    (let [page-uid (common-db/get-page-uid @db/dsdb title)]
+      {:fx [[:dispatch-n [(cond
+                            shift?
+                            [:right-sidebar/open-item page-uid]
 
-                           (not (dates/is-daily-note page-uid))
-                           [:navigate :page {:id page-uid}]
+                            (not (dates/is-daily-note page-uid))
+                            [:navigate :page {:id page-uid}]
 
-                           (dates/is-daily-note page-uid)
-                           [:daily-note/add page-uid])]]]})))
-
-
-(reg-event-fx
- :backspace/delete-merge-block
- (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
-   (log/debug ":backspace/delete-merge-block args:" (pr-str args))
-   (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block")
-         op          (wrap-span-no-new-tx "build-block-remove-merge-op"
-                                          (graph-ops/build-block-remove-merge-op @db/dsdb
-                                                                                 uid
-                                                                                 prev-block-uid
-                                                                                 value))
-         event       (common-events/build-atomic-event  op)]
-     {:fx [(transact-async-flow :backspace-delete-merge-block event sentry-tx
-                                [(focus-on-uid prev-block-uid embed-id
-                                               (count (:block/string prev-block)))])]})))
+                            (dates/is-daily-note page-uid)
+                            [:daily-note/add page-uid])]]]})))
 
 
 (reg-event-fx
- :backspace/delete-merge-block-with-save
- (fn [_ [_ {:keys [uid value prev-block-uid embed-id local-update] :as args}]]
-   (log/debug ":backspace/delete-merge-block-with-save args:" (pr-str args))
-   (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block-with-save")
-         op          (wrap-span-no-new-tx "build-block-merge-with-updated-op"
-                                          (graph-ops/build-block-merge-with-updated-op @db/dsdb
-                                                                                       uid
-                                                                                       prev-block-uid
-                                                                                       value
-                                                                                       local-update))
-         event       (common-events/build-atomic-event  op)]
-     {:fx [(transact-async-flow :backspace-delete-merge-block-with-save event sentry-tx
-                                [(focus-on-uid prev-block-uid embed-id (count local-update))])]})))
+  :backspace/delete-merge-block
+  (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
+    (log/debug ":backspace/delete-merge-block args:" (pr-str args))
+    (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block")
+          op          (wrap-span-no-new-tx "build-block-remove-merge-op"
+                                           (graph-ops/build-block-remove-merge-op @db/dsdb
+                                                                                  uid
+                                                                                  prev-block-uid
+                                                                                  value))
+          event       (common-events/build-atomic-event  op)]
+      {:fx [(transact-async-flow :backspace-delete-merge-block event sentry-tx
+                                 [(focus-on-uid prev-block-uid embed-id
+                                                (count (:block/string prev-block)))])]})))
+
+
+(reg-event-fx
+  :backspace/delete-merge-block-with-save
+  (fn [_ [_ {:keys [uid value prev-block-uid embed-id local-update] :as args}]]
+    (log/debug ":backspace/delete-merge-block-with-save args:" (pr-str args))
+    (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block-with-save")
+          op          (wrap-span-no-new-tx "build-block-merge-with-updated-op"
+                                           (graph-ops/build-block-merge-with-updated-op @db/dsdb
+                                                                                        uid
+                                                                                        prev-block-uid
+                                                                                        value
+                                                                                        local-update))
+          event       (common-events/build-atomic-event  op)]
+      {:fx [(transact-async-flow :backspace-delete-merge-block-with-save event sentry-tx
+                                 [(focus-on-uid prev-block-uid embed-id (count local-update))])]})))
 
 
 ;; Atomic events end ==========
 
 
 (reg-event-fx
- :enter/add-child
- (fn [_ [_ {:keys [block new-uid embed-id] :as args}]]
-   (log/debug ":enter/add-child args:" (pr-str args))
-   (let [sentry-tx   (close-and-get-sentry-tx "enter/add-child")
-         position    (wrap-span-no-new-tx "compat-position"
-                                          (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
-                                                                               :relation  :first}))
-         event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
-     {:fx [(transact-async-flow :enter-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+  :enter/add-child
+  (fn [_ [_ {:keys [block new-uid embed-id] :as args}]]
+    (log/debug ":enter/add-child args:" (pr-str args))
+    (let [sentry-tx   (close-and-get-sentry-tx "enter/add-child")
+          position    (wrap-span-no-new-tx "compat-position"
+                                           (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
+                                                                                :relation  :first}))
+          event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
+      {:fx [(transact-async-flow :enter-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
 
 
 (reg-event-fx
- :enter/split-block
- (fn [_ [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
-   (log/debug ":enter/split-block" (pr-str args))
-   (let [sentry-tx   (close-and-get-sentry-tx "enter/split-block")
-         op          (wrap-span-no-new-tx "build-block-split-op"
-                                          (graph-ops/build-block-split-op @db/dsdb
-                                                                          {:old-block-uid uid
-                                                                           :new-block-uid new-uid
-                                                                           :string        value
-                                                                           :index         index
-                                                                           :relation      relation}))
-         event       (common-events/build-atomic-event op)]
-     {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+  :enter/split-block
+  (fn [_ [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
+    (log/debug ":enter/split-block" (pr-str args))
+    (let [sentry-tx   (close-and-get-sentry-tx "enter/split-block")
+          op          (wrap-span-no-new-tx "build-block-split-op"
+                                           (graph-ops/build-block-split-op @db/dsdb
+                                                                           {:old-block-uid uid
+                                                                            :new-block-uid new-uid
+                                                                            :string        value
+                                                                            :index         index
+                                                                            :relation      relation}))
+          event       (common-events/build-atomic-event op)]
+      {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
 
 
 (reg-event-fx
- :enter/bump-up
- (fn [_ [_ {:keys [uid new-uid embed-id] :as args}]]
-   (log/debug ":enter/bump-up args" (pr-str args))
-   (let [sentry-tx   (close-and-get-sentry-tx "enter/bump-up")
-         position    (wrap-span-no-new-tx "compat-position"
-                                          (common-db/compat-position @db/dsdb {:block/uid uid
-                                                                               :relation  :before}))
-         event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
-     {:fx [(transact-async-flow :enter-bump-up event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+  :enter/bump-up
+  (fn [_ [_ {:keys [uid new-uid embed-id] :as args}]]
+    (log/debug ":enter/bump-up args" (pr-str args))
+    (let [sentry-tx   (close-and-get-sentry-tx "enter/bump-up")
+          position    (wrap-span-no-new-tx "compat-position"
+                                           (common-db/compat-position @db/dsdb {:block/uid uid
+                                                                                :relation  :before}))
+          event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
+      {:fx [(transact-async-flow :enter-bump-up event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
 
 
 (reg-event-fx
- :enter/open-block-add-child
- (fn [_ [_ {:keys [block new-uid embed-id]}]]
+  :enter/open-block-add-child
+  (fn [_ [_ {:keys [block new-uid embed-id]}]]
     ;; Triggered when there is a closed embeded block with no content in the top level block
     ;; and then one presses enter in the embeded block.
-   (log/debug ":enter/open-block-add-child" (pr-str block) (pr-str new-uid))
-   (let [sentry-tx               (close-and-get-sentry-tx "enter/open-block-add-child")
-         block-uid               (:block/uid block)
-         block-open-op           (atomic-graph-ops/make-block-open-op block-uid
-                                                                      true)
-         position                (wrap-span-no-new-tx "compat-position"
-                                                      (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
-                                                                                           :relation  :first}))
-         add-child-op            (atomic-graph-ops/make-block-new-op new-uid position)
-         open-block-add-child-op (composite-ops/make-consequence-op {:op/type :open-block-add-child}
-                                                                    [block-open-op
-                                                                     add-child-op])
-         event                   (common-events/build-atomic-event open-block-add-child-op)]
-     {:fx [(transact-async-flow :enter-open-block-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+    (log/debug ":enter/open-block-add-child" (pr-str block) (pr-str new-uid))
+    (let [sentry-tx               (close-and-get-sentry-tx "enter/open-block-add-child")
+          block-uid               (:block/uid block)
+          block-open-op           (atomic-graph-ops/make-block-open-op block-uid
+                                                                       true)
+          position                (wrap-span-no-new-tx "compat-position"
+                                                       (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
+                                                                                            :relation  :first}))
+          add-child-op            (atomic-graph-ops/make-block-new-op new-uid position)
+          open-block-add-child-op (composite-ops/make-consequence-op {:op/type :open-block-add-child}
+                                                                     [block-open-op
+                                                                      add-child-op])
+          event                   (common-events/build-atomic-event open-block-add-child-op)]
+      {:fx [(transact-async-flow :enter-open-block-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
 
 
 (defn enter
@@ -1314,10 +1314,10 @@
 
 
 (reg-event-fx
- :enter
- [(interceptors/sentry-span-no-new-tx "enter")]
- (fn [{rfdb :db} [_ uid d-event]]
-   (enter rfdb uid d-event)))
+  :enter
+  [(interceptors/sentry-span-no-new-tx "enter")]
+  (fn [{rfdb :db} [_ uid d-event]]
+    (enter rfdb uid d-event)))
 
 
 (defn get-prev-block-uid-and-target-rel
@@ -1346,285 +1346,285 @@
 
 
 (reg-event-fx
- :indent
- (fn [{:keys [_db]} [_ {:keys [uid d-key-down local-string] :as args}]]
+  :indent
+  (fn [{:keys [_db]} [_ {:keys [uid d-key-down local-string] :as args}]]
     ;; - `block-zero`: The first block in a page
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-   (let [sentry-tx                     (close-and-get-sentry-tx "indent")
-         block                         (wrap-span-no-new-tx "get-block"
-                                                            (common-db/get-block @db/dsdb [:block/uid uid]))
-         block-zero?                   (zero? (:block/order block))
-         [prev-block-uid
-          target-rel]                  (wrap-span-no-new-tx "get-prev-block-uid-and-target-rel"
-                                                            (get-prev-block-uid-and-target-rel uid))
-         sib-block                     (wrap-span-no-new-tx "get-block-sib-block"
-                                                            (common-db/get-block @db/dsdb [:block/uid prev-block-uid]))
+    (let [sentry-tx                     (close-and-get-sentry-tx "indent")
+          block                         (wrap-span-no-new-tx "get-block"
+                                                             (common-db/get-block @db/dsdb [:block/uid uid]))
+          block-zero?                   (zero? (:block/order block))
+          [prev-block-uid
+           target-rel]                  (wrap-span-no-new-tx "get-prev-block-uid-and-target-rel"
+                                                             (get-prev-block-uid-and-target-rel uid))
+          sib-block                     (wrap-span-no-new-tx "get-block-sib-block"
+                                                             (common-db/get-block @db/dsdb [:block/uid prev-block-uid]))
           ;; if sibling block is closed with children, open
-         {sib-open     :block/open
-          sib-children :block/children
-          sib-uid      :block/uid}     sib-block
-         block-closed?                 (and (not sib-open) sib-children)
-         sib-block-open-op             (when block-closed?
-                                         (atomic-graph-ops/make-block-open-op sib-uid true))
-         {:keys [start end]}           d-key-down
-         block-save-block-move-op      (block-save-block-move-composite-op uid
-                                                                           prev-block-uid
-                                                                           target-rel
-                                                                           local-string)
-         event                         (common-events/build-atomic-event
-                                        (composite-ops/make-consequence-op {:op/type :indent}
-                                                                           (cond-> [block-save-block-move-op]
-                                                                             block-closed? (conj sib-block-open-op))))]
-     (log/debug "null-sib-uid" (and block-zero?
-                                    prev-block-uid)
-                ", args:" (pr-str args)
-                ", block-zero?" block-zero?)
-     (when (and prev-block-uid
-                (not block-zero?))
-       {:fx [(transact-async-flow :indent event sentry-tx [])
-             [:set-cursor-position [uid start end]]]}))))
+          {sib-open     :block/open
+           sib-children :block/children
+           sib-uid      :block/uid}     sib-block
+          block-closed?                 (and (not sib-open) sib-children)
+          sib-block-open-op             (when block-closed?
+                                          (atomic-graph-ops/make-block-open-op sib-uid true))
+          {:keys [start end]}           d-key-down
+          block-save-block-move-op      (block-save-block-move-composite-op uid
+                                                                            prev-block-uid
+                                                                            target-rel
+                                                                            local-string)
+          event                         (common-events/build-atomic-event
+                                          (composite-ops/make-consequence-op {:op/type :indent}
+                                                                             (cond-> [block-save-block-move-op]
+                                                                               block-closed? (conj sib-block-open-op))))]
+      (log/debug "null-sib-uid" (and block-zero?
+                                     prev-block-uid)
+                 ", args:" (pr-str args)
+                 ", block-zero?" block-zero?)
+      (when (and prev-block-uid
+                 (not block-zero?))
+        {:fx [(transact-async-flow :indent event sentry-tx [])
+              [:set-cursor-position [uid start end]]]}))))
 
 
 (reg-event-fx
- :indent/multi
- (fn [_ [_ {:keys [uids]}]]
-   (log/debug ":indent/multi" (pr-str uids))
-   (let [sentry-tx                (close-and-get-sentry-tx "indent/multi")
-         sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
-         f-uid                    (first sanitized-selected-uids)
-         dsdb                     @db/dsdb
-         [prev-block-uid
-          target-rel]             (wrap-span-no-new-tx "get-prev-block-uid-and-target-rel"
-                                                       (get-prev-block-uid-and-target-rel f-uid))
-         same-parent?             (wrap-span-no-new-tx "same-parent"
-                                                       (common-db/same-parent? dsdb sanitized-selected-uids))
-         first-block-order        (:block/order (wrap-span-no-new-tx "get-block"
-                                                                     (common-db/get-block dsdb [:block/uid f-uid])))
-         block-zero?              (zero? first-block-order)]
-     (log/debug ":indent/multi same-parent?" same-parent?
-                ", not block-zero?" (not  block-zero?))
-     (when (and same-parent? (not block-zero?))
-       {:fx [[:async-flow {:id             :indent-multi-async-flow
-                           :db-path        [:async-flow :indent-multi]
-                           :first-dispatch [:drop-multi/sibling {:source-uids sanitized-selected-uids
-                                                                 :target-uid  prev-block-uid
-                                                                 :drag-target target-rel}]
-                           :rules          (wait-for-rft sentry-tx [])}]]}))))
+  :indent/multi
+  (fn [_ [_ {:keys [uids]}]]
+    (log/debug ":indent/multi" (pr-str uids))
+    (let [sentry-tx                (close-and-get-sentry-tx "indent/multi")
+          sanitized-selected-uids  (mapv (comp first common-db/uid-and-embed-id) uids)
+          f-uid                    (first sanitized-selected-uids)
+          dsdb                     @db/dsdb
+          [prev-block-uid
+           target-rel]             (wrap-span-no-new-tx "get-prev-block-uid-and-target-rel"
+                                                        (get-prev-block-uid-and-target-rel f-uid))
+          same-parent?             (wrap-span-no-new-tx "same-parent"
+                                                        (common-db/same-parent? dsdb sanitized-selected-uids))
+          first-block-order        (:block/order (wrap-span-no-new-tx "get-block"
+                                                                      (common-db/get-block dsdb [:block/uid f-uid])))
+          block-zero?              (zero? first-block-order)]
+      (log/debug ":indent/multi same-parent?" same-parent?
+                 ", not block-zero?" (not  block-zero?))
+      (when (and same-parent? (not block-zero?))
+        {:fx [[:async-flow {:id             :indent-multi-async-flow
+                            :db-path        [:async-flow :indent-multi]
+                            :first-dispatch [:drop-multi/sibling {:source-uids sanitized-selected-uids
+                                                                  :target-uid  prev-block-uid
+                                                                  :drag-target target-rel}]
+                            :rules          (wait-for-rft sentry-tx [])}]]}))))
 
 
 (reg-event-fx
- :unindent
- (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
-   (log/debug ":unindent args" (pr-str args))
-   (let [sentry-tx                 (close-and-get-sentry-tx "unindent")
-         parent                    (wrap-span-no-new-tx "parent"
-                                                        (common-db/get-parent @db/dsdb
-                                                                              (common-db/e-by-av @db/dsdb :block/uid uid)))
-         is-parent-root-embed?     (= (some-> d-key-down
-                                              :target
-                                              (.. (closest ".block-embed"))
-                                              (. -firstChild)
-                                              (.getAttribute "data-uid"))
-                                      (str (:block/uid parent) "-embed-" embed-id))
-         do-nothing?               (or is-parent-root-embed?
-                                       (:node/title parent)
-                                       (= context-root-uid (:block/uid parent)))
-         {:keys [start end]}       d-key-down
-         block-save-block-move-op  (block-save-block-move-composite-op uid
-                                                                       (:block/uid parent)
-                                                                       :after
-                                                                       local-string)
-         event                     (common-events/build-atomic-event block-save-block-move-op)]
-
-     (log/debug ":unindent do-nothing?" do-nothing?)
-     (when-not do-nothing?
-       {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid uid embed-id)])
-             [:set-cursor-position [uid start end]]]}))))
-
-
-(reg-event-fx
- :unindent/multi
- (fn [{:keys [db]} [_ {:keys [uids]}]]
-   (log/debug ":unindent/multi" uids)
-   (let [sentry-tx                   (close-and-get-sentry-tx "unindent/multi")
-         [f-uid f-embed-id]          (wrap-span-no-new-tx "uid-and-embed-id"
-                                                          (common-db/uid-and-embed-id (first uids)))
-         sanitized-selected-uids     (mapv (comp
-                                            first
-                                            common-db/uid-and-embed-id) uids)
-         {parent-title :node/title
-          parent-uid   :block/uid}   (wrap-span-no-new-tx "get-parent"
-                                                          (common-db/get-parent @db/dsdb [:block/uid f-uid]))
-         same-parent?                (wrap-span-no-new-tx "same-parent"
-                                                          (common-db/same-parent? @db/dsdb sanitized-selected-uids))
-         is-parent-root-embed?       (when same-parent?
-                                       (some-> "#editable-uid-"
-                                               (str f-uid "-embed-" f-embed-id)
-                                               js/document.querySelector
+  :unindent
+  (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
+    (log/debug ":unindent args" (pr-str args))
+    (let [sentry-tx                 (close-and-get-sentry-tx "unindent")
+          parent                    (wrap-span-no-new-tx "parent"
+                                                         (common-db/get-parent @db/dsdb
+                                                                               (common-db/e-by-av @db/dsdb :block/uid uid)))
+          is-parent-root-embed?     (= (some-> d-key-down
+                                               :target
                                                (.. (closest ".block-embed"))
                                                (. -firstChild)
-                                               (.getAttribute "data-uid")
-                                               (= (str parent-uid "-embed-" f-embed-id))))
-         context-root-uid            (get-in db [:current-route :path-params :id])
-         do-nothing?                 (or parent-title
-                                         (not same-parent?)
-                                         (and same-parent? is-parent-root-embed?)
-                                         (= parent-uid context-root-uid))]
-     (log/debug ":unindent/multi do-nothing?" do-nothing?)
-     (when-not do-nothing?
-       {:fx [[:async-flow {:id             :unindent-multi-async-flow
-                           :db-path        [:async-flow :unindent-multi]
-                           :first-dispatch [:drop-multi/sibling {:source-uids  sanitized-selected-uids
-                                                                 :target-uid   parent-uid
-                                                                 :drag-target  :after}]
-                           :rules          (wait-for-rft sentry-tx [])}]]}))))
+                                               (.getAttribute "data-uid"))
+                                       (str (:block/uid parent) "-embed-" embed-id))
+          do-nothing?               (or is-parent-root-embed?
+                                        (:node/title parent)
+                                        (= context-root-uid (:block/uid parent)))
+          {:keys [start end]}       d-key-down
+          block-save-block-move-op  (block-save-block-move-composite-op uid
+                                                                        (:block/uid parent)
+                                                                        :after
+                                                                        local-string)
+          event                     (common-events/build-atomic-event block-save-block-move-op)]
+
+      (log/debug ":unindent do-nothing?" do-nothing?)
+      (when-not do-nothing?
+        {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid uid embed-id)])
+              [:set-cursor-position [uid start end]]]}))))
 
 
 (reg-event-fx
- :block/move
- (fn [_ [_ {:keys [source-uid target-uid target-rel] :as args}]]
-   (log/debug ":block/move args" (pr-str args))
-   (let [atomic-event (common-events/build-atomic-event
-                       (atomic-graph-ops/make-block-move-op source-uid
-                                                            {:block/uid target-uid
-                                                             :relation target-rel}))]
-     {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+  :unindent/multi
+  (fn [{:keys [db]} [_ {:keys [uids]}]]
+    (log/debug ":unindent/multi" uids)
+    (let [sentry-tx                   (close-and-get-sentry-tx "unindent/multi")
+          [f-uid f-embed-id]          (wrap-span-no-new-tx "uid-and-embed-id"
+                                                           (common-db/uid-and-embed-id (first uids)))
+          sanitized-selected-uids     (mapv (comp
+                                              first
+                                              common-db/uid-and-embed-id) uids)
+          {parent-title :node/title
+           parent-uid   :block/uid}   (wrap-span-no-new-tx "get-parent"
+                                                           (common-db/get-parent @db/dsdb [:block/uid f-uid]))
+          same-parent?                (wrap-span-no-new-tx "same-parent"
+                                                           (common-db/same-parent? @db/dsdb sanitized-selected-uids))
+          is-parent-root-embed?       (when same-parent?
+                                        (some-> "#editable-uid-"
+                                                (str f-uid "-embed-" f-embed-id)
+                                                js/document.querySelector
+                                                (.. (closest ".block-embed"))
+                                                (. -firstChild)
+                                                (.getAttribute "data-uid")
+                                                (= (str parent-uid "-embed-" f-embed-id))))
+          context-root-uid            (get-in db [:current-route :path-params :id])
+          do-nothing?                 (or parent-title
+                                          (not same-parent?)
+                                          (and same-parent? is-parent-root-embed?)
+                                          (= parent-uid context-root-uid))]
+      (log/debug ":unindent/multi do-nothing?" do-nothing?)
+      (when-not do-nothing?
+        {:fx [[:async-flow {:id             :unindent-multi-async-flow
+                            :db-path        [:async-flow :unindent-multi]
+                            :first-dispatch [:drop-multi/sibling {:source-uids  sanitized-selected-uids
+                                                                  :target-uid   parent-uid
+                                                                  :drag-target  :after}]
+                            :rules          (wait-for-rft sentry-tx [])}]]}))))
 
 
 (reg-event-fx
- :block/link
- (fn [_ [_ {:keys [source-uid target-uid target-rel] :as args}]]
-   (log/debug ":block/link args" (pr-str args))
-   (let [block-uid    (common.utils/gen-block-uid)
-         atomic-event (common-events/build-atomic-event
-                       (composite-ops/make-consequence-op {:op/type :block/link}
-                                                          [(atomic-graph-ops/make-block-new-op block-uid
-                                                                                               {:block/uid target-uid
-                                                                                                :relation target-rel})
-                                                           (atomic-graph-ops/make-block-save-op block-uid
-                                                                                                (str "((" source-uid "))"))]))]
-     {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+  :block/move
+  (fn [_ [_ {:keys [source-uid target-uid target-rel] :as args}]]
+    (log/debug ":block/move args" (pr-str args))
+    (let [atomic-event (common-events/build-atomic-event
+                         (atomic-graph-ops/make-block-move-op source-uid
+                                                              {:block/uid target-uid
+                                                               :relation target-rel}))]
+      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
 
 
 (reg-event-fx
- :drop-multi/child
- (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
-   (log/debug ":drop-multi/child args" (pr-str args))
-   (let [atomic-op (graph-ops/block-move-chain target-uid source-uids :first)
-         event     (common-events/build-atomic-event atomic-op)]
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+  :block/link
+  (fn [_ [_ {:keys [source-uid target-uid target-rel] :as args}]]
+    (log/debug ":block/link args" (pr-str args))
+    (let [block-uid    (common.utils/gen-block-uid)
+          atomic-event (common-events/build-atomic-event
+                         (composite-ops/make-consequence-op {:op/type :block/link}
+                                                            [(atomic-graph-ops/make-block-new-op block-uid
+                                                                                                 {:block/uid target-uid
+                                                                                                  :relation target-rel})
+                                                             (atomic-graph-ops/make-block-save-op block-uid
+                                                                                                  (str "((" source-uid "))"))]))]
+      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
 
 
 (reg-event-fx
- :drop-multi/sibling
- (fn [_ [_ {:keys [source-uids target-uid drag-target] :as args}]]
+  :drop-multi/child
+  (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
+    (log/debug ":drop-multi/child args" (pr-str args))
+    (let [atomic-op (graph-ops/block-move-chain target-uid source-uids :first)
+          event     (common-events/build-atomic-event atomic-op)]
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+
+
+(reg-event-fx
+  :drop-multi/sibling
+  (fn [_ [_ {:keys [source-uids target-uid drag-target] :as args}]]
     ;; When the selected blocks have same parent and are DnD under the same parent this event is fired.
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
-   (log/debug ":drop-multi/sibling args" (pr-str args))
-   (let [rel-position drag-target
-         atomic-op    (graph-ops/block-move-chain target-uid source-uids rel-position)
-         event        (common-events/build-atomic-event atomic-op)]
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+    (log/debug ":drop-multi/sibling args" (pr-str args))
+    (let [rel-position drag-target
+          atomic-op    (graph-ops/block-move-chain target-uid source-uids rel-position)
+          event        (common-events/build-atomic-event atomic-op)]
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
- :paste-internal
- [(interceptors/sentry-span-no-new-tx "paste-internal")]
- (fn [_ [_ uid local-str internal-representation]]
-   (let [[uid]  (db/uid-and-embed-id uid)
-         op     (bfs/build-paste-op @db/dsdb
-                                    uid
-                                    local-str
-                                    internal-representation)
-         event  (common-events/build-atomic-event op)]
-     (log/debug "paste internal event is" (pr-str event))
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+  :paste-internal
+  [(interceptors/sentry-span-no-new-tx "paste-internal")]
+  (fn [_ [_ uid local-str internal-representation]]
+    (let [[uid]  (db/uid-and-embed-id uid)
+          op     (bfs/build-paste-op @db/dsdb
+                                     uid
+                                     local-str
+                                     internal-representation)
+          event  (common-events/build-atomic-event op)]
+      (log/debug "paste internal event is" (pr-str event))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
- :paste-image
- [(interceptors/sentry-span-no-new-tx "paste-image")]
- (fn [{:keys [db]} [_ items head tail callback]]
-   (let [local?     (not (db-picker/remote-db? db))
-         img-regex  #"(?i)^image/(p?jpeg|gif|png)$"]
-     (log/debug ":paste-image : local?" local?)
-     (if local?
-       (do
-         (mapv (fn [item]
-                 (let [datatype (.. item -type)]
-                   (cond
-                     (re-find img-regex datatype)    (when electron.utils/electron?
-                                                       (let [new-str (images/save-image head tail item "png")]
-                                                         (callback new-str)))
-                     (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
-               items)
-         {})
-       {:fx (util/toast (clj->js {:status "error"
-                            :title "Couldn't paste"
-                            :description "Image paste is not supported in Lan-Party, yet."}))}))))
+  :paste-image
+  [(interceptors/sentry-span-no-new-tx "paste-image")]
+  (fn [{:keys [db]} [_ items head tail callback]]
+    (let [local?     (not (db-picker/remote-db? db))
+          img-regex  #"(?i)^image/(p?jpeg|gif|png)$"]
+      (log/debug ":paste-image : local?" local?)
+      (if local?
+        (do
+          (mapv (fn [item]
+                  (let [datatype (.. item -type)]
+                    (cond
+                      (re-find img-regex datatype)    (when electron.utils/electron?
+                                                        (let [new-str (images/save-image head tail item "png")]
+                                                          (callback new-str)))
+                      (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
+                items)
+          {})
+        {:fx (util/toast (clj->js {:status "error"
+                                   :title "Couldn't paste"
+                                   :description "Image paste is not supported in Lan-Party, yet."}))}))))
 
 
 (reg-event-fx
- :paste-verbatim
- [(interceptors/sentry-span-no-new-tx "paste-verbatim")]
- (fn [_ [_ uid text]]
+  :paste-verbatim
+  [(interceptors/sentry-span-no-new-tx "paste-verbatim")]
+  (fn [_ [_ uid text]]
     ;; NOTE: use of `value` is questionable, it's the DOM so it's what users sees,
     ;; but what users sees should taken from DB. How would `value` behave with multiple editors?
-   (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
-         block-empty? (string/blank? value)
-         block-start? (zero? start)
-         new-string   (cond
-                        block-empty?       text
-                        (and (not block-empty?)
-                             block-start?) (str text value)
-                        :else              (str (subs value 0 start)
-                                                text
-                                                (subs value start)))
-         op          (graph-ops/build-block-save-op @db/dsdb uid new-string)
-         event       (common-events/build-atomic-event op)]
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+    (let [{:keys [start value]} (textarea-keydown/destruct-target js/document.activeElement)
+          block-empty? (string/blank? value)
+          block-start? (zero? start)
+          new-string   (cond
+                         block-empty?       text
+                         (and (not block-empty?)
+                              block-start?) (str text value)
+                         :else              (str (subs value 0 start)
+                                                 text
+                                                 (subs value start)))
+          op          (graph-ops/build-block-save-op @db/dsdb uid new-string)
+          event       (common-events/build-atomic-event op)]
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
 (reg-event-fx
- :unlinked-references/link
- (fn [_ [_ {:block/keys [string uid]} title]]
-   (log/debug ":unlinked-references/link:" uid)
-   (let [ignore-case-title  (re-pattern (str "(?i)" title))
-         new-str            (string/replace string ignore-case-title (str "[[" title "]]"))
-         op                 (graph-ops/build-block-save-op @db/dsdb
-                                                           uid
-                                                           new-str)
-         event              (common-events/build-atomic-event op)]
-     {:fx [[:dispatch [:resolve-transact-forward event]]
-           [:dispatch [:posthog/report-feature :unlinked-references]]]})))
+  :unlinked-references/link
+  (fn [_ [_ {:block/keys [string uid]} title]]
+    (log/debug ":unlinked-references/link:" uid)
+    (let [ignore-case-title  (re-pattern (str "(?i)" title))
+          new-str            (string/replace string ignore-case-title (str "[[" title "]]"))
+          op                 (graph-ops/build-block-save-op @db/dsdb
+                                                            uid
+                                                            new-str)
+          event              (common-events/build-atomic-event op)]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :unlinked-references]]]})))
 
 
 (reg-event-fx
- :unlinked-references/link-all
- (fn [_ [_ unlinked-refs title]]
-   (log/debug ":unlinked-references/link:" title)
-   (let [block-save-ops      (mapv
-                              (fn [{:block/keys [string uid]}]
-                                (let [ignore-case-title (re-pattern (str "(?i)" title))
-                                      new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
-                                  (graph-ops/build-block-save-op @db/dsdb
-                                                                 uid
-                                                                 new-str)))
-                              unlinked-refs)
-         link-all-op         (composite-ops/make-consequence-op {:op/type :block/unlinked-refs-link-all}
-                                                                block-save-ops)
-         event              (common-events/build-atomic-event link-all-op)]
-     {:fx [[:dispatch [:resolve-transact-forward event]]
-           [:dispatch [:posthog/report-feature :unlinked-references]]]})))
+  :unlinked-references/link-all
+  (fn [_ [_ unlinked-refs title]]
+    (log/debug ":unlinked-references/link:" title)
+    (let [block-save-ops      (mapv
+                                (fn [{:block/keys [string uid]}]
+                                  (let [ignore-case-title (re-pattern (str "(?i)" title))
+                                        new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
+                                    (graph-ops/build-block-save-op @db/dsdb
+                                                                   uid
+                                                                   new-str)))
+                                unlinked-refs)
+          link-all-op         (composite-ops/make-consequence-op {:op/type :block/unlinked-refs-link-all}
+                                                                 block-save-ops)
+          event              (common-events/build-atomic-event link-all-op)]
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :unlinked-references]]]})))
 
 
 (rf/reg-event-fx
- :block/open
- (fn [_ [_ {:keys [block-uid open?] :as args}]]
-   (log/debug ":block/open args" args)
-   (let [event (common-events/build-atomic-event
-                (atomic-graph-ops/make-block-open-op block-uid open?))]
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+  :block/open
+  (fn [_ [_ {:keys [block-uid open?] :as args}]]
+    (log/debug ":block/open args" args)
+    (let [event (common-events/build-atomic-event
+                  (atomic-graph-ops/make-block-open-op block-uid open?))]
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 

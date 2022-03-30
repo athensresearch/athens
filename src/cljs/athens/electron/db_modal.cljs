@@ -12,7 +12,6 @@
     [reagent.core :as r]))
 
 
-
 (defn file-cb
   [e transformed-db roam-db-filename]
   (let [fr   (js/FileReader.)
@@ -105,7 +104,6 @@
                 "Merge"]]]]))]])))
 
 
-
 (defn form-container
   [content footer]
   [:> Box {:as "form"
@@ -116,7 +114,6 @@
                     :borderColor "separator.divider"
                     :p 2
                     :pr 5} footer]])
-
 
 
 (defn open-local-comp
@@ -146,9 +143,6 @@
      "Open from file"]]])
 
 
-
-
-
 (defn create-new-local
   [state]
   [form-container
@@ -156,12 +150,11 @@
     [:> FormLabel "Name"]
     [:> Input {:value (:input @state)
                :onChange  #(swap! state assoc :input (js-event->val %))}]]
-    [:> ButtonGroup
-     [:> Button {:value (:input @state)
-                 :isDisabled (clojure.string/blank? (:input @state))
-                 :onClick #(dialogs/create-dialog! (:input @state))}
-      "Choose folder"]]])
-
+   [:> ButtonGroup
+    [:> Button {:value (:input @state)
+                :isDisabled (clojure.string/blank? (:input @state))
+                :onClick #(dialogs/create-dialog! (:input @state))}
+     "Choose folder"]]])
 
 
 (defn join-remote-comp
@@ -172,21 +165,21 @@
     (fn []
       [form-container
        (->>
-        [:> VStack {:spacing 4}
-         [:> FormControl
-          [:> FormLabel "Database name"]
-          [:> Input {:value @name
-                     :onChange #(reset! name (js-event->val %))}]]
-         [:> FormControl
-          [:> FormLabel "Remote address"]
-          [:> Input {:value @address
-                     :onChange #(reset! address (js-event->val %))}]]
-         [:> FormControl {:flexDirection "row"}
-          [:> FormLabel "Password"]
-          [:> Input {:value @password
-                     :type "password"
-                     :onChange #(reset! password (js-event->val %))}]]]
-        doall)
+         [:> VStack {:spacing 4}
+          [:> FormControl
+           [:> FormLabel "Database name"]
+           [:> Input {:value @name
+                      :onChange #(reset! name (js-event->val %))}]]
+          [:> FormControl
+           [:> FormLabel "Remote address"]
+           [:> Input {:value @address
+                      :onChange #(reset! address (js-event->val %))}]]
+          [:> FormControl {:flexDirection "row"}
+           [:> FormLabel "Password"]
+           [:> Input {:value @password
+                      :type "password"
+                      :onChange #(reset! password (js-event->val %))}]]]
+         doall)
        [:> ButtonGroup
         [:> Button {:type "submit"
                     :isDisabled (or (clojure.string/blank? @name)
@@ -216,9 +209,9 @@
         (when-not @loading
           [:> ModalCloseButton])
         [:> ModalBody {:display "contents"}
-        ;; TODO: this is hacky, we're just hiding the picker and forcing
-        ;; tab 2 for the web client. Instead we should use Stuart's
-        ;; redesigned DB picker.
+         ;; TODO: this is hacky, we're just hiding the picker and forcing
+         ;; tab 2 for the web client. Instead we should use Stuart's
+         ;; redesigned DB picker.
          [:> Tabs {:isFitted true
                    :display "contents"
                    :defaultIndex (if utils/electron? 0 2)}

@@ -1,6 +1,6 @@
 (ns athens.views.pages.all-pages
   (:require
-  ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button Box]]
+    ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button Box]]
     ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
     ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
     [athens.common-db          :as common-db]
@@ -94,25 +94,25 @@
             [sortable-header :created "Created" "16rem" false {:date? true}]]]
           [:> Tbody
            (doall
-            (for [{:keys    [block/uid node/title block/_refs]
-                   modified :edit/time
-                   created  :create/time} sorted-pages]
-              [:> Tr {:key uid}
-               [:> Td {:overflow "hidden"}
-                [:> Button {:variant "link"
-                            :color "link"
-                            :display "block"
-                            :maxWidth "100%"
-                            :whiteSpace "nowrap"
-                            :onClick (fn [e]
-                                       (let [shift? (.-shiftKey e)]
-                                         (rf/dispatch [:reporting/navigation {:source :all-pages
-                                                                              :target :page
-                                                                              :pane   (if shift?
-                                                                                        :right-pane
-                                                                                        :main-pane)}])
-                                         (router/navigate-page title e)))}
-                 title]]
-               [:> Td {:width "12rem" :whiteSpace "nowrap" :color "foreground.secondary" :isNumeric true} (count _refs)]
-               [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string modified)]
-               [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))
+             (for [{:keys    [block/uid node/title block/_refs]
+                    modified :edit/time
+                    created  :create/time} sorted-pages]
+               [:> Tr {:key uid}
+                [:> Td {:overflow "hidden"}
+                 [:> Button {:variant "link"
+                             :color "link"
+                             :display "block"
+                             :maxWidth "100%"
+                             :whiteSpace "nowrap"
+                             :onClick (fn [e]
+                                        (let [shift? (.-shiftKey e)]
+                                          (rf/dispatch [:reporting/navigation {:source :all-pages
+                                                                               :target :page
+                                                                               :pane   (if shift?
+                                                                                         :right-pane
+                                                                                         :main-pane)}])
+                                          (router/navigate-page title e)))}
+                  title]]
+                [:> Td {:width "12rem" :whiteSpace "nowrap" :color "foreground.secondary" :isNumeric true} (count _refs)]
+                [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string modified)]
+                [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))

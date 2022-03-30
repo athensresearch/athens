@@ -1,20 +1,20 @@
 (ns athens.views.devtool
   (:require
-   ["@chakra-ui/react" :refer [Box Button Table Thead Tbody Th Tr Td Input ButtonGroup]]
-   ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
-   ["@material-ui/icons/Clear" :default Clear]
-   [athens.config :as config]
-   [athens.db :as db :refer [dsdb]]
-   [cljs.pprint :as pp]
-   [clojure.core.protocols :as core-p]
-   [clojure.datafy :refer [nav datafy]]
-   [datascript.core :as d]
-   [datascript.db]
-   [me.tonsky.persistent-sorted-set]
-   [re-frame.core :refer [subscribe dispatch]]
-   [reagent.core :as r]
-   [reagent.ratom]
-   [sci.core :as sci])
+    ["@chakra-ui/react" :refer [Box Button Table Thead Tbody Th Tr Td Input ButtonGroup]]
+    ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
+    ["@material-ui/icons/Clear" :default Clear]
+    [athens.config :as config]
+    [athens.db :as db :refer [dsdb]]
+    [cljs.pprint :as pp]
+    [clojure.core.protocols :as core-p]
+    [clojure.datafy :refer [nav datafy]]
+    [datascript.core :as d]
+    [datascript.db]
+    [me.tonsky.persistent-sorted-set]
+    [re-frame.core :refer [subscribe dispatch]]
+    [reagent.core :as r]
+    [reagent.ratom]
+    [sci.core :as sci])
   (:import
     (goog.events
       KeyCodes)))
@@ -76,20 +76,20 @@
        [:> Table {:width "100%"}
         [:> Thead
          [:> Tr (for [h headers]
-                ^{:key h} [:> Th h])]]
+                  ^{:key h} [:> Th h])]]
         [:> Tbody
          (doall
            (for [row (take @limit rows)]
 
              ^{:key row}
              [:> Tr {:on-click #(add-nav! [(first row)
-                                         (-> row meta :row-value)])}
+                                           (-> row meta :row-value)])}
               (for [i (range (count row))]
                 (let [cell (get row i)]
                   ^{:key (str row i cell)}
                   [:> Td (if (nil? cell)
-                         ""
-                         (pr-str cell))]))]))]] ; use the edn-viewer here as well?
+                           ""
+                           (pr-str cell))]))]))]] ; use the edn-viewer here as well?
        (when (< @limit (count rows))
          [:> Button {:onClick #(swap! limit + 10)
                      :width "100%"}
@@ -233,7 +233,7 @@
                                                            (dissoc :viewer))))}
                   [:<> [:> ChevronLeft] [:span (first nav)]]])))
            [:h3 (pr-str (type navved-data))]
-           [:div 
+           [:div
             [:span "View as "]
             (for [v applicable-vs]
               (let [click-fn #(swap! state assoc :viewer v)]
@@ -380,7 +380,7 @@
                     :mr "auto"
                     :isActive (= active-panel :txes)}
          "Transactions"]
-        
+
         [devtool-close-el]]
        [:> Box {:overflowY "auto"
                 :padding "0.5rem"}

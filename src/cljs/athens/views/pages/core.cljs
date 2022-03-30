@@ -1,15 +1,14 @@
 (ns athens.views.pages.core
   (:require
-   ["@chakra-ui/react" :refer [Box]]
-   [athens.util :refer [toast]]
-   [athens.views.hoc.perf-mon :as perf-mon]
-   [athens.views.pages.all-pages :as all-pages]
-   [athens.views.pages.daily-notes :as daily-notes]
-   [athens.views.pages.graph :as graph]
-   [athens.views.pages.page :as page]
-   [athens.views.pages.settings :as settings]
-   [re-frame.core :as rf]))
-
+    ["@chakra-ui/react" :refer [Box]]
+    [athens.util :refer [toast]]
+    [athens.views.hoc.perf-mon :as perf-mon]
+    [athens.views.pages.all-pages :as all-pages]
+    [athens.views.pages.daily-notes :as daily-notes]
+    [athens.views.pages.graph :as graph]
+    [athens.views.pages.page :as page]
+    [athens.views.pages.settings :as settings]
+    [re-frame.core :as rf]))
 
 
 ;; View
@@ -37,7 +36,7 @@
               black calc(100vh - 5rem), 
               #000000f0 calc(100vh - 4rem), 
               #00000088 100vh)"
-             "&:before" {:content "''"
+                  "&:before" {:content "''"
                               :position "fixed"
                               :zIndex "-1"
                               :inset 0

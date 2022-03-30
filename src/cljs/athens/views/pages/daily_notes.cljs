@@ -1,11 +1,11 @@
 (ns athens.views.pages.daily-notes
   (:require
-   ["@chakra-ui/react" :refer [Box VStack]]
-   [athens.dates :as dates]
-   [athens.reactive :as reactive]
-   [athens.views.pages.header :refer [title-container]]
-   [athens.views.pages.node-page :as node-page]
-   [re-frame.core :refer [dispatch subscribe]]))
+    ["@chakra-ui/react" :refer [Box VStack]]
+    [athens.dates :as dates]
+    [athens.reactive :as reactive]
+    [athens.views.pages.header :refer [title-container]]
+    [athens.views.pages.node-page :as node-page]
+    [re-frame.core :refer [dispatch subscribe]]))
 
 
 (defn reactive-pull-many
@@ -17,25 +17,24 @@
   (keep #(reactive/get-reactive-block-document [:block/uid %]) ids))
 
 
-
 (defn daily-notes-page
   ([props children]
-  (let [{:keys [real?]} props]
-    [:> Box {:class "node-page daily-notes"
-             :boxShadow "page",
-             :bg "background.floor"
-             :alignSelf "stretch"
-             :justifySelf "stretch"
-             :opacity (if real? 1 0.5)
-             :px {:sm 6 :md 12}
-             :py {:sm 6 :md 12}
-             :borderWidth "1px"
-             :borderStyle "solid"
-             :borderColor "separator.divider"
-             :transitionDuration "0s"
-             :borderRadius "0.5rem"
-             :minHeight "calc(100vh - 10rem)"}
-     children])))
+   (let [{:keys [real?]} props]
+     [:> Box {:class "node-page daily-notes"
+              :boxShadow "page",
+              :bg "background.floor"
+              :alignSelf "stretch"
+              :justifySelf "stretch"
+              :opacity (if real? 1 0.5)
+              :px {:sm 6 :md 12}
+              :py {:sm 6 :md 12}
+              :borderWidth "1px"
+              :borderStyle "solid"
+              :borderColor "separator.divider"
+              :transitionDuration "0s"
+              :borderRadius "0.5rem"
+              :minHeight "calc(100vh - 10rem)"}
+      children])))
 
 
 ;; Components
@@ -58,9 +57,9 @@
                       :flex           "1 1 100%"
                       :flexDirection "column"}
            (doall
-            (for [{:keys [block/uid]} notes]
-              [daily-notes-page {:key uid
-                                 :real? true}
-               [node-page/page [:block/uid uid]]]))
+             (for [{:keys [block/uid]} notes]
+               [daily-notes-page {:key uid
+                                  :real? true}
+                [node-page/page [:block/uid uid]]]))
            [daily-notes-page {:real? false}
             [title-container "Earlier"]]])))))

@@ -1,26 +1,25 @@
 (ns athens.views
   (:require
-   ["/theme/theme" :refer [theme]]
-   ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center]]
-   ["@react-aria/overlays" :refer [OverlayProvider]]
-   [athens.config]
-   [athens.electron.db-modal :as db-modal]
-   [athens.electron.utils :as electron.utils]
-   [athens.style :refer [zoom]]
-   [athens.subs]
-   [athens.util :refer [get-os]]
-   [athens.views.app-toolbar :as app-toolbar]
-   [athens.views.athena :refer [athena-component]]
-   [athens.views.devtool :refer [devtool-component]]
-   [athens.views.help :refer [help-popup]]
-   [athens.views.left-sidebar :as left-sidebar]
-   [athens.views.pages.core :as pages]
-   [athens.views.right-sidebar :as right-sidebar]
-   [re-frame.core :as rf]))
+    ["/theme/theme" :refer [theme]]
+    ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center]]
+    ["@react-aria/overlays" :refer [OverlayProvider]]
+    [athens.config]
+    [athens.electron.db-modal :as db-modal]
+    [athens.electron.utils :as electron.utils]
+    [athens.style :refer [zoom]]
+    [athens.subs]
+    [athens.util :refer [get-os]]
+    [athens.views.app-toolbar :as app-toolbar]
+    [athens.views.athena :refer [athena-component]]
+    [athens.views.devtool :refer [devtool-component]]
+    [athens.views.help :refer [help-popup]]
+    [athens.views.left-sidebar :as left-sidebar]
+    [athens.views.pages.core :as pages]
+    [athens.views.right-sidebar :as right-sidebar]
+    [re-frame.core :as rf]))
 
 
 ;; Components
-
 
 
 

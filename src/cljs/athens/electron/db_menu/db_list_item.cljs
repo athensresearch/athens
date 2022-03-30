@@ -1,11 +1,11 @@
 (ns athens.electron.db-menu.db-list-item
   (:require
-   ["@chakra-ui/react" :refer [VStack Box Flex Text Button IconButton]]
-   ["@material-ui/icons/Clear" :default Clear]
-   ["@material-ui/icons/Link" :default Link]
-   [athens.electron.db-menu.db-icon :refer [db-icon]]
-   [athens.electron.dialogs :as dialogs]
-   [re-frame.core :refer [dispatch]]))
+    ["@chakra-ui/react" :refer [VStack Box Flex Text Button IconButton]]
+    ["@material-ui/icons/Clear" :default Clear]
+    ["@material-ui/icons/Link" :default Link]
+    [athens.electron.db-menu.db-icon :refer [db-icon]]
+    [athens.electron.dialogs :as dialogs]
+    [re-frame.core :refer [dispatch]]))
 
 
 (defn active-db
@@ -78,16 +78,16 @@
       (when (:is-remote db)
         [:> Link])
       (:id db)]]]
-    (when on-remove
-      [:> IconButton
-       {:onClick on-remove
-        :gridArea "main"
-        :alignSelf "center"
-        :justifySelf "flex-end"
-        :size "sm"
-        :mr 2
-        :bg "transparent"}
-       [:> Clear]])])
+   (when on-remove
+     [:> IconButton
+      {:onClick on-remove
+       :gridArea "main"
+       :alignSelf "center"
+       :justifySelf "flex-end"
+       :size "sm"
+       :mr 2
+       :bg "transparent"}
+      [:> Clear]])])
 
 
 (defn db-list-item

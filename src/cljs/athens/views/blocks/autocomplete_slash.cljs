@@ -25,12 +25,12 @@
                       :left (str left "px")
                       :top (str (+ top 24) "px")}
          (doall
-          (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
-            [:> MenuItem {:key     text
-                          :id      (str "dropdown-item-" i)
-                          :command kbd
-                          :class (when (= i index) "isActive")
-                          :onClick (fn [_] (slash-item-click state block item))}
-             [:<>
-              [(r/adapt-react-class icon)]
-              text]]))]]])))
+           (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
+             [:> MenuItem {:key     text
+                           :id      (str "dropdown-item-" i)
+                           :command kbd
+                           :class (when (= i index) "isActive")
+                           :onClick (fn [_] (slash-item-click state block item))}
+              [:<>
+               [(r/adapt-react-class icon)]
+               text]]))]]])))
