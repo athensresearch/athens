@@ -102,9 +102,9 @@
           full-url                  (.. js/window -location -href)
           base-url                  (first (clojure.string/split full-url "#"))
           block-parent-url          (str base-url "#/page/" uid)
-          mention-athens-team       (str "<@&" "858004385215938560" ">")
+          ;;mention-athens-team       (str "<@&" "858004385215938560" ">")
           message                   {"message"
-                                     (str author " wrote a comment: " "\"" comment-string "\"" " — " block-parent-url " — " mention-athens-team)}]
+                                     (str author " wrote a comment: " "\"" comment-string "\"" " — " block-parent-url #_#_" — " mention-athens-team)}]
       {:fx [[:dispatch [:resolve-transact-forward event]]
             [:dispatch [:posthog/report-feature "comments"]]
             [:dispatch [:notification/send message]]]})))
