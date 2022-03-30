@@ -57,14 +57,20 @@ jobs:
        - uses: ./.github/custom-actions/clojure-env
        - uses: ./.github/custom-actions/node-env
 
-       - name: Start Fluree process
-         run: yarn server:fluree
-
        - name: Run JVM tests
          run: yarn server:test
 
        - name: Run Karma tests
          run: yarn client:test
+
+       # TODO: these tests cause the test runner to never exist, so they
+       # can't be ran on CI. Please run them manually for now.
+       # See https://github.com/fluree/db/issues/163.
+       # - name: Start Fluree process
+       #   run: yarn server:fluree
+
+       # - name: Run Fluree tests
+       #   run: yarn server:test:fluree
 
 
    e2e:

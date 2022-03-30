@@ -2,9 +2,7 @@
   (:require
     [athens.self-hosted.event-log :as event-log]
     [athens.self-hosted.fluree.test-helpers :as fth]
-    [athens.self-hosted.fluree.utils :as fu]
-    [clojure.test :as t :refer [deftest testing is]]
-    [fluree.db.api :as fdb]))
+    [clojure.test :as t :refer [deftest testing is]]))
 
 
 (t/use-fixtures :each fth/with-ledger)
@@ -17,7 +15,7 @@
    :reconnect-fn #()})
 
 
-(deftest logs-events
+(deftest ^:fluree logs-events
   (let [comp   (make-comp)
         events (map (fn [id] [id {:id id}])
                     (repeatedly 4 random-uuid))]
@@ -28,7 +26,7 @@
     (is (= events (event-log/events comp)))))
 
 
-(deftest lists-events-since
+(deftest ^:fluree lists-events-since
   (let [comp    (make-comp)
         events  (map (fn [id] [id {:id id}])
                      (repeatedly 4 random-uuid))

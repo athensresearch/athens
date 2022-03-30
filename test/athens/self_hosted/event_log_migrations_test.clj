@@ -19,7 +19,7 @@
                                              :from   "event"}))
 
 
-(deftest migration-to-1
+(deftest ^:fluree migration-to-1
   (let [[conn ledger] (fth/conn+ledger)]
     (migrate/migrate-ledger! conn ledger event-log-migrations/migrations :up-to 1)
     (run! #(fth/transact! [{:_id :event :event/id %}]) (range 4))
@@ -27,7 +27,7 @@
     (is (= 4 (count (all-events-subjects))) "Should have 4 events")))
 
 
-(deftest migration-to-2
+(deftest ^:fluree migration-to-2
   (let [[conn ledger] (fth/conn+ledger)]
     (migrate/migrate-ledger! conn ledger event-log-migrations/migrations :up-to 2)
     (fth/transact! [{:_id :event :event/id "1" :event/data "1"}])
@@ -41,7 +41,7 @@
         "Should not allow changing :event/data")))
 
 
-(deftest migration-to-3
+(deftest ^:fluree migration-to-3
   (let [[conn ledger] (fth/conn+ledger)]
     (migrate/migrate-ledger! conn ledger event-log-migrations/migrations :up-to 1)
     (run! #(fth/transact! [{:_id :event :event/id %}]) (range 4))
