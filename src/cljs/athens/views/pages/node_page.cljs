@@ -303,7 +303,7 @@
                     :color "foreground.secondary"
                     :borderRadius "full"}
            (count linked-refs)]]]
-        [:> AccordionPanel {:px 0}
+        [:> AccordionPanel {:p 0}
          [:> VStack {:spacing 6
                      :pl 9
                      :align "stretch"}
@@ -362,7 +362,7 @@
 
                                   (reset! unlinked-refs []))}
             "Link All"])]
-        [:> AccordionPanel {:px 0}
+        [:> AccordionPanel {:p 0}
          [:> VStack {:spacing 6
                      :pl 1
                      :align "stretch"}

@@ -3,15 +3,6 @@
   ["@chakra-ui/react" :refer [Box Button Heading VStack]]))
 
 
-(defn references-container
-  ([_ children]
-     [:> Box {:as "aside"
-              :ml 6
-              :borderRadius "md"
-              :background "background.basement"}
-      children]))
-
-
 (defn reference-header
   ([props]
    (let [{:keys [on-click title]} props]

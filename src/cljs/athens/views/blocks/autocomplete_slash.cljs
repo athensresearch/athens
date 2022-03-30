@@ -13,7 +13,7 @@
 
 
 (defn slash-menu-el
-  [_block state]
+  [_block #_ state]
   (fn [block state]
     (let [{:search/keys [index results type] caret-position :caret-position} @state
           {:keys [left top]} caret-position]

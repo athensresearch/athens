@@ -17,7 +17,7 @@
 
 
 (defn inline-search-el
-  [_block state]
+  [_block #_ state]
   (fn [block state]
     (let [open? (some #(= % type) [:page :block :hashtag :template])
           {:search/keys [query results index type] caret-position :caret-position} @state
