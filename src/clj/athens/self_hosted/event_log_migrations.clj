@@ -71,7 +71,7 @@
 (defn sids-with-missing-uids
   [conn ledger]
   (let [db   (fdb/db conn ledger)
-        step (partial sid+id-page db 1)]
+        step (partial sid+id-page db 100)]
     (->> (iteration step
                     :kf :next-page
                     :vf :items
@@ -136,7 +136,7 @@
 (defn sids-with-missing-order
   [conn ledger]
   (let [db   (fdb/db conn ledger)
-        step (partial sid+order-page db 1)]
+        step (partial sid+order-page db 100)]
     (->> (iteration step
                     :kf :next-page
                     :vf :items
