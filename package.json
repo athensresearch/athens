@@ -100,7 +100,6 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.15.4",
-    "@chakra-ui/icon": "^2.0.5",
     "@chakra-ui/react": "^1.8.6",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
