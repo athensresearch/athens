@@ -2,7 +2,7 @@
   (:require
    ["/components/Block/components/Anchor" :refer [Anchor]]
    ["/components/Dialog/Dialog" :refer [Dialog]]
-   ["@chakra-ui/react" :refer [Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+   ["@chakra-ui/react" :refer [Text Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
    ["@material-ui/icons/Bookmark" :default Bookmark]
    ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
    ["@material-ui/icons/BubbleChart" :default BubbleChart]
@@ -297,10 +297,15 @@
         [:h2
          [:> AccordionButton {:onClick (fn [] (swap! state update linked? not))}
           [:> AccordionIcon]
-          linked?]]
+          linked?
+          [:> Text {:ml "auto"
+                    :fontWeight "medium"
+                    :color "foreground.secondary"
+                    :borderRadius "full"}
+           (count linked-refs)]]]
         [:> AccordionPanel {:px 0}
          [:> VStack {:spacing 6
-                     :pl 1
+                     :pl 9
                      :align "stretch"}
           (doall
            (for [[group-title group] linked-refs]
@@ -318,7 +323,7 @@
               (doall
                (for [block group]
                 [reference-block {:key (str "ref-" (:block/uid block))}
-                 #_ [ref-comp block]]))]))]]]])))
+                 [ref-comp block]]))]))]]]])))
 
 
 
@@ -327,7 +332,7 @@
   (let [unlinked? "Unlinked References"]
     (when (not daily-notes?)
       [:> Accordion {:index (if (get @state unlinked?) 0 nil)}
-       [:> AccordionItem
+       [:> AccordionItem {:isDisabled (empty @unlinked-refs)}
         [:> Box {:as "h2" :position "relative"}
          [:> AccordionButton {:onClick (fn []
                                          (if (get @state unlinked?)
@@ -336,7 +341,12 @@
                                              (swap! state assoc unlinked? true)
                                              (reset! unlinked-refs un-refs))))}
           [:> AccordionIcon]
-          unlinked?]
+          unlinked?
+          [:> Text {:ml "auto"
+                    :fontWeight "medium"
+                    :color "foreground.secondary"
+                    :borderRadius "full"}
+           (count @unlinked-refs)]]
          (when (and unlinked? (not-empty @unlinked-refs))
            [:> Button {:position "absolute"
                        :size "xs"

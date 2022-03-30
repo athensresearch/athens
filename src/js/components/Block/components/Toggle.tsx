@@ -31,7 +31,6 @@ export const Toggle = (props) => {
       minWidth="0"
       minHeight="0"
       h="2em"
-      w="100%"
       fontSize="inherit"
       mx="-0.125em"
       size="sm"

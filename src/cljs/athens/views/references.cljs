@@ -1,6 +1,6 @@
 (ns athens.views.references
   (:require
-  ["@chakra-ui/react" :refer [Box Button Heading]]))
+  ["@chakra-ui/react" :refer [Box Button Heading VStack]]))
 
 
 (defn references-container
@@ -16,9 +16,11 @@
   ([props]
    (let [{:keys [on-click title]} props]
      [:> Heading {:as "h4"
-                  :py 2
                   :color "foreground.secondary"
                   :textTransform "uppercase"
+                  :pt 4
+                  :borderTop "1px solid"
+                  :borderTopColor "separator.divider"
                   :fontWeight "bold"
                   :fontSize "0.75rem"
                   :size "md"}
@@ -36,7 +38,7 @@
 (defn reference-group
   ([props children]
    (let [{:keys [on-click-title title]} props]
-     [:> Box
+     [:> VStack {:spacing 2 :align "stretch"}
       [reference-header {:on-click on-click-title
                          :title title}]
       children])))

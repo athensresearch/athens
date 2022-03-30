@@ -15,7 +15,9 @@ const shadows = {
 }
 
 const fonts = {
-  code: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
+  body: '"IBM Plex Serif", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"',
+  default: '"IBM Plex Sans", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"',
+  code: '"IBM Plex Mono", BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, ui-sans-serif, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
 }
 
 const radii = {
@@ -264,6 +266,13 @@ const components = {
     baseStyle: {
       button: {
         borderRadius: "sm",
+        borderColor: "separator.border",
+        _hover: {
+          bg: "interaction.surface.hover",
+        },
+        _active: {
+          bg: "interaction.surface.active"
+        },
         _focus: {
           outline: "none",
           boxShadow: "none",
@@ -525,6 +534,9 @@ const styles = {
     'html, body': {
       bg: 'background.floor',
       color: 'foreground.primary',
+      lineHeight: '1.5',
+      height: '100vh',
+      fontFamily: 'default',
     }
   }
 }

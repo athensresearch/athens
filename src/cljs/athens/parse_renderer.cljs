@@ -17,8 +17,6 @@
 
 (def fm-props {:as "b" :class "formatting" :fontWeight "normal" :opacity "0.3"})
 
-#_ (def content-props {:as "span" :fontWeight "normal" :opacity "0.3"})
-
 (def link-props {:color "link"
                  :borderRadius "1px"
                  :variant "link"
@@ -113,6 +111,7 @@
                    :whiteSpace "unset"
                    :textAlign "unset"
                    :minWidth "0"
+                   :fontSize "inherit"
                    :fontWeight "inherit"
                    :lineHeight "inherit"
                    :marginInline "-2px"

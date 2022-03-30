@@ -58,7 +58,7 @@
            [:> AccordionIcon "LinkedReferences"]]]
          [:> AccordionPanel {:px 0}
           [:> VStack {:spacing 6
-                      :pl 1
+                      :pl 6
                       :align "stretch"}
            (doall
             (for [[group-title group] linked-refs]

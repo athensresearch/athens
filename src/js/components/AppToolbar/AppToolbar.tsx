@@ -83,14 +83,16 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
   h={6}
   zIndex="3"
   userSelect="none"
-  transition='border-color 0.5s ease'
+  transition='common 0.5s ease-in-out'
   _hover={{
-    borderBottomColor: 'separator.divider'
+    borderBottomColor: 'separator.divider',
+    bg: "background.floor",
   }}
   sx={{
     WebkitAppRegion: "drag",
     "&.is-right-sidebar-open": {
-      borderBottomColor: 'separator.divider'
+      borderBottomColor: 'separator.divider',
+      bg: "background.floor",
     },
     ".is-fullscreen &": {
       height: '44px'

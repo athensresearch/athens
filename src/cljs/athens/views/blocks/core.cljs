@@ -2,7 +2,7 @@
   (:require
    ["/components/Block/components/Anchor"   :refer [Anchor]]
    ["/components/Block/components/Toggle"   :refer [Toggle]]
-   ["@chakra-ui/react" :refer [Box Button Breadcrumb IconButton BreadcrumbItem BreadcrumbLink HStack]]
+   ["@chakra-ui/react" :refer [VStack Box Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
    [athens.common.logging                   :as log]
    [athens.db                               :as db]
    [athens.electron.images                  :as images]
@@ -132,27 +132,27 @@
                                   (.. e stopPropagation)
                                   (swap! state update :open? not))}]
 
-          [:> Breadcrumb {:fontSize "0.7em" :pl 6}
+          [:> Breadcrumb {:fontSize "0.7em"}
            (doall
              (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
                    (if (or (:open? @state) (not (:focus? @state)))
                      parents
                      (conj parents block))]
                [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
-               [:> BreadcrumbLink {:onClick #(let [new-B (db/get-block [:block/uid uid])
-                                                   new-P (concat
-                                                          (take-while (fn [b] (not= (:block/uid b) uid)) parents)
-                                                          [breadcrumb-block])]
-                                               (.. % stopPropagation)
-                                               (swap! state assoc :block new-B :parents new-P :focus? false))}
-                [parse-renderer/parse-and-render (or title string) uid]]]))]]
+                [:> BreadcrumbLink {:onClick #(let [new-B (db/get-block [:block/uid uid])
+                                                    new-P (concat
+                                                           (take-while (fn [b] (not= (:block/uid b) uid)) parents)
+                                                           [breadcrumb-block])]
+                                                (.. % stopPropagation)
+                                                (swap! state assoc :block new-B :parents new-P :focus? false))}
+                 [parse-renderer/parse-and-render (or title string) uid]]]))]]
 
          (when (:open? @state)
            (if (:focus? @state)
 
              ;; Display the single child block only when focusing.
              ;; This is the default behaviour for a ref without children, for brevity.
-             [:div.block-embed
+             [:div.block-embed {:fontSize "0.7em"}
               [block-el
                (util/recursively-modify-block-for-embed block embed-id)
                linked-ref-data
@@ -172,21 +172,25 @@
   [state uid]
   (let [refs (reactive/get-reactive-linked-references [:block/uid uid])]
     (when (not-empty refs)
-      [:> Box {:as "section"
-               :key "Inline Linked References"
-               :zIndex 2
-               :ml 6
-               :pl 2
-               :borderRadius "10px solid red"
-               :background "background.basement"}
-        (doall
-         (for [[group-title group] refs]
-           [reference-group {:title group-title
-                             :key (str "group-" group-title)}
-            (doall
-             (for [block' group]
-               [reference-block {:key (str "ref-" (:block/uid block'))}
-                [ref-comp block' state]]))]))])))
+      [:> VStack {:as "aside"
+                  :align "stretch"
+                  :key "Inline Linked References"
+                  :zIndex 2
+                  :mt 2
+                  :mb 4
+                  :ml 6
+                  :py 2
+                  :px 4
+                  :borderRadius "sm"
+                  :background "background.basement"}
+       (doall
+        (for [[group-title group] refs]
+          [reference-group {:title group-title
+                            :key (str "group-" group-title)}
+           (doall
+            (for [block' group]
+              [reference-block {:key (str "ref-" (:block/uid block'))}
+               [ref-comp block' state]]))]))])))
 
 
 ;; Components

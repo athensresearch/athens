@@ -107,7 +107,6 @@
                                              :on-mouse-down #(swap! state assoc :dragging true)
                                              :class (when (:dragging @state) "is-dragging")}]
                                     [:> Flex {:flexDirection "column"
-                                              ;; :bg "background.upper"
                                               :flex 1;
                                               :maxHeight "calc(100vh - 3.25rem - 1px)"
                                               :width (str (:width @state) "vw")
@@ -121,6 +120,7 @@
                                           [:> AccordionItem {:_first {:borderTop 0} :borderBottom 0}
                                            [:> Box {:as "h2" :position "relative"}
                                             [:> AccordionButton {:borderBottom "1px solid"
+                                                                 :borderRadius "0"
                                                                  :borderBottomColor "separator.divider"}
                                              [:> AccordionIcon {:as AddIcon}]
                                              [parse-renderer/parse-and-render (or title string) uid]]
@@ -132,7 +132,7 @@
                                                             :background "transparent"
                                                             :onClick #(dispatch [:right-sidebar/close-item uid])}
                                              [:> Close]]]
-                                           [:> AccordionPanel
+                                           [:> AccordionPanel {:p 0}
                                             (cond
                                               is-graph? [graph/page uid]
                                               title     [node-page/page [:block/uid uid]]

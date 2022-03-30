@@ -15,12 +15,22 @@
    [athens.dates :as dates]
    [athens.db :as db]
    [athens.router :as router]
-   [athens.style :as styles]
    [clojure.set :as set]
    [datascript.core :as d]
    [re-frame.core :as rf :refer [subscribe]]
    [reagent.core :as r]
    [reagent.dom :as dom]))
+
+(def THEME-DARK
+  {:graph-node-normal   "hsla(0, 0%, 100%, 0.57)"
+   :graph-node-hlt      "#498eda"
+   :graph-link-normal   "#ffffff11"})
+
+(def THEME-LIGHT
+  {:graph-node-normal   "#909090"
+   :graph-node-hlt      "#0075E1"
+   :graph-link-normal   "#cfcfcf"})
+
 
 
 ;; all graph refs(react refs) reside in this atom
@@ -282,7 +292,7 @@
    (let [highlight-nodes (r/atom #{})
          highlight-links (r/atom #{})
          dimensions      (r/atom {})]
-     (r/create-class
+    (r/create-class
       {:component-did-mount
        (fn [this]
          (let [dom-node   (dom/dom-node this)
@@ -378,8 +388,8 @@
                                                                 (contains? filtered-nodes-set (get link-obj "target"))))))
 
                theme                            (if dark?
-                                                  styles/THEME-DARK
-                                                  styles/THEME-LIGHT)]
+                                                  THEME-DARK
+                                                  THEME-LIGHT)]
            [:> ForceGraph2D
             {:graphData        {:nodes nodes
                                 :links links}
