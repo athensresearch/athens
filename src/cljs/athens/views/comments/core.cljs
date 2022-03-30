@@ -63,6 +63,26 @@
       [new-block-uid [new-block-op new-block-save-op]])
     nil))
 
+
+(def users
+  {"[[@Jeff]]"        "<@!374269202103664651>"
+   "[[@Alex]]"        "<@!776180002722021396>"
+   "[[@Sid]]"         "<@!701431351387226143>"
+   "[[@Filipe]]"      "<@!469099065712312320>"
+   "[[@Stuart]]"      "<@!229346773104066562>"
+   "[[@Athens Team]]" "<@&858004385215938560>"})
+
+(defn parse-for-mentions
+  [content]
+  (loop [parsed content
+         users users]
+    (if (empty? users)
+      parsed
+      (recur (clojure.string/replace parsed (ffirst users) (second (first users)))
+             (drop 1 users)))))
+
+
+
 (rf/reg-event-fx
   :comment/write-comment
   (fn [{db :db} [_ uid comment-string author]]
@@ -99,12 +119,14 @@
 
           event                     (common-events/build-atomic-event active-comment-ops)
 
+          parsed-comment-string     (parse-for-mentions comment-string)
           full-url                  (.. js/window -location -href)
           base-url                  (first (clojure.string/split full-url "#"))
           block-parent-url          (str base-url "#/page/" uid)
-          ;;mention-athens-team       (str "<@&" "858004385215938560" ">")
           message                   {"message"
-                                     (str author " wrote a comment: " "\"" comment-string "\"" " — " block-parent-url #_#_" — " mention-athens-team)}]
+                                     (str author " wrote a comment: "
+                                          "\"" parsed-comment-string "\""
+                                          " — " block-parent-url)}]
       {:fx [[:dispatch [:resolve-transact-forward event]]
             [:dispatch [:posthog/report-feature "comments"]]
             [:dispatch [:notification/send message]]]})))
@@ -119,7 +141,7 @@
   (fn [message]
     (go (let [response (<! (http/post "https://3txhfpivzk.execute-api.us-east-2.amazonaws.com/Prod/hello/"
                                       {:query-params message}))]
-          (prn  (:body response))) ;; print the response's body in the console
+          #_(prn  (:body response))) ;; print the response's body in the console
         {})))
 
 
