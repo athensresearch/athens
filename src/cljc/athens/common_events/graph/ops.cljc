@@ -4,6 +4,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events.graph.atomic    :as atomic]
     [athens.common-events.graph.composite :as composite]
+    [athens.parser.structure              :as structure]
     [clojure.set                          :as set]))
 
 
@@ -195,3 +196,39 @@
                            (map :block/new)
                            set)]
     new-uids))
+
+
+(defn structural-diff
+  "Calculates removed and added links (block refs & page links)"
+  [db ops]
+  (let [block-save-ops    (contains-op? ops :block/save)
+        new-blocks        (->> block-save-ops
+                               (map #(select-keys (:op/args %)
+                                                  [:block/uid :block/string])))
+        new-block-uids    (->> new-blocks
+                               (map :block/uid)
+                               set)
+        new-structures    (->> new-blocks
+                               (map :block/string)
+                               (map structure/structure-parser->ast))
+        old-block-strings (->> new-block-uids
+                               (map #(common-db/get-block-string db %)))
+        old-structures    (->> old-block-strings
+                               (map structure/structure-parser->ast))
+        links             (fn [structs names renames]
+                            (->> structs
+                                 (mapcat (partial tree-seq vector? identity))
+                                 (filter #(and (vector? %)
+                                               (contains? names (first %))))
+                                 (map #(vector (get renames (first %) (first %))
+                                               (-> % second :string)))
+                                 set))
+        old-links         (links old-structures
+                                 #{:page-link :hashtag :block-ref}
+                                 {:hashtag :page-link})
+        new-links         (links new-structures
+                                 #{:page-link :hashtag :block-ref}
+                                 {:hashtag :page-link})
+        removed-links     (set/difference old-links new-links)
+        added-links       (set/difference new-links old-links)]
+    [removed-links added-links]))
