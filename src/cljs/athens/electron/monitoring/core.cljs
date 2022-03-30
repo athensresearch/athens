@@ -61,19 +61,19 @@
 
 
 (rf/reg-event-fx
- :reporting/page.link
- (fn [{:keys [_db]} [_ {:keys [source count]}]]
-   {:posthog/capture-event! {:event-name "feature/page.link"
-                             :opts-map   {:source        source
-                                          :links-created count}}}))
+  :reporting/page.link
+  (fn [{:keys [_db]} [_ {:keys [source count]}]]
+    {:posthog/capture-event! {:event-name "feature/page.link"
+                              :opts-map   {:source        source
+                                           :links-created count}}}))
 
 
 (rf/reg-event-fx
- :reporting/block.link
- (fn [{:keys [_db]} [_ {:keys [source count]}]]
-   {:posthog/capture-event! {:event-name "feature/block.link"
-                             :opts-map   {:source        source
-                                          :links-created count}}}))
+  :reporting/block.link
+  (fn [{:keys [_db]} [_ {:keys [source count]}]]
+    {:posthog/capture-event! {:event-name "feature/block.link"
+                              :opts-map   {:source        source
+                                           :links-created count}}}))
 
 
 (defn build-reporting-link-creation

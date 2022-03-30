@@ -1723,13 +1723,13 @@
   (fn [_ [_ unlinked-refs title]]
     (log/debug ":unlinked-references/link:" title)
     (let [block-save-ops (mapv
-                          (fn [{:block/keys [string uid]}]
-                            (let [ignore-case-title (re-pattern (str "(?i)" title))
-                                  new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
-                              (graph-ops/build-block-save-op @db/dsdb
-                                                             uid
-                                                             new-str)))
-                          unlinked-refs)
+                           (fn [{:block/keys [string uid]}]
+                             (let [ignore-case-title (re-pattern (str "(?i)" title))
+                                   new-str           (string/replace string ignore-case-title (str "[[" title "]]"))]
+                               (graph-ops/build-block-save-op @db/dsdb
+                                                              uid
+                                                              new-str)))
+                           unlinked-refs)
           link-all-op    (composite-ops/make-consequence-op {:op/type :block/unlinked-refs-link-all}
                                                             block-save-ops)
           [_rm add]      (graph-ops/structural-diff @db/dsdb link-all-op)

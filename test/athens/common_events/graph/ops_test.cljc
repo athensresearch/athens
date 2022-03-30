@@ -1,11 +1,12 @@
 (ns athens.common-events.graph.ops-test
   (:require
-   [athens.common-events.fixture :as fixture]
-   [athens.common-events.graph.ops :as ops]
-   [clojure.test :as t]))
+    [athens.common-events.fixture :as fixture]
+    [athens.common-events.graph.ops :as ops]
+    [clojure.test :as t]))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
+
 
 (t/deftest extract-new-titles
   (let [test-uid   "test-uid"
