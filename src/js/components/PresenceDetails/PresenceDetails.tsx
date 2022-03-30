@@ -1,71 +1,9 @@
-import styled, { keyframes } from "styled-components";
+import { withErrorBoundary } from 'react-error-boundary';
 import React from "react";
 
 import { Text, Tooltip, Avatar, AvatarGroup, Menu, MenuDivider, MenuButton, MenuList, MenuGroup, MenuItem, Button, Portal } from '@chakra-ui/react';
 
-import { RefreshDouble, Lock } from "iconoir-react";
-
 import { ProfileSettingsDialog } from "@/ProfileSettingsDialog";
-import { ConnectedGraphConnection } from "@/Icons/ConnectedGraphConnection";
-import { Icon } from "@/Icons/Icon";
-
-const rotate = keyframes`
-  from {
-    transform: rotate(0deg);
-  } to {
-    transform: rotate(360deg);
-  }
-`;
-
-const OfflineIcon = styled(Lock)`
-  width: 1.25rem;
-  height: 1.25rem;
-`;
-
-const ActivityIcon = styled(RefreshDouble)`
-  width: 1.25rem;
-  height: 1.25rem;
-  animation: ${rotate} 2s linear infinite;
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
-`;
-
-const ConnectedGraphIconWrap = styled(Icon)`
-  --size: 1.5rem;
-`;
-
-const connectionStatusIndicator = {
-  connected: (
-    <ConnectedGraphIconWrap>
-      <ConnectedGraphConnection />
-    </ConnectedGraphIconWrap>
-  ),
-  connecting: (
-    <>
-      <ActivityIcon />
-      <span>Connecting...</span>
-    </>
-  ),
-  reconnecting: (
-    <>
-      <ActivityIcon />
-      <span>Reconnecting...</span>
-    </>
-  ),
-  offline: (
-    <>
-      <OfflineIcon />
-      <span>View Only</span>
-    </>
-  ),
-};
-
-const connectionStatusHelpText = {
-  connecting: "Athens is connecting to the host.",
-  connected: "View connection details.",
-  reconnecting: "Athens is attempting to reconnect to the host.",
-  offline: "Athens is not connected.",
-};
 
 export interface PresenceDetailsProps {
   hostAddress: HostAddress;
@@ -86,7 +24,7 @@ interface ConnectionButtonProps {
 const ConnectionButton = React.forwardRef((props: ConnectionButtonProps, ref) => {
   const { connectionStatus, showablePersons } = props;
   return (
-    <Tooltip label={showablePersons.length + " members online"}>
+    <Tooltip label={`${showablePersons.length} member${showablePersons.length === 1 ? '' : 's'} online`}>
       <Button
         ref={ref as any}
         as={MenuButton}
@@ -116,7 +54,7 @@ const ConnectionButton = React.forwardRef((props: ConnectionButtonProps, ref) =>
 });
 
 
-export const PresenceDetails = (props: PresenceDetailsProps) => {
+export const _PresenceDetails = (props: PresenceDetailsProps) => {
   const {
     hostAddress,
     currentUser,
@@ -230,6 +168,4 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
   );
 };
 
-PresenceDetails.defaultProps = {
-  defaultOpen: false,
-};
+export const PresenceDetails = withErrorBoundary(_PresenceDetails, { fallback: <></> });

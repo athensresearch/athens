@@ -192,9 +192,13 @@ const semanticTokens = {
       _dark: 'linkContrastDark'
     },
     // block content colors
-    "ref.feature": {
-      default: "#fbbe6322",
-      _dark: "#fbbe6322",
+    "ref.foreground": {
+      default: "#fbbe63bb",
+      _dark: "#fbbe6366",
+    },
+    "ref.background": {
+      default: "#fbbe63bb",
+      _dark: "#fbbe6311",
     }
   }
 }
@@ -370,6 +374,8 @@ const components = {
         overflow: 'hidden',
         py: 0,
         bg: 'background.upper',
+        minWidth: '0',
+        width: 'max-content',
         shadow: 'menu'
       },
       groupTitle: {

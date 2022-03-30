@@ -2,7 +2,7 @@
   (:require
    ["/components/Block/components/Anchor"   :refer [Anchor]]
    ["/components/Block/components/Toggle"   :refer [Toggle]]
-   ["@chakra-ui/react" :refer [Box Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+   ["@chakra-ui/react" :refer [Box Button Breadcrumb IconButton BreadcrumbItem BreadcrumbLink HStack]]
    [athens.common.logging                   :as log]
    [athens.db                               :as db]
    [athens.electron.images                  :as images]
@@ -432,19 +432,19 @@
           [:div.block-body
            (when (seq children)
              [:> Toggle {:isOpen (if (or (and (true? linked-ref) (:linked-ref/open @state))
-                                         (and (false? linked-ref) open))
-                                   true
-                                   false)
-                         :onClick (fn [e]
-                                    (.. e stopPropagation)
-                                    (if (true? linked-ref)
-                                      (swap! state update :linked-ref/open not)
-                                      (toggle uid (not open))))}])
-           [:> Anchor {:isClosedWithChildren (when (and (seq children)
+                                             (and (false? linked-ref) open))
+                                       true
+                                       false)
+                             :onClick (fn [e]
+                                        (.. e stopPropagation)
+                                        (if (true? linked-ref)
+                                          (swap! state update :linked-ref/open not)
+                                          (toggle uid (not open))))}])
+            [:> Anchor {:isClosedWithChildren (when (and (seq children)
                                                         (or (and (true? linked-ref) (not (:linked-ref/open @state)))
                                                             (and (false? linked-ref) (not open))))
                                                "closed-with-children")
-                       :block uid-sanitized-block
+                       :block block
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
                        :onCopyRefs #(handle-copy-refs nil uid state)
                        :onCopyUnformatted #(handle-copy-unformatted uid state)
@@ -456,14 +456,13 @@
                                                                                           :right-pane
                                                                                           :main-pane)}])
                                            (router/navigate-uid uid e)))
-                       ;; :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
                        :on-drag-start   (fn [e] (bullet-drag-start e uid state))
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
            [content/block-content-el block state]
 
            [presence/inline-presence-el uid]
 
-           (when (and (> (count _refs) 0) (not= :block-embed? opts))
+            (when (and (> (count _refs) 0) (not= :block-embed? opts))
              [block-refs-count-el
               (count _refs)
               (fn [e]
@@ -473,11 +472,11 @@
               (:inline-refs/open @state)])]
 
 
-          [autocomplete-search/inline-search-el block state]
+           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
 
           ;; Inline refs
-          (when (and (> (count _refs) 0)
+           (when (and (> (count _refs) 0)
                      (not= :block-embed? opts)
                      (:inline-refs/open @state))
             [inline-linked-refs-el state uid])

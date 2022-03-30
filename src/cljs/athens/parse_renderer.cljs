@@ -17,30 +17,18 @@
 
 (def fm-props {:as "b" :class "formatting" :fontWeight "normal" :opacity "0.3"})
 
-(def content-props {:as "span" :fontWeight "normal" :opacity "0.3"})
+#_ (def content-props {:as "span" :fontWeight "normal" :opacity "0.3"})
 
 (def link-props {:color "link"
+                 :borderRadius "1px"
                  :variant "link"
-                 :minWidth "unset"
+                 :minWidth "0"
                  :whiteSpace "normal"
                  :wordBreak "break-word"
                  :lineHeight "unset"
                  :fontSize "inherit"
                  :fontWeight "inherit"
-                 :textDecoration "none"
-                 :_hover {:textDecoration "none"}})
-
-(def ref-props {:as "span"
-                :white-space "normal"
-                :word-break "break-word"
-                :fontSize "0.9em"
-                :transition "background 0.05s ease"
-                :borderBottomWidth "1px"
-                :borderBottomStyle "solid"
-                :borderBottomColor "highlight"
-                :_hover {:background "background.upper"
-                         :cursor "alias"}})
-
+                 :textDecoration "none"})
 
 
 (defn parse-title
@@ -124,13 +112,19 @@
                    :color "unset"
                    :whiteSpace "unset"
                    :textAlign "unset"
-                   :minWidth "unset"
+                   :minWidth "0"
                    :fontWeight "inherit"
                    :lineHeight "inherit"
-                   :background "ref.feature"
+                   :marginInline "-2px"
+                   :paddingInline "2px"
+                   :borderBottomWidth "1px"
+                   :borderBottomStyle "solid"
+                   :borderBottomColor "ref.foreground"
                    :cursor "alias"
-                   :sx {"-webkit-box-decoration-break" "clone"}
-                   :_hover {:textDecoration "none"}
+                   :sx {"WebkitBoxDecorationBreak" "clone"}
+                   :_hover {:textDecoration "none"
+                            :borderBottomColor "transparent"
+                            :bg "ref.background"}
                    :onClick (fn [e]
                               (.. e stopPropagation)
                               (let [shift? (.-shiftKey e)]
@@ -214,20 +208,21 @@
     :page-link            (fn [{_from :from :as attr} & title-coll]
                             (render-page-link attr title-coll))
     :hashtag              (fn [{_from :from} & title-coll]
-                            [:> Button {:variant "link"
-                                        :class   "hashtag"
-                                        :color  "inherit"
-                                        :fontWeight "inherit"
-                                        :_hover {:textDecoration "none"}
-                                        :onClick (fn [e]
-                                                   (let [parsed-title (parse-title title-coll)
-                                                         shift?       (.-shiftKey e)]
-                                                     (rf/dispatch [:reporting/navigation {:source :pr-hashtag
-                                                                                          :target :hashtag
-                                                                                          :pane   (if shift?
-                                                                                                    :right-pane
-                                                                                                    :main-pane)}])
-                                                     (router/navigate-page parsed-title e)))}
+                            [:> Button (merge link-props
+                                              {:variant "link"
+                                               :class   "hashtag"
+                                               :color  "inherit"
+                                               :fontWeight "inherit"
+                                               :_hover {:textDecoration "none"}
+                                               :onClick (fn [e]
+                                                          (let [parsed-title (parse-title title-coll)
+                                                                shift?       (.-shiftKey e)]
+                                                            (rf/dispatch [:reporting/navigation {:source :pr-hashtag
+                                                                                                 :target :hashtag
+                                                                                                 :pane   (if shift?
+                                                                                                           :right-pane
+                                                                                                           :main-pane)}])
+                                                            (router/navigate-page parsed-title e)))})
                              [:> Text fm-props "#"]
                              [:span {:class "contents"} title-coll]])
     :block-ref            (fn [{_from :from :as attr} ref-uid]
@@ -245,12 +240,13 @@
                                                 :target "_blank"})
                              text])
     :link                 (fn [{:keys [text target title]}]
-                            [:a (cond-> (merge link-props
-                                               {:class  "url-link contents"
-                                                :href target
-                                                :target "_blank"})
-                                  (string? title)
-                                  (assoc :title title))
+                            [:> Button (cond-> (merge link-props
+                                                      {:class  "url-link contents"
+                                                       :as "a"
+                                                       :href target
+                                                       :target "_blank"})
+                                         (string? title)
+                                         (assoc :title title))
                              text])
     :autolink             (fn [{:keys [text target]}]
                             [:<>

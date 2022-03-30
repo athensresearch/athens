@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { Menu, MenuList, MenuItem, MenuGroup, MenuDivider, MenuButton, IconButton, Portal, Box, Text, ButtonProps } from '@chakra-ui/react';
+import { Menu, MenuList, MenuItem, MenuGroup, MenuDivider, MenuButton, IconButton, Portal, Box, Text } from '@chakra-ui/react';
 
 const ANCHORS = {
   CIRCLE: <svg viewBox="0 0 24 24">
@@ -138,7 +138,6 @@ export const Anchor = (props: AnchorProps) => {
     shouldShowDebugDetails,
     onCopyRefs,
     onCopyUnformatted,
-    onContextMenu,
     onDragStart,
     onDragEnd,
     onClick,
@@ -153,9 +152,7 @@ export const Anchor = (props: AnchorProps) => {
         onDragStart={onDragStart}
         onClick={onClick}
         onDragEnd={onDragEnd}
-        onContextMenu={onContextMenu}
         onContextMenu={(e) => {
-          console.log(e);
           e.preventDefault();
           e.stopPropagation();
           setIsOpen(true);

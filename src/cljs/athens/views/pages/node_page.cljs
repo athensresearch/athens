@@ -318,7 +318,7 @@
               (doall
                (for [block group]
                 [reference-block {:key (str "ref-" (:block/uid block))}
-                 [ref-comp block]]))]))]]]])))
+                 #_ [ref-comp block]]))]))]]]])))
 
 
 

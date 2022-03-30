@@ -7,7 +7,7 @@
   {:position "relative"
    :fontSize "2rem"
    :overflow "visible"
-   :flex-grow "1"
+   :flexGrow "1"
    :margin "0"
    :whiteSpace "pre-line"
    :wordBreak "break-word"

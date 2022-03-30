@@ -229,6 +229,9 @@ const SecondaryToolbarOverflowMenu = (items) => {
 }
 
 export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
+
+  console.log(electron);
+
   const {
     os,
     route,

@@ -1,4 +1,5 @@
 import React from 'react';
+import { withErrorBoundary } from 'react-error-boundary';
 
 import {
   keyframes,
@@ -74,7 +75,7 @@ interface ProfileSettingsDialogProps extends OverlayProps, AriaDialogProps {
 /**
  * Dialog for modifying the current user's username and color
  */
-export const ProfileSettingsDialog = ({
+export const _ProfileSettingsDialog = ({
   person,
   onClose: handleClose,
   onUpdatePerson: handleUpdatePerson,
@@ -147,3 +148,5 @@ export const ProfileSettingsDialog = ({
     </Modal>
   )
 }
+
+export const ProfileSettingsDialog = withErrorBoundary(_ProfileSettingsDialog, { fallback: null });
