@@ -29,7 +29,7 @@
 (defn validate-serialized-event
   [serialized-event]
   (when-not (valid-serialized-event? serialized-event)
-    (ex-info "Serialized event is larger than 10 MB" {})))
+    (ex-info "Serialized event is larger than 1 MB" {})))
 
 
 (defn ignore-serialized-event-validation?

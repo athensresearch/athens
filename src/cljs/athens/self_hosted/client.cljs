@@ -100,7 +100,7 @@
          (let [serialized-event (common-events/serialize data)
                errors           (common-events/validate-serialized-event serialized-event)]
            (if errors
-             (do (log/warn "Received invalid serialized event:" (pr-str errors))
+             (do (log/warn "Tried sending invalid serialized event:" (pr-str errors))
                  {:result :rejected
                   :reason :invalid-event-schema})
              (do (.send connection serialized-event)
