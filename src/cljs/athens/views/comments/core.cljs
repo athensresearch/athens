@@ -6,6 +6,7 @@
             [athens.common-events.graph.ops :as graph-ops]
             [athens.common-events.graph.composite :as composite-ops]
             [re-frame.core :as rf]
+            [athens.bot]
             [athens.common-events :as common-events]
             [athens.common.utils :as common.utils]
             [athens.common-db :as common-db]
@@ -64,22 +65,6 @@
     nil))
 
 
-(def users
-  {"[[@Jeff]]"        "<@!374269202103664651>"
-   "[[@Alex]]"        "<@!776180002722021396>"
-   "[[@Sid]]"         "<@!701431351387226143>"
-   "[[@Filipe]]"      "<@!469099065712312320>"
-   "[[@Stuart]]"      "<@!229346773104066562>"
-   "[[@Athens Team]]" "<@&858004385215938560>"})
-
-(defn parse-for-mentions
-  [content]
-  (loop [parsed content
-         users users]
-    (if (empty? users)
-      parsed
-      (recur (clojure.string/replace parsed (ffirst users) (second (first users)))
-             (drop 1 users)))))
 
 
 
@@ -117,32 +102,10 @@
                                                                             new-active-block-save-op
                                                                             comment-add-op]))
 
-          event                     (common-events/build-atomic-event active-comment-ops)
-
-          parsed-comment-string     (parse-for-mentions comment-string)
-          full-url                  (.. js/window -location -href)
-          base-url                  (first (clojure.string/split full-url "#"))
-          block-parent-url          (str base-url "#/page/" uid)
-          message                   {"message"
-                                     (str author " wrote a comment: "
-                                          "\"" parsed-comment-string "\""
-                                          " — " block-parent-url)}]
+          event                     (common-events/build-atomic-event active-comment-ops)]
       {:fx [[:dispatch [:resolve-transact-forward event]]
             [:dispatch [:posthog/report-feature "comments"]]
-            [:dispatch [:notification/send message]]]})))
-
-(rf/reg-event-fx
-  :notification/send
-  (fn [_ [_ message]]
-    {:discord-bot message}))
-
-(rf/reg-fx
-  :discord-bot
-  (fn [message]
-    (go (let [response (<! (http/post "https://3txhfpivzk.execute-api.us-east-2.amazonaws.com/Prod/hello/"
-                                      {:query-params message}))]
-          #_(prn  (:body response))) ;; print the response's body in the console
-        {})))
+            [:dispatch [:prepare-message uid author :comment {:string comment-string}]]]})))
 
 
 (rf/reg-sub

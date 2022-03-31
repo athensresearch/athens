@@ -1,6 +1,7 @@
 (ns athens.events
   (:require
     [athens.athens-datoms                 :as athens-datoms]
+    [athens.bot]
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs             :as bfs]
@@ -1055,7 +1056,8 @@
   :block/save
   (fn [{:keys [db]} [_ {:keys [uid string] :as args}]]
     (log/debug ":block/save args" (pr-str args))
-    (let [local?      (not (db-picker/remote-db? db))
+    (let [username    @(subscribe [:username])
+          local?      (not (db-picker/remote-db? db))
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
           do-nothing? (or (not block-eid)
                           (= string (->> block-eid (d/entity @db/dsdb) :block/string)))
@@ -1063,8 +1065,10 @@
           event       (common-events/build-atomic-event op)]
       (log/debug ":block/save local?" local?
                  ", do-nothing?" do-nothing?)
+      (println "this is a block save ===================++++")
       (when-not do-nothing?
-        {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
+        {:fx [[:dispatch [:resolve-transact-forward event]]
+              [:dispatch [:check-for-mentions uid string username]]]}))))
 
 
 (reg-event-fx
@@ -1164,7 +1168,8 @@
   :enter/split-block
   (fn [_ [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
-    (let [sentry-tx   (close-and-get-sentry-tx "enter/split-block")
+    (let [username    @(subscribe [:username])
+          sentry-tx   (close-and-get-sentry-tx "enter/split-block")
           op          (wrap-span-no-new-tx "build-block-split-op"
                                            (graph-ops/build-block-split-op @db/dsdb
                                                                            {:old-block-uid uid
@@ -1173,7 +1178,8 @@
                                                                             :index         index
                                                                             :relation      relation}))
           event       (common-events/build-atomic-event op)]
-      {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+      {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch [:check-for-mentions uid value username]]]})))
 
 
 (reg-event-fx
@@ -1486,13 +1492,16 @@
 
 (reg-event-fx
   :block/move
-  (fn [_ [_ {:keys [source-uid target-uid target-rel] :as args}]]
+  (fn [_ [_ {:keys [source-uid target-uid target-rel ] :as args}]]
     (log/debug ":block/move args" (pr-str args))
-    (let [atomic-event (common-events/build-atomic-event
+    (let [author       @(subscribe [:username])
+          atomic-event (common-events/build-atomic-event
                          (atomic-graph-ops/make-block-move-op source-uid
                                                               {:block/uid target-uid
                                                                :relation target-rel}))]
-      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+      {:fx [[:dispatch [:move-ticket source-uid target-uid author]]
+            [:dispatch [:resolve-transact-forward atomic-event]]]})))
+
 
 
 (reg-event-fx
