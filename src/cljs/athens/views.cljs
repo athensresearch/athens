@@ -72,12 +72,7 @@
                     'devtool devtool devtool'"
                     :height "100vh"
                     :overflow "hidden"
-                    :sx {"WebkitAppRegion" "drag"}
-                    :className [(case os
-                                  :windows "os-windows"
-                                  :mac "os-mac"
-                                  :linux "os-linux")
-                                (when electron? "is-electron")]}
+                    :sx {"WebkitAppRegion" "drag"}}
                    [app-toolbar/app-toolbar]
                    [left-sidebar/left-sidebar]
                    [pages/view]

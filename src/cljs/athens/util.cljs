@@ -222,8 +222,8 @@
   (let [os (.. js/window -navigator -appVersion)]
     (cond
       (re-find #"Windows" os) :windows
-      (re-find #"Linux" os) :linux
-      (re-find #"Mac" os) :mac)))
+      (re-find #"Mac" os) :mac
+      :else :linux)))
 
 
 (defn is-mac?
