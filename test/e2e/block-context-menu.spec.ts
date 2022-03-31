@@ -4,9 +4,9 @@ import { saveLastBlockAndEnter, waitForBoot, createPage, deleteCurrentPage } fro
 
 
 const rightClickFirstBullet = async (page: Page) => {
-    await page.click('.block-body >> nth=0 >> svg', {
-        button: 'right'
-    });
+  await page.click('.block-body >> nth=0 >> [aria-label="Block anchor"]', {
+    button: 'right'
+  });
 };
 
 test.describe("no blocks selected", () => {
@@ -32,12 +32,10 @@ test.describe("no blocks selected", () => {
   });
 
   // This should close the context menu but doesn't yet.
-  /*
   test('clicking out of the context menu on the block itself closes context menu', async ({ page }) => {
     await page.click('text=alice');
     await expect(page.locator('text="Copy block ref"')).not.toBeVisible();
   });
-  */
 })
 
 

@@ -9,7 +9,7 @@
 
 
 (defn handle-copy-refs
-  [_ uid state]
+  [_ uid]
   (let [selected-items @(rf/subscribe [::select-subs/items])
         ;; use this when using datascript-transit
         ;; uids (map (fn [x] [:block/uid x]) selected-items)
@@ -19,13 +19,12 @@
                          (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
                               (string/join "")))]
     (.. js/navigator -clipboard (writeText data))
-    (toast (clj->js {:title "Copied ref to clipboard"}))
-    (swap! state assoc :context-menu/show false)))
+    (toast (clj->js {:title "Copied ref to clipboard"}))))
 
 
 (defn handle-copy-unformatted
   "If copying only a single block, dissoc children to not copy subtree."
-  [^js uid state]
+  [^js uid]
   (let [uids @(rf/subscribe [::select-subs/items])]
     (if (empty? uids)
       (let [block (dissoc (db/get-block [:block/uid uid]) :block/children)
@@ -35,5 +34,4 @@
                       (map #(listeners/blocks-to-clipboard-data 0 % true))
                       (apply str))]
         (.. js/navigator -clipboard (writeText data)))))
-  (toast (clj->js {:title "Copied content to clipboard" :status "success"}))
-  (swap! state assoc :context-menu/show false))
+  (toast (clj->js {:title "Copied content to clipboard" :status "success"})))

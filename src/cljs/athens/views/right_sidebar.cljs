@@ -1,8 +1,7 @@
 (ns athens.views.right-sidebar
   (:require
-    ["/components/Icons/Icons" :refer [RightSidebarAddIcon]]
-    ["@chakra-ui/react" :refer [Flex Text Box AddIcon IconButton Accordion AccordionItem AccordionButton AccordionIcon AccordionPanel]]
-    ["@material-ui/icons/Close" :default Close]
+    ["/components/Icons/Icons" :refer [RightSidebarAddIcon XmarkIcon ChevronDownIcon]]
+    ["@chakra-ui/react" :refer [Flex Text Box IconButton Accordion AccordionItem AccordionButton AccordionIcon AccordionPanel]]
     ["framer-motion" :refer [AnimatePresence motion]]
     [athens.parse-renderer :as parse-renderer]
     [athens.views.pages.block-page :as block-page]
@@ -64,7 +63,9 @@
                                  [:> AnimatePresence {:initial false}
                                   (when open?
                                     [:> (.-div motion)
-                                     {:style {:display "flex"
+                                     {:aria-role "sidebar"
+                                      :class "right-sidebar"
+                                      :style {:display "flex"
                                               :WebkitAppRegion "no-drag"
                                               :flex-direction "column"
                                               :height "calc(100% - 3.25rem)"
@@ -116,28 +117,43 @@
                                         [empty-message]
                                         [:> Accordion {:allowMultiple true}
                                          (doall
-                                           (for [[uid {:keys [node/title block/string is-graph?]}] items]
-                                             ^{:key uid}
-                                             [:> AccordionItem {:_first {:borderTop 0} :borderBottom 0}
-                                              [:> Box {:as "h2" :position "relative"}
-                                               [:> AccordionButton {:borderBottom "1px solid"
-                                                                    :borderRadius "0"
-                                                                    :borderBottomColor "separator.divider"}
-                                                [:> AccordionIcon {:as AddIcon}]
-                                                [parse-renderer/parse-and-render (or title string) uid]]
-                                               [:> IconButton {:size "xs"
-                                                               :position "absolute"
-                                                               :color "foreground.secondary"
-                                                               :right 5
-                                                               :top 2
-                                                               :background "transparent"
-                                                               :onClick #(dispatch [:right-sidebar/close-item uid])}
-                                                [:> Close]]]
-                                              [:> AccordionPanel {:p 0}
-                                               (cond
-                                                 is-graph? [graph/page uid]
-                                                 title     [node-page/page [:block/uid uid]]
-                                                 :else     [block-page/page [:block/uid uid]])]]))])]])])})))
+                                          (for [[uid {:keys [node/title block/string is-graph?]}] items]
+                                            ^{:key uid}
+                                            [:> AccordionItem {:borderWidth 0
+                                                               :borderColor "separator.divider"
+                                                               :borderBottomWidth "1px"}
+                                             [:> Box {:as "h2" :position "relative"}
+                                              [:> AccordionButton {:borderRadius "0"
+                                                                   :py 4
+                                                                   :pl 3
+                                                                   :pr 4
+                                                                   :height "auto"
+                                                                   :textAlign "left"
+                                                                   :overflow "hidden"
+                                                                   :whiteSpace "nowrap"
+                                                                   :border 0}
+                                               [:> AccordionIcon]
+                                               [:> Box {:flex "1 1 100%"
+                                                        :mx 3
+                                                        :tabIndex -1
+                                                        :pointerEvents "none"
+                                                        :position "relative"
+                                                        :bottom "1px"
+                                                        :overflow "hidden"
+                                                        :sx {:maskImage "linear-gradient(to right, black, black calc(100% - 4rem), transparent calc(100% - 2rem))"}} [parse-renderer/parse-and-render (or title string) uid]]]
+                                              [:> IconButton {:size "sm"
+                                                              :position "absolute"
+                                                              :color "foreground.secondary"
+                                                              :right 5
+                                                              :top 3
+                                                              :background "transparent"
+                                                              :onClick #(dispatch [:right-sidebar/XmarkIcon-item uid])}
+                                               [:> XmarkIcon]]]
+                                             [:> AccordionPanel {:p 4}
+                                              (cond
+                                                is-graph? [graph/page uid]
+                                                title     [node-page/page [:block/uid uid]]
+                                                :else     [block-page/page [:block/uid uid]])]]))])]])])})))
 
 
 (defn right-sidebar

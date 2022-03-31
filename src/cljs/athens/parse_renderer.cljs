@@ -15,17 +15,24 @@
 
 (declare parse-and-render)
 
-(def fm-props {:as "b" :class "formatting" :fontWeight "normal" :opacity "0.3"})
-
+(def fm-props
+  {:as "b"
+   :class "formatting"
+   :whiteSpace "nowrap"
+   :fontWeight "normal"
+   :opacity "0.3"})
 
 (def link-props
   {:color "link"
    :borderRadius "1px"
    :variant "link"
    :minWidth "0"
-   :whiteSpace "normal"
-   :wordBreak "break-word"
+   :whiteSpace "inherit"
+   :wordBreak "inherit"
+   :alignItems "flex-start"
+   :justifyContent "flex-start"
    :lineHeight "unset"
+   :textAlign "inherit"
    :fontSize "inherit"
    :fontWeight "inherit"
    :textDecoration "none"})
@@ -337,7 +344,7 @@
 
 (defn parse-and-render
   "Converts a string of block syntax to Hiccup, with fallback formatting if it can’t be parsed."
-  [string uid]
+  [string uid interactive?]
   (when config/measure-parser?
     (js/console.group string))
   (let [pt-n-1     (js/performance.now)

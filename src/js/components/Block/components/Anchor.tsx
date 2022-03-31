@@ -69,7 +69,7 @@ export interface AnchorProps {
   shouldShowDebugDetails: boolean;
   as: ReactNode;
   onContextMenu: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
-  onCopyRefs: () => void;
+  onCopyRef: () => void;
   onCopyUnformatted: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -136,7 +136,7 @@ export const Anchor = (props: AnchorProps) => {
   const { isClosedWithChildren,
     anchorElement,
     shouldShowDebugDetails,
-    onCopyRefs,
+    onCopyRef,
     onCopyUnformatted,
     onDragStart,
     onDragEnd,
@@ -148,6 +148,7 @@ export const Anchor = (props: AnchorProps) => {
   return (
     <Menu isOpen={isOpen} onClose={() => setIsOpen(false)}>
       <IconButton
+        aria-label="Block anchor"
         {...anchorButtonStyleProps(isClosedWithChildren)}
         onDragStart={onDragStart}
         onClick={onClick}
@@ -163,7 +164,7 @@ export const Anchor = (props: AnchorProps) => {
       </IconButton>
       <Portal>
         <MenuList>
-          <MenuItem onClick={onCopyRefs}>Copy block refs</MenuItem>
+          <MenuItem onClick={onCopyRef}>Copy block ref</MenuItem>
           <MenuItem onClick={onCopyUnformatted}>Copy unformatted</MenuItem>
           {shouldShowDebugDetails && (
             <>

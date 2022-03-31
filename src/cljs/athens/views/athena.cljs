@@ -1,7 +1,7 @@
 (ns athens.views.athena
   (:require
-   ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
    ["/components/Icons/Icons" :refer [XmarkIcon]]
+   ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
    [athens.common.utils :as utils]
    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
    [athens.router       :as router]
@@ -215,7 +215,7 @@
          ^{:key i}
          [result-el {:key      i
                      :title    query
-                     :prefix   "Create page "
+                     :prefix   "Create page: "
                      :preview  nil
                      :query    query
                      :active?  (= i index)

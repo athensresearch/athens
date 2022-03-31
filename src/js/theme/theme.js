@@ -286,6 +286,9 @@ const components = {
   },
   Breadcrumb: {
     baseStyle: {
+      container: {
+        lineHeight: 1.5,
+      },
       separator: {
         color: 'separator.border'
       },

@@ -452,8 +452,8 @@
                                                "closed-with-children")
                        :block block
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
-                       :onCopyRefs #(handle-copy-refs nil uid state)
-                       :onCopyUnformatted #(handle-copy-unformatted uid state)
+                       :onCopyRef #(handle-copy-refs nil uid)
+                       :onCopyUnformatted #(handle-copy-unformatted uid)
                        :onClick        (fn [e]
                                          (let [shift? (.-shiftKey e)]
                                            (rf/dispatch [:reporting/navigation {:source :block-bullet

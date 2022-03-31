@@ -24,7 +24,7 @@ test('athena create new page then click create page', async ({ page }) => {
   await inputInAthena(page, title);
 
   await Promise.all([
-    page.click('text=Create Page: ' + title),
+    page.click('text=Create page: ' + title),
     page.waitForNavigation()
   ]);
   await expect(page.locator(pageTitleLocator)).toHaveText(title);
