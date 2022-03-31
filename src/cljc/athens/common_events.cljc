@@ -76,7 +76,7 @@
 (defn deserialize
   [serialized-event]
   #?(:cljs (-> (transit/reader serialization-type serialization-opts)
-               (transit/write serialized-event))
+               (transit/read serialized-event))
      :clj  (let [in     (ByteArrayInputStream. (.getBytes serialized-event))
                  reader (transit/reader in serialization-type serialization-opts)]
              (transit/read reader))))

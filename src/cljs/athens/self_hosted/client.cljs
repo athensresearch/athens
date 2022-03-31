@@ -280,7 +280,7 @@
 
 (defn- message-handler
   [event]
-  (if-let [errors (common-events/validate-serialized-event event)]
+  (if-let [errors (common-events/validate-serialized-event (.-data event))]
     (log/warn "Received invalid serialized event:" (pr-str errors))
     (let [packet (->> event .-data common-events/deserialize)]
       (if (schema/valid-event-response? packet)
