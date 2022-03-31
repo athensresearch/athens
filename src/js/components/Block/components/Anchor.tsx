@@ -164,7 +164,7 @@ export const Anchor = (props: AnchorProps) => {
       </IconButton>
       <Portal>
         <MenuList>
-          <MenuItem onClick={onCopyRef}>Copy block ref</MenuItem>
+          <MenuItem onClick={onCopyRef}>Copy block refs</MenuItem>
           <MenuItem onClick={onCopyUnformatted}>Copy unformatted</MenuItem>
           {shouldShowDebugDetails && (
             <>

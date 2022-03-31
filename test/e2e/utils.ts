@@ -31,7 +31,7 @@ export const createLocalAthensDB = async (page: Page, dbName: string) => {
     await page.pause()
 };
 
-export const lastBlockSelector = '.textarea >> nth=-1';
+export const lastBlockSelector = '.block-input-textarea >> nth=-1';
 
 export const inputInLastBlock = async (page: Page, text: string) => {
     await page.click(lastBlockSelector);
@@ -54,7 +54,7 @@ export const saveLastBlockAndEnter = async (page: Page, text: string) => {
     await page.press(lastBlockSelector, 'Enter');
     // Wait for the new block to be visible.
     // TODO: we shouldn't need to do this, instead we should have deterministic states from input.
-    await page.locator('.textarea.is-editing:text-is("")').waitFor();
+    await page.locator('.block-input-textarea.is-editing:text-is("")').waitFor();
 };
 
 export const indentLastBlock = async (page: Page) => {
