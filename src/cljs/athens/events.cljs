@@ -213,11 +213,12 @@
       {:dispatch [:transact tx-data]})))
 
 
-(reg-event-db
+(reg-event-fx
   :athena/toggle
   [(interceptors/sentry-span-no-new-tx "athena/toggle")]
-  (fn [db _]
-    (update db :athena/open not)))
+  (fn [{:keys [db]} _]
+    {:db (update db :athena/open not)
+     :dispatch [:posthog/report-feature :athena]}))
 
 
 (reg-event-db
@@ -235,18 +236,20 @@
     (update db :devtool/open not)))
 
 
-(reg-event-db
+(reg-event-fx
   :help/toggle
   [(interceptors/sentry-span-no-new-tx "help/toggle")]
-  (fn [db _]
-    (update db :help/open? not)))
+  (fn [{:keys [db]} _]
+    {:db (update db :help/open? not)
+     :dispatch [:posthog/report-feature :help]}))
 
 
-(reg-event-db
+(reg-event-fx
   :left-sidebar/toggle
   [(interceptors/sentry-span-no-new-tx "left-sidebar/toggle")]
-  (fn [db _]
-    (update db :left-sidebar/open not)))
+  (fn [{:keys [db]} _]
+    {:db (update db :left-sidebar/open not)
+     :dispatch [:posthog/report-feature :left-sidebar]}))
 
 
 (reg-event-fx
@@ -556,7 +559,8 @@
   (fn [_ [_ {:keys [uid title]}]]
     (when-not (db/e-by-av :block/uid uid)
       {:dispatch [:page/new {:title     title
-                             :block-uid (common.utils/gen-block-uid)}]})))
+                             :block-uid (common.utils/gen-block-uid)
+                             :source    :auto-make-daily-note}]})))
 
 
 (reg-event-fx
@@ -631,8 +635,9 @@
   :theme/toggle
   [(interceptors/sentry-span-no-new-tx "theme/toggle")]
   (fn [{:keys [db]} _]
-    {:db       (update-in db [:athens/persist :theme/dark] not)
-     :dispatch [:theme/set]}))
+    {:db         (update-in db [:athens/persist :theme/dark] not)
+     :dispatch-n [[:theme/set]
+                  [:posthog/report-feature :theme]]}))
 
 
 ;; Datascript
@@ -838,7 +843,8 @@
                                                                             {:page/title target-name
                                                                              :relation relation})
           event (common-events/build-atomic-event drop-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :left-sidebar]]]})))
 
 
 (reg-event-fx
@@ -852,7 +858,6 @@
   :undo
   [(interceptors/sentry-span-no-new-tx "undo")]
   (fn [{:keys [db]} _]
-    (log/debug ":undo")
     (try
       (log/debug ":undo count" (undo/count-undo db))
       (if-some [[undo db'] (undo/pop-undo db)]
@@ -860,11 +865,20 @@
               evt-id         (:event/id evt)
               dsdb           @db/dsdb
               undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
+              undo-ops       (:event/op undo-evt)
+              new-titles     (graph-ops/ops->new-page-titles undo-ops)
+              new-uids       (graph-ops/ops->new-block-uids undo-ops)
               undo-evt-id    (:event/id undo-evt)
               db''           (undo/push-redo db' undo-evt-id [dsdb undo-evt])]
           (log/debug ":undo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
           {:db db''
-           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
+           :fx [[:dispatch-n (cond-> [[:resolve-transact-forward undo-evt]]
+                               (seq new-titles)
+                               (conj [:reporting/page.create {:source :undo
+                                                              :count  (count new-titles)}])
+                               (seq new-uids)
+                               (conj [:reporting/block.create {:source :undo
+                                                               :count  (count new-uids)}]))]]})
         {})
       (catch :default _
         {:fx [[:dispatch [:alert/js "Undo for this operation not supported in Lan-Party, yet."]]]}))))
@@ -882,11 +896,20 @@
               evt-id         (:event/id evt)
               dsdb           @db/dsdb
               undo-evt       (undo-resolver/build-undo-event dsdb evt-dsdb evt)
+              undo-ops       (:event/op undo-evt)
               undo-evt-id    (:event/id undo-evt)
+              new-titles     (graph-ops/ops->new-page-titles undo-ops)
+              new-uids       (graph-ops/ops->new-block-uids undo-ops)
               db''           (undo/push-undo db' undo-evt-id [dsdb undo-evt])]
           (log/debug ":redo evt" (pr-str evt-id) "as" (pr-str undo-evt-id))
           {:db db''
-           :fx [[:dispatch [:resolve-transact-forward undo-evt]]]})
+           :fx [[:dispatch-n (cond-> [[:resolve-transact-forward undo-evt]]
+                               (seq new-titles)
+                               (conj [:reporting/page.create {:source :redo
+                                                              :count  (count new-titles)}])
+                               (seq new-uids)
+                               (conj [:reporting/block.create {:source :redo
+                                                               :count  (count new-uids)}]))]]})
         {})
       (catch :default _
         {:fx [[:dispatch [:alert/js "Redo for this operation not supported in Lan-Party, yet."]]]}))))
@@ -1043,35 +1066,51 @@
           op          (atomic-graph-ops/make-block-new-op new-uid {:block/uid (:block/uid block)
                                                                    :relation  :after})
           event       (common-events/build-atomic-event op)]
-      {:fx [(transact-async-flow :enter-new-block event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+      {:fx [(transact-async-flow :enter-new-block event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch [:reporting/block.create {:source :enter-new-block
+                                                 :count  1}]]]})))
 
 
 (reg-event-fx
   :block/save
-  (fn [{:keys [db]} [_ {:keys [uid string] :as args}]]
+  (fn [{:keys [db]} [_ {:keys [uid string source] :as args}]]
     (log/debug ":block/save args" (pr-str args))
     (let [local?      (not (db-picker/remote-db? db))
           block-eid   (common-db/e-by-av @db/dsdb :block/uid uid)
+          old-string  (->> block-eid
+                           (d/entity @db/dsdb)
+                           :block/string)
           do-nothing? (or (not block-eid)
-                          (= string (->> block-eid (d/entity @db/dsdb) :block/string)))
+                          (= old-string string))
           op          (graph-ops/build-block-save-op @db/dsdb uid string)
+          new-titles  (graph-ops/ops->new-page-titles op)
           event       (common-events/build-atomic-event op)]
       (log/debug ":block/save local?" local?
                  ", do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
+        {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
+                             (seq new-titles)
+                             (conj [:reporting/page.create {:source (or source :unknown-block-save)
+                                                            :count  (count new-titles)}]))]]}))))
 
 
 (reg-event-fx
   :page/new
-  (fn [_ [_ {:keys [title block-uid shift?] :or {shift? false} :as args}]]
+  (fn [_ [_ {:keys [title block-uid shift? source]
+             :or   {shift? false
+                    source :unknown-page-new}
+             :as   args}]]
     (log/debug ":page/new args" (pr-str args))
-    (let [event (common-events/build-atomic-event (graph-ops/build-page-new-op @db/dsdb
-                                                                               title
-                                                                               block-uid))]
+    (let [new-page-op (graph-ops/build-page-new-op @db/dsdb
+                                                   title
+                                                   block-uid)
+          new-titles  (graph-ops/ops->new-page-titles new-page-op)
+          event       (common-events/build-atomic-event new-page-op)]
       {:fx [[:dispatch-n [[:resolve-transact-forward event]
                           [:page/new-followup title shift?]
-                          [:editing/uid block-uid]]]]})))
+                          [:editing/uid block-uid]
+                          [:reporting/page.create {:source source
+                                                   :count  (count new-titles)}]]]]})))
 
 
 (reg-event-fx
@@ -1112,32 +1151,40 @@
   :backspace/delete-merge-block
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id prev-block] :as args}]]
     (log/debug ":backspace/delete-merge-block args:" (pr-str args))
-    (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block")
-          op          (wrap-span-no-new-tx "build-block-remove-merge-op"
-                                           (graph-ops/build-block-remove-merge-op @db/dsdb
-                                                                                  uid
-                                                                                  prev-block-uid
-                                                                                  value))
-          event       (common-events/build-atomic-event  op)]
-      {:fx [(transact-async-flow :backspace-delete-merge-block event sentry-tx
-                                 [(focus-on-uid prev-block-uid embed-id
-                                                (count (:block/string prev-block)))])]})))
+    (let [sentry-tx  (close-and-get-sentry-tx "backspace/delete-merge-block")
+          op         (wrap-span-no-new-tx "build-block-remove-merge-op"
+                                          (graph-ops/build-block-remove-merge-op @db/dsdb
+                                                                                 uid
+                                                                                 prev-block-uid
+                                                                                 value))
+          new-titles (graph-ops/ops->new-page-titles op)
+          event      (common-events/build-atomic-event  op)]
+      {:fx (cond-> [(transact-async-flow :backspace-delete-merge-block event sentry-tx
+                                         [(focus-on-uid prev-block-uid embed-id
+                                                        (count (:block/string prev-block)))])]
+             (seq new-titles)
+             (conj [:dispatch [:reporting/page.create {:source :kbd-backspace-merge
+                                                       :count  (count new-titles)}]]))})))
 
 
 (reg-event-fx
   :backspace/delete-merge-block-with-save
   (fn [_ [_ {:keys [uid value prev-block-uid embed-id local-update] :as args}]]
     (log/debug ":backspace/delete-merge-block-with-save args:" (pr-str args))
-    (let [sentry-tx   (close-and-get-sentry-tx "backspace/delete-merge-block-with-save")
-          op          (wrap-span-no-new-tx "build-block-merge-with-updated-op"
-                                           (graph-ops/build-block-merge-with-updated-op @db/dsdb
-                                                                                        uid
-                                                                                        prev-block-uid
-                                                                                        value
-                                                                                        local-update))
-          event       (common-events/build-atomic-event  op)]
-      {:fx [(transact-async-flow :backspace-delete-merge-block-with-save event sentry-tx
-                                 [(focus-on-uid prev-block-uid embed-id (count local-update))])]})))
+    (let [sentry-tx  (close-and-get-sentry-tx "backspace/delete-merge-block-with-save")
+          op         (wrap-span-no-new-tx "build-block-merge-with-updated-op"
+                                          (graph-ops/build-block-merge-with-updated-op @db/dsdb
+                                                                                       uid
+                                                                                       prev-block-uid
+                                                                                       value
+                                                                                       local-update))
+          new-titles (graph-ops/ops->new-page-titles op)
+          event      (common-events/build-atomic-event  op)]
+      {:fx (cond-> [(transact-async-flow :backspace-delete-merge-block-with-save event sentry-tx
+                                         [(focus-on-uid prev-block-uid embed-id (count local-update))])]
+             (seq new-titles)
+             (conj [:dispatch [:reporting/page.create  {:source :kbd-backspace-merge-with-save
+                                                        :count  (count new-titles)}]]))})))
 
 
 ;; Atomic events end ==========
@@ -1152,23 +1199,31 @@
                                            (common-db/compat-position @db/dsdb {:block/uid (:block/uid block)
                                                                                 :relation  :first}))
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
-      {:fx [(transact-async-flow :enter-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+      {:fx [(transact-async-flow :enter-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch [:reporting/block.create {:source :enter-add-child
+                                                 :count  1}]]]})))
 
 
 (reg-event-fx
   :enter/split-block
   (fn [_ [_ {:keys [uid new-uid value index embed-id relation] :as args}]]
     (log/debug ":enter/split-block" (pr-str args))
-    (let [sentry-tx   (close-and-get-sentry-tx "enter/split-block")
-          op          (wrap-span-no-new-tx "build-block-split-op"
-                                           (graph-ops/build-block-split-op @db/dsdb
-                                                                           {:old-block-uid uid
-                                                                            :new-block-uid new-uid
-                                                                            :string        value
-                                                                            :index         index
-                                                                            :relation      relation}))
-          event       (common-events/build-atomic-event op)]
-      {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+    (let [sentry-tx  (close-and-get-sentry-tx "enter/split-block")
+          op         (wrap-span-no-new-tx "build-block-split-op"
+                                          (graph-ops/build-block-split-op @db/dsdb
+                                                                          {:old-block-uid uid
+                                                                           :new-block-uid new-uid
+                                                                           :string        value
+                                                                           :index         index
+                                                                           :relation      relation}))
+          new-titles (graph-ops/ops->new-page-titles op)
+          event      (common-events/build-atomic-event op)]
+      {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch-n (cond-> [[:reporting/block.create {:source :enter-split
+                                                            :count  1}]]
+                           (seq new-titles)
+                           (conj [:reporting/page.create {:source :enter-split
+                                                          :count  (count new-titles)}]))]]})))
 
 
 (reg-event-fx
@@ -1180,7 +1235,9 @@
                                            (common-db/compat-position @db/dsdb {:block/uid uid
                                                                                 :relation  :before}))
           event       (common-events/build-atomic-event (atomic-graph-ops/make-block-new-op new-uid position))]
-      {:fx [(transact-async-flow :enter-bump-up event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+      {:fx [(transact-async-flow :enter-bump-up event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch [:reporting/block.create {:source :enter-bump-up
+                                                 :count  1}]]]})))
 
 
 (reg-event-fx
@@ -1201,7 +1258,9 @@
                                                                      [block-open-op
                                                                       add-child-op])
           event                   (common-events/build-atomic-event open-block-add-child-op)]
-      {:fx [(transact-async-flow :enter-open-block-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])]})))
+      {:fx [(transact-async-flow :enter-open-block-add-child event sentry-tx [(focus-on-uid new-uid embed-id)])
+            [:dispatch [:reporting/block.create {:source :enter-open-block-add-child
+                                                 :count  1}]]]})))
 
 
 (defn enter
@@ -1349,39 +1408,43 @@
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
-    (let [sentry-tx                     (close-and-get-sentry-tx "indent")
-          block                         (wrap-span-no-new-tx "get-block"
-                                                             (common-db/get-block @db/dsdb [:block/uid uid]))
-          block-zero?                   (zero? (:block/order block))
+    (let [sentry-tx                 (close-and-get-sentry-tx "indent")
+          block                     (wrap-span-no-new-tx "get-block"
+                                                         (common-db/get-block @db/dsdb [:block/uid uid]))
+          block-zero?               (zero? (:block/order block))
           [prev-block-uid
-           target-rel]                  (wrap-span-no-new-tx "get-prev-block-uid-and-target-rel"
-                                                             (get-prev-block-uid-and-target-rel uid))
-          sib-block                     (wrap-span-no-new-tx "get-block-sib-block"
-                                                             (common-db/get-block @db/dsdb [:block/uid prev-block-uid]))
+           target-rel]              (wrap-span-no-new-tx "get-prev-block-uid-and-target-rel"
+                                                         (get-prev-block-uid-and-target-rel uid))
+          sib-block                 (wrap-span-no-new-tx "get-block-sib-block"
+                                                         (common-db/get-block @db/dsdb [:block/uid prev-block-uid]))
           ;; if sibling block is closed with children, open
           {sib-open     :block/open
            sib-children :block/children
-           sib-uid      :block/uid}     sib-block
-          block-closed?                 (and (not sib-open) sib-children)
-          sib-block-open-op             (when block-closed?
-                                          (atomic-graph-ops/make-block-open-op sib-uid true))
-          {:keys [start end]}           d-key-down
-          block-save-block-move-op      (block-save-block-move-composite-op uid
-                                                                            prev-block-uid
-                                                                            target-rel
-                                                                            local-string)
-          event                         (common-events/build-atomic-event
-                                          (composite-ops/make-consequence-op {:op/type :indent}
-                                                                             (cond-> [block-save-block-move-op]
-                                                                               block-closed? (conj sib-block-open-op))))]
+           sib-uid      :block/uid} sib-block
+          block-closed?             (and (not sib-open) sib-children)
+          sib-block-open-op         (when block-closed?
+                                      (atomic-graph-ops/make-block-open-op sib-uid true))
+          {:keys [start end]}       d-key-down
+          block-save-block-move-op  (block-save-block-move-composite-op uid
+                                                                        prev-block-uid
+                                                                        target-rel
+                                                                        local-string)
+          composite-ops             (composite-ops/make-consequence-op {:op/type :indent}
+                                                                       (cond-> [block-save-block-move-op]
+                                                                         block-closed? (conj sib-block-open-op)))
+          new-titles                (graph-ops/ops->new-page-titles composite-ops)
+          event                     (common-events/build-atomic-event composite-ops)]
       (log/debug "null-sib-uid" (and block-zero?
                                      prev-block-uid)
                  ", args:" (pr-str args)
                  ", block-zero?" block-zero?)
       (when (and prev-block-uid
                  (not block-zero?))
-        {:fx [(transact-async-flow :indent event sentry-tx [])
-              [:set-cursor-position [uid start end]]]}))))
+        {:fx (cond-> [(transact-async-flow :indent event sentry-tx [])
+                      [:set-cursor-position [uid start end]]]
+               (seq new-titles)
+               (conj [:dispatch [:reporting/page.create {:source :indent
+                                                         :count  (count new-titles)}]]))}))))
 
 
 (reg-event-fx
@@ -1433,12 +1496,16 @@
                                                                         (:block/uid parent)
                                                                         :after
                                                                         local-string)
+          new-titles                (graph-ops/ops->new-page-titles block-save-block-move-op)
           event                     (common-events/build-atomic-event block-save-block-move-op)]
 
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid uid embed-id)])
-              [:set-cursor-position [uid start end]]]}))))
+        {:fx (cond-> [(transact-async-flow :unindent event sentry-tx [(focus-on-uid uid embed-id)])
+                      [:set-cursor-position [uid start end]]]
+               (seq new-titles)
+               (conj [:dispatch [:reporting/page.create {:source :unindent
+                                                         :count  (count new-titles)}]]))}))))
 
 
 (reg-event-fx
@@ -1502,7 +1569,10 @@
                                                                                                   :relation target-rel})
                                                              (atomic-graph-ops/make-block-save-op block-uid
                                                                                                   (str "((" source-uid "))"))]))]
-      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+      {:fx [[:dispatch-n [[:resolve-transact-forward atomic-event]
+                          [:reporting/block.create {:source :bullet-drop
+                                                    :count  1}] ; TODO :reporting/block.link
+                          ]]]})))
 
 
 (reg-event-fx
@@ -1530,14 +1600,24 @@
   :paste-internal
   [(interceptors/sentry-span-no-new-tx "paste-internal")]
   (fn [_ [_ uid local-str internal-representation]]
-    (let [[uid]  (db/uid-and-embed-id uid)
-          op     (bfs/build-paste-op @db/dsdb
-                                     uid
-                                     local-str
-                                     internal-representation)
-          event  (common-events/build-atomic-event op)]
+    (let [[uid]      (db/uid-and-embed-id uid)
+          op         (bfs/build-paste-op @db/dsdb
+                                         uid
+                                         local-str
+                                         internal-representation)
+          new-titles (graph-ops/ops->new-page-titles op)
+          new-uids   (graph-ops/ops->new-block-uids op)
+          event      (common-events/build-atomic-event op)]
       (log/debug "paste internal event is" (pr-str event))
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
+
+                           (seq new-titles)
+                           (conj [:reporting/page.create {:source :paste-internal
+                                                          :count  (count new-titles)}])
+
+                           (seq new-uids)
+                           (conj [:reporting/block.create {:source :paste-internal
+                                                           :count  (count new-uids)}]))]]})))
 
 
 (reg-event-fx
@@ -1578,8 +1658,12 @@
                                                  text
                                                  (subs value start)))
           op          (graph-ops/build-block-save-op @db/dsdb uid new-string)
+          new-titles  (graph-ops/ops->new-page-titles op)
           event       (common-events/build-atomic-event op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
+                           (seq new-titles)
+                           (conj [:reporting/page.create {:source :paste-verbatim
+                                                          :count  (count new-titles)}]))]]})))
 
 
 (reg-event-fx
@@ -1592,7 +1676,8 @@
                                                             uid
                                                             new-str)
           event              (common-events/build-atomic-event op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :unlinked-references]]]})))
 
 
 (reg-event-fx
@@ -1610,7 +1695,8 @@
           link-all-op         (composite-ops/make-consequence-op {:op/type :block/unlinked-refs-link-all}
                                                                  block-save-ops)
           event              (common-events/build-atomic-event link-all-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]
+            [:dispatch [:posthog/report-feature :unlinked-references]]]})))
 
 
 (rf/reg-event-fx

@@ -10,7 +10,7 @@
     [athens.views.pages.node-page :as node-page]
     [garden.selectors :as selectors]
     [komponentit.autosize :as autosize]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :as rf :refer [dispatch subscribe]]
     [reagent.core :as r]
     [stylefy.core :as stylefy :refer [use-style]]))
 
@@ -59,13 +59,14 @@
 ;; Helpers
 
 
-(defn persist-textarea-string
+(defn- persist-textarea-string
   "A helper fn that takes `state` containing textarea changes and when user has made a text change dispatches `transact-string`.
    Used in `block-page-el` function to log when there is a diff and `on-blur`"
   [state block-uid]
-  (dispatch [:block/save {:uid       block-uid
-                          :string    (:string/local state)
-                          :add-time? true}]))
+  (rf/dispatch [:block/save {:uid       block-uid
+                             :string    (:string/local state)
+                             :add-time? true
+                             :source    :on-blur-block-save}]))
 
 
 ;; Components
@@ -80,6 +81,11 @@
   "If block is in main, navigate to page. If in right sidebar, replace right sidebar item."
   [e uid breadcrumb-uid]
   (let [right-sidebar? (.. e -target (closest ".right-sidebar"))]
+    (rf/dispatch [:reporting/navigation {:source :block-page-breadcrumb
+                                         :target :block
+                                         :pane   (if right-sidebar?
+                                                   :right-pane
+                                                   :main-pane)}])
     (if right-sidebar?
       (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
       (router/navigate-uid breadcrumb-uid e))))
@@ -101,7 +107,15 @@
            (for [[group-title group] linked-refs]
              [:div (use-style node-page/references-group-style {:key (str "group-" group-title)})
               [:h4 (use-style node-page/references-group-title-style)
-               [:a {:on-click #(router/navigate-page (parse-renderer/parse-title group-title))}
+               [:a {:on-click (fn [e]
+                                (let [shift?       (.-shiftKey e)
+                                      parsed-title (parse-renderer/parse-title group-title)]
+                                  (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
+                                                                       :target :page
+                                                                       :pane   (if shift?
+                                                                                 :right-pane
+                                                                                 :main-pane)}])
+                                  (router/navigate-page parsed-title)))}
                 group-title]]
               (doall
                 (for [block group]
@@ -124,7 +138,7 @@
 
 
 (defn block-page-el
-  [_ _ _ _]
+  [_block]
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})]
     (fn [block]
@@ -142,7 +156,11 @@
                 {:on-click (fn [e]
                              (.. e preventDefault)
                              (if (.. e -shiftKey)
-                               (router/navigate-uid uid e)
+                               (do
+                                 (rf/dispatch [:reporting/navigation {:source :block-page
+                                                                      :target :block
+                                                                      :pane   :right-pane}])
+                                 (router/navigate-uid uid e))
                                (dispatch [:editing/uid uid])))})
           [autosize/textarea
            {:id          (str "editable-uid-" uid)

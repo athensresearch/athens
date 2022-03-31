@@ -64,10 +64,11 @@
     (-> db :athens/persist :graph-conf)))
 
 
-(rf/reg-event-db
+(rf/reg-event-fx
   :graph/set-conf
-  (fn [db [_ k v]]
-    (update-in db [:athens/persist :graph-conf] #(assoc % k v))))
+  (fn [{:keys [db]} [_ k v]]
+    {:db (update-in db [:athens/persist :graph-conf] #(assoc % k v))
+     :dispatch [:posthog/report-feature :graph]}))
 
 
 (rf/reg-sub
@@ -464,14 +465,20 @@
                                     (.arc ctx x y radius 0 (* js/Math.PI 2))
                                     (.fill ctx)))
               ;; node actions
-              :onNodeClick      (fn [^js node ^js event]
-                                  (router/navigate-page (.. node -label) event))
-              :onNodeHover      (fn [^js node]
-                                  (let [_          (reset! highlight-nodes #{})
-                                        _          (reset! highlight-links #{})
-                                        graph-conf @(rf/subscribe [:graph/conf])]
-                                    (when-let [node-id (some-> node (.. -id))]
-                                      (reset! highlight-nodes (n-level-linked all-links node-id (:hlt-link-levels graph-conf))))))}]))}))))
+              :onNodeClick (fn [^js node ^js event]
+                             (let [shift? (.-shiftKey event)]
+                               (rf/dispatch [:reporting/navigation {:source :graph
+                                                                    :target :page
+                                                                    :pane   (if shift?
+                                                                              :right-pane
+                                                                              :main-pane)}])
+                               (router/navigate-page (.. node -label) event)))
+              :onNodeHover (fn [^js node]
+                             (let [_          (reset! highlight-nodes #{})
+                                   _          (reset! highlight-links #{})
+                                   graph-conf @(rf/subscribe [:graph/conf])]
+                               (when-let [node-id (some-> node (.. -id))]
+                                 (reset! highlight-nodes (n-level-linked all-links node-id (:hlt-link-levels graph-conf))))))}]))}))))
 
 
 (defn page
