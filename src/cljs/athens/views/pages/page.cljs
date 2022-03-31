@@ -18,7 +18,7 @@
              :flexDirection "column"
              :display "flex"
              :margin "2rem auto"
-             :padding "1rem 2rem 10rem 3rem"
+             :padding "1rem 4rem 10rem"
              :flexBasis "100%"
              :maxWidth "75rem"}
      children]))

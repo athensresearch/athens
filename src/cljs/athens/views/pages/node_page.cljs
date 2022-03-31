@@ -434,30 +434,31 @@
          ;; Header
          [page-header
 
+          [:<>
           ;; Dropdown
-          [menu-dropdown node daily-note?]
+           [menu-dropdown node daily-note?]
 
-          [editable-title-container
+           [editable-title-container
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 
-           (when-not daily-note?
-             [autosize/textarea
-              {:value       (:title/local @state)
-               :id          (str "editable-uid-" uid)
-               :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
-               :on-blur     (fn [_]
+            (when-not daily-note?
+              [autosize/textarea
+               {:value       (:title/local @state)
+                :id          (str "editable-uid-" uid)
+                :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
+                :on-blur     (fn [_]
                               ;; add title Untitled-n for empty titles
-                              (when (empty? (:title/local @state))
-                                (swap! state assoc :title/local (auto-inc-untitled)))
-                              (handle-blur node state))
-               :on-key-down (fn [e] (handle-key-down e uid state children))
-               :on-change   (fn [e] (handle-change e state))}])
+                               (when (empty? (:title/local @state))
+                                 (swap! state assoc :title/local (auto-inc-untitled)))
+                               (handle-blur node state))
+                :on-key-down (fn [e] (handle-key-down e uid state children))
+                :on-change   (fn [e] (handle-change e state))}])
            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
-           (if (str/blank? (:title/local @state))
-             [:wbr]
-             [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
-              [parse-renderer/parse-and-render (:title/local @state) uid]])]]
+            (if (str/blank? (:title/local @state))
+              [:wbr]
+              [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
+               [parse-renderer/parse-and-render (:title/local @state) uid]])]]]
 
          ;; Children
          (if (empty? children)

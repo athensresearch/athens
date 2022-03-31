@@ -15,17 +15,18 @@
 
 
 (defn page-header
-  ([_ children]
-   [:> Box {:as "header"
-            :class "page-header"
-            :position "relative"}
-    children]))
+  [children]
+  [:> Box {:as "header"
+           :class "page-header"
+           :position "relative"}
+   children])
 
 
 (defn title-container
-  [children]
-  [:> Box title-style-props
-   children])
+  ([props children]
+   (let [{:keys [_]} props]
+     [:> Box title-style-props
+      children])))
 
 
 (defn editable-title-container
@@ -33,8 +34,8 @@
    (let [{:keys [_]} props]
      [:> Box (merge
                title-style-props
-               {:as "header"
-                :class "page-header"
+               {:as "h1"
+                :class "page-title"
                 :sx {"textarea" {:appearance    "none"
                                  :cursor        "text"
                                  :resize        "none"

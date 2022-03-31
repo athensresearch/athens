@@ -1,17 +1,17 @@
 (ns athens.views.athena
   (:require
-    ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
-    ["@material-ui/icons/Close" :default Close]
-    [athens.common.utils :as utils]
-    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
-    [athens.router       :as router]
-    [athens.subs]
-    [athens.util         :refer [scroll-into-view]]
-    [clojure.string      :as str]
-    [goog.dom            :refer [getElement]]
-    [goog.events         :as events]
-    [re-frame.core       :as rf :refer [subscribe dispatch]]
-    [reagent.core        :as r])
+   ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
+   ["/components/Icons/Icons" :refer [XmarkIcon]]
+   [athens.common.utils :as utils]
+   [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
+   [athens.router       :as router]
+   [athens.subs]
+   [athens.util         :refer [scroll-into-view]]
+   [clojure.string      :as str]
+   [goog.dom            :refer [getElement]]
+   [goog.events         :as events]
+   [re-frame.core       :as rf :refer [subscribe dispatch]]
+   [reagent.core        :as r])
   (:import
     (goog.events
       KeyCodes)))
@@ -297,7 +297,7 @@
           :on-key-down (fn [e] (key-down-handler e state))}]
         (when (:query @state)
           [:> IconButton {:background "none"
-                          :color "inherit"
+                          :color "foreground.secondary"
                           :position "absolute"
                           :transition "opacity 0.1s ease, background 0.1s ease"
                           :cursor "pointer"
@@ -311,6 +311,6 @@
                           :display "flex"
                           :top "2rem"
                           :onClick #(set! (.-value (getElement "athena-input")) nil)}
-           [:> Close]])
+           [:> XmarkIcon {:boxSize 6}]])
         [results-el state]
         [search-results-el @state]]])))

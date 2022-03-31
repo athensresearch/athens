@@ -471,21 +471,6 @@
       (assoc-in db [:selection :items] ordered-selection))))
 
 
-;; Alerts
-
-(reg-event-db
-  :alert/unset
-  (fn-traced [db]
-             (assoc db :alert nil)))
-
-
-;; Use native js/alert rather than custom UI alert
-(reg-event-fx
-  :alert/js
-  (fn [_ [_ message]]
-    {:alert/js! message}))
-
-
 (reg-event-fx
   :confirm/js
   (fn [_ [_ message true-cb false-cb]]

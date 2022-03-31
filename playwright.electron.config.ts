@@ -18,7 +18,7 @@ const config: PlaywrightTestConfig = {
   ...baseConfig,
   workers: 1,
   use: {},
-  projects: [{
+  projects: [ {
     name: 'chromium',
     use: {
       browserName: 'chromium',
@@ -32,7 +32,7 @@ const config: PlaywrightTestConfig = {
       mode: 'default',
       video: false,
     }
-  }],
+  } ],
 };
 
 export default config;
