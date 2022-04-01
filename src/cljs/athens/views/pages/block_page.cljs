@@ -1,16 +1,16 @@
 (ns athens.views.pages.block-page
   (:require
-   ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
-   ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
-   [athens.parse-renderer :as parse-renderer]
-   [athens.reactive :as reactive]
-   [athens.router :as router]
-   [athens.views.blocks.core :as blocks]
-   [athens.views.pages.node-page :as node-page]
-   [athens.views.references :refer [reference-group reference-block]]
-   [komponentit.autosize :as autosize]
-   [re-frame.core :as rf :refer [dispatch subscribe]]
-   [reagent.core :as r]))
+    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
+    ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
+    [athens.parse-renderer :as parse-renderer]
+    [athens.reactive :as reactive]
+    [athens.router :as router]
+    [athens.views.blocks.core :as blocks]
+    [athens.views.pages.node-page :as node-page]
+    [athens.views.references :refer [reference-group reference-block]]
+    [komponentit.autosize :as autosize]
+    [re-frame.core :as rf :refer [dispatch subscribe]]
+    [reagent.core :as r]))
 
 
 ;; Helpers
@@ -106,7 +106,7 @@
          ;; Header
          [:> PageHeader
 
-         ;; Parent Context
+          ;; Parent Context
           [parents-el uid id]
           [:> EditableTitleContainer {:onClick (fn [e]
                                                  (.. e preventDefault)

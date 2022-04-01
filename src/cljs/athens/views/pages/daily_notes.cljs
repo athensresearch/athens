@@ -1,11 +1,11 @@
 (ns athens.views.pages.daily-notes
   (:require
-   ["/components/Page/Page" :refer [PageHeader TitleContainer DailyNotesPage]]
-   ["@chakra-ui/react" :refer [VStack]]
-   [athens.dates :as dates]
-   [athens.reactive :as reactive]
-   [athens.views.pages.node-page :as node-page]
-   [re-frame.core :refer [dispatch subscribe]]))
+    ["/components/Page/Page" :refer [PageHeader TitleContainer DailyNotesPage]]
+    ["@chakra-ui/react" :refer [VStack]]
+    [athens.dates :as dates]
+    [athens.reactive :as reactive]
+    [athens.views.pages.node-page :as node-page]
+    [re-frame.core :refer [dispatch subscribe]]))
 
 
 (defn reactive-pull-many
@@ -37,10 +37,10 @@
                       :flex           "1 1 100%"
                       :flexDirection "column"}
            (doall
-            (for [{:keys [block/uid]} notes]
-              [:> DailyNotesPage {:key uid
-                                  :isReal true}
-               [node-page/page [:block/uid uid]]]))
+             (for [{:keys [block/uid]} notes]
+               [:> DailyNotesPage {:key uid
+                                   :isReal true}
+                [node-page/page [:block/uid uid]]]))
            [:> DailyNotesPage {:isReal false}
             [:> PageHeader
              [:> TitleContainer "Earlier"]]]])))))

@@ -15,12 +15,14 @@
 
 (declare parse-and-render)
 
+
 (def fm-props
   {:as "b"
    :class "formatting"
    :whiteSpace "nowrap"
    :fontWeight "normal"
    :opacity "0.3"})
+
 
 (def link-props
   {:color "link"
