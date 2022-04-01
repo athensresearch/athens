@@ -353,8 +353,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           <Tooltip label="Daily notes">
             <ToolbarIconButton
               aria-label="Daily notes"
-              isDisabled={route === '/daily-notes'}
-              isActive={route === '/daily-notes'}
+              isActive={route === 'home'}
               onClick={handlePressDailyNotes}>
               <DailyNotesIcon />
             </ToolbarIconButton>
@@ -362,8 +361,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           <Tooltip label="All pages">
             <ToolbarIconButton
               aria-label="All pages"
-              isDisabled={route === '/all-pages'}
-              isActive={route === '/all-pages'} onClick={handlePressAllPages}
+              isActive={route === 'pages'}
+              onClick={handlePressAllPages}
             >
               <AllPagesIcon />
             </ToolbarIconButton>
@@ -371,8 +370,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           <Tooltip label="Graph">
             <ToolbarIconButton
               aria-label="Graph"
-              isDisabled={route === '/graph'}
-              isActive={route === '/graph'} onClick={handlePressGraph}>
+              isActive={route === 'graph'}
+              onClick={handlePressGraph}>
               <BubbleChart />
             </ToolbarIconButton>
           </Tooltip>
