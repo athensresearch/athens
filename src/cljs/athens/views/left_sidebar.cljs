@@ -94,7 +94,6 @@
        (when @open?
          [:> (.-div motion)
           {:style {:display "flex"
-                   ;;  :paddingTop "7.5rem"
                    :flex-direction "column"
                    :height "100%"
                    :alignItems "stretch"

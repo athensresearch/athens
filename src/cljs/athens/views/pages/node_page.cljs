@@ -1,7 +1,8 @@
 (ns athens.views.pages.node-page
   (:require
     ["/components/Block/components/Anchor" :refer [Anchor]]
-    ["/components/Dialog/Dialog" :refer [Dialog]]
+    ;; ["/components/Dialog/Dialog" :refer [Dialog]]
+    ["/components/Confirmation/Confirmation" :refer [Confirmation]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
     ["@chakra-ui/react" :refer [Text Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     ["@material-ui/icons/Bookmark" :default Bookmark]
@@ -426,12 +427,11 @@
 
         [:<>
 
-         (when alert-show
-           [:> Dialog {:isOpen    true
-                       :title     message
-                       :onConfirm confirm-fn
-                       :onDismiss cancel-fn}])
-
+         [:> Confirmation {:isOpen    alert-show
+                           :title     message
+                           :onConfirm confirm-fn
+                           :onClose   cancel-fn}]
+         
          ;; Header
          [:> PageHeader
 

@@ -75,6 +75,7 @@ const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) 
 });
 
 const AppToolbarWrapper = ({ children, ...props }) => <Flex
+  gridArea="app-header"
   borderBottom="1px solid transparent"
   justifyContent="space-between"
   overflow="hidden"
@@ -85,6 +86,8 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
   userSelect="none"
   transition='0.5s ease-in-out'
   transitionProperty='common'
+  height="var(--app-header-height, 44px)"
+
   _hover={{
     borderBottomColor: 'separator.divider',
     bg: "background.floor",
@@ -99,21 +102,34 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
       height: '44px'
     },
     ".os-windows &": {
+      pl: '10px',
+      py: '0',
+      pr: '0',
+
       "&:hover": {
         background: 'background.floor',
       },
-      paddingLeft: '10px',
+    },
+    ".os-linux &": {
+      height: '44px',
+      pl: '10px',
+      py: '0',
+      pr: '0',
+
+      "&:hover": {
+        background: 'background.floor',
+      },
     },
     ".os-mac &": {
       paddingLeft: '22px',
       paddingRight: '22px',
-      height: '52px',
       borderTopLeftRadius: '12px',
       borderTopRightRadius: '12px',
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
+
       "&:hover": {
         background: 'background.floor',
       },
@@ -263,9 +279,18 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     presenceDetails,
     ...rest
   } = props;
-
-  const { toggleColorMode } = useColorMode()
+  const { colorMode, toggleColorMode } = useColorMode();
   const [ canShowFullSecondaryMenu ] = useMediaQuery('(min-width: 900px)');
+
+  // If the database color mode doesn't match
+  // the chakra color mode, update the chakra color mode
+  React.useEffect(() => {
+    if (isThemeDark && colorMode !== 'dark') {
+      toggleColorMode()
+    } else if (!isThemeDark && colorMode !== 'light') {
+      toggleColorMode()
+    }
+  }, [ isThemeDark, toggleColorMode ])
 
   const secondaryTools = [
     {
@@ -276,10 +301,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     },
     {
       label: "Toggle theme",
-      onClick: () => {
-        toggleColorMode()
-        handlePressThemeToggle()
-      },
+      onClick: handlePressThemeToggle,
       icon: <ContrastIcon />
     },
     {
@@ -375,7 +397,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       </HStack>
       {isElectron && (os === 'windows' || os === 'linux') && (
         <WindowButtons
-          os={os}
           isWinMaximized={isWinMaximized}
           isWinFullscreen={isWinFullscreen}
           isWinFocused={isWinFocused}

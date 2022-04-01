@@ -112,7 +112,7 @@ export const DailyNotesPage = ({ isReal, children }) => <Box
   }}
 >{children}</Box>
 
-export const EditableTitleContainer = ({ children }) => <Box
+export const EditableTitleContainer = ({ children, props }) => <Box
   {...TITLE_PROPS}
   as="h1"
   className="page-title"
@@ -151,5 +151,6 @@ export const EditableTitleContainer = ({ children }) => <Box
       visibility: "hidden",
       position: "absolute"
     }
-  }}>
+  }}
+  {...props}>
   {children}</Box>
