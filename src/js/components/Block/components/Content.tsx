@@ -28,6 +28,7 @@ export const Content = ({ children, fontSize }) => {
         overflow: "hidden",
         padding: "0",
         background: "var(--block-surface-color)",
+        caretColor: "var(--chakra-colors-link)",
         gridArea: "main",
         minHeight: "100%",
         margin: "0",

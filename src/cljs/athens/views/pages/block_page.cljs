@@ -109,27 +109,30 @@
 
           ;; Parent Context
           [parents-el uid id]
-          [:> EditableTitleContainer {:onClick (fn [e]
+          [:> EditableTitleContainer {:isEditing @(subscribe [:editing/is-editing uid])
+                                      :onClick (fn [e]
                                                  (.. e preventDefault)
                                                  (if (.. e -shiftKey)
                                                    (do
-                                                     (rf/dispatch [:reporting/navigation {:source :block-page
-                                                                                          :target :block
-                                                                                          :pane   :right-pane}])
+                                                     (dispatch [:reporting/navigation {:source :block-page
+                                                                                       :target :block
+                                                                                       :pane   :right-pane}])
                                                      (router/navigate-uid uid e))
 
                                                    (dispatch [:editing/uid uid])))}
            [autosize/textarea
-            {:id          (str "editable-uid-" uid)
-             :value       (:string/local @state)
+            {:value       (:string/local @state)
              :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
-             :auto-focus  true
-             :on-blur     (fn [_] (persist-textarea-string @state uid))
+             :id          (str "editable-uid-" uid)
+             ;; :auto-focus  true
+             :on-blur     (fn [_] (do (persist-textarea-string @state uid)
+                                   (dispatch [:editing/uid nil])))
+             :on-click    #(dispatch [:editing/uid uid])
              :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
              :on-change   (fn [e] (block-page-change e uid state))}]
            (if (clojure.string/blank? (:string/local @state))
-             [:wbr]
-             [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]]
+             [:span [:wbr]]
+             [parse-renderer/parse-and-render (:string/local @state) uid])]]
 
          ;; Children
          [:> PageBody
