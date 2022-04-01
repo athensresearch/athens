@@ -91,7 +91,7 @@
                                             :overflowY "overlay"}
                                    (if (empty? items)
                                      [empty-message]
-                                     [:> Accordion {:allowMultiple true}
+                                     [:> Accordion {:allowMultiple true :defaultIndex [[]]}
                                       (doall
                                         (for [[uid {:keys [node/title block/string is-graph?]}] items]
                                           ^{:key uid}
@@ -123,7 +123,7 @@
                                                             :right 5
                                                             :top 3
                                                             :background "transparent"
-                                                            :onClick #(dispatch [:right-sidebar/XmarkIcon-item uid])}
+                                                            :onClick #(dispatch [:right-sidebar/close-item uid])}
                                              [:> XmarkIcon]]]
                                            [:> AccordionPanel {:p 4}
                                             (cond
