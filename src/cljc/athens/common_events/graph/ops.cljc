@@ -173,3 +173,25 @@
                                                             children? (conj move-children-op)
                                                             children? (conj close-new-block-op)))]
     split-block-op))
+
+
+(defn ops->new-page-titles
+  "Reduces Graph Ops into a set of titles of newly created pages."
+  [ops]
+  (let [page-new-ops (contains-op? ops :page/new)
+        new-titles   (->> page-new-ops
+                          (map :op/args)
+                          (map :page/title)
+                          set)]
+    new-titles))
+
+
+(defn ops->new-block-uids
+  "Reduces Graph Ops into a set of block/uids of newly created blocks."
+  [ops]
+  (let [block-new-ops (contains-op? ops :block/new)
+        new-uids      (->> block-new-ops
+                           (map :op/args)
+                           (map :block/new)
+                           set)]
+    new-uids))

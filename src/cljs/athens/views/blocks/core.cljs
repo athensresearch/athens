@@ -370,10 +370,10 @@
                         :inline-refs/open   false
                         :inline-refs/states {}
                         :block/uid          uid})
-         save-fn #(db/transact-state-for-uid (or original-uid uid) state)
-         idle-fn (gfns/debounce save-fn 2000)]
+         save-fn (partial db/transact-state-for-uid (or original-uid uid) state)
+         idle-fn (gfns/debounce #(save-fn :autosave) 2000)]
      (swap! state assoc
-            :string/save-fn save-fn
+            :string/save-fn #(save-fn :block-save)
             :string/idle-fn idle-fn)
 
      (fn [block linked-ref-data opts]

@@ -610,7 +610,8 @@
                                         (.blur target)
                                         (dispatch [:page/new {:title     link
                                                               :block-uid block-uid
-                                                              :shift?    shift}]))))
+                                                              :shift?    shift
+                                                              :source    :kbd-ctrl-o}]))))
 
                                   ;; same logic as link
                                   (and (re-find #"(?s)#" head)
@@ -628,7 +629,8 @@
                                         (.blur target)
                                         (dispatch [:page/new {:title     link
                                                               :block-uid block-uid
-                                                              :shift?    shift}]))))
+                                                              :shift?    shift
+                                                              :source    :kbd-ctrl-o}]))))
 
                                   (and (re-find #"(?s)\(\(" head)
                                        (re-find #"(?s)\)\)" tail)

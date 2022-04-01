@@ -64,9 +64,8 @@
                                                                               :title     query}))
                                  (dispatch [:page/new {:title     query
                                                        :block-uid block-uid
-                                                       :shift?    shift?}])
-                                 (dispatch [:reporting/page.create {:source :athena
-                                                                    :count  1}])
+                                                       :shift?    shift?
+                                                       :source    :athena}])
                                  (dispatch [:reporting/navigation {:source :athena
                                                                    :target (str "page/" query)
                                                                    :pane   (if shift?
@@ -220,34 +219,42 @@
                      :query    query
                      :active?  (= i index)
                      :on-click (fn [e]
-                                 (rf/dispatch [:athena/toggle])
-                                 (rf/dispatch [:right-sidebar/open-page (:node/title x) e])
-                                 (rf/dispatch [:reporting/navigation {:source :athena
-                                                                      :target :page
-                                                                      :pane   :right-pane}]))}]
+                                       (let [block-uid (utils/gen-block-uid)
+                                             shift?    (.-shiftKey e)]
+                                         (dispatch [:athena/toggle])
+                                         (dispatch [:page/new {:title     query
+                                                               :block-uid block-uid
+                                                               :source    :athena}])
+                                         (dispatch [:reporting/navigation {:source :athena
+                                                                           :target (if parent
+                                                                                     (str "block/" block-uid)
+                                                                                     (str "page/" title))
+                                                                           :pane   (if shift?
+                                                                                     :right-pane
+                                                                                     :main-pane)}])))}]
          [result-el {:key i
                      :title title
                      :query query
                      :preview string
                      :active? (= i index)
                      :on-click (fn [e]
-                                 (let [selected-page {:node/title   title
-                                                      :block/uid    uid
-                                                      :block/string string
-                                                      :query        query}
-                                       shift?        (.-shiftKey e)]
-                                   (dispatch [:athena/toggle])
-                                   (dispatch [:athena/update-recent-items selected-page])
-                                   (dispatch [:reporting/navigation {:source :athena
-                                                                     :target (if parent
-                                                                               :block
-                                                                               :page)
-                                                                     :pane   (if shift?
-                                                                               :right-pane
-                                                                               :main-pane)}])
-                                   (if parent
-                                     (router/navigate-uid block-uid)
-                                     (router/navigate-page title e))))}])))])
+                                       (let [selected-page {:node/title   title
+                                                            :block/uid    uid
+                                                            :block/string string
+                                                            :query        query}
+                                             shift?        (.-shiftKey e)]
+                                         (dispatch [:athena/toggle])
+                                         (dispatch [:athena/update-recent-items selected-page])
+                                         (dispatch [:reporting/navigation {:source :athena
+                                                                           :target (if parent
+                                                                                     :block
+                                                                                     :page)
+                                                                           :pane   (if shift?
+                                                                                     :right-pane
+                                                                                     :main-pane)}])
+                                         (if parent
+                                           (router/navigate-uid block-uid)
+                                           (router/navigate-page title e))))}])))])
 
 
 (defn athena-component
