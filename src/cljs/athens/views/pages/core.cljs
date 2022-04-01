@@ -26,7 +26,6 @@
              :gridArea "main-content"
              :alignItems "flex-start"
              :justifyContent "stretch"
-             :paddingTop "3.25rem"
              :display "flex"
              :overflowY "overlay"
              :sx {:maskImage "linear-gradient(to bottom,

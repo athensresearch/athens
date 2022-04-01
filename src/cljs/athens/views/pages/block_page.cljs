@@ -1,16 +1,16 @@
 (ns athens.views.pages.block-page
   (:require
-    ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
-    [athens.parse-renderer :as parse-renderer]
-    [athens.reactive :as reactive]
-    [athens.router :as router]
-    [athens.views.blocks.core :as blocks]
-    [athens.views.pages.header :refer [page-header editable-title-container]]
-    [athens.views.pages.node-page :as node-page]
-    [athens.views.references :refer [reference-group reference-block]]
-    [komponentit.autosize :as autosize]
-    [re-frame.core :as rf :refer [dispatch subscribe]]
-    [reagent.core :as r]))
+   ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
+   ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
+   [athens.parse-renderer :as parse-renderer]
+   [athens.reactive :as reactive]
+   [athens.router :as router]
+   [athens.views.blocks.core :as blocks]
+   [athens.views.pages.node-page :as node-page]
+   [athens.views.references :refer [reference-group reference-block]]
+   [komponentit.autosize :as autosize]
+   [re-frame.core :as rf :refer [dispatch subscribe]]
+   [reagent.core :as r]))
 
 
 ;; Helpers
@@ -82,7 +82,7 @@
 (defn parents-el
   [uid id]
   (let [parents (reactive/get-reactive-parents-recursively id)]
-    [:> Breadcrumb
+    [:> Breadcrumb {:gridArea "breadcrumb" :opacity 0.75}
      (doall
        (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
          ^{:key breadcrumb-uid}
@@ -102,41 +102,43 @@
           (swap! state assoc :string/previous string :string/local string))
 
         [:<>
-         ;; Parent Context
-         [parents-el uid id]
 
          ;; Header
-         [page-header
-          [editable-title-container {:onClick (fn [e]
-                                                (.. e preventDefault)
-                                                (if (.. e -shiftKey)
-                                                  (do
-                                                    (rf/dispatch [:reporting/navigation {:source :block-page
-                                                                                         :target :block
-                                                                                         :pane   :right-pane}])
-                                                    (router/navigate-uid uid e))
+         [:> PageHeader
 
-                                                  (dispatch [:editing/uid uid])))}
-           [:<>
-            [autosize/textarea
-             {:id          (str "editable-uid-" uid)
-              :value       (:string/local @state)
-              :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
-              :auto-focus  true
-              :on-blur     (fn [_] (persist-textarea-string @state uid))
-              :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
-              :on-change   (fn [e] (block-page-change e uid state))}]
-            (if (clojure.string/blank? (:string/local @state))
-              [:wbr]
-              [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]]]
+         ;; Parent Context
+          [parents-el uid id]
+          [:> EditableTitleContainer {:onClick (fn [e]
+                                                 (.. e preventDefault)
+                                                 (if (.. e -shiftKey)
+                                                   (do
+                                                     (rf/dispatch [:reporting/navigation {:source :block-page
+                                                                                          :target :block
+                                                                                          :pane   :right-pane}])
+                                                     (router/navigate-uid uid e))
+
+                                                   (dispatch [:editing/uid uid])))}
+           [autosize/textarea
+            {:id          (str "editable-uid-" uid)
+             :value       (:string/local @state)
+             :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
+             :auto-focus  true
+             :on-blur     (fn [_] (persist-textarea-string @state uid))
+             :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
+             :on-change   (fn [e] (block-page-change e uid state))}]
+           (if (clojure.string/blank? (:string/local @state))
+             [:wbr]
+             [:span [parse-renderer/parse-and-render (:string/local @state) uid]])]]
 
          ;; Children
-         [:div (for [child children]
-                 (let [{:keys [db/id]} child]
-                   ^{:key id} [blocks/block-el child]))]
+         [:> PageBody
+          (for [child children]
+            (let [{:keys [db/id]} child]
+              ^{:key id} [blocks/block-el child]))]
 
          ;; Refs
-         [linked-refs-el id]]))))
+         [:> PageFooter
+          [linked-refs-el id]]]))))
 
 
 (defn page

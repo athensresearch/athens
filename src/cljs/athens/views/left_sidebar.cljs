@@ -33,6 +33,7 @@
                    :textAlign "left"
                    :justifyContent "flex-start"
                    :overflow "hidden"
+                   :fontWeight "medium"
                    :whiteSpace "nowrap"
                    :textOverflow "ellipsis"
                    :flex "1"

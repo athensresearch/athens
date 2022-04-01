@@ -1,32 +1,32 @@
 (ns athens.views.pages.node-page
   (:require
-    ["/components/Block/components/Anchor" :refer [Anchor]]
-    ["/components/Dialog/Dialog" :refer [Dialog]]
-    ["@chakra-ui/react" :refer [Text Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
-    ["@material-ui/icons/Bookmark" :default Bookmark]
-    ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
-    ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/Delete" :default Delete]
-    ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
-    [athens.common-db :as common-db]
-    [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
-    [athens.common.utils :as utils]
-    [athens.dates :as dates]
-    [athens.db :as db :refer [get-unlinked-references]]
-    [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
-    [athens.reactive :as reactive]
-    [athens.router :as router]
-    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
-    [athens.views.blocks.core :as blocks]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [athens.views.hoc.perf-mon     :as perf-mon]
-    [athens.views.pages.header :refer [page-header editable-title-container]]
-    [athens.views.references :refer [reference-group reference-block]]
-    [clojure.string :as str]
-    [datascript.core :as d]
-    [komponentit.autosize :as autosize]
-    [re-frame.core :as rf :refer [dispatch subscribe]]
-    [reagent.core :as r])
+   ["/components/Block/components/Anchor" :refer [Anchor]]
+   ["/components/Dialog/Dialog" :refer [Dialog]]
+   ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
+   ["@chakra-ui/react" :refer [Text Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+   ["@material-ui/icons/Bookmark" :default Bookmark]
+   ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
+   ["@material-ui/icons/BubbleChart" :default BubbleChart]
+   ["@material-ui/icons/Delete" :default Delete]
+   ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
+   [athens.common-db :as common-db]
+   [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
+   [athens.common.utils :as utils]
+   [athens.dates :as dates]
+   [athens.db :as db :refer [get-unlinked-references]]
+   [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+   [athens.reactive :as reactive]
+   [athens.router :as router]
+   [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
+   [athens.views.blocks.core :as blocks]
+   [athens.views.blocks.textarea-keydown :as textarea-keydown]
+   [athens.views.hoc.perf-mon     :as perf-mon]
+   [athens.views.references :refer [reference-group reference-block]]
+   [clojure.string :as str]
+   [datascript.core :as d]
+   [komponentit.autosize :as autosize]
+   [re-frame.core :as rf :refer [dispatch subscribe]]
+   [reagent.core :as r])
   (:import
     (goog.events
       KeyCodes)))
@@ -214,12 +214,13 @@
          :node/title} node]
     [:> Menu
      [:> MenuButton {:as IconButton
-                     :position "absolute"
+                     :gridArea "menu"
+                     :justifySelf "center"
+                     :alignSelf "flex-end"
+                     :mb 1
                      :bg "transparent"
                      :height "2.5rem"
                      :width "2.5rem"
-                     :right "100%"
-                     :top "0.35rem"
                      :borderRadius "full"
                      :sx {"span" {:display "contents"}
                           "button svg:first-child" {:marginRight "0.25rem"}}}
@@ -230,13 +231,13 @@
         (if sidebar
           [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])}
            [:> BookmarkBorder]
-           [:span "Remove Shortcut"]]
+           "Remove Shortcut"]
           [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])}
            [:> Bookmark]
            [:span "Add Shortcut"]])
         [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])}
          [:> BubbleChart]
-         [:span "Show Local Graph"]]]
+         "Show Local Graph"]]
        [:> MenuDivider]
        [:> MenuItem {:onClick (fn []
                                 ;; if page being deleted is in right sidebar, remove from right sidebar
@@ -253,7 +254,7 @@
                                 (if daily-note?
                                   (dispatch [:daily-note/delete uid title])
                                   (dispatch [:page/delete title])))}
-        [:> Delete] [:span "Delete Page"]]]]]))
+        [:> Delete] "Delete Page"]]]]))
 
 
 (defn ref-comp
@@ -269,7 +270,7 @@
       (let [{:keys [block parents embed-id]} @state
             block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
-         [:> Breadcrumb {:fontSize "0.7em" :pl 6}
+         [:> Breadcrumb {:fontSize "0.7em" :pl 6 :opacity 0.75}
           (doall
             (for [{:keys [node/title block/string block/uid]} parents]
               [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
@@ -432,45 +433,46 @@
                        :onDismiss cancel-fn}])
 
          ;; Header
-         [page-header
+         [:> PageHeader 
 
-[:<>
           ;; Dropdown
-          [menu-dropdown node daily-note?]
+           [menu-dropdown node daily-note?]
 
-          [editable-title-container
+           [:> EditableTitleContainer
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 
-           (when-not daily-note?
-             [autosize/textarea
-              {:value       (:title/local @state)
-               :id          (str "editable-uid-" uid)
-               :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
-               :on-blur     (fn [_]
+            (when-not daily-note?
+              [autosize/textarea
+               {:value       (:title/local @state)
+                :id          (str "editable-uid-" uid)
+                :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
+                :on-blur     (fn [_]
                               ;; add title Untitled-n for empty titles
-                              (when (empty? (:title/local @state))
-                                (swap! state assoc :title/local (auto-inc-untitled)))
-                              (handle-blur node state))
-               :on-key-down (fn [e] (handle-key-down e uid state children))
-               :on-change   (fn [e] (handle-change e state))}])
+                               (when (empty? (:title/local @state))
+                                 (swap! state assoc :title/local (auto-inc-untitled)))
+                               (handle-blur node state))
+                :on-key-down (fn [e] (handle-key-down e uid state children))
+                :on-change   (fn [e] (handle-change e state))}])
            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
-           (if (str/blank? (:title/local @state))
-             [:wbr]
-             [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
-              [parse-renderer/parse-and-render (:title/local @state) uid]])]]]
+            (if (str/blank? (:title/local @state))
+              [:wbr]
+              [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
+               [parse-renderer/parse-and-render (:title/local @state) uid]])]]
 
-         ;; Children
-         (if (empty? children)
-           [placeholder-block-el uid]
-           [:div
-            (for [{:block/keys [uid] :as child} children]
-              ^{:key uid}
-              [perf-mon/hoc-perfmon {:span-name "block-el"}
-               [blocks/block-el child]])])
+         [:> PageBody
+
+          ;; Children
+          (if (empty? children)
+            [placeholder-block-el uid]
+            [:div
+             (for [{:block/keys [uid] :as child} children]
+               ^{:key uid}
+               [perf-mon/hoc-perfmon {:span-name "block-el"}
+                [blocks/block-el child]])])]
 
          ;; References
-         [:> Box {:py 10}
+         [:> PageFooter
           [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
            [linked-ref-el state on-daily-notes? title]]
           [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}

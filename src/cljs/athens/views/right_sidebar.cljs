@@ -1,14 +1,15 @@
 (ns athens.views.right-sidebar
   (:require
-    ["/components/Icons/Icons" :refer [RightSidebarAddIcon XmarkIcon ChevronDownIcon]]
-    ["@chakra-ui/react" :refer [Flex Text Box IconButton Accordion AccordionItem AccordionButton AccordionIcon AccordionPanel]]
-    ["framer-motion" :refer [AnimatePresence motion]]
-    [athens.parse-renderer :as parse-renderer]
-    [athens.views.pages.block-page :as block-page]
-    [athens.views.pages.graph :as graph]
-    [athens.views.pages.node-page :as node-page]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]))
+   ["/components/Layout/Layout" :refer [RightSidebarContainer]]
+   ["/components/Icons/Icons" :refer [RightSidebarAddIcon XmarkIcon]]
+   ["@chakra-ui/react" :refer [Flex Text Box IconButton Accordion AccordionItem AccordionButton AccordionIcon AccordionPanel]]
+   ["framer-motion" :refer [AnimatePresence motion]]
+   [athens.parse-renderer :as parse-renderer]
+   [athens.views.pages.block-page :as block-page]
+   [athens.views.pages.graph :as graph]
+   [athens.views.pages.node-page :as node-page]
+   [re-frame.core :refer [dispatch subscribe]]
+   [reagent.core :as r]))
 
 
 ;; Components
@@ -60,100 +61,76 @@
                                  (js/document.removeEventListener "mousemove" move-handler)
                                  (js/document.removeEventListener "mouseup" mouse-up-handler))
        :reagent-render         (fn [open? items _]
-                                 [:> AnimatePresence {:initial false}
-                                  (when open?
-                                    [:> (.-div motion)
-                                     {:aria-role "sidebar"
-                                      :class "right-sidebar"
-                                      :style {:display "flex"
-                                              :WebkitAppRegion "no-drag"
-                                              :flex-direction "column"
-                                              :height "calc(100% - 3.25rem)"
-                                              :marginTop "3.25rem"
-                                              :alignItems "stretch"
-                                              :justifySelf "stretch"
-                                              :transformOrigin "right"
-                                              :justifyContent "space-between"
-                                              :overflowX "visible"
-                                              :position "relative"
-                                              :gridArea "secondary-content"}
-                                      :initial {:width 0
-                                                :opacity 0}
-                                      :transition (if (:dragging @state)
-                                                    {:type "tween"
-                                                     :duration 0}
-                                                    nil)
-                                      :animate {:width (str (:width @state) "vw")
-                                                :opacity 1}
-                                      :exit {:width 0
-                                             :opacity 0}}
-                                     [:> Box {:role "separator"
-                                              :aria-orientation "vertical"
-                                              :cursor "col-resize"
-                                              :position "absolute"
-                                              :top 0
-                                              :bottom 0
-                                              :width "1px"
-                                              :zIndex 1
-                                              :transitionDuration "0.2s"
-                                              :transitionTimingFunction "ease-in-out"
-                                              :transitionProperty "common"
-                                              :bg "separator.divider"
-                                              :sx {:WebkitAppRegion "no-drag"}
-                                              :_hover {:bg "link"}
-                                              :_active {:bg "link"}
-                                              :_after {:content "''"
-                                                       :position "absolute"
-                                                       :sx {:WebkitAppRegion "no-drag"}
-                                                       :inset "-4px"}
-                                              :on-mouse-down #(swap! state assoc :dragging true)
-                                              :class (when (:dragging @state) "is-dragging")}]
-                                     [:> Flex {:flexDirection "column"
-                                               :flex 1;
-                                               :maxHeight "calc(100vh - 3.25rem - 1px)"
-                                               :width (str (:width @state) "vw")
-                                               :overflowY "overlay"}
-                                      (if (empty? items)
-                                        [empty-message]
-                                        [:> Accordion {:allowMultiple true}
-                                         (doall
-                                          (for [[uid {:keys [node/title block/string is-graph?]}] items]
-                                            ^{:key uid}
-                                            [:> AccordionItem {:borderWidth 0
-                                                               :borderColor "separator.divider"
-                                                               :borderBottomWidth "1px"}
-                                             [:> Box {:as "h2" :position "relative"}
-                                              [:> AccordionButton {:borderRadius "0"
-                                                                   :py 4
-                                                                   :pl 3
-                                                                   :pr 4
-                                                                   :height "auto"
-                                                                   :textAlign "left"
-                                                                   :overflow "hidden"
-                                                                   :whiteSpace "nowrap"
-                                                                   :border 0}
-                                               [:> AccordionIcon]
-                                               [:> Box {:flex "1 1 100%"
-                                                        :mx 3
-                                                        :tabIndex -1
-                                                        :pointerEvents "none"
-                                                        :position "relative"
-                                                        :bottom "1px"
-                                                        :overflow "hidden"
-                                                        :sx {:maskImage "linear-gradient(to right, black, black calc(100% - 4rem), transparent calc(100% - 2rem))"}} [parse-renderer/parse-and-render (or title string) uid]]]
-                                              [:> IconButton {:size "sm"
-                                                              :position "absolute"
-                                                              :color "foreground.secondary"
-                                                              :right 5
-                                                              :top 3
-                                                              :background "transparent"
-                                                              :onClick #(dispatch [:right-sidebar/XmarkIcon-item uid])}
-                                               [:> XmarkIcon]]]
-                                             [:> AccordionPanel {:p 4}
-                                              (cond
-                                                is-graph? [graph/page uid]
-                                                title     [node-page/page [:block/uid uid]]
-                                                :else     [block-page/page [:block/uid uid]])]]))])]])])})))
+                                 [:> RightSidebarContainer {:isOpen open?
+                                                            :isDragging (:dragging @state)
+                                                            :width (:width @state)}
+                                  [:> Box {:role "separator"
+                                           :aria-orientation "vertical"
+                                           :cursor "col-resize"
+                                           :position "absolute"
+                                           :top 0
+                                           :bottom 0
+                                           :width "1px"
+                                           :zIndex 1
+                                           :transitionDuration "0.2s"
+                                           :transitionTimingFunction "ease-in-out"
+                                           :transitionProperty "common"
+                                           :bg "separator.divider"
+                                           :sx {:WebkitAppRegion "no-drag"}
+                                           :_hover {:bg "link"}
+                                           :_active {:bg "link"}
+                                           :_after {:content "''"
+                                                    :position "absolute"
+                                                    :sx {:WebkitAppRegion "no-drag"}
+                                                    :inset "-4px"}
+                                           :on-mouse-down #(swap! state assoc :dragging true)
+                                           :class (when (:dragging @state) "is-dragging")}]
+                                  [:> Flex {:flexDirection "column"
+                                            :flex 1;
+                                            :maxHeight "calc(100vh - 3.25rem - 1px)"
+                                            :width (str (:width @state) "vw")
+                                            :overflowY "overlay"}
+                                   (if (empty? items)
+                                     [empty-message]
+                                     [:> Accordion {:allowMultiple true}
+                                      (doall
+                                       (for [[uid {:keys [node/title block/string is-graph?]}] items]
+                                         ^{:key uid}
+                                         [:> AccordionItem {:borderWidth 0
+                                                            :borderColor "separator.divider"
+                                                            :borderBottomWidth "1px"}
+                                          [:> Box {:as "h2" :position "relative"}
+                                           [:> AccordionButton {:borderRadius "0"
+                                                                :py 4
+                                                                :pl 3
+                                                                :pr 4
+                                                                :height "auto"
+                                                                :textAlign "left"
+                                                                :overflow "hidden"
+                                                                :whiteSpace "nowrap"
+                                                                :border 0}
+                                            [:> AccordionIcon]
+                                            [:> Box {:flex "1 1 100%"
+                                                     :mx 3
+                                                     :tabIndex -1
+                                                     :pointerEvents "none"
+                                                     :position "relative"
+                                                     :bottom "1px"
+                                                     :overflow "hidden"
+                                                     :sx {:maskImage "linear-gradient(to right, black, black calc(100% - 4rem), transparent calc(100% - 2rem))"}} [parse-renderer/parse-and-render (or title string) uid]]]
+                                           [:> IconButton {:size "sm"
+                                                           :position "absolute"
+                                                           :color "foreground.secondary"
+                                                           :right 5
+                                                           :top 3
+                                                           :background "transparent"
+                                                           :onClick #(dispatch [:right-sidebar/XmarkIcon-item uid])}
+                                            [:> XmarkIcon]]]
+                                          [:> AccordionPanel {:p 4}
+                                           (cond
+                                             is-graph? [graph/page uid]
+                                             title     [node-page/page [:block/uid uid]]
+                                             :else     [block-page/page [:block/uid uid]])]]))])]])})))
 
 
 (defn right-sidebar

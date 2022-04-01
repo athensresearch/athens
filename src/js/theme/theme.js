@@ -385,7 +385,8 @@ const components = {
         zIndex: 3,
         overflow: 'hidden',
         py: 0,
-        bg: 'background.upper',
+        bg: 'background.vibrancy',
+        backdropFilter: "blur(20px)",
         minWidth: '0',
         width: 'max-content',
         shadow: 'menu'
@@ -403,8 +404,11 @@ const components = {
         "svg": {
           flexShrink: 0,
           fontSize: "1.5em",
+        },
+        // additional selector to catch icons not using the icon prop
+        "&& > svg:first-child, svg:not(span > svg)": {
           marginInlineEnd: "0.75rem"
-        }
+        },
       }
     },
     sizes: {
