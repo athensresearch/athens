@@ -346,7 +346,7 @@
 
 (defn parse-and-render
   "Converts a string of block syntax to Hiccup, with fallback formatting if it can’t be parsed."
-  [string uid interactive?]
+  [string uid]
   (when config/measure-parser?
     (js/console.group string))
   (let [pt-n-1     (js/performance.now)

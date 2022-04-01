@@ -431,7 +431,7 @@
                            :title     message
                            :onConfirm confirm-fn
                            :onClose   cancel-fn}]
-         
+
          ;; Header
          [:> PageHeader
 
