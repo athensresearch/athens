@@ -1,17 +1,17 @@
 (ns athens.views.athena
   (:require
-   ["/components/Icons/Icons" :refer [XmarkIcon]]
-   ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
-   [athens.common.utils :as utils]
-   [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
-   [athens.router       :as router]
-   [athens.subs]
-   [athens.util         :refer [scroll-into-view]]
-   [clojure.string      :as str]
-   [goog.dom            :refer [getElement]]
-   [goog.events         :as events]
-   [re-frame.core       :as rf :refer [subscribe dispatch]]
-   [reagent.core        :as r])
+    ["/components/Icons/Icons" :refer [XmarkIcon]]
+    ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
+    [athens.common.utils :as utils]
+    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
+    [athens.router       :as router]
+    [athens.subs]
+    [athens.util         :refer [scroll-into-view]]
+    [clojure.string      :as str]
+    [goog.dom            :refer [getElement]]
+    [goog.events         :as events]
+    [re-frame.core       :as rf :refer [subscribe dispatch]]
+    [reagent.core        :as r])
   (:import
     (goog.events
       KeyCodes)))

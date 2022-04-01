@@ -1,32 +1,32 @@
 (ns athens.views.pages.node-page
   (:require
-   ["/components/Block/components/Anchor" :refer [Anchor]]
-   ["/components/Dialog/Dialog" :refer [Dialog]]
-   ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
-   ["@chakra-ui/react" :refer [Text Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
-   ["@material-ui/icons/Bookmark" :default Bookmark]
-   ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
-   ["@material-ui/icons/BubbleChart" :default BubbleChart]
-   ["@material-ui/icons/Delete" :default Delete]
-   ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
-   [athens.common-db :as common-db]
-   [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
-   [athens.common.utils :as utils]
-   [athens.dates :as dates]
-   [athens.db :as db :refer [get-unlinked-references]]
-   [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
-   [athens.reactive :as reactive]
-   [athens.router :as router]
-   [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
-   [athens.views.blocks.core :as blocks]
-   [athens.views.blocks.textarea-keydown :as textarea-keydown]
-   [athens.views.hoc.perf-mon     :as perf-mon]
-   [athens.views.references :refer [reference-group reference-block]]
-   [clojure.string :as str]
-   [datascript.core :as d]
-   [komponentit.autosize :as autosize]
-   [re-frame.core :as rf :refer [dispatch subscribe]]
-   [reagent.core :as r])
+    ["/components/Block/components/Anchor" :refer [Anchor]]
+    ["/components/Dialog/Dialog" :refer [Dialog]]
+    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
+    ["@chakra-ui/react" :refer [Text Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+    ["@material-ui/icons/Bookmark" :default Bookmark]
+    ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
+    ["@material-ui/icons/BubbleChart" :default BubbleChart]
+    ["@material-ui/icons/Delete" :default Delete]
+    ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
+    [athens.common-db :as common-db]
+    [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
+    [athens.common.utils :as utils]
+    [athens.dates :as dates]
+    [athens.db :as db :refer [get-unlinked-references]]
+    [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+    [athens.reactive :as reactive]
+    [athens.router :as router]
+    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
+    [athens.views.blocks.core :as blocks]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [athens.views.hoc.perf-mon     :as perf-mon]
+    [athens.views.references :refer [reference-group reference-block]]
+    [clojure.string :as str]
+    [datascript.core :as d]
+    [komponentit.autosize :as autosize]
+    [re-frame.core :as rf :refer [dispatch subscribe]]
+    [reagent.core :as r])
   (:import
     (goog.events
       KeyCodes)))
@@ -433,32 +433,32 @@
                        :onDismiss cancel-fn}])
 
          ;; Header
-         [:> PageHeader 
+         [:> PageHeader
 
           ;; Dropdown
-           [menu-dropdown node daily-note?]
+          [menu-dropdown node daily-note?]
 
-           [:> EditableTitleContainer
+          [:> EditableTitleContainer
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 
-            (when-not daily-note?
-              [autosize/textarea
-               {:value       (:title/local @state)
-                :id          (str "editable-uid-" uid)
-                :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
-                :on-blur     (fn [_]
+           (when-not daily-note?
+             [autosize/textarea
+              {:value       (:title/local @state)
+               :id          (str "editable-uid-" uid)
+               :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
+               :on-blur     (fn [_]
                               ;; add title Untitled-n for empty titles
-                               (when (empty? (:title/local @state))
-                                 (swap! state assoc :title/local (auto-inc-untitled)))
-                               (handle-blur node state))
-                :on-key-down (fn [e] (handle-key-down e uid state children))
-                :on-change   (fn [e] (handle-change e state))}])
+                              (when (empty? (:title/local @state))
+                                (swap! state assoc :title/local (auto-inc-untitled)))
+                              (handle-blur node state))
+               :on-key-down (fn [e] (handle-key-down e uid state children))
+               :on-change   (fn [e] (handle-change e state))}])
            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
-            (if (str/blank? (:title/local @state))
-              [:wbr]
-              [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
-               [parse-renderer/parse-and-render (:title/local @state) uid]])]]
+           (if (str/blank? (:title/local @state))
+             [:wbr]
+             [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
+              [parse-renderer/parse-and-render (:title/local @state) uid]])]]
 
          [:> PageBody
 
