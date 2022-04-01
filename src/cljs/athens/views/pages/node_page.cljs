@@ -439,6 +439,7 @@
           [menu-dropdown node daily-note?]
 
           [:> EditableTitleContainer
+           {:isEditing @(subscribe [:editing/is-editing uid])}
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 

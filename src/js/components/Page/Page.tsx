@@ -112,10 +112,10 @@ export const DailyNotesPage = ({ isReal, children }) => <Box
   }}
 >{children}</Box>
 
-export const EditableTitleContainer = ({ children, props }) => <Box
+export const EditableTitleContainer = ({ children, props, isEditing }) => <Box
   {...TITLE_PROPS}
   as="h1"
-  className="page-title"
+  className={isEditing ? "page-title is-editing" : "page-title"}
   sx={{
     "textarea": {
       appearance: "none",
@@ -128,7 +128,6 @@ export const EditableTitleContainer = ({ children, props }) => <Box
       letterSpacing: "inherit",
       width: "100%",
       minHeight: "100%",
-      caretColor: "link",
       background: "transparent",
       margin: "0",
       fontSize: "inherit",
@@ -137,20 +136,25 @@ export const EditableTitleContainer = ({ children, props }) => <Box
       transition: "opacity 0.15s ease",
       border: "0",
       fontFamily: "inherit",
-      visibility: "hidden",
-      position: "absolute"
+      position: "absolute",
+      "&:focus": {
+        outline: "none",
+      }
+    },
+    "textarea + *": {
+      pointerEvents: "none"
     },
     "textarea ::WebkitScrollbar": { display: "none" },
-    ".is-editing textarea:focus": {
+    "textarea.is-editing:focus": {
       outline: "none",
       visibility: "visible",
       position: "relative"
     },
-    "abbr": { zIndex: 4 },
-    ".is-editing span": {
+    "textarea.is-editing + span": {
       visibility: "hidden",
       position: "absolute"
-    }
+    },
+    "abbr": { zIndex: 4 },
   }}
   {...props}>
   {children}</Box>
