@@ -146,7 +146,7 @@ export const Anchor = (props: AnchorProps) => {
   const [ isOpen, setIsOpen ] = React.useState(false);
 
   return (
-    <Menu isOpen={isOpen} onClose={() => setIsOpen(false)}>
+    <Menu isOpen={isOpen} isLazy={true} onClose={() => setIsOpen(false)}>
       <IconButton
         aria-label="Block anchor"
         {...anchorButtonStyleProps(isClosedWithChildren)}
