@@ -387,7 +387,6 @@
                                        (assoc block :block/uid (or original-uid uid)))
                                      block)
              {:keys [dragging]}    @state
-             is-editing            @(rf/subscribe [:editing/is-editing uid])
              is-selected           @(rf/subscribe [::select-subs/selected? uid])
              present-user          @(rf/subscribe [:presence/has-presence uid])
              is-presence           (seq present-user)]
