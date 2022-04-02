@@ -50,6 +50,7 @@
           :main {:target           :node-script
                  :output-to        "resources/main.js"
                  :main             athens.main.core/main
+                 :js-options       {:babel-preset-config {:targets {:chrome 80}}}
                  :compiler-options {:output-feature-set :es-next
                                     :reader-features  #{:electron}}}
 
