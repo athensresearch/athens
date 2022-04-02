@@ -265,60 +265,60 @@
                                       :results []})
         search-handler       (create-search-handler state)]
     (fn []
-        [:> Modal {:maxHeight "60vh"
-                   :display "flex"
-                   :scrollBehavior "inside"
-                   :outline "none"
-                   :motionPreset "none"
-                   :closeOnEsc true
-                   :isOpen @athena-open?
-                   :onClose #(dispatch [:athena/toggle])}
-         [:> ModalOverlay]
-         [:> ModalContent {:width "49rem"
-                           :class "athena-modal"
-                           :overflow "hidden"
-                           :backdropFilter "blur(20px)"
-                           :bg "background.vibrancy"
-                           :maxWidth "calc(100vw - 4rem)"}
-          [:> Input
-           {:type "search"
-            :width "100%"
-            :border 0
-            :fontSize "2.375rem"
-            :fontWeight "300"
-            :lineHeight "1.3"
-            :letterSpacing "-0.03em"
-            :color "inherit"
-            :background "none"
-            :borderRadius 0
-            :height "auto"
-            :padding "1.5rem 4rem 1.5rem 1.5rem"
-            :cursor "text"
-            :id "athena-input"
-            :auto-focus true
-            :required true
-            :_focus {:outline "none"}
-            :sx {"::placeholder" {:color "foreground.secondary"}
-                 "::-webkit-search-cancel-button" {:display "none"}}
-            :placeholder "Find or Create Page"
-            :on-change   (fn [e] (search-handler (.. e -target -value)))
-            :on-key-down (fn [e] (key-down-handler e state))}]
-          (when (:query @state)
-            [:> IconButton {:background "none"
-                            :color "foreground.secondary"
-                            :position "absolute"
-                            :transition "opacity 0.1s ease, background 0.1s ease"
-                            :cursor "pointer"
-                            :border 0
-                            :right "2rem"
-                            :placeItems "center"
-                            :placeContent "center"
-                            :height "2.5rem"
-                            :width "2.5rem"
-                            :borderRadius "1000px"
-                            :display "flex"
-                            :top "2rem"
-                            :onClick #(set! (.-value (getElement "athena-input")) nil)}
-             [:> XmarkIcon {:boxSize 6}]])
-          [results-el state]
-          [search-results-el @state]]])))
+      [:> Modal {:maxHeight "60vh"
+                 :display "flex"
+                 :scrollBehavior "inside"
+                 :outline "none"
+                 :motionPreset "none"
+                 :closeOnEsc true
+                 :isOpen @athena-open?
+                 :onClose #(dispatch [:athena/toggle])}
+       [:> ModalOverlay]
+       [:> ModalContent {:width "49rem"
+                         :class "athena-modal"
+                         :overflow "hidden"
+                         :backdropFilter "blur(20px)"
+                         :bg "background.vibrancy"
+                         :maxWidth "calc(100vw - 4rem)"}
+        [:> Input
+         {:type "search"
+          :width "100%"
+          :border 0
+          :fontSize "2.375rem"
+          :fontWeight "300"
+          :lineHeight "1.3"
+          :letterSpacing "-0.03em"
+          :color "inherit"
+          :background "none"
+          :borderRadius 0
+          :height "auto"
+          :padding "1.5rem 4rem 1.5rem 1.5rem"
+          :cursor "text"
+          :id "athena-input"
+          :auto-focus true
+          :required true
+          :_focus {:outline "none"}
+          :sx {"::placeholder" {:color "foreground.secondary"}
+               "::-webkit-search-cancel-button" {:display "none"}}
+          :placeholder "Find or Create Page"
+          :on-change   (fn [e] (search-handler (.. e -target -value)))
+          :on-key-down (fn [e] (key-down-handler e state))}]
+        (when (:query @state)
+          [:> IconButton {:background "none"
+                          :color "foreground.secondary"
+                          :position "absolute"
+                          :transition "opacity 0.1s ease, background 0.1s ease"
+                          :cursor "pointer"
+                          :border 0
+                          :right "2rem"
+                          :placeItems "center"
+                          :placeContent "center"
+                          :height "2.5rem"
+                          :width "2.5rem"
+                          :borderRadius "1000px"
+                          :display "flex"
+                          :top "2rem"
+                          :onClick #(set! (.-value (getElement "athena-input")) nil)}
+           [:> XmarkIcon {:boxSize 6}]])
+        [results-el state]
+        [search-results-el @state]]])))
