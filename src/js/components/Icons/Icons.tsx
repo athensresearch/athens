@@ -1,5 +1,6 @@
 import { createIcon } from '@chakra-ui/react'
 
+
 export const RightSidebarIcon = createIcon({
   displayName: 'RightSidebarIcon',
   viewBox: '0 0 24 24',
