@@ -104,7 +104,12 @@ export const _PresenceDetails = (props: PresenceDetailsProps) => {
               )}
 
               {currentUser && (
-                <MenuItem onClick={() => setShouldShowProfileSettings(true)}>Edit appearance</MenuItem>
+                <MenuItem onClick={() => setShouldShowProfileSettings(true)} icon={<Avatar
+                  size="xs"
+                  marginBlock={-1}
+                  name={currentUser.username}
+                  bg={currentUser.color}
+                />}>Edit appearance</MenuItem>
               )}
 
               {currentPageMembers.length > 0 && (
