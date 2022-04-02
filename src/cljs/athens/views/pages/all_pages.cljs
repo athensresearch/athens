@@ -100,6 +100,9 @@
                [:> Tr {:key uid}
                 [:> Td {:overflow "hidden"}
                  [:> Button {:variant "link"
+                             :justifyContent "flex-start"
+                             :textAlign "left"
+                             :padding "0"
                              :color "link"
                              :display "block"
                              :maxWidth "100%"
