@@ -406,7 +406,7 @@ const components = {
           fontSize: "1.5em",
         },
         // additional selector to catch icons not using the icon prop
-        "&& > svg:first-child, svg:not(span > svg)": {
+        "&& > svg:first-of-type, svg:not(span > svg)": {
           marginInlineEnd: "0.75rem"
         },
       }

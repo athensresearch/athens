@@ -223,10 +223,10 @@
                      :mr "0.5em"
                      :borderRadius "full"
                      :sx {"span" {:display "contents"}
-                          "button svg:first-child" {:marginRight "0.25rem"}}}
+                          "button svg:first-of-type" {:marginRight "0.25rem"}}}
       [:> MoreHoriz]]
      [:> Portal
-      [:> MenuList {:sx {"button svg:first-child" {:marginRight "0.25rem"}}}
+      [:> MenuList {:sx {"button svg:first-of-type" {:marginRight "0.25rem"}}}
        [:<>
         (if sidebar
           [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])}
