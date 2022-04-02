@@ -28,6 +28,7 @@
            (doall
             (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
               [:> MenuItem {:key     text
+                            :isFocusable false
                             :id      (str "dropdown-item-" i)
                             :command kbd
                             :class (when (= i index) "isActive")

@@ -384,7 +384,7 @@ const components = {
       list: {
         zIndex: 3,
         overflow: 'hidden',
-        py: 0,
+        p: 0,
         bg: 'background.vibrancy',
         backdropFilter: "blur(20px)",
         minWidth: '0',
