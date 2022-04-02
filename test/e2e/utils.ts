@@ -92,7 +92,7 @@ export const inputInAthena = async (page: Page, query: string) => {
 }
 
 
-export const pageTitleLocator = ".node-page > .page-header > h1.page-title > .block";
+export const pageTitleLocator = ".page-header > h1.page-title > .block";
 
 export const createPage = async (page: Page, title: string) => {
     await inputInAthena(page, title);
