@@ -89,60 +89,59 @@
   []
   (let [open?     (rf/subscribe [:left-sidebar/open])
         shortcuts (reactive/get-reactive-shortcuts)]
-    (fn []
-      [:> AnimatePresence {:initial false}
-       (when @open?
-         [:> (.-div motion)
-          {:style {:display "flex"
-                   :flex-direction "column"
-                   :height "100%"
-                   :alignItems "stretch"
-                   :gridArea "left-sidebar"
-                   :position "relative"
-                   :overflow "hidden"}
-           :initial {:width 0
-                     :opacity 0}
-           :animate {:width expanded-sidebar-width
-                     :opacity 1}
-           :exit {:width 0
-                  :opacity 0}}
+    [:> AnimatePresence {:initial false}
+     (when @open?
+       [:> (.-div motion)
+        {:style {:display "flex"
+                 :flex-direction "column"
+                 :height "100%"
+                 :alignItems "stretch"
+                 :gridArea "left-sidebar"
+                 :position "relative"
+                 :overflow "hidden"}
+         :initial {:width 0
+                   :opacity 0}
+         :animate {:width expanded-sidebar-width
+                   :opacity 1}
+         :exit {:width 0
+                :opacity 0}}
 
-          ;; SHORTCUTS
-          [:> VStack {:as "ol"
-                      :align "stretch"
-                      :width expanded-sidebar-width
-                      :py "1rem"
-                      :paddingTop "7rem"
-                      :spacing "0.25rem"
-                      :overflowY "overlay"
-                      :sx {:listStyle "none"
-                           :WebkitAppRegion "no-drag"}}
-           [:> Heading {:as "h2"
-                        :px "2rem"
-                        :pb "0.5rem"
-                        :size "sm"
-                        :color "foreground.secondary"}
-            "Shortcuts"]
-           (doall
-             (for [sh shortcuts]
-               ^{:key (str "left-sidebar-" (second sh))}
-               [shortcut-component sh]))]
-
-          ;; LOGO + BOTTOM BUTTONS
-          [:> Flex {:as "footer"
+        ;; SHORTCUTS
+        [:> VStack {:as "ol"
+                    :align "stretch"
                     :width expanded-sidebar-width
-                    :flexWrap "wrap"
-                    :gap "0.25em 0.5em"
-                    :fontSize "sm"
-                    :p "2rem"
-                    :mt "auto"}
-           [:> Link {:fontWeight "bold"
-                     :display "inline-block"
-                     :href "https://github.com/athensresearch/athens/issues/new/choose"
-                     :target "_blank"}
-            "Athens"]
-           [:> Link {:color "foreground.secondary"
-                     :display "inline-block"
-                     :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
-                     :target "_blank"}
-            (athens.util/athens-version)]]])])))
+                    :py "1rem"
+                    :paddingTop "7rem"
+                    :spacing "0.25rem"
+                    :overflowY "overlay"
+                    :sx {:listStyle "none"
+                         :WebkitAppRegion "no-drag"}}
+         [:> Heading {:as "h2"
+                      :px "2rem"
+                      :pb "0.5rem"
+                      :size "sm"
+                      :color "foreground.secondary"}
+          "Shortcuts"]
+         (doall
+           (for [sh shortcuts]
+             ^{:key (str "left-sidebar-" (second sh))}
+             [shortcut-component sh]))]
+
+        ;; LOGO + BOTTOM BUTTONS
+        [:> Flex {:as "footer"
+                  :width expanded-sidebar-width
+                  :flexWrap "wrap"
+                  :gap "0.25em 0.5em"
+                  :fontSize "sm"
+                  :p "2rem"
+                  :mt "auto"}
+         [:> Link {:fontWeight "bold"
+                   :display "inline-block"
+                   :href "https://github.com/athensresearch/athens/issues/new/choose"
+                   :target "_blank"}
+          "Athens"]
+         [:> Link {:color "foreground.secondary"
+                   :display "inline-block"
+                   :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
+                   :target "_blank"}
+          (athens.util/athens-version)]]])]))
