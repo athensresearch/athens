@@ -403,7 +403,7 @@
          [:> Container {:sx (merge block-container-inner-style
                                    {"--block-surface-color" "background.floor"})
                         :isDragging (and dragging (not is-selected))
-                        :isEditing is-editing
+                        ;; :isEditing is-editing
                         :isSelected is-selected
                         :hasChildren (seq children)
                         :isOpen open
