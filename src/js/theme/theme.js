@@ -42,7 +42,7 @@ const colors = {
   backgroundColorLight: "#F6F6F6",
   backgroundMinus1Light: "#FAF8F6",
   backgroundMinus2Light: "#EFEDEB",
-  backgroundVibrancyLight: "#ffffff55",
+  backgroundVibrancyLight: "#ffffff99",
 
   errorLight: "#fd5243",
   shadowLight: "#000",
