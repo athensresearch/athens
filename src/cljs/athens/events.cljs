@@ -471,27 +471,6 @@
       (assoc-in db [:selection :items] ordered-selection))))
 
 
-;; Alerts
-
-(reg-event-db
-  :alert/set
-  (fn-traced [db alert]
-             (assoc db :alert alert)))
-
-
-(reg-event-db
-  :alert/unset
-  (fn-traced [db]
-             (assoc db :alert nil)))
-
-
-;; Use native js/alert rather than custom UI alert
-(reg-event-fx
-  :alert/js
-  (fn [_ [_ message]]
-    {:alert/js! message}))
-
-
 (reg-event-fx
   :confirm/js
   (fn [_ [_ message true-cb false-cb]]
@@ -881,7 +860,9 @@
                                                                :count  (count new-uids)}]))]]})
         {})
       (catch :default _
-        {:fx [[:dispatch [:alert/js "Undo for this operation not supported in Lan-Party, yet."]]]}))))
+        {:fx (util/toast (clj->js {:status "error"
+                                   :title "Couldn't undo"
+                                   :description "Undo for this operation not supported in Lan-Party, yet."}))}))))
 
 
 (reg-event-fx
@@ -912,7 +893,9 @@
                                                                :count  (count new-uids)}]))]]})
         {})
       (catch :default _
-        {:fx [[:dispatch [:alert/js "Redo for this operation not supported in Lan-Party, yet."]]]}))))
+        {:fx (util/toast (clj->js {:status "error"
+                                   :title "Couldn't redo"
+                                   :description "Redo for this operation not supported in Lan-Party, yet."}))}))))
 
 
 (reg-event-fx
@@ -1638,7 +1621,9 @@
                       (re-find #"text/html" datatype) (.getAsString item (fn [_] #_(prn "getAsString" _))))))
                 items)
           {})
-        {:fx [[:dispatch [:alert/js "Image paste not supported in Lan-Party, yet."]]]}))))
+        {:fx (util/toast (clj->js {:status "error"
+                                   :title "Couldn't paste"
+                                   :description "Image paste is not supported in Lan-Party, yet."}))}))))
 
 
 (reg-event-fx

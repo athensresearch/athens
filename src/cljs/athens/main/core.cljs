@@ -89,7 +89,7 @@
                                     :y (.-y main-window-state)
                                     :width (.-width main-window-state)
                                     :height (.-height main-window-state)
-                                    :minWidth 800 ; Minimum width before clipping in toolbar
+                                    :minWidth 650 ; Minimum width before clipping in toolbar
                                     :minHeight 300
                                     :backgroundColor "#1A1A1A"
                                     :autoHideMenuBar true
