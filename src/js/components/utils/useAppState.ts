@@ -1,5 +1,4 @@
 import React from 'react';
-import { mockDatabases as databaseMenuData } from '@/concept/DatabaseMenu/mockData';
 import * as presenceData from '@/PresenceDetails/mockData';
 
 const mockData = {
@@ -10,8 +9,6 @@ const mockData = {
     color: '#007e51',
   },
   hostAddress: '192.169.0.1',
-  activeDatabase: databaseMenuData[ 0 ],
-  inactiveDatabases: databaseMenuData.slice(1),
   currentPageMembers: presenceData.currentPageMembers,
   differentPageMembers: presenceData.differentPageMembers,
 }
@@ -23,12 +20,6 @@ export const useAppState = () => {
   const [ hostAddress, setHostAddress ] = React.useState<string | null>(mockData.hostAddress);
   const [ currentPageMembers, setCurrentPageMembers ] = React.useState<PersonPresence[]>(mockData.currentPageMembers);
   const [ differentPageMembers, setDifferentPageMembers ] = React.useState<PersonPresence[]>(mockData.differentPageMembers);
-
-  // Database
-  const [ activeDatabase, setActiveDatabase ] = React.useState<Database | null>(mockData.activeDatabase);
-  const [ inactiveDatabases, setInactiveDatabases ] = React.useState<Database[] | null>(mockData.inactiveDatabases);
-  const [ isSynced, setIsSynced ] = React.useState<boolean>(null);
-  const [ connectionStatus, setConnectionStatus ] = React.useState<ConnectionStatus>(mockData.connectionStatus as ConnectionStatus);
 
   // Preferences
   const [ isThemeDark, setIsThemeDark ] = React.useState<boolean>(false);
@@ -63,14 +54,8 @@ export const useAppState = () => {
     setCurrentPageMembers,
     differentPageMembers,
     setDifferentPageMembers,
-    activeDatabase,
-    setActiveDatabase,
-    inactiveDatabases,
     isSettingsOpen,
     setIsSettingsOpen,
-    setInactiveDatabases,
-    isSynced,
-    setIsSynced,
     isElectron,
     setIsElectron,
     setRoute,
@@ -94,7 +79,5 @@ export const useAppState = () => {
     setIsMergeDialogOpen,
     isDatabaseDialogOpen,
     setIsDatabaseDialogOpen,
-    connectionStatus,
-    setConnectionStatus
   }
 }
