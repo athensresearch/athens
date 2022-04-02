@@ -60,9 +60,10 @@ export const PageHeader = ({ children, image }) => <Box
   pb={4}
   gridArea="header"
   display="grid"
-  gridTemplateColumns="var(--page-padding-h) 1fr auto"
+  gridTemplateColumns="max(var(--page-padding-h), 3rem) 1fr auto"
   gridTemplateRows="auto auto"
-  gridTemplateAreas="'menu breadcrumb breadcrumb' 
+  alignItems="center"
+  gridTemplateAreas="'empty breadcrumb breadcrumb' 
   'menu title extras'"
   className="page-header"
   borderBottom="1px solid transparent"
@@ -74,7 +75,7 @@ export const PageHeader = ({ children, image }) => <Box
   // unless they're in the sidebar
   sx={{
     ".right-sidebar &": {
-      borderBottomColor: "transparent"
+      // borderBottomColor: "transparent"
     }
   }}
 >
@@ -94,6 +95,7 @@ export const PageFooter = ({ children }) => <Box
   as="footer"
   pt={4}
   gridArea="footer"
+  p={4}
 >{children}</Box>
 
 export const TitleContainer = ({ children }) => <Box

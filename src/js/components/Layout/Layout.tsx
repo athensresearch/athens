@@ -22,8 +22,8 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
         position="relative"
         gridArea="secondary-content"
         sx={{
-          "--page-padding-v": "0rem",
-          "--page-padding-h": "1.5rem",
+          "--page-padding-v": "1rem",
+          "--page-padding-h": "0rem",
           "--page-title-font-size": "1.25rem",
         }}
         initial={{
@@ -45,19 +45,24 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
   </AnimatePresence>
 }
 
-export const SidebarItem = ({ title, defaultOpen, onRemove, onClose, children }) => {
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: defaultOpen, onClose: onClose })
-  console.log(title);
+export const SidebarItem = ({ title, defaultIsOpen, onRemove, onClose, children }) => {
+  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: defaultIsOpen, onClose: onClose });
 
   return (
     <VStack
       align="stretch"
+      position="relative"
       spacing={0}
+      ml="1px" // Account for the floating separator
       _notFirst={{
         borderTop: "1px solid",
         borderColor: "separator.divider"
       }}>
       <Box
+        top="-1px"
+        zIndex={2}
+        position="sticky"
+        background="background.floor"
         display="grid"
         gridTemplateColumns="1fr 3rem"
         pr={2}
@@ -103,10 +108,13 @@ export const SidebarItem = ({ title, defaultOpen, onRemove, onClose, children })
           <XmarkIcon />
         </IconButton>
       </Box>
-      <Box as={Collapse}
+      <Box
+        as={Collapse}
         in={isOpen}
         animateOpacity
         unmountOnExit
+        zIndex={1}
+        px={4}
       >
         {children}
       </Box>

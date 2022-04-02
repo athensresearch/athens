@@ -1,7 +1,6 @@
 (ns athens.views.pages.node-page
   (:require
     ["/components/Block/components/Anchor" :refer [Anchor]]
-    ;; ["/components/Dialog/Dialog" :refer [Dialog]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
     ["@chakra-ui/react" :refer [Text Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
@@ -21,7 +20,7 @@
     [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [athens.views.hoc.perf-mon     :as perf-mon]
+    [athens.views.hoc.perf-mon :as perf-mon]
     [athens.views.references :refer [reference-group reference-block]]
     [clojure.string :as str]
     [datascript.core :as d]
@@ -216,12 +215,12 @@
     [:> Menu
      [:> MenuButton {:as IconButton
                      :gridArea "menu"
-                     :justifySelf "center"
-                     :alignSelf "flex-end"
-                     :mb 1
+                     :justifySelf "flex-end"
+                     :alignSelf "center"
                      :bg "transparent"
-                     :height "2.5rem"
-                     :width "2.5rem"
+                     :height "2.25em"
+                     :width "2.25em"
+                     :mr "0.5em"
                      :borderRadius "full"
                      :sx {"span" {:display "contents"}
                           "button svg:first-child" {:marginRight "0.25rem"}}}
