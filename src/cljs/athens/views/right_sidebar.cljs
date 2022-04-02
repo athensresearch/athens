@@ -95,16 +95,16 @@
                                    (if (empty? items)
                                      [empty-message]
                                      (doall
-                                      (for [[uid {:keys [node/title block/string is-graph?]}] items]
-                                        ^{:key uid}
-                                        [:> SidebarItem {:defaultOpen true
-                                                         :onRemove #(dispatch [:right-sidebar/close-item uid])
-                                                         ;; nth 1 to get just the title
-                                                         :title (nth [parse-renderer/parse-and-render (or title string) uid] 1)}
-                                         (cond
-                                           is-graph? [graph/page uid]
-                                           title     [node-page/page [:block/uid uid]]
-                                           :else     [block-page/page [:block/uid uid]])])))]])})))
+                                       (for [[uid {:keys [node/title block/string is-graph?]}] items]
+                                         ^{:key uid}
+                                         [:> SidebarItem {:defaultOpen true
+                                                          :onRemove #(dispatch [:right-sidebar/close-item uid])
+                                                          ;; nth 1 to get just the title
+                                                          :title (nth [parse-renderer/parse-and-render (or title string) uid] 1)}
+                                          (cond
+                                            is-graph? [graph/page uid]
+                                            title     [node-page/page [:block/uid uid]]
+                                            :else     [block-page/page [:block/uid uid]])])))]])})))
 
 
 (defn right-sidebar

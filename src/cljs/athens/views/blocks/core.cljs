@@ -403,26 +403,26 @@
            (swap! state assoc :string/previous string :string/local string))
 
          [:> Container {:sx (merge block-container-inner-style
-                                        {"--block-surface-color" "background.floor"})
-                             :isDragging (and dragging (not is-selected))
-                             :isEditing is-editing
-                             :isSelected is-selected
-                             :hasChildren (seq children)
-                             :isOpen open
-                             :isLinkedRef (and (false? initial-open) (= uid linked-ref-uid))
-                             :hasPresence is-presence
-                             :uid uid
-                             ;; need to know children for selection resolution
-                             :childrenUids children-uids
-                            ;; :show-editable-dom allows us to render the editing elements (like the textarea)
-                            ;; even when not editing this block. When true, clicking the block content will pass
-                            ;; the clicks down to the underlying textarea. The textarea is expensive to render,
-                            ;; so we avoid rendering it when it's not needed.
-                             :onMouseEnter    #(swap! state assoc :show-editable-dom true)
-                             :onMouseLeave    #(swap! state assoc :show-editable-dom false)
-                             :onDragOver      (fn [e] (block-drag-over e block state))
-                             :onDragLeave     (fn [e] (block-drag-leave e block state))
-                             :onDrop           (fn [e] (block-drop e block state))}
+                                   {"--block-surface-color" "background.floor"})
+                        :isDragging (and dragging (not is-selected))
+                        :isEditing is-editing
+                        :isSelected is-selected
+                        :hasChildren (seq children)
+                        :isOpen open
+                        :isLinkedRef (and (false? initial-open) (= uid linked-ref-uid))
+                        :hasPresence is-presence
+                        :uid uid
+                        ;; need to know children for selection resolution
+                        :childrenUids children-uids
+                        ;; :show-editable-dom allows us to render the editing elements (like the textarea)
+                        ;; even when not editing this block. When true, clicking the block content will pass
+                        ;; the clicks down to the underlying textarea. The textarea is expensive to render,
+                        ;; so we avoid rendering it when it's not needed.
+                        :onMouseEnter    #(swap! state assoc :show-editable-dom true)
+                        :onMouseLeave    #(swap! state assoc :show-editable-dom false)
+                        :onDragOver      (fn [e] (block-drag-over e block state))
+                        :onDragLeave     (fn [e] (block-drag-leave e block state))
+                        :onDrop           (fn [e] (block-drop e block state))}
 
           (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 

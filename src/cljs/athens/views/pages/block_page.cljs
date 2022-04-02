@@ -125,8 +125,9 @@
              :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
              :id          (str "editable-uid-" uid)
              ;; :auto-focus  true
-             :on-blur     (fn [_] (do (persist-textarea-string @state uid)
-                                   (dispatch [:editing/uid nil])))
+             :on-blur     (fn [_]
+                            (persist-textarea-string @state uid)
+                            (dispatch [:editing/uid nil]))
              :on-click    #(dispatch [:editing/uid uid])
              :on-key-down (fn [e] (node-page/handle-key-down e uid state nil))
              :on-change   (fn [e] (block-page-change e uid state))}]
