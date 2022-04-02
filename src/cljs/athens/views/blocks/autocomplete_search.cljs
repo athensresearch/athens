@@ -1,8 +1,8 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-    ["@chakra-ui/react" :refer [Portal Text Menu MenuList MenuItem]]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [clojure.string :as string]))
+   ["@chakra-ui/react" :refer [Portal Menu MenuItem MenuList Text Box]]
+   [athens.views.blocks.textarea-keydown :as textarea-keydown]
+   [clojure.string :as string]))
 
 
 (defn inline-item-click
@@ -17,29 +17,39 @@
 
 
 (defn inline-search-el
-  [_block #_ state]
+  [_block]
   (fn [block state]
-    (let [open? (some #(= % type) [:page :block :hashtag :template])
-          {:search/keys [query results index type] caret-position :caret-position} @state
+    (let [{:search/keys [index results type query] caret-position :caret-position} @state
           {:keys [left top]} caret-position]
-      (when open?
-        [:> Menu {:isOpen open?
-                  :autoSelect false
-                  :onClose #(swap! state assoc :search/type false)
-                  :isLazy true}
+      (println type)
+      (println (when type (symbol type)))
+      (when (some #(= % type) [:page :block :hashtag :template])
+        [:> Menu {:isOpen true
+                  :autoSelect false}
          [:> Portal
-          [:> MenuList {:position   "absolute"
-                        :left (str left "px")
-                        :top (str (+ top 24) "px")}
+          [:> MenuList {;; don't blur textarea when clicking to auto-complete
+                        :on-mouse-down (fn [e] (.. e preventDefault))
+                        :as Box
+                        :position "absolute"
+                        :overflow "auto"
+                        :p 1
+                        :align "stretch"
+                        :justify "stretch"
+                        :width "max-content"
+                        :bg "background.upper"
+                        :maxHeight "20rem"
+                        :top (str (+ 24 top) "px")
+                        :left (str (+ 24 left) "px")}
            (if (or (string/blank? query)
                    (empty? results))
              [:> Text (str "Search for a " (symbol type))]
              (doall
-               (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-                 [:> MenuItem {:key      (str "inline-search-item-" uid)
-                               :id       (str "dropdown-item-" i)
-                               :class (when (= i index) "isActive")
-                               ;; if page link, expand to title. otherwise expand to uid for a block ref
-                               :onClick (fn [_] (inline-item-click state (:block/uid block) (or title uid)))}
-                  (or title string)])))]]]))))
+              (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+                [:> MenuItem {:key      (str "inline-search-item" uid)
+                              :id       (str "dropdown-item-" i)
+                              :width "100%"
+                              :isActive   (= index i)
+                                                         ;; if page link, expand to title. otherwise expand to uid for a block ref
+                              :onClick (fn [_] (inline-item-click state (:block/uid block) (or title uid)))}
+                 (or title string)])))]]]))))
 
