@@ -269,7 +269,7 @@
            :gridTemplateColumns "12rem 1fr"
            :columnGap "1rem"
            :borderTop "1px solid"
-           :borderColor "separator.border"}
+           :borderColor "separator.divider"}
    [:> Heading {:fontSize "1.5em"
                 :as "h3"
                 :margin 0
