@@ -1,8 +1,9 @@
 (ns athens.views.blocks.core
   (:require
     ["/components/Block/components/Anchor"   :refer [Anchor]]
+    ["/components/Block/components/Container" :refer [Container]]
     ["/components/Block/components/Toggle"   :refer [Toggle]]
-    ["@chakra-ui/react" :refer [VStack Box Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -47,8 +48,7 @@
                                    :transform  "translateX(50%)"
                                    :transition "background-color 0.2s ease-in-out, opacity 0.2s ease-in-out"
                                    :background "separator.divider"}
-   "&:hover.show-tree-indicator:before,
-    &:focus-within.show-tree-indicator:before" {:opacity 1}
+   "&:hover.show-tree-indicator:before, &:focus-within.show-tree-indicator:before" {:opacity 1}
    "&:after" {:content        "''"
               :zIndex         0
               :position       "absolute"
@@ -72,8 +72,7 @@
                                       'below below below below'"
                   :borderRadius         "0.5rem"
                   :position              "relative"}
-   "&:hover > .block-toggle, 
-     &:focus-within > .block-toggle" {:opacity "1"}
+   "&:hover > .block-toggle, &:focus-within > .block-toggle" {:opacity "1"}
    "button.block-edit-toggle" {:position   "absolute"
                                :appearance "none"
                                :width      "100%"
@@ -403,35 +402,27 @@
          (when (not= string (:string/previous @state))
            (swap! state assoc :string/previous string :string/local string))
 
-         [:> Box {:display         "flex"
-                  :line-height     "2em"
-                  :position        "relative"
-                  :border-radius   "0.125rem"
-                  :justify-content "flex-start"
-                  :flex-direction  "column"
-                  :background "var(--block-surface-color)"
-                  :opacity (if dragging 0.5 1.0)
-                  :sx (merge block-container-inner-style
-                             {"--block-surface-color" "background.floor"})
-                  :class ["block-container"
-                          (when (and dragging (not is-selected)) "dragging")
-                          (when is-editing "is-editing")
-                          (when is-selected "is-selected")
-                          (when (and (seq children) open) "show-tree-indicator")
-                          (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
-                          (when is-presence "is-presence")]
-                  :data-uid          uid
-                  ;; need to know children for selection resolution
-                  :data-childrenuids children-uids
-                  ;; :show-editable-dom allows us to render the editing elements (like the textarea)
-                  ;; even when not editing this block. When true, clicking the block content will pass
-                  ;; the clicks down to the underlying textarea. The textarea is expensive to render,
-                  ;; so we avoid rendering it when it's not needed.
-                  :on-mouse-enter    #(swap! state assoc :show-editable-dom true)
-                  :on-mouse-leave    #(swap! state assoc :show-editable-dom false)
-                  :on-drag-over      (fn [e] (block-drag-over e block state))
-                  :on-drag-leave     (fn [e] (block-drag-leave e block state))
-                  :on-drop           (fn [e] (block-drop e block state))}
+         [:> Container {:sx (merge block-container-inner-style
+                                        {"--block-surface-color" "background.floor"})
+                             :isDragging (and dragging (not is-selected))
+                             :isEditing is-editing
+                             :isSelected is-selected
+                             :hasChildren (seq children)
+                             :isOpen open
+                             :isLinkedRef (and (false? initial-open) (= uid linked-ref-uid))
+                             :hasPresence is-presence
+                             :uid uid
+                             ;; need to know children for selection resolution
+                             :childrenUids children-uids
+                            ;; :show-editable-dom allows us to render the editing elements (like the textarea)
+                            ;; even when not editing this block. When true, clicking the block content will pass
+                            ;; the clicks down to the underlying textarea. The textarea is expensive to render,
+                            ;; so we avoid rendering it when it's not needed.
+                             :onMouseEnter    #(swap! state assoc :show-editable-dom true)
+                             :onMouseLeave    #(swap! state assoc :show-editable-dom false)
+                             :onDragOver      (fn [e] (block-drag-over e block state))
+                             :onDragLeave     (fn [e] (block-drag-leave e block state))
+                             :onDrop           (fn [e] (block-drop e block state))}
 
           (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
@@ -478,6 +469,7 @@
               (:inline-refs/open @state)])]
 
 
+          (js/console.log (clj->js @state))
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
 

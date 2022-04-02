@@ -1,6 +1,7 @@
 import { Box } from '@chakra-ui/react';
+import { withErrorBoundary } from 'react-error-boundary';
 
-export const Content = ({ children, fontSize }) => {
+const _Content = ({ children, fontSize, ...props }) => {
   return <Box
     className="block-content"
     display="grid"
@@ -16,9 +17,9 @@ export const Content = ({ children, fontSize }) => {
     wordBreak="break-word"
     fontSize={fontSize}
     sx={{
+      // make the textarea transparent
       "textarea": {
         display: "block",
-        lineHeight: 0,
         appearance: "none",
         cursor: "text",
         resize: "none",
@@ -26,41 +27,41 @@ export const Content = ({ children, fontSize }) => {
         color: "inherit",
         outline: "none",
         overflow: "hidden",
-        padding: "0",
+        padding: 0,
         background: "var(--block-surface-color)",
         caretColor: "var(--chakra-colors-link)",
         gridArea: "main",
+        lineHeight: "inherit",
         minHeight: "100%",
         margin: "0",
         fontSize: "inherit",
         borderRadius: "0.25rem",
-        border: "0",
-        opacity: "0",
+        border: 0,
+        opacity: 0,
         fontFamily: "inherit"
       },
-      "&:hover: textarea:not:(.is-editing)": { lineHeight: "2" },
-      "textarea.is-editing + *": { opacity: "0" },
-      ".is-editing": {
+      "& > span": {
+        gridArea: "main",
+      },
+      // deactivate noninteractive (text) content
+      "div, span, p, blockquote": {
+        pointerEvents: "none",
+      },
+      // activate interactive content (links, buttons)
+      "a, button": {
+        pointerEvents: "auto",
+        zIndex: 2,
+        position: "relative"
+      },
+      // manage the textarea interactions
+      "&:hover textarea:not:(.is-editing)": { lineHeight: 2 },
+      "textarea.is-editing": {
         zIndex: 3,
         lineHeight: "inherit",
         opacity: 1,
       },
-      "span.text-run": {
-        pointerEvents: "none",
-        "& > a": {
-          position: "relative",
-          zIndex: 2,
-          pointerEvents: "all",
-        }
-      },
-      "span": {
-        gridArea: "main",
-        "& > span": {
-          position: "relative",
-          zIndex: 2,
-        }
-      },
-      "abbr": {
+      "textarea.is-editing ~ *": { opacity: "0" },
+      "& > abbr": {
         gridArea: "main",
         zIndex: 4,
         "& > span": {
@@ -68,6 +69,7 @@ export const Content = ({ children, fontSize }) => {
           zIndex: 2,
         }
       },
+      // style block children
       "code, pre": {
         fontFamily: "code",
         fontSize: "0.85em",
@@ -130,5 +132,8 @@ export const Content = ({ children, fontSize }) => {
       }
     }
     }
+    {...props}
   > {children}</Box>
 }
+
+export const Content = withErrorBoundary(_Content, { fallback: <div>oops</div> });
