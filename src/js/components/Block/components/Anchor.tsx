@@ -66,6 +66,7 @@ export interface AnchorProps {
    */
   isClosedWithChildren: boolean;
   block: any;
+  uidSanitizedBlock: any;
   shouldShowDebugDetails: boolean;
   as: ReactNode;
   onContextMenu: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
@@ -141,7 +142,9 @@ export const Anchor = (props: AnchorProps) => {
     onDragStart,
     onDragEnd,
     onClick,
-    block } = props;
+    block,
+    uidSanitizedBlock,
+  } = props;
 
   const [ isOpen, setIsOpen ] = React.useState(false);
 
@@ -171,7 +174,7 @@ export const Anchor = (props: AnchorProps) => {
               <MenuDivider />
               <MenuGroup title="Debug details">
                 <Box px={4} pb={3}>
-                  {propertiesList(block)}
+                  {propertiesList(uidSanitizedBlock)}
                 </Box>
               </MenuGroup>
             </>)}

@@ -14,9 +14,7 @@
     [athens.router                           :as router]
     [athens.self-hosted.presence.views       :as presence]
     [athens.subs.selection                   :as select-subs]
-    [athens.util                             :as util :refer [mouse-offset vertical-center
-                                                              ;; specter-recursive-path
-                                                              ]]
+    [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
     [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
     [athens.views.blocks.bullet              :refer [bullet-drag-start bullet-drag-end]]
@@ -24,7 +22,7 @@
     [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
     [athens.views.references                 :refer [reference-group reference-block]]
-    ;; [com.rpl.specter                         :as s]
+    [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
     [reagent.core                            :as r]))
@@ -383,11 +381,11 @@
                            children
                            _refs]} (merge (reactive/get-reactive-block-document ident) block)
              children-uids         (set (map :block/uid children))
-             ;; uid-sanitized-block   (s/transform
-             ;;                         (specter-recursive-path #(contains? % :block/uid))
-             ;;                         (fn [{:block/keys [original-uid uid] :as block}]
-             ;;                           (assoc block :block/uid (or original-uid uid)))
-             ;;                         block)
+             uid-sanitized-block   (s/transform
+                                      (specter-recursive-path #(contains? % :block/uid))
+                                      (fn [{:block/keys [original-uid uid] :as block}]
+                                        (assoc block :block/uid (or original-uid uid)))
+                                      block)
              {:keys [dragging]}    @state
              is-editing            @(rf/subscribe [:editing/is-editing uid])
              is-selected           @(rf/subscribe [::select-subs/selected? uid])
@@ -442,6 +440,7 @@
                                                             (and (false? linked-ref) (not open))))
                                                "closed-with-children")
                        :block block
+                       :uidSanitizedBlock uid-sanitized-block
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
                        :onCopyRef #(handle-copy-refs nil uid)
                        :onCopyUnformatted #(handle-copy-unformatted uid)
@@ -468,8 +467,6 @@
                   (swap! state update :inline-refs/open not)))
               (:inline-refs/open @state)])]
 
-
-          (js/console.log (clj->js @state))
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
 
