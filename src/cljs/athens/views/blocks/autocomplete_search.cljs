@@ -50,9 +50,9 @@
 
 (ns athens.views.blocks.autocomplete-search
   (:require
-   ["@chakra-ui/react" :refer [Portal Popover PopoverTrigger PopoverBody Button PopoverContent Menu MenuItem MenuList Text Box]]
-   [athens.views.blocks.textarea-keydown :as textarea-keydown]
-   [clojure.string :as string]))
+    ["@chakra-ui/react" :refer [Portal Popover PopoverTrigger PopoverBody Button PopoverContent Menu MenuItem MenuList Text Box]]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [clojure.string :as string]))
 
 
 (defn inline-item-click
@@ -73,7 +73,7 @@
           can-open (some #(= % type) [:page :block :hashtag :template])
           {:keys [left top]} caret-position]
       [:> Popover {:isOpen can-open
-      :placement "bottom-start"
+                   :placement "bottom-start"
                    :isLazy true
                    :returnFocusOnClose false
                    :closeOnBlur true
@@ -101,16 +101,16 @@
                         :fontStyle "italics"}
                (str "Search for a " (symbol type))]
               (doall
-               (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-                 [:> Button {:key      (str "inline-search-item" uid)
-                             :id       (str "dropdown-item-" i)
-                             :borderRadius "0"
-                             :justifyContent "flex-start"
-                             :width "100%"
-                             :_first {:borderTopRadius "inherit"}
-                             :_last {:borderBottomRadius "inherit"}
-                             :isActive   (= index i)
-                          ;; if page link, expand to title. otherwise expand to uid for a block ref
-                             :onClick (fn [_] (inline-item-click state (:block/uid block) (or title uid)))}
-                  (or title string)]))))]]]])))
+                (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+                  [:> Button {:key (str "inline-search-item" uid)
+                              :id (str "dropdown-item-" i)
+                              :borderRadius "0"
+                              :justifyContent "flex-start"
+                              :width "100%"
+                              :_first {:borderTopRadius "inherit"}
+                              :_last {:borderBottomRadius "inherit"}
+                              :isActive (= index i)
+                              ;; if page link, expand to title. otherwise expand to uid for a block ref
+                              :onClick (fn [_] (inline-item-click state (:block/uid block) (or title uid)))}
+                   (or title string)]))))]]]])))
 

@@ -382,10 +382,10 @@
                            _refs]} (merge (reactive/get-reactive-block-document ident) block)
              children-uids         (set (map :block/uid children))
              uid-sanitized-block   (s/transform
-                                      (specter-recursive-path #(contains? % :block/uid))
-                                      (fn [{:block/keys [original-uid uid] :as block}]
-                                        (assoc block :block/uid (or original-uid uid)))
-                                      block)
+                                     (specter-recursive-path #(contains? % :block/uid))
+                                     (fn [{:block/keys [original-uid uid] :as block}]
+                                       (assoc block :block/uid (or original-uid uid)))
+                                     block)
              {:keys [dragging]}    @state
              is-editing            @(rf/subscribe [:editing/is-editing uid])
              is-selected           @(rf/subscribe [::select-subs/selected? uid])
