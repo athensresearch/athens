@@ -15,7 +15,7 @@ const PAGE_PROPS = {
 const TITLE_PROPS = {
   position: "relative",
   gridArea: "title",
-  fontSize: "2rem",
+  fontSize: "var(--page-title-font-size, 2rem)",
   overflow: "visible",
   flexGrow: "1",
   margin: "0",
@@ -66,9 +66,17 @@ export const PageHeader = ({ children, image }) => <Box
   'menu title extras'"
   className="page-header"
   borderBottom="1px solid transparent"
+
+  // Page headers without images get a nice border...
   {...!image && ({
     borderBottomColor: "separator.divider"
   })}
+  // unless they're in the sidebar
+  sx={{
+    ".right-sidebar &": {
+      borderBottomColor: "transparent"
+    }
+  }}
 >
   {image && <HeaderImage src={image} />}
   {children}
@@ -122,7 +130,6 @@ export const EditableTitleContainer = ({ children, isEditing, props }) => <Box
   gridArea="title"
   maxWidth="max-content"
   display="grid"
-  minHeight="3rem"
   background="var(--block-surface-color)"
   color="foreground.primary"
   gridTemplateAreas="'main'"
