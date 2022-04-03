@@ -1,8 +1,8 @@
 (ns athens.electron.db-menu.status-indicator
   (:require
-   ["@chakra-ui/react" :refer [Box Tooltip Spinner]]
-   ["@material-ui/icons/CheckCircle" :default CheckCircle]
-   ["@material-ui/icons/Error" :default Error]))
+    ["@chakra-ui/react" :refer [Box Tooltip Spinner]]
+    ["@material-ui/icons/CheckCircle" :default CheckCircle]
+    ["@material-ui/icons/Error" :default Error]))
 
 
 (defn status-indicator
@@ -22,8 +22,8 @@
            :right 0
            :borderRadius "full"
            :sx {"svg" {:fontSize "1em"
-                         :background "background.floor"
-                         :borderRadius "full"}}}
+                       :background "background.floor"
+                       :borderRadius "full"}}}
    (cond
      (= status :closed) [:> Tooltip
                          {:label "Disconnected"}

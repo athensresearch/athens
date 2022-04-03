@@ -27,7 +27,7 @@
     [:> Text {:textOverflow "ellipsis"
               :overflow "hidden"
               :fontWeight "bold"}
-     (:name db) ]
+     (:name db)]
     [:> Text {:textOverflow "ellipsis"
               :fontSize "sm"
               :color "foreground.secondary"

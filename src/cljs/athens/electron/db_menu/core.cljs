@@ -1,6 +1,6 @@
 (ns athens.electron.db-menu.core
   (:require
-    ["@chakra-ui/react" :refer [Box IconButton Spinner Center Text Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button]]
+    ["@chakra-ui/react" :refer [Box IconButton Spinner Text Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button]]
     ["react-focus-lock" :default FocusLock]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
     [athens.electron.db-menu.db-list-item :refer [db-list-item]]
@@ -74,11 +74,11 @@
                       :spacing 0
                       :overflow-y "auto"}
            (doall
-            (for [[key db] inactive-dbs]
-              [db-list-item {:db db
-                             :is-disabled (= sync-status :synchronising)
-                             :is-current false
-                             :key key}]))
+             (for [[key db] inactive-dbs]
+               [db-list-item {:db db
+                              :is-disabled (= sync-status :synchronising)
+                              :is-current false
+                              :key key}]))
            (when (= :synchronising sync-status)
              [:> VStack {:align "center"
                          :background "background.vibrancy"
