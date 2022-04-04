@@ -1,62 +1,35 @@
-import React from 'react';
-import { Portal, useDisclosure, AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogBody, Button, ButtonGroup } from "@chakra-ui/react"
+import { Modal, ModalOverlay, ModalContent, ModalBody, ModalHeader, ModalFooter, Button, ButtonGroup } from '@chakra-ui/react';
 
 export const Confirmation = ({
-  db,
   isOpen,
-  title,
-  message,
+  onClose,
   onConfirm,
-  cancelText,
-  confirmText,
-  onClose
+  title,
+  description
 }) => {
-  const cancelRef = React.useRef();
-
-  const { isOpen: isConfirmOpen,
-    onClose: onConfirmClose } = useDisclosure({
-      defaultIsOpen: isOpen,
-      onClose: onClose
-    })
-
-  console.log(db, isOpen, title, message);
-  console.log('alerting!');
-
-  return (<AlertDialog
-    isOpen={isConfirmOpen}
-    leastDestructiveRef={cancelRef}
-    onClose={onConfirmClose}
-  >
-    <Portal>
-      <AlertDialogOverlay>
-        <AlertDialogContent>
-          {title &&
-            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
-              {title}
-            </AlertDialogHeader>
-          }
-          {message && <AlertDialogBody>
-            {message}
-          </AlertDialogBody>}
-          <AlertDialogFooter>
-            <ButtonGroup>
-              <Button
-                ref={cancelRef}
-                onClick={onClose}>
-                {cancelText || 'Cancel'}
-              </Button>
-              <Button
-                colorScheme='red'
-                onClick={() => {
-                  onConfirm();
-                  onClose()
-                }}>
-                {confirmText || 'Confirm'}
-              </Button>
-            </ButtonGroup>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogOverlay>
-    </Portal>
-  </AlertDialog>);
-}
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      closeOnOverlayClick={false}
+      closeOnEsc={false}
+      size='sm'
+    >
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>{title}</ModalHeader>
+        {description && <ModalBody>{description}</ModalBody>}
+        <ModalFooter>
+          <ButtonGroup>
+            <Button mr={3} onClick={onConfirm}>
+              Confirm
+            </Button>
+            <Button onClick={onClose}>
+              Cancel
+            </Button>
+          </ButtonGroup>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+};

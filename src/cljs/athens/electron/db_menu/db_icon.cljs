@@ -34,4 +34,4 @@
       :x "50%"
       :y "75%"}
      (nth (:name db) 0)]]
-   (when (and status (not= status :running)) [status-indicator {:status status}])])
+   (when status [status-indicator {:status status}])])

@@ -26,14 +26,6 @@ export const XmarkIcon = createIcon({
   ),
 })
 
-export const CheckmarkIcon = createIcon({
-  displayName: 'CheckmarkIcon',
-  viewBox: '0 0 24 24',
-  path: (
-    <path fillRule="evenodd" clipRule="evenodd" d="M18.2601 5.32733C18.6316 4.91867 19.264 4.88855 19.6727 5.26006C20.0813 5.63157 20.1114 6.26401 19.7399 6.67267L9.73994 17.6727C9.55042 17.8811 9.28174 18 9 18C8.71825 18 8.44958 17.8811 8.26006 17.6727L3.26006 12.1727C2.88855 11.764 2.91867 11.1316 3.32733 10.7601C3.73598 10.3886 4.36843 10.4187 4.73994 10.8273L9 15.5134L18.2601 5.32733Z" fill="currentColor" />
-  ),
-})
-
 export const DailyNotesIcon = createIcon({
   displayName: 'DailyNotesIcon',
   viewBox: '0 0 24 24',
