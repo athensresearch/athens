@@ -214,7 +214,7 @@
          ;; redesigned DB picker.
          [:> Tabs {:isFitted true
                    :display "contents"
-                   :defaultIndex (if utils/electron? 0 2)}
+                   :defaultIndex (if utils/electron? 0 1)}
           (when utils/electron?
             [:> TabList
              [:> Tab "Open Local"]
