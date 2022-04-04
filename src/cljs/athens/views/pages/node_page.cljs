@@ -334,6 +334,7 @@
                           :refs @unlinked-refs
                           :title "Unlinked References"
                           :extras (r/as-element [:> Button {:variant "link"
+                                                            :size "sm"
                                                             :flexShrink 0
                                                             :onClick link-all-unlinked}
                                                  "Link all"])
@@ -358,8 +359,8 @@
              (for [block group]
                [:> ReferenceBlock
                 {:key (str "ref-" (:block/uid block))
-                 #_ :actions #_ (when unlinked?
-                            [:> Button {:marginTop "1.5em"
+                 :actions (when unlinked?
+                            (r/as-element [:> Button {:marginTop "1.5em"
                                         :size "xs"
                                         :flex "0 0"
                                         :float "right"
@@ -373,7 +374,7 @@
                                                          ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
                                                      (reset! unlinked-refs new-unlinked-refs)
                                                      (dispatch [:unlinked-references/link block title])))}
-                             "Link"])}
+                             "Link"]))}
                 [ref-comp block]]))]))]))
 
 

@@ -177,8 +177,11 @@ export const ReferenceGroup = ({ title, onClickTitle, children }) => {
 }
 
 export const ReferenceBlock = ({ children, actions }) => {
-  return <Box
-  >{children} {actions}</Box>
+  if (actions) {
+    return (<HStack pr={2} ><Box flex="1 1 100%">{children}</Box> {actions}</HStack>)
+  } else {
+    return children
+  }
 }
 
 const EmptyReferencesNotice = ({ title }: { title: string }) => {
@@ -199,40 +202,53 @@ export const PageReferences = withErrorBoundary(({ children, count, title, defau
     onOpen: onOpen
   });
 
+  const isShowingContent = isOpen && !!children;
+
   return (
     <VStack
       align="stretch"
       position="relative"
       spacing={0}
-      p={1}
-      mt={2}
-      borderRadius="md"
-      background="background.basement"
+      p={2}
+      px={2}
     >
       <HStack>
         <Button onClick={onToggle}
           variant="ghost"
           flex="1 1 100%"
+          borderRadius="sm"
+          isActive={isShowingContent}
           color="foreground.secondary"
           textAlign="left"
           justifyContent="flex-start"
           overflow="hidden"
           whiteSpace="nowrap"
           leftIcon={
-            <ChevronUpIcon transform={isOpen ? "rotate(180deg)" : null}
-              boxSize={1}
+            <ChevronUpIcon
+              transform={isOpen ? "rotate(180deg)" : "rotate(90deg)"}
+              transitionProperty="common"
+              transitionDuration="0.15s"
+              transitionTimingFunction="ease-in-out"
+              fontSize="sm"
               justifySelf="center"
             />
           }
         >
           {title}
-          <Text marginInlineStart={2} minWidth="1.75em" textAlign="center" background="background.basement" borderRadius="full" p={1} fontSize="sm">{count}</Text>
+          {!!count && <Text
+            marginInlineStart={2}
+            minWidth="1.75em"
+            textAlign="center"
+            background="background.basement"
+            borderRadius="full"
+            p={1}
+            fontSize="sm"
+          >{count}</Text>}
         </Button>
-        {extras}
+        {isShowingContent && extras}
       </HStack>
-      <Collapse in={(isOpen && !!children)}>
-        <Divider />
-        <VStack spacing={0} pl={4} py={2} align="stretch">
+      <Collapse in={isShowingContent} unmountOnExit>
+        <VStack spacing={0} pl={4} py={0} align="stretch">
           {children}
         </VStack>
       </Collapse>

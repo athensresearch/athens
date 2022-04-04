@@ -292,16 +292,30 @@ const components = {
       separator: {
         color: 'separator.border'
       },
+      item: {
+        maxWidth: '10em',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        ".fmt": {
+          display: 'none',
+        }
+      },
     },
     variants: {
       strict: {
         link: {
+          overflow: 'hidden !important',
+          textOverflow: 'ellipsis !important',
+
           "*": {
             fontSize: 'inherit !important',
             fontWeight: 'inherit !important',
             lineHeight: 'inherit !important',
+            fontFamily: 'inherit !important',
             color: 'inherit !important',
+            background: 'none !important',
             textDecoration: 'none !important',
+            display: "inline !important",
           }
         }
       }
