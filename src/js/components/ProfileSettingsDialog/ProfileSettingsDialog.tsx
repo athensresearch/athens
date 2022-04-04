@@ -1,57 +1,30 @@
 import React from 'react';
-import styled, { keyframes } from 'styled-components';
-import { readableColor } from 'polished';
+import { withErrorBoundary } from 'react-error-boundary';
+
+import {
+  keyframes,
+  Modal,
+  ModalOverlay,
+  ModalFooter,
+  Center,
+  Flex,
+  Box,
+  ButtonGroup,
+  ModalHeader,
+  ModalCloseButton,
+  ModalContent,
+  ModalBody,
+  Text,
+  FormControl,
+  FormHelperText,
+  Input,
+  Avatar,
+  Button
+} from '@chakra-ui/react';
+
 import { HexColorPicker } from "react-colorful";
 import { AriaDialogProps } from '@react-types/dialog';
 import { OverlayProps } from '@react-aria/overlays';
-
-import { Button } from '@/Button';
-import { Avatar } from '../Avatar';
-import { Input } from '../Input';
-import { Dialog } from '../Dialog';
-
-const ProfileWrap = styled(Dialog.Body)`
-  width: 26rem;
-
-  h3 {
-    text-align: center;
-    margin: 0;
-    font-weight: 600;
-  }
-
-  hr {
-    margin: 1rem 0;
-    border: 0;
-    border-top: 1px solid var(--border-color);
-  }
-`;
-
-const Actions = styled(Dialog.Actions)`
-  padding-Bottom: 1rem;
-  align-self: center;
-  gap: 1rem;
-  margin: 0;
-
-  button {
-    width: 5em;
-  }
-`;
-
-const AvatarWrap = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20rem;
-  margin: 1em auto 2em;
-  border-radius: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--border-color);
-  background: var(--background-plus-2);
-
-  > * {
-    filter: drop-shadow(0 0.25rem 0.25rem var(--shadow-color---opacity-10));
-  }
-`;
 
 const pulse = keyframes`
   from {
@@ -61,42 +34,39 @@ const pulse = keyframes`
   }
 `;
 
-const ColorPickerWrap = styled.div`
-  .react-colorful {
-    width: 8.5rem;
-    height: 3rem;
-    gap: 1rem;
-    margin: -0.25rem 0 1rem;
-    flex-direction: row;
+const ColorPickerWrap = ({ children }) => {
+  return (<Box
+    sx={{
+      ".react-colorful": {
+        width: "8.5rem",
+        height: "3rem",
+        gap: "1rem",
+        margin: "-0.25rem 0 1rem",
+        flexDirection: "row",
 
-    > * {
-      border-radius: 0.5rem;
-      height: 100%;
-      flex: 0 0 4rem;
-    }
-  }
+        "> *": {
+          borderRadius: "0.5rem",
+          height: "100%",
+          flex: "0 0 4rem",
+        }
+      },
+      ".react-colorful__saturation": {
+        borderBottom: 0
+      },
+      ".react-colorful__interactive:focus .react-colorful__pointer": {
+        animation: `${pulse} 0.5s infinite alternate ease-in-out`
+      }
+    }}
+  >
+    {children}
+  </Box>)
+};
 
-  .react-colorful__saturation {
-    border-bottom: 0;
-  }
-
-  .react-colorful__interactive:focus
-  .react-colorful__pointer {
-    animation: ${pulse} 0.5s infinite alternate ease-in-out;
-  }
-`;
-
-const Inputs = styled.div`
-  display: flex;
-  gap: 2rem;
-  align-items: flex-start;
-  justify-content: center;
-`;
-
-const LabelWrapper = styled(Input.LabelWrapper)`
-  gap: 0.25rem;
-`;
-
+const Inputs = ({ children }) => {
+  return (<Flex gap="2rem" align="flex-start" justifyContent="center">
+    {children}
+  </Flex>)
+}
 
 interface ProfileSettingsDialogProps extends OverlayProps, AriaDialogProps {
   person: Person;
@@ -105,16 +75,16 @@ interface ProfileSettingsDialogProps extends OverlayProps, AriaDialogProps {
 /**
  * Dialog for modifying the current user's username and color
  */
-export const ProfileSettingsDialog = ({
+export const _ProfileSettingsDialog = ({
   person,
   onClose: handleClose,
   onUpdatePerson: handleUpdatePerson,
   isOpen,
   ...rest
 }: ProfileSettingsDialogProps) => {
-  const [editingUsername, setEditingUsername] = React.useState<string>(person.username || '');
-  const [editingColor, setEditingColor] = React.useState<string>(person.color || '#0071DB');
-  const [isValidUsername, setIsValidUsername] = React.useState<boolean>(!!editingUsername);
+  const [ editingUsername, setEditingUsername ] = React.useState<string>(person.username || '');
+  const [ editingColor, setEditingColor ] = React.useState<string>(person.color || '#0071DB');
+  const [ isValidUsername, setIsValidUsername ] = React.useState<boolean>(!!editingUsername);
 
   const handleChangeUsername = (e: React.ChangeEvent<HTMLInputElement>) => {
     const attempt = e.target.value.trim();
@@ -123,55 +93,60 @@ export const ProfileSettingsDialog = ({
   }
 
   return (
-    <Dialog
+    <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Change how you appear to others"
       {...rest}
     >
-      <ProfileWrap>
-        <h3>How you appear to others</h3>
-        <AvatarWrap className={isValidUsername ? "is-valid" : 'is-invalid'}>
-          <Avatar
-            size="2em"
-            personId={person.personId}
-            username={isValidUsername ? editingUsername : person.username}
-            color={editingColor}
-            showTooltip={false}
-          />
-          <Avatar.Fullname style={{
-            "--tooltip-background-color": editingColor,
-            "--tooltip-text-color": readableColor(editingColor)
-          }}>
-            {isValidUsername ? editingUsername : person.username}
-          </Avatar.Fullname>
-        </AvatarWrap>
-        <Inputs>
-          <ColorPickerWrap>
-            <HexColorPicker color={editingColor} onChange={setEditingColor} />
-          </ColorPickerWrap>
-          <LabelWrapper>
-            <Input required className={!isValidUsername ? 'is-invalid' : ''} type="name" defaultValue={editingUsername} onChange={handleChangeUsername} />
-            <Input.Help style={{ opacity: isValidUsername ? 0 : 1 }}>At least 2 characters</Input.Help>
-          </LabelWrapper>
-        </Inputs>
-        <hr />
-        <Actions>
-          <Button
-            shape="round"
-            variant="gray"
-            onClick={handleClose}
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>
+          Change how you appear to others
+        </ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <Center
+            padding="2rem"
+            display="flex"
+            flexDirection="column"
           >
-            Cancel
-          </Button>
-          <Button shape="round" variant="filled"
-            disabled={!isValidUsername}
-            onClick={() => handleUpdatePerson({ ...person, username: editingUsername, color: editingColor })}
-          >
-            Save
-          </Button>
-        </Actions>
-      </ProfileWrap>
-    </Dialog>
+            <Avatar
+              name={isValidUsername ? editingUsername : person.username}
+              bg={editingColor}
+            />
+            <Text>{isValidUsername ? editingUsername : person.username}</Text>
+          </Center>
+          <Inputs>
+            <ColorPickerWrap>
+              <HexColorPicker color={editingColor} onChange={setEditingColor} />
+            </ColorPickerWrap>
+            <FormControl>
+              <Input
+                isRequired
+                className={!isValidUsername ? 'is-invalid' : ''}
+                type="name"
+                defaultValue={editingUsername}
+                onChange={handleChangeUsername}
+              />
+              <FormHelperText
+                style={{ opacity: isValidUsername ? 0 : 1 }}
+              >At least 2 characters
+              </FormHelperText>
+            </FormControl>
+          </Inputs>
+        </ModalBody>
+        <ModalFooter
+          borderTop="1px solid"
+          borderColor="separator.divider"
+        >
+          <ButtonGroup>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button isDisabled={!isValidUsername} onClick={() => handleUpdatePerson({ ...person, username: editingUsername, color: editingColor })}>Change appearance</Button>
+          </ButtonGroup>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   )
 }
+
+export const ProfileSettingsDialog = withErrorBoundary(_ProfileSettingsDialog, { fallback: null });
