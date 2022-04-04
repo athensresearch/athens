@@ -215,11 +215,10 @@
          [:> Tabs {:isFitted true
                    :display "contents"
                    :defaultIndex (if utils/electron? 0 2)}
-          (when utils/electron?
-            [:> TabList
-             [:> Tab "Open Local"]
-             [:> Tab "Join Remote"]
-             [:> Tab "Create New"]])
+          [:> TabList
+           [:> Tab "Open Local"]
+           [:> Tab "Join Remote"]
+           [:> Tab "Create New"]]
           [:> TabPanels {:display "contents"}
            [:> TabPanel {:display "contents"}
             [open-local-comp loading selected-db]]
