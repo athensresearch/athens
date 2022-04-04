@@ -92,33 +92,42 @@
 
 (defn page-link-transform
   [& contents]
-  (apply conj [:page-link {:from (str "[[" (apply string-representation contents) "]]")}]
-         contents))
+  (let [string-repr (apply string-representation contents)]
+    (apply conj [:page-link {:from   (str "[[" string-repr "]]")
+                             :string string-repr}]
+           contents)))
 
 
 (defn naked-hashtag-transform
   [& contents]
-  (apply conj [:hashtag {:from (str "#" (apply string-representation contents))}]
-         contents))
+  (let [string-repr (apply string-representation contents)]
+    (apply conj [:hashtag {:from   (str "#" string-repr)
+                           :string string-repr}]
+           contents)))
 
 
 (defn braced-hashtag-transform
   [& contents]
-  (apply conj [:hashtag {:from (str "#[[" (apply string-representation contents) "]]")}]
-         contents))
+  (let [string-repr (apply string-representation contents)]
+    (apply conj [:hashtag {:from   (str "#[[" string-repr "]]")
+                           :string string-repr}]
+           contents)))
 
 
 (defn block-ref-transform
   [block-ref-str]
-  [:block-ref {:from (str "((" block-ref-str "))")}
+  [:block-ref {:from   (str "((" block-ref-str "))")
+               :string block-ref-str}
    block-ref-str])
 
 
 (defn typed-block-ref-transform
   [ref-type-el block-ref-el]
   (let [ref-type       (second ref-type-el)
-        block-ref-from (-> block-ref-el second :from)]
-    [:typed-block-ref {:from (str "{{" ref-type ": " block-ref-from "}}")}
+        block-ref-from (-> block-ref-el second :from)
+        string-repr    (str ref-type ": " block-ref-from)]
+    [:typed-block-ref {:from   (str "{{" string-repr "}}")
+                       :string string-repr}
      ref-type-el
      block-ref-el]))
 
