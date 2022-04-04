@@ -28,47 +28,6 @@ const radii = {
   full: '9999px',
 }
 
-const colors = {
-  // light theme
-  linkLight: "#0071DB",
-  linkContrastLight: '#fff',
-  highlightLight: "#F9A132",
-  textHighlightLight: "#ffdb8a",
-  highlightContrastLight: "#000",
-  warningLight: "#D20000",
-
-  backgroundPlus2Light: "#fff",
-  backgroundPlus1Light: "#fbfbfb",
-  backgroundColorLight: "#F6F6F6",
-  backgroundMinus1Light: "#FAF8F6",
-  backgroundMinus2Light: "#EFEDEB",
-  backgroundVibrancyLight: "#ffffff99",
-
-  errorLight: "#fd5243",
-  shadowLight: "#000",
-
-  // dark theme
-  backgroundMinu2Dark: "#151515",
-  backgroundMinus1Dark: "#111",
-  backgroundColorDark: "#1A1A1A",
-  backgroundPlus1Dark: "#222",
-  backgroundPlus2Dark: "#333",
-  backgroundVibrancyDark: "#222222aa",
-
-  linkDark: "#498eda",
-  linkContrastDark: '#fff',
-  highlightDark: "#FBBE63",
-  textHighlightDark: "#FBBE63",
-  highlightContrastDark: "#000",
-  warningDark: "#DE3C21",
-
-  errorDark: "#fd5243",
-  shadowDark: "#000",
-
-  // interactives
-
-}
-
 const semanticTokens = {
   shadows: {
     focus: {
@@ -186,8 +145,8 @@ const semanticTokens = {
       _dark: '#000'
     },
     link: {
-      default: 'linkLight',
-      _dark: 'linkDark'
+      default: '#0071DB',
+      _dark: '#498eda'
     },
     linkContrast: {
       default: '#fff',
