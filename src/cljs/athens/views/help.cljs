@@ -1,34 +1,31 @@
 (ns athens.views.help
   (:require
-    ["@material-ui/core/Modal" :default Modal]
-    [athens.style :refer [color]]
+    ["@chakra-ui/react" :refer [Text Heading Box Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
     [athens.util :as util]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]])
-  (:import
-    (goog.events
-      KeyCodes)))
+    [reagent.core :as r]))
 
 
 ;; Helpers to create the help content
 ;; ==========================
-(defn opaque-text
+(defn faded-text
   [text]
-  [:span (use-style {:color       (color :body-text-color :opacity-med)
-                     :font-weight "normal"})
+  [:> Text {:as "span"
+            :color "foreground.secondary"
+            :fontWeight "normal"}
    text])
 
 
 (defn space
   []
-  [:i (use-style {:width         "0.25em"
-                  :display       "inline-block"
-                  :margin-inline "0.25em"
-                  :height        "0.125em"
-                  :border        (str "1px solid " (color :body-text-color :opacity-low))
-                  :border-top    0})])
+  [:> Box  {:as "i"
+            :width "0.5em"
+            :display "inline-block"
+            :marginInline "0.125em"
+            :background "currentColor"
+            :height "1px"
+            :opacity "0.5"}])
 
 
 (defn- add-keys
@@ -41,7 +38,7 @@
 
 (defn example
   [template & args]
-  (let [opaque-texts    (map #(r/as-element [opaque-text %]) args)
+  (let [faded-texts    (map #(r/as-element [faded-text %]) args)
         space-component (r/as-element [space])
         insert-spaces   (fn [str-or-vec]
                           (if (and (string? str-or-vec)
@@ -52,14 +49,13 @@
                                       (interleave (repeat space-component))
                                       add-keys))
                             str-or-vec))]
-    [:span (use-style
-             {:font-size   "85%"
-              :font-weight "bold"
-              :user-select "all"
-              :word-break  "break-word"})
+    [:> Text {:fontSize   "85%"
+              :fontWeight "bold"
+              :userSelect "all"
+              :wordBreak  "break-word"}
      (as-> template t
            (str/split t #"\$text")
-           (interleave t (concat opaque-texts [nil]))
+           (interleave t (concat faded-texts [nil]))
            (map insert-spaces t)
            (add-keys t)
            (into [:<>] t))]))
@@ -181,13 +177,15 @@
             ;; :example     [:span (use-style {:text-decoration "underline"}) "Athens"]
             ;; :shortcut    "mod+u"}
             {:description "Strikethrough"
-             :example     [:span (use-style {:text-decoration "line-through"}) "Athens"]
+             :example     [:> Text {:as "span" :textDecoration "line-through"} "Athens"]
              :shortcut    "mod+y"}
             {:description "Highlight"
-             :example     [:span (use-style {:background    (color :highlight-color)
-                                             :color         (color :background-color)
-                                             :border-radius "0.1rem"
-                                             :padding       "0 0.125em"}) "Athens"]
+             :example     [:> Text {:as "span"
+                                    :background "highlight"
+                                    :color "highlightContrast"
+                                    :borderRadius "0.1rem"
+                                    :padding "0 0.125em"}
+                           "Athens"]
              :shortcut    "mod+h"}]}
    {:name  "Graph"
     :items [{:description "Open Node in Sidebar"
@@ -227,69 +225,36 @@
         keys           (as-> shortcut-str s
                              (str/split s #"\+")
                              (map key-to-display s))]
-    [:div (use-style {:display     "flex"
-                      :align-items "center"
-                      :gap         "0.3rem"})
+    [:> Box {:display "flex"
+             :alignItems "center"
+             :gap "0.3rem"}
 
      (doall
        (for [key keys]
          ^{:key key}
-         [:span (use-style {:font-family    "inherit"
-                            :display        "inline-flex"
-                            :gap            "0.3em"
-                            :text-transform "uppercase"
-                            :font-size      "0.8em"
-                            :padding-inline "0.35em"
-                            :background     (color :background-plus-2)
-                            :border-radius  "0.25rem"
-                            :font-weight    600})
+         [:> Text {:fontFamily "inherit"
+                   :display "inline-flex"
+                   :gap "0.3em"
+                   :textTransform "uppercase"
+                   :fontSize "0.8em"
+                   :paddingInline "0.35em"
+                   :background "background.basement"
+                   :borderRadius "0.25rem"
+                   :fontWeight 600}
           key]))]))
-
-
-(def modal-body-styles
-  {:width         "max-content"
-   :margin        "2rem auto"
-   :max-width     "calc(100% - 1rem)"
-   :border        (str "1px solid " (color :border-color))
-   :border-radius "1rem"
-   :box-shadow    (str "0 0.25rem 0.5rem -0.25rem " (color :shadow-color))
-   :display       "flex"})
-
-
-(def help-styles
-  {:background-color (color :background-color)
-   :border-radius    "1rem"
-   :display          "flex"
-   :flex-direction   "column"
-   :min-width        "500px"})
-
-
-(def help-header-styles
-  {:display         "flex"
-   :justify-content "space-between"
-   :margin          0
-   :align-items     "center"
-   :border-bottom   [["1px solid" (color :border-color)]]})
-
-
-(def help-title
-  {:padding   "1rem 1.5rem"
-   :margin    "0"
-   :font-size "2rem"
-   :color     (color :header-text-color)})
 
 
 (defn help-section
   [title & children]
-  [:section
-   [:h2 (use-style
-          {:color          (color :body-text-color :opacity-med)
-           :text-transform "uppercase"
-           :letter-spacing "0.06rem"
-           :margin         0
-           :font-weight    600
-           :font-size      "100%"
-           :padding        "1rem 1.5rem"})
+  [:> Box {:as "section"}
+   [:> Heading {:as "h2"
+                :color "foreground.primary"
+                :textTransform "uppercase"
+                :letterSpacing "0.06rem"
+                :margin 0
+                :font-weight 600
+                :font-size "100%"
+                :padding "1rem 1.5rem"}
     title]
    (doall
      (for [child children]
@@ -299,15 +264,16 @@
 
 (defn help-section-group
   [title & children]
-  [:section (use-style
-              {:display               "grid"
-               :padding               "1.5rem"
-               :grid-template-columns "12rem 1fr"
-               :column-gap            "1rem"
-               :border-top            [["1px solid" (color :border-color)]]})
-   [:h3 (use-style {:font-size   "1.5em"
-                    :margin      0
-                    :font-weight "bold"})
+  [:> Box {:display "grid"
+           :padding "1.5rem"
+           :gridTemplateColumns "12rem 1fr"
+           :columnGap "1rem"
+           :borderTop "1px solid"
+           :borderColor "separator.divider"}
+   [:> Heading {:fontSize "1.5em"
+                :as "h3"
+                :margin 0
+                :font-weight "bold"}
     title]
    [:div
     (doall
@@ -318,18 +284,16 @@
 
 (defn help-item
   [item]
-  [:div (use-style
-          {:border-radius         "0.5rem"
-           :align-items           "center"
-           :display               "grid"
-           :gap                   "1rem"
-           :grid-template-columns "12rem 1fr"
-           :padding               "0.25rem 0.5rem"
-           ::stylefy/manual       ["&:nth-child(odd)"
-                                   {:background (color :background-plus-2 :opacity-low)}]})
-   [:span (use-style
-            {:display         "flex"
-             :justify-content "space-between"})
+  [:> Box {:borderRadius "0.5rem"
+           :alignItems "center"
+           :display "grid"
+           :gap "1rem"
+           :gridTemplateColumns "12rem 1fr"
+           :padding "0.25rem 0.5rem"
+           :sx {"&:nth-child(odd)"
+                {:bg "background.floor"}}}
+   [:> Text {:display "flex"
+             :justify-content "space-between"}
     ;; Position of the example changes if there is a shortcut or not.
     (:description item)
     (when (contains? item :shortcut)
@@ -340,56 +304,32 @@
      [shortcut (:shortcut item)])])
 
 
-;; Help popup UI
-;; Why the escape handler?
-;; Because when disabled the modal autofocus (which moves the modal to the top when
-;; opened and causes other issues like moving into the top the modal when clicking outside
-;; of it from the top), the escape handler from the modal itself doesn't work.
-;; Because of that, our own escape handler is added.
 (defn help-popup
   []
   (r/with-let [open? (subscribe [:help/open?])
-               close #(dispatch [:help/toggle])
-               escape-handler (fn [event]
-                                (when
-                                  (and @open? (= (.. event -keyCode) KeyCodes.ESC))
-                                  (close)))
-               _ (js/addEventListener "keydown" escape-handler)]
-              [:> Modal {:open             @open?
-                         :style            {:overflow-y "auto"}
-                         :disableAutoFocus true
-                         :onClose          close}
-               [:div (use-style modal-body-styles)
-                [:div (use-style help-styles)
-                 [:header (use-style help-header-styles)
-                  [:h1 (use-style help-title)
-                   "Help"]
-                  [:nav (use-style {:display "flex"
-                                    :gap     "1rem"
-                                    :padding "1rem"})]]
-                 ;; Links at the top of the help. Uncomment when the correct links are obtained.
-                 ;; [help-link
-                 ;; [:> LiveHelp]
-                 ;; "Get Help on Discord"]
-                 ;; [help-link
-                 ;; [:> Error]
-                 ;; "Get Help on Discord"]
-                 ;; [help-link
-                 ;; [:> AddToPhotos]
-                 ;; "Get Help on Discord"]]]
-                 [:div (use-style {:overflow-y "auto"})
-                  (doall
-                    (for [section content]
-                      ^{:key section}
-                      [help-section (:name section)
-                       (doall
-                         (for [group (:groups section)]
-                           ^{:key group}
-                           [help-section-group (:name group)
-                            (doall
-                              (for [item (:items group)]
-                                ^{:key item}
-                                [help-item item]))]))]))]]]]
-              (finally js/removeEventListener "keydown" escape-handler)))
+               close #(dispatch [:help/toggle])]
+              [:> Modal {:isOpen             @open?
+                         :onClose          close
+                         :scrollBehavior "outside"
+                         :size "full"}
+               [:> ModalOverlay]
+               [:> ModalContent {:maxWidth "calc(100% - 8rem)"
+                                 :width "max-content"
+                                 :my "4rem"}
+                [:> ModalHeader "Help"
+                 [:> ModalCloseButton]]
+                [:> ModalBody {:flexDirection "column"}
+                 (doall
+                   (for [section content]
+                     ^{:key section}
+                     [help-section (:name section)
+                      (doall
+                        (for [group (:groups section)]
+                          ^{:key group}
+                          [help-section-group (:name group)
+                           (doall
+                             (for [item (:items group)]
+                               ^{:key item}
+                               [help-item item]))]))]))]]]))
 
 

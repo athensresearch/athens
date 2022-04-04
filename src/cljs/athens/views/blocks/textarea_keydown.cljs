@@ -21,6 +21,7 @@
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
     [goog.functions :refer [throttle #_debounce]]
+    [goog.style :refer [getClientPosition]]
     [re-frame.core :as rf :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
@@ -817,8 +818,12 @@
 
       ;; update caret position for search dropdowns and for up/down
       (when (nil? (:search/type @state))
-        (let [caret-position (get-caret-position (.. e -target))]
-          (swap! state assoc :caret-position caret-position)))
+
+        (let [caret-position (get-caret-position (.. e -target))
+              textarea-position (js->clj (getClientPosition (.. e -target)) :keywordize-keys true)
+              position {:left (+ (:left caret-position) (.. textarea-position -x))
+                        :top (+ (:top caret-position) (.. textarea-position -y))}]
+          (swap! state assoc :caret-position position)))
 
       ;; dispatch center
       ;; only when nothing is selected or duplicate/events dispatched

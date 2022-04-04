@@ -2,7 +2,6 @@
   (:require
     ["/components/AppToolbar/AppToolbar" :refer [AppToolbar]]
     [athens.electron.db-menu.core        :refer [db-menu]]
-    [athens.electron.db-modal            :as db-modal]
     [athens.electron.utils               :as electron.utils]
     [athens.router                       :as router]
     [athens.self-hosted.presence.views   :refer [toolbar-presence-el]]
@@ -32,7 +31,6 @@
         win-fullscreen?        (if electron?
                                  (rf/subscribe [:win-fullscreen?])
                                  (r/atom false))
-        merge-open?            (r/atom false)
         os                     (util/get-os)
         on-left-sidebar-toggle #(rf/dispatch [:left-sidebar/toggle])
         on-back                #(.back js/window.history)
@@ -60,42 +58,36 @@
         on-athena              #(rf/dispatch [:athena/toggle])
         on-help                #(rf/dispatch [:help/toggle])
         on-theme               #(rf/dispatch [:theme/toggle])
-        on-merge               #(swap! merge-open? not)
         on-right-sidebar       #(rf/dispatch [:right-sidebar/toggle])
         on-maximize            #(rf/dispatch [:toggle-max-min-win])
         on-minimize            #(rf/dispatch [:minimize-win])
         on-close               #(rf/dispatch [:close-win])]
-    (fn []
-      [:<>
-       (when @merge-open?
-         [db-modal/merge-modal merge-open?])
-       [:> AppToolbar {:style                     (unzoom)
-                       :os                        os
-                       :isElectron                electron?
-                       :route                     @route-name
-                       :isWinFullscreen           @win-fullscreen?
-                       :isWinMaximized            @win-maximized?
-                       :isWinFocused              @win-focused?
-                       :isHelpOpen                @help-open?
-                       :isThemeDark               @theme-dark
-                       :isLeftSidebarOpen         @left-open?
-                       :isRightSidebarOpen        @right-open?
-                       :isCommandBarOpen          @athena-open?
-                       :onPressLeftSidebarToggle  on-left-sidebar-toggle
-                       :onPressHistoryBack        on-back
-                       :onPressHistoryForward     on-forward
-                       :onPressDailyNotes         on-daily-pages
-                       :onPressAllPages           on-all-pages
-                       :onPressGraph              on-graph
-                       :onPressCommandBar         on-athena
-                       :onPressHelp               on-help
-                       :onPressThemeToggle        on-theme
-                       :onPressSettings           on-settings
-                       :onPressMerge              on-merge
-                       :onPressRightSidebarToggle on-right-sidebar
-                       :onPressMaximizeRestore    on-maximize
-                       :onPressMinimize           on-minimize
-                       :onPressClose              on-close
-                       :databaseMenu              (r/as-element [db-menu])
-                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)
-                                                    (r/as-element [toolbar-presence-el]))}]])))
+    [:> AppToolbar {:style                     (unzoom)
+                    :os                        os
+                    :isElectron                electron?
+                    :route                     @route-name
+                    :isWinFullscreen           @win-fullscreen?
+                    :isWinMaximized            @win-maximized?
+                    :isWinFocused              @win-focused?
+                    :isHelpOpen                @help-open?
+                    :isThemeDark               @theme-dark
+                    :isLeftSidebarOpen         @left-open?
+                    :isRightSidebarOpen        @right-open?
+                    :isCommandBarOpen          @athena-open?
+                    :onPressLeftSidebarToggle  on-left-sidebar-toggle
+                    :onPressHistoryBack        on-back
+                    :onPressHistoryForward     on-forward
+                    :onPressDailyNotes         on-daily-pages
+                    :onPressAllPages           on-all-pages
+                    :onPressGraph              on-graph
+                    :onPressCommandBar         on-athena
+                    :onPressHelp               on-help
+                    :onPressThemeToggle        on-theme
+                    :onPressSettings           on-settings
+                    :onPressRightSidebarToggle on-right-sidebar
+                    :onPressMaximizeRestore    on-maximize
+                    :onPressMinimize           on-minimize
+                    :onPressClose              on-close
+                    :databaseMenu              (r/as-element [db-menu])
+                    :presenceDetails           (when (electron.utils/remote-db? @selected-db)
+                                                 (r/as-element [toolbar-presence-el]))}]))
