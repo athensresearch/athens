@@ -47,13 +47,13 @@ interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'
 }
 
 const toolbarButtonStyle = {
-  variant: "ghost",
+  background: 'background.floor',
   color: "foreground.secondary",
   sx: { WebkitAppRegion: "no-drag" }
 }
 
 const toolbarIconButtonStyle = {
-  variant: "ghost",
+  background: 'background.floor',
   color: "foreground.secondary",
   sx: {
     WebkitAppRegion: "no-drag",
@@ -70,7 +70,7 @@ const ToolbarButton = React.forwardRef((props: ToolbarButtonProps, ref) => {
 
 const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) => {
   const { children } = props;
-  return <IconButton ref={ref as any} {...toolbarIconButtonStyle
+  return <IconButton aria-label="" ref={ref as any} {...toolbarIconButtonStyle
   } {...props}>{children}</IconButton>
 });
 
@@ -87,6 +87,7 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
   transition='0.5s ease-in-out'
   transitionProperty='common'
   height="var(--app-header-height, 44px)"
+
   _hover={{
     borderBottomColor: 'separator.divider',
     bg: "background.floor",
@@ -218,7 +219,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
 const SecondaryToolbarItems = (items) => {
   return <ButtonGroup size="sm">
     {items.map((item) => <Tooltip label={item.label} key={item.label}>
-      <ToolbarIconButton variant="ghost" color="foreground.secondary" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
+      <ToolbarIconButton key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
         {item.icon}
       </ToolbarIconButton>
     </Tooltip>)}
