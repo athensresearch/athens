@@ -88,4 +88,4 @@
                                    :count  page-link}])
       (pos? block-ref)
       (conj [:reporting/block.link {:source source
-                                    :count  page-link}]))))
+                                    :count  block-ref}]))))
