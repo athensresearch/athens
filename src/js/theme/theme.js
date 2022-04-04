@@ -28,6 +28,47 @@ const radii = {
   full: '9999px',
 }
 
+const colors = {
+  // light theme
+  linkLight: "#0071DB",
+  linkContrastLight: '#fff',
+  highlightLight: "#F9A132",
+  textHighlightLight: "#ffdb8a",
+  highlightContrastLight: "#000",
+  warningLight: "#D20000",
+
+  backgroundPlus2Light: "#fff",
+  backgroundPlus1Light: "#fbfbfb",
+  backgroundColorLight: "#F6F6F6",
+  backgroundMinus1Light: "#FAF8F6",
+  backgroundMinus2Light: "#EFEDEB",
+  backgroundVibrancyLight: "#ffffff99",
+
+  errorLight: "#fd5243",
+  shadowLight: "#000",
+
+  // dark theme
+  backgroundMinu2Dark: "#151515",
+  backgroundMinus1Dark: "#111",
+  backgroundColorDark: "#1A1A1A",
+  backgroundPlus1Dark: "#222",
+  backgroundPlus2Dark: "#333",
+  backgroundVibrancyDark: "#222222aa",
+
+  linkDark: "#498eda",
+  linkContrastDark: '#fff',
+  highlightDark: "#FBBE63",
+  textHighlightDark: "#FBBE63",
+  highlightContrastDark: "#000",
+  warningDark: "#DE3C21",
+
+  errorDark: "#fd5243",
+  shadowDark: "#000",
+
+  // interactives
+
+}
+
 const semanticTokens = {
   shadows: {
     focus: {
@@ -64,8 +105,8 @@ const semanticTokens = {
   },
   colors: {
     brand: {
-      default: '#0071DB',
-      _dark: '#498eda'
+      default: 'linkLight',
+      _dark: 'linkDark'
     },
     // separator colors
     "separator.border": {
@@ -78,24 +119,24 @@ const semanticTokens = {
     },
     // background colors
     "background.floor": {
-      default: '#F6F6F6',
-      _dark: '#1A1A1A'
+      default: 'backgroundColorLight',
+      _dark: 'backgroundColorDark'
     },
     "background.basement": {
-      default: '#FAF8F6',
-      _dark: '#111'
+      default: 'backgroundMinus1Light',
+      _dark: 'backgroundMinus1Dark'
     },
     "background.upper": {
-      default: '#fbfbfb',
-      _dark: '#222'
+      default: 'backgroundPlus1Light',
+      _dark: 'backgroundPlus1Dark'
     },
     "background.attic": {
-      default: '#fff',
-      _dark: '#333'
+      default: 'backgroundPlus2Light',
+      _dark: 'backgroundPlus2Dark'
     },
     "background.vibrancy": {
-      default: '#ffffff99',
-      _dark: '#222222aa'
+      default: 'backgroundVibrancyLight',
+      _dark: 'backgroundVibrancyDark'
     },
     // foreground colors
     "foreground.primary": {
@@ -124,42 +165,42 @@ const semanticTokens = {
       _dark: 'hsla(0, 0%, 100%, 0.16)',
     },
     // status colors
-    error: {
-      default: '#D20000',
-      _dark: '#DE3C21'
+    danger: {
+      default: 'warningLight',
+      _dark: 'warningDark'
     },
     info: {
-      default: '#0071DB',
-      _dark: '#498eda'
+      default: 'linkLight',
+      _dark: 'linkDark'
     },
     warning: {
-      default: '#D20000',
-      _dark: '#DE3C21'
+      default: 'warningLight',
+      _dark: 'warningDark'
     },
     success: {
-      default: '#4CBB17',
-      _dark: '#498eda'
+      default: 'confirmationLight',
+      _dark: 'confirmationDark'
     },
     // other colors
     textHighlight: {
-      default: '#ffdb8a',
-      _dark: '#FBBE63'
+      default: 'textHighlightLight',
+      _dark: 'textHighlightDark'
     },
     highlight: {
-      default: '#F9A132',
-      _dark: '#FBBE63'
+      default: 'highlightLight',
+      _dark: 'highlightDark'
     },
     highlightContrast: {
-      default: '#000',
-      _dark: '#000'
+      default: 'highlightContrastLight',
+      _dark: 'highlightContrastDark'
     },
     link: {
-      default: '#0071DB',
-      _dark: '#498eda'
+      default: 'linkLight',
+      _dark: 'linkDark'
     },
     linkContrast: {
-      default: '#fff',
-      _dark: '#fff'
+      default: 'linkContrastLight',
+      _dark: 'linkContrastDark'
     },
     // block content colors
     "ref.foreground": {
@@ -196,41 +237,28 @@ const components = {
   Alert: {
     variants: {
       // variant used by toasts
-      solid: ({ theme, status }) => {
-
-        // Toasts don't recieve the current color mode
-        // as a prop, so we get both colors and use one or
-        // the other based on the CSS context
-        const toastColorDefault = theme.semanticTokens.colors[ status ].default;
-        const toastColorDark = theme.semanticTokens.colors[ status ].dark;
-
-        return ({
-          container: {
-            bg: 'background.vibrancy',
-            backdropFilter: "blur(20px)",
-            color: "foreground.primary",
-            "--toast-color": toastColorDefault,
-            ".is-theme-dark &": {
-              "--toast-color": toastColorDark,
-            },
-            _after: {
-              content: "''",
-              position: "absolute",
-              inset: 0,
-              borderRadius: "inherit",
-              background: "var(--toast-color)",
-              opacity: 0.1,
-              zIndex: -1,
-            }
-          },
-          title: {
-            fontWeight: "normal"
-          },
-          icon: {
-            color: "var(--toast-color)",
+      solid: ({ colorScheme }) => ({
+        container: {
+          bg: 'background.vibrancy',
+          backdropFilter: "blur(20px)",
+          color: "foreground.primary",
+          _after: {
+            content: "''",
+            position: "absolute",
+            inset: 0,
+            borderRadius: "inherit",
+            background: colorScheme,
+            opacity: 0.1,
+            zIndex: -1,
           }
-        })
-      }
+        },
+        title: {
+          fontWeight: "normal"
+        },
+        icon: {
+          color: colorScheme || "info"
+        }
+      })
     }
   },
   Avatar: {
@@ -338,8 +366,8 @@ const components = {
       }
     },
     colorSchemes: {
-      error: {
-        color: "error"
+      danger: {
+        color: "danger"
       }
     }
   },
@@ -563,9 +591,6 @@ const styles = {
       lineHeight: '1.5',
       height: '100vh',
       fontFamily: 'default',
-    },
-    "#chakra-toast-manager-top-right, #chakra-toast-manager-top, #chakra-toast-manager-top-left": {
-      margin: "3rem 1rem"
     }
   }
 }
@@ -574,4 +599,4 @@ const sizes = {
   ...spacing
 }
 
-export const theme = extendTheme({ config, radii, fonts, shadows, semanticTokens, spacing, sizes, components, styles });
+export const theme = extendTheme({ config, radii, fonts, colors, shadows, semanticTokens, spacing, sizes, components, styles });

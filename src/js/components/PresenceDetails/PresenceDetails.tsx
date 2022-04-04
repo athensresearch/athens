@@ -54,7 +54,7 @@ const ConnectionButton = React.forwardRef((props: ConnectionButtonProps, ref) =>
 });
 
 
-export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) => {
+export const _PresenceDetails = (props: PresenceDetailsProps) => {
   const {
     hostAddress,
     currentUser,
@@ -171,4 +171,6 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
       />
     </>
   );
-}, { fallback: <></> });
+};
+
+export const PresenceDetails = withErrorBoundary(_PresenceDetails, { fallback: <></> });

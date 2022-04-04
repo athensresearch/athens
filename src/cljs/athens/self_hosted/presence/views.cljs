@@ -24,7 +24,6 @@
   [host-address]
   (.. js/navigator -clipboard (writeText host-address))
   (util/toast (clj->js {:status "info"
-                        :position "top-right"
                         :title "Host address copied to clipboard"})))
 
 
@@ -39,7 +38,6 @@
       ;; TODO: if we support navigating to a block, it should be added here.
       (rf/dispatch [:navigate :page {:id page-uid}])
       (util/toast (clj->js {:title "User is not on any page"
-                            :position "top-right"
                             :status "warning"})))))
 
 
