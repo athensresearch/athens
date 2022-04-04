@@ -35,7 +35,7 @@
                            :synchronising)]
     [:<>
      [db-modal/merge-modal merge-open?]
-     [:> Popover {:placement "bottom-start"}
+     [:> Popover {:placement "bottom-start" :isLazy true}
       [:> PopoverTrigger
        [:> IconButton {:p 0
                        :bg "background.floor"}

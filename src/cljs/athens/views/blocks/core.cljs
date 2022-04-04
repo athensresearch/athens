@@ -402,7 +402,6 @@
          [:> Container {:sx (merge block-container-inner-style
                                    {"--block-surface-color" "background.floor"})
                         :isDragging (and dragging (not is-selected))
-                        ;; :isEditing is-editing
                         :isSelected is-selected
                         :hasChildren (seq children)
                         :isOpen open
@@ -466,9 +465,9 @@
                   (swap! state update :inline-refs/open not)))
               (:inline-refs/open @state)])]
 
-          [autocomplete-search/inline-search-el block state]
-          [autocomplete-slash/slash-menu-el block state]
-
+          ;;  [autocomplete-search/inline-search-el block state]
+          ;;  [autocomplete-slash/slash-menu-el block state]
+          
           ;; Inline refs
           (when (and (> (count _refs) 0)
                      (not= :block-embed? opts)

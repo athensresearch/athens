@@ -212,7 +212,7 @@
   (let [{:block/keys [uid] sidebar
          :page/sidebar title
          :node/title} node]
-    [:> Menu
+    [:> Menu {:isLazy true}
      [:> MenuButton {:as IconButton
                      :gridArea "menu"
                      :justifySelf "flex-end"
