@@ -1,15 +1,16 @@
 (ns athens.components
   (:require
-    ["@chakra-ui/react" :refer [Checkbox Box Button]]
     ["@material-ui/icons/Edit" :default Edit]
     [athens.db :as db]
     [athens.parse-renderer :refer [component]]
     [athens.reactive :as reactive]
+    [athens.style :refer [color]]
     [athens.util :refer [recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [clojure.string :as str]
     [re-frame.core :as rf :refer [dispatch subscribe]]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 (defn todo-on-click
@@ -29,27 +30,25 @@
    TODO() - might be a good idea to keep an edit icon at top right
      for every component."
   [children]
-  [:span {:style {:display "contents"}
-          :on-click (fn [e] (.. e stopPropagation))}
+  [:span {:on-click (fn [e]
+                      (.. e stopPropagation))}
    children])
 
 
 (defmethod component :todo
   [_content uid]
   [span-click-stop
-   [:> Checkbox {:isChecked false
-                 :verticalAlign "middle"
-                 :transform "translateY(-2px)"
-                 :onChange #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}]])
+   [:input {:type      "checkbox"
+            :checked   false
+            :on-change #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}]])
 
 
 (defmethod component :done
   [_content uid]
   [span-click-stop
-   [:> Checkbox {:isChecked   true
-                 :verticalAlign "middle"
-                 :transform "translateY(-2px)"
-                 :onChange #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}]])
+   [:input {:type      "checkbox"
+            :checked   true
+            :on-change #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}]])
 
 
 (defmethod component :youtube
@@ -70,9 +69,23 @@
 (defmethod component :self
   [content _uid]
   [span-click-stop
-   [:> Button {:variant "link"
-               :color "red"}
+   [:button {:style {:color       "red"
+                     :font-family "IBM Plex Mono"}}
     content]])
+
+
+(def block-embed-adjustments
+  {:background (color :background-minus-2 :opacity-med)
+   :position   "relative"
+   ::stylefy/manual [[:>.block-container {:margin-left "0"
+                                          :padding-right "1.3rem"
+                                          ::stylefy/manual [[:textarea {:background "transparent"}]]}]
+                     [:>svg              {:position   "absolute"
+                                          :right      "5px"
+                                          :top        "5px"
+                                          :font-size  "1rem"
+                                          :z-index    "5"
+                                          :cursor     "pointer"}]]})
 
 
 (defmethod component :block-embed
@@ -84,18 +97,7 @@
     ;; todo -- not reactive. some cases where delete then ctrl-z doesn't work
     (if (db/e-by-av :block/uid block-uid)
       (r/with-let [embed-id (random-uuid)]
-                  [:> Box {:class "block-embed"
-                           :bg "background.basement"
-                           :position "relative"
-                           :sx {"> .block-container" {:ml 0
-                                                      :pr "1.3rem"
-                                                      "textarea" {:background "transparent"}}
-                                "> svg" {:position "absolute"
-                                         :right "5px"
-                                         :top "5px"
-                                         :fontSize "1rem"
-                                         :zIndex "5"
-                                         :cursor "pointer"}}}
+                  [:div.block-embed (use-style block-embed-adjustments)
                    (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
                      [:<>
                       [blocks/block-el

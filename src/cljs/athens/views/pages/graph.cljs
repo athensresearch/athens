@@ -6,32 +6,26 @@
       and customizations are based on that where as global doesn't have an explicit root
 
       Relies on material ui comps for user inputs."}
- athens.views.pages.graph
+  athens.views.pages.graph
   (:require
-   ["@chakra-ui/react" :refer [Box Accordion AccordionButton AccordionItem AccordionPanel AccordionIcon]]
-   ["@material-ui/core/Slider" :as OldSlider]
-   ["@material-ui/core/Switch" :as OldSwitch]
-   ["react-force-graph-2d" :as ForceGraph2D]
-   [athens.dates :as dates]
-   [athens.db :as db]
-   [athens.router :as router]
-   [clojure.set :as set]
-   [datascript.core :as d]
-   [re-frame.core :as rf :refer [subscribe]]
-   [reagent.core :as r]
-   [reagent.dom :as dom]))
-
-
-(def THEME-DARK
-  {:graph-node-normal   "hsla(0, 0%, 100%, 0.57)"
-   :graph-node-hlt      "#498eda"
-   :graph-link-normal   "#ffffff11"})
-
-
-(def THEME-LIGHT
-  {:graph-node-normal   "#909090"
-   :graph-node-hlt      "#0075E1"
-   :graph-link-normal   "#cfcfcf"})
+    ["@material-ui/core/ExpansionPanel" :as ExpansionPanel]
+    ["@material-ui/core/ExpansionPanelDetails" :as ExpansionPanelDetails]
+    ["@material-ui/core/ExpansionPanelSummary" :as ExpansionPanelSummary]
+    ["@material-ui/core/Slider" :as Slider]
+    ["@material-ui/core/Switch" :as Switch]
+    ["@material-ui/icons/KeyboardArrowRight" :default KeyboardArrowRight]
+    ["@material-ui/icons/KeyboardArrowUp" :default KeyboardArrowUp]
+    ["react-force-graph-2d" :as ForceGraph2D]
+    [athens.dates :as dates]
+    [athens.db :as db]
+    [athens.router :as router]
+    [athens.style :as styles]
+    [clojure.set :as set]
+    [datascript.core :as d]
+    [re-frame.core :as rf :refer [subscribe]]
+    [reagent.core :as r]
+    [reagent.dom :as dom]
+    [stylefy.core :as stylefy :refer [use-style]]))
 
 
 ;; all graph refs(react refs) reside in this atom
@@ -44,9 +38,19 @@
 ;; --- material ui ---
 
 
-(def m-slider (r/adapt-react-class (.-default OldSlider)))
+(def m-slider (r/adapt-react-class (.-default Slider)))
 
-(def m-switch (r/adapt-react-class (.-default OldSwitch)))
+
+(def m-expansion-panel (r/adapt-react-class (.-default ExpansionPanel)))
+
+
+(def m-expansion-panel-details (r/adapt-react-class (.-default ExpansionPanelDetails)))
+
+
+(def m-expansion-panel-summary (r/adapt-react-class (.-default ExpansionPanelSummary)))
+
+
+(def m-switch (r/adapt-react-class (.-default Switch)))
 
 
 ;; -------------------------------------------------------------------
@@ -169,29 +173,54 @@
 ;; -------------------------------------------------------------------
 ;; --- comps ---
 
+
+(defn graph-control-style
+  [theme]
+  {:position        "absolute"
+   :right           "10px"
+   :font-size       "14px"
+   :z-index         2
+   ::stylefy/manual [[:.MuiExpansionPanelDetails-root {:flex-flow "column"
+                                                       :color     "grey"}
+                      [:.switch {:display         "flex"
+                                 :justify-content "space-between"
+                                 :align-items     "center"}]]
+                     [:.MuiSvgIcon-root {:font-size "1.2rem"}]
+                     [:.MuiExpansionPanelSummary-content {:justify-content "space-between"}
+                      [:&.Mui-expanded {:margin     "24px 0"
+                                        :min-height "unset"}]]
+                     [:.MuiExpansionPanelSummary-root
+                      [:&.Mui-expanded {:min-height "unset"}]]
+                     [:.MuiPaper-root {:background (:graph-control-bg theme)
+                                       :color      (:graph-control-color theme)
+                                       :margin     "10px 0 2px 0"}
+                      [:&.Mui-expanded {:margin "0 0 5px 0"}]]]})
+
+
 (defn expansion-panel
   [{:keys [heading controls]} local-node-eid]
-  (let [graph-conf @(subscribe [:graph/conf])
-        graph-ref  (get @graph-ref-map (or local-node-eid :global))]
-    [:> AccordionItem
-     [:> AccordionButton
-      [:> AccordionIcon]
-      heading]
-     [:> AccordionPanel
-      (doall
-        (for [{:keys [key comp label onChange no-simulation-reheat? props class]} controls]
-          ^{:key key}
-          [:div {:class class} label
-           [comp
-            (merge
-              props
-              {:value    (key graph-conf)
-               :color    "primary"
-               :onChange (fn [_ n-val]
-                           (and onChange (onChange n-val))
-                           (rf/dispatch [:graph/set-conf key n-val])
-                           (when-not no-simulation-reheat?
-                             (.d3ReheatSimulation graph-ref)))})]]))]]))
+  (r/with-let [is-open? (r/atom false)]
+              (let [graph-conf @(subscribe [:graph/conf])
+                    graph-ref  (get @graph-ref-map (or local-node-eid :global))]
+                [m-expansion-panel
+                 [m-expansion-panel-summary
+                  {:onClick #(swap! is-open? not)}
+                  [:<> [:span heading] (if @is-open? [:> KeyboardArrowUp] [:> KeyboardArrowRight])]]
+                 [m-expansion-panel-details
+                  (doall
+                    (for [{:keys [key comp label onChange no-simulation-reheat? props class]} controls]
+                      ^{:key key}
+                      [:div {:class class} label
+                       [comp
+                        (merge
+                          props
+                          {:value    (key graph-conf)
+                           :color    "primary"
+                           :onChange (fn [_ n-val]
+                                       (and onChange (onChange n-val))
+                                       (rf/dispatch [:graph/set-conf key n-val])
+                                       (when-not no-simulation-reheat?
+                                         (.d3ReheatSimulation graph-ref)))})]]))]])))
 
 
 (defn graph-controls
@@ -203,6 +232,7 @@
    (fn []
      (let [graph-conf     @(subscribe [:graph/conf])
            graph-ref      (get @graph-ref-map (or local-node-eid :global))
+           theme          (if @(rf/subscribe [:theme/dark]) styles/THEME-DARK styles/THEME-LIGHT)
 
            ;; code theme
            ;; category -- for eg node-section and section related data
@@ -267,11 +297,7 @@
                             :no-simulation-reheat? true}]
            local-section  {:heading  "Local options"
                            :controls local-controls}]
-       [:> Accordion {:width "14em"
-                      :position "fixed"
-                      :allowMultiple true
-                      :top "4rem"
-                      :right 0}
+       [:div (use-style (graph-control-style theme))
         (doall
           (for [{:keys [heading] :as section} (remove nil? [(when-not local-node-eid
                                                               node-section)
@@ -299,9 +325,9 @@
                 graph-conf @(subscribe [:graph/conf])
                 graph-ref  (get @graph-ref-map (or local-node-eid :global))]
             ;; set canvas dimensions
-            (swap! dimensions assoc :width (-> dom-node (.. (closest "#app"))
+            (swap! dimensions assoc :width (-> dom-node (.. (closest ".graph-page"))
                                                .-parentNode .-clientWidth))
-            (swap! dimensions assoc :height (-> dom-node (.. (closest "#app"))
+            (swap! dimensions assoc :height (-> dom-node (.. (closest ".graph-page"))
                                                 .-parentNode .-clientHeight))
             ;; set init forces for graph
             (when graph-ref
@@ -388,15 +414,15 @@
                                                                  (contains? filtered-nodes-set (get link-obj "target"))))))
 
                 theme                            (if dark?
-                                                   THEME-DARK
-                                                   THEME-LIGHT)]
+                                                   styles/THEME-DARK
+                                                   styles/THEME-LIGHT)]
             [:> ForceGraph2D
              {:graphData        {:nodes nodes
                                  :links links}
               ;; example data
               #_{:nodes [{"id" "foo", "name" "name1", "val" 1}
-                        {"id" "bar", "name" "name2", "val" 10}]
-                :links [{"source" "foo", "target" "bar"}]}
+                         {"id" "bar", "name" "name2", "val" 10}]
+                 :links [{"source" "foo", "target" "bar"}]}
               :width            (:width  @dimensions)
               :height           (:height @dimensions)
               :ref              #(swap! graph-ref-map assoc (or local-node-eid :global) %)
@@ -463,12 +489,8 @@
    (let [local-node-eid (when block-uid
                           (->> [:block/uid block-uid] (d/pull @db/dsdb '[:db/id])
                                :db/id))]
-     [:> Box {:class "graph-page"
-              :gridColumn "1 / -1"
-              :position "fixed"
-              :top 0
-              :left 0
-              :width "100vw"
-              :height "100vh"}
-      [graph-root local-node-eid]
-      [graph-controls local-node-eid]])))
+     [:div.graph-page
+      {:style (merge (when local-node-eid {:min-height "500px"})
+                     {:position "relative"})}
+      [graph-controls local-node-eid]
+      [graph-root local-node-eid]])))
