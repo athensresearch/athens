@@ -23,28 +23,18 @@
                 :border "1px solid transparent"
                 :borderTopColor (when (:above @drag) "brand")
                 :borderBottomColor (when (:below @drag) "brand")}
-       [:> Button {:variant "link"
-                   :borderWidth "1px"
-                   :color "foreground.primary"
-                   :p "1rem"
-                   :display "block"
-                   :py "0.5rem"
+       [:> Button {:variant "ghost"
                    :mx "1rem"
                    :textAlign "left"
                    :justifyContent "flex-start"
                    :overflow "hidden"
-                   :fontWeight "medium"
+                   :fontWeight "normal"
                    :whiteSpace "nowrap"
                    :textOverflow "ellipsis"
                    :flex "1"
-                   :border "none"
-                   :bg "transparent"
-                   :borderRadius "md"
                    :boxShadow "0 0 0 0.25rem transparent"
                    :_focus {:outline "none"}
-                   :_hover {:bg "background.upper"}
-                   :_active {:bg "background.attic"
-                             :transitionDuration "0s"}
+                   :_active {:transitionDuration "0s"}
                    :on-click (fn [e]
                                (let [shift? (.-shiftKey e)]
                                  (rf/dispatch [:reporting/navigation {:source :left-sidebar

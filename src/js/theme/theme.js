@@ -49,7 +49,8 @@ const semanticTokens = {
       _dark: "0 0.25rem 1rem #00000055",
     },
     menu: {
-      default: "0 0.25rem 1rem #00000055",
+      default: "0 0.25rem 1rem #00000022",
+      _dark: "0 0.25rem 1rem #00000022",
     },
     popover: {
       default: "0 0.25rem 1rem #00000055",
@@ -68,11 +69,11 @@ const semanticTokens = {
     },
     // separator colors
     "separator.border": {
-      default: '00000011',
+      default: '00000022',
       _dark: '#ffffff55'
     },
     "separator.divider": {
-      default: '#00000011',
+      default: '#00000022',
       _dark: '#ffffff11'
     },
     // background colors
@@ -105,9 +106,17 @@ const semanticTokens = {
       default: 'hsla(0, 0%, 0%, 0.57)',
       _dark: 'hsla(0, 0%, 100%, 0.57)'
     },
+    "foreground.tertiary": {
+      default: 'hsla(0, 0%, 0%, 0.2)',
+      _dark: 'hsla(0, 0%, 100%, 0.2)'
+    },
     // interactions
-    "interaction.surface.hover": {
+    "interaction.surface": {
       default: 'hsla(0, 0%, 0%, 0.04)',
+      _dark: 'hsla(0, 0%, 100%, 0.04)',
+    },
+    "interaction.surface.hover": {
+      default: 'hsla(0, 0%, 0%, 0.08)',
       _dark: 'hsla(0, 0%, 100%, 0.08)',
     },
     "interaction.surface.active": {
@@ -292,6 +301,18 @@ const components = {
         borderRadius: "1px"
       },
       solid: {
+        bg: "interaction.surface",
+        _hover: {
+          bg: "interaction.surface.hover"
+        },
+        _active: {
+          color: 'foreground.primary',
+          bg: 'interaction.surface.active',
+        },
+      },
+      ghost: {
+        bg: "transparent",
+        color: "foreground.primary",
         _hover: {
           bg: "interaction.surface.hover"
         },
@@ -358,6 +379,7 @@ const components = {
         overflow: 'hidden',
         p: 0,
         bg: 'background.vibrancy',
+        borderColor: 'separator.divider',
         backdropFilter: "blur(20px)",
         minWidth: '0',
         width: 'max-content',
@@ -376,6 +398,21 @@ const components = {
         "svg": {
           flexShrink: 0,
           fontSize: "1.5em",
+        },
+        _focus: {
+          background: "interaction.surface.hover",
+        },
+        _focusVisible: {
+          background: "interaction.surface.hover",
+        },
+        _hover: {
+          background: "interaction.surface.hover",
+        },
+        _active: {
+          background: "interaction.surface.active",
+        },
+        _expanded: {
+          background: "interaction.surface.active",
         },
         // additional selector to catch icons not using the icon prop
         "&& > svg:first-of-type, svg:not(span > svg)": {
@@ -426,6 +463,16 @@ const components = {
     }),
     defaultProps: {
       thickness: '1.5px',
+    }
+  },
+  Switch: {
+    baseStyle: {
+      track: {
+        background: "foreground.tertiary",
+        _checked: {
+          background: "link",
+        }
+      }
     }
   },
   Table: {
