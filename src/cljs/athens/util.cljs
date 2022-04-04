@@ -1,8 +1,6 @@
 (ns athens.util
   (:require
     ["/textarea" :as getCaretCoordinates]
-    ["/theme/theme" :refer [theme]]
-    ["@chakra-ui/react" :refer [createStandaloneToast]]
     [athens.config :as config]
     [athens.electron.utils :as electron.utils]
     [clojure.string :as string]
@@ -14,9 +12,6 @@
   (:import
     (goog.events
       KeyCodes)))
-
-
-(def toast (createStandaloneToast (clj->js {:theme theme})))
 
 
 ;; Electron ipcMain Channels
@@ -222,8 +217,8 @@
   (let [os (.. js/window -navigator -appVersion)]
     (cond
       (re-find #"Windows" os) :windows
-      (re-find #"Mac" os) :mac
-      :else :linux)))
+      (re-find #"Linux" os) :linux
+      (re-find #"Mac" os) :mac)))
 
 
 (defn is-mac?
