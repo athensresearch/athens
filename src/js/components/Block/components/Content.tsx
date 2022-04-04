@@ -47,8 +47,8 @@ const _Content = ({ children, fontSize, ...props }) => {
       "div, span, p, blockquote": {
         pointerEvents: "none",
       },
-      // activate interactive content (links, buttons)
-      "a, button": {
+      // activate interactive content (links, buttons, etc.)
+      "a, button, label, video, embed, iframe, img": {
         pointerEvents: "auto",
         zIndex: 2,
         position: "relative"
