@@ -86,10 +86,10 @@
 (defn- delete-msg-prompt
   [{:keys [name base-dir url] :as db}]
   (let [remote-db? (utils/remote-db? db)
-        part-1 (str "Confirm removing \"" name "\" from the list?\n\n")
+        part-1 (str "Remove \"" name "\"?\n\n")
         part-2 (if remote-db?
-                 (str "The data will still remain at remote server " url ".")
-                 (str "The files will still remain locally on disk at \"" base-dir "\"."))]
+                 (str "The data will still be available at " url ".")
+                 (str "The files will still be available at \"" base-dir "\"."))]
     (str part-1 part-2)))
 
 

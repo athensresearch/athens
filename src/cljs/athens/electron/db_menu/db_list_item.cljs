@@ -1,8 +1,7 @@
 (ns athens.electron.db-menu.db-list-item
   (:require
+    ["/components/Icons/Icons" :refer [XmarkIcon]]
     ["@chakra-ui/react" :refer [VStack Box Flex Text Button IconButton]]
-    ["@material-ui/icons/Clear" :default Clear]
-    ["@material-ui/icons/Link" :default Link]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
     [athens.electron.dialogs :as dialogs]
     [re-frame.core :refer [dispatch]]))
@@ -34,23 +33,21 @@
               :color "foreground.secondary"
               :overflow "hidden"
               :title (:id db)}
-     (when (:is-remote db)
-       [:> Link])
      (:id db)]]])
 
 
 (defn db-item
-  [{:keys [db on-click on-remove]}]
+  [{:keys [db on-click on-remove is-disabled]}]
   [:> Box {:display "grid"
-           :borderTopWidth "1px"
-           :borderTopStyle "solid"
-           :borderTopColor "separator.divider"
+           :_notFirst {:borderTopWidth "1px"
+                       :borderTopStyle "solid"
+                       :borderTopColor "separator.divider"}
            :gridTemplateAreas "'main'"}
    [:> Button {:onClick (when on-click on-click)
+               :isDisabled (or is-disabled (not on-click))
                :gridArea "main"
                :whiteSpace "nowrap"
                :bg "transparent"
-               :isDisabled (not on-click)
                :display "flex"
                :gap 2
                :py 2
@@ -75,8 +72,6 @@
                :color "foreground.secondary"
                :overflow "hidden"
                :title (:id db)}
-      (when (:is-remote db)
-        [:> Link])
       (:id db)]]]
    (when on-remove
      [:> IconButton
@@ -87,17 +82,18 @@
        :size "sm"
        :mr 2
        :bg "transparent"}
-      [:> Clear]])])
+      [:> XmarkIcon]])])
 
 
 (defn db-list-item
-  [{:keys [db is-current]}]
+  [{:keys [db is-current is-disabled]}]
   (let [remove-db-click-handler (fn [e]
                                   (dialogs/delete-dialog! db)
                                   (.. e stopPropagation))]
     (if is-current
       [active-db {:db db}]
       [db-item {:db db
+                :is-disabled is-disabled
                 :on-click #(dispatch [:db-picker/select-db db])
                 :on-remove remove-db-click-handler}])))
 

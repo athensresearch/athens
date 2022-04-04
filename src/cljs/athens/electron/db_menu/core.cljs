@@ -1,6 +1,6 @@
 (ns athens.electron.db-menu.core
   (:require
-    ["@chakra-ui/react" :refer [Box IconButton Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button]]
+    ["@chakra-ui/react" :refer [Box IconButton Spinner Text Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button]]
     ["react-focus-lock" :default FocusLock]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
     [athens.electron.db-menu.db-list-item :refer [db-list-item]]
@@ -70,14 +70,22 @@
                        :color "foreground.secondary"}
            "Other databases"]
           [:> VStack {:align "stretch"
+                      :position "relative"
                       :spacing 0
                       :overflow-y "auto"}
-           {:align "stretch" :spacing 0}
            (doall
              (for [[key db] inactive-dbs]
                [db-list-item {:db db
+                              :is-disabled (= sync-status :synchronising)
                               :is-current false
-                              :key key}]))]
+                              :key key}]))
+           (when (= :synchronising sync-status)
+             [:> VStack {:align "center"
+                         :background "background.vibrancy"
+                         :backdropFilter "blur(0.25ch)"
+                         :justify "center" :position "absolute" :inset 0}
+              [:> Spinner]
+              [:> Text "Syncing..."]])]
           ;; Add DB control
           [:> ButtonGroup {:borderTop "1px solid" :borderTopColor "separator.divider" :p 2 :pt 0 :pl 10 :size "sm" :width "100%" :ml 10 :justifyContent "flex-start"}
            [:> Button {:onClick #(dispatch [:modal/toggle])}

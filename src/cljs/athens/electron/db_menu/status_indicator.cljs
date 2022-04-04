@@ -1,9 +1,8 @@
 (ns athens.electron.db-menu.status-indicator
   (:require
-    ["@chakra-ui/react" :refer [Box Tooltip]]
+    ["@chakra-ui/react" :refer [Box Tooltip Spinner]]
     ["@material-ui/icons/CheckCircle" :default CheckCircle]
-    ["@material-ui/icons/Error" :default Error]
-    ["@material-ui/icons/Sync" :default Sync]))
+    ["@material-ui/icons/Error" :default Error]))
 
 
 (defn status-indicator
@@ -34,4 +33,4 @@
                           [:> CheckCircle]]
      :else [:> Tooltip
             {:label "Synchronizing..."}
-            [:> Sync]])])
+            [:> Spinner {:emptyColor "background.vibrancy" :speed "2s" :size "xs"}]])])
