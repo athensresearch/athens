@@ -28,47 +28,6 @@ const radii = {
   full: '9999px',
 }
 
-const colors = {
-  // light theme
-  linkLight: "#0071DB",
-  linkContrastLight: '#fff',
-  highlightLight: "#F9A132",
-  textHighlightLight: "#ffdb8a",
-  highlightContrastLight: "#000",
-  warningLight: "#D20000",
-
-  backgroundPlus2Light: "#fff",
-  backgroundPlus1Light: "#fbfbfb",
-  backgroundColorLight: "#F6F6F6",
-  backgroundMinus1Light: "#FAF8F6",
-  backgroundMinus2Light: "#EFEDEB",
-  backgroundVibrancyLight: "#ffffff99",
-
-  errorLight: "#fd5243",
-  shadowLight: "#000",
-
-  // dark theme
-  backgroundMinu2Dark: "#151515",
-  backgroundMinus1Dark: "#111",
-  backgroundColorDark: "#1A1A1A",
-  backgroundPlus1Dark: "#222",
-  backgroundPlus2Dark: "#333",
-  backgroundVibrancyDark: "#222222aa",
-
-  linkDark: "#498eda",
-  linkContrastDark: '#fff',
-  highlightDark: "#FBBE63",
-  textHighlightDark: "#FBBE63",
-  highlightContrastDark: "#000",
-  warningDark: "#DE3C21",
-
-  errorDark: "#fd5243",
-  shadowDark: "#000",
-
-  // interactives
-
-}
-
 const semanticTokens = {
   shadows: {
     focus: {
@@ -90,7 +49,8 @@ const semanticTokens = {
       _dark: "0 0.25rem 1rem #00000055",
     },
     menu: {
-      default: "0 0.25rem 1rem #00000055",
+      default: "0 0.25rem 1rem #00000022",
+      _dark: "0 0.25rem 1rem #00000022",
     },
     popover: {
       default: "0 0.25rem 1rem #00000055",
@@ -104,38 +64,38 @@ const semanticTokens = {
   },
   colors: {
     brand: {
-      default: 'linkLight',
-      _dark: 'linkDark'
+      default: '#0071DB',
+      _dark: '#498eda'
     },
     // separator colors
     "separator.border": {
-      default: '00000011',
+      default: '00000022',
       _dark: '#ffffff55'
     },
     "separator.divider": {
-      default: '#00000011',
+      default: '#00000022',
       _dark: '#ffffff11'
     },
     // background colors
     "background.floor": {
-      default: 'backgroundColorLight',
-      _dark: 'backgroundColorDark'
+      default: '#F6F6F6',
+      _dark: '#1A1A1A'
     },
     "background.basement": {
-      default: 'backgroundMinus1Light',
-      _dark: 'backgroundMinus1Dark'
+      default: '#FAF8F6',
+      _dark: '#111'
     },
     "background.upper": {
-      default: 'backgroundPlus1Light',
-      _dark: 'backgroundPlus1Dark'
+      default: '#fbfbfb',
+      _dark: '#222'
     },
     "background.attic": {
-      default: 'backgroundPlus2Light',
-      _dark: 'backgroundPlus2Dark'
+      default: '#fff',
+      _dark: '#333'
     },
     "background.vibrancy": {
-      default: 'backgroundVibrancyLight',
-      _dark: 'backgroundVibrancyDark'
+      default: '#ffffff99',
+      _dark: '#222222aa'
     },
     // foreground colors
     "foreground.primary": {
@@ -146,9 +106,17 @@ const semanticTokens = {
       default: 'hsla(0, 0%, 0%, 0.57)',
       _dark: 'hsla(0, 0%, 100%, 0.57)'
     },
+    "foreground.tertiary": {
+      default: 'hsla(0, 0%, 0%, 0.2)',
+      _dark: 'hsla(0, 0%, 100%, 0.2)'
+    },
     // interactions
-    "interaction.surface.hover": {
+    "interaction.surface": {
       default: 'hsla(0, 0%, 0%, 0.04)',
+      _dark: 'hsla(0, 0%, 100%, 0.04)',
+    },
+    "interaction.surface.hover": {
+      default: 'hsla(0, 0%, 0%, 0.08)',
       _dark: 'hsla(0, 0%, 100%, 0.08)',
     },
     "interaction.surface.active": {
@@ -156,42 +124,42 @@ const semanticTokens = {
       _dark: 'hsla(0, 0%, 100%, 0.16)',
     },
     // status colors
-    danger: {
-      default: 'warningLight',
-      _dark: 'warningDark'
+    error: {
+      default: '#D20000',
+      _dark: '#DE3C21'
     },
     info: {
-      default: 'linkLight',
-      _dark: 'linkDark'
+      default: '#0071DB',
+      _dark: '#498eda'
     },
     warning: {
-      default: 'warningLight',
-      _dark: 'warningDark'
+      default: '#D20000',
+      _dark: '#DE3C21'
     },
     success: {
-      default: 'confirmationLight',
-      _dark: 'confirmationDark'
+      default: '#4CBB17',
+      _dark: '#498eda'
     },
     // other colors
     textHighlight: {
-      default: 'textHighlightLight',
-      _dark: 'textHighlightDark'
+      default: '#ffdb8a',
+      _dark: '#FBBE63'
     },
     highlight: {
-      default: 'highlightLight',
-      _dark: 'highlightDark'
+      default: '#F9A132',
+      _dark: '#FBBE63'
     },
     highlightContrast: {
-      default: 'highlightContrastLight',
-      _dark: 'highlightContrastDark'
+      default: '#000',
+      _dark: '#000'
     },
     link: {
-      default: 'linkLight',
-      _dark: 'linkDark'
+      default: '#0071DB',
+      _dark: '#498eda'
     },
     linkContrast: {
-      default: 'linkContrastLight',
-      _dark: 'linkContrastDark'
+      default: '#fff',
+      _dark: '#fff'
     },
     // block content colors
     "ref.foreground": {
@@ -228,28 +196,41 @@ const components = {
   Alert: {
     variants: {
       // variant used by toasts
-      solid: ({ colorScheme }) => ({
-        container: {
-          bg: 'background.vibrancy',
-          backdropFilter: "blur(20px)",
-          color: "foreground.primary",
-          _after: {
-            content: "''",
-            position: "absolute",
-            inset: 0,
-            borderRadius: "inherit",
-            background: colorScheme,
-            opacity: 0.1,
-            zIndex: -1,
+      solid: ({ theme, status }) => {
+
+        // Toasts don't recieve the current color mode
+        // as a prop, so we get both colors and use one or
+        // the other based on the CSS context
+        const toastColorDefault = theme.semanticTokens.colors[ status ].default;
+        const toastColorDark = theme.semanticTokens.colors[ status ].dark;
+
+        return ({
+          container: {
+            bg: 'background.vibrancy',
+            backdropFilter: "blur(20px)",
+            color: "foreground.primary",
+            "--toast-color": toastColorDefault,
+            ".is-theme-dark &": {
+              "--toast-color": toastColorDark,
+            },
+            _after: {
+              content: "''",
+              position: "absolute",
+              inset: 0,
+              borderRadius: "inherit",
+              background: "var(--toast-color)",
+              opacity: 0.1,
+              zIndex: -1,
+            }
+          },
+          title: {
+            fontWeight: "normal"
+          },
+          icon: {
+            color: "var(--toast-color)",
           }
-        },
-        title: {
-          fontWeight: "normal"
-        },
-        icon: {
-          color: colorScheme || "info"
-        }
-      })
+        })
+      }
     }
   },
   Avatar: {
@@ -320,6 +301,18 @@ const components = {
         borderRadius: "1px"
       },
       solid: {
+        bg: "interaction.surface",
+        _hover: {
+          bg: "interaction.surface.hover"
+        },
+        _active: {
+          color: 'foreground.primary',
+          bg: 'interaction.surface.active',
+        },
+      },
+      ghost: {
+        bg: "transparent",
+        color: "foreground.primary",
         _hover: {
           bg: "interaction.surface.hover"
         },
@@ -345,8 +338,8 @@ const components = {
       }
     },
     colorSchemes: {
-      danger: {
-        color: "danger"
+      error: {
+        color: "error"
       }
     }
   },
@@ -386,6 +379,7 @@ const components = {
         overflow: 'hidden',
         p: 0,
         bg: 'background.vibrancy',
+        borderColor: 'separator.divider',
         backdropFilter: "blur(20px)",
         minWidth: '0',
         width: 'max-content',
@@ -404,6 +398,21 @@ const components = {
         "svg": {
           flexShrink: 0,
           fontSize: "1.5em",
+        },
+        _focus: {
+          background: "interaction.surface.hover",
+        },
+        _focusVisible: {
+          background: "interaction.surface.hover",
+        },
+        _hover: {
+          background: "interaction.surface.hover",
+        },
+        _active: {
+          background: "interaction.surface.active",
+        },
+        _expanded: {
+          background: "interaction.surface.active",
         },
         // additional selector to catch icons not using the icon prop
         "&& > svg:first-of-type, svg:not(span > svg)": {
@@ -454,6 +463,16 @@ const components = {
     }),
     defaultProps: {
       thickness: '1.5px',
+    }
+  },
+  Switch: {
+    baseStyle: {
+      track: {
+        background: "foreground.tertiary",
+        _checked: {
+          background: "link",
+        }
+      }
     }
   },
   Table: {
@@ -544,6 +563,9 @@ const styles = {
       lineHeight: '1.5',
       height: '100vh',
       fontFamily: 'default',
+    },
+    "#chakra-toast-manager-top-right, #chakra-toast-manager-top, #chakra-toast-manager-top-left": {
+      margin: "3rem 1rem"
     }
   }
 }
@@ -552,4 +574,4 @@ const sizes = {
   ...spacing
 }
 
-export const theme = extendTheme({ config, radii, fonts, colors, shadows, semanticTokens, spacing, sizes, components, styles });
+export const theme = extendTheme({ config, radii, fonts, shadows, semanticTokens, spacing, sizes, components, styles });
