@@ -1,6 +1,7 @@
-import { Button, IconButton, Box, useDisclosure, Collapse, VStack } from '@chakra-ui/react';
+import { Heading, Button, IconButton, Box, useDisclosure, Collapse, Text, VStack, Divider, HStack } from '@chakra-ui/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { XmarkIcon, ChevronUpIcon } from '@/Icons/Icons';
+import { XmarkIcon, ChevronUpIcon, LinkedIcon, UnlinkedIcon } from '@/Icons/Icons';
+import { withErrorBoundary } from 'react-error-boundary';
 
 const Container = motion(Box)
 
@@ -120,3 +121,121 @@ export const SidebarItem = ({ title, defaultIsOpen, onRemove, onClose, children 
       </Box>
     </VStack >)
 }
+
+export const PageReference = ({ children }) => {
+  return (
+    <Box>
+      {children}
+    </Box>
+  )
+}
+
+interface PageReferences {
+  children: React.ReactNode,
+  extras: React.ReactNode,
+  showIfEmpty: boolean,
+  count: number,
+  title: string,
+  defaultIsOpen: boolean,
+  onOpen: () => void,
+  onClose: () => void,
+}
+
+export const ReferenceHeader = ({ onClick, title }) => {
+  return <Heading
+    as="h4"
+    pl={4}
+  >
+    <Button
+      variant="link"
+      onClick={onClick}
+      textTransform="uppercase"
+      fontWeight="bold"
+      fontSize="xs"
+      color="foreground.secondary"
+      opacity={0.5}
+      display="flex"
+    >{title}</Button>
+  </Heading>
+}
+
+export const ReferenceGroup = ({ title, onClickTitle, children }) => {
+  return (
+    <VStack
+      align="stretch"
+      spacing={4}
+      py={4}
+      _notFirst={{
+        borderTop: "1px solid",
+        borderColor: "separator.divider"
+      }}
+    >
+      {title && <ReferenceHeader onClick={onClickTitle} title={title} />}
+      {children}
+    </VStack>
+  )
+}
+
+export const ReferenceBlock = ({ children, actions }) => {
+  return <Box
+  >{children} {actions}</Box>
+}
+
+const EmptyReferencesNotice = ({ title }: { title: string }) => {
+  return (<Text
+    background="background.floor"
+    color="foreground.secondary"
+    borderRadius="md"
+    p={4}>
+    No {title.toLowerCase()}
+  </Text>)
+}
+
+export const PageReferences = withErrorBoundary(({ children, count, title, defaultIsOpen, onOpen, onClose, extras }: PageReferences) => {
+
+  const { isOpen, onToggle } = useDisclosure({
+    defaultIsOpen: defaultIsOpen,
+    onClose: onClose,
+    onOpen: onOpen
+  });
+
+  return (
+    <VStack
+      align="stretch"
+      position="relative"
+      spacing={0}
+      p={1}
+      mt={2}
+      borderRadius="md"
+      background="background.basement"
+    >
+      <HStack>
+        <Button onClick={onToggle}
+          variant="ghost"
+          flex="1 1 100%"
+          color="foreground.secondary"
+          textAlign="left"
+          justifyContent="flex-start"
+          overflow="hidden"
+          whiteSpace="nowrap"
+          leftIcon={
+            <ChevronUpIcon transform={isOpen ? "rotate(180deg)" : null}
+              boxSize={1}
+              justifySelf="center"
+            />
+          }
+        >
+          {title}
+          <Text marginInlineStart={2} minWidth="1.75em" textAlign="center" background="background.basement" borderRadius="full" p={1} fontSize="sm">{count}</Text>
+        </Button>
+        {extras}
+      </HStack>
+      <Collapse in={(isOpen && !!children)}>
+        <Divider />
+        <VStack spacing={0} pl={4} py={2} align="stretch">
+          {children}
+        </VStack>
+      </Collapse>
+    </VStack>)
+},
+  { fallback: <Text>Error displaying references</Text> })

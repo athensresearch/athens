@@ -48,8 +48,8 @@ const colors = {
   shadowLight: "#000",
 
   // dark theme
-  backgroundMinu2Dark: "#151515",
-  backgroundMinus1Dark: "#111",
+  backgroundMinus2Dark: "#222",
+  backgroundMinus1Dark: "#151515",
   backgroundColorDark: "#1A1A1A",
   backgroundPlus1Dark: "#222",
   backgroundPlus2Dark: "#333",
@@ -292,6 +292,19 @@ const components = {
       separator: {
         color: 'separator.border'
       },
+    },
+    variants: {
+      strict: {
+        link: {
+          "*": {
+            fontSize: 'inherit !important',
+            fontWeight: 'inherit !important',
+            lineHeight: 'inherit !important',
+            color: 'inherit !important',
+            textDecoration: 'none !important',
+          }
+        }
+      }
     }
   },
   Button: {
