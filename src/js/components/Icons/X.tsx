@@ -1,1 +1,0 @@
-export const X = () => <path d="M5 5L11.75 11.75M18.5 18.5L11.75 11.75M11.75 11.75L18.5 5M11.75 11.75L5 18.5" className="stroke" />;
