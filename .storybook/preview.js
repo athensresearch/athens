@@ -1,10 +1,13 @@
 import React from 'react';
 
 import { themes } from '@storybook/theming';
-import { ChakraProvider } from '@chakra-ui/react';
+import {
+  OverlayProvider
+} from '@react-aria/overlays';
+import { NotificationContainer } from '@/Notifications/Notifications';
 
-
-import { theme } from '../src/js/theme/theme';
+import { classnames } from '../src/js/components/utils/classnames';
+import { GlobalStyles } from '../src/js/components/utils/style/style';
 import { badges, Storybook } from '../src/js/components/utils/storybook';
 
 export const parameters = {
@@ -62,12 +65,18 @@ export const decorators = [
     console.log(context);
     return (
       <>
-        <ChakraProvider>
+        <GlobalStyles />
+        <OverlayProvider>
           <Storybook.App
-            id="app" >
+            id="app"
+            className={classnames(
+              context.globals.hostType === 'electron' ? 'is-electron' : 'is-browser',
+              context.viewMode === 'docs' ? 'is-storybook-docs' : 'is-storybook-canvas'
+            )}>
             <Story />
+            <NotificationContainer />
           </Storybook.App>
-        </ChakraProvider>
+        </OverlayProvider>
       </>
     )
   },

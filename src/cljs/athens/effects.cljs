@@ -17,7 +17,8 @@
     [goog.dom.selection          :refer [setCursorPosition]]
     [malli.core                  :as m]
     [malli.error                 :as me]
-    [re-frame.core               :as rf]))
+    [re-frame.core               :as rf]
+    [stylefy.core                :as stylefy]))
 
 
 ;; Effects
@@ -130,6 +131,12 @@
                        (set! (.-selectionStart target) start)
                        (set! (.-selectionEnd target) end)))
                    100)))
+
+
+(rf/reg-fx
+  :stylefy/tag
+  (fn [[tag properties]]
+    (stylefy/tag tag properties)))
 
 
 (rf/reg-fx

@@ -1,14 +1,80 @@
 (ns athens.views.pages.all-pages
   (:require
-    ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button Box]]
     ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
     ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
     [athens.common-db          :as common-db]
     [athens.dates              :as dates]
     [athens.db                 :as db]
     [athens.router             :as router]
+    [athens.style              :as style :refer [color OPACITIES]]
     [clojure.string            :refer [lower-case]]
-    [re-frame.core             :as rf]))
+    [garden.selectors          :as selectors]
+    [re-frame.core             :as rf]
+    [stylefy.core              :as stylefy :refer [use-style]]))
+
+
+;; Styles
+
+
+(def page-style
+  {:display "flex"
+   :margin "5rem auto"
+   :flex-basis "100%"
+   :max-width "70rem"})
+
+
+(def table-style
+  {:flex "1 1 100%"
+   :margin "0 2rem"
+   :text-align "left"
+   :border-collapse "collapse"
+   ::stylefy/manual [[:tbody {:vertical-align "top"}
+                      [:tr {:transition "background 0.1s ease"}
+                       [:td {:border-top (str "1px solid " (color :border-color))
+                             :transition "box-shadow 0.1s ease"}
+                        [:&.title {:color (color :link-color)
+                                   :width "15vw"
+                                   :cursor "pointer"
+                                   :min-width "10em"
+                                   :word-break "break-word"
+                                   :font-weight "500"
+                                   :font-size "1.3125em"
+                                   :line-height "1.28"}]
+                        [:&.links {:font-size "1em"
+                                   :text-align "center"}]
+                        [:&.body-preview {:word-break "break-word"
+                                          :overflow "hidden"
+                                          :text-overflow "ellipsis"
+                                          :display "-webkit-box"
+                                          :-webkit-mask "linear-gradient(to bottom, #fff calc(100% - 1em), transparent)"
+                                          :-webkit-line-clamp "3"
+                                          :-webkit-box-orient "vertical"}
+                         [:span:empty {:display "none"}]
+                         [(selectors/+ :span :span)
+                          [:&:before {:content "'•'"
+                                      :margin-inline "0.5em"
+                                      :opacity (:opacity-low OPACITIES)}]]]
+                        [:&.date {:text-align "right"
+                                  :opacity (:opacity-high OPACITIES)
+                                  :font-size "0.75em"
+                                  :min-width "9em"}]
+                        [:&:first-child {:border-radius "0.5rem 0 0 0.5rem"
+                                         :box-shadow "-1rem 0 transparent"}]
+                        [:&:last-child {:border-radius "0 0.5rem 0.5rem 0"
+                                        :box-shadow "1rem 0 transparent"}]]
+                       [:&:hover {:background-color (color :background-minus-1 :opacity-med)
+                                  :border-radius "0.5rem"}
+                        [:td [:&:first-child {:box-shadow [["-1rem 0 " (color :background-minus-1 :opacity-med)]]}]]
+                        [:td [:&:last-child {:box-shadow [["1rem 0 " (color :background-minus-1 :opacity-med)]]}]]]]]
+                     [:td :th {:padding "0.5rem"}]
+                     [:th {:opacity (:opacity-med OPACITIES)
+                           :user-select "none"}
+                      [:&.sortable {:cursor "pointer"}
+                       [:.wrap-label {:display "flex"
+                                      :align-items "center"}]
+                       [:&.date
+                        [:.wrap-label {:flex-direction "row-reverse"}]]
+                       [:&:hover {:opacity 1}]]]]})
 
 
 ;; Sort state and logic
@@ -63,19 +129,17 @@
 ;; Components
 
 (defn- sortable-header
-  ([column-id label width isNumeric]
+  ([column-id label]
+   (sortable-header column-id label {:date? false}))
+  ([column-id label {:keys [date?]}]
    (let [sorted-by @(rf/subscribe [:all-pages/sorted-by])
          growing?  @(rf/subscribe [:all-pages/sort-order-ascending?])]
-     [:> Th {:width width :isNumeric isNumeric}
-      [:> Button {:onClick #(rf/dispatch [:all-pages/sort-by column-id])
-                  :size "sm"
-                  :variant "link"}
-       (when-not isNumeric label)
+     [:th {:on-click #(rf/dispatch [:all-pages/sort-by column-id])
+           :class ["sortable" (when date? "date")]}
+      [:div.wrap-label
+       [:h5 label]
        (when (= sorted-by column-id)
-         (if growing?
-           [:> ArrowDropUp]
-           [:> ArrowDropDown]))
-       (when isNumeric label)]])))
+         (if growing? [:> ArrowDropUp] [:> ArrowDropDown]))]])))
 
 
 (defn page
@@ -83,39 +147,30 @@
   (let [all-pages (common-db/get-all-pages @db/dsdb)]
     (fn []
       (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
-        [:> Box {:px 4
-                 :margin "calc(var(--app-header-height) + 2rem) auto 5rem"}
-         [:> Table {:variant "striped"}
-          [:> Thead
-           [:> Tr
+        [:div (use-style page-style)
+         [:table (use-style table-style)
+          [:thead
+           [:tr
             [sortable-header :title "Title"]
-            [sortable-header :links-count "Links" "12rem" true]
-            [sortable-header :modified "Modified" "16rem" false {:date? true}]
-            [sortable-header :created "Created" "16rem" false {:date? true}]]]
-          [:> Tbody
+            [sortable-header :links-count "Links"]
+            [sortable-header :modified "Modified" {:date? true}]
+            [sortable-header :created "Created" {:date? true}]]]
+          [:tbody
            (doall
              (for [{:keys    [block/uid node/title block/_refs]
                     modified :edit/time
                     created  :create/time} sorted-pages]
-               [:> Tr {:key uid}
-                [:> Td {:overflow "hidden"}
-                 [:> Button {:variant "link"
-                             :justifyContent "flex-start"
-                             :textAlign "left"
-                             :padding "0"
-                             :color "link"
-                             :display "block"
-                             :maxWidth "100%"
-                             :whiteSpace "nowrap"
-                             :onClick (fn [e]
-                                        (let [shift? (.-shiftKey e)]
-                                          (rf/dispatch [:reporting/navigation {:source :all-pages
-                                                                               :target :page
-                                                                               :pane   (if shift?
-                                                                                         :right-pane
-                                                                                         :main-pane)}])
-                                          (router/navigate-page title e)))}
-                  title]]
-                [:> Td {:width "12rem" :whiteSpace "nowrap" :color "foreground.secondary" :isNumeric true} (count _refs)]
-                [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string modified)]
-                [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))
+               [:tr {:key uid}
+                [:td {:class    "title"
+                      :on-click (fn [e]
+                                  (let [shift? (.-shiftKey e)]
+                                    (rf/dispatch [:reporting/navigation {:source :all-pages
+                                                                         :target :page
+                                                                         :pane   (if shift?
+                                                                                   :right-pane
+                                                                                   :main-pane)}])
+                                    (router/navigate-page title e)))}
+                 title]
+                [:td {:class "links"} (count _refs)]
+                [:td {:class "date"} (dates/date-string modified)]
+                [:td {:class "date"} (dates/date-string created)]]))]]]))))
