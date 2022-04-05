@@ -245,7 +245,6 @@
   [conn idx]
   (let [res @(fdb/block-query conn default-ledger {:block (inc idx) :pretty-print true})
         ex-msg (ex-message res)]
-    (println res)
     ;; If the query because the is higher than the total blocks,
     ;; result will be an error map instead of seq.
     (if (and ex-msg (str/starts-with? ex-msg "Start block is out of range for this ledger."))
