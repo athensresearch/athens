@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.26](https://github.com/athensresearch/athens/compare/v2.0.0-beta.25...v2.0.0-beta.26) (2022-04-05)
+
+
+### Features
+
+* migrate events without a uid ([98ab9df](https://github.com/athensresearch/athens/commit/98ab9dfe16556b293120a53f064c2365d85e46b8))
+* migrate to efficient event log filtering ([420a128](https://github.com/athensresearch/athens/commit/420a1286627e22a9d978f936001a7c6e10443566))
+* support event log migrations ([47fcabe](https://github.com/athensresearch/athens/commit/47fcabe2371ec21e641058ea88e5e6b04ba23f41))
+
+
+### Bug Fixes
+
+* allow remote dbs in web athens ([094192e](https://github.com/athensresearch/athens/commit/094192e5d23a821f0f04005e707310c082016f4e))
+* bugs alex found ([677fb6e](https://github.com/athensresearch/athens/commit/677fb6ea085b4ed1d254d2e41b765b68a559c75e))
+* current version is 0 if none is present ([bb8ef68](https://github.com/athensresearch/athens/commit/bb8ef68b886efe07f32ccfe5ce60de20c5c934c3))
+* event-log/events now received id as kw arg ([25543ff](https://github.com/athensresearch/athens/commit/25543ff4a23df89b86e13ae83cd70adb98c72c1a))
+* exclude db dump from size limit ([7b28172](https://github.com/athensresearch/athens/commit/7b28172aaf764ea98b214ffe910eaafb211d8bfe))
+* Feature block link correct counting ([#2111](https://github.com/athensresearch/athens/issues/2111)) ([f1807a2](https://github.com/athensresearch/athens/commit/f1807a2b35879b281c22e46b52dd8ba86996b7fc))
+* fix args on migrate call site ([58ae736](https://github.com/athensresearch/athens/commit/58ae736581c59805305cc8f611af55f59c7d18e0))
+* fix wording on some limit messages ([7f55150](https://github.com/athensresearch/athens/commit/7f55150b1ec395740bb859250fd0c2799ad7113e))
+* get-current-version should return 0 on err ([a94fc64](https://github.com/athensresearch/athens/commit/a94fc648ce5d70d3eec78ba3f36e5b3a84dcb4d7))
+* minor migration logging ([d716ae7](https://github.com/athensresearch/athens/commit/d716ae7d49581d9b766780091422c79c9ab1ff5e))
+* query page size for migrations should be 100 ([7dadf54](https://github.com/athensresearch/athens/commit/7dadf546142095474e107884d573672d748040c5))
+* remove leftover print ([84624c3](https://github.com/athensresearch/athens/commit/84624c3cf1b217706f381448fde3076cb12b49bb))
+* set a 1MB event limit ([81198f4](https://github.com/athensresearch/athens/commit/81198f408119df7fa288fe0a1d042ba8bf8e0be1))
+* show remote db page in db modal when not electron ([477ecd1](https://github.com/athensresearch/athens/commit/477ecd1b28377127415d6d0fe6449d8f3557945d))
+* transit usage was very bork in clj ([92210e2](https://github.com/athensresearch/athens/commit/92210e2d260700828bc849e1324fe98c7fe930c9))
+* use long instead of bigint for event log ([20ee4b4](https://github.com/athensresearch/athens/commit/20ee4b482e260425db8ffd491c6a73bd7c8e2a6a))
+
+
+### Refactors
+
+* add athens.self-hosted.fluree.utils ([19bf9d3](https://github.com/athensresearch/athens/commit/19bf9d338a41794eb588c12f9c6fca7467e58d20))
+* move migrator into own ns ([0f97365](https://github.com/athensresearch/athens/commit/0f97365e97f422669f61c2b176646309f97541fd))
+
+
+* ignore unused test helper ([146f459](https://github.com/athensresearch/athens/commit/146f459bbd8b5b3100c6dd88a7d07a49afb477b1))
+* run fluree tests manually for now ([bb033c8](https://github.com/athensresearch/athens/commit/bb033c8ae1c4585ab03d36e21e530f70cc5c8172))
+* update to clojure 11 ([8ac293e](https://github.com/athensresearch/athens/commit/8ac293ea4511e54c9400081f4704d2d688638833))
+
 ## [2.0.0-beta.25](https://github.com/athensresearch/athens/compare/v2.0.0-beta.24...v2.0.0-beta.25) (2022-04-04)
 
 
