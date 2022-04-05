@@ -1,62 +1,114 @@
-import React, { ReactNode } from 'react';
-import { Menu, MenuList, MenuItem, MenuGroup, MenuDivider, MenuButton, IconButton, Portal, Box, Text } from '@chakra-ui/react';
+import React from 'react'
+import styled from 'styled-components';
+import { useFocusRing } from '@react-aria/focus';
+import { useTooltipTrigger } from '@react-aria/tooltip'
+import { useTooltipTriggerState } from '@react-stately/tooltip';
+import { TooltipTriggerProps } from '@react-types/tooltip';
+import { mergeProps } from '@react-aria/utils';
+import { DetailPopover } from '@/Block/components/DetailPopover';
 
-const ANCHORS = {
-  CIRCLE: <svg viewBox="0 0 24 24">
+export const AnchorButton = styled.button`
+  flex-shrink: 0;
+  grid-area: bullet;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  transition: all 0.05s ease;
+  color: inherit;
+  margin-right: 0.25em;
+  display: flex;
+  place-items: center;
+  place-content: center;
+  padding: 0;
+  height: 2em;
+  width: 1em;
+
+  svg {
+    pointer-events: none;
+    transform: scale(1.0001); // Prevents the bullet being squished
+    overflow: visible; // Prevents the bullet being cropped
+    width: 1em;
+    height: 1em;
+    color: var(--user-color, var(--body-text-color---opacity-low));
+
+    * {
+      vector-effect: non-scaling-stroke;
+    }
+  }
+
+  circle {
+    fill: currentColor;
+    transition: fill 0.05s ease, opacity 0.05s ease;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:before {
+    content: '';
+    inset: 0.25rem -0.125rem;
+    z-index: -1;
+    transition: opacity 0.1s ease;
+    position: absolute;
+    border-radius: 0.25rem;
+    opacity: 0;
+    background: var(--background-plus-2);
+    box-shadow: var(--depth-shadow-8);
+  }
+
+  &:hover {
+    color: var(--link-color);
+    z-index: 100;
+  }
+
+  &:hover,
+  &:hover:before,
+  &:focus-visible:before {
+    opacity: 1;
+  }
+
+  &.closed-with-children {
+    circle {
+      stroke: var(--body-text-color);
+      fill: var(--body-text-color---opacity-low);
+      r: 5;
+      stroke-width: 2px;
+      opacity: var(--opacity-med);
+    }
+  }
+
+  &:hover svg {
+    transform: scale(1.3);
+  }
+
+  &.dragging {
+    z-index: 1;
+    cursor: grabbing;
+    color: var(--body-text-color);
+  }
+`;
+
+const anchorElements = {
+  circle: <svg viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="4" />
   </svg>,
-  DASH: <svg viewBox="0 0 1 1">
-    <line x1="-1" y1="0" x2="1" y2="0" />
+  dash: <svg viewBox="0 0 1 1">
+    <line x1="-1" y1="0" x2="1" y2="0" stroke="currentColor" strokeWidth="0.5" />
   </svg>
 }
 
-const showValue = (value) => {
-  if (typeof value === 'object') return (value = JSON.stringify(value));
-  else if (typeof value === 'boolean') return (value = value ? 'true' : 'false');
-  else return value;
-}
+const FocusRing = styled.div`
+  position: absolute;
+  inset: 0.25rem -0.125rem;
+  border: 2px solid var(--link-color);
+  border-radius: 0.25rem;
+`;
 
-const properties = (block) => ({
-  "uid": block?.uid,
-  "db/id": block?.id,
-  "order": block?.order,
-  "open": block?.open,
-  "refs": block?._refs?.length || 0,
-});
-
-const Item = ({ children }) => {
-  return (<Text
-    as="li"
-    fontSize="sm"
-    margin={0}
-    padding={0}
-    display="flex"
-    justifyContent={'space-between'}
-    sx={{
-      "span": {
-        color: "foreground.secondary",
-        flex: "1 1 50%",
-        fontWeight: "medium"
-      },
-      "span + span": {
-        marginLeft: "1ch",
-        color: "foreground.primary",
-        fontWeight: "normal"
-      }
-    }}
-  >{children}</Text>)
-}
-
-const propertiesList = (block) => {
-  return Object.entries(properties(block)).map(([ key, value ]) => {
-    return <Item key={key}>
-      <span>{key}</span>
-      <span>{showValue(value)}</span>
-    </Item>
-  })
-}
-
-export interface AnchorProps {
+export interface AnchorProps extends TooltipTriggerProps {
   /**
    * What style of anchor to display
    */
@@ -66,120 +118,31 @@ export interface AnchorProps {
    */
   isClosedWithChildren: boolean;
   block: any;
-  uidSanitizedBlock: any;
   shouldShowDebugDetails: boolean;
-  as: ReactNode;
-  onContextMenu: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
-  onCopyRef: () => void;
-  onCopyUnformatted: () => void;
-  onDragStart: () => void;
-  onDragEnd: () => void;
-  onClick: () => void;
 }
-
-const anchorButtonStyleProps = (isClosedWithChildren) => {
-  return ({
-    bg: "transparent",
-    "aria-label": "Block anchor",
-    className: [ 'anchor', isClosedWithChildren && 'closed-with-children' ].filter(Boolean).join(' '),
-    draggable: true,
-    gridArea: "bullet",
-    flexShrink: 0,
-    position: 'relative',
-    appearance: "none",
-    border: "0",
-    color: "inherit",
-    display: "flex",
-    placeItems: "center",
-    placeContent: "center",
-    zIndex: 2,
-    minWidth: "0",
-    minHeight: "0",
-    h: "2em",
-    w: "fit-content",
-    fontSize: "inherit",
-    mx: "-0.125em",
-    size: "sm",
-    p: 0,
-    sx: {
-      "svg": {
-        pointerEvents: "none",
-        transform: "scale(1.0001)", // Prevents the bullet being squished
-        overflow: "visible", // Prevents the bullet being cropped
-        width: "1em",
-        height: "1em",
-        color: "foreground.secondary",
-        "*": {
-          vectorEffect: "non-scaling-stroke"
-        }
-      },
-      "circle": {
-        transformOrigin: 'center',
-        transition: 'all 0.15s ease-in-out',
-        stroke: "transparent",
-        strokeWidth: "0.125em",
-        fill: "currentColor",
-        ...isClosedWithChildren && ({
-          transform: "scale(1.25)",
-          stroke: 'currentColor',
-          fill: "none",
-        })
-      }
-    }
-  })
-};
-
 
 /**
  * A handle and indicator of a block's position in the document
 */
 export const Anchor = (props: AnchorProps) => {
-  const { isClosedWithChildren,
-    anchorElement,
-    shouldShowDebugDetails,
-    onCopyRef,
-    onCopyUnformatted,
-    onDragStart,
-    onDragEnd,
-    onClick,
-    block,
-    uidSanitizedBlock,
-  } = props;
-
-  const [ isOpen, setIsOpen ] = React.useState(false);
+  const { isClosedWithChildren, anchorElement, shouldShowDebugDetails, block } = props;
+  const ref = React.useRef();
+  let state = useTooltipTriggerState(props);
+  let { triggerProps, tooltipProps } = useTooltipTrigger({ delay: 500 }, state, ref);
+  const { isFocusVisible, focusProps } = useFocusRing();
 
   return (
-    <Menu isOpen={isOpen} isLazy={true} onClose={() => setIsOpen(false)}>
-      <IconButton
-        aria-label="Block anchor"
-        {...anchorButtonStyleProps(isClosedWithChildren)}
-        onDragStart={onDragStart}
-        onClick={onClick}
-        onDragEnd={onDragEnd}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsOpen(true);
-        }}
-        as={MenuButton}
+    <>
+      <AnchorButton
+        className={['anchor', isClosedWithChildren && 'closed-with-children'].join(' ')}
+        ref={ref}
+        draggable={true}
+        {...mergeProps(props, focusProps, triggerProps)}
       >
-        {ANCHORS[ anchorElement ] || ANCHORS.CIRCLE}
-      </IconButton>
-      <Portal>
-        <MenuList>
-          <MenuItem onClick={onCopyRef}>Copy block refs</MenuItem>
-          <MenuItem onClick={onCopyUnformatted}>Copy unformatted</MenuItem>
-          {shouldShowDebugDetails && (
-            <>
-              <MenuDivider />
-              <MenuGroup title="Debug details">
-                <Box px={4} pb={3}>
-                  {propertiesList(uidSanitizedBlock)}
-                </Box>
-              </MenuGroup>
-            </>)}
-        </MenuList>
-      </Portal>
-    </Menu>
+        {anchorElements[anchorElement] || anchorElements['circle']}
+        {isFocusVisible && <FocusRing />}
+      </AnchorButton>
+      {shouldShowDebugDetails && state.isOpen && <DetailPopover block={block} {...tooltipProps} state={state} />}
+    </>
   )
 };

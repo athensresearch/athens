@@ -1,9 +1,8 @@
 (ns athens.views.blocks.core
   (:require
     ["/components/Block/components/Anchor"   :refer [Anchor]]
-    ["/components/Block/components/Container" :refer [Container]]
     ["/components/Block/components/Toggle"   :refer [Toggle]]
-    ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    ["/components/Button/Button"             :refer [Button]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -13,19 +12,21 @@
     [athens.reactive                         :as reactive]
     [athens.router                           :as router]
     [athens.self-hosted.presence.views       :as presence]
+    [athens.style                            :as style]
     [athens.subs.selection                   :as select-subs]
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
     [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
     [athens.views.blocks.bullet              :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content             :as content]
-    [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
+    [athens.views.blocks.context-menu        :as context-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    [athens.views.references                 :refer [reference-group reference-block]]
+    [athens.views.breadcrumbs                :as breadcrumbs]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
-    [reagent.core                            :as r]))
+    [reagent.core                            :as r]
+    [stylefy.core                            :as stylefy]))
 
 
 ;; Styles
@@ -35,63 +36,81 @@
 ;; smaller than main content blocks, for instance.
 
 
-(def block-container-inner-style
-  {"&.show-tree-indicator:before" {:content    "''"
-                                   :position   "absolute"
-                                   :width      "1px"
-                                   :left       "calc(1.375em + 1px)"
-                                   :top        "2em"
-                                   :bottom     "0"
-                                   :opacity    "0"
-                                   :transform  "translateX(50%)"
-                                   :transition "background-color 0.2s ease-in-out, opacity 0.2s ease-in-out"
-                                   :background "separator.divider"}
-   "&:hover.show-tree-indicator:before, &:focus-within.show-tree-indicator:before" {:opacity 1}
-   "&:after" {:content        "''"
-              :zIndex         0
-              :position       "absolute"
-              :inset          "1px 0"
-              :opacity        0
-              :pointerEvents  "none"
-              :borderRadius   "sm"
-              :transition "opacity 0.075s ease-in-out"
-              :background "link"}
-   "&.is-selected:after" {:opacity 0.2}
-   "&.is-presence .block-content" {:padding-right "1rem"}
-   ".user-avatar" {:position "absolute"
-                   :left "4px"
-                   :top "4px"}
-   ".block-body" {:display               "grid"
-                  :gridTemplateColumns "1em 1em 1fr auto"
-                  :gridTemplateRows    "0 1fr 0"
-                  :gridTemplateAreas   "
+(def block-container-style
+  {:display         "flex"
+   :line-height     "2em"
+   :position        "relative"
+   :border-radius   "0.125rem"
+   :justify-content "flex-start"
+   :flex-direction  "column"
+   ::stylefy/manual [[:&.show-tree-indicator:before {:content    "''"
+                                                     :position   "absolute"
+                                                     :width      "1px"
+                                                     :left       "calc(1.375em + 1px)"
+                                                     :top        "2em"
+                                                     :bottom     "0"
+                                                     :opacity    "0"
+                                                     :transform  "translateX(50%)"
+                                                     :transition "background-color 0.2s ease-in-out, opacity 0.2s ease-in-out"
+                                                     :background (style/color :border-color)}]
+                     [:&:hover
+                      :&:focus-within [:&.show-tree-indicator:before {:opacity "1"}]]
+                     [:&:after {:content        "''"
+                                :z-index        -1
+                                :position       "absolute"
+                                :top            "0.75px"
+                                :right          0
+                                :bottom         "0.75px"
+                                :left           0
+                                :opacity        0
+                                :pointer-events "none"
+                                :border-radius  "0.25rem"
+                                :transition     "opacity 0.075s ease"
+                                :background     (style/color :link-color :opacity-lower)}]
+                     [:&.is-selected:after {:opacity 1}]
+                     [:&.is-presence [:.block-content {:padding-right "1rem"}]]
+                     [:.user-avatar {:position "absolute"
+                                     :left "4px"
+                                     :top "4px"}]
+                     [:.block-body {:display               "grid"
+                                    :grid-template-columns "1em 1em 1fr auto"
+                                    :grid-template-rows    "0 1fr 0"
+                                    :grid-template-areas   "
                                       'above above above above'
                                       'toggle bullet content refs'
                                       'below below below below'"
-                  :borderRadius         "0.5rem"
-                  :position              "relative"}
-   "&:hover > .block-toggle, &:focus-within > .block-toggle" {:opacity "1"}
-   "button.block-edit-toggle" {:position   "absolute"
-                               :appearance "none"
-                               :width      "100%"
-                               :background "none"
-                               :border     0
-                               :cursor     "text"
-                               :display    "block"
-                               :z-index    1
-                               :top        0
-                               :right      0
-                               :bottom     0
-                               :left       0}
-   ".block-embed" {:borderRadius "sm"
-                   :sx {"--block-surface-color" "background.basement"}
-                   :bg "background.basement"
-                   ".block-container" {:marginLeft 0.5}}
-   ".block-content" {:gridArea  "content"
-                     :minHeight "1.5em"}
-   "&.is-linked-ref" {:bg "background-attic"}
-   ".block-container" {:marginLeft "2rem"
-                       :gridArea "body"}})
+                                    :border-radius         "0.5rem"
+                                    :position              "relative"}
+                      [:&:hover
+                       :&:focus-within ["> .block-toggle" {:opacity "1"}]]
+                      [:button.block-edit-toggle {:position   "absolute"
+                                                  :appearance "none"
+                                                  :width      "100%"
+                                                  :background "none"
+                                                  :border     0
+                                                  :cursor     "text"
+                                                  :display    "block"
+                                                  :z-index    1
+                                                  :top        0
+                                                  :right      0
+                                                  :bottom     0
+                                                  :left       0}]]
+                     [:.block-content {:grid-area  "content"
+                                       :min-height "1.5em"}]
+                     [:&.is-linked-ref {:background-color (style/color :background-plus-2)}]
+                     ;; Inset child blocks
+                     [:.block-container {:margin-left "2rem"
+                                         :grid-area   "body"}]]})
+
+
+(stylefy/class "block-container" block-container-style)
+
+
+(def dragging-style
+  {:opacity "0.25"})
+
+
+(stylefy/class "dragging" dragging-style)
 
 
 ;; Inline refs
@@ -100,6 +119,21 @@
 ;; It would be nicer to have inline refs code in a different file, but it's
 ;; much easier to resolve the circular dependency if they are on the same one.
 (declare block-el)
+
+
+(def reference-breadcrumbs-style
+  {:font-size "12px"
+   :padding "0 0.25em"})
+
+
+(def reference-breadcrumbs-container-style
+  {:padding-left          "0.5em"
+   :display               "grid"
+   :grid-template-columns "1em 1fr"
+   :grid-template-rows    "1fr"
+   :grid-template-areas   "'toggle breadcrumbs'"
+   :border-radius         "0.5rem"
+   :position              "relative"})
 
 
 (defn ref-comp
@@ -125,33 +159,33 @@
       (let [{:keys [block parents embed-id]} @state
             block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
-         [:> HStack
+         [:div (stylefy/use-style reference-breadcrumbs-container-style)
           [:> Toggle {:isOpen (:open? @state)
                       :on-click (fn [e]
                                   (.. e stopPropagation)
                                   (swap! state update :open? not))}]
 
-          [:> Breadcrumb {:fontSize "0.7em"}
+          [breadcrumbs/breadcrumbs-list {:style reference-breadcrumbs-style}
            (doall
              (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
                    (if (or (:open? @state) (not (:focus? @state)))
                      parents
                      (conj parents block))]
-               [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
-                [:> BreadcrumbLink {:onClick #(let [new-B (db/get-block [:block/uid uid])
-                                                    new-P (concat
-                                                            (take-while (fn [b] (not= (:block/uid b) uid)) parents)
-                                                            [breadcrumb-block])]
-                                                (.. % stopPropagation)
-                                                (swap! state assoc :block new-B :parents new-P :focus? false))}
-                 [parse-renderer/parse-and-render (or title string) uid]]]))]]
+               [breadcrumbs/breadcrumb {:key       (str "breadcrumb-" uid)
+                                        :on-click #(let [new-B (db/get-block [:block/uid uid])
+                                                         new-P (concat
+                                                                 (take-while (fn [b] (not= (:block/uid b) uid)) parents)
+                                                                 [breadcrumb-block])]
+                                                     (.. % stopPropagation)
+                                                     (swap! state assoc :block new-B :parents new-P :focus? false))}
+                [parse-renderer/parse-and-render (or title string) uid]]))]]
 
          (when (:open? @state)
            (if (:focus? @state)
 
              ;; Display the single child block only when focusing.
              ;; This is the default behaviour for a ref without children, for brevity.
-             [:div.block-embed {:fontSize "0.7em"}
+             [:div.block-embed
               [block-el
                (util/recursively-modify-block-for-embed block embed-id)
                linked-ref-data
@@ -167,47 +201,55 @@
                  {:block-embed? true}]])))]))))
 
 
+(def references-style
+  {:padding-left "2em"})
+
+
+(def references-list-style
+  {:font-size "14px"})
+
+
+(def references-group-style
+  {:background (style/color :background-minus-2 :opacity-med)
+   :padding "0rem 0.5rem"
+   :border-radius "0.25rem"
+   :margin "0.5em 0"})
+
+
+(def references-group-block-style
+  {:width "100%"
+   ::stylefy/manual [[:&:first-of-type {:border-top "0"
+                                        :margin-block-start "0"}]]})
+
+
 (defn inline-linked-refs-el
   [state uid]
   (let [refs (reactive/get-reactive-linked-references [:block/uid uid])]
     (when (not-empty refs)
-      [:> VStack {:as "aside"
-                  :align "stretch"
-                  :key "Inline Linked References"
-                  :zIndex 2
-                  :mt 2
-                  :mb 4
-                  :ml 6
-                  :py 2
-                  :px 4
-                  :borderRadius "sm"
-                  :background "background.basement"}
-       (doall
-         (for [[group-title group] refs]
-           [reference-group {:title group-title
-                             :key (str "group-" group-title)}
-            (doall
-              (for [block' group]
-                [reference-block {:key (str "ref-" (:block/uid block'))}
-                 [ref-comp block' state]]))]))])))
+      [:div (stylefy/use-style references-style {:key "Inline Linked References"})
+       [:section
+        [:div (stylefy/use-style references-list-style)
+         (doall
+           (for [[group-title group] refs]
+             [:div (stylefy/use-style references-group-style {:key (str "group-" group-title)})
+              (doall
+                (for [block' group]
+                  [:div (stylefy/use-style references-group-block-style {:key (str "ref-" (:block/uid block'))})
+                   [ref-comp block' state]]))]))]]])))
 
 
 ;; Components
 
 (defn block-refs-count-el
-  [count click-fn active?]
-  [:> Button {:gridArea "refs"
-              :size "xs"
-              :ml "1em"
-              :mt 1
-              :mr 1
-              :zIndex 10
-              :visibility (if (pos? count) "visible" "hidden")
-              :isActive active?
-              :onClick (fn [e]
-                         (.. e stopPropagation)
-                         (click-fn e))}
-   count])
+  [count click-fn]
+  [:div (stylefy/use-style {:margin-left "1em"
+                            :grid-area "refs"
+                            :z-index (:zindex-dropdown style/ZINDICES)
+                            :visibility (when-not (pos? count) "hidden")})
+   [:> Button {:on-click  (fn [e]
+                            (.. e stopPropagation)
+                            (click-fn e))}
+    count]])
 
 
 (defn block-drag-over
@@ -387,6 +429,7 @@
                                        (assoc block :block/uid (or original-uid uid)))
                                      block)
              {:keys [dragging]}    @state
+             is-editing            @(rf/subscribe [:editing/is-editing uid])
              is-selected           @(rf/subscribe [::select-subs/selected? uid])
              present-user          @(rf/subscribe [:presence/has-presence uid])
              is-presence           (seq present-user)]
@@ -399,29 +442,28 @@
          (when (not= string (:string/previous @state))
            (swap! state assoc :string/previous string :string/local string))
 
-         [:> Container {:sx (merge block-container-inner-style
-                                   {"--block-surface-color" "background.floor"})
-                        :isDragging (and dragging (not is-selected))
-                        ;; :isEditing is-editing
-                        :isSelected is-selected
-                        :hasChildren (seq children)
-                        :isOpen open
-                        :isLinkedRef (and (false? initial-open) (= uid linked-ref-uid))
-                        :hasPresence is-presence
-                        :uid uid
-                        ;; need to know children for selection resolution
-                        :childrenUids children-uids
-                        ;; :show-editable-dom allows us to render the editing elements (like the textarea)
-                        ;; even when not editing this block. When true, clicking the block content will pass
-                        ;; the clicks down to the underlying textarea. The textarea is expensive to render,
-                        ;; so we avoid rendering it when it's not needed.
-                        :onMouseEnter    #(swap! state assoc :show-editable-dom true)
-                        :onMouseLeave    #(swap! state assoc :show-editable-dom false)
-                        :onDragOver      (fn [e] (block-drag-over e block state))
-                        :onDragLeave     (fn [e] (block-drag-leave e block state))
-                        :onDrop           (fn [e] (block-drop e block state))}
+         [:div
+          {:class             ["block-container"
+                               (when (and dragging (not is-selected)) "dragging")
+                               (when is-editing "is-editing")
+                               (when is-selected "is-selected")
+                               (when (and (seq children) open) "show-tree-indicator")
+                               (when (and (false? initial-open) (= uid linked-ref-uid)) "is-linked-ref")
+                               (when is-presence "is-presence")]
+           :data-uid          uid
+           ;; need to know children for selection resolution
+           :data-childrenuids children-uids
+           ;; :show-editable-dom allows us to render the editing elements (like the textarea)
+           ;; even when not editing this block. When true, clicking the block content will pass
+           ;; the clicks down to the underlying textarea. The textarea is expensive to render,
+           ;; so we avoid rendering it when it's not needed.
+           :on-mouse-enter    #(swap! state assoc :show-editable-dom true)
+           :on-mouse-leave    #(swap! state assoc :show-editable-dom false)
+           :on-drag-over      (fn [e] (block-drag-over e block state))
+           :on-drag-leave     (fn [e] (block-drag-leave e block state))
+           :on-drop           (fn [e] (block-drop e block state))}
 
-          (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
+          (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:grid-area "above"}])
 
           [:div.block-body
            (when (seq children)
@@ -429,28 +471,28 @@
                                          (and (false? linked-ref) open))
                                    true
                                    false)
-                         :onClick (fn [e]
-                                    (.. e stopPropagation)
-                                    (if (true? linked-ref)
-                                      (swap! state update :linked-ref/open not)
-                                      (toggle uid (not open))))}])
+                         :on-click (fn [e]
+                                     (.. e stopPropagation)
+                                     (if (true? linked-ref)
+                                       (swap! state update :linked-ref/open not)
+                                       (toggle uid (not open))))}])
+           (when (:context-menu/show @state)
+             [context-menu/context-menu-el uid-sanitized-block state])
            [:> Anchor {:isClosedWithChildren (when (and (seq children)
                                                         (or (and (true? linked-ref) (not (:linked-ref/open @state)))
                                                             (and (false? linked-ref) (not open))))
                                                "closed-with-children")
                        :block block
-                       :uidSanitizedBlock uid-sanitized-block
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
-                       :onCopyRef #(handle-copy-refs nil uid)
-                       :onCopyUnformatted #(handle-copy-unformatted uid)
-                       :onClick        (fn [e]
-                                         (let [shift? (.-shiftKey e)]
-                                           (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                :target :block
-                                                                                :pane   (if shift?
-                                                                                          :right-pane
-                                                                                          :main-pane)}])
-                                           (router/navigate-uid uid e)))
+                       :on-click        (fn [e]
+                                          (let [shift? (.-shiftKey e)]
+                                            (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                 :target :block
+                                                                                 :pane   (if shift?
+                                                                                           :right-pane
+                                                                                           :main-pane)}])
+                                            (router/navigate-uid uid e)))
+                       :on-context-menu (fn [e] (context-menu/bullet-context-menu e uid state))
                        :on-drag-start   (fn [e] (bullet-drag-start e uid state))
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
            [content/block-content-el block state]
@@ -458,13 +500,10 @@
            [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
-             [block-refs-count-el
-              (count _refs)
-              (fn [e]
-                (if (.. e -shiftKey)
-                  (rf/dispatch [:right-sidebar/open-item uid])
-                  (swap! state update :inline-refs/open not)))
-              (:inline-refs/open @state)])]
+             [block-refs-count-el (count _refs) (fn [e]
+                                                  (if (.. e -shiftKey)
+                                                    (rf/dispatch [:right-sidebar/open-item uid])
+                                                    (swap! state update :inline-refs/open not)))])]
 
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
@@ -485,6 +524,6 @@
                 (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
                 opts]]))
 
-          (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
-          (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])])))))
+          (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"} :child true}])
+          (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:style {:grid-area "below"}}])])))))
 
