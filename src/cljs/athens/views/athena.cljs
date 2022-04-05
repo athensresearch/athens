@@ -194,9 +194,8 @@
                                                                               :title     query}))
                                  (dispatch [:page/new {:title     query
                                                        :block-uid block-uid
-                                                       :shift?    shift?}])
-                                 (dispatch [:reporting/page.create {:source :athena
-                                                                    :count  1}])
+                                                       :shift?    shift?
+                                                       :source    :athena}])
                                  (dispatch [:reporting/navigation {:source :athena
                                                                    :target (str "page/" query)
                                                                    :pane   (if shift?
@@ -301,9 +300,8 @@
                                              shift?    (.-shiftKey e)]
                                          (dispatch [:athena/toggle])
                                          (dispatch [:page/new {:title     query
-                                                               :block-uid block-uid}])
-                                         (dispatch [:reporting/page.create {:source :athena
-                                                                            :count  1}])
+                                                               :block-uid block-uid
+                                                               :source    :athena}])
                                          (dispatch [:reporting/navigation {:source :athena
                                                                            :target (if parent
                                                                                      (str "block/" block-uid)

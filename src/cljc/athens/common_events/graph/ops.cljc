@@ -4,6 +4,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events.graph.atomic    :as atomic]
     [athens.common-events.graph.composite :as composite]
+    [athens.parser.structure              :as structure]
     [clojure.set                          :as set]))
 
 
@@ -173,3 +174,61 @@
                                                             children? (conj move-children-op)
                                                             children? (conj close-new-block-op)))]
     split-block-op))
+
+
+(defn ops->new-page-titles
+  "Reduces Graph Ops into a set of titles of newly created pages."
+  [ops]
+  (let [page-new-ops (contains-op? ops :page/new)
+        new-titles   (->> page-new-ops
+                          (map :op/args)
+                          (map :page/title)
+                          set)]
+    new-titles))
+
+
+(defn ops->new-block-uids
+  "Reduces Graph Ops into a set of block/uids of newly created blocks."
+  [ops]
+  (let [block-new-ops (contains-op? ops :block/new)
+        new-uids      (->> block-new-ops
+                           (map :op/args)
+                           (map :block/new)
+                           set)]
+    new-uids))
+
+
+(defn structural-diff
+  "Calculates removed and added links (block refs & page links)"
+  [db ops]
+  (let [block-save-ops    (contains-op? ops :block/save)
+        new-blocks        (->> block-save-ops
+                               (map #(select-keys (:op/args %)
+                                                  [:block/uid :block/string])))
+        new-block-uids    (->> new-blocks
+                               (map :block/uid)
+                               set)
+        new-structures    (->> new-blocks
+                               (map :block/string)
+                               (map structure/structure-parser->ast))
+        old-block-strings (->> new-block-uids
+                               (map #(common-db/get-block-string db %)))
+        old-structures    (->> old-block-strings
+                               (map structure/structure-parser->ast))
+        links             (fn [structs names renames]
+                            (->> structs
+                                 (mapcat (partial tree-seq vector? identity))
+                                 (filter #(and (vector? %)
+                                               (contains? names (first %))))
+                                 (map #(vector (get renames (first %) (first %))
+                                               (-> % second :string)))
+                                 set))
+        old-links         (links old-structures
+                                 #{:page-link :hashtag :block-ref}
+                                 {:hashtag :page-link})
+        new-links         (links new-structures
+                                 #{:page-link :hashtag :block-ref}
+                                 {:hashtag :page-link})
+        removed-links     (set/difference old-links new-links)
+        added-links       (set/difference new-links old-links)]
+    [removed-links added-links]))
