@@ -59,13 +59,28 @@
   (fn receive-handler
     [channel msg]
     (let [username (clients/get-client-username channel)
-          data     (clients/<-transit msg)]
-      (if-not (schema/valid-event? data)
+          data     (common-events/deserialize msg)
+          errors   (common-events/validate-serialized-event msg)]
+      (cond
+        ;; TODO: we should be able to validate the serialized event without deserializing it, but
+        ;; we also need to build a rejected event to pass back to the client, and to do that we need
+        ;; the :event/id, which we only get after deserializing the event.
+        ;; I think this means that we should separate the :event/id from the payload itself.
+        errors
+        (do
+          (log/warn "username:" username "Invalid serialized event received, errors:" errors)
+          (clients/send! channel (common-events/build-event-rejected (:event/id data)
+                                                                     (str "Invalid serialized event")
+                                                                     errors)))
+
+        (not (schema/valid-event? data))
         (let [explanation (schema/explain-event data)]
           (log/warn "username:" username "Invalid event received, explanation:" explanation)
           (clients/send! channel (common-events/build-event-rejected (:event/id data)
                                                                      (str "Invalid event: " (pr-str data))
                                                                      explanation)))
+
+        :else
         (let [{:event/keys [id type]} data]
           (log/info "Received valid event" "username:" username ", event-id:" id ", type:" (common-events/find-event-or-atomic-op-type data))
           (let [{:event/keys [status]
