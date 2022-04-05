@@ -3,6 +3,7 @@
   (:require
     [athens.self-hosted.fluree.utils :as fu]
     [athens.self-hosted.migrate :as migrate]
+    [clojure.tools.logging :as log]
     [fluree.db.api :as fdb]))
 
 
@@ -55,6 +56,7 @@
   page-number for all events that have event/data in db, split by page-size.
   Events without event/id will return nil as event-id. For use with `iteration`."
   ([db page-size page-number]
+   (log/info "Fetching sid+id offset" (* page-size page-number))
    {:next-page (inc page-number)
     :items     (fu/query db {:select ["?event" "?id"]
                              :where  [["?event" "event/data", "?data"]
@@ -65,6 +67,7 @@
 
 (defn add-missing-uuid!
   [conn ledger sid]
+  (log/info "Adding uuid to sid" sid)
   (fu/transact! conn ledger [{:_id sid :event/id (str (random-uuid))}]))
 
 
@@ -120,6 +123,7 @@
 
 (defn add-order!
   [conn ledger sid]
+  (log/info "Adding order to sid" sid)
   (fu/transact! conn ledger [{:_id sid
                               ;; Would be nice to do multiple order numbers in the same tx,
                               ;; but max-pred-val seems to compute to the value before the tx
@@ -134,6 +138,7 @@
   bigint that acts as insertion order.
   Events without event/order will return nil as order. For use with `iteration`."
   ([db page-size page-number]
+   (log/info "Fetching sid+order offset" (* page-size page-number))
    {:next-page (inc page-number)
     :items     (fu/query db {:select ["?event" "?order"]
                              :where  [["?event" "event/id", "?id"]
