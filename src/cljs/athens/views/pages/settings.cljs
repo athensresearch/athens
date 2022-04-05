@@ -1,56 +1,14 @@
 (ns athens.views.pages.settings
   (:require
-    ["/components/Button/Button" :refer [Button]]
-    ["/components/Toggle/Toggle" :refer [Toggle]]
-    ["@material-ui/icons/Check" :default Check]
-    ["@material-ui/icons/NotInterested" :default NotInterested]
+    ["@chakra-ui/react" :refer [Text Heading Box FormControl FormLabel ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
     [athens.db :refer [default-athens-persist]]
-    [athens.views.textinput :as textinput]
+    [athens.util :refer [toast]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [subscribe dispatch reg-event-fx]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy])
+    [reagent.core :as r])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
-
-
-;; Styles
-
-(def settings-wrap-style
-  {:border-top      "1px solid var(--border-color)"
-   :padding-top     "2rem"
-   :padding-bottom  "2rem"
-   :padding         "2rem 0.75rem"
-   :line-height     "1.25"
-   ::stylefy/manual [[:h3 {:margin 0}]
-                     [:&.disabled {:opacity 0.5}]
-                     [:header {:padding-bottom "1rem"}]
-                     [:span.glance {:font-weight "normal"
-                                    :opacity     0.7
-                                    :font-size   "0.8em"
-                                    :gap         "0.25em"}
-                      [:svg {:vertical-align "-0.25em"
-                             :font-size      "1.5em"}]]
-                     [:aside {:font-size   "0.8em"
-                              :padding-top "0.5rem"}]
-                     [:p {:margin "0.25rem 0"}]
-                     [:p:first-child {:margin-top 0}]
-                     [:p:last-child {:margin-bottom 0}]
-                     [:label {:display     "flex"
-                              :gap         "0.5rem"
-                              :align-items "center"
-                              :font-weight "bold"}]]
-   ::stylefy/media  {{:min-width "40em"}
-                     {:display               "grid"
-                      :grid-template-columns "10rem 1fr"
-                      :grid-gap              "1rem"}}})
-
-
-(def settings-page-styles
-  {:width     "50em"
-   :max-width "100%"
-   :margin    "2rem auto"})
 
 
 ;; Helpers
@@ -65,17 +23,24 @@
 
             ;; Open Collective Lambda finds email associated with Athens
             (and (:success resp) (true? (:email_exists (:body resp))))
-            (update-fn @value)
+            (do (update-fn @value)
+                (toast (clj->js {:title "Account connected"
+                                 :status "success"})))
 
             ;; Open Collective Lambda doesn't find email
             (and (:success resp) (false? (:email_exists (:body resp))))
             (do
               (update-fn nil)
-              (js/alert "No OpenCollective account was found with this email address."))
+
+              (toast (clj->js {:title "Account not found"
+                               :status "error"
+                               :description "No OpenCollective account was found with this email address."})))
 
             ;; Something else, e.g. networking error
             :else
-            (js/alert (str "Unexpected error" resp)))))))
+            (toast (clj->js {:title "Unknown error"
+                             :status "error"
+                             :description resp})))))))
 
 
 (defn handle-reset-email
@@ -110,13 +75,49 @@
 ;; Components
 
 
+(defn title
+  [children]
+  [:> Heading {:size "md"}
+   children])
+
+
+(defn header
+  [children]
+  [:> Box {:gridArea "header"} children])
+
+
+(defn glance
+  [children]
+  [:> Box children])
+
+
+(defn form
+  [children]
+  [:> Box {:gridArea "form"} children])
+
+
+(defn help
+  [children]
+  [:> Text {:color "foreground.secondary"
+            :gridArea "help"} children])
+
+
 (defn setting-wrapper
   ([children]
    [setting-wrapper {} children])
   ([config children]
    (let [{:keys [disabled] :as _props} config]
-     [:div (stylefy/use-style settings-wrap-style
-                              {:class [(when disabled "disabled")]}) children])))
+     [:> Grid {:as "section"
+               :py 7
+               :gap "1rem"
+               :gridTemplateColumns "12rem 1fr"
+               :gridTemplateAreas "'header form'
+               'header help'"
+               :_first {:borderTop "none"}
+               :_notFirst {:borderTop "1px solid"
+                           :borderColor "separator.divider"}
+               :sx {"*" {:opacity (if disabled 0.5 1)}}}
+      children])))
 
 
 (defn email-comp
@@ -127,48 +128,43 @@
     (fn []
       [setting-wrapper
        [:<>
-        [:header
-         [:h3 "Email"]
-         [:span.glance (if (clojure.string/blank? email)
-                         "Not set"
-                         email)]]
-        [:main
-         [:div
-          [textinput/textinput {:type        " email "
-                                :placeholder " Open Collective Email "
-                                :on-change   #(reset! value (.. % -target -value))
-                                :value       @value}]
-          [:> Button {:is-primary  true
-                      :disabled (not (clojure.string/blank? email))
-                      :on-click #(handle-submit-email value update-fn)}
-           "Submit"]
-          [:> Button {:on-click #(handle-reset-email value update-fn)}
-           "Reset"]]
-         [:aside
-          [:p (if (clojure.string/blank? email)
-                "You are using the free version of Athens. You are hosting your own data. Please be careful!"
-                "Thank you for supporting Athens! Backups are coming soon.")]]]]])))
+        [header
+         [title "OpenCollective Address"]
+         [glance (if (clojure.string/blank? email)
+                   "Not set"
+                   email)]]
+        [form
+         [:<> [:> FormControl
+               [:> FormLabel "Email address"]
+               [:> Input {:type        " email "
+                          :width        "25em"
+                          :placeholder " Open Collective Email "
+                          :onChange   #(reset! value (.. % -target -value))
+                          :value       @value}]]
+          [:> ButtonGroup {:pt 2}
+           [:> Button {:isDisabled (not (clojure.string/blank? email))
+                       :onClick #(handle-submit-email value update-fn)}
+            "Submit"]
+           [:> Button {:onClick #(handle-reset-email value update-fn)}
+            "Reset"]]]]
+        [help
+         [:p (if (clojure.string/blank? email)
+               "You are using the free version of Athens. You are hosting your own data. Please be careful!"
+               "Thank you for supporting Athens! Backups are coming soon.")]]]])))
 
 
 (defn monitoring-comp
   [monitoring update-fn]
   [setting-wrapper
    [:<>
-    [:header
-     [:h3 "Usage and Diagnostics"]
-     [:span.glance (if (true? monitoring)
-                     [:<>
-                      [:> Check]
-                      [:span "Sending usage data"]]
-                     [:<>
-                      [:> NotInterested]
-                      [:span "Not sending usage data"]])]]
-    [:main
-     [:> Toggle {:defaultSelected monitoring
-                 :on-change #(handle-monitoring-click monitoring update-fn)}
-      "Send usage data and diagnostics to Athens"]
-     [:aside
-      [:p "Athens has never and will never look at the contents of your database."]
+    [header
+     [title "Usage and Diagnostics"]]
+    [form
+     [:> Switch {:defaultChecked monitoring
+                 :onChange #(handle-monitoring-click monitoring update-fn)}
+      "Send usage data and diagnostics to Athens"]]
+    [help
+     [:<> [:p "Athens has never and will never look at the contents of your database."]
       [:p "Athens will never ever sell your data."]]]]])
 
 
@@ -176,21 +172,23 @@
   [backup-time update-fn]
   [setting-wrapper
    [:<>
-    [:header
-     [:h3 "Backups"]
-     [:span.glance (str backup-time " seconds after last edit")]]
-    [:main
-     [:label
-      [textinput/textinput {:type         "number"
-                            :defaultValue backup-time
-                            :min          0
-                            :step         15
-                            :max          100
-                            :on-blur      #(update-fn (.. % -target -value))}]
-      " seconds"]
-     [:aside
-      [:p "Changes are saved immediately."]
-      [:p (str "Athens will save a new backup " backup-time " seconds after your last edit.")]]]]])
+    [header
+     [title "On-disk Backups"]]
+    [form
+     [:> FormControl
+      [:> FormLabel "Idle time before saving new backup"]
+      [:> Input {:type         "number"
+                 :defaultValue backup-time
+                 :width "6em"
+                 :mr "0.5rem"
+                 :min          0
+                 :step         15
+                 :max          100
+                 :onBlur      #(update-fn (.. % -target -value))}]
+      " seconds"]]
+    [help
+     [:<> [:> Text "Changes are saved immediately."]
+      [:> Text (str "Athens will save a new backup " backup-time " seconds after your last edit.")]]]]])
 
 
 (defn remote-backups-comp
@@ -198,35 +196,30 @@
   [setting-wrapper
    {:disabled true}
    [:<>
-    [:header
-     [:h3 "Remote Backups"]
-     [:span.glance "Coming soon to "
+    [header
+     [title "Remote Backups"]
+     [glance "Coming soon to "
       [:a {:href   "https://opencollective.com/athens"
            :target "_blank"
            :rel    "noreferrer"}
        " paid users and sponsors"]]]
-    [:main
-     [:> Button {:disabled true} "Backup my DB to the cloud"]]]])
-
-
-(defn settings-container
-  [child]
-  [:div (stylefy/use-style settings-page-styles) child])
+    [form
+     [:> Button {:isDisabled true} "Backup my DB to the cloud"]]]])
 
 
 (defn reset-settings-comp
   [reset-fn]
   [setting-wrapper
    [:<>
-    [:header
-     [:h3 "Reset settings"]]
-    [:main
-     [:> Button {:on-click reset-fn}
-      "Reset all settings to defaults"]
-     [:aside
-      [:p "All settings saved between sessions will be restored to defaults."]
-      [:p "Databases on disk will not be deleted, but you will need to add them to Athens again."]
-      [:p "Athens will restart after reset and open the default database path."]]]]])
+    [header
+     [title "Reset settings"]]
+    [form
+     [:> Button {:onClick reset-fn}
+      "Reset all settings to defaults"]]
+    [help
+     [:<> [:> Text "All settings saved between sessions will be restored to defaults."]
+      [:> Text "Databases on disk will not be deleted, but you will need to add them to Athens again."]
+      [:> Text "Athens will restart after reset and open the default database path."]]]]])
 
 
 (reg-event-fx
@@ -245,13 +238,24 @@
 (defn page
   []
   (let [{:keys [email monitoring backup-time]} @(subscribe [:settings])]
-    [settings-container
-     [:<>
-      [:h1 "Settings"]
-      [email-comp email #(dispatch [:settings/update :email %])]
-      [monitoring-comp monitoring #(dispatch [:settings/update :monitoring %])]
-      [backup-comp backup-time (fn [x]
-                                 (dispatch [:settings/update :backup-time x])
-                                 (dispatch [:fs/update-write-db]))]
-      [remote-backups-comp]
-      [reset-settings-comp #(dispatch [:settings/reset])]]]))
+    [:> Modal {:isOpen true
+               :scrollBehavior "inside"
+               :onClose #(.back js/window.history)
+               :size "xl"}
+     [:> ModalOverlay]
+     [:> ModalContent {:maxWidth "calc(100% - 8rem)"
+                       :width "50rem"
+                       :my "4rem"}
+      [:> ModalHeader
+       {:borderBottom "1px solid" :borderColor "separator.divider"}
+       "Settings"
+       [:> ModalCloseButton]]
+      [:> ModalBody {:flexDirection "column"}
+       [:<>
+        [email-comp email #(dispatch [:settings/update :email %])]
+        [monitoring-comp monitoring #(dispatch [:settings/update :monitoring %])]
+        [backup-comp backup-time (fn [x]
+                                   (dispatch [:settings/update :backup-time x])
+                                   (dispatch [:fs/update-write-db]))]
+        [remote-backups-comp]
+        [reset-settings-comp #(dispatch [:settings/reset])]]]]]))
