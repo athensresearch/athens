@@ -39,3 +39,4 @@ athens.common-events.graph.atomic/make-shortcut-move-op
 athens.common-events.graph.schema/valid-atomic-op?
 athens.common-events.graph.schema/explain-atomic-op
 athens.style/unzoom
+athens.self-hosted.fluree.test-helpers/query

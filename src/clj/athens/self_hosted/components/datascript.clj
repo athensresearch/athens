@@ -38,7 +38,7 @@
                             ;; In-memory setups don't use stored events at all
                             in-memory? event-log/initial-events
                             ;; If we have the last id for persisted db, we can skip all events up to that one.
-                            id         (event-log/events fluree id)
+                            id         (event-log/events fluree :since-event-id id)
                             ;; Otherwise just load all events.
                             :else      (event-log/events fluree))]
           (log/info "Processing" (pr-str id) "with" (common-events/find-event-or-atomic-op-type data))
