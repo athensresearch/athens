@@ -2,7 +2,6 @@
   (:require
     [athens.common-events       :as common-events]
     [athens.common.logging      :as log]
-    [athens.common.utils        :as utils]
     [athens.self-hosted.clients :as clients]
     [clojure.string             :as str]
     [datascript.core            :as d]))
@@ -16,7 +15,7 @@
 (defn- valid-password
   [conn channel id {:keys [session-intro]}]
   (let [username   (:username session-intro)
-        session-id (str (utils/random-uuid))
+        session-id (str (random-uuid))
         session    (assoc session-intro :session-id session-id)]
     (log/info "New Client Intro:" session-intro)
     (clients/add-client! channel session)
