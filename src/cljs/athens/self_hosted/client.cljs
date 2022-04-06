@@ -280,12 +280,14 @@
 
 (defn- message-handler
   [event]
-  (if-let [errors (common-events/validate-serialized-event (.-data event))]
-    (log/warn "Received invalid serialized event:" (pr-str errors))
-    (let [packet (->> event .-data common-events/deserialize)]
-      (if (schema/valid-event-response? packet)
-        (awaited-response-handler packet)
-        (server-event-handler packet)))))
+  (let [serialized-event (.-data event)
+        data             (common-events/deserialize serialized-event)
+        errors           (when-not (common-events/ignore-serialized-event-validation? data)
+                           (common-events/validate-serialized-event serialized-event))]
+    (cond
+      errors                              (log/warn "Received invalid serialized event:" (pr-str errors))
+      (schema/valid-event-response? data) (awaited-response-handler data)
+      :else                               (server-event-handler data))))
 
 
 (defn- remove-listeners!
