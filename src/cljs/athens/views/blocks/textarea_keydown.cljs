@@ -182,6 +182,7 @@
    (let [target (.. e -target)
          {:search/keys [index results]} @state
          item (nth results index)]
+     (println "ran auto-complete-slash")
      (auto-complete-slash state target item)))
   ;; here comes the autocompletion logic itself,
   ;; independent of the input method the user used.
@@ -197,6 +198,8 @@
          start-idx (dec (count (re-find #"(?s).*/" head)))]
      (swap! state assoc
             :search/type nil)
+
+     (println "ran auto-complete-slash")
      (set-selection target start-idx start)
      (replace-selection-with expand)
      (when pos
@@ -815,15 +818,7 @@
 
       ;; used for paste, to determine if shift key was held down
       (swap! state assoc :last-keydown d-event)
-
-      ;; update caret position for search dropdowns and for up/down
-      (when (nil? (:search/type @state))
-
-        (let [caret-position (get-caret-position (.. e -target))
-              textarea-position (js->clj (getClientPosition (.. e -target)) :keywordize-keys true)
-              position {:left (+ (:left caret-position) (.. textarea-position -x))
-                        :top (+ (:top caret-position) (.. textarea-position -y))}]
-          (swap! state assoc :caret-position position)))
+      (swap! state assoc :last-e e)
 
       ;; dispatch center
       ;; only when nothing is selected or duplicate/events dispatched

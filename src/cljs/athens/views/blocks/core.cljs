@@ -465,9 +465,9 @@
                   (swap! state update :inline-refs/open not)))
               (:inline-refs/open @state)])]
 
-          ;;  [autocomplete-search/inline-search-el block state]
-          ;;  [autocomplete-slash/slash-menu-el block state]
-          
+           [autocomplete-search/inline-search-el block state]
+           [autocomplete-slash/slash-menu-el block state]
+           
           ;; Inline refs
           (when (and (> (count _refs) 0)
                      (not= :block-embed? opts)
