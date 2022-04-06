@@ -3,7 +3,6 @@
   (:require
     [athens.self-hosted.fluree.utils :as fu]
     [athens.self-hosted.migrate :as migrate]
-    [clojure.tools.logging :as log]
     [fluree.db.api :as fdb]))
 
 
@@ -56,7 +55,6 @@
   page-number for all events that have event/data in db, split by page-size.
   Events without event/id will return nil as event-id. For use with `iteration`."
   ([db page-size page-number]
-   (log/info "Fetching sid+id offset" (* page-size page-number))
    {:next-page (inc page-number)
     :items     (fu/query db {:select ["?event" "?id"]
                              :where  [["?event" "event/data", "?data"]
@@ -67,7 +65,6 @@
 
 (defn add-missing-uuid!
   [conn ledger sid]
-  (log/info "Adding uuid to sid" sid)
   (fu/transact! conn ledger [{:_id sid :event/id (str (random-uuid))}]))
 
 
@@ -101,29 +98,18 @@
 (def migration-3-schema
   [{:_id :_predicate
     :_predicate/name :event/order
-    ;; Note on limits:
-    ;; PostgreSQL data types https://www.postgresql.org/docs/current/datatype-numeric.html
-    ;; Fluree data types https://developers.flur.ee/docs/overview/schema/predicates/
-    ;; PostgreSQL uses `serial` and `bigserial` for auto-incrementing fields.
-    ;; Fluree `int` is the same max as PostgreSQL `serial` (32 bits = 4 bytes), and the same
-    ;; goes for `long` and `bigserial` (64 bits = 8 bytes).
-    ;; So `int` gives us up to 2147483647, and `long` is up to 9223372036854775807.
-    ;; This isn't infinite, but it's a lot, and if we hit the limit we should find another
-    ;; efficient way of doing the ordered log, and migrate all events there instead.
-    ;; I also tried Flurees `bigint` but it made queries and insertions (~0.8s at 45k events) slow.
     ;; TODO: the "strictly increasing" condition could be validated via specs:
     ;; - collection spec to ensure order is there
     ;; - predicate spec to ensure the new number is bigger than the max
     ;; This validation isn't happening here, we're just transacting "correct" data.
-    :_predicate/doc "Strictly increasing long for event ordering."
+    :_predicate/doc "Strictly increasing big int for event ordering."
     :_predicate/unique true
-    :_predicate/type :long
+    :_predicate/type :bigint
     :_predicate/spec [[:_fn/name :immutable]]}])
 
 
 (defn add-order!
   [conn ledger sid]
-  (log/info "Adding order to sid" sid)
   (fu/transact! conn ledger [{:_id sid
                               ;; Would be nice to do multiple order numbers in the same tx,
                               ;; but max-pred-val seems to compute to the value before the tx
@@ -138,7 +124,6 @@
   bigint that acts as insertion order.
   Events without event/order will return nil as order. For use with `iteration`."
   ([db page-size page-number]
-   (log/info "Fetching sid+order offset" (* page-size page-number))
    {:next-page (inc page-number)
     :items     (fu/query db {:select ["?event" "?order"]
                              :where  [["?event" "event/id", "?id"]
