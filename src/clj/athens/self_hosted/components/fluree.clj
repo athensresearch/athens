@@ -37,7 +37,7 @@
           (log/info "Starting Fluree connection, servers" servers)
           (let [comp         (create-fluree-comp servers)]
             ;; Initialize event log.
-            (event-log/init! comp)
+            (event-log/ensure-ledger! comp)
             (merge component comp))))))
 
 
