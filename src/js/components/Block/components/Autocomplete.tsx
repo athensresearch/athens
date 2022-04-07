@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Box, PopoverBody, Popover,
@@ -11,11 +12,8 @@ import getCaretCoordinates from '@/../textarea'
 let lastETargetValue;
 let currentEventPosition = { left: null, top: null };
 
-const TARGET_KEY = '/';
-
 const getCaretPositionFromKeyDownEvent = (event) => {
   if (event?.target) {
-    console.log('got caret position');
     const localCaretCoordinates = getCaretCoordinates(event?.target);
     const { x: targetLeft, y: targetTop } = event?.target.getBoundingClientRect();
     const position = {
@@ -26,11 +24,33 @@ const getCaretPositionFromKeyDownEvent = (event) => {
   }
 }
 
-const AutocompleteButton = ({ children, onClick, ...props }) => {
+const scrollToEl = (el) => {
+  if (el) {
+    el.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'center',
+    });
+  }
+}
+
+export const AutocompleteButton = ({ children, onClick, isActive, ...props }) => {
+  const buttonRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (isActive) {
+      scrollToEl(buttonRef.current);
+    }
+  }, [isActive]);
+
   return (
     <Button
+      ref={buttonRef}
       borderRadius={0}
       justifyContent="flex-start"
+      isActive={isActive}
+      textOverflow="ellipsis"
+      whiteSpace={"nowrap"}
       width="100%"
       _first={{
         borderTopRadius: "inherit",
@@ -40,22 +60,25 @@ const AutocompleteButton = ({ children, onClick, ...props }) => {
       }}
       {...props}
       onClick={onClick}
-    >{children}</Button>
+    >
+      {children}
+    </Button>
   );
 }
 
-export const Autocomplete = ({ isOpen, onClose, event, emptyMessage, onSelect, index, options }) => {
+export const Autocomplete = ({ isOpen, onClose, event, children }) => {
   const newETargetValue = event?.target?.value;
   const isNewEvent = newETargetValue !== lastETargetValue;
 
-  if (event?.target && isNewEvent && event?.key === TARGET_KEY) {
+  if (isOpen && event?.target && isNewEvent) {
     currentEventPosition = getCaretPositionFromKeyDownEvent(event)
   };
 
   lastETargetValue = event?.target?.value;
 
   return (
-    <Popover isOpen={isOpen}
+    <Popover
+      isOpen={isOpen}
       placement="bottom-start"
       isLazy={true}
       returnFocusOnClose={false}
@@ -78,18 +101,13 @@ export const Autocomplete = ({ isOpen, onClose, event, emptyMessage, onSelect, i
       </PopoverTrigger>
       <Portal>
         <PopoverContent>
-          <PopoverBody>
-            {options?.map((option) => {
-              const [optIndex, [text, icon, expansion, kbd, pos]] = option;
-              return <AutocompleteButton
-                onClick={() => onSelect(option)}
-              // isActive={optIndex === index}
-              // leftIcon={icon}
-              // rightIcon={kbd}
-              >
-                {text}
-              </AutocompleteButton>
-            })}
+          <PopoverBody
+            p={0}
+            overflow="auto"
+            borderRadius="inherit"
+            maxHeight={`calc(100vh - 2rem - ${currentEventPosition.top}px)`}
+          >
+            {children}
           </PopoverBody>
         </PopoverContent>
       </Portal>
