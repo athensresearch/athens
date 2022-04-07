@@ -1,7 +1,8 @@
 (ns athens.views.blocks.autocomplete-slash
   (:require
    ["/components/Block/components/Autocomplete" :refer [Autocomplete AutocompleteButton]]
-   [athens.views.blocks.textarea-keydown :as textarea-keydown]))
+   [athens.views.blocks.textarea-keydown :as textarea-keydown]
+   [reagent.core :as r]))
 
 
 (defn slash-item-click
@@ -23,9 +24,9 @@
          (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
            [:> AutocompleteButton {:key     text
                                    :id      (str "dropdown-item-" i)
-                                  ;; :command kbd
+                                  :command kbd
                                    :isActive (when (= i index) "isActive")
                                    :onClick (fn [_] (slash-item-click state block item))}
             [:<>
-          ;; [(r/adapt-react-class icon)]
+          [(r/adapt-react-class icon)]
              text]]))])))

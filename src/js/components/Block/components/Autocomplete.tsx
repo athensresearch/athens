@@ -4,13 +4,11 @@ import {
   Box, PopoverBody, Popover,
   Button,
   PopoverTrigger,
+  useOutsideClick,
   PopoverContent,
   Portal
 } from '@chakra-ui/react';
 import getCaretCoordinates from '@/../textarea'
-
-let lastETargetValue;
-let currentEventPosition = { left: null, top: null };
 
 const getCaretPositionFromKeyDownEvent = (event) => {
   if (event?.target) {
@@ -19,6 +17,7 @@ const getCaretPositionFromKeyDownEvent = (event) => {
     const position = {
       left: localCaretCoordinates.left + targetLeft,
       top: localCaretCoordinates.top + targetTop,
+      height: localCaretCoordinates.height + targetLeft,
     }
     return position;
   }
@@ -67,14 +66,22 @@ export const AutocompleteButton = ({ children, onClick, isActive, ...props }) =>
 }
 
 export const Autocomplete = ({ isOpen, onClose, event, children }) => {
-  const newETargetValue = event?.target?.value;
-  const isNewEvent = newETargetValue !== lastETargetValue;
+  const menuRef = React.useRef(null);
+  const lastEventTargetValue = React.useRef(null);
+  const currentEventPosition = React.useRef({ left: null, top: null });
+  const newEventTargetValue = event?.target?.value;
+  const isNewEvent = newEventTargetValue !== lastEventTargetValue.current;
 
-  if (isOpen && event?.target && isNewEvent) {
-    currentEventPosition = getCaretPositionFromKeyDownEvent(event)
+  useOutsideClick({
+    ref: menuRef,
+    handler: () => onClose(),
+  })
+
+  if (isOpen && isNewEvent) {
+    currentEventPosition.current = getCaretPositionFromKeyDownEvent(event)
   };
 
-  lastETargetValue = event?.target?.value;
+  lastEventTargetValue.current = newEventTargetValue;
 
   return (
     <Popover
@@ -89,23 +96,25 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
     >
       <PopoverTrigger>
         <Box
+          visibility="hidden"
           bg="red"
           position="fixed"
           width="10px"
-          height="10px"
+          height="1.75rem"
           zIndex="100"
-          left={currentEventPosition.left + 'px'}
-          top={currentEventPosition.top + "px"}
+          left={currentEventPosition.current.left + 'px'}
+          top={currentEventPosition.current.top + "px"}
         >
         </Box>
       </PopoverTrigger>
       <Portal>
         <PopoverContent>
           <PopoverBody
+            ref={menuRef}
             p={0}
             overflow="auto"
             borderRadius="inherit"
-            maxHeight={`calc(100vh - 2rem - ${currentEventPosition.top}px)`}
+            maxHeight={`calc(100vh - 2rem - 2rem - ${currentEventPosition.current.top}px)`}
           >
             {children}
           </PopoverBody>
