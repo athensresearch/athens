@@ -34,13 +34,14 @@
 (defn serialize
   [id data]
   (assert (uuid? id))
-  {:_id :event
-   :event/id (str id)
-   :event/data (pr-str data)
-   ;; Compute the new order number as 1 higher than last.
-   ;; This will be 1 if there are no events yet.
-   ;; NOTE: is max-pred-val efficient for very large collections? I don't know.
-   :event/order "#(inc (max-pred-val \"event/order\"))"})
+  (let [str-id      (str id)
+        self-tempid (str "event$self-" str-id)]
+    {:_id         self-tempid
+     :event/id    (str id)
+     :event/data  (pr-str data)
+     ;; See athens.self-hosted.event-log-migrations/migration-3-schema
+     ;; for how ordering works.
+     :event/order self-tempid}))
 
 
 (defn deserialize
@@ -59,14 +60,12 @@
                          {:select {"?event" ["*"]}
                           :where  [["?event" "event/id", "?id"]
                                    ["?event" "event/order" (str "#(> ?order " since-order ")")]]
-                          ;; Subject ID (?event here) is a monotonically incrementing bigint,
-                          ;; so ordering by that gives us event insertion order since events are immutable.
                           :opts   {:orderBy ["ASC", "?order"]
                                    :limit   page-size
                                    :offset  (* page-size page-number)}})}))
 
 
-(defn- event-id->order
+(defn event-id->order
   [db event-id]
   (first (fu/query db {:select "?order"
                        :where  [["?event" "event/id", (str event-id)]

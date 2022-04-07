@@ -111,13 +111,25 @@
     ;; This isn't infinite, but it's a lot, and if we hit the limit we should find another
     ;; efficient way of doing the ordered log, and migrate all events there instead.
     ;; I also tried Flurees `bigint` but it made queries and insertions (~0.8s at 45k events) slow.
+
+    ;; Note on how ordering is implemented:
+    ;; Fluree's refs are represented in flakes as the subject ID, which seems to be a least a long
+    ;; that starts at 351843720888320 and goes up by 1 with each new entity.
+    ;; Refs work for ordering even though they are returned as `{:_id 351843720888320}`, since
+    ;; on the flake itself it's a number. Unclear if this is supported long term in Fluree though.
+    ;; We set a reference to the own entity on transaction, or migration for the ones missing it.
+    ;; Using refs for ordering is very efficient because no calculations need to be made on insertion,
+    ;; and the only limit it will hit is that of the max entity that fluree supports.
+    ;; I tried before using the `max-pred-val` smartfn but that proved to scale with total events,
+    ;; which made it unsuitable insertions even on the medium term (95k events was already taking 600ms).
+
     ;; TODO: the "strictly increasing" condition could be validated via specs:
     ;; - collection spec to ensure order is there
     ;; - predicate spec to ensure the new number is bigger than the max
     ;; This validation isn't happening here, we're just transacting "correct" data.
     :_predicate/doc "Strictly increasing long for event ordering."
     :_predicate/unique true
-    :_predicate/type :long
+    :_predicate/type :ref
     :_predicate/spec [[:_fn/name :immutable]]}])
 
 
@@ -125,10 +137,7 @@
   [conn ledger sid]
   (log/info "Adding order to sid" sid)
   (fu/transact! conn ledger [{:_id sid
-                              ;; Would be nice to do multiple order numbers in the same tx,
-                              ;; but max-pred-val seems to compute to the value before the tx
-                              ;; and thus will be the same for all events in the tx.
-                              :event/order "#(inc (max-pred-val \"event/order\"))"}]))
+                              :event/order sid}]))
 
 
 (defn sid+order-page
@@ -230,3 +239,74 @@
 
   ;;
   )
+
+
+(comment
+  (def conn (fdb/connect "http://localhost:8090"))
+  (def ledger "events/log")
+  @(fdb/new-ledger conn ledger)
+
+  (def schema
+    [{:_id              :_collection
+      :_collection/name :event}
+     {:_id               :_predicate
+      :_predicate/name   :event/id
+      :_predicate/unique true
+      :_predicate/type   :string}
+     {:_id               :_predicate
+      :_predicate/name   :event/order
+      :_predicate/unique true
+      :_predicate/type   :ref}])
+
+  @(fdb/transact conn ledger schema)
+
+
+  (defn new-event [id]
+    (let [str-id      (str id)
+          self-tempid (str "event$self-" str-id)]
+      {:_id         self-tempid
+       :event/id    str-id
+       :event/order self-tempid}))
+
+  @(fdb/transact conn ledger [(new-event 1)
+                              (new-event 2)
+                              (new-event 3)
+                              (new-event 4)])
+
+  ;; descending order
+
+  (-> conn
+      (fdb/db ledger)
+      (fdb/query {:select {"?event" ["*"]}
+                  :where  [["?event" "event/order", "?order"]]
+                  :opts   {:orderBy ["DESC", "?order"]}})
+      deref)
+  ;; => [{:_id 351843720888323, "event/id" "4", "event/order" {:_id 351843720888323}}
+  ;;     {:_id 351843720888322, "event/id" "3", "event/order" {:_id 351843720888322}}
+  ;;     {:_id 351843720888321, "event/id" "2", "event/order" {:_id 351843720888321}}
+  ;;     {:_id 351843720888320, "event/id" "1", "event/order" {:_id 351843720888320}}]
+
+  ;; ascending order
+
+  (-> conn
+      (fdb/db ledger)
+      (fdb/query {:select {"?event" ["*"]}
+                  :where  [["?event" "event/order", "?order"]]
+                  :opts   {:orderBy ["ASC", "event/order"]}})
+      deref)
+  ;; => [{:_id 351843720888320, "event/id" "1", "event/order" {:_id 351843720888320}}
+  ;;     {:_id 351843720888321, "event/id" "2", "event/order" {:_id 351843720888321}}
+  ;;     {:_id 351843720888322, "event/id" "3", "event/order" {:_id 351843720888322}}
+  ;;     {:_id 351843720888323, "event/id" "4", "event/order" {:_id 351843720888323}}]
+
+  ;; Filtered
+
+  (-> conn
+      (fdb/db ledger)
+      (fdb/query {:select {"?event" ["*"]}
+                  :where  [["?event" "event/order" (str "#(> ?order " 351843720888321 ")")]]
+                  :opts   {:orderBy ["ASC", "?order"]}})
+      deref)
+  ;; => [{:_id 351843720888323, "event/id" "4", "event/order" {:_id 351843720888323}}
+  ;;     {:_id 351843720888322, "event/id" "3", "event/order" {:_id 351843720888322}}]
+)
