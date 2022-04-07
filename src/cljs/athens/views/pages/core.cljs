@@ -45,6 +45,7 @@
                               :position "fixed"
                               :zIndex "-1"
                               :inset 0
+                              :pointerEvents "none"
                               :top "3.25rem"
                               :WebkitAppRegion "no-drag"}
                   "::WebkitScrollbar" {:background "background.basement"
