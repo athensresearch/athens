@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "2.0.0-beta.26",
+  "version": "2.0.0-beta.27",
   "description": "An open-source knowledege graph for research and notetaking",
   "repository": {
     "type": "git",
