@@ -36,7 +36,7 @@
 
 (defn- load-events
   [comp previous-events progress total]
-  (event-log/ensure-ledger! comp [])
+  (event-log/init! comp [])
   (doseq [[id data] previous-events]
     (swap! progress inc)
     (log/info "Processing" id (str "#" @progress "/" total))
@@ -54,7 +54,7 @@
                                     deref)
         previous-events        (edn/read-string (slurp filename))
         total                  (count previous-events)
-        ledger-exists?         (seq  @(fdb/ledger-info conn event-log/ledger))
+        ledger-exists?         (seq  @(fdb/ledger-info conn event-log/default-ledger))
         progress               (atom 0)
         last-added-event-id    (when resume
                                  (event-log/last-event-id comp))
@@ -68,7 +68,7 @@
       (do
         (log/info "Deleting the current ledger before loading data....")
         @(fdb/delete-ledger conn
-                            event-log/ledger)
+                            event-log/default-ledger)
         (log/warn "Please restart the fluree docker."))
 
       (and (not ledger-exists?) resume)
@@ -91,7 +91,7 @@
       :else
       (do
         (log/info "Recreating ledger...")
-        (event-log/ensure-ledger! comp [])
+        (event-log/init! comp [])
         (log/info "Loading all events...")
         (load-events comp previous-events progress total)))))
 
