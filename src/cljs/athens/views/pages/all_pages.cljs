@@ -1,8 +1,7 @@
 (ns athens.views.pages.all-pages
   (:require
     ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button Box]]
-    ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
-    ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
+    ["/components/Icons/Icons" :refer [ChevronUpIcon ChevronDownIcon]]
     [athens.common-db          :as common-db]
     [athens.dates              :as dates]
     [athens.db                 :as db]
@@ -68,13 +67,17 @@
          growing?  @(rf/subscribe [:all-pages/sort-order-ascending?])]
      [:> Th {:width width :isNumeric isNumeric}
       [:> Button {:onClick #(rf/dispatch [:all-pages/sort-by column-id])
-                  :size "sm"
-                  :variant "link"}
+                  :size "xs"
+                  :textTransform "uppercase"
+                  :gap "0.25em"
+                  :variant "link"
+                  :color "inherit"
+                  :_hover {:textDecoration "none"}}
        (when-not isNumeric label)
        (when (= sorted-by column-id)
          (if growing?
-           [:> ArrowDropUp]
-           [:> ArrowDropDown]))
+           [:> ChevronUpIcon]
+           [:> ChevronDownIcon]))
        (when isNumeric label)]])))
 
 
