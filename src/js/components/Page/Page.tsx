@@ -118,22 +118,8 @@ export const DailyNotesPage = ({ isReal, children }) => <Box
   }}
 >{children}</Box>
 
-export const TitleContainer = ({ children, onOpen, onOpenInSidebar }) => {
 
-  return (<Box
-    {...TITLE_PROPS}
-  >
-    <Button onClick={onOpen}>
-      Link
-    </Button>
-    <Button onClick={onOpenInSidebar}>
-      Sidebar
-    </Button>
-    {children}</Box>)
-}
-
-
-export const EditableTitleContainer = ({ children, isEditing, props }) => <Box
+export const TitleContainer = ({ children, isEditing, props }) => <Box
   {...TITLE_PROPS}
   as="h1"
   className={[
@@ -145,7 +131,7 @@ export const EditableTitleContainer = ({ children, isEditing, props }) => <Box
   display="grid"
   background="var(--block-surface-color)"
   color="foreground.primary"
-  gridTemplateAreas="'main'"
+  gridTemplateAreas="'main extras'"
   alignItems="stretch"
   justifyContent="stretch"
   position="relative"

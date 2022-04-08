@@ -2,7 +2,7 @@
   (:require
     ["/components/Block/components/Anchor" :refer [Anchor]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
+    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["@chakra-ui/react" :refer [Text Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     ["@material-ui/icons/Bookmark" :default Bookmark]
     ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
@@ -437,8 +437,7 @@
           ;; Dropdown
           [menu-dropdown node daily-note?]
 
-          [:> EditableTitleContainer
-           {:isEditing @(subscribe [:editing/is-editing uid])}
+          [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 

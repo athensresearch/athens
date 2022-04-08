@@ -1,6 +1,6 @@
 (ns athens.views.pages.block-page
   (:require
-    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
+    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
@@ -109,7 +109,7 @@
 
           ;; Parent Context
           [parents-el uid id]
-          [:> EditableTitleContainer {:isEditing @(subscribe [:editing/is-editing uid])
+          [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])
                                       :onClick (fn [e]
                                                  (.. e preventDefault)
                                                  (if (.. e -shiftKey)
