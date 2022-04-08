@@ -1,4 +1,4 @@
-import { Box } from '@chakra-ui/react';
+import { Box, Button, Link } from '@chakra-ui/react';
 
 const PAGE_PROPS = {
   as: "article",
@@ -98,10 +98,6 @@ export const PageFooter = ({ children }) => <Box
   p={4}
 >{children}</Box>
 
-export const TitleContainer = ({ children }) => <Box
-  {...TITLE_PROPS}
->{children}</Box>
-
 export const DailyNotesPage = ({ isReal, children }) => <Box
   {...PAGE_PROPS}
   className="node-page daily-notes"
@@ -121,6 +117,21 @@ export const DailyNotesPage = ({ isReal, children }) => <Box
     "--page-padding-h": "4rem"
   }}
 >{children}</Box>
+
+export const TitleContainer = ({ children, onOpen, onOpenInSidebar }) => {
+
+  return (<Box
+    {...TITLE_PROPS}
+  >
+    <Button onClick={onOpen}>
+      Link
+    </Button>
+    <Button onClick={onOpenInSidebar}>
+      Sidebar
+    </Button>
+    {children}</Box>)
+}
+
 
 export const EditableTitleContainer = ({ children, isEditing, props }) => <Box
   {...TITLE_PROPS}

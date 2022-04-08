@@ -1,9 +1,9 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-   ["/components/Block/components/Autocomplete" :refer [Autocomplete AutocompleteButton]]
-   ["@chakra-ui/react" :refer [Text]]
-   [athens.views.blocks.textarea-keydown :as textarea-keydown]
-   [clojure.string :as string]))
+    ["/components/Block/components/Autocomplete" :refer [Autocomplete AutocompleteButton]]
+    ["@chakra-ui/react" :refer [Text]]
+    [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [clojure.string :as string]))
 
 
 (defn inline-item-click
@@ -34,9 +34,9 @@
                      :fontStyle "italics"}
             (str "Search for a " (symbol type))]
            (doall
-            (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-              [:> AutocompleteButton {:key (str "inline-search-item" uid)
-                                      :isActive (= i index)
-                                      :onClick (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
-                                      :id (str "inline-search-item" uid)}
-               (or title string)]))))])))
+             (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+               [:> AutocompleteButton {:key (str "inline-search-item" uid)
+                                       :isActive (= i index)
+                                       :onClick (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
+                                       :id (str "inline-search-item" uid)}
+                (or title string)]))))])))
