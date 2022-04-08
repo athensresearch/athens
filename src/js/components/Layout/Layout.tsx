@@ -45,8 +45,7 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
   </AnimatePresence>
 }
 
-export const SidebarItem = ({ title, defaultIsOpen, onRemove, onClose, children }) => {
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: defaultIsOpen, onClose: onClose });
+export const SidebarItem = ({ title, isOpen, onToggle, onRemove, children }) => {
 
   return (
     <VStack

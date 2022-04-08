@@ -95,10 +95,11 @@
                                    (if (empty? items)
                                      [empty-message]
                                      (doall
-                                       (for [[uid {:keys [node/title block/string is-graph?]}] items]
+                                       (for [[uid {:keys [open node/title block/string is-graph?]}] items]
                                          ^{:key uid}
-                                         [:> SidebarItem {:defaultIsOpen true
+                                         [:> SidebarItem {:isOpen open
                                                           :onRemove #(dispatch [:right-sidebar/close-item uid])
+                                                          :onToggle #(dispatch [:right-sidebar/toggle-item uid])
                                                           ;; nth 1 to get just the title
                                                           :title (nth [parse-renderer/parse-and-render (or title string) uid] 1)}
                                           (cond
