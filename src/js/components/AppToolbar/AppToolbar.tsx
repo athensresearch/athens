@@ -169,6 +169,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isMergeDialogOpen,
     isShowInlineComments,
     isShowRightSideComments,
+    isShowNotifications,
     onPressCommandBar: handlePressCommandBar,
     onPressDailyNotes: handlePressDailyNotes,
     onPressAllPages: handlePressAllPages,
@@ -185,6 +186,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressMaximizeRestore: handlePressMaximizeRestore,
     onClickInlineComments: handleClickInlineComments,
     onClickRightSideComments: handleClickRightSideComments,
+    onClickNotifications: handleClickNotifications,
     onPressClose: handlePressClose,
     databaseMenu,
     presenceDetails,
@@ -219,6 +221,14 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         onClick={handleClickRightSideComments}>
         {isShowRightSideComments ? <ToggleOn/> : <ToggleOff/>}
       </Button>
+
+      <Button shape='round'
+       onClick={handleClickNotifications}>
+        {isShowNotifications ?
+          <Button shape='round' variant='filled'> N </Button>
+          : <Button shape='round' variant='gray'> N </Button> }
+        </Button>
+
     </AppToolbar.MainControls>
     <AppToolbar.SecondaryControls>
       {presenceDetails}

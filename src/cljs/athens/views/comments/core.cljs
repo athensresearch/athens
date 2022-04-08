@@ -6,7 +6,7 @@
             [athens.common-events.graph.ops :as graph-ops]
             [athens.common-events.graph.composite :as composite-ops]
             [re-frame.core :as rf]
-            [athens.bot]
+            [athens.bot :as bot]
             [athens.common-events :as common-events]
             [athens.common.utils :as common.utils]
             [athens.common-db :as common-db]
@@ -71,40 +71,21 @@
 (rf/reg-event-fx
   :comment/write-comment
   (fn [{db :db} [_ uid comment-string author]]
-    (let [new-comment               {:block/uid (common.utils/gen-block-uid)
+    (let [block                     (common-db/get-block @db/dsdb [:block/uid uid])
+          comment-block-uid         (common.utils/gen-block-uid)
+          new-comment               {:block/uid  comment-block-uid
                                      :block/type :comment
                                      :string      comment-string
                                      :author      author
                                      :time        "12:09 pm"}
-          parent-page-title         (:node/title (db/get-root-parent-page uid))
-          last-block-uid            (last
-                                      (common-db/get-children-uids @db/dsdb
-                                                                   [:node/title parent-page-title]))
-          last-block                (common-db/get-block @db/dsdb [:block/uid last-block-uid])
-          [show-comments-uid
-           show-comments-op]        (show-comments-actively-block db parent-page-title last-block)
-          new-active-block-rel     (if show-comments-uid
-                                     show-comments-uid
-                                     last-block-uid)
-          new-active-block-uid      (common.utils/gen-block-uid)
-          new-active-block-op       (atomic-graph-ops/make-block-new-op new-active-block-uid {:block/uid new-active-block-rel
-                                                                                              :relation  :last})
-          new-active-block-save-op  (graph-ops/build-block-save-op @db/dsdb
-                                                                   new-active-block-uid
-                                                                   (str  "**((" uid "))**" "\n"
-                                                                        "*[[@" author "]]: " comment-string "*"))
           comment-add-op            (atomic-graph-ops/make-comment-add-op uid new-comment)
+          notif-ops                 (bot/create-notifs-ops db block author bot/athens-users comment-block-uid)
           active-comment-ops        (composite/make-consequence-op {:op/type :active-comments-op}
-                                                                   (concat (if show-comments-uid
-                                                                             show-comments-op
-                                                                             [])
-                                                                           [new-active-block-op
-                                                                            new-active-block-save-op
-                                                                            comment-add-op]))
+                                                                   (concat [comment-add-op]
+                                                                           notif-ops))
 
           event                     (common-events/build-atomic-event active-comment-ops)]
       {:fx [[:dispatch [:resolve-transact-forward event]]
-            [:dispatch [:posthog/report-feature "comments"]]
             [:dispatch [:prepare-message uid author :comment {:string comment-string}]]]})))
 
 

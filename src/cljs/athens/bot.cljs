@@ -3,7 +3,12 @@
             [re-frame.core :as rf]
             [athens.common-db :as common-db]
             [athens.db :as db]
-            [cljs.core.async :refer [<!]])
+            [athens.common-events.graph.atomic :as atomic-graph-ops]
+            [athens.common-events.graph.ops :as graph-ops]
+            [athens.common.utils :as common.utils]
+            [cljs.core.async :refer [<!]]
+            [athens.common-events.graph.composite :as composite]
+            [athens.common-events :as common-events])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def users
@@ -13,6 +18,9 @@
    "[[@Filipe]]"      "<@!469099065712312320>"
    "[[@Stuart]]"      "<@!229346773104066562>"
    "[[@Athens Team]]" "<@&858004385215938560>"})
+
+(def athens-users
+  ["@Stuart" "@Alex" "@Jeff" "@Filipe" "@Sid"])
 
 
 (defn parse-for-mentions
@@ -25,19 +33,64 @@
              (drop 1 users)))))
 
 
+(defn create-block-new-block-save-op
+  [db new-block-uid position save-string]
+  (let [new-block-op       (atomic-graph-ops/make-block-new-op new-block-uid position)
+        new-block-save-op  (graph-ops/build-block-save-op @db/dsdb new-block-uid save-string)]
+    [new-block-op
+     new-block-save-op]))
+
+
+(defn create-notification-event
+  [db parent sender receiver ref]
+  (let [receiver-page-uid                         (common-db/get-page-uid @db/dsdb receiver)
+        {old-to-read-block-uid :block/uid
+         to-read-block-string  :block/string }    (common-db/nth-child @db/dsdb receiver-page-uid 0)
+        to-read-block-uid                         (if (not= "To read" to-read-block-string)
+                                                    (common.utils/gen-block-uid)
+                                                    old-to-read-block-uid)
+        ref-parent-string                        (if (:node/title parent)
+                                                   (str "**[[" (:node/title parent) "]]**" "\n")
+                                                   (str "**((" (:block/uid parent) "))**" "\n"))
+
+        new-notif-op                             (concat (if (not= "To read" to-read-block-string)
+                                                           ;; If there is no "To read" block then create it first
+                                                           (create-block-new-block-save-op db
+                                                                                           to-read-block-uid
+                                                                                           (common-db/compat-position @db/dsdb {:block/uid receiver-page-uid
+                                                                                                                                :relation  :first})
+                                                                                           "To read")
+                                                           [])
+                                                         (create-block-new-block-save-op db
+                                                                                         (common.utils/gen-block-uid)
+                                                                                         (common-db/compat-position @db/dsdb {:block/uid to-read-block-uid
+                                                                                                                              :relation  :first})
+                                                                                         (str ref-parent-string
+                                                                                              "*[[" sender "]]: ((" ref ")) *")))]
+    new-notif-op))
+
+
+(defn create-notifs-ops
+  [db parent sender receivers ref]
+  (mapcat
+    (fn [receiver]
+      (create-notification-event db parent sender receiver ref))
+    receivers))
+
+
 (rf/reg-event-fx
   :check-for-mentions
-  (fn [_ [_ uid block-string author]]
-    (let [block-parent         (:block/string (common-db/get-parent @db/dsdb [:block/uid uid]))
+  (fn [{:keys [db]} [_ uid block-string author]]
+    (let [block-parent         (common-db/get-parent @db/dsdb [:block/uid uid])
           is-parent-a-new-task (contains? #{"To Do 🤔" "Todo"} block-parent)
-          contains-mention?    (contains?
-                                 (into #{} (map
-                                             (fn [[k _]] (clojure.string/includes? block-string k))
-                                             users))
-                                 true)]
+          mentions             (remove nil? (into #{} (map
+                                                        #(when (clojure.string/includes? block-string %)
+                                                           %)
+                                                        athens-users)))]
       (cond
         (true? is-parent-a-new-task) {:fx [[:dispatch [:prepare-message uid author :new-task {:string block-string}]]]}
-        (true? contains-mention?)    {:fx [[:dispatch [:prepare-message uid author :mention {:string block-string}]]]}))))
+        (seq mentions)    {:fx [[:dispatch [:notification/send-to-athens block-parent author mentions uid]]
+                                [:dispatch [:prepare-message uid author :mention {:string block-string}]]]}))))
 
 
 (rf/reg-event-fx
@@ -126,14 +179,36 @@
                                                         "*" parsed-string "* "
                                                         " -- from "  (:msg action-data)
                                                         " — " block-parent-url))}]
-      {:fx [[:dispatch [:notification/send message]]]})))
+      {:fx [[:dispatch [:notification/send-to-discord message]]]})))
 
 
 (rf/reg-event-fx
-  :notification/send
+  :notification/send-to-athens
+  (fn [{:keys [db]} [_ parent sender receivers ref]]
+    (let [notif-ops        (create-notifs-ops db parent sender receivers ref)
+          notification-op  (composite/make-consequence-op {:op/type :notification}
+                                                          notif-ops)
+          event            (common-events/build-atomic-event notification-op)]
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+
+
+(rf/reg-event-fx
+  :notification/send-to-discord
   (fn [_ [_ message]]
     (println "send notification" message)
     {:discord-bot message}))
+
+
+(rf/reg-event-fx
+  :notification/take-to-user-page
+  (fn [_ _]
+    (let [current-user  @(rf/subscribe [:username])
+          userpage      (str "@" current-user)
+          page-uid      (common-db/get-page-uid @db/dsdb userpage)]
+      (println "Notifications?"(pos-int? (count (common-db/get-children-uids @db/dsdb [:block/uid (first (common-db/get-children-uids @db/dsdb [:node/title userpage]))]))))
+      (println "Notifications?"(count (common-db/get-children-uids @db/dsdb [:block/uid (first (common-db/get-children-uids @db/dsdb [:node/title userpage]))])))
+      {:fx [[:dispatch [:navigate :page {:id page-uid}]]]})))
+
 
 (rf/reg-fx
   :discord-bot
@@ -143,3 +218,10 @@
                                       {:query-params message}))]
           (prn  (:body response))) ;; print the response's body in the console
         {})))
+
+(rf/reg-sub
+  :notification/show-notif-alert?
+  (fn [_ _]
+    (let [userpage (str "@" @(rf/subscribe [:username]))
+          notif?   (pos-int? (count (common-db/get-children-uids @db/dsdb [:block/uid (first (common-db/get-children-uids @db/dsdb [:node/title userpage]))])))]
+      notif?)))

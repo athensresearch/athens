@@ -67,7 +67,8 @@
         on-close               #(rf/dispatch [:close-win])
 
         inline-comments        (rf/subscribe [:comment/show-inline-comments?])
-        right-side-comments    (rf/subscribe [:comment/show-right-side-comments?])]
+        right-side-comments    (rf/subscribe [:comment/show-right-side-comments?])
+        show-notifications?    (rf/subscribe [:notification/show-notif-alert?])]
     (fn []
       [:<>
        (when @merge-open?
@@ -86,8 +87,10 @@
                        :isCommandBarOpen          @athena-open?
                        :isShowInlineComments      @inline-comments
                        :isShowRightSideComments   @right-side-comments
+                       :isShowNotifications       @show-notifications?
                        :onClickInlineComments     #(rf/dispatch [:comment/toggle-inline-comments])
                        :onClickRightSideComments  #(rf/dispatch [:comment/toggle-right-side-comments])
+                       :onClickNotifications      #(rf/dispatch [:notification/take-to-user-page])
                        :onPressLeftSidebarToggle  on-left-sidebar-toggle
                        :onPressHistoryBack        on-back
                        :onPressHistoryForward     on-forward
