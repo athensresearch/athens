@@ -15,12 +15,6 @@
 (t/use-fixtures :each fth/with-ledger)
 
 
-(defn all-events-subjects
-  []
-  (fu/query @fth/conn-atom @fth/ledger-atom {:select ["*"]
-                                             :from   "event"}))
-
-
 (deftest ^:fluree migration-to-1
   (let [[conn ledger] (fth/conn+ledger)
         all           #(fu/query @fth/conn-atom @fth/ledger-atom {:select ["*"]
