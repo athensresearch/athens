@@ -105,7 +105,8 @@
         [:<>
 
          ;; Header
-         [:> PageHeader
+         [:> PageHeader {:onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                                                 #(dispatch [:right-sidebar/open-item uid]))}
 
           ;; Parent Context
           [parents-el uid id]
