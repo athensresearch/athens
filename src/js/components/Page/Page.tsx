@@ -1,4 +1,5 @@
-import { Box, Button, Link } from '@chakra-ui/react';
+import { Box, IconButton, ButtonGroup } from '@chakra-ui/react';
+import { RightSidebarAddIcon } from '@/Icons/Icons';
 
 const PAGE_PROPS = {
   as: "article",
@@ -53,9 +54,9 @@ export const HeaderImage = ({ src }) => <Box
   }}
 />
 
-export const PageHeader = ({ children, image }) => <Box
+export const PageHeader = ({ children, image, onClickOpenInSidebar }) => <Box
   as="header"
-  pr="var(--page-padding-h)"
+  pr="calc(var(--page-padding-h) / 2)"
   pt="var(--page-padding-v)"
   pb={4}
   gridArea="header"
@@ -81,6 +82,17 @@ export const PageHeader = ({ children, image }) => <Box
 >
   {image && <HeaderImage src={image} />}
   {children}
+
+  <ButtonGroup gridArea="extras" size="sm">
+    {onClickOpenInSidebar && <IconButton
+      aria-label='Open in sidebar'
+      color="foreground.secondary"
+      variant="ghost"
+      onClick={onClickOpenInSidebar}
+    >
+      <RightSidebarAddIcon boxSize="1.5em" />
+    </IconButton>}
+  </ButtonGroup>
 </Box>
 
 export const PageBody = ({ children }) => <Box

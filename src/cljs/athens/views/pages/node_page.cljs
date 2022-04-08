@@ -432,7 +432,8 @@
                            :onClose   cancel-fn}]
 
          ;; Header
-         [:> PageHeader
+         [:> PageHeader {:onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                                                 #(dispatch [:right-sidebar/open-item uid]))}
 
           ;; Dropdown
           [menu-dropdown node daily-note?]
