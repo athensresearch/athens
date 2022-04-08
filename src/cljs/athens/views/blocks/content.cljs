@@ -244,7 +244,7 @@
          ;; When block is in editing mode or the editing DOM elements are rendered
           (when (or (:show-editable-dom @state) @editing?)
            [autosize/textarea {:value          (:string/local @state)
-                               :class          ["block-input-textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
+                               :class          ["textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
                                ;; :auto-focus  true
                                :id             (str "editable-uid-" uid)
                                :on-change      (fn [e] (textarea-change e uid state))
