@@ -5,8 +5,11 @@ const PAGE_PROPS = {
   as: "article",
   display: "grid",
   flexBasis: "100%",
+  width: "100%",
+  maxWidth: "70em",
   gridTemplateAreas: "'header' 'content' 'footer'",
   gridTemplateRows: "auto 1fr auto",
+  marginInline: "auto",
   sx: {
     "--page-padding-v": "6rem",
     "--page-padding-h": "4rem"
@@ -27,12 +30,10 @@ const TITLE_PROPS = {
 
 export const PageContainer = ({ children, uid, type }) => <Box
   {...PAGE_PROPS}
-  maxWidth="70em"
   minHeight="100vh"
   data-ui={uid}
   className={type + '-page'}
   flexDirection="column"
-  marginInline="auto"
   pb="calc(var(--page-padding-v) / 2)"
 >{children}</Box>
 
@@ -115,8 +116,6 @@ export const DailyNotesPage = ({ isReal, children }) => <Box
   className="node-page daily-notes"
   boxShadow="page"
   bg="background.floor"
-  alignSelf="stretch"
-  justifySelf="stretch"
   opacity={isReal ? 1 : 0.5}
   borderWidth="1px"
   borderStyle="solid"
