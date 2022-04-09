@@ -468,8 +468,9 @@
   "BUG: escape is fired 24 times for some reason."
   [e state]
   (.. e preventDefault)
-  (swap! state assoc :search/type nil)
-  (dispatch [:editing/uid nil]))
+  (if (:search/type @state)
+    (swap! state assoc :search/type nil)
+    (dispatch [:editing/uid nil])))
 
 
 (def throttled-dispatch-sync
