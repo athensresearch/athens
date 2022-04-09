@@ -45,8 +45,7 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
   </AnimatePresence>
 }
 
-export const SidebarItem = ({ title, isOpen, onToggle, onRemove, children }) => {
-
+export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children }) => {
   return (
     <VStack
       align="stretch"
@@ -111,6 +110,7 @@ export const SidebarItem = ({ title, isOpen, onToggle, onRemove, children }) => 
       <Box
         as={Collapse}
         in={isOpen}
+        className={`${type}-page`}
         animateOpacity
         unmountOnExit
         zIndex={1}

@@ -97,8 +97,9 @@
                                      [empty-message]
                                      (doall
                                       (for [[uid {:keys [open node/title block/string is-graph?]}] items]
-                                        ^{:key uid}
                                         [:> SidebarItem {:isOpen open
+                                                         :key uid
+                                                         :type (cond is-graph? "graph" title "node" :else "block")
                                                          :onRemove #(dispatch [:right-sidebar/close-item uid])
                                                          :onToggle #(dispatch [:right-sidebar/toggle-item uid])
                                                           ;; nth 1 to get just the title
