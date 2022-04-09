@@ -35,7 +35,6 @@ const _Content = ({ children, fontSize, ...props }) => {
         minHeight: "100%",
         margin: "0",
         fontSize: "inherit",
-        borderRadius: "0.25rem",
         border: 0,
         opacity: 0,
         fontFamily: "inherit"
