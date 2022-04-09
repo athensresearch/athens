@@ -279,7 +279,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     ...rest
   } = props;
   const { colorMode, toggleColorMode } = useColorMode();
-  const [ canShowFullSecondaryMenu ] = useMediaQuery('(min-width: 900px)');
+  const [canShowFullSecondaryMenu] = useMediaQuery('(min-width: 900px)');
 
   // If the database color mode doesn't match
   // the chakra color mode, update the chakra color mode
@@ -289,7 +289,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     } else if (!isThemeDark && colorMode !== 'light') {
       toggleColorMode()
     }
-  }, [ isThemeDark, toggleColorMode ])
+  }, [isThemeDark, toggleColorMode])
 
   const secondaryTools = [
     {

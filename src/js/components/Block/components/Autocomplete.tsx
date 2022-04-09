@@ -45,17 +45,24 @@ export const AutocompleteButton = ({ children, onClick, isActive, ...props }) =>
   return (
     <Button
       ref={buttonRef}
+      variant="ghost"
       borderRadius={0}
+      flexShrink={0}
+      maxWidth="100%"
+      justifySelf="stretch"
+      overflowX="hidden"
+      display="inline-block"
+      textAlign="left"
       justifyContent="flex-start"
       isActive={isActive}
       textOverflow="ellipsis"
-      whiteSpace={"nowrap"}
-      width="100%"
+      whiteSpace="nowrap"
+      fontWeight="normal"
       _first={{
         borderTopRadius: "inherit",
       }}
       _last={{
-        borderBottomRadius: "inherit"
+        borderBottomRadius: "inherit",
       }}
       {...props}
       onClick={onClick}
@@ -115,16 +122,19 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
         </Box>
       </PopoverTrigger>
       <Portal>
-        <PopoverContent>
-          <PopoverBody
-            ref={menuRef}
-            p={0}
-            overflow="auto"
-            borderRadius="inherit"
-            maxHeight={`calc(100vh - 2rem - 2rem - ${currentEventPosition.current.top}px)`}
-          >
-            {children}
-          </PopoverBody>
+        <PopoverContent
+          borderRadius="md"
+          shadow="menu"
+          bg="background.vibrancy"
+          borderColor="separator.divider"
+          backdropFilter="blur(20px)"
+          maxWidth="max-content"
+          ref={menuRef}
+          p={0}
+          overflow="auto"
+          maxHeight={`calc(100vh - 2rem - 2rem - ${currentEventPosition.current.top}px)`}
+        >
+          {children}
         </PopoverContent>
       </Portal>
     </Popover>)

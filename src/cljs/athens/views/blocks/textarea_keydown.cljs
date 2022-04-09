@@ -1,12 +1,6 @@
 (ns athens.views.blocks.textarea-keydown
   (:require
-    ["@material-ui/icons/DesktopWindows" :default DesktopWindows]
-    ["@material-ui/icons/Done" :default Done]
-    ["@material-ui/icons/FlipToFront" :default FlipToFront]
-    ["@material-ui/icons/Timer" :default Timer]
-    ["@material-ui/icons/Today" :default Today]
-    ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
-    ["@material-ui/icons/YouTube" :default YouTube]
+    ["/components/Icons/Icons" :refer [TimeNow CheckboxIcon CalendarNowIcon CalendarTomorrowIcon CalendarYesterdayIcon BlockEmbedIcon TemplateIcon HTMLEmbedIcon YoutubeIcon]]
     [athens.common-db :as common-db]
     [athens.common.utils :as common.utils]
     [athens.dates :as dates]
@@ -95,18 +89,20 @@
 
 
 ;; Dropdown: inline-search and slash commands
+(js/console.log CheckboxIcon)
+(js/console.log [:> CheckboxIcon])
 
 ;; TODO: some expansions require caret placement after
 (def slash-options
-  [["Add Todo"      Done "{{[[TODO]]}} " "cmd-enter" nil]
-   ["Current Time"  Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
-   ["Today"         Today (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
-   ["Tomorrow"      Today (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
-   ["Yesterday"     Today (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
-   ["YouTube Embed" YouTube "{{[[youtube]]: }}" nil 2]
-   ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
-   ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]
-   ["Template"      FlipToFront ";;" nil nil]])
+  [["Add Todo"      CheckboxIcon "{{[[TODO]]}} " "cmd-enter" nil]
+   ["Current Time"  TimeNow (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
+   ["Today"         CalendarNowIcon (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
+   ["Tomorrow"      CalendarTomorrowIcon (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
+   ["Yesterday"     CalendarYesterdayIcon (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
+   ["YouTube Embed" YoutubeIcon "{{[[youtube]]: }}" nil 2]
+   ["iframe Embed"  HTMLEmbedIcon "{{iframe: }}" nil 2]
+   ["Block Embed"   BlockEmbedIcon "{{[[embed]]: (())}}" nil 4]
+   ["Template"      TemplateIcon ";;" nil nil]])
 
 
 ;; [ "Block Embed" #(str "[[" (:title (dates/get-day 1)) "]]")]

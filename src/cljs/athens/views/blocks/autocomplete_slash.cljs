@@ -28,5 +28,5 @@
                                    :isActive (when (= i index) "isActive")
                                    :onClick (fn [_] (slash-item-click state block item))}
             [:<>
-             [(r/adapt-react-class icon)]
+             [(r/adapt-react-class icon) {:boxSize 6 :mr 3 :ml 0}]
              text]]))])))
