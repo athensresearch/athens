@@ -39,7 +39,7 @@
   [span-click-stop
    [:> Checkbox {:isChecked false
                  :verticalAlign "middle"
-                 :transform "translateY(-2px)"
+                 :transform "translateY(-1px)"
                  :onChange #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}]])
 
 
@@ -48,7 +48,7 @@
   [span-click-stop
    [:> Checkbox {:isChecked   true
                  :verticalAlign "middle"
-                 :transform "translateY(-2px)"
+                 :transform "translateY(-1px)"
                  :onChange #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}]])
 
 
