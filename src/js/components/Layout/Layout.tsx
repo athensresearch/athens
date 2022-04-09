@@ -1,6 +1,6 @@
 import { Button, IconButton, Box, Collapse, VStack } from '@chakra-ui/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { XmarkIcon, ChevronUpIcon } from '@/Icons/Icons';
+import { XmarkIcon, ChevronRightIcon } from '@/Icons/Icons';
 
 const Container = motion(Box)
 
@@ -82,8 +82,8 @@ export const SidebarItem = ({ title, isOpen, onToggle, onRemove, children }) => 
           whiteSpace="nowrap"
           sx={{ maskImage: "linear-gradient(to right, black, black calc(100% - 1rem), transparent calc(100%))" }}
         >
-          <ChevronUpIcon
-            transform={isOpen ? "rotate(180deg)" : null}
+          <ChevronRightIcon
+            transform={isOpen ? "rotate(90deg)" : null}
             justifySelf="center"
           />
           <Box

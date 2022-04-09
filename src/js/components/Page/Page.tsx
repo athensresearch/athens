@@ -1,4 +1,4 @@
-import { Box, IconButton, ButtonGroup } from '@chakra-ui/react';
+import { Box, IconButton, ButtonGroup, Tooltip } from '@chakra-ui/react';
 import { RightSidebarAddIcon } from '@/Icons/Icons';
 
 const PAGE_PROPS = {
@@ -70,29 +70,24 @@ export const PageHeader = ({ children, image, onClickOpenInSidebar }) => <Box
   className="page-header"
   borderBottom="1px solid transparent"
 
-  // Page headers without images get a nice border...
+  // Page headers without images get a nice border
   {...!image && ({
     borderBottomColor: "separator.divider"
   })}
-  // unless they're in the sidebar
-  sx={{
-    ".right-sidebar &": {
-      // borderBottomColor: "transparent"
-    }
-  }}
 >
   {image && <HeaderImage src={image} />}
   {children}
 
   <ButtonGroup gridArea="extras" size="sm">
-    {onClickOpenInSidebar && <IconButton
-      aria-label='Open in sidebar'
-      color="foreground.secondary"
-      variant="ghost"
-      onClick={onClickOpenInSidebar}
-    >
-      <RightSidebarAddIcon boxSize="1.5em" />
-    </IconButton>}
+    {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
+      <IconButton
+        aria-label='Open in right sidebar'
+        color="foreground.secondary"
+        variant="ghost"
+        onClick={onClickOpenInSidebar}
+      >
+        <RightSidebarAddIcon boxSize="1.5em" />
+      </IconButton></Tooltip>}
   </ButtonGroup>
 </Box>
 
