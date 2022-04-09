@@ -214,6 +214,7 @@
          :node/title} node]
     [:> Menu {:isLazy true}
      [:> MenuButton {:as IconButton
+                     "aria-label" "Page menu"
                      :gridArea "menu"
                      :justifySelf "flex-end"
                      :alignSelf "center"
