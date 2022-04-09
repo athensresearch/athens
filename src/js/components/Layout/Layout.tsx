@@ -1,6 +1,6 @@
-import { Button, IconButton, Box, useDisclosure, Collapse, VStack } from '@chakra-ui/react';
+import { Button, IconButton, Box, Collapse, VStack } from '@chakra-ui/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { XmarkIcon, ChevronUpIcon } from '@/Icons/Icons';
+import { XmarkIcon, ChevronRightIcon } from '@/Icons/Icons';
 
 const Container = motion(Box)
 
@@ -45,9 +45,7 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
   </AnimatePresence>
 }
 
-export const SidebarItem = ({ title, defaultIsOpen, onRemove, onClose, children }) => {
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: defaultIsOpen, onClose: onClose });
-
+export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children }) => {
   return (
     <VStack
       align="stretch"
@@ -83,7 +81,8 @@ export const SidebarItem = ({ title, defaultIsOpen, onRemove, onClose, children 
           whiteSpace="nowrap"
           sx={{ maskImage: "linear-gradient(to right, black, black calc(100% - 1rem), transparent calc(100%))" }}
         >
-          <ChevronUpIcon transform={isOpen ? "rotate(180deg)" : null}
+          <ChevronRightIcon
+            transform={isOpen ? "rotate(90deg)" : null}
             justifySelf="center"
           />
           <Box
@@ -111,6 +110,7 @@ export const SidebarItem = ({ title, defaultIsOpen, onRemove, onClose, children 
       <Box
         as={Collapse}
         in={isOpen}
+        className={`${type}-page`}
         animateOpacity
         unmountOnExit
         zIndex={1}
@@ -118,5 +118,5 @@ export const SidebarItem = ({ title, defaultIsOpen, onRemove, onClose, children 
       >
         {children}
       </Box>
-    </VStack >)
+    </VStack>)
 }

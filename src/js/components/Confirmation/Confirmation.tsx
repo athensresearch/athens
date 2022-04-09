@@ -2,7 +2,6 @@ import React from 'react';
 import { Portal, useDisclosure, AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogBody, Button, ButtonGroup } from "@chakra-ui/react"
 
 export const Confirmation = ({
-  db,
   isOpen,
   title,
   message,
@@ -18,9 +17,6 @@ export const Confirmation = ({
       defaultIsOpen: isOpen,
       onClose: onClose
     })
-
-  console.log(db, isOpen, title, message);
-  console.log('alerting!');
 
   return (<AlertDialog
     isOpen={isConfirmOpen}

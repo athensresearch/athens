@@ -25,6 +25,7 @@
                 :borderBottomColor (when (:below @drag) "brand")}
        [:> Button {:variant "ghost"
                    :mx "1rem"
+                   :display "inline-block"
                    :textAlign "left"
                    :justifyContent "flex-start"
                    :overflow "hidden"
@@ -85,6 +86,7 @@
         {:style {:display "flex"
                  :flex-direction "column"
                  :height "100%"
+                 :zIndex 1
                  :alignItems "stretch"
                  :gridArea "left-sidebar"
                  :position "relative"
@@ -101,10 +103,13 @@
                     :align "stretch"
                     :width expanded-sidebar-width
                     :py "1rem"
-                    :paddingTop "7rem"
+                    :marginTop "7rem"
                     :spacing "0.25rem"
-                    :overflowY "overlay"
-                    :sx {:listStyle "none"
+                    :overflowY "auto"
+                    :backdropFilter "blur(1em)"
+                    :borderRadius "lg"
+                    :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}
+                         :listStyle "none"
                          :WebkitAppRegion "no-drag"}}
          [:> Heading {:as "h2"
                       :px "2rem"

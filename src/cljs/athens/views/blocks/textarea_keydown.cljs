@@ -1,12 +1,6 @@
 (ns athens.views.blocks.textarea-keydown
   (:require
-    ["@material-ui/icons/DesktopWindows" :default DesktopWindows]
-    ["@material-ui/icons/Done" :default Done]
-    ["@material-ui/icons/FlipToFront" :default FlipToFront]
-    ["@material-ui/icons/Timer" :default Timer]
-    ["@material-ui/icons/Today" :default Today]
-    ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
-    ["@material-ui/icons/YouTube" :default YouTube]
+    ["/components/Icons/Icons" :refer [TimeNow CheckboxIcon CalendarNowIcon CalendarTomorrowIcon CalendarYesterdayIcon BlockEmbedIcon TemplateIcon HTMLEmbedIcon YoutubeIcon]]
     [athens.common-db :as common-db]
     [athens.common.utils :as common.utils]
     [athens.dates :as dates]
@@ -14,14 +8,13 @@
     [athens.events.selection :as select-events]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
-    [athens.util :as util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
+    [athens.util :as util :refer [scroll-if-needed shortcut-key? escape-str]]
     [athens.views.blocks.internal-representation :as internal-representation]
     [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
     [goog.dom.selection :refer [setStart setEnd getText setCursorPosition getEndPoints]]
     [goog.events.KeyCodes :refer [isCharacterKey]]
-    [goog.functions :refer [throttle #_debounce]]
-    [goog.style :refer [getClientPosition]]
+    [goog.functions :refer [throttle]]
     [re-frame.core :as rf :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
@@ -96,18 +89,17 @@
 
 
 ;; Dropdown: inline-search and slash commands
-
 ;; TODO: some expansions require caret placement after
 (def slash-options
-  [["Add Todo"      Done "{{[[TODO]]}} " "cmd-enter" nil]
-   ["Current Time"  Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
-   ["Today"         Today (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
-   ["Tomorrow"      Today (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
-   ["Yesterday"     Today (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
-   ["YouTube Embed" YouTube "{{[[youtube]]: }}" nil 2]
-   ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
-   ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]
-   ["Template"      FlipToFront ";;" nil nil]])
+  [["Add Todo"      CheckboxIcon "{{[[TODO]]}} " "cmd-enter" nil]
+   ["Current Time"  TimeNow (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
+   ["Today"         CalendarNowIcon (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
+   ["Tomorrow"      CalendarTomorrowIcon (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
+   ["Yesterday"     CalendarYesterdayIcon (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
+   ["YouTube Embed" YoutubeIcon "{{[[youtube]]: }}" nil 2]
+   ["iframe Embed"  HTMLEmbedIcon "{{iframe: }}" nil 2]
+   ["Block Embed"   BlockEmbedIcon "{{[[embed]]: (())}}" nil 4]
+   ["Template"      TemplateIcon ";;" nil nil]])
 
 
 ;; [ "Block Embed" #(str "[[" (:title (dates/get-day 1)) "]]")]
@@ -182,6 +174,7 @@
    (let [target (.. e -target)
          {:search/keys [index results]} @state
          item (nth results index)]
+     (println "ran auto-complete-slash")
      (auto-complete-slash state target item)))
   ;; here comes the autocompletion logic itself,
   ;; independent of the input method the user used.
@@ -197,6 +190,8 @@
          start-idx (dec (count (re-find #"(?s).*/" head)))]
      (swap! state assoc
             :search/type nil)
+
+     (println "ran auto-complete-slash")
      (set-selection target start-idx start)
      (replace-selection-with expand)
      (when pos
@@ -470,8 +465,9 @@
   "BUG: escape is fired 24 times for some reason."
   [e state]
   (.. e preventDefault)
-  (swap! state assoc :search/type nil)
-  (dispatch [:editing/uid nil]))
+  (if (:search/type @state)
+    (swap! state assoc :search/type nil)
+    (dispatch [:editing/uid nil])))
 
 
 (def throttled-dispatch-sync
@@ -815,15 +811,7 @@
 
       ;; used for paste, to determine if shift key was held down
       (swap! state assoc :last-keydown d-event)
-
-      ;; update caret position for search dropdowns and for up/down
-      (when (nil? (:search/type @state))
-
-        (let [caret-position (get-caret-position (.. e -target))
-              textarea-position (js->clj (getClientPosition (.. e -target)) :keywordize-keys true)
-              position {:left (+ (:left caret-position) (.. textarea-position -x))
-                        :top (+ (:top caret-position) (.. textarea-position -y))}]
-          (swap! state assoc :caret-position position)))
+      (swap! state assoc :last-e e)
 
       ;; dispatch center
       ;; only when nothing is selected or duplicate/events dispatched

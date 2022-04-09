@@ -35,9 +35,10 @@
                            :synchronising)]
     [:<>
      [db-modal/merge-modal merge-open?]
-     [:> Popover {:placement "bottom-start"}
+     [:> Popover {:placement "bottom-start" :isLazy true}
       [:> PopoverTrigger
        [:> IconButton {:p 0
+                       "aria-label" "Database menu"
                        :bg "background.floor"}
         ;; DB Icon + Dropdown toggle
         [db-icon {:db     active-db

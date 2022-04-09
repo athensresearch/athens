@@ -1,6 +1,6 @@
 (ns athens.views.pages.block-page
   (:require
-    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
+    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
@@ -105,21 +105,22 @@
         [:<>
 
          ;; Header
-         [:> PageHeader
+         [:> PageHeader {:onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                                                 #(dispatch [:right-sidebar/open-item uid]))}
 
           ;; Parent Context
           [parents-el uid id]
-          [:> EditableTitleContainer {:isEditing @(subscribe [:editing/is-editing uid])
-                                      :onClick (fn [e]
-                                                 (.. e preventDefault)
-                                                 (if (.. e -shiftKey)
-                                                   (do
-                                                     (dispatch [:reporting/navigation {:source :block-page
-                                                                                       :target :block
-                                                                                       :pane   :right-pane}])
-                                                     (router/navigate-uid uid e))
+          [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])
+                              :onClick (fn [e]
+                                         (.. e preventDefault)
+                                         (if (.. e -shiftKey)
+                                           (do
+                                             (dispatch [:reporting/navigation {:source :block-page
+                                                                               :target :block
+                                                                               :pane   :right-pane}])
+                                             (router/navigate-uid uid e))
 
-                                                   (dispatch [:editing/uid uid])))}
+                                           (dispatch [:editing/uid uid])))}
            [autosize/textarea
             {:value       (:string/local @state)
              :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")

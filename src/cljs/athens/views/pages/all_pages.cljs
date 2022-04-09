@@ -1,8 +1,7 @@
 (ns athens.views.pages.all-pages
   (:require
+    ["/components/Icons/Icons" :refer [ChevronUpIcon ChevronDownIcon]]
     ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button Box]]
-    ["@material-ui/icons/ArrowDropDown" :default ArrowDropDown]
-    ["@material-ui/icons/ArrowDropUp" :default ArrowDropUp]
     [athens.common-db          :as common-db]
     [athens.dates              :as dates]
     [athens.db                 :as db]
@@ -68,13 +67,17 @@
          growing?  @(rf/subscribe [:all-pages/sort-order-ascending?])]
      [:> Th {:width width :isNumeric isNumeric}
       [:> Button {:onClick #(rf/dispatch [:all-pages/sort-by column-id])
-                  :size "sm"
-                  :variant "link"}
+                  :size "xs"
+                  :textTransform "uppercase"
+                  :gap "0.25em"
+                  :variant "link"
+                  :color "inherit"
+                  :_hover {:textDecoration "none"}}
        (when-not isNumeric label)
        (when (= sorted-by column-id)
          (if growing?
-           [:> ArrowDropUp]
-           [:> ArrowDropDown]))
+           [:> ChevronUpIcon]
+           [:> ChevronDownIcon]))
        (when isNumeric label)]])))
 
 
@@ -84,12 +87,13 @@
     (fn []
       (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
         [:> Box {:px 4
+                 :maxWidth "70rem"
                  :margin "calc(var(--app-header-height) + 2rem) auto 5rem"}
          [:> Table {:variant "striped"}
           [:> Thead
            [:> Tr
             [sortable-header :title "Title"]
-            [sortable-header :links-count "Links" "12rem" true]
+            [sortable-header :links-count "Links" "6rem" true]
             [sortable-header :modified "Modified" "16rem" false {:date? true}]
             [sortable-header :created "Created" "16rem" false {:date? true}]]]
           [:> Tbody
@@ -98,7 +102,7 @@
                     modified :edit/time
                     created  :create/time} sorted-pages]
                [:> Tr {:key uid}
-                [:> Td {:overflow "hidden"}
+                [:> Td
                  [:> Button {:variant "link"
                              :justifyContent "flex-start"
                              :textAlign "left"
@@ -106,7 +110,8 @@
                              :color "link"
                              :display "block"
                              :maxWidth "100%"
-                             :whiteSpace "nowrap"
+                             :whiteSpace "wrap"
+                             :wordBreak "break-all"
                              :onClick (fn [e]
                                         (let [shift? (.-shiftKey e)]
                                           (rf/dispatch [:reporting/navigation {:source :all-pages
@@ -116,6 +121,6 @@
                                                                                          :main-pane)}])
                                           (router/navigate-page title e)))}
                   title]]
-                [:> Td {:width "12rem" :whiteSpace "nowrap" :color "foreground.secondary" :isNumeric true} (count _refs)]
+                [:> Td {:width "6rem" :whiteSpace "nowrap" :color "foreground.secondary" :isNumeric true} (count _refs)]
                 [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string modified)]
                 [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))

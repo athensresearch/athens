@@ -1,11 +1,15 @@
-import { Box } from '@chakra-ui/react';
+import { Box, IconButton, ButtonGroup, Tooltip } from '@chakra-ui/react';
+import { RightSidebarAddIcon } from '@/Icons/Icons';
 
 const PAGE_PROPS = {
   as: "article",
   display: "grid",
   flexBasis: "100%",
+  width: "100%",
+  maxWidth: "70em",
   gridTemplateAreas: "'header' 'content' 'footer'",
   gridTemplateRows: "auto 1fr auto",
+  marginInline: "auto",
   sx: {
     "--page-padding-v": "6rem",
     "--page-padding-h": "4rem"
@@ -26,12 +30,10 @@ const TITLE_PROPS = {
 
 export const PageContainer = ({ children, uid, type }) => <Box
   {...PAGE_PROPS}
-  maxWidth="70em"
   minHeight="100vh"
   data-ui={uid}
   className={type + '-page'}
   flexDirection="column"
-  marginInline="auto"
   pb="calc(var(--page-padding-v) / 2)"
 >{children}</Box>
 
@@ -53,9 +55,9 @@ export const HeaderImage = ({ src }) => <Box
   }}
 />
 
-export const PageHeader = ({ children, image }) => <Box
+export const PageHeader = ({ children, image, onClickOpenInSidebar }) => <Box
   as="header"
-  pr="var(--page-padding-h)"
+  pr="calc(var(--page-padding-h) / 2)"
   pt="var(--page-padding-v)"
   pb={4}
   gridArea="header"
@@ -68,19 +70,25 @@ export const PageHeader = ({ children, image }) => <Box
   className="page-header"
   borderBottom="1px solid transparent"
 
-  // Page headers without images get a nice border...
+  // Page headers without images get a nice border
   {...!image && ({
     borderBottomColor: "separator.divider"
   })}
-  // unless they're in the sidebar
-  sx={{
-    ".right-sidebar &": {
-      // borderBottomColor: "transparent"
-    }
-  }}
 >
   {image && <HeaderImage src={image} />}
   {children}
+
+  <ButtonGroup gridArea="extras" size="sm">
+    {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
+      <IconButton
+        aria-label='Open in right sidebar'
+        color="foreground.secondary"
+        variant="ghost"
+        onClick={onClickOpenInSidebar}
+      >
+        <RightSidebarAddIcon boxSize="1.5em" />
+      </IconButton></Tooltip>}
+  </ButtonGroup>
 </Box>
 
 export const PageBody = ({ children }) => <Box
@@ -98,17 +106,11 @@ export const PageFooter = ({ children }) => <Box
   p={4}
 >{children}</Box>
 
-export const TitleContainer = ({ children }) => <Box
-  {...TITLE_PROPS}
->{children}</Box>
-
 export const DailyNotesPage = ({ isReal, children }) => <Box
   {...PAGE_PROPS}
   className="node-page daily-notes"
   boxShadow="page"
   bg="background.floor"
-  alignSelf="stretch"
-  justifySelf="stretch"
   opacity={isReal ? 1 : 0.5}
   borderWidth="1px"
   borderStyle="solid"
@@ -122,7 +124,8 @@ export const DailyNotesPage = ({ isReal, children }) => <Box
   }}
 >{children}</Box>
 
-export const EditableTitleContainer = ({ children, isEditing, props }) => <Box
+
+export const TitleContainer = ({ children, isEditing, props }) => <Box
   {...TITLE_PROPS}
   as="h1"
   className={[
@@ -134,7 +137,7 @@ export const EditableTitleContainer = ({ children, isEditing, props }) => <Box
   display="grid"
   background="var(--block-surface-color)"
   color="foreground.primary"
-  gridTemplateAreas="'main'"
+  gridTemplateAreas="'main extras'"
   alignItems="stretch"
   justifyContent="stretch"
   position="relative"

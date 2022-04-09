@@ -15,9 +15,9 @@ const shadows = {
 }
 
 const fonts = {
-  body: '"IBM Plex Serif", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"',
-  default: '"IBM Plex Sans", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"',
-  code: '"IBM Plex Mono", BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, ui-sans-serif, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+  body: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+  default: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+  code: 'ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro","Fira Mono", "Droid Sans Mono", "Courier New", monospace;',
 }
 
 const radii = {
@@ -196,13 +196,13 @@ const components = {
   Alert: {
     variants: {
       // variant used by toasts
-      solid: ({ theme, status }) => {
+      solid: ({ theme, status = "info" }) => {
 
         // Toasts don't recieve the current color mode
         // as a prop, so we get both colors and use one or
         // the other based on the CSS context
-        const toastColorDefault = theme.semanticTokens.colors[ status ].default;
-        const toastColorDark = theme.semanticTokens.colors[ status ].dark;
+        const toastColorDefault = theme.semanticTokens.colors[status]?.default;
+        const toastColorDark = theme.semanticTokens.colors[status]?.dark;
 
         return ({
           container: {
@@ -446,12 +446,12 @@ const components = {
     }
   },
   Popover: {
-    parts: [ "arrow", "content" ],
+    parts: ["arrow", "content"],
     baseStyle: {
       content: {
         bg: "background.upper",
         shadow: "popover",
-        [ $arrowBg.variable ]: "colors.background.upper",
+        [$arrowBg.variable]: "colors.background.upper",
       }
     }
   },
