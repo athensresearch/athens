@@ -59,7 +59,9 @@
     :items     (fu/query db
                          {:select {"?event" ["*"]}
                           :where  [["?event" "event/id", "?id"]
-                                   ["?event" "event/order" (str "#(> ?order " since-order ")")]]
+                                   (if since-order
+                                     ["?event" "event/order" (str "#(> ?order " since-order ")")]
+                                     ["?event" "event/order" "?order"])]
                           :opts   {:orderBy ["ASC", "?order"]
                                    :limit   page-size
                                    :offset  (* page-size page-number)}})}))
@@ -99,9 +101,7 @@
                        since-event-id (or (event-id->order db since-event-id)
                                           (throw (ex-info "Cannot find starting id"
                                                           {:since-event-id since-event-id})))
-                       ;; First order number is 1, so if we start
-                       ;; on 0 we will get all events.
-                       :else          0)
+                       :else          nil)
         step         (partial events-page db since-order' 100)]
     ;; New core fn added in Clojure 11.
     ;; See https://www.juxt.pro/blog/new-clojure-iteration for usage example.
