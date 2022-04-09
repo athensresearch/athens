@@ -174,7 +174,8 @@
                    :pt 4
                    :mb 4
                    :px 4
-                   :overflowY "overlay"
+                   :overflowY "auto"
+                   :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}}
                    :_empty {:display "none"}}
         (doall
           (for [[i x] (map-indexed list recent-items)]
@@ -201,7 +202,8 @@
               :pt 4
               :mb 4
               :px 4
-              :overflowY "overlay"
+              :overflowY "auto"
+              :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}}
               :_empty {:display "none"}}
    (doall
      (for [[i x] (map-indexed list results)

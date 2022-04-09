@@ -105,10 +105,11 @@
                     :py "1rem"
                     :marginTop "7rem"
                     :spacing "0.25rem"
-                    :overflowY "overlay"
+                    :overflowY "auto"
                     :backdropFilter "blur(1em)"
                     :borderRadius "lg"
-                    :sx {:listStyle "none"
+                    :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}
+                         :listStyle "none"
                          :WebkitAppRegion "no-drag"}}
          [:> Heading {:as "h2"
                       :px "2rem"

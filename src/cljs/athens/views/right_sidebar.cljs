@@ -91,21 +91,22 @@
                                     :flex 1;
                                     :maxHeight "calc(100vh - 3.25rem - 1px)"
                                     :width (str (:width @state) "vw")
-                                    :overflowY "overlay"}
+                                    :overflowY "auto"
+                                    :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}}}
                                    (if (empty? items)
                                      [empty-message]
                                      (doall
-                                       (for [[uid {:keys [open node/title block/string is-graph?]}] items]
-                                         ^{:key uid}
-                                         [:> SidebarItem {:isOpen open
-                                                          :onRemove #(dispatch [:right-sidebar/close-item uid])
-                                                          :onToggle #(dispatch [:right-sidebar/toggle-item uid])
+                                      (for [[uid {:keys [open node/title block/string is-graph?]}] items]
+                                        ^{:key uid}
+                                        [:> SidebarItem {:isOpen open
+                                                         :onRemove #(dispatch [:right-sidebar/close-item uid])
+                                                         :onToggle #(dispatch [:right-sidebar/toggle-item uid])
                                                           ;; nth 1 to get just the title
-                                                          :title (nth [parse-renderer/parse-and-render (or title string) uid] 1)}
-                                          (cond
-                                            is-graph? [graph/page uid]
-                                            title     [node-page/page [:block/uid uid]]
-                                            :else     [block-page/page [:block/uid uid]])])))]])})))
+                                                         :title (nth [parse-renderer/parse-and-render (or title string) uid] 1)}
+                                         (cond
+                                           is-graph? [graph/page uid]
+                                           title     [node-page/page [:block/uid uid]]
+                                           :else     [block-page/page [:block/uid uid]])])))]])})))
 
 
 (defn right-sidebar

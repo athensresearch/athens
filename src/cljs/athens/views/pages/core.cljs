@@ -26,8 +26,10 @@
              :alignItems "flex-start"
              :justifyContent "stretch"
              :display "flex"
-             :overflowY "overlay"
-             :sx {:maskImage "linear-gradient(to bottom,
+             :overflowY "auto"
+             :sx {
+               "@supports (overflow-y: overlay)" {:overflowY "overlay"}
+               :maskImage "linear-gradient(to bottom,
                   transparent,
                   #000000cc 1rem, 
                   black 1.5rem, 
