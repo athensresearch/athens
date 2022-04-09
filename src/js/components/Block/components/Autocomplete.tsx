@@ -73,7 +73,6 @@ export const AutocompleteButton = ({ children, onClick, isActive, ...props }) =>
 }
 
 export const Autocomplete = ({ isOpen, onClose, event, children }) => {
-
   // Early return with nothing, to avoid rendering all
   // the juicy portaling goodness.
   if (!isOpen) {
@@ -113,8 +112,8 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
           visibility="hidden"
           bg="red"
           position="fixed"
-          width="10px"
-          height="1.75rem"
+          width="1px"
+          height="1.5em"
           zIndex="100"
           left={currentEventPosition.current.left + 'px'}
           top={currentEventPosition.current.top + "px"}
