@@ -33,7 +33,7 @@
                       :gap            "1.5rem"
                       :py             "6rem"
                       :px             "2rem"
-                      :alignItems    "stretch"
+                      :alignItems    "center"
                       :flex           "1 1 100%"
                       :flexDirection "column"}
            (doall
