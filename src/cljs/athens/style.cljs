@@ -1,10 +1,8 @@
 (ns athens.style
   (:require
-    [athens.config :as config]
-    [athens.util :as util]
-    [re-frame.core :refer [reg-sub subscribe]]
-    [stylefy.core :as stylefy]
-    [stylefy.reagent :as stylefy-reagent]))
+   [athens.config :as config]
+   [athens.util :as util]
+   [re-frame.core :refer [reg-sub subscribe]]))
 
 
 (reg-sub
@@ -58,7 +56,6 @@
 
 (defn init
   []
-  (stylefy/init {:dom (stylefy-reagent/init)})
   ;; hide re-frame-10x by default
   (when config/debug?
     (util/hide-10x)))
