@@ -1,7 +1,7 @@
 (ns athens.views.pages.all-pages
   (:require
-    ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button Box]]
     ["/components/Icons/Icons" :refer [ChevronUpIcon ChevronDownIcon]]
+    ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button Box]]
     [athens.common-db          :as common-db]
     [athens.dates              :as dates]
     [athens.db                 :as db]

@@ -89,9 +89,6 @@
 
 
 ;; Dropdown: inline-search and slash commands
-(js/console.log CheckboxIcon)
-(js/console.log [:> CheckboxIcon])
-
 ;; TODO: some expansions require caret placement after
 (def slash-options
   [["Add Todo"      CheckboxIcon "{{[[TODO]]}} " "cmd-enter" nil]

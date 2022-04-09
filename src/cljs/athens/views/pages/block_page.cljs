@@ -111,16 +111,16 @@
           ;; Parent Context
           [parents-el uid id]
           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])
-                                      :onClick (fn [e]
-                                                 (.. e preventDefault)
-                                                 (if (.. e -shiftKey)
-                                                   (do
-                                                     (dispatch [:reporting/navigation {:source :block-page
-                                                                                       :target :block
-                                                                                       :pane   :right-pane}])
-                                                     (router/navigate-uid uid e))
+                              :onClick (fn [e]
+                                         (.. e preventDefault)
+                                         (if (.. e -shiftKey)
+                                           (do
+                                             (dispatch [:reporting/navigation {:source :block-page
+                                                                               :target :block
+                                                                               :pane   :right-pane}])
+                                             (router/navigate-uid uid e))
 
-                                                   (dispatch [:editing/uid uid])))}
+                                           (dispatch [:editing/uid uid])))}
            [autosize/textarea
             {:value       (:string/local @state)
              :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
