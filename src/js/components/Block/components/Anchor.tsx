@@ -48,7 +48,7 @@ const Item = ({ children }) => {
 }
 
 const propertiesList = (block) => {
-  return Object.entries(properties(block)).map(([ key, value ]) => {
+  return Object.entries(properties(block)).map(([key, value]) => {
     return <Item key={key}>
       <span>{key}</span>
       <span>{showValue(value)}</span>
@@ -81,7 +81,7 @@ const anchorButtonStyleProps = (isClosedWithChildren) => {
   return ({
     bg: "transparent",
     "aria-label": "Block anchor",
-    className: [ 'anchor', isClosedWithChildren && 'closed-with-children' ].filter(Boolean).join(' '),
+    className: ['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' '),
     draggable: true,
     gridArea: "bullet",
     flexShrink: 0,
@@ -134,6 +134,8 @@ const anchorButtonStyleProps = (isClosedWithChildren) => {
  * A handle and indicator of a block's position in the document
 */
 export const Anchor = (props: AnchorProps) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+
   const { isClosedWithChildren,
     anchorElement,
     shouldShowDebugDetails,
@@ -146,10 +148,31 @@ export const Anchor = (props: AnchorProps) => {
     uidSanitizedBlock,
   } = props;
 
-  const [ isOpen, setIsOpen ] = React.useState(false);
+  // Early return with just the button, to avoid rendering the menu
+  // with all its juicy portaling goodness.
+  if (!isOpen) {
+    return <IconButton
+      aria-label="Block anchor"
+      {...anchorButtonStyleProps(isClosedWithChildren)}
+      onDragStart={onDragStart}
+      onClick={onClick}
+      onDragEnd={onDragEnd}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(true);
+      }}
+    >
+      {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
+    </IconButton>
+  }
 
   return (
-    <Menu isOpen={isOpen} isLazy={true} onClose={() => setIsOpen(false)}>
+    <Menu
+      isOpen={true}
+      isLazy={true}
+      onClose={() => setIsOpen(false)}
+    >
       <IconButton
         aria-label="Block anchor"
         {...anchorButtonStyleProps(isClosedWithChildren)}
@@ -163,9 +186,10 @@ export const Anchor = (props: AnchorProps) => {
         }}
         as={MenuButton}
       >
-        {ANCHORS[ anchorElement ] || ANCHORS.CIRCLE}
+        {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
       </IconButton>
-      <Portal>
+      <Portal
+      >
         <MenuList>
           <MenuItem onClick={onCopyRef}>Copy block refs</MenuItem>
           <MenuItem onClick={onCopyUnformatted}>Copy unformatted</MenuItem>

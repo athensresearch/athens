@@ -66,6 +66,13 @@ export const AutocompleteButton = ({ children, onClick, isActive, ...props }) =>
 }
 
 export const Autocomplete = ({ isOpen, onClose, event, children }) => {
+
+  // Early return with nothing, to avoid rendering all
+  // the juicy portaling goodness.
+  if (!isOpen) {
+    return null;
+  }
+
   const menuRef = React.useRef(null);
   const lastEventTargetValue = React.useRef(null);
   const currentEventPosition = React.useRef({ left: null, top: null });

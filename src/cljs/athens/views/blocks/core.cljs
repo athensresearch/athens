@@ -466,8 +466,7 @@
               (:inline-refs/open @state)])]
 
           [autocomplete-search/inline-search-el block state]
-          (when @(rf/subscribe [:editing/is-editing uid])
-            [autocomplete-slash/slash-menu-el block state])
+          [autocomplete-slash/slash-menu-el block state]
 
           ;; Inline refs
           (when (and (> (count _refs) 0)
