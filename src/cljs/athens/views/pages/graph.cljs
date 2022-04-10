@@ -3,9 +3,7 @@
       "
       Graph and controls are designed to work with local and global graph
       global graphs vs local graphs -- local graphs have an explicit root node
-      and customizations are based on that where as global doesn't have an explicit root
-
-      Relies on material ui comps for user inputs."}
+      and customizations are based on that where as global doesn't have an explicit root"}
  athens.views.pages.graph
   (:require
    ["@chakra-ui/react" :refer [Box Switch VStack FormControl FormLabel Input Accordion AccordionButton AccordionItem AccordionPanel]]
