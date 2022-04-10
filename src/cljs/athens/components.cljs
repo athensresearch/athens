@@ -1,7 +1,7 @@
 (ns athens.components
   (:require
     ["/components/Icons/Icons" :refer [PencilIcon]]
-    ["@chakra-ui/react" :refer [Checkbox Box Button IconButton]]
+    ["@chakra-ui/react" :refer [Checkbox Box IconButton Button]]
     [athens.db :as db]
     [athens.parse-renderer :refer [component]]
     [athens.reactive :as reactive]
@@ -97,14 +97,17 @@
                        {:linked-ref false}
                        {:block-embed? true}]
                       (when-not @(subscribe [:editing/is-editing uid])
-                      [:> IconButton {:size "xs"
-                                      :position "absolute"
-                                      :top 1
-                                      :right 1
-                                      :zIndex 5
-                                      :on-click (fn [e]
-                                                  (.. e stopPropagation)
-                                                  (dispatch [:editing/uid uid]))}
-                       [:> PencilIcon]])])]
+                        [:> IconButton {:position "absolute"
+                                        :right 1
+                                        :top 1
+                                        :size "xs"
+                                        :fontSize "1rem"
+                                        :zIndex "5"
+                                        :on-click (fn [e]
+                                                    (.. e stopPropagation)
+                                                    (dispatch [:editing/uid uid]))}
+                         [:> PencilIcon]])])])
       ;; roam actually hides the brackets around [[embed]]
-      [:span "{{" content "}}"]))))
+      [:span "{{" content "}}"])))
+
+

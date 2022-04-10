@@ -52,7 +52,6 @@ const _Content = ({ children, fontSize, ...props }) => {
       "a, button, label, video, embed, iframe, img": {
         pointerEvents: "auto",
         zIndex: 2,
-        position: "relative"
       },
       // manage the textarea interactions
       "&:hover textarea:not:(.is-editing)": { lineHeight: 2 },
