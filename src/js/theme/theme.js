@@ -274,8 +274,6 @@ const components = {
         color: 'separator.border'
       },
       item: {
-        // maxWidth: '10em',
-        whiteSpace: 'nowrap',
         overflow: 'hidden',
         ".fmt": {
           display: 'none',
