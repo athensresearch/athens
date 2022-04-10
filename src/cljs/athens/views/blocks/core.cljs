@@ -332,9 +332,7 @@
          (when (not= string (:string/previous @state))
            (swap! state assoc :string/previous string :string/local string))
 
-         [:> Container {#_ :sx# #_ (merge block-container-inner-style
-                                   {"--block-surface-color" "background.floor"})
-                        :isDragging (and dragging (not is-selected))
+         [:> Container {:isDragging (and dragging (not is-selected))
                         :isSelected is-selected
                         :hasChildren (seq children)
                         :isOpen open

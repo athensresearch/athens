@@ -42,10 +42,6 @@ const _Content = ({ children, fontSize, ...props }) => {
       "& > span": {
         gridArea: "main",
       },
-      // deactivate noninteractive (text) content
-      "div, span, p, blockquote": {
-        pointerEvents: "none",
-      },
       // activate interactive content (links, buttons, etc.)
       "a, button, label, video, embed, iframe, img": {
         pointerEvents: "auto",
@@ -129,8 +125,7 @@ const _Content = ({ children, fontSize, ...props }) => {
         borderRadius: "0.125rem",
         background: "highlight",
       }
-    }
-    }
+    }}
     {...props}
   > {children}</Box>
 }
