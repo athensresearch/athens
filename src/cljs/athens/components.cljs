@@ -1,7 +1,7 @@
 (ns athens.components
   (:require
-    ["@chakra-ui/react" :refer [Checkbox Box Button]]
-    ["@material-ui/icons/Edit" :default Edit]
+    ["/components/Icons/Icons" :refer [PencilIcon]]
+    ["@chakra-ui/react" :refer [Checkbox Box Button IconButton]]
     [athens.db :as db]
     [athens.parse-renderer :refer [component]]
     [athens.reactive :as reactive]
@@ -89,13 +89,7 @@
                            :position "relative"
                            :sx {"> .block-container" {:ml 0
                                                       :pr "1.3rem"
-                                                      "textarea" {:background "transparent"}}
-                                "> svg" {:position "absolute"
-                                         :right "5px"
-                                         :top "5px"
-                                         :fontSize "1rem"
-                                         :zIndex "5"
-                                         :cursor "pointer"}}}
+                                                      "textarea" {:background "transparent"}}}}
                    (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
                      [:<>
                       [blocks/block-el
@@ -103,11 +97,14 @@
                        {:linked-ref false}
                        {:block-embed? true}]
                       (when-not @(subscribe [:editing/is-editing uid])
-                        [:> Edit
-                         {:on-click (fn [e]
-                                      (.. e stopPropagation)
-                                      (dispatch [:editing/uid uid]))}])])])
+                      [:> IconButton {:size "xs"
+                                      :position "absolute"
+                                      :top 1
+                                      :right 1
+                                      :zIndex 5
+                                      :on-click (fn [e]
+                                                  (.. e stopPropagation)
+                                                  (dispatch [:editing/uid uid]))}
+                       [:> PencilIcon]])])]
       ;; roam actually hides the brackets around [[embed]]
-      [:span "{{" content "}}"])))
-
-
+      [:span "{{" content "}}"]))))
