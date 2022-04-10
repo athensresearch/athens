@@ -296,7 +296,7 @@ const components = {
           textOverflow: 'ellipsis !important',
           // Complicated selector applies to everything
           // except descendants of TODO checkboxes
-          "*:not([data-checked] *):not([data-unchecked] *)": {
+          "*:not([data-checked] *):not([data-unchecked] *):not([class*='checkbox'])": {
             fontSize: 'inherit !important',
             fontWeight: 'inherit !important',
             lineHeight: 'inherit !important',
