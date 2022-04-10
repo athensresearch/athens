@@ -210,11 +210,9 @@ export const PageReferences = withErrorBoundary(({ children, count, title, defau
       position="relative"
       spacing={0}
       p={2}
-      px={2}
     >
       <HStack>
         <Button onClick={onToggle}
-          variant="ghost"
           flex="1 1 100%"
           borderRadius="sm"
           isActive={isShowingContent}
@@ -229,7 +227,7 @@ export const PageReferences = withErrorBoundary(({ children, count, title, defau
               transitionProperty="common"
               transitionDuration="0.15s"
               transitionTimingFunction="ease-in-out"
-              fontSize="sm"
+              fontSize="xs"
               justifySelf="center"
             />
           }
