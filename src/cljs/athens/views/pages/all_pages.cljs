@@ -7,8 +7,8 @@
     [athens.db                 :as db]
     [athens.router             :as router]
     [clojure.string            :refer [lower-case]]
-    [reagent.core              :as r]
-    [re-frame.core             :as rf]))
+    [re-frame.core             :as rf]
+    [reagent.core              :as r]))
 
 
 ;; Sort state and logic

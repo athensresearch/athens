@@ -1,8 +1,8 @@
 (ns athens.style
   (:require
-   [athens.config :as config]
-   [athens.util :as util]
-   [re-frame.core :refer [reg-sub subscribe]]))
+    [athens.config :as config]
+    [athens.util :as util]
+    [re-frame.core :refer [reg-sub subscribe]]))
 
 
 (reg-sub

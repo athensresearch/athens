@@ -199,7 +199,7 @@
              "Daily notes"]]]])
        [:> AccordionItem
         [:> AccordionButton {:borderRadius "sm"}
-        "Forces"]
+         "Forces"]
         [:> AccordionPanel
          [:> VStack {:align "stretch"}
           [:> FormControl
@@ -209,7 +209,8 @@
                       :min 5
                       :max 95
                       :step 10
-                      :onChange (fn [e] ((and graph-ref (.. graph-ref (d3Force "link") (distance (.. e -target -value)))))
+                      :onChange (fn [e]
+                                  ((and graph-ref (.. graph-ref (d3Force "link") (distance (.. e -target -value)))))
                                   (.d3ReheatSimulation graph-ref))}]]
           [:> FormControl
            [:> FormLabel "Attraction force"]
@@ -218,7 +219,8 @@
                       :min -30
                       :max 0
                       :step 5
-                      :onChange (fn [e] ((and graph-ref (.. graph-ref (d3Force "charge") (distance (.. e -target -value)))))
+                      :onChange (fn [e]
+                                  ((and graph-ref (.. graph-ref (d3Force "charge") (distance (.. e -target -value)))))
                                   (.d3ReheatSimulation graph-ref))}]]]]]
        (when local-node-eid
          [:> AccordionItem

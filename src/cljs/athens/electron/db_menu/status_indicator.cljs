@@ -1,7 +1,7 @@
 (ns athens.electron.db-menu.status-indicator
   (:require
-   ["/components/Icons/Icons" :refer [CheckmarkCircleFillIcon ExclamationCircleFillIcon]]
-   ["@chakra-ui/react" :refer [Box Tooltip Spinner]]))
+    ["/components/Icons/Icons" :refer [CheckmarkCircleFillIcon ExclamationCircleFillIcon]]
+    ["@chakra-ui/react" :refer [Box Tooltip Spinner]]))
 
 
 (defn status-indicator

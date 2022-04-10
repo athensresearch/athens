@@ -1,6 +1,6 @@
 (ns athens.views.references
   (:require
-   ["@chakra-ui/react" :refer [Box Button Heading VStack]]))
+    ["@chakra-ui/react" :refer [Box Button Heading VStack]]))
 
 
 (defn reference-header
@@ -38,7 +38,7 @@
 (defn reference-block
   ([props children]
    (let [{:keys [actions]} props]
-     [:> Box 
+     [:> Box
       children
       actions])))
 

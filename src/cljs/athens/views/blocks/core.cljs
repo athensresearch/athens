@@ -28,7 +28,6 @@
     [reagent.core                            :as r]))
 
 
-
 ;; Inline refs
 
 ;; block-el depends on inline-linked-refs-el, which in turn depends on block-el
@@ -45,8 +44,8 @@
         parents         (cond-> (:block/parents block)
                           ;; If the ref has children, move it to breadcrumbs and show children.
                           has-children? (conj block))
-                        ;; Reset state on parent each time the component is created.
-                        ;; To clear state, open/close the inline refs.
+        ;; Reset state on parent each time the component is created.
+        ;; To clear state, open/close the inline refs.
         _               (reset! state {:block     block
                                        :embed-id  (random-uuid)
                                        :open?     true
@@ -118,7 +117,7 @@
        (doall
          (for [[group-title group] refs]
            [:> ReferenceGroup {:title group-title
-                             :key (str "group-" group-title)}
+                               :key (str "group-" group-title)}
             (doall
               (for [block' group]
                 [:> ReferenceBlock {:key (str "ref-" (:block/uid block'))}
