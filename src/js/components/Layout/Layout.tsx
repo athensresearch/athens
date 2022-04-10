@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { XmarkIcon, ChevronRightIcon } from '@/Icons/Icons';
 import { Button, IconButton, Box, useDisclosure, Collapse, Text, VStack, HStack } from '@chakra-ui/react';
 import { withErrorBoundary } from 'react-error-boundary';
@@ -6,57 +6,44 @@ import { withErrorBoundary } from 'react-error-boundary';
 const Container = motion(Box);
 
 export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) => {
-  const prefersReducedMotion = useReducedMotion();
-
-  // Create the Sidebar element that we'll return below
-  const ContainerEl = (props) => (<Container
-    className="right-sidebar"
-    display="flex"
-    WebkitAppRegion="no-drag"
-    flexDirection="column"
-    height="calc(100% - 3.25rem)"
-    marginTop="3.25rem"
-    alignItems="stretch"
-    justifySelf="stretch"
-    transformOrigin="right"
-    justifyContent="space-between"
-    overflowX="visible"
-    position="relative"
-    gridArea="secondary-content"
-    sx={{
-      "--page-padding-v": "1rem",
-      "--page-padding-h": "0rem",
-      "--page-title-font-size": "1.25rem",
-    }}
-    {...props}
-  >
-    {children}
-  </Container>);
-
-  if (prefersReducedMotion) {
-    // If reduced motion preferred, then either render the sidebar or don't
-    return isOpen ? <ContainerEl width={width + 'vw'} /> : null
-  } else {
-    // Otherwise, provide the AnimatePresence wrapper and all the transition properties
-    return <AnimatePresence initial={false}>
-      {isOpen &&
-        <ContainerEl
-          initial={{
-            width: 0,
-            opacity: 0
-          }}
-          transition={isDragging ? { duration: 0 } : undefined}
-          animate={{
-            width: isOpen ? `${width}vw` : 0,
-            opacity: 1
-          }}
-          exit={{
-            width: 0,
-            opacity: 0
-          }}
-        />}
-    </AnimatePresence>
-  }
+  return <AnimatePresence initial={false}>
+    {isOpen &&
+      <Container
+        className="right-sidebar"
+        display="flex"
+        WebkitAppRegion="no-drag"
+        flexDirection="column"
+        height="calc(100% - 3.25rem)"
+        marginTop="3.25rem"
+        alignItems="stretch"
+        justifySelf="stretch"
+        transformOrigin="right"
+        justifyContent="space-between"
+        overflowX="visible"
+        position="relative"
+        gridArea="secondary-content"
+        sx={{
+          "--page-padding-v": "1rem",
+          "--page-padding-h": "0rem",
+          "--page-title-font-size": "1.25rem",
+        }}
+        initial={{
+          width: 0,
+          opacity: 0
+        }}
+        transition={isDragging ? { duration: 0 } : undefined}
+        animate={{
+          width: isOpen ? `${width}vw` : 0,
+          opacity: 1
+        }}
+        exit={{
+          width: 0,
+          opacity: 0
+        }}
+      >
+        {children}
+      </Container>}
+  </AnimatePresence>
 }
 
 export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children }) => {
