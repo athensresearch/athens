@@ -1,8 +1,7 @@
 (ns athens.views.devtool
   (:require
-    ["@chakra-ui/react" :refer [Box Button Table Thead Tbody Th Tr Td Input ButtonGroup]]
-    ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
-    ["@material-ui/icons/Clear" :default Clear]
+    ["/components/Icons/Icons" :refer [XmarkIcon ChevronLeftIcon]]
+    ["@chakra-ui/react" :refer [Box IconButton Button Table Thead Tbody Th Tr Td Input ButtonGroup]]
     [athens.config :as config]
     [athens.db :as db :refer [dsdb]]
     [cljs.pprint :as pp]
@@ -231,7 +230,7 @@
                                                        (-> s
                                                            (update :navs subvec 0 i)
                                                            (dissoc :viewer))))}
-                  [:<> [:> ChevronLeft] [:span (first nav)]]])))
+                  [:<> [:> ChevronLeftIcon] [:span (first nav)]]])))
            [:h3 (pr-str (type navved-data))]
            [:div
             [:span "View as "]
@@ -353,8 +352,8 @@
 
 (defn devtool-close-el
   []
-  [:> Button {:onClick #(dispatch [:devtool/toggle])}
-   [:> Clear]])
+  [:> IconButton {:onClick #(dispatch [:devtool/toggle])}
+   [:> XmarkIcon]])
 
 
 (defn devtool-el
