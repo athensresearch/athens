@@ -2,14 +2,10 @@
   (:require
     ["/components/Block/components/Anchor" :refer [Anchor]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
+    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon]]
     ["/components/Layout/Layout" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["@chakra-ui/react" :refer [Box Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
-    ["@material-ui/icons/Bookmark" :default Bookmark]
-    ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
-    ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/Delete" :default Delete]
-    ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
     [athens.common-db :as common-db]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
     [athens.common.utils :as utils]
@@ -217,6 +213,7 @@
                      "aria-label" "Page menu"
                      :gridArea "menu"
                      :justifySelf "flex-end"
+                     :size "md"
                      :alignSelf "center"
                      :bg "transparent"
                      :width "2.25em"
@@ -224,22 +221,23 @@
                      :borderRadius "full"
                      :sx {"span" {:display "contents"}
                           "button svg:first-of-type" {:marginRight "0.25rem"}}}
-      [:> MoreHoriz]]
+      [:> EllipsisHorizontalIcon]]
      [:> Portal
       [:> MenuList {:sx {"button svg:first-of-type" {:marginRight "0.25rem"}}}
        [:<>
         (if sidebar
-          [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])}
-           [:> BookmarkBorder]
+          [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])
+                        :icon (r/as-element [:> BookmarkFillIcon])}
            "Remove Shortcut"]
-          [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])}
-           [:> Bookmark]
+          [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])
+                        :icon (r/as-element [:> BookmarkIcon])}
            [:span "Add Shortcut"]])
-        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])}
-         [:> BubbleChart]
+        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])
+                      :icon (r/as-element [:> GraphIcon])}
          "Show Local Graph"]]
        [:> MenuDivider]
-       [:> MenuItem {:onClick (fn []
+       [:> MenuItem {:icon (r/as-element [:> TrashIcon])
+                     :onClick (fn []
                                 ;; if page being deleted is in right sidebar, remove from right sidebar
                                 (when (contains? @(subscribe [:right-sidebar/items]) uid)
                                   (dispatch [:right-sidebar/close-item uid]))
@@ -254,7 +252,7 @@
                                 (if daily-note?
                                   (dispatch [:daily-note/delete uid title])
                                   (dispatch [:page/delete title])))}
-        [:> Delete] "Delete Page"]]]]))
+        "Delete Page"]]]]))
 
 
 (defn ref-comp

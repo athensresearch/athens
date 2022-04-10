@@ -10,13 +10,10 @@ import {
   AllPagesIcon,
   SettingsIcon,
   ContrastIcon,
-  DailyNotesIcon
+  DailyNotesIcon,
+  GraphIcon,
+  EllipsisHorizontalIcon
 } from '@/Icons/Icons';
-
-import {
-  BubbleChart,
-  MoreHoriz,
-} from '@material-ui/icons';
 
 import {
   HTMLChakraProps,
@@ -228,7 +225,7 @@ const SecondaryToolbarItems = (items) => {
 const SecondaryToolbarOverflowMenu = (items) => {
   return <Menu>
     {({ isOpen }) => <>
-      <ToolbarIconButton size="sm" as={MenuButton} isActive={isOpen}><MoreHoriz /></ToolbarIconButton>
+      <ToolbarIconButton size="sm" as={MenuButton} isActive={isOpen}><EllipsisHorizontalIcon /></ToolbarIconButton>
       <Portal>
         <MenuList>
           {items.map((item) => (<MenuItem
@@ -371,7 +368,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               aria-label="Graph"
               isActive={route === 'graph'}
               onClick={handlePressGraph}>
-              <BubbleChart />
+              <GraphIcon />
             </ToolbarIconButton>
           </Tooltip>
           <ToolbarButton

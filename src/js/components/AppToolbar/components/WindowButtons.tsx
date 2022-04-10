@@ -1,5 +1,4 @@
 import { Box, Icon } from '@chakra-ui/react';
-import { SvgIcon } from '@material-ui/core';
 
 const Wrapper = ({ children }) => <Box
   display="flex"
