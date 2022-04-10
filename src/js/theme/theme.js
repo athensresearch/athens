@@ -234,11 +234,21 @@ const components = {
     }
   },
   Avatar: {
-    baseStyle: ({ bg, color }) => {
+    baseStyle: (props) => {
+      console.log(props);
+      const { bg, color, size } = props;
+      const exessLabelFontSize = theme.fontSizes[size || 'md'];
+
       return {
         container: {
           borderColor: "background.floor",
           ...makeAvatarColor(bg, color)
+        },
+        excessLabel: {
+          background: "background.attic",
+          fontSize: exessLabelFontSize,
+          border: "2px solid transparent",
+          backgroundClip: "padding-box",
         },
       }
     },
