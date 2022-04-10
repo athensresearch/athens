@@ -306,10 +306,6 @@ const components = {
     baseStyle: {
       transitionProperty: 'common',
       transitionTimingFunction: 'ease-in-out',
-      "& > .chakra-button__icon svg": {
-        height: "1.5em",
-        width: "1.5em",
-      },
       _active: {
         transitionDuration: "0s",
       },
@@ -325,7 +321,11 @@ const components = {
     variants: {
       link: {
         color: "link",
-        borderRadius: "1px"
+        borderRadius: "1px",
+        _active: {
+          color: "link",
+          opacity: 0.8,
+        }
       },
       solid: {
         bg: "interaction.surface",

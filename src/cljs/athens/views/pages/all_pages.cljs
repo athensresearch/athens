@@ -7,6 +7,7 @@
     [athens.db                 :as db]
     [athens.router             :as router]
     [clojure.string            :refer [lower-case]]
+    [reagent.core              :as r]
     [re-frame.core             :as rf]))
 
 
@@ -64,21 +65,28 @@
 (defn- sortable-header
   ([column-id label width isNumeric]
    (let [sorted-by @(rf/subscribe [:all-pages/sorted-by])
-         growing?  @(rf/subscribe [:all-pages/sort-order-ascending?])]
-     [:> Th {:width width :isNumeric isNumeric}
+         growing?  @(rf/subscribe [:all-pages/sort-order-ascending?])
+         sort-icon (if growing? (r/as-element [:> ChevronUpIcon {:fontSize "0.5em"}])
+                       (r/as-element [:> ChevronDownIcon {:fontSize "0.5em"}]))]
+     [:> Th {:width width
+             :border 0
+             :isNumeric isNumeric}
       [:> Button {:onClick #(rf/dispatch [:all-pages/sort-by column-id])
-                  :size "xs"
+                  :size "sm"
                   :textTransform "uppercase"
+                  :display "flex"
+                  :height "1em"
+                  :overflow "hidden"
                   :gap "0.25em"
                   :variant "link"
-                  :color "inherit"
+                  :leftIcon (when (and isNumeric
+                                       (= column-id sorted-by))
+                              sort-icon)
+                  :rightIcon (when (and (not isNumeric)
+                                        (= column-id sorted-by))
+                               sort-icon)
                   :_hover {:textDecoration "none"}}
-       (when-not isNumeric label)
-       (when (= sorted-by column-id)
-         (if growing?
-           [:> ChevronUpIcon]
-           [:> ChevronDownIcon]))
-       (when isNumeric label)]])))
+       label]])))
 
 
 (defn page
