@@ -1,5 +1,5 @@
 import { Box, IconButton, ButtonGroup, Tooltip } from '@chakra-ui/react';
-import { RightSidebarAddIcon } from '@/Icons/Icons';
+import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
 
 const PAGE_PROPS = {
   as: "article",
@@ -34,7 +34,6 @@ export const PageContainer = ({ children, uid, type }) => <Box
   data-ui={uid}
   className={type + '-page'}
   flexDirection="column"
-  pb="calc(var(--page-padding-v) / 2)"
   marginInline="auto"
 >{children}</Box>
 
@@ -56,7 +55,7 @@ export const HeaderImage = ({ src }) => <Box
   }}
 />
 
-export const PageHeader = ({ children, image, onClickOpenInSidebar }) => <Box
+export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenInMainView }) => <Box
   as="header"
   pr="calc(var(--page-padding-h) / 2)"
   pt="var(--page-padding-v)"
@@ -87,7 +86,16 @@ export const PageHeader = ({ children, image, onClickOpenInSidebar }) => <Box
         variant="ghost"
         onClick={onClickOpenInSidebar}
       >
-        <RightSidebarAddIcon boxSize="1.5em" />
+        <ArrowRightOnBoxIcon boxSize="1.5em" />
+      </IconButton></Tooltip>}
+    {onClickOpenInMainView && <Tooltip label="Open in main view">
+      <IconButton
+        aria-label='Open in main view'
+        color="foreground.secondary"
+        variant="ghost"
+        onClick={onClickOpenInMainView}
+      >
+        <ArrowLeftOnBoxIcon boxSize="1.5em" />
       </IconButton></Tooltip>}
   </ButtonGroup>
 </Box>

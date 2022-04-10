@@ -2,7 +2,7 @@
   (:require
     ["/components/Block/components/Anchor" :refer [Anchor]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon]]
+    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon]]
     ["/components/Layout/Layout" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["@chakra-ui/react" :refer [Box Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
@@ -202,13 +202,12 @@
    "Linked References"   true
    "Unlinked References" false})
 
-
 (defn menu-dropdown
   [node daily-note?]
   (let [{:block/keys [uid] sidebar
          :page/sidebar title
          :node/title} node]
-    [:> Menu {:isLazy true}
+    [:> Menu {:isLazy true :size "sm"}
      [:> MenuButton {:as IconButton
                      "aria-label" "Page menu"
                      :gridArea "menu"
@@ -234,7 +233,11 @@
            [:span "Add Shortcut"]])
         [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])
                       :icon (r/as-element [:> GraphIcon])}
-         "Show Local Graph"]]
+         "Show Local Graph"]
+        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])
+                      :isDisabled (contains? @(subscribe [:right-sidebar/items]) uid)
+                      :icon (r/as-element [:> ArrowRightOnBoxIcon])}
+         "Open in Sidebar"]]
        [:> MenuDivider]
        [:> MenuItem {:icon (r/as-element [:> TrashIcon])
                      :onClick (fn []
@@ -403,9 +406,10 @@
                            :title     message
                            :onConfirm confirm-fn
                            :onClose   cancel-fn}]
-
          ;; Header
-         [:> PageHeader {:onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+         [:> PageHeader {:onClickOpenInMainView (when-not (= @(subscribe [:current-route/page-title]) title)
+                                                  (fn [e] (router/navigate-page title e)))
+                         :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
                                                  #(dispatch [:right-sidebar/open-item uid]))}
 
           ;; Dropdown

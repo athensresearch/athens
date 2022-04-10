@@ -235,7 +235,6 @@ const components = {
   },
   Avatar: {
     baseStyle: (props) => {
-      console.log(props);
       const { bg, color, size } = props;
       const exessLabelFontSize = theme.fontSizes[size || 'md'];
 
@@ -450,17 +449,16 @@ const components = {
         _expanded: {
           background: "interaction.surface.active",
         },
-        // additional selector to catch icons not using the icon prop
-        "&& > svg:first-of-type, svg:not(span > svg)": {
-          marginInlineEnd: "0.75rem"
-        },
       }
     },
     sizes: {
       sm: {
         item: {
-          padding: '0.5rem 1rem',
+          padding: '0.35rem 0.5rem',
           fontSize: "sm"
+        },
+        icon: {
+          marginInlineEnd: "0.25rem",
         }
       }
     }

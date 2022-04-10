@@ -176,10 +176,6 @@ export const ReferenceGroup = ({ title, onClickTitle, children }) => {
       align="stretch"
       spacing={2}
       py={2}
-    // _notFirst={{
-    //   borderTop: "1px solid",
-    //   borderColor: "separator.divider"
-    // }}
     >
       {title && <ReferenceHeader onClick={onClickTitle} title={title} />}
       {children}
