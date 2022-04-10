@@ -17,6 +17,12 @@ const _Content = ({ children, fontSize, ...props }) => {
     wordBreak="break-word"
     fontSize={fontSize}
     sx={{
+      // DANGER DANGER DANGER
+      //
+      // The styles below are essential to the
+      // basic basic editing workflow.
+      // Do not modify them without good reason.
+      //
       // make the textarea transparent
       "textarea": {
         display: "block",
