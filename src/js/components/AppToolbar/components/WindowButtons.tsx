@@ -1,4 +1,4 @@
-import { Box } from '@chakra-ui/react';
+import { Box, Icon } from '@chakra-ui/react';
 import { SvgIcon } from '@material-ui/core';
 
 const Wrapper = ({ children }) => <Box
@@ -143,9 +143,9 @@ export const WindowButtons = ({
       onClick={handlePressMinimize}
       className="minimize"
     >
-      <SvgIcon>
+      <Icon>
         <line x1={4} y1={11} x2={20} y2={11} />
-      </SvgIcon>
+      </Icon>
     </button>
     {isWinFullscreen ? (
       <button
@@ -153,10 +153,10 @@ export const WindowButtons = ({
         onClick={handlePressMinimize}
         className="minimize"
       >
-        <SvgIcon>
+        <Icon>
           <path d="M11 13L5 19M11 13V19M11 13H5" />
           <path d="M13 11L19.5 4.5M13 11L13 5M13 11L19 11" />
-        </SvgIcon>
+        </Icon>
       </button>
     ) : (
       <button
@@ -165,14 +165,14 @@ export const WindowButtons = ({
         className="maximize-restore"
       >
         {isWinMaximized ? (
-          <SvgIcon>
+          <Icon>
             <path d="M11 13L5 19M11 13V19M11 13H5" />
             <path d="M13 11L19.5 4.5M13 11L13 5M13 11L19 11" />
-          </SvgIcon>
+          </Icon>
         ) : (
-          <SvgIcon>
+          <Icon>
             <rect height={14} width={14} x={5} y={5} />
-          </SvgIcon>
+          </Icon>
 
         )}
       </button>
@@ -182,9 +182,9 @@ export const WindowButtons = ({
       onClick={handlePressClose}
       className="close"
     >
-      <SvgIcon>
+      <Icon>
         <path d="M4 4L19 19M19 4L4 19" />
-      </SvgIcon>
+      </Icon>
     </button>
   </Wrapper>)
 }
