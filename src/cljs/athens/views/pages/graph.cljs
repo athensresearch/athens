@@ -8,9 +8,7 @@
       Relies on material ui comps for user inputs."}
  athens.views.pages.graph
   (:require
-   ["@chakra-ui/react" :refer [Box Switch VStack FormControl FormLabel Input Accordion AccordionButton AccordionItem AccordionPanel AccordionIcon]]
-   ["@material-ui/core/Slider" :as OldSlider]
-   ["@material-ui/core/Switch" :as OldSwitch]
+   ["@chakra-ui/react" :refer [Box Switch VStack FormControl FormLabel Input Accordion AccordionButton AccordionItem AccordionPanel]]
    ["react-force-graph-2d" :as ForceGraph2D]
    [athens.dates :as dates]
    [athens.db :as db]
@@ -38,15 +36,6 @@
 ;; saving this to re-frame db is not ideal because of serialization
 ;; and objects losing their refs
 (def graph-ref-map (r/atom {}))
-
-
-;; -------------------------------------------------------------------
-;; --- material ui ---
-
-
-(def m-slider (r/adapt-react-class (.-default OldSlider)))
-
-(def m-switch (r/adapt-react-class (.-default OldSwitch)))
 
 
 ;; -------------------------------------------------------------------
@@ -175,41 +164,44 @@
   (fn []
     (let [graph-conf     @(subscribe [:graph/conf])
           graph-ref      (get @graph-ref-map (or local-node-eid :global))]
-      (println graph-conf)
       [:> Accordion {:width "14em"
                      :defaultIndex 0
-                     :position "fixed"
+                     :position "absolute"
+                     :bg "background.basement"
+                     :overflow "hidden"
+                     :p 0
+                     :borderRadius "md"
                      :allowToggle true
                      :allowMultiple true
-                     :bottom "0rem"
-                     :right 0}
+                     :bottom 2
+                     :right 2}
        (when-not local-node-eid
-         [:> AccordionItem
-          [:> AccordionButton
+         [:> AccordionItem {:borderTop 0}
+          [:> AccordionButton {:borderRadius "sm"}
            "Nodes"]
           [:> AccordionPanel
            [:> VStack {:align "stretch"}
             [:> FormControl
              [:> FormLabel "Highlighted link levels"]
              [:> Input {:type "number"
-                        :defaultValue (or (:hlt-link-levels graph-conf) 1)
+                        :value (or (:hlt-link-levels graph-conf) 1)
                         :min 1
                         :max 5
                         :step 1
                         :onChange (fn [e] (rf/dispatch [:graph/set-conf :hlt-link-levels (.. e -target -value)]))}]]
-            [:> Switch {:defaultIsChecked (:orphans? graph-conf)
+            [:> Switch {:isChecked (:orphans? graph-conf)
                         :onChange (fn [e]
                                     (rf/dispatch [:graph/set-conf :orphans? (.. e -target -checked)])
                                     (.d3ReheatSimulation graph-ref))}
              "Orphan nodes"]
-            [:> Switch {:defaultIsChecked (:daily-notes? graph-conf)
+            [:> Switch {:isChecked (:daily-notes? graph-conf)
                         :onChange (fn [e]
                                     (rf/dispatch [:graph/set-conf :daily-notes? (.. e -target -checked)])
                                     (.d3ReheatSimulation graph-ref))}
              "Daily notes"]]]])
        [:> AccordionItem
-        [:> AccordionButton
-         "Forces"]
+        [:> AccordionButton {:borderRadius "sm"}
+        "Forces"]
         [:> AccordionPanel
          [:> VStack {:align "stretch"}
           [:> FormControl
@@ -232,7 +224,7 @@
                                   (.d3ReheatSimulation graph-ref))}]]]]]
        (when local-node-eid
          [:> AccordionItem
-          [:> AccordionButton
+          [:> AccordionButton {:borderRadius "sm"}
            "Local options"]
           [:> AccordionPanel
            [:> VStack {:align "stretch"}
@@ -244,7 +236,7 @@
                         :max 5
                         :step 1
                         :onChange (fn [e] (rf/dispatch [:graph/set-conf :local-depth (.. e -target -value)]))}]]
-            [:> Switch {:defaultIsChecked (:root-links-only? graph-conf)
+            [:> Switch {:isChecked (:root-links-only? graph-conf)
                         :onChange (fn [e]
                                     (rf/dispatch [:graph/set-conf :root-links-only? (.. e -target -checked)]))}
              "Only root links?"]]]])])))
@@ -432,21 +424,22 @@
    (let [local-node-eid (when block-uid
                           (->> [:block/uid block-uid] (d/pull @db/dsdb '[:db/id])
                                :db/id))]
-     [:> Box (if local-node-eid
-               {:class "graph-page"
-                :alignSelf "stretch"
-                :justifySelf "stretch"
-                :overflow "hidden"
-                :height "20em"
-                :borderRadius "lg"
-                :bg "background.basement"
-                :position "relative"}
-               {:class "graph-page"
-                :gridColumn "1 / -1"
-                :position "fixed"
-                :top 0
-                :left 0
-                :width "100vw"
-                :height "100vh"})
-      [graph-root local-node-eid]
+     [:<>
+      [:> Box (if local-node-eid
+                {:class "graph-page"
+                 :alignSelf "stretch"
+                 :justifySelf "stretch"
+                 :overflow "hidden"
+                 :height "20em"
+                 :borderRadius "lg"
+                 :bg "background.basement"
+                 :position "relative"}
+                {:class "graph-page"
+                 :gridColumn "1 / -1"
+                 :position "fixed"
+                 :top 0
+                 :left 0
+                 :width "100vw"
+                 :height "100vh"})
+       [graph-root local-node-eid]]
       [graph-controls local-node-eid]])))
