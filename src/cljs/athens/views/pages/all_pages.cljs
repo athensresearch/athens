@@ -63,26 +63,27 @@
 ;; Components
 
 (defn- sortable-header
-  ([column-id label width isNumeric]
+  ([column-id label width is-numeric?]
    (let [sorted-by @(rf/subscribe [:all-pages/sorted-by])
          growing?  @(rf/subscribe [:all-pages/sort-order-ascending?])
-         sort-icon (if growing? (r/as-element [:> ChevronUpIcon {:fontSize "0.5em"}])
-                       (r/as-element [:> ChevronDownIcon {:fontSize "0.5em"}]))]
+         sort-icon (if growing? (r/as-element [:> ChevronUpIcon])
+                       (r/as-element [:> ChevronDownIcon]))]
      [:> Th {:width width
              :border 0
-             :isNumeric isNumeric}
+             :isNumeric is-numeric?}
       [:> Button {:onClick #(rf/dispatch [:all-pages/sort-by column-id])
                   :size "sm"
                   :textTransform "uppercase"
+                  :justifyContent (if is-numeric? "flex-end" "flex-start")
                   :display "flex"
                   :height "1em"
                   :overflow "hidden"
                   :gap "0.25em"
                   :variant "link"
-                  :leftIcon (when (and isNumeric
+                  :leftIcon (when (and is-numeric?
                                        (= column-id sorted-by))
                               sort-icon)
-                  :rightIcon (when (and (not isNumeric)
+                  :rightIcon (when (and (not is-numeric?)
                                         (= column-id sorted-by))
                                sort-icon)
                   :_hover {:textDecoration "none"}}
