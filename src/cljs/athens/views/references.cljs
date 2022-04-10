@@ -29,9 +29,9 @@
 (defn reference-group
   ([props children]
    (let [{:keys [on-click-title title]} props]
-     [:> VStack {:spacing 2 :align "stretch"}
-      [reference-header {:on-click on-click-title
-                         :title title}]
+     [:> VStack {:spacing 0 :align "stretch"}
+      (when title [reference-header {:on-click on-click-title
+                                     :title title}])
       children])))
 
 

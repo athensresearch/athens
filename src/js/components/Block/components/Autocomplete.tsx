@@ -1,7 +1,8 @@
 
 import React from 'react';
 import {
-  Box, PopoverBody, Popover,
+  Box,
+  Popover,
   Button,
   PopoverTrigger,
   useOutsideClick,

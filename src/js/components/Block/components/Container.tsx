@@ -1,6 +1,8 @@
 import { Box } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
 
+const ERROR_MESSAGE = "An error occurred while rendering this block.";
+
 const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, ...props }) => {
   return <Box
     className={[
@@ -60,6 +62,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         gridTemplateRows: "0 1fr 0",
         gridTemplateAreas: "'above above above above' 'toggle bullet content refs' 'below below below below'",
         borderRadius: "0.5rem",
+        minHeight: '2em',
         position: "relative",
       },
       "&:hover > .block-toggle, &:focus-within > .block-toggle": { opacity: "1" },
@@ -97,4 +100,4 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
   > {children}</Box >;
 }
 
-export const Container = withErrorBoundary(_Container, { fallback: <div>oops</div> });
+export const Container = withErrorBoundary(_Container, { fallback: <p>{ERROR_MESSAGE}</p> });

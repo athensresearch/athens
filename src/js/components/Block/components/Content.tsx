@@ -17,6 +17,12 @@ const _Content = ({ children, fontSize, ...props }) => {
     wordBreak="break-word"
     fontSize={fontSize}
     sx={{
+      // DANGER DANGER DANGER
+      //
+      // The styles below are essential to the
+      // basic basic editing workflow.
+      // Do not modify them without good reason.
+      //
       // make the textarea transparent
       "textarea": {
         display: "block",
@@ -42,15 +48,10 @@ const _Content = ({ children, fontSize, ...props }) => {
       "& > span": {
         gridArea: "main",
       },
-      // deactivate noninteractive (text) content
-      "div, span, p, blockquote": {
-        pointerEvents: "none",
-      },
       // activate interactive content (links, buttons, etc.)
       "a, button, label, video, embed, iframe, img": {
         pointerEvents: "auto",
         zIndex: 2,
-        position: "relative"
       },
       // manage the textarea interactions
       "&:hover textarea:not:(.is-editing)": { lineHeight: 2 },
@@ -129,8 +130,7 @@ const _Content = ({ children, fontSize, ...props }) => {
         borderRadius: "0.125rem",
         background: "highlight",
       }
-    }
-    }
+    }}
     {...props}
   > {children}</Box>
 }

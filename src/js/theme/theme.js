@@ -273,16 +273,38 @@ const components = {
       separator: {
         color: 'separator.border'
       },
+      item: {
+        overflow: 'hidden',
+        ".fmt": {
+          display: 'none',
+        }
+      },
+    },
+    variants: {
+      strict: {
+        link: {
+          overflow: 'hidden !important',
+          textOverflow: 'ellipsis !important',
+          // Complicated selector applies to everything
+          // except descendants of TODO checkboxes
+          "*:not([data-checked] *):not([data-unchecked] *)": {
+            fontSize: 'inherit !important',
+            fontWeight: 'inherit !important',
+            lineHeight: 'inherit !important',
+            fontFamily: 'inherit !important',
+            color: 'inherit !important',
+            background: 'none !important',
+            textDecoration: 'none !important',
+            display: "inline !important",
+          }
+        }
+      }
     }
   },
   Button: {
     baseStyle: {
       transitionProperty: 'common',
       transitionTimingFunction: 'ease-in-out',
-      "& > .chakra-button__icon svg": {
-        height: "1.5em",
-        width: "1.5em",
-      },
       _active: {
         transitionDuration: "0s",
       },
@@ -298,7 +320,11 @@ const components = {
     variants: {
       link: {
         color: "link",
-        borderRadius: "1px"
+        borderRadius: "1px",
+        _active: {
+          color: "link",
+          opacity: 0.8,
+        }
       },
       solid: {
         bg: "interaction.surface",

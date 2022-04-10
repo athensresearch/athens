@@ -3,6 +3,7 @@
     ["/components/Block/components/Anchor"   :refer [Anchor]]
     ["/components/Block/components/Container" :refer [Container]]
     ["/components/Block/components/Toggle"   :refer [Toggle]]
+    ["/components/Layout/Layout"   :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
@@ -21,77 +22,10 @@
     [athens.views.blocks.content             :as content]
     [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    [athens.views.references                 :refer [reference-group reference-block]]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
     [reagent.core                            :as r]))
-
-
-;; Styles
-;;
-;; Blocks use Em units in many places rather than Rem units because
-;; blocks need to scale with their container: sidebar blocks are
-;; smaller than main content blocks, for instance.
-
-
-(def block-container-inner-style
-  {"&.show-tree-indicator:before" {:content    "''"
-                                   :position   "absolute"
-                                   :width      "1px"
-                                   :left       "calc(1.375em + 1px)"
-                                   :top        "2em"
-                                   :bottom     "0"
-                                   :opacity    "0"
-                                   :transform  "translateX(50%)"
-                                   :transition "background-color 0.2s ease-in-out, opacity 0.2s ease-in-out"
-                                   :background "separator.divider"}
-   "&:hover.show-tree-indicator:before, &:focus-within.show-tree-indicator:before" {:opacity 1}
-   "&:after" {:content        "''"
-              :zIndex         0
-              :position       "absolute"
-              :inset          "1px 0"
-              :opacity        0
-              :pointerEvents  "none"
-              :borderRadius   "sm"
-              :transition "opacity 0.075s ease-in-out"
-              :background "link"}
-   "&.is-selected:after" {:opacity 0.2}
-   "&.is-presence .block-content" {:padding-right "1rem"}
-   ".user-avatar" {:position "absolute"
-                   :left "4px"
-                   :top "4px"}
-   ".block-body" {:display               "grid"
-                  :gridTemplateColumns "1em 1em 1fr auto"
-                  :gridTemplateRows    "0 1fr 0"
-                  :gridTemplateAreas   "
-                                      'above above above above'
-                                      'toggle bullet content refs'
-                                      'below below below below'"
-                  :borderRadius         "0.5rem"
-                  :position              "relative"}
-   "&:hover > .block-toggle, &:focus-within > .block-toggle" {:opacity "1"}
-   "button.block-edit-toggle" {:position   "absolute"
-                               :appearance "none"
-                               :width      "100%"
-                               :background "none"
-                               :border     0
-                               :cursor     "text"
-                               :display    "block"
-                               :z-index    1
-                               :top        0
-                               :right      0
-                               :bottom     0
-                               :left       0}
-   ".block-embed" {:borderRadius "sm"
-                   :sx {"--block-surface-color" "background.basement"}
-                   :bg "background.basement"
-                   ".block-container" {:marginLeft 0.5}}
-   ".block-content" {:gridArea  "content"
-                     :minHeight "1.5em"}
-   "&.is-linked-ref" {:bg "background-attic"}
-   ".block-container" {:marginLeft "2rem"
-                       :gridArea "body"}})
 
 
 ;; Inline refs
@@ -125,13 +59,13 @@
       (let [{:keys [block parents embed-id]} @state
             block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
-         [:> HStack
+         [:> HStack {:lineHeight "1"}
           [:> Toggle {:isOpen (:open? @state)
                       :on-click (fn [e]
                                   (.. e stopPropagation)
                                   (swap! state update :open? not))}]
 
-          [:> Breadcrumb {:fontSize "0.7em"}
+          [:> Breadcrumb {:fontSize "xs" :color "foreground.secondary"}
            (doall
              (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
                    (if (or (:open? @state) (not (:focus? @state)))
@@ -173,22 +107,20 @@
     (when (not-empty refs)
       [:> VStack {:as "aside"
                   :align "stretch"
+                  :spacing 3
                   :key "Inline Linked References"
                   :zIndex 2
-                  :mt 2
-                  :mb 4
-                  :ml 6
-                  :py 2
+                  :ml 4
                   :px 4
-                  :borderRadius "sm"
+                  :borderRadius "md"
                   :background "background.basement"}
        (doall
          (for [[group-title group] refs]
-           [reference-group {:title group-title
-                             :key (str "group-" group-title)}
+           [:> ReferenceGroup {:title group-title
+                               :key (str "group-" group-title)}
             (doall
               (for [block' group]
-                [reference-block {:key (str "ref-" (:block/uid block'))}
+                [:> ReferenceBlock {:key (str "ref-" (:block/uid block'))}
                  [ref-comp block' state]]))]))])))
 
 
@@ -399,9 +331,7 @@
          (when (not= string (:string/previous @state))
            (swap! state assoc :string/previous string :string/local string))
 
-         [:> Container {:sx (merge block-container-inner-style
-                                   {"--block-surface-color" "background.floor"})
-                        :isDragging (and dragging (not is-selected))
+         [:> Container {:isDragging (and dragging (not is-selected))
                         :isSelected is-selected
                         :hasChildren (seq children)
                         :isOpen open
