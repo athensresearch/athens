@@ -1,6 +1,6 @@
 (ns athens.views.athena
   (:require
-    ["/components/Icons/Icons" :refer [XmarkIcon]]
+    ["/components/Icons/Icons" :refer [XmarkIcon PlusIcon ArrowRightIcon]]
     ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
     [athens.common.utils :as utils]
     [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
@@ -131,21 +131,34 @@
               :height "auto"
               :textAlign "start"
               :flexDirection "row"
+              :rightIcon icon
               :bg "transparent"
               :px 3
               :py 3
               :isActive active?
-              :onClick on-click}
+              :onClick on-click
+              :sx {"span[class*='icon']" {:ml "auto"
+                                          :mr "1rem"
+                                          :marginBlock "-0.2rem"
+                                          :alignItems "center"
+                                          :fontSize "1.5em"
+                                          :alignSelf "center"}}}
    [:> VStack {:align "stretch"
                :spacing 1
                :overflow "hidden"}
     [:> Heading {:as "h4"
-                 :size "sm"} prefix (highlight-match query title)]
+                 :size "sm"}
+     (when prefix [:> Text {:as "span"
+                            :textTransform "uppercase"
+                            :color "foreground.secondary"
+                            :fontSize "xs"
+                            :letterSpacing "0.1ch"
+                            :mr "1ch"} prefix])
+     (highlight-match query title)]
     (when preview
       [:> Text {:color "foreground.secondary"
                 :textOverflow "ellipsis"
-                :overflow "hidden"} (highlight-match query preview)])]
-   icon])
+                :overflow "hidden"} (highlight-match query preview)])]])
 
 
 (defn results-el
@@ -171,9 +184,7 @@
                    :borderTopWidth "1px"
                    :borderTopStyle "solid"
                    :borderColor "separator.divider"
-                   :pt 4
-                   :mb 4
-                   :px 4
+                   :p 4
                    :overflowY "auto"
                    :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}}
                    :_empty {:display "none"}}
@@ -199,9 +210,7 @@
               :borderTopStyle "solid"
               :borderColor "separator.divider"
               :spacing 1
-              :pt 4
-              :mb 4
-              :px 4
+              :p 4
               :overflowY "auto"
               :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}}
               :_empty {:display "none"}}
@@ -216,9 +225,10 @@
          ^{:key i}
          [result-el {:key      i
                      :title    query
-                     :prefix   "Create page: "
+                     :prefix   "Create page"
                      :preview  nil
                      :query    query
+                     :icon     (r/as-element [:> PlusIcon])
                      :active?  (= i index)
                      :on-click (fn [e]
                                  (let [block-uid (utils/gen-block-uid)
@@ -237,6 +247,7 @@
          [result-el {:key i
                      :title title
                      :query query
+                     :icon (when (= i index) (r/as-element [:> ArrowRightIcon]))
                      :preview string
                      :active? (= i index)
                      :on-click (fn [e]
@@ -284,6 +295,7 @@
                          :maxWidth "calc(100vw - 4rem)"}
         [:> Input
          {:type "search"
+          :autocomplete "off"
           :width "100%"
           :border 0
           :fontSize "2.375rem"

@@ -28,7 +28,7 @@ export const ArrowLeftOnBoxIcon = createIcon({
   displayName: 'ArrowLeftOnBoxIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><path fill="currentColor" fillRule="evenodd" d="M7 4.5h7A1.5 1.5 0 0 1 15.5 6v4.25H17V6a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3v-4.25h-1.5V18a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 18V6A1.5 1.5 0 0 1 7 4.5Z" clipRule="evenodd" /><path fill="currentColor" fillRule="evenodd" d="M12.53 8.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 0 1.06l3 3a.75.75 0 1 0 1.06-1.06l-1.72-1.72h9.94a.75.75 0 0 0 0-1.5h-9.94l1.72-1.72a.75.75 0 0 0 0-1.06Z" clipRule="evenodd" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="M14 5H7a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-4h2v4a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3v4h-2V6a1 1 0 0 0-1-1Zm-2.707 3.293a1 1 0 1 1 1.414 1.414L11.414 11h9.336a1 1 0 1 1 0 2h-9.336l1.293 1.293a1 1 0 0 1-1.414 1.414l-3-3a1 1 0 0 1 0-1.414l3-3Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -36,7 +36,7 @@ export const ArrowLeftOnBoxFillIcon = createIcon({
   displayName: 'ArrowLeftOnBoxFillIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><path fill="currentColor" fillRule="evenodd" d="M2.5 6a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3v5.25h3.75a.75.75 0 0 1 0 1.5H15.5V18a3 3 0 0 1-3 3h-7a3 3 0 0 1-3-3V6Zm13 6.75H9.31l1.72 1.72a.75.75 0 1 1-1.06 1.06l-3-3a.75.75 0 0 1 0-1.06l3-3a.75.75 0 1 1 1.06 1.06l-1.72 1.72h6.19v1.5Z" clipRule="evenodd" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="M2.5 6a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3v5h3.75a1 1 0 1 1 0 2H15.5v5a3 3 0 0 1-3 3h-7a3 3 0 0 1-3-3V6Zm13 7H9.914l1.293 1.293a1 1 0 0 1-1.414 1.414l-3-3a1 1 0 0 1 0-1.414l3-3a1 1 0 0 1 1.414 1.414L9.914 11H15.5v2Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -52,7 +52,7 @@ export const ArrowRightOnBoxIcon = createIcon({
   displayName: 'ArrowRightOnBoxIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><path fill="currentColor" fillRule="evenodd" d="M17 4.5h-7A1.5 1.5 0 0 0 8.5 6v4.25H7V6a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-7a3 3 0 0 1-3-3v-4.25h1.5V18a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5V6A1.5 1.5 0 0 0 17 4.5Z" clipRule="evenodd" /><path fill="currentColor" fillRule="evenodd" d="M11.47 8.47a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H3.25a.75.75 0 0 1 0-1.5h9.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="M10 5h7a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-4H7v4a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3h-7a3 3 0 0 0-3 3v4h2V6a1 1 0 0 1 1-1Zm2.707 3.293a1 1 0 1 0-1.414 1.414L12.586 11H3.25a1 1 0 1 0 0 2h9.336l-1.293 1.293a1 1 0 0 0 1.414 1.414l3-3a1 1 0 0 0 0-1.414l-3-3Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -60,7 +60,7 @@ export const ArrowRightOnBoxFillIcon = createIcon({
   displayName: 'ArrowRightOnBoxFillIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><path fill="currentColor" fillRule="evenodd" d="M20 6a3 3 0 0 0-3-3h-7a3 3 0 0 0-3 3v5.25H3.25a.75.75 0 0 0 0 1.5H7V18a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V6ZM7 12.75h6.19l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 1 0-1.06 1.06l1.72 1.72H7v1.5Z" clipRule="evenodd" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="M20 6a3 3 0 0 0-3-3h-7a3 3 0 0 0-3 3v5H3.25a1 1 0 1 0 0 2H7v5a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V6ZM7 13h5.586l-1.293 1.293a1 1 0 0 0 1.414 1.414l3-3a1 1 0 0 0 0-1.414l-3-3a1 1 0 1 0-1.414 1.414L12.586 11H7v2Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -76,7 +76,7 @@ export const BookmarkIcon = createIcon({
   displayName: 'BookmarkIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><path fill="currentColor" d="m18 21-.707.707A1 1 0 0 0 19 21h-1ZM6 21H5a1 1 0 0 0 1.707.707L6 21ZM7.25 4h9.5V2h-9.5v2Zm9.75.25V21h2V4.25h-2ZM7 21V4.25H5V21h2Zm11.707-.707L13.414 15 12 16.414l5.293 5.293 1.414-1.414ZM10.586 15l-5.293 5.293 1.414 1.414L12 16.414 10.586 15Zm2.828 0a2 2 0 0 0-2.828 0L12 16.414 13.414 15ZM16.75 4a.25.25 0 0 1 .25.25h2A2.25 2.25 0 0 0 16.75 2v2Zm-9.5-2A2.25 2.25 0 0 0 5 4.25h2A.25.25 0 0 1 7.25 4V2Z" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="M7.25 2A2.25 2.25 0 0 0 5 4.25V21a1 1 0 0 0 1.707.707L12 16.414l5.293 5.293A1 1 0 0 0 19 21V4.25A2.25 2.25 0 0 0 16.75 2h-9.5ZM7 4.25A.25.25 0 0 1 7.25 4h9.5a.25.25 0 0 1 .25.25v14.336L13.414 15a2 2 0 0 0-2.828 0L7 18.586V4.25Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -84,7 +84,7 @@ export const BookmarkFillIcon = createIcon({
   displayName: 'BookmarkFillIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><path fill="currentColor" d="M6 4.25C6 3.56 6.56 3 7.25 3h9.5c.69 0 1.25.56 1.25 1.25V21l-5.293-5.293a1 1 0 0 0-1.414 0L6 21V4.25Z" /><path fill="currentColor" d="m18 21-.707.707A1 1 0 0 0 19 21h-1ZM6 21H5a1 1 0 0 0 1.707.707L6 21ZM7.25 4h9.5V2h-9.5v2Zm9.75.25V21h2V4.25h-2ZM7 21V4.25H5V21h2Zm11.707-.707L13.414 15 12 16.414l5.293 5.293 1.414-1.414ZM10.586 15l-5.293 5.293 1.414 1.414L12 16.414 10.586 15Zm2.828 0a2 2 0 0 0-2.828 0L12 16.414 13.414 15ZM16.75 4a.25.25 0 0 1 .25.25h2A2.25 2.25 0 0 0 16.75 2v2Zm-9.5-2A2.25 2.25 0 0 0 5 4.25h2A.25.25 0 0 1 7.25 4V2Z" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="M5 4.25A2.25 2.25 0 0 1 7.25 2h9.5A2.25 2.25 0 0 1 19 4.25V21a1 1 0 0 1-1.707.707L12 16.414l-5.293 5.293A1 1 0 0 1 5 21V4.25Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -100,7 +100,7 @@ export const CalendarTomorrowIcon = createIcon({
   displayName: 'CalendarTomorrowIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><path fill="currentColor" fillRule="evenodd" d="M8 1a1 1 0 0 0-1 1v1H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2.5V2a1 1 0 1 0-2 0v1H9V2a1 1 0 0 0-1-1Zm11.5 7a1 1 0 0 0-1-1h-13a1 1 0 0 0-1 1v11a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5V8Z" clipRule="evenodd" /><path fill="currentColor" fillRule="evenodd" d="M13.77 10.07a.75.75 0 0 1 1.06 0l2.4 2.4a.75.75 0 0 1 0 1.06l-2.4 2.4a.75.75 0 1 1-1.06-1.06l1.12-1.12H7.5a.75.75 0 0 1 0-1.5h7.39l-1.12-1.12a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="M7 2a1 1 0 0 1 2 0v1h5.5V2a1 1 0 1 1 2 0v1H19a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2V2Zm11.5 5a1 1 0 0 1 1 1v11a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5V8a1 1 0 0 1 1-1h13Zm-3.67 3.07a.75.75 0 1 0-1.06 1.06l1.12 1.12H7.5a.75.75 0 0 0 0 1.5h7.39l-1.12 1.12a.75.75 0 1 0 1.06 1.06l2.4-2.4a.75.75 0 0 0 0-1.06l-2.4-2.4Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -108,7 +108,7 @@ export const CalendarYesterdayIcon = createIcon({
   displayName: 'CalendarYesterdayIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><path fill="currentColor" fillRule="evenodd" d="M8 1a1 1 0 0 0-1 1v1H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2.5V2a1 1 0 1 0-2 0v1H9V2a1 1 0 0 0-1-1Zm11.5 7a1 1 0 0 0-1-1h-13a1 1 0 0 0-1 1v11a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5V8Z" clipRule="evenodd" /><path fill="currentColor" fillRule="evenodd" d="M10.23 10.07a.75.75 0 0 0-1.06 0l-2.4 2.4a.75.75 0 0 0 0 1.06l2.4 2.4a.75.75 0 1 0 1.06-1.06l-1.12-1.12h7.14a.75.75 0 0 0 0-1.5H9.11l1.12-1.12a.75.75 0 0 0 0-1.06Z" clipRule="evenodd" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="M7 2a1 1 0 0 1 2 0v1h5.5V2a1 1 0 1 1 2 0v1H19a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2V2Zm11.5 5a1 1 0 0 1 1 1v11a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5V8a1 1 0 0 1 1-1h13Zm-9.33 3.07a.75.75 0 1 1 1.06 1.06l-1.12 1.12h7.14a.75.75 0 0 1 0 1.5H9.11l1.12 1.12a.75.75 0 1 1-1.06 1.06l-2.4-2.4a.75.75 0 0 1 0-1.06l2.4-2.4Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -116,7 +116,7 @@ export const CheckboxIcon = createIcon({
   displayName: 'CheckboxIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><path fill="currentColor" fillRule="evenodd" d="M5 4.5h14a.5.5 0 0 1 .5.5v14a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5ZM3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5Zm15.006 2.26a1 1 0 0 0-1.413.067l-5.926 6.52-2.594-2.853a1 1 0 1 0-1.48 1.345l3.334 3.667a1 1 0 0 0 1.48 0l6.666-7.333a1 1 0 0 0-.067-1.413Z" clipRule="evenodd" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="M6 5h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1ZM3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6Zm14.314 1.987a1 1 0 0 0-1.41.116l-5.07 5.976-2.155-2.539a1 1 0 0 0-1.525 1.295l2.917 3.437a1 1 0 0 0 1.525 0l5.833-6.875a1 1 0 0 0-.115-1.41Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -204,7 +204,7 @@ export const GraphIcon = createIcon({
   displayName: 'GraphIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><circle cx="15.5" cy="8.5" r="5.5" fill="currentColor" /><circle cx="5.5" cy="14.5" r="3.5" fill="currentColor" /><circle cx="13" cy="19" r="2" fill="currentColor" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="M21 8.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0Zm-12 6a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm4 6.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -228,7 +228,7 @@ export const LinkedIcon = createIcon({
   displayName: 'LinkedIcon',
   viewBox: '0 0 24 24',
   path: (
-    <><path fill="currentColor" fillRule="evenodd" d="m11.947 13.717 4.155-4.154a3.501 3.501 0 0 0-4.263.535l-4.155 4.154a3.5 3.5 0 0 0 4.263-.535Zm-1.169-4.68a5.002 5.002 0 0 1 6.177-.71 3.5 3.5 0 0 0-5.715-3.802L6.997 8.768a3.501 3.501 0 0 0-.409 4.459l4.19-4.19Zm6.472-5.573a5.002 5.002 0 0 1 .883 5.88 5 5 0 0 1-.284 6.764l-4.242 4.243a5 5 0 0 1-7.953-5.88 5 5 0 0 1 .283-6.764l4.242-4.243a5 5 0 0 1 7.071 0Zm-4.242 11.314 4.19-4.19a3.501 3.501 0 0 1-.41 4.46l-4.242 4.242a3.5 3.5 0 0 1-5.715-3.8 5.002 5.002 0 0 0 6.177-.712Z" clipRule="evenodd" /></>
+    <><path fill="currentColor" fillRule="evenodd" d="m11.947 13.717 4.155-4.154a3.501 3.501 0 0 0-4.263.535l-4.155 4.154a3.5 3.5 0 0 0 4.263-.535Zm-1.169-4.68a5.002 5.002 0 0 1 6.177-.71 3.501 3.501 0 0 0-5.715-3.802L6.997 8.768a3.501 3.501 0 0 0-.409 4.459l4.19-4.19Zm6.472-5.573a5.002 5.002 0 0 1 .883 5.88 5 5 0 0 1-.284 6.764l-4.242 4.243a5 5 0 0 1-7.954-5.88 5 5 0 0 1 .284-6.764l4.242-4.243a5 5 0 0 1 7.071 0Zm-4.242 11.314 4.19-4.19a3.501 3.501 0 0 1-.41 4.46l-4.242 4.242a3.5 3.5 0 0 1-5.715-3.8 5.002 5.002 0 0 0 6.177-.712Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -237,6 +237,14 @@ export const MenuIcon = createIcon({
   viewBox: '0 0 24 24',
   path: (
     <><path fill="currentColor" fillRule="evenodd" d="M3 6a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1Zm0 6a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1Zm1 5a1 1 0 1 0 0 2h16a1 1 0 1 0 0-2H4Z" clipRule="evenodd" /></>
+  ),
+});
+
+export const PageAddIcon = createIcon({
+  displayName: 'PageAddIcon',
+  viewBox: '0 0 24 24',
+  path: (
+    <><path fill="currentColor" fillRule="evenodd" d="M7 20.5h5.89a5.53 5.53 0 0 0 1.447 1.5H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h6.57a2 2 0 0 1 1.298.478l3.43 2.923A2 2 0 0 1 19 6.923v5.284A5.506 5.506 0 0 0 17.5 12V6.923a.5.5 0 0 0-.176-.38l-3.429-2.924a.5.5 0 0 0-.324-.119H7a.5.5 0 0 0-.5.5v16a.5.5 0 0 0 .5.5Zm15-3a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM17 15v2h-2v1h2v2h1v-2h2v-1h-2v-2h-1Z" clipRule="evenodd" /></>
   ),
 });
 
@@ -269,6 +277,14 @@ export const PencilLineIcon = createIcon({
   viewBox: '0 0 24 24',
   path: (
     <><path fill="currentColor" fillRule="evenodd" d="M18.081 4.06a1.5 1.5 0 0 1 0 2.122l-.788.789-2.121-2.122.788-.788a1.5 1.5 0 0 1 2.121 0Zm-3.617 1.496 2.122 2.122-6.937 6.937L6.06 16.08l1.466-3.588 6.937-6.937ZM3 18a1 1 0 1 0 0 2h18a1 1 0 1 0 0-2H3Z" clipRule="evenodd" /></>
+  ),
+});
+
+export const PlusIcon = createIcon({
+  displayName: 'PlusIcon',
+  viewBox: '0 0 24 24',
+  path: (
+    <><path fill="currentColor" fillRule="evenodd" d="M3 12a1 1 0 0 1 1-1h7V4a1 1 0 1 1 2 0v7h7a1 1 0 1 1 0 2h-7v7a1 1 0 1 1-2 0v-7H4a1 1 0 0 1-1-1Z" clipRule="evenodd" /></>
   ),
 });
 

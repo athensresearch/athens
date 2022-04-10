@@ -24,7 +24,7 @@ test('athena create new page then click create page', async ({ page }) => {
   await inputInAthena(page, title);
 
   await Promise.all([
-    page.click('text=Create page: ' + title),
+    page.click('text=Create page' + title),
     page.waitForNavigation()
   ]);
   await expect(page.locator(pageTitleLocator)).toHaveText(title);
@@ -51,7 +51,7 @@ test('athena search block then click on result', async ({ page }) => {
   await waitForBoot(page);
   await inputInAthena(page, 'welcome');
   // Click text=WelcomeWelcome to Athens, Open-Source Networked Thought!
-  await page.click('text='+title);
+  await page.click('text=' + title);
   await expect(page.locator(pageTitleLocator)).toHaveText(title);
 });
 
