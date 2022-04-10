@@ -219,7 +219,6 @@
                      :justifySelf "flex-end"
                      :alignSelf "center"
                      :bg "transparent"
-                     :height "2.25em"
                      :width "2.25em"
                      :mr "0.5em"
                      :borderRadius "full"
