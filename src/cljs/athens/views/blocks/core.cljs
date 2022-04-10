@@ -66,7 +66,7 @@
                                   (.. e stopPropagation)
                                   (swap! state update :open? not))}]
 
-          [:> Breadcrumb {:fontSize "0.7em"}
+          [:> Breadcrumb {:fontSize "xs" :color "foreground.secondary"}
            (doall
              (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
                    (if (or (:open? @state) (not (:focus? @state)))
@@ -108,7 +108,7 @@
     (when (not-empty refs)
       [:> VStack {:as "aside"
                   :align "stretch"
-                  :spacing 0
+                  :spacing 3
                   :key "Inline Linked References"
                   :zIndex 2
                   :ml 4

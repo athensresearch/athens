@@ -165,7 +165,6 @@ export const ReferenceHeader = ({ onClick, title }) => {
     fontWeight="bold"
     fontSize="xs"
     color="foreground.secondary"
-    opacity={0.5}
     display="flex"
   >{title}</Button>
 }
@@ -175,12 +174,12 @@ export const ReferenceGroup = ({ title, onClickTitle, children }) => {
     <VStack
       className="reference-group"
       align="stretch"
-      spacing={0}
+      spacing={2}
       py={2}
-      _notFirst={{
-        borderTop: "1px solid",
-        borderColor: "separator.divider"
-      }}
+    // _notFirst={{
+    //   borderTop: "1px solid",
+    //   borderColor: "separator.divider"
+    // }}
     >
       {title && <ReferenceHeader onClick={onClickTitle} title={title} />}
       {children}
@@ -192,7 +191,7 @@ export const ReferenceBlock = ({ children, actions }) => {
   if (actions) {
     return (<HStack pr={2}><Box flex="1 1 100%">{children}</Box> {actions}</HStack>)
   } else {
-    return children
+    return <Box>{children}</Box>
   }
 }
 
