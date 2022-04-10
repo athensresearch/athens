@@ -35,6 +35,7 @@ export const PageContainer = ({ children, uid, type }) => <Box
   className={type + '-page'}
   flexDirection="column"
   pb="calc(var(--page-padding-v) / 2)"
+  marginInline="auto"
 >{children}</Box>
 
 export const HeaderImage = ({ src }) => <Box
