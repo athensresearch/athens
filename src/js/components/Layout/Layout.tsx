@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { XmarkIcon, ChevronRightIcon } from '@/Icons/Icons';
-import { Heading, Button, IconButton, Box, useDisclosure, Collapse, Text, VStack, HStack } from '@chakra-ui/react';
+import { Button, IconButton, Box, useDisclosure, Collapse, Text, VStack, HStack } from '@chakra-ui/react';
 import { withErrorBoundary } from 'react-error-boundary';
 
 const Container = motion(Box);
@@ -167,29 +167,29 @@ interface PageReferences {
 }
 
 export const ReferenceHeader = ({ onClick, title }) => {
-  return <Heading
-    as="h4"
-    pl={4}
-  >
-    <Button
-      variant="link"
-      onClick={onClick}
-      textTransform="uppercase"
-      fontWeight="bold"
-      fontSize="xs"
-      color="foreground.secondary"
-      opacity={0.5}
-      display="flex"
-    >{title}</Button>
-  </Heading>
+  return <Button
+    variant="link"
+    aria-role="heading"
+    aria-level={4}
+    onClick={onClick}
+    textAlign="left"
+    justifyContent="flex-start"
+    textTransform="uppercase"
+    fontWeight="bold"
+    fontSize="xs"
+    color="foreground.secondary"
+    opacity={0.5}
+    display="flex"
+  >{title}</Button>
 }
 
 export const ReferenceGroup = ({ title, onClickTitle, children }) => {
   return (
     <VStack
+      className="reference-group"
       align="stretch"
-      spacing={4}
-      py={4}
+      spacing={0}
+      py={2}
       _notFirst={{
         borderTop: "1px solid",
         borderColor: "separator.divider"
@@ -203,7 +203,7 @@ export const ReferenceGroup = ({ title, onClickTitle, children }) => {
 
 export const ReferenceBlock = ({ children, actions }) => {
   if (actions) {
-    return (<HStack pr={2} ><Box flex="1 1 100%">{children}</Box> {actions}</HStack>)
+    return (<HStack pr={2}><Box flex="1 1 100%">{children}</Box> {actions}</HStack>)
   } else {
     return children
   }

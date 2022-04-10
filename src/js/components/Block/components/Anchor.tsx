@@ -88,17 +88,16 @@ const anchorButtonStyleProps = (isClosedWithChildren) => {
     position: 'relative',
     appearance: "none",
     border: "0",
-    color: "inherit",
+    color: "foreground.secondary",
     display: "flex",
     placeItems: "center",
     placeContent: "center",
     zIndex: 2,
     minWidth: "0",
     minHeight: "0",
-    h: "2em",
-    w: "fit-content",
+    h: "auto",
+    w: "auto",
     fontSize: "inherit",
-    mx: "-0.125em",
     size: "sm",
     p: 0,
     sx: {
@@ -108,7 +107,6 @@ const anchorButtonStyleProps = (isClosedWithChildren) => {
         overflow: "visible", // Prevents the bullet being cropped
         width: "1em",
         height: "1em",
-        color: "foreground.secondary",
         "*": {
           vectorEffect: "non-scaling-stroke"
         }

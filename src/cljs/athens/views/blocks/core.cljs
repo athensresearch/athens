@@ -3,6 +3,7 @@
     ["/components/Block/components/Anchor"   :refer [Anchor]]
     ["/components/Block/components/Container" :refer [Container]]
     ["/components/Block/components/Toggle"   :refer [Toggle]]
+    ["/components/Layout/Layout"   :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
@@ -21,7 +22,6 @@
     [athens.views.blocks.content             :as content]
     [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    [athens.views.references                 :refer [reference-group reference-block]]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
@@ -110,8 +110,8 @@
         parents         (cond-> (:block/parents block)
                           ;; If the ref has children, move it to breadcrumbs and show children.
                           has-children? (conj block))
-        ;; Reset state on parent each time the component is created.
-        ;; To clear state, open/close the inline refs.
+                        ;; Reset state on parent each time the component is created.
+                        ;; To clear state, open/close the inline refs.
         _               (reset! state {:block     block
                                        :embed-id  (random-uuid)
                                        :open?     true
@@ -125,7 +125,7 @@
       (let [{:keys [block parents embed-id]} @state
             block (reactive/get-reactive-block-document (:db/id block))]
         [:<>
-         [:> HStack
+         [:> HStack {:lineHeight "1"}
           [:> Toggle {:isOpen (:open? @state)
                       :on-click (fn [e]
                                   (.. e stopPropagation)
@@ -173,22 +173,20 @@
     (when (not-empty refs)
       [:> VStack {:as "aside"
                   :align "stretch"
+                  :spacing 0
                   :key "Inline Linked References"
                   :zIndex 2
-                  :mt 2
-                  :mb 4
-                  :ml 6
-                  :py 2
+                  :ml 4
                   :px 4
-                  :borderRadius "sm"
+                  :borderRadius "md"
                   :background "background.basement"}
        (doall
          (for [[group-title group] refs]
-           [reference-group {:title group-title
+           [:> ReferenceGroup {:title group-title
                              :key (str "group-" group-title)}
             (doall
               (for [block' group]
-                [reference-block {:key (str "ref-" (:block/uid block'))}
+                [:> ReferenceBlock {:key (str "ref-" (:block/uid block'))}
                  [ref-comp block' state]]))]))])))
 
 
