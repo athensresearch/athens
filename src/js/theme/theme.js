@@ -274,7 +274,7 @@ const components = {
         color: 'separator.border'
       },
       item: {
-        maxWidth: '10em',
+        // maxWidth: '10em',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         ".fmt": {
@@ -287,8 +287,9 @@ const components = {
         link: {
           overflow: 'hidden !important',
           textOverflow: 'ellipsis !important',
-
-          "*": {
+          // Complicated selector applies to everything
+          // except descendants of TODO checkboxes
+          "*:not([data-checked] *):not([data-unchecked] *)": {
             fontSize: 'inherit !important',
             fontWeight: 'inherit !important',
             lineHeight: 'inherit !important',
