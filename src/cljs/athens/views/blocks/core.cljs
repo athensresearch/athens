@@ -28,71 +28,6 @@
     [reagent.core                            :as r]))
 
 
-;; Styles
-;;
-;; Blocks use Em units in many places rather than Rem units because
-;; blocks need to scale with their container: sidebar blocks are
-;; smaller than main content blocks, for instance.
-
-
-(def block-container-inner-style
-  {"&.show-tree-indicator:before" {:content    "''"
-                                   :position   "absolute"
-                                   :width      "1px"
-                                   :left       "calc(1.375em + 1px)"
-                                   :top        "2em"
-                                   :bottom     "0"
-                                   :opacity    "0"
-                                   :transform  "translateX(50%)"
-                                   :transition "background-color 0.2s ease-in-out, opacity 0.2s ease-in-out"
-                                   :background "separator.divider"}
-   "&:hover.show-tree-indicator:before, &:focus-within.show-tree-indicator:before" {:opacity 1}
-   "&:after" {:content        "''"
-              :zIndex         0
-              :position       "absolute"
-              :inset          "1px 0"
-              :opacity        0
-              :pointerEvents  "none"
-              :borderRadius   "sm"
-              :transition "opacity 0.075s ease-in-out"
-              :background "link"}
-   "&.is-selected:after" {:opacity 0.2}
-   "&.is-presence .block-content" {:padding-right "1rem"}
-   ".user-avatar" {:position "absolute"
-                   :left "4px"
-                   :top "4px"}
-   ".block-body" {:display               "grid"
-                  :gridTemplateColumns "1em 1em 1fr auto"
-                  :gridTemplateRows    "0 1fr 0"
-                  :gridTemplateAreas   "
-                                      'above above above above'
-                                      'toggle bullet content refs'
-                                      'below below below below'"
-                  :borderRadius         "0.5rem"
-                  :position              "relative"}
-   "&:hover > .block-toggle, &:focus-within > .block-toggle" {:opacity "1"}
-   "button.block-edit-toggle" {:position   "absolute"
-                               :appearance "none"
-                               :width      "100%"
-                               :background "none"
-                               :border     0
-                               :cursor     "text"
-                               :display    "block"
-                               :z-index    1
-                               :top        0
-                               :right      0
-                               :bottom     0
-                               :left       0}
-   ".block-embed" {:borderRadius "sm"
-                   :sx {"--block-surface-color" "background.basement"}
-                   :bg "background.basement"
-                   ".block-container" {:marginLeft 0.5}}
-   ".block-content" {:gridArea  "content"
-                     :minHeight "1.5em"}
-   "&.is-linked-ref" {:bg "background-attic"}
-   ".block-container" {:marginLeft "2rem"
-                       :gridArea "body"}})
-
 
 ;; Inline refs
 
@@ -397,7 +332,7 @@
          (when (not= string (:string/previous @state))
            (swap! state assoc :string/previous string :string/local string))
 
-         [:> Container {:sx (merge block-container-inner-style
+         [:> Container {#_ :sx# #_ (merge block-container-inner-style
                                    {"--block-surface-color" "background.floor"})
                         :isDragging (and dragging (not is-selected))
                         :isSelected is-selected
