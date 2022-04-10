@@ -27,9 +27,10 @@ export const Toggle = (props: ToggleProps) => {
       display="flex"
       placeItems="center"
       placeContent="center"
+      alignSelf="flex-start"
+      minHeight="inherit"
       zIndex={2}
       minWidth="0"
-      minHeight="0"
       fontSize="inherit"
       h="auto"
       size="sm"
