@@ -82,7 +82,7 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
   zIndex="3"
   userSelect="none"
   transition='0.5s ease-in-out'
-  transitionProperty='borderColor'
+  transitionProperty='border'
   height="var(--app-header-height, 44px)"
   _hover={{
     borderBottomColor: 'separator.divider',
