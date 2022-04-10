@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { XmarkIcon, ChevronRightIcon } from '@/Icons/Icons';
+import { XmarkIcon, ChevronUpIcon } from '@/Icons/Icons';
 import { Heading, Button, IconButton, Box, useDisclosure, Collapse, Text, VStack, HStack } from '@chakra-ui/react';
 import { withErrorBoundary } from 'react-error-boundary';
 
@@ -82,7 +82,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
           whiteSpace="nowrap"
           sx={{ maskImage: "linear-gradient(to right, black, black calc(100% - 1rem), transparent calc(100%))" }}
         >
-          <ChevronRightIcon
+          <ChevronUpIcon
             transform={isOpen ? "rotate(90deg)" : null}
             justifySelf="center"
           />
@@ -224,7 +224,7 @@ export const PageReferences = withErrorBoundary(({ children, count, title, defau
           overflow="hidden"
           whiteSpace="nowrap"
           leftIcon={
-            <ChevronRightIcon
+            <ChevronUpIcon
               transform={isOpen ? "rotate(180deg)" : "rotate(90deg)"}
               transitionProperty="common"
               transitionDuration="0.15s"
