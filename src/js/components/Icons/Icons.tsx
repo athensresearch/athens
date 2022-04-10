@@ -184,6 +184,22 @@ export const ParenRightIcon = createIcon({
   ),
 });
 
+export const PencilIcon = createIcon({
+  displayName: 'PencilIcon',
+  viewBox: '0 0 24 24',
+  path: (
+    <path fillRule="evenodd" clipRule="evenodd" d="M19.65 7.05C20.3956 6.30441 20.3956 5.09558 19.65 4.35C18.9044 3.60442 17.6956 3.60441 16.95 4.35L15.9462 5.35385L18.6462 8.05385L19.65 7.05ZM17.939 8.76095L15.239 6.06095L6.21692 15.0831L4.35 19.65L8.91692 17.7831L17.939 8.76095Z" fill="currentColor" />
+  ),
+});
+
+export const PencilBarIcon = createIcon({
+  displayName: 'PencilBarIcon',
+  viewBox: '0 0 24 24',
+  path: (
+    <path fillRule="evenodd" clipRule="evenodd" d="M18.0815 4.06066C18.6673 4.64645 18.6673 5.59619 18.0815 6.18198L17.2928 6.97068L15.1715 4.84936L15.9602 4.06066C16.546 3.47487 17.4957 3.47487 18.0815 4.06066ZM14.4644 5.55646L16.5857 7.67778L9.64879 14.6147L6.06068 16.0815L7.52747 12.4934L14.4644 5.55646ZM3 18C2.44772 18 2 18.4477 2 19C2 19.5523 2.44772 20 3 20H21C21.5523 20 22 19.5523 22 19C22 18.4477 21.5523 18 21 18H3Z" fill="currentColor" />
+  ),
+});
+
 export const RightSidebarIcon = createIcon({
   displayName: 'RightSidebarIcon',
   viewBox: '0 0 24 24',
