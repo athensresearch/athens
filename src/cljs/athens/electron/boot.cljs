@@ -11,7 +11,7 @@
 (rf/reg-event-fx
   :boot
   [(rf/inject-cofx :local-storage :athens/persist)]
-  (fn [{:keys [local-storage]} _]
+  (fn [{:keys [local-storage]} [_ first-boot?]]
     (let [boot-tx             (sentry/transaction-start "boot-sequence")
           init-app-db         (wrap-span-no-new-tx "db/init-app-db"
                                                    (db/init-app-db local-storage))
@@ -76,14 +76,22 @@
                                       :dispatch-n [[:fs/update-write-db]
                                                    [:db/sync]
                                                    ;; [:restore-navigation]  ; This functionality is there but unreliable we can use it once we make it reliable
-                                                   [:navigate :home]
                                                    [:reset-undo-redo]
+                                                   (if first-boot?
+                                                     ;; Only init the router after the db
+                                                     ;; is loaded, otherwise we can't check
+                                                     ;; if titles/uids in the URL exist.
+                                                     [:init-routes!]
+                                                     ;; Go to home on graph change, but not
+                                                     ;; on the first boot.
+                                                     ;; We might have a permalink to follow
+                                                     ;; on first boot.
+                                                     [:navigate :home])
                                                    [:posthog/set-super-properties]
                                                    [:loading/unset]]}
                                      {:when     :seen-all-of?
                                       :events   [[:fs/update-write-db]
                                                  [:db/sync]
-                                                 [:navigate :home]
                                                  [:reset-undo-redo]
                                                  [:posthog/set-super-properties]
                                                  [:loading/unset]]
