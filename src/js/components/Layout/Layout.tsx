@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { XmarkIcon, ChevronUpIcon } from '@/Icons/Icons';
+import { XmarkIcon, ChevronRightIcon } from '@/Icons/Icons';
 import { Heading, Button, IconButton, Box, useDisclosure, Collapse, Text, VStack, HStack } from '@chakra-ui/react';
 import { withErrorBoundary } from 'react-error-boundary';
 
@@ -47,6 +47,9 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
 }
 
 export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children }) => {
+
+  const canToggle = type !== 'graph';
+
   return (
     <VStack
       align="stretch"
@@ -68,7 +71,14 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
         alignItems="center"
         justifyContent="center"
       >
-        <Button onClick={onToggle}
+        <Button
+          onClick={canToggle ? onToggle : undefined}
+          as={canToggle ? undefined : 'div'}
+          {...(!canToggle && {
+            _hover: {},
+            _focus: {},
+            _active: {},
+          })}
           display="flex"
           bg="transparent"
           borderRadius="0"
@@ -82,10 +92,12 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
           whiteSpace="nowrap"
           sx={{ maskImage: "linear-gradient(to right, black, black calc(100% - 1rem), transparent calc(100%))" }}
         >
-          <ChevronUpIcon
-            transform={isOpen ? "rotate(90deg)" : null}
-            justifySelf="center"
-          />
+          {canToggle && (
+            <ChevronRightIcon
+              transform={isOpen ? "rotate(90deg)" : null}
+              justifySelf="center"
+            />
+          )}
           <Box
             flex="1 1 100%"
             tabIndex={-1}
@@ -222,8 +234,8 @@ export const PageReferences = withErrorBoundary(({ children, count, title, defau
           overflow="hidden"
           whiteSpace="nowrap"
           leftIcon={
-            <ChevronUpIcon
-              transform={isOpen ? "rotate(180deg)" : "rotate(90deg)"}
+            <ChevronRightIcon
+              transform={isOpen ? "rotate(90deg)" : null}
               transitionProperty="common"
               transitionDuration="0.15s"
               transitionTimingFunction="ease-in-out"

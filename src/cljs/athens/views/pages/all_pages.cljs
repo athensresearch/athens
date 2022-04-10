@@ -87,7 +87,8 @@
     (fn []
       (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
         [:> Box {:px 4
-                 :maxWidth "70rem"
+                 :width "100%"
+                 :maxWidth "75rem"
                  :margin "calc(var(--app-header-height) + 2rem) auto 5rem"}
          [:> Table {:variant "striped"}
           [:> Thead
