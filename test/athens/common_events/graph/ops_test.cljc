@@ -1,8 +1,9 @@
 (ns athens.common-events.graph.ops-test
   (:require
-    [athens.common-events.fixture :as fixture]
-    [athens.common-events.graph.ops :as ops]
-    [clojure.test :as t]))
+    [athens.common-events.fixture      :as fixture]
+    [athens.common-events.graph.atomic :as atomic-ops]
+    [athens.common-events.graph.ops    :as ops]
+    [clojure.test                      :as t]))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
@@ -75,4 +76,22 @@
             [removed added] (ops/structural-diff @@fixture/connection save-ops)]
         (t/is (= #{[:block-ref test-uid-2]} removed))
         (t/is (= #{[:page-link "def"] [:block-ref "test-uid-3"]} added)))
+      (fixture/teardown! setup-repr))
+
+    (t/testing "new page link in page rename"
+      (fixture/setup! setup-repr)
+      (let [new-title       (str "[[" test-t-1 "]] " test-t-2)
+            save-op         (atomic-ops/make-page-rename-op test-t-2 new-title)
+            [removed added] (ops/structural-diff @@fixture/connection save-op)]
+        (t/is (= #{} removed))
+        (t/is (= #{[:page-link test-t-1]} added)))
+      (fixture/teardown! setup-repr))
+
+    (t/testing "new page link in new page"
+      (fixture/setup! setup-repr)
+      (let [new-title       (str "[[" test-t-1 "]] " test-t-2)
+            new-page-op     (ops/build-page-new-op @@fixture/connection new-title)
+            [removed added] (ops/structural-diff @@fixture/connection new-page-op)]
+        (t/is (= #{} removed))
+        (t/is (= #{[:page-link test-t-1]} added)))
       (fixture/teardown! setup-repr))))
