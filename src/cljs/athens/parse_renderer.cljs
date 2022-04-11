@@ -38,8 +38,7 @@
    :textAlign "inherit"
    :fontSize "inherit"
    :fontWeight "inherit"
-   :textDecoration "none"
-   "&:hover" {:textDecoration "underline"}})
+   :textDecoration "none"})
 
 
 (defn page-link-el
@@ -60,10 +59,10 @@
                                  :display "inline"
                                  :fontSize "inherit"
                                  :fontWeight "inherit"
-                                 :textDecoration "none"
-                                 "&:hover" {:textDecoration "underline"}}
+                                 :textDecoration "none"}
                         ".fmt" (merge {:whiteSpace "nowrap"
                                        :display "inline"
+                                       :color "foreground.secondary"
                                        :fontWeight "normal"
                                        :opacity "0.3"})}}]
           (r/children this))))
