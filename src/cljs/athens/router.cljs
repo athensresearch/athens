@@ -238,3 +238,30 @@
   (fn [_ _]
     (init-routes!)
     {}))
+
+
+;; Permalink param processing
+
+(def graph-param-key "graph")
+
+
+(defn consume-graph-param
+  "Removes and returns the graph-id in the current URL, if any."
+  []
+  ;; Note: don't use the reitit.frontend functions here, as the router
+  ;; it not yet initialized during boot.
+  (let [url       (js/URL. js/window.location)
+        graph-id  (.. url -searchParams (get graph-param-key))]
+    ;; Replace history with a version without the graph param.
+    (.. url -searchParams (delete graph-param-key))
+    (js/history.replaceState js/history.state nil url)
+    graph-id))
+
+
+(defn create-url-with-graph-param
+  "Create a URL containing graph-id."
+  [graph-id]
+  (let [url (js/URL. js/window.location)]
+    (.. url -searchParams (set graph-param-key graph-id))
+    (.toString url)))
+

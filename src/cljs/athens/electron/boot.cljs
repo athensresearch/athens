@@ -4,6 +4,7 @@
     [athens.db                 :as db]
     [athens.electron.db-picker :as db-picker]
     [athens.electron.utils     :as utils]
+    [athens.router             :as router]
     [athens.utils.sentry       :as sentry]
     [re-frame.core             :as rf]))
 
@@ -15,6 +16,10 @@
     (let [boot-tx             (sentry/transaction-start "boot-sequence")
           init-app-db         (wrap-span-no-new-tx "db/init-app-db"
                                                    (db/init-app-db local-storage))
+          graph-param         (router/consume-graph-param)
+          init-app-db         (if graph-param
+                                (db-picker/select-db init-app-db graph-param)
+                                init-app-db)
           all-dbs             (db-picker/all-dbs init-app-db)
           selected-db         (db-picker/selected-db init-app-db)
           default-db          (utils/get-default-db)
