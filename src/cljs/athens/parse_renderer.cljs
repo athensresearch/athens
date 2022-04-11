@@ -16,6 +16,7 @@
 
 (declare parse-and-render)
 
+
 (def fm-props
   {:as "b"
    :class "fmt"
@@ -41,7 +42,8 @@
    "&:hover" {:textDecoration "underline"}})
 
 
-(defn page-link-el []
+(defn page-link-el
+  []
   (let [this (r/current-component)]
     (into [:> Box {:as "span"
                    :sx {".link" {:color "link"
@@ -61,11 +63,10 @@
                                  :textDecoration "none"
                                  "&:hover" {:textDecoration "underline"}}
                         ".fmt" (merge {:whiteSpace "nowrap"
-                                :display "inline"
-                                :fontWeight "normal"
-                                :opacity "0.3"})}}]
+                                       :display "inline"
+                                       :fontWeight "normal"
+                                       :opacity "0.3"})}}]
           (r/children this))))
-
 
 
 (defn parse-title
@@ -77,7 +78,6 @@
                 el
                 (str "[[" (str/join (get-in el [2 2])) "]]"))) title-coll)
        (str/join "")))
-
 
 
 (defn render-page-link
@@ -116,7 +116,6 @@
                                  (router/navigate-page parsed-title e)))}]
            title-coll))
    [:span {:class "fmt"} "]]"]])
-
 
 
 (defn- block-breadcrumb-string
