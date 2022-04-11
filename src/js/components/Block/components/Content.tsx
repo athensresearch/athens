@@ -49,7 +49,7 @@ const _Content = ({ children, fontSize, ...props }) => {
         gridArea: "main",
       },
       // activate interactive content (links, buttons, etc.)
-      "a, button, label, video, embed, iframe, img": {
+      "a, .link, button, label, video, embed, iframe, img": {
         pointerEvents: "auto",
         zIndex: 2,
       },
