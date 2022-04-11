@@ -163,7 +163,7 @@ export interface PresenceDetailsProps {
   differentPageMembers: Person[];
   handleUpdateProfile(person: Person): void;
   handleCopyHostAddress(hostAddress: HostAddress): void;
-  handleCopyPermalink(): void;
+  handleCopyPermalink?(): void;
   handlePressMember(person: Person): void;
   connectionStatus: ConnectionStatus;
   defaultOpen?: boolean;
@@ -314,10 +314,12 @@ export const PresenceDetails = (props: PresenceDetailsProps) => {
                       onClick={() => handleCopyHostAddress(hostAddress)}
                     >Copy
                     </Button>
-                    <Button
-                      onClick={() => handleCopyPermalink(hostAddress)}
-                    >Permalink
-                    </Button>
+                    {handleCopyPermalink && (
+                      <Button
+                        onClick={() => handleCopyPermalink()}
+                      >Permalink
+                      </Button>
+                    )}
                   </Host>
                 </>
               )}
