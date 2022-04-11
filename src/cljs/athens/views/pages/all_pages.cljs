@@ -63,26 +63,27 @@
 ;; Components
 
 (defn- sortable-header
-  ([column-id label width isNumeric]
+  ([column-id label width is-numeric?]
    (let [sorted-by @(rf/subscribe [:all-pages/sorted-by])
          growing?  @(rf/subscribe [:all-pages/sort-order-ascending?])
-         sort-icon (if growing? (r/as-element [:> ChevronUpIcon {:fontSize "0.5em"}])
-                       (r/as-element [:> ChevronDownIcon {:fontSize "0.5em"}]))]
+         sort-icon (if growing? (r/as-element [:> ChevronUpIcon])
+                       (r/as-element [:> ChevronDownIcon]))]
      [:> Th {:width width
              :border 0
-             :isNumeric isNumeric}
+             :isNumeric is-numeric?}
       [:> Button {:onClick #(rf/dispatch [:all-pages/sort-by column-id])
                   :size "sm"
                   :textTransform "uppercase"
+                  :justifyContent (if is-numeric? "flex-end" "flex-start")
                   :display "flex"
                   :height "1em"
                   :overflow "hidden"
                   :gap "0.25em"
                   :variant "link"
-                  :leftIcon (when (and isNumeric
+                  :leftIcon (when (and is-numeric?
                                        (= column-id sorted-by))
                               sort-icon)
-                  :rightIcon (when (and (not isNumeric)
+                  :rightIcon (when (and (not is-numeric?)
                                         (= column-id sorted-by))
                                sort-icon)
                   :_hover {:textDecoration "none"}}
@@ -103,8 +104,8 @@
            [:> Tr
             [sortable-header :title "Title"]
             [sortable-header :links-count "Links" "6rem" true]
-            [sortable-header :modified "Modified" "16rem" false {:date? true}]
-            [sortable-header :created "Created" "16rem" false {:date? true}]]]
+            [sortable-header :modified "Modified" "14rem" false {:date? true}]
+            [sortable-header :created "Created" "14rem" false {:date? true}]]]
           [:> Tbody
            (doall
              (for [{:keys    [block/uid node/title block/_refs]
@@ -130,6 +131,6 @@
                                                                                          :main-pane)}])
                                           (router/navigate-page title e)))}
                   title]]
-                [:> Td {:width "6rem" :whiteSpace "nowrap" :color "foreground.secondary" :isNumeric true} (count _refs)]
-                [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string modified)]
-                [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))
+                [:> Td {:width "6rem" :whiteSpace "nowrap"  :color "foreground.secondary" :isNumeric true} (count _refs)]
+                [:> Td {:width "14rem" :whiteSpace "nowrap" :fontSize "sm" :color "foreground.secondary"} (dates/date-string modified)]
+                [:> Td {:width "14rem" :whiteSpace "nowrap" :fontSize "sm" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))

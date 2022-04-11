@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { XmarkIcon, ChevronRightIcon } from '@/Icons/Icons';
+import { XmarkIcon, ChevronRightIcon, PageFillIcon, BlockFillIcon, GraphIcon } from '@/Icons/Icons';
 import { Button, IconButton, Box, useDisclosure, Collapse, Text, VStack, HStack } from '@chakra-ui/react';
 import { withErrorBoundary } from 'react-error-boundary';
 
@@ -45,6 +45,8 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
       </Container>}
   </AnimatePresence>
 }
+
+const typeIcon = (type) => { return { "node": <PageFillIcon />, "graph": <GraphIcon />, "block": <BlockFillIcon /> }[type] };
 
 export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children }) => {
 
@@ -98,6 +100,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
               justifySelf="center"
             />
           )}
+          {typeIcon(type)}
           <Box
             flex="1 1 100%"
             tabIndex={-1}
@@ -176,10 +179,6 @@ export const ReferenceGroup = ({ title, onClickTitle, children }) => {
       align="stretch"
       spacing={2}
       py={2}
-    // _notFirst={{
-    //   borderTop: "1px solid",
-    //   borderColor: "separator.divider"
-    // }}
     >
       {title && <ReferenceHeader onClick={onClickTitle} title={title} />}
       {children}

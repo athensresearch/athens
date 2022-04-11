@@ -82,7 +82,7 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
   zIndex="3"
   userSelect="none"
   transition='0.5s ease-in-out'
-  transitionProperty='common'
+  transitionProperty='border'
   height="var(--app-header-height, 44px)"
   _hover={{
     borderBottomColor: 'separator.divider',
@@ -119,8 +119,6 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
     ".os-mac &": {
       paddingLeft: '22px',
       paddingRight: '22px',
-      borderTopLeftRadius: '12px',
-      borderTopRightRadius: '12px',
       position: 'absolute',
       top: 0,
       left: 0,
@@ -130,7 +128,11 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
         background: 'background.floor',
       },
     },
-    ".os-mac.is-electron &": { paddingLeft: "88px" },
+    ".os-mac.is-electron &": {
+      paddingLeft: "88px",
+      borderTopLeftRadius: '12px',
+      borderTopRightRadius: '12px'
+    },
     ".os-mac.is-fullscreen &": {
       paddingLeft: '22px'
     }

@@ -163,7 +163,6 @@
     (let [graph-conf     @(subscribe [:graph/conf])
           graph-ref      (get @graph-ref-map (or local-node-eid :global))]
       [:> Accordion {:width "14em"
-                     :defaultIndex 0
                      :position "absolute"
                      :bg "background.basement"
                      :overflow "hidden"

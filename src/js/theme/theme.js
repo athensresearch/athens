@@ -1,4 +1,4 @@
-import { extendTheme, cssVar } from '@chakra-ui/react'
+import { extendTheme, cssVar, Tooltip } from '@chakra-ui/react'
 import { readableColor } from 'polished';
 import { spacing } from './spacing'
 
@@ -234,11 +234,20 @@ const components = {
     }
   },
   Avatar: {
-    baseStyle: ({ bg, color }) => {
+    baseStyle: (props) => {
+      const { bg, color, size } = props;
+      const exessLabelFontSize = theme.fontSizes[size || 'md'];
+
       return {
         container: {
           borderColor: "background.floor",
           ...makeAvatarColor(bg, color)
+        },
+        excessLabel: {
+          background: "background.attic",
+          fontSize: exessLabelFontSize,
+          border: "2px solid transparent",
+          backgroundClip: "padding-box",
         },
       }
     },
@@ -287,7 +296,7 @@ const components = {
           textOverflow: 'ellipsis !important',
           // Complicated selector applies to everything
           // except descendants of TODO checkboxes
-          "*:not([data-checked] *):not([data-unchecked] *)": {
+          "*:not([data-checked] *):not([data-unchecked] *):not([class*='checkbox'])": {
             fontSize: 'inherit !important',
             fontWeight: 'inherit !important',
             lineHeight: 'inherit !important',
@@ -440,17 +449,16 @@ const components = {
         _expanded: {
           background: "interaction.surface.active",
         },
-        // additional selector to catch icons not using the icon prop
-        "&& > svg:first-of-type, svg:not(span > svg)": {
-          marginInlineEnd: "0.75rem"
-        },
       }
     },
     sizes: {
       sm: {
         item: {
-          padding: '0.5rem 1rem',
+          padding: '0.35rem 0.5rem',
           fontSize: "sm"
+        },
+        icon: {
+          marginInlineEnd: "0.25rem",
         }
       }
     }
@@ -572,9 +580,12 @@ const components = {
       boxShadow: "md",
       maxW: "320px",
       zIndex: "tooltip",
-    }
+    },
   },
 }
+
+// Default prop overrides
+Tooltip.defaultProps = { ...Tooltip.defaultProps, openDelay: 500 }
 
 const config = {
   initialColorMode: 'dark',

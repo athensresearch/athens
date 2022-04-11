@@ -2,7 +2,7 @@
   (:require
     ["/components/Block/components/Anchor" :refer [Anchor]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon]]
+    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon]]
     ["/components/Layout/Layout" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["@chakra-ui/react" :refer [Box Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
@@ -208,7 +208,7 @@
   (let [{:block/keys [uid] sidebar
          :page/sidebar title
          :node/title} node]
-    [:> Menu {:isLazy true}
+    [:> Menu {:isLazy true :size "sm"}
      [:> MenuButton {:as IconButton
                      "aria-label" "Page menu"
                      :gridArea "menu"
@@ -234,7 +234,11 @@
            [:span "Add Shortcut"]])
         [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])
                       :icon (r/as-element [:> GraphIcon])}
-         "Show Local Graph"]]
+         "Show Local Graph"]
+        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])
+                      :isDisabled (contains? @(subscribe [:right-sidebar/items]) uid)
+                      :icon (r/as-element [:> ArrowRightOnBoxIcon])}
+         "Open in Sidebar"]]
        [:> MenuDivider]
        [:> MenuItem {:icon (r/as-element [:> TrashIcon])
                      :onClick (fn []
@@ -393,7 +397,9 @@
       (let [{:block/keys [children uid] title :node/title}                      node
             {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
-            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))]
+            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
+            is-current-route?                                                   (or (and daily-note? on-daily-notes?)
+                                                                                    (= @(subscribe [:current-route/page-title]) title))]
 
         (sync-title title state)
 
@@ -403,9 +409,10 @@
                            :title     message
                            :onConfirm confirm-fn
                            :onClose   cancel-fn}]
-
          ;; Header
-         [:> PageHeader {:onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+         [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
+                                                  (fn [e] (router/navigate-page title e)))
+                         :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
                                                  #(dispatch [:right-sidebar/open-item uid]))}
 
           ;; Dropdown
