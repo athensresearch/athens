@@ -202,6 +202,7 @@
    "Linked References"   true
    "Unlinked References" false})
 
+
 (defn menu-dropdown
   [node daily-note?]
   (let [{:block/keys [uid] sidebar
