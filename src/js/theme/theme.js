@@ -1,4 +1,4 @@
-import { extendTheme, cssVar } from '@chakra-ui/react'
+import { extendTheme, cssVar, Tooltip } from '@chakra-ui/react'
 import { readableColor } from 'polished';
 import { spacing } from './spacing'
 
@@ -580,9 +580,12 @@ const components = {
       boxShadow: "md",
       maxW: "320px",
       zIndex: "tooltip",
-    }
+    },
   },
 }
+
+// Default prop overrides
+Tooltip.defaultProps = { ...Tooltip.defaultProps, openDelay: 500 }
 
 const config = {
   initialColorMode: 'dark',
