@@ -41,6 +41,12 @@
     (selected-db db)))
 
 
+(rf/reg-sub
+  :db-picker/remote-db?
+  (fn [db _]
+    (remote-db? db)))
+
+
 ;; Add a db to the db picker list and select it as the current db.
 ;; Adding a db with the same id will overwrite the previous one.
 (rf/reg-event-fx
