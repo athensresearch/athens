@@ -17,6 +17,11 @@
     (get-in db [:athens/persist :db-picker/all-dbs selected-db-id])))
 
 
+(defn select-db
+  [db id]
+  (assoc-in db [:athens/persist :db-picker/selected-db-id] id))
+
+
 (defn remote-db?
   [rfdb]
   (-> rfdb
@@ -62,7 +67,7 @@
         {:dispatch [:alert/js "Database is saving your changes, if you switch now your changes will not be saved."]}
 
         db-exists?
-        {:db         (assoc-in db [:athens/persist :db-picker/selected-db-id] id)
+        {:db         (select-db db id)
          :dispatch-n [(when (utils/remote-db? curr-selected-db)
                         [:remote/disconnect!])
                       [:boot]]}
