@@ -1,6 +1,6 @@
 (ns athens.views.athena
   (:require
-    ["/components/Icons/Icons" :refer [XmarkIcon PlusIcon ArrowRightIcon]]
+    ["/components/Icons/Icons" :refer [PageAddIcon XmarkIcon PageIcon BlockIcon ArrowRightIcon]]
     ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
     [athens.common.utils :as utils]
     [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
@@ -123,6 +123,7 @@
 
 ;; Components
 
+
 (defn result-el
   [{:keys [title preview prefix icon query on-click active?]}]
   [:> Button {:justifyContent "flex-start"
@@ -137,7 +138,7 @@
               :py 3
               :isActive active?
               :onClick on-click
-              :sx {"span[class*='icon']" {:ml "auto"
+              :sx {"span[class*='icon']:last-child" {:ml "auto"
                                           :mr "1rem"
                                           :marginBlock "-0.2rem"
                                           :alignItems "center"
@@ -148,12 +149,13 @@
                :overflow "hidden"}
     [:> Heading {:as "h4"
                  :size "sm"}
-     (when prefix [:> Text {:as "span"
-                            :textTransform "uppercase"
-                            :color "foreground.secondary"
-                            :fontSize "xs"
-                            :letterSpacing "0.1ch"
-                            :mr "1ch"} prefix])
+     (when prefix
+       [:> Text {:as "span"
+                 :textTransform "uppercase"
+                 :color "foreground.secondary"
+                 :fontSize "xs"
+                 :letterSpacing "0.1ch"
+                 :mr "1ch"} prefix])
      (highlight-match query title)]
     (when preview
       [:> Text {:color "foreground.secondary"
@@ -218,6 +220,7 @@
      (for [[i x] (map-indexed list results)
            :let  [block-uid (:block/uid x)
                   parent    (:block/parent x)
+                  type      (if parent :block :node)
                   title     (or (:node/title parent) (:node/title x))
                   uid       (or (:block/uid parent) (:block/uid x))
                   string    (:block/string x)]]
@@ -227,8 +230,9 @@
                      :title    query
                      :prefix   "Create page"
                      :preview  nil
+                     :type     :page
                      :query    query
-                     :icon     (r/as-element [:> PlusIcon])
+                     :icon     (r/as-element [:> PageAddIcon])
                      :active?  (= i index)
                      :on-click (fn [e]
                                  (let [block-uid (utils/gen-block-uid)
@@ -247,6 +251,7 @@
          [result-el {:key i
                      :title title
                      :query query
+                     :type type
                      :icon (when (= i index) (r/as-element [:> ArrowRightIcon]))
                      :preview string
                      :active? (= i index)
@@ -287,7 +292,7 @@
                  :isOpen @athena-open?
                  :onClose #(dispatch [:athena/toggle])}
        [:> ModalOverlay]
-       [:> ModalContent {:width "49rem"
+       [:> ModalContent {:width "45rem"
                          :class "athena-modal"
                          :overflow "hidden"
                          :backdropFilter "blur(20px)"
