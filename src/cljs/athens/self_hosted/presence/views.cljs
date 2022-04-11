@@ -2,6 +2,8 @@
   (:require
     ["/components/Avatar/Avatar" :refer [Avatar]]
     ["/components/PresenceDetails/PresenceDetails" :refer [PresenceDetails]]
+    [athens.electron.utils :as electron.utils]
+    [athens.router :as router]
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
     [athens.self-hosted.presence.subs]
@@ -27,6 +29,15 @@
   (.. js/navigator -clipboard (writeText host-address))
   (rf/dispatch [:show-snack-msg {:msg "Host address copied to clipboard"
                                  :type :success}]))
+
+
+(defn copy-permalink
+  []
+  (let [selected-db @(rf/subscribe [:db-picker/selected-db])
+        url (router/create-url-with-graph-param (:id selected-db))]
+    (.. js/navigator -clipboard (writeText url))
+    (rf/dispatch [:show-snack-msg {:msg "Permalink copied to clipboard"
+                                   :type :success}])))
 
 
 (defn go-to-user-block
@@ -69,15 +80,18 @@
                 (let [current-user'          (user->person @current-user)
                       current-page-members   (others-seq @same-page)
                       different-page-members (others-seq @diff-page)]
-                  [:> PresenceDetails {:current-user              current-user'
-                                       :current-page-members      current-page-members
-                                       :different-page-members    different-page-members
-                                       :host-address              (:url @selected-db)
-                                       :handle-copy-host-address copy-host-address-to-clipboard
-                                       :handle-press-member       #(go-to-user-block @all-users %)
-                                       :handle-update-profile     #(edit-current-user %)
-                                       ;; TODO: show other states when we support them.
-                                       :connection-status         "connected"}]))))
+                  [:> PresenceDetails (merge
+                                        {:current-user             current-user'
+                                         :current-page-members     current-page-members
+                                         :different-page-members   different-page-members
+                                         :host-address             (:url @selected-db)
+                                         :handle-copy-host-address copy-host-address-to-clipboard
+                                         :handle-press-member      #(go-to-user-block @all-users %)
+                                         :handle-update-profile    #(edit-current-user %)
+                                         ;; TODO: show other states when we support them.
+                                         :connection-status        "connected"}
+                                        (when-not electron.utils/electron?
+                                          {:handle-copy-permalink copy-permalink}))]))))
 
 
 ;; inline
