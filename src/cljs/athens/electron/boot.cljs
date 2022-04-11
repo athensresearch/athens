@@ -81,11 +81,11 @@
                                                    [:db/sync]
                                                    ;; [:restore-navigation]  ; This functionality is there but unreliable we can use it once we make it reliable
                                                    [:reset-undo-redo]
-                                                   (if first-boot?
-                                                     ;; Only init the router after the db
-                                                     ;; is loaded, otherwise we can't check
-                                                     ;; if titles/uids in the URL exist.
-                                                     [:init-routes!]
+                                                   ;; Only init the router after the db
+                                                   ;; is loaded, otherwise we can't check
+                                                   ;; if titles/uids in the URL exist.
+                                                   [:init-routes!]
+                                                   (when-not first-boot?
                                                      ;; Go to home on graph change, but not
                                                      ;; on the first boot.
                                                      ;; We might have a permalink to follow
