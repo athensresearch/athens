@@ -16,35 +16,9 @@
 
 (declare parse-and-render)
 
-
-(defn render-el []
-  (let [this (r/current-component)]
-    (into [:> Box {:as "span"
-                   :sx {".link" {:color "link"
-                                 :borderRadius "1px"
-                                 :cursor "pointer"
-                                 :minWidth "0"
-                                 :whiteSpace "inherit"
-                                 :wordBreak "inherit"
-                                 :alignItems "flex-start"
-                                 :justifyContent "flex-start"
-                                 :lineHeight "unset"
-                                 :position "relative"
-                                 :textAlign "inherit"
-                                 :display "inline"
-                                 :fontSize "inherit"
-                                 :fontWeight "inherit"
-                                 :textDecoration "none"
-                                 "&:hover" {:textDecoration "underline"}}
-                        ".fmt" {:whiteSpace "nowrap"
-                                :display "inline"
-                                :fontWeight "normal"
-                                :opacity "0.3"}}}]
-          (r/children this))))
-
 (def fm-props
   {:as "b"
-   :class "formatting"
+   :class "fmt"
    :whiteSpace "nowrap"
    :fontWeight "normal"
    :opacity "0.3"})
@@ -63,7 +37,35 @@
    :textAlign "inherit"
    :fontSize "inherit"
    :fontWeight "inherit"
-   :textDecoration "none"})
+   :textDecoration "none"
+   "&:hover" {:textDecoration "underline"}})
+
+
+(defn page-link-el []
+  (let [this (r/current-component)]
+    (into [:> Box {:as "span"
+                   :sx {".link" {:color "link"
+                                 :borderRadius "1px"
+                                 :cursor "pointer"
+                                 :minWidth "0"
+                                 :whiteSpace "inherit"
+                                 :wordBreak "inherit"
+                                 :alignItems "flex-start"
+                                 :justifyContent "flex-start"
+                                 :lineHeight "unset"
+                                 :position "relative"
+                                 :textAlign "inherit"
+                                 :display "inline"
+                                 :fontSize "inherit"
+                                 :fontWeight "inherit"
+                                 :textDecoration "none"
+                                 "&:hover" {:textDecoration "underline"}}
+                        ".fmt" (merge {:whiteSpace "nowrap"
+                                :display "inline"
+                                :fontWeight "normal"
+                                :opacity "0.3"})}}]
+          (r/children this))))
+
 
 
 (defn parse-title
@@ -81,15 +83,13 @@
 (defn render-page-link
   "Renders a page link given the title of the page."
   [{:keys [from title]} title-coll]
-  (println "test title-coll" title-coll)
-  (println "test parsed title-coll" (parse-title title-coll))
-  [render-el
+  [page-link-el
    [:span {:class "fmt"} "[["]
    (cond
      (not (str/blank? title))
      [:span {:class "link"
-     :title (parse-title title-coll)
-       :on-click (fn [e]
+             :title from
+             :on-click (fn [e]
                          (let [parsed-title (parse-title title-coll)
                                shift?       (.-shiftKey e)]
                            (.. e stopPropagation) ; prevent bubbling up click handler for nested links
@@ -103,7 +103,7 @@
 
      :else
      (into [:span {:class "link"
-                   :title (parse-title title-coll)
+                   :title from
                    :on-click (fn [e]
                                (let [parsed-title (parse-title title-coll)
                                      shift?       (.-shiftKey e)]
@@ -117,45 +117,6 @@
            title-coll))
    [:span {:class "fmt"} "]]"]])
 
-
-;; (defn render-page-link
-;;   "Renders a page link given the title of the page."
-;;   [{:keys [from title]} title-coll]
-;;   [render-el
-;;    [:span {:class "fmt"} "[["]
-;;    (cond
-;;      (not (str/blank? title))
-;;      [:span {:class "link"
-;;              :on-click (fn [e]
-;;                          (let [parsed-title (parse-title title-coll)
-;;                                shift?       (.-shiftKey e)]
-;;                            (.. e stopPropagation) ; prevent bubbling up click handler for nested links
-;;                            (rf/dispatch [:reporting/navigation {:source :pr-page-link
-;;                                                                 :target :page
-;;                                                                 :pane   (if shift?
-;;                                                                           :right-pane
-;;                                                                           :main-pane)}])
-;;                            (router/navigate-page parsed-title e)))}
-;;       title]
-
-;;      :else
-;;      (into
-;;       [:span {:title from
-;;               :class "link"
-;;               :onClick (fn [e]
-;;                          (let [parsed-title (parse-title title-coll)
-;;                                shift?       (.-shiftKey e)]
-;;                            (println "test reg" title-coll)
-;;                            (println "test parsed" (parse-title title-coll))
-;;                            (.. e stopPropagation) ; prevent bubbling up click handler for nested links
-;;                            (rf/dispatch [:reporting/navigation {:source :pr-page-link
-;;                                                                 :target :page
-;;                                                                 :pane   (if shift?
-;;                                                                           :right-pane
-;;                                                                           :main-pane)}])
-;;                            (router/navigate-page parsed-title e)))}]
-;;       title-coll))
-;;    [:span {:class "fmt"} "]]"]])
 
 
 (defn- block-breadcrumb-string
