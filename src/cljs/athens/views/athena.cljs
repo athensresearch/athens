@@ -1,6 +1,6 @@
 (ns athens.views.athena
   (:require
-    ["/components/Icons/Icons" :refer [PageAddIcon XmarkIcon PageIcon BlockIcon ArrowRightIcon]]
+    ["/components/Icons/Icons" :refer [PageAddIcon XmarkIcon ArrowRightIcon]]
     ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
     [athens.common.utils :as utils]
     [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
@@ -139,11 +139,11 @@
               :isActive active?
               :onClick on-click
               :sx {"span[class*='icon']:last-child" {:ml "auto"
-                                          :mr "1rem"
-                                          :marginBlock "-0.2rem"
-                                          :alignItems "center"
-                                          :fontSize "1.5em"
-                                          :alignSelf "center"}}}
+                                                     :mr "1rem"
+                                                     :marginBlock "-0.2rem"
+                                                     :alignItems "center"
+                                                     :fontSize "1.5em"
+                                                     :alignSelf "center"}}}
    [:> VStack {:align "stretch"
                :spacing 1
                :overflow "hidden"}
