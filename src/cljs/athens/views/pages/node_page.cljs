@@ -396,7 +396,9 @@
       (let [{:block/keys [children uid] title :node/title}                      node
             {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
-            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))]
+            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
+            is-current-route?                                                   (or (and daily-note? on-daily-notes?)
+                                                                                    (= @(subscribe [:current-route/page-title]) title))]
 
         (sync-title title state)
 
@@ -407,7 +409,7 @@
                            :onConfirm confirm-fn
                            :onClose   cancel-fn}]
          ;; Header
-         [:> PageHeader {:onClickOpenInMainView (when-not (= @(subscribe [:current-route/page-title]) title)
+         [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
                                                   (fn [e] (router/navigate-page title e)))
                          :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
                                                  #(dispatch [:right-sidebar/open-item uid]))}
