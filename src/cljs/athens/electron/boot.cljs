@@ -72,8 +72,7 @@
                     :rules          [;; if first time, go to Daily Pages and open left-sidebar
                                      {:when       :seen?
                                       :events     :fs/create-and-watch
-                                      :dispatch-n [[:navigate :home]
-                                                   [:left-sidebar/toggle]]}
+                                      :dispatch-n [[:left-sidebar/toggle]]}
 
                                      ;; if nth time, remember dark/light theme
                                      {:when       :seen?
