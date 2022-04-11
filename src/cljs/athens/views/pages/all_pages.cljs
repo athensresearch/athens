@@ -104,8 +104,8 @@
            [:> Tr
             [sortable-header :title "Title"]
             [sortable-header :links-count "Links" "6rem" true]
-            [sortable-header :modified "Modified" "16rem" false {:date? true}]
-            [sortable-header :created "Created" "16rem" false {:date? true}]]]
+            [sortable-header :modified "Modified" "14rem" false {:date? true}]
+            [sortable-header :created "Created" "14rem" false {:date? true}]]]
           [:> Tbody
            (doall
              (for [{:keys    [block/uid node/title block/_refs]
@@ -131,6 +131,6 @@
                                                                                          :main-pane)}])
                                           (router/navigate-page title e)))}
                   title]]
-                [:> Td {:width "6rem" :whiteSpace "nowrap" :color "foreground.secondary" :isNumeric true} (count _refs)]
-                [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string modified)]
-                [:> Td {:width "16rem" :whiteSpace "nowrap" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))
+                [:> Td {:width "6rem" :whiteSpace "nowrap"  :color "foreground.secondary" :isNumeric true} (count _refs)]
+                [:> Td {:width "14rem" :whiteSpace "nowrap" :fontSize "sm" :color "foreground.secondary"} (dates/date-string modified)]
+                [:> Td {:width "14rem" :whiteSpace "nowrap" :fontSize "sm" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))
