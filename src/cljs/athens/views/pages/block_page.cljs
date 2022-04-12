@@ -1,14 +1,13 @@
 (ns athens.views.pages.block-page
   (:require
-    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/Layout/Layout" :refer [PageReferences ReferenceBlock ReferenceGroup]]
-    ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
+    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
+    ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink]]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.views.blocks.core :as blocks]
     [athens.views.pages.node-page :as node-page]
-    [athens.views.references :refer [reference-group reference-block]]
     [komponentit.autosize :as autosize]
     [re-frame.core :as rf :refer [dispatch subscribe]]
     [reagent.core :as r]))
@@ -56,22 +55,22 @@
       [:> PageReferences {:title "Linked References"
                           :count (count linked-refs)}
        (doall
-        (for [[group-title group] linked-refs]
-          [:> ReferenceGroup {:key (str "group-" group-title)
-                              :title group-title
-                              :onClickTitle (fn [e]
-                                              (let [shift?       (.-shiftKey e)
-                                                    parsed-title (parse-renderer/parse-title group-title)]
-                                                (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
-                                                                                     :target :page
-                                                                                     :pane   (if shift?
-                                                                                               :right-pane
-                                                                                               :main-pane)}])
-                                                (router/navigate-page parsed-title)))}
-           (doall
-            (for [block group]
-              [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
-               [node-page/ref-comp block]]))]))])))
+         (for [[group-title group] linked-refs]
+           [:> ReferenceGroup {:key (str "group-" group-title)
+                               :title group-title
+                               :onClickTitle (fn [e]
+                                               (let [shift?       (.-shiftKey e)
+                                                     parsed-title (parse-renderer/parse-title group-title)]
+                                                 (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
+                                                                                      :target :page
+                                                                                      :pane   (if shift?
+                                                                                                :right-pane
+                                                                                                :main-pane)}])
+                                                 (router/navigate-page parsed-title)))}
+            (doall
+              (for [block group]
+                [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
+                 [node-page/ref-comp block]]))]))])))
 
 
 (defn parents-el
