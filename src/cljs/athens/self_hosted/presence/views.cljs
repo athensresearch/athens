@@ -35,8 +35,9 @@
   (let [selected-db @(rf/subscribe [:db-picker/selected-db])
         url (router/create-url-with-graph-param (:id selected-db))]
     (.. js/navigator -clipboard (writeText url))
-    (rf/dispatch [:show-snack-msg {:msg "Permalink copied to clipboard"
-                                   :type :success}])))
+    (util/toast (clj->js {:status "info"
+                          :position "top-right"
+                          :title "Copied permalink to clipboard"}))))
 
 
 (defn go-to-user-block
