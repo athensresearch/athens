@@ -1638,10 +1638,10 @@
             new-uids   (graph-ops/ops->new-block-uids op)
             [_rm add]  (graph-ops/structural-diff @db/dsdb op)
             event      (common-events/build-atomic-event op)
-            focus-uid  (->> op
-                            :op/consequences
-                            (some #(when (= :block/new (:op/type %))
-                                     (-> % :op/args :block/uid))))]
+            focus-uid  (-> (graph-ops/contains-op? op :block/new)
+                           first
+                           :op/args
+                           :block/uid)]
         (log/debug "paste internal event is" (pr-str event))
         {:fx [[:async-flow {:id             :paste-internal-async-flow
                             :db-path        [:async-flow :paste-internal]
