@@ -76,48 +76,46 @@
           nav-page?      (= :page-by-title route-name)
           controllers    (rfc/apply-controllers (:controllers old-match) new-match)
           loading?       (:loading? db)]
-      (when-not loading?
-        (if nav-page?
-          (let [page-title (-> new-match :path-params :title)
-                page-block (common-db/get-block @db/dsdb [:node/title page-title])
-                html-title (str page-title " | Athens")]
-            (set! (.-title js/document) html-title)
-            {:db         (-> db
-                             (assoc :current-route (assoc new-match :controllers controllers))
-                             (dissoc :merge-prompt))
-             :timeout    {:action :clear
-                          :id     :merge-prompt}
-             :dispatch-n [[:editing/first-child (:block/uid page-block)]
-                          (when (= "router/navigate" sentry-tx-name)
-                            [:sentry/end-tx sentry-tx])]})
-          (let [uid               (-> new-match :path-params :id)
-                ;; TODO make the page title query work when zoomed in on a block
-                node-title        (common-db/get-page-title @db/dsdb uid)
-                home?             (= route-name :home)
-                html-title-prefix (cond
-                                    node-title            node-title
-                                    (= route-name :pages) "All Pages"
-                                    home?                 "Daily Notes")
-                html-title        (if html-title-prefix
-                                    (str html-title-prefix " | Athens")
-                                    "Athens")
-                today             (dates/get-day)]
-            (set! (.-title js/document) html-title)
-            {:db         (-> db
-                             (assoc :current-route (assoc new-match :controllers controllers))
-                             (dissoc :merge-prompt))
-             :timeout    {:action :clear
-                          :id     :merge-prompt}
-             :dispatch-n [(when (and (not loading?)
-                                     home?)
-                            [:daily-note/ensure-day today])
-                          (when-let [parent-uid (and (not loading?)
-                                                     (or uid
-                                                         (and home?
-                                                              (:uid today))))]
-                            [:editing/first-child parent-uid])
-                          (when (= "router/navigate" sentry-tx-name)
-                            [:sentry/end-tx sentry-tx])]}))))))
+      (if nav-page?
+        (let [page-title (-> new-match :path-params :title)
+              page-block (common-db/get-block @db/dsdb [:node/title page-title])
+              html-title (str page-title " | Athens")]
+          (set! (.-title js/document) html-title)
+          {:db         (-> db
+                           (assoc :current-route (assoc new-match :controllers controllers))
+                           (dissoc :merge-prompt))
+           :timeout    {:action :clear
+                        :id     :merge-prompt}
+           :dispatch-n [[:editing/first-child (:block/uid page-block)]
+                        (when (= "router/navigate" sentry-tx-name)
+                          [:sentry/end-tx sentry-tx])]})
+        (let [uid               (-> new-match :path-params :id)
+              ;; TODO make the page title query work when zoomed in on a block
+              node-title        (common-db/get-page-title @db/dsdb uid)
+              home?             (= route-name :home)
+              html-title-prefix (cond
+                                  node-title            node-title
+                                  (= route-name :pages) "All Pages"
+                                  home?                 "Daily Notes")
+              html-title        (if html-title-prefix
+                                  (str html-title-prefix " | Athens")
+                                  "Athens")
+              today             (dates/get-day)]
+          (set! (.-title js/document) html-title)
+          {:db         (-> db
+                           (assoc :current-route (assoc new-match :controllers controllers))
+                           (dissoc :merge-prompt))
+           :timeout    {:action :clear
+                        :id     :merge-prompt}
+           :dispatch-n [(when home?
+                          [:daily-note/ensure-day today])
+                        (when-let [parent-uid (and (not loading?)
+                                                   (or uid
+                                                       (and home?
+                                                            (:uid today))))]
+                          [:editing/first-child parent-uid])
+                        (when (= "router/navigate" sentry-tx-name)
+                          [:sentry/end-tx sentry-tx])]})))))
 
 
 ;; doesn't reliably work. notably, Daily Notes are often not remembered as last open page, leading to incorrect restore
@@ -233,3 +231,37 @@
     router
     on-navigate
     {:use-fragment true}))
+
+
+(rf/reg-event-fx
+  :init-routes!
+  (fn [_ _]
+    (init-routes!)
+    {}))
+
+
+;; Permalink param processing
+
+(def graph-param-key "graph")
+
+
+(defn consume-graph-param
+  "Removes and returns the graph-id in the current URL, if any."
+  []
+  ;; Note: don't use the reitit.frontend functions here, as the router
+  ;; it not yet initialized during boot.
+  (let [url       (js/URL. js/window.location)
+        graph-id  (.. url -searchParams (get graph-param-key))]
+    ;; Replace history with a version without the graph param.
+    (.. url -searchParams (delete graph-param-key))
+    (js/history.replaceState js/history.state nil url)
+    graph-id))
+
+
+(defn create-url-with-graph-param
+  "Create a URL containing graph-id."
+  [graph-id]
+  (let [url (js/URL. js/window.location)]
+    (.. url -searchParams (set graph-param-key graph-id))
+    (.toString url)))
+

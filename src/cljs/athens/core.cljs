@@ -35,9 +35,10 @@
 
 
 (defn ^:dev/after-load mount-root
-  []
+  [first-boot?]
   (rf/clear-subscription-cache!)
-  (router/init-routes!)
+  (when-not first-boot?
+    (router/init-routes!))
   (r-dom/render [views/main]
                 (getElement "app")))
 
@@ -97,6 +98,6 @@
   (listeners/init)
   (when config/debug?
     (datalog-console/enable! {:conn dsdb}))
-  (rf/dispatch-sync [:boot])
+  (rf/dispatch-sync [:boot true])
   (dev-setup)
-  (mount-root))
+  (mount-root true))

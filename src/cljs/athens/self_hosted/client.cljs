@@ -5,13 +5,8 @@
     [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events.schema       :as schema]
     [athens.common.logging             :as log]
-    [cognitect.transit                 :as transit]
-    [com.cognitect.transit.types       :as ty]
     [com.stuartsierra.component        :as component]
     [re-frame.core                     :as rf]))
-
-
-(extend-type ty/UUID IUUID)
 
 
 (defonce ^:private ws-connection (atom nil))
@@ -102,8 +97,14 @@
          (log/debug "event-id:" (pr-str (:event/id data))
                     ", type:" (pr-str (:event/type data))
                     "WSClient sending to server")
-         (.send connection (transit/write (transit/writer :json) data))
-         {:result :sent})
+         (let [serialized-event (common-events/serialize data)
+               errors           (common-events/validate-serialized-event serialized-event)]
+           (if errors
+             (do (log/warn "Tried sending invalid serialized event:" (pr-str errors))
+                 {:result :rejected
+                  :reason :invalid-event-schema})
+             (do (.send connection serialized-event)
+                 {:result :sent}))))
        (do
          (log/warn "event-id:" (pr-str (:event/id data))
                    ", type:" (pr-str (:event/type data))
@@ -277,29 +278,16 @@
               "WSClient Received invalid server event, explanation:" (pr-str (schema/explain-server-event packet)))))
 
 
-(def ^:private datom-reader
-  (transit/read-handler
-    (fn [[e a v tx added]]
-      {:e     e
-       :a     a
-       :v     v
-       :tx    tx
-       :added added})))
-
-
 (defn- message-handler
   [event]
-  (let [packet (->> event
-                    .-data
-                    (transit/read
-                      (transit/reader
-                        :json
-                        {:handlers
-                         {:datom datom-reader}})))]
-
-    (if (schema/valid-event-response? packet)
-      (awaited-response-handler packet)
-      (server-event-handler packet))))
+  (let [serialized-event (.-data event)
+        data             (common-events/deserialize serialized-event)
+        errors           (when-not (common-events/ignore-serialized-event-validation? data)
+                           (common-events/validate-serialized-event serialized-event))]
+    (cond
+      errors                              (log/warn "Received invalid serialized event:" (pr-str errors))
+      (schema/valid-event-response? data) (awaited-response-handler data)
+      :else                               (server-event-handler data))))
 
 
 (defn- remove-listeners!

@@ -90,16 +90,21 @@
 
 ;; Dropdown: inline-search and slash commands
 ;; TODO: some expansions require caret placement after
-(def slash-options
-  [["Add Todo"      CheckboxIcon "{{[[TODO]]}} " "cmd-enter" nil]
-   ["Current Time"  TimeNow (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
-   ["Today"         CalendarNowIcon (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
-   ["Tomorrow"      CalendarTomorrowIcon (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
-   ["Yesterday"     CalendarYesterdayIcon (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
-   ["YouTube Embed" YoutubeIcon "{{[[youtube]]: }}" nil 2]
-   ["iframe Embed"  HTMLEmbedIcon "{{iframe: }}" nil 2]
-   ["Block Embed"   BlockEmbedIcon "{{[[embed]]: (())}}" nil 4]
-   ["Template"      TemplateIcon ";;" nil nil]])
+(defn slash-options
+  []
+  (cond->
+   [["Add Todo"      CheckboxIcon "{{[[TODO]]}} " "cmd-enter" nil]
+    ["Current Time"  TimeNow (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
+    ["Today"         CalendarNowIcon (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
+    ["Tomorrow"      CalendarTomorrowIcon (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
+    ["Yesterday"     CalendarYesterdayIcon (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
+    ["YouTube Embed" YoutubeIcon "{{[[youtube]]: }}" nil 2]
+    ["iframe Embed"  HTMLEmbedIcon "{{iframe: }}" nil 2]
+    ["Block Embed"   BlockEmbedIcon "{{[[embed]]: (())}}" nil 4]
+    ["Template"      TemplateIcon ";;" nil nil]]
+    @(subscribe [:db-picker/remote-db?])
+    (conj (let [username (:username @(rf/subscribe [:presence/current-user]))]
+            [(str "Me (" username ")") Person (fn [] (str "[[" username "]] ")) nil nil]))))
 
 
 ;; [ "Block Embed" #(str "[[" (:title (dates/get-day 1)) "]]")]
@@ -111,10 +116,10 @@
 (defn filter-slash-options
   [query]
   (if (blank? query)
-    slash-options
+    (slash-options)
     (filterv (fn [[text]]
                (includes? (lower-case text) (lower-case query)))
-             slash-options)))
+             (slash-options))))
 
 
 (defn update-query
@@ -767,7 +772,7 @@
                                            :search/index 0
                                            :search/query ""
                                            :search/type :slash
-                                           :search/results slash-options)
+                                           :search/results (slash-options))
       (and (= key "#") (nil? type)) (swap! state assoc
                                            :search/index 0
                                            :search/query ""

@@ -12,6 +12,7 @@ export interface PresenceDetailsProps {
   differentPageMembers: Person[];
   handleUpdateProfile(person: Person): void;
   handleCopyHostAddress(hostAddress: HostAddress): void;
+  handleCopyPermalink?(): void;
   handlePressMember(person: Person): void;
   connectionStatus: ConnectionStatus;
   defaultOpen?: boolean;
@@ -61,12 +62,13 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
     currentPageMembers,
     differentPageMembers,
     handleCopyHostAddress,
+    handleCopyPermalink,
     handlePressMember,
     handleUpdateProfile,
     connectionStatus,
   } = props;
-  const showablePersons = [ ...currentPageMembers, ...differentPageMembers ];
-  const [ shouldShowProfileSettings, setShouldShowProfileSettings ] = React.useState(false);
+  const showablePersons = [...currentPageMembers, ...differentPageMembers];
+  const [shouldShowProfileSettings, setShouldShowProfileSettings] = React.useState(false);
 
   return connectionStatus === "local" ? (
     <></>
@@ -81,26 +83,31 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
           <MenuList>
             <>
               {hostAddress && (
-                <MenuItem
-                  onClick={() => handleCopyHostAddress(hostAddress)}
-                  display="flex"
-                  flexDirection="column"
-                  textAlign="left"
-                  justifyContent="flex-start"
-                  alignItems="stretch"
-                >
-                  <Text>Copy address</Text>
-                  <Text
-                    fontSize="sm"
-                    color="foreground.secondary"
-                    maxWidth="14em"
-                    whiteSpace="nowrap"
-                    overflow="hidden"
-                    textOverflow="ellipsis"
+                <>
+                  <MenuItem
+                    onClick={() => handleCopyHostAddress(hostAddress)}
+                    display="flex"
+                    flexDirection="column"
+                    textAlign="left"
+                    justifyContent="flex-start"
+                    alignItems="stretch"
                   >
-                    {hostAddress}
-                  </Text>
-                </MenuItem>
+                    <Text>Copy address</Text>
+                    <Text
+                      fontSize="sm"
+                      color="foreground.secondary"
+                      maxWidth="14em"
+                      whiteSpace="nowrap"
+                      overflow="hidden"
+                      textOverflow="ellipsis"
+                    >
+                      {hostAddress}
+                    </Text>
+                  </MenuItem>
+                  <MenuItem onClick={() => handleCopyPermalink()}>
+                    Copy permalink
+                  </MenuItem>
+                </>
               )}
 
               {currentUser && (
