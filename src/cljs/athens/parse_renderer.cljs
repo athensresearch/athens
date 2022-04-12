@@ -10,7 +10,8 @@
    [athens.router :as router]
    [clojure.string :as str]
    [instaparse.core :as insta]
-   [re-frame.core :as rf]))
+   [re-frame.core :as rf]
+   [reagent.core :as r]))
 
 
 (declare parse-and-render)
@@ -18,7 +19,7 @@
 
 (def fm-props
   {:as "b"
-   :class "formatting"
+   :class "fmt"
    :whiteSpace "nowrap"
    :fontWeight "normal"
    :opacity "0.3"})
@@ -40,6 +41,33 @@
    :textDecoration "none"})
 
 
+(defn page-link-el
+  []
+  (let [this (r/current-component)]
+    (into [:> Box {:as "span"
+                   :sx {".link" {:color "link"
+                                 :borderRadius "1px"
+                                 :cursor "pointer"
+                                 :minWidth "0"
+                                 :whiteSpace "inherit"
+                                 :wordBreak "inherit"
+                                 :alignItems "flex-start"
+                                 :justifyContent "flex-start"
+                                 :lineHeight "unset"
+                                 :position "relative"
+                                 :textAlign "inherit"
+                                 :display "inline"
+                                 :fontSize "inherit"
+                                 :fontWeight "inherit"
+                                 :textDecoration "none"}
+                        ".fmt" (merge {:whiteSpace "nowrap"
+                                       :display "inline"
+                                       :color "foreground.secondary"
+                                       :fontWeight "normal"
+                                       :opacity "0.3"})}}]
+          (r/children this))))
+
+
 (defn parse-title
   "Title coll is a sequence of plain strings or hiccup elements. If string, return string, otherwise parse the hiccup
   for its plain-text representation."
@@ -47,23 +75,20 @@
   (->> (map (fn [el]
               (if (string? el)
                 el
-                (str "[[" (str/join (get-in el [3 2])) "]]"))) title-coll)
+                (str "[[" (str/join (get-in el [2 2])) "]]"))) title-coll)
        (str/join "")))
 
 
 (defn render-page-link
   "Renders a page link given the title of the page."
   [{:keys [from title]} title-coll]
-  [:<>
-   [:> Text fm-props "[["]
+  [page-link-el
+   [:span {:class "fmt"} "[["]
    (cond
      (not (str/blank? title))
-     [:> Button
-      (merge link-props
-             {:class "page-link"
-              :fontWeight "normal"
-              :title from
-              :onClick (fn [e]
+     [:span {:class "link"
+             :title from
+             :on-click (fn [e]
                          (let [parsed-title (parse-title title-coll)
                                shift?       (.-shiftKey e)]
                            (.. e stopPropagation) ; prevent bubbling up click handler for nested links
@@ -72,27 +97,24 @@
                                                                 :pane   (if shift?
                                                                           :right-pane
                                                                           :main-pane)}])
-                           (router/navigate-page parsed-title e)))})
+                           (router/navigate-page parsed-title e)))}
       title]
 
      :else
-     (into
-       [:> Button
-        (merge link-props
-               {:class "page-link"
-                :title from
-                :onClick (fn [e]
-                           (let [parsed-title (parse-title title-coll)
-                                 shift?       (.-shiftKey e)]
-                             (.. e stopPropagation) ; prevent bubbling up click handler for nested links
-                             (rf/dispatch [:reporting/navigation {:source :pr-page-link
-                                                                  :target :page
-                                                                  :pane   (if shift?
-                                                                            :right-pane
-                                                                            :main-pane)}])
-                             (router/navigate-page parsed-title e)))})]
-       title-coll))
-   [:> Text fm-props "]]"]])
+     (into [:span {:class "link"
+                   :title from
+                   :on-click (fn [e]
+                               (let [parsed-title (parse-title title-coll)
+                                     shift?       (.-shiftKey e)]
+                                 (.. e stopPropagation) ; prevent bubbling up click handler for nested links
+                                 (rf/dispatch [:reporting/navigation {:source :pr-page-link
+                                                                      :target :page
+                                                                      :pane   (if shift?
+                                                                                :right-pane
+                                                                                :main-pane)}])
+                                 (router/navigate-page parsed-title e)))}]
+           title-coll))
+   [:span {:class "fmt"} "]]"]])
 
 
 (defn- block-breadcrumb-string
