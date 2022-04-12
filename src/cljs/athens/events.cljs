@@ -1628,7 +1628,7 @@
   :paste-internal
   [(interceptors/sentry-span-no-new-tx "paste-internal")]
   (fn [_ [_ uid local-str internal-representation]]
-    (when (seq? internal-representation)
+    (when (seq internal-representation)
       (let [[uid]      (db/uid-and-embed-id uid)
             op         (bfs/build-paste-op @db/dsdb
                                            uid
