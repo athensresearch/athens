@@ -1,6 +1,6 @@
 (ns athens.views.blocks.textarea-keydown
   (:require
-    ["/components/Icons/Icons" :refer [TimeNow CheckboxIcon CalendarNowIcon CalendarTomorrowIcon CalendarYesterdayIcon BlockEmbedIcon TemplateIcon HTMLEmbedIcon YoutubeIcon]]
+    ["/components/Icons/Icons" :refer [TimeNowIcon PersonIcon CheckboxIcon CalendarNowIcon CalendarTomorrowIcon CalendarYesterdayIcon BlockEmbedIcon TemplateIcon HTMLEmbedIcon YoutubeIcon]]
     [athens.common-db :as common-db]
     [athens.common.utils :as common.utils]
     [athens.dates :as dates]
@@ -94,7 +94,7 @@
   []
   (cond->
    [["Add Todo"      CheckboxIcon "{{[[TODO]]}} " "cmd-enter" nil]
-    ["Current Time"  TimeNow (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
+    ["Current Time"  TimeNowIcon (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
     ["Today"         CalendarNowIcon (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
     ["Tomorrow"      CalendarTomorrowIcon (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
     ["Yesterday"     CalendarYesterdayIcon (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
@@ -104,7 +104,7 @@
     ["Template"      TemplateIcon ";;" nil nil]]
     @(subscribe [:db-picker/remote-db?])
     (conj (let [username (:username @(rf/subscribe [:presence/current-user]))]
-            [(str "Me (" username ")") Person (fn [] (str "[[" username "]] ")) nil nil]))))
+            [(str "Me (" username ")") PersonIcon (fn [] (str "[[" username "]] ")) nil nil]))))
 
 
 ;; [ "Block Embed" #(str "[[" (:title (dates/get-day 1)) "]]")]
