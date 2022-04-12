@@ -3,6 +3,7 @@
     ["@material-ui/icons/DesktopWindows" :default DesktopWindows]
     ["@material-ui/icons/Done" :default Done]
     ["@material-ui/icons/FlipToFront" :default FlipToFront]
+    ["@material-ui/icons/Person" :default Person]
     ["@material-ui/icons/Timer" :default Timer]
     ["@material-ui/icons/Today" :default Today]
     ["@material-ui/icons/ViewDayRounded" :default ViewDayRounded]
@@ -97,16 +98,21 @@
 ;; Dropdown: inline-search and slash commands
 
 ;; TODO: some expansions require caret placement after
-(def slash-options
-  [["Add Todo"      Done "{{[[TODO]]}} " "cmd-enter" nil]
-   ["Current Time"  Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
-   ["Today"         Today (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
-   ["Tomorrow"      Today (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
-   ["Yesterday"     Today (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
-   ["YouTube Embed" YouTube "{{[[youtube]]: }}" nil 2]
-   ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
-   ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]
-   ["Template"      FlipToFront ";;" nil nil]])
+(defn slash-options
+  []
+  (cond->
+    [["Add Todo"      Done "{{[[TODO]]}} " "cmd-enter" nil]
+     ["Current Time"  Timer (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
+     ["Today"         Today (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
+     ["Tomorrow"      Today (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
+     ["Yesterday"     Today (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
+     ["YouTube Embed" YouTube "{{[[youtube]]: }}" nil 2]
+     ["iframe Embed"  DesktopWindows "{{iframe: }}" nil 2]
+     ["Block Embed"   ViewDayRounded "{{[[embed]]: (())}}" nil 4]
+     ["Template"      FlipToFront ";;" nil nil]]
+    @(subscribe [:db-picker/remote-db?])
+    (conj (let [username (:username @(rf/subscribe [:presence/current-user]))]
+            [(str "Me (" username ")") Person (fn [] (str "[[" username "]]")) nil nil]))))
 
 
 ;; [ "Block Embed" #(str "[[" (:title (dates/get-day 1)) "]]")]
@@ -118,10 +124,10 @@
 (defn filter-slash-options
   [query]
   (if (blank? query)
-    slash-options
+    (slash-options)
     (filterv (fn [[text]]
                (includes? (lower-case text) (lower-case query)))
-             slash-options)))
+             (slash-options))))
 
 
 (defn update-query
@@ -770,7 +776,7 @@
                                            :search/index 0
                                            :search/query ""
                                            :search/type :slash
-                                           :search/results slash-options)
+                                           :search/results (slash-options))
       (and (= key "#") (nil? type)) (swap! state assoc
                                            :search/index 0
                                            :search/query ""

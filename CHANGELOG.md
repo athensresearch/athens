@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.28](https://github.com/athensresearch/athens/compare/v2.0.0-beta.27...v2.0.0-beta.28) (2022-04-12)
+
+
+### Features
+
+* add a slash command to insert own name link ([ad53214](https://github.com/athensresearch/athens/commit/ad532140ef62e25c8cf3a4eff6da93c8060cef0b))
+* Page link creation reporting also from page titles. ([bc3a614](https://github.com/athensresearch/athens/commit/bc3a6142d3f4a7976555139dafd6e1546d4fba4e))
+* support copying permalink ([7abf100](https://github.com/athensresearch/athens/commit/7abf100b35b37ffc22819848b06bdd509993fba2))
+* support loading a url on first boot on web client ([f94cfab](https://github.com/athensresearch/athens/commit/f94cfab0524217a932c9e467717b6b533849e39e))
+
+
+### Bug Fixes
+
+* /me shouldn't add a space at the end ([4ab8adb](https://github.com/athensresearch/athens/commit/4ab8adb388e62e2cda5365c2a7a68053091b87d6))
+* don't remove block if there's nothing to paste ([e2fd834](https://github.com/athensresearch/athens/commit/e2fd834794780854a76dbbd2d3530d893b387a63))
+* don't show permalink button on electron ([52a969f](https://github.com/athensresearch/athens/commit/52a969ff9006b90aff17569705a4408ac205806c))
+* ensure router starts after boot ([cfaff36](https://github.com/athensresearch/athens/commit/cfaff3668bde92c10165744a3111218b814c9302))
+* focus on first block after paste ([6691e0a](https://github.com/athensresearch/athens/commit/6691e0ab2dd35ff088910bfefcc289570565ca79))
+* only navigate at the end of the boot sequence ([4de8cf2](https://github.com/athensresearch/athens/commit/4de8cf25d4f447294793097b6098f87f7ce99b6c))
+* seq is the right fn to check if not empty ([faf493f](https://github.com/athensresearch/athens/commit/faf493fd8ddf9cb5640a6010aab999e6c9e2c3a6))
+
+
+### Refactors
+
+* use contains-op? to filter op list ([b180ecf](https://github.com/athensresearch/athens/commit/b180ecf61fb390406600c2dd1acb0308f3b8d2e1))
+
 ## [2.0.0-beta.27](https://github.com/athensresearch/athens/compare/v2.0.0-beta.25...v2.0.0-beta.27) (2022-04-07)
 
 
