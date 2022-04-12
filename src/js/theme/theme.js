@@ -459,6 +459,9 @@ const components = {
         },
         icon: {
           marginInlineEnd: "0.25rem",
+        },
+        groupTitle: {
+          margin: '0.35rem 0.5rem',
         }
       }
     }
