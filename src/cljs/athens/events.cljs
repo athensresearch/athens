@@ -1636,9 +1636,24 @@
           new-titles (graph-ops/ops->new-page-titles op)
           new-uids   (graph-ops/ops->new-block-uids op)
           [_rm add]  (graph-ops/structural-diff @db/dsdb op)
-          event      (common-events/build-atomic-event op)]
+          event      (common-events/build-atomic-event op)
+          focus-uid  (->> op
+                          :op/consequences
+                          (some #(when (= :block/new (:op/type %))
+                                   (-> % :op/args :block/uid))))]
       (log/debug "paste internal event is" (pr-str event))
-      {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
+      {:fx [[:async-flow {:id             :paste-internal-async-flow
+                          :db-path        [:async-flow :paste-internal]
+                          :first-dispatch [:resolve-transact-forward event]
+                          :rules          [{:when   :seen?
+                                            :events :fail-resolve-forward-transact
+                                            :halt?  true}
+                                           {:when       :seen?
+                                            :events     :success-resolve-forward-transact
+                                            :dispatch-n [(when focus-uid
+                                                           [:editing/uid focus-uid])]
+                                            :halt?      true}]}]
+            [:dispatch-n (cond-> []
 
                            (seq new-titles)
                            (conj [:reporting/page.create {:source :paste-internal
