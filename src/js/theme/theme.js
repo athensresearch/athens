@@ -461,7 +461,7 @@ const components = {
           marginInlineEnd: "0.25rem",
         },
         groupTitle: {
-          padding: '0.35rem 0.5rem',
+          margin: '0.35rem 0.5rem',
         }
       }
     }
