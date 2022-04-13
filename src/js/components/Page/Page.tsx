@@ -57,7 +57,8 @@ export const HeaderImage = ({ src }) => <Box
 
 export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenInMainView }) => <Box
   as="header"
-  pr="calc(var(--page-padding-h) / 2)"
+  // pr="calc(var(--page-padding-h) / 2)"
+  pr="var(--page-padding-h)"
   pt="var(--page-padding-v)"
   pb={4}
   gridArea="header"
@@ -105,6 +106,7 @@ export const PageBody = ({ children }) => <Box
   pt={4}
   // inset the left margin to account for block toggles
   px="calc(var(--page-padding-h) - 1em)"
+  pr="var(--page-padding-h)"
   gridArea="content"
 >{children}</Box>
 
@@ -112,7 +114,7 @@ export const PageFooter = ({ children }) => <Box
   as="footer"
   pt={4}
   gridArea="footer"
-  p={4}
+  px="var(--page-padding-h)"
 >{children}</Box>
 
 export const DailyNotesPage = ({ isReal, children }) => <Box

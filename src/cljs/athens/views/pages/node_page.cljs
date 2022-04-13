@@ -453,11 +453,12 @@
 
          ;; References
          [:> PageFooter
-          [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
-           [linked-ref-el state title]]
-          (when-not on-daily-notes?
-            [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
-             [unlinked-ref-el state unlinked-refs title]])]]))))
+          [:> VStack {:spacing 2 :py 4 :align "stretch"}
+           [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
+            [linked-ref-el state title]]
+           (when-not on-daily-notes?
+             [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
+              [unlinked-ref-el state unlinked-refs title]])]]]))))
 
 
 (defn page

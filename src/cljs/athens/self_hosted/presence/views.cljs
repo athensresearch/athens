@@ -1,13 +1,14 @@
 (ns athens.self-hosted.presence.views
   (:require
     ["/components/PresenceDetails/PresenceDetails" :refer [PresenceDetails]]
-    ["@chakra-ui/react" :refer [Avatar AvatarGroup]]
+    ["@chakra-ui/react" :refer [Avatar AvatarGroup Tooltip]]
     [athens.electron.utils :as electron.utils]
     [athens.router :as router]
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
     [athens.self-hosted.presence.subs]
     [athens.util :as util]
+    [clojure.string :as str]
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
@@ -102,17 +103,20 @@
   (let [users (rf/subscribe [:presence/has-presence (util/embed-uid->original-uid uid)])]
     (when (seq @users)
       (into
-        [:> AvatarGroup {:max 3
-                         :zIndex 2
-                         :size "xs"
-                         :position "absolute"
-                         :right "-1.5rem"
-                         :top "0.25rem"}
-         (->> @users
-              (map user->person)
-              (remove nil?)
-              (map (fn [{:keys [personId] :as person}]
-                     [:> Avatar {:key personId
-                                 :bg (:color person)
-                                 :name (:username person)}])))]))))
+      [:> Tooltip {:label (->> @users (map user->person)
+                               (remove nil?)
+                               (map (fn [person] (:username person)))
+                               (str/join ", "))}
+       [:> AvatarGroup {:max 1
+                        :zIndex 2
+                        :size "xs"
+                        :cursor "default"
+                        :gridArea "presence"}
+        (->> @users
+             (map user->person)
+             (remove nil?)
+             (map (fn [{:keys [personId] :as person}]
+                    [:> Avatar {:key personId
+                                :bg (:color person)
+                                :name (:username person)}])))]]))))
 
