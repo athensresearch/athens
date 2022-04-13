@@ -57,17 +57,16 @@ export const HeaderImage = ({ src }) => <Box
 
 export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenInMainView }) => <Box
   as="header"
-  // pr="calc(var(--page-padding-h) / 2)"
-  pr="var(--page-padding-h)"
+  px="var(--page-padding-h)"
   pt="var(--page-padding-v)"
   pb={4}
   gridArea="header"
   display="grid"
-  gridTemplateColumns="max(var(--page-padding-h), 3rem) 1fr auto"
+  gridTemplateColumns="1fr auto"
   gridTemplateRows="auto auto"
   alignItems="center"
-  gridTemplateAreas="'empty breadcrumb breadcrumb' 
-  'menu title extras'"
+  gridTemplateAreas="'breadcrumb breadcrumb' 
+  'title extras'"
   className="page-header"
   borderBottom="1px solid transparent"
 
@@ -143,23 +142,23 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
     'page-title',
     isEditing && 'is-editing',
   ].filter(Boolean).join(' ')}
-  gridArea="title"
   maxWidth="max-content"
-  display="grid"
   background="var(--block-surface-color)"
+  display="grid"
+  gridTemplateAreas="'main'"
   color="foreground.primary"
-  gridTemplateAreas="'main extras'"
   alignItems="stretch"
   justifyContent="stretch"
+  lineHeight="1.3"
   position="relative"
   overflow="visible"
   zIndex={2}
-  flexGrow={1}
+  flexGrow={0}
   wordBreak="break-word"
   sx={{
-    "textarea": {
+    "textarea, .textarea": {
       display: "block",
-      lineHeight: 0,
+      lineHeight: "inherit",
       appearance: "none",
       cursor: "text",
       resize: "none",
@@ -178,10 +177,12 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
       borderRadius: "0.25rem",
       border: "0",
       opacity: "0",
-      fontFamily: "inherit"
+      fontFamily: "inherit",
     },
-    "&:hover: textarea:not:(.is-editing)": { lineHeight: "2" },
-    "textarea.is-editing + *": {
+    "textarea:focus, .textarea:focus": {
+      opacity: 1,
+    },
+    "textarea:focus + *, .textarea:focus + *": {
       opacity: "0",
     },
     ".is-editing": {
