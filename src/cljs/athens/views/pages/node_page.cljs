@@ -235,7 +235,7 @@
         [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])
                       :icon (r/as-element [:> GraphIcon])}
          "Show Local Graph"]
-        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])
+        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid])
                       :isDisabled (contains? @(subscribe [:right-sidebar/items]) uid)
                       :icon (r/as-element [:> ArrowRightOnBoxIcon])}
          "Open in Sidebar"]]
