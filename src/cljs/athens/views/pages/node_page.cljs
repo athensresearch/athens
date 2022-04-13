@@ -5,7 +5,7 @@
     ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon]]
     ["/components/Layout/Layout" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
-    ["@chakra-ui/react" :refer [Box Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+    ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
     [athens.common.utils :as utils]
@@ -415,9 +415,6 @@
                          :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
                                                  #(dispatch [:right-sidebar/open-item uid]))}
 
-          ;; Dropdown
-          [menu-dropdown node daily-note?]
-
           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
@@ -434,11 +431,16 @@
                               (handle-blur node state))
                :on-key-down (fn [e] (handle-key-down e uid state children))
                :on-change   (fn [e] (handle-change e state))}])
-           ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
-           (if (str/blank? (:title/local @state))
-             [:wbr]
-             [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
-              [parse-renderer/parse-and-render (:title/local @state) uid]])]]
+
+           [:> HStack {:width "fit-content" :gridArea "main"}
+            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
+            (if (str/blank? (:title/local @state))
+              [:wbr]
+              [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
+               [parse-renderer/parse-and-render (:title/local @state) uid]])
+
+            ;; Dropdown
+            [menu-dropdown node daily-note?]]]]
 
          [:> PageBody
 
@@ -453,11 +455,12 @@
 
          ;; References
          [:> PageFooter
-          [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
-           [linked-ref-el state title]]
-          (when-not on-daily-notes?
-            [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
-             [unlinked-ref-el state unlinked-refs title]])]]))))
+          [:> VStack {:spacing 2 :py 4 :align "stretch"}
+           [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
+            [linked-ref-el state title]]
+           (when-not on-daily-notes?
+             [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
+              [unlinked-ref-el state unlinked-refs title]])]]]))))
 
 
 (defn page

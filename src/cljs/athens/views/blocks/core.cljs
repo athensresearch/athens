@@ -72,12 +72,19 @@
                      parents
                      (conj parents block))]
                [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
-                [:> BreadcrumbLink {:onClick #(let [new-B (db/get-block [:block/uid uid])
-                                                    new-P (concat
-                                                            (take-while (fn [b] (not= (:block/uid b) uid)) parents)
-                                                            [breadcrumb-block])]
-                                                (.. % stopPropagation)
-                                                (swap! state assoc :block new-B :parents new-P :focus? false))}
+                [:> BreadcrumbLink {:onClick (fn [e]
+                                               (let [shift? (.-shiftKey e)]
+                                                 (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                      :target :block
+                                                                                      :pane   (if shift?
+                                                                                                :right-pane
+                                                                                                :main-pane)}])
+                                                 (let [new-B (db/get-block [:block/uid uid])
+                                                       new-P (concat
+                                                               (take-while (fn [b] (not= (:block/uid b) uid)) parents)
+                                                               [breadcrumb-block])]
+                                                   (.. e stopPropagation)
+                                                   (swap! state assoc :block new-B :parents new-P :focus? false))))}
                  [parse-renderer/parse-and-render (or title string) uid]]]))]]
 
          (when (:open? @state)
@@ -110,8 +117,9 @@
                   :spacing 3
                   :key "Inline Linked References"
                   :zIndex 2
-                  :ml 4
-                  :px 4
+                  :ml 8
+                  :pl 4
+                  :p2 2
                   :borderRadius "md"
                   :background "background.basement"}
        (doall

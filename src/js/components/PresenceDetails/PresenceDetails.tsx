@@ -84,39 +84,25 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
             <>
               {hostAddress && (
                 <>
-                  <MenuItem
-                    onClick={() => handleCopyHostAddress(hostAddress)}
-                    display="flex"
-                    flexDirection="column"
-                    textAlign="left"
-                    justifyContent="flex-start"
-                    alignItems="stretch"
-                  >
-                    <Text>Copy address</Text>
-                    <Text
-                      fontSize="sm"
-                      color="foreground.secondary"
-                      maxWidth="14em"
-                      whiteSpace="nowrap"
-                      overflow="hidden"
-                      textOverflow="ellipsis"
-                    >
-                      {hostAddress}
-                    </Text>
+                  <MenuItem onClick={() => handleCopyHostAddress(hostAddress)}>
+                    Copy link to database
                   </MenuItem>
-                  <MenuItem onClick={() => handleCopyPermalink()}>
-                    Copy permalink
-                  </MenuItem>
+                  {handleCopyPermalink && <MenuItem onClick={() => handleCopyPermalink()}>
+                    Copy link to page
+                  </MenuItem>}
                 </>
               )}
 
               {currentUser && (
-                <MenuItem onClick={() => setShouldShowProfileSettings(true)} icon={<Avatar
-                  size="xs"
-                  marginBlock={-1}
-                  name={currentUser.username}
-                  bg={currentUser.color}
-                />}>Edit appearance</MenuItem>
+                <>
+                  <MenuDivider />
+                  <MenuItem onClick={() => setShouldShowProfileSettings(true)} icon={<Avatar
+                    size="xs"
+                    marginBlock={-1}
+                    name={currentUser.username}
+                    bg={currentUser.color}
+                  />}>Edit appearance</MenuItem>
+                </>
               )}
 
               {currentPageMembers.length > 0 && (

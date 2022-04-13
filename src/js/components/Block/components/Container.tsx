@@ -50,7 +50,6 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         background: "link",
       },
       "&.is-selected:after": { opacity: 0.2 },
-      "&.is-presence .block-content": { paddingRight: "1rem" },
       ".user-avatar": {
         position: "absolute",
         left: "4px",
@@ -60,7 +59,8 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         display: "grid",
         gridTemplateColumns: "1em 1em 1fr auto",
         gridTemplateRows: "0 1fr 0",
-        gridTemplateAreas: "'above above above above' 'toggle bullet content refs' 'below below below below'",
+        gridTemplateAreas:
+          "'above above above above above' 'toggle bullet content refs presence' 'below below below below below'",
         borderRadius: "0.5rem",
         minHeight: '2em',
         position: "relative",

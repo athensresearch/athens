@@ -93,15 +93,15 @@
 (defn slash-options
   []
   (cond->
-   [["Add Todo"      CheckboxIcon "{{[[TODO]]}} " "cmd-enter" nil]
-    ["Current Time"  TimeNowIcon (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
-    ["Today"         CalendarNowIcon (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
-    ["Tomorrow"      CalendarTomorrowIcon (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
-    ["Yesterday"     CalendarYesterdayIcon (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
-    ["YouTube Embed" YoutubeIcon "{{[[youtube]]: }}" nil 2]
-    ["iframe Embed"  HTMLEmbedIcon "{{iframe: }}" nil 2]
-    ["Block Embed"   BlockEmbedIcon "{{[[embed]]: (())}}" nil 4]
-    ["Template"      TemplateIcon ";;" nil nil]]
+    [["Add Todo"      CheckboxIcon "{{[[TODO]]}} " "cmd-enter" nil]
+     ["Current Time"  TimeNowIcon (fn [] (.. (js/Date.) (toLocaleTimeString [] (clj->js {"timeStyle" "short"})))) nil nil]
+     ["Today"         CalendarNowIcon (fn [] (str "[[" (:title (dates/get-day 0)) "]] ")) nil nil]
+     ["Tomorrow"      CalendarTomorrowIcon (fn [] (str "[[" (:title (dates/get-day -1)) "]]")) nil nil]
+     ["Yesterday"     CalendarYesterdayIcon (fn [] (str "[[" (:title (dates/get-day 1)) "]]")) nil nil]
+     ["YouTube Embed" YoutubeIcon "{{[[youtube]]: }}" nil 2]
+     ["iframe Embed"  HTMLEmbedIcon "{{iframe: }}" nil 2]
+     ["Block Embed"   BlockEmbedIcon "{{[[embed]]: (())}}" nil 4]
+     ["Template"      TemplateIcon ";;" nil nil]]
     @(subscribe [:db-picker/remote-db?])
     (conj (let [username (:username @(rf/subscribe [:presence/current-user]))]
             [(str "Me (" username ")") PersonIcon (fn [] (str "[[" username "]] ")) nil nil]))))

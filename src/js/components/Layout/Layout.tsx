@@ -219,7 +219,6 @@ export const PageReferences = withErrorBoundary(({ children, count, title, defau
       align="stretch"
       position="relative"
       spacing={0}
-      p={2}
     >
       <HStack>
         <Button onClick={onToggle}

@@ -1,4 +1,4 @@
-import { Box, IconButton, ButtonGroup, Tooltip } from '@chakra-ui/react';
+import { Button, Divider, Center, Box, Heading, IconButton, ButtonGroup, Tooltip } from '@chakra-ui/react';
 import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
 
 const PAGE_PROPS = {
@@ -12,7 +12,7 @@ const PAGE_PROPS = {
   marginInline: "auto",
   sx: {
     "--page-padding-v": "6rem",
-    "--page-padding-h": "4rem"
+    "--page-padding-h": "2rem"
   }
 }
 
@@ -26,6 +26,17 @@ const TITLE_PROPS = {
   whiteSpace: "pre-line",
   wordBreak: "break-word",
   fontWeight: "bold",
+}
+
+export const PageNotFound = ({ title, onClickHome, children }) => {
+  return <Center height="100vh" gap="1rem" flexDirection="column">
+    <Heading>404: {title ? `${title} not found`
+      : `Page not found`}</Heading>
+    {onClickHome
+      ? <Button onClick={onClickHome}>Return home</Button>
+      : <Button as="a" href="/">Return home</Button>}
+    {children && (<><Divider /> children</>)}
+  </Center>
 }
 
 export const PageContainer = ({ children, uid, type }) => <Box
@@ -57,16 +68,16 @@ export const HeaderImage = ({ src }) => <Box
 
 export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenInMainView }) => <Box
   as="header"
-  pr="calc(var(--page-padding-h) / 2)"
+  px="var(--page-padding-h)"
   pt="var(--page-padding-v)"
   pb={4}
   gridArea="header"
   display="grid"
-  gridTemplateColumns="max(var(--page-padding-h), 3rem) 1fr auto"
+  gridTemplateColumns="1fr auto"
   gridTemplateRows="auto auto"
   alignItems="center"
-  gridTemplateAreas="'empty breadcrumb breadcrumb' 
-  'menu title extras'"
+  gridTemplateAreas="'breadcrumb breadcrumb' 
+  'title extras'"
   className="page-header"
   borderBottom="1px solid transparent"
 
@@ -105,6 +116,7 @@ export const PageBody = ({ children }) => <Box
   pt={4}
   // inset the left margin to account for block toggles
   px="calc(var(--page-padding-h) - 1em)"
+  pr="var(--page-padding-h)"
   gridArea="content"
 >{children}</Box>
 
@@ -112,7 +124,7 @@ export const PageFooter = ({ children }) => <Box
   as="footer"
   pt={4}
   gridArea="footer"
-  p={4}
+  px="var(--page-padding-h)"
 >{children}</Box>
 
 export const DailyNotesPage = ({ isReal, children }) => <Box
@@ -129,7 +141,7 @@ export const DailyNotesPage = ({ isReal, children }) => <Box
   minHeight="calc(100vh - 10rem)"
   sx={{
     "--page-padding-v": "1rem",
-    "--page-padding-h": "4rem"
+    "--page-padding-h": "2.5rem"
   }}
 >{children}</Box>
 
@@ -141,23 +153,23 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
     'page-title',
     isEditing && 'is-editing',
   ].filter(Boolean).join(' ')}
-  gridArea="title"
-  maxWidth="max-content"
-  display="grid"
   background="var(--block-surface-color)"
+  display="grid"
+  gridTemplateAreas="'main'"
   color="foreground.primary"
-  gridTemplateAreas="'main extras'"
   alignItems="stretch"
   justifyContent="stretch"
+  lineHeight="1.3"
   position="relative"
   overflow="visible"
   zIndex={2}
   flexGrow={1}
   wordBreak="break-word"
   sx={{
-    "textarea": {
+    "textarea, .textarea": {
       display: "block",
-      lineHeight: 0,
+      lineHeight: "inherit",
+      fontWeight: "normal",
       appearance: "none",
       cursor: "text",
       resize: "none",
@@ -172,14 +184,15 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
       margin: "0",
       caretColor: "var(--chakra-colors-link)",
       fontSize: "inherit",
-      fontWeight: "inherit",
       borderRadius: "0.25rem",
       border: "0",
       opacity: "0",
-      fontFamily: "inherit"
+      fontFamily: "inherit",
     },
-    "&:hover: textarea:not:(.is-editing)": { lineHeight: "2" },
-    "textarea.is-editing + *": {
+    "textarea:focus, .textarea:focus": {
+      opacity: 1,
+    },
+    "textarea:focus + *, .textarea:focus + *": {
       opacity: "0",
     },
     ".is-editing": {
@@ -198,15 +211,11 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
     "span": {
       gridArea: "main",
       pointerEvents: "none",
-      "a, button": {
+      "a, button, .link": {
         position: "relative",
         zIndex: 2,
         pointerEvents: "all",
       },
-      "& > span": {
-        position: "relative",
-        zIndex: 2,
-      }
     },
     "abbr": {
       gridArea: "main",
