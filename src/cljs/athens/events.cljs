@@ -1611,27 +1611,43 @@
   :paste-internal
   [(interceptors/sentry-span-no-new-tx "paste-internal")]
   (fn [_ [_ uid local-str internal-representation]]
-    (let [[uid]      (db/uid-and-embed-id uid)
-          op         (bfs/build-paste-op @db/dsdb
-                                         uid
-                                         local-str
-                                         internal-representation)
-          new-titles (graph-ops/ops->new-page-titles op)
-          new-uids   (graph-ops/ops->new-block-uids op)
-          [_rm add]  (graph-ops/structural-diff @db/dsdb op)
-          event      (common-events/build-atomic-event op)]
-      (log/debug "paste internal event is" (pr-str event))
-      {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
+    (when (seq internal-representation)
+      (let [[uid]      (db/uid-and-embed-id uid)
+            op         (bfs/build-paste-op @db/dsdb
+                                           uid
+                                           local-str
+                                           internal-representation)
+            new-titles (graph-ops/ops->new-page-titles op)
+            new-uids   (graph-ops/ops->new-block-uids op)
+            [_rm add]  (graph-ops/structural-diff @db/dsdb op)
+            event      (common-events/build-atomic-event op)
+            focus-uid  (-> (graph-ops/contains-op? op :block/new)
+                           first
+                           :op/args
+                           :block/uid)]
+        (log/debug "paste internal event is" (pr-str event))
+        {:fx [[:async-flow {:id             :paste-internal-async-flow
+                            :db-path        [:async-flow :paste-internal]
+                            :first-dispatch [:resolve-transact-forward event]
+                            :rules          [{:when   :seen?
+                                              :events :fail-resolve-forward-transact
+                                              :halt?  true}
+                                             {:when       :seen?
+                                              :events     :success-resolve-forward-transact
+                                              :dispatch-n [(when focus-uid
+                                                             [:editing/uid focus-uid])]
+                                              :halt?      true}]}]
+              [:dispatch-n (cond-> []
 
-                           (seq new-titles)
-                           (conj [:reporting/page.create {:source :paste-internal
-                                                          :count  (count new-titles)}])
+                             (seq new-titles)
+                             (conj [:reporting/page.create {:source :paste-internal
+                                                            :count  (count new-titles)}])
 
-                           (seq new-uids)
-                           (conj [:reporting/block.create {:source :paste-internal
-                                                           :count  (count new-uids)}])
-                           (seq add)
-                           (concat (monitoring/build-reporting-link-creation add :paste-internal)))]]})))
+                             (seq new-uids)
+                             (conj [:reporting/block.create {:source :paste-internal
+                                                             :count  (count new-uids)}])
+                             (seq add)
+                             (concat (monitoring/build-reporting-link-creation add :paste-internal)))]]}))))
 
 
 (reg-event-fx

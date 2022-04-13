@@ -104,7 +104,7 @@
      ["Template"      TemplateIcon ";;" nil nil]]
     @(subscribe [:db-picker/remote-db?])
     (conj (let [username (:username @(rf/subscribe [:presence/current-user]))]
-            [(str "Me (" username ")") PersonIcon (fn [] (str "[[" username "]] ")) nil nil]))))
+            [(str "Me (" username ")") PersonIcon (fn [] (str "[[" username "]]")) nil nil]))))
 
 
 ;; [ "Block Embed" #(str "[[" (:title (dates/get-day 1)) "]]")]
