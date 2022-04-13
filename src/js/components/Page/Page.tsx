@@ -12,7 +12,7 @@ const PAGE_PROPS = {
   marginInline: "auto",
   sx: {
     "--page-padding-v": "6rem",
-    "--page-padding-h": "4rem"
+    "--page-padding-h": "2rem"
   }
 }
 
@@ -142,7 +142,6 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
     'page-title',
     isEditing && 'is-editing',
   ].filter(Boolean).join(' ')}
-  maxWidth="max-content"
   background="var(--block-surface-color)"
   display="grid"
   gridTemplateAreas="'main'"
@@ -153,12 +152,13 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
   position="relative"
   overflow="visible"
   zIndex={2}
-  flexGrow={0}
+  flexGrow={1}
   wordBreak="break-word"
   sx={{
     "textarea, .textarea": {
       display: "block",
       lineHeight: "inherit",
+      fontWeight: "normal",
       appearance: "none",
       cursor: "text",
       resize: "none",
@@ -173,7 +173,6 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
       margin: "0",
       caretColor: "var(--chakra-colors-link)",
       fontSize: "inherit",
-      fontWeight: "inherit",
       borderRadius: "0.25rem",
       border: "0",
       opacity: "0",
@@ -201,15 +200,11 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
     "span": {
       gridArea: "main",
       pointerEvents: "none",
-      "a, button": {
+      "a, button, .link": {
         position: "relative",
         zIndex: 2,
         pointerEvents: "all",
       },
-      "& > span": {
-        position: "relative",
-        zIndex: 2,
-      }
     },
     "abbr": {
       gridArea: "main",
