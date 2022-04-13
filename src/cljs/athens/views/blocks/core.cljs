@@ -117,8 +117,9 @@
                   :spacing 3
                   :key "Inline Linked References"
                   :zIndex 2
-                  :ml 4
-                  :px 4
+                  :ml 8
+                  :pl 4
+                  :p2 2
                   :borderRadius "md"
                   :background "background.basement"}
        (doall
