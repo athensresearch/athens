@@ -8,7 +8,12 @@
     [athens.views.pages.graph :as graph]
     [athens.views.pages.page :as page]
     [athens.views.pages.settings :as settings]
+    [goog.functions :refer [throttle]]
     [re-frame.core :as rf]))
+
+
+(def throttled-scroll
+  (throttle #(rf/dispatch [:daily-note/scroll]) 200))
 
 
 ;; View
@@ -56,7 +61,7 @@
                   "::WebkitScrollbar-thumb" {:bg "background.upper"
                                              :borderRadius "full"}}
              :on-scroll (when (= @route-name :home)
-                          #(rf/dispatch [:daily-note/scroll]))}
+                          throttled-scroll)}
      (case @route-name
        :settings      [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/settings"}
                        [settings/page]]
