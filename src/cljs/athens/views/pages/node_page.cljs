@@ -433,7 +433,7 @@
                :on-change   (fn [e] (handle-change e state))}])
 
            [:> HStack {:width "fit-content" :gridArea "main"}
-           ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
+            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
             (if (str/blank? (:title/local @state))
               [:wbr]
               [perf-mon/hoc-perfmon {:span-name "parse-and-render"}

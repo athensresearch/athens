@@ -103,20 +103,20 @@
   (let [users (rf/subscribe [:presence/has-presence (util/embed-uid->original-uid uid)])]
     (when (seq @users)
       (into
-      [:> Tooltip {:label (->> @users (map user->person)
-                               (remove nil?)
-                               (map (fn [person] (:username person)))
-                               (str/join ", "))}
-       [:> AvatarGroup {:max 1
-                        :zIndex 2
-                        :size "xs"
-                        :cursor "default"
-                        :gridArea "presence"}
-        (->> @users
-             (map user->person)
-             (remove nil?)
-             (map (fn [{:keys [personId] :as person}]
-                    [:> Avatar {:key personId
-                                :bg (:color person)
-                                :name (:username person)}])))]]))))
+        [:> Tooltip {:label (->> @users (map user->person)
+                                 (remove nil?)
+                                 (map (fn [person] (:username person)))
+                                 (str/join ", "))}
+         [:> AvatarGroup {:max 1
+                          :zIndex 2
+                          :size "xs"
+                          :cursor "default"
+                          :gridArea "presence"}
+          (->> @users
+               (map user->person)
+               (remove nil?)
+               (map (fn [{:keys [personId] :as person}]
+                      [:> Avatar {:key personId
+                                  :bg (:color person)
+                                  :name (:username person)}])))]]))))
 
