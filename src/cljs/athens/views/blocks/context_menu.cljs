@@ -1,6 +1,7 @@
 (ns athens.views.blocks.context-menu
   (:require
     ["/components/Button/Button" :refer [Button]]
+    [athens.bot :as bot]
     [athens.db :as db]
     [athens.listeners :as listeners]
     [athens.subs.selection :as select-subs]
@@ -9,7 +10,8 @@
     [goog.events :as events]
     [re-frame.core :as rf]
     [reagent.core :as r]
-    [stylefy.core :as stylefy]))
+    [stylefy.core :as stylefy]
+    [athens.common-db :as common-db]))
 
 
 (defn copy-refs-mouse-down
@@ -58,6 +60,12 @@
   (.. e preventDefault)
   (swap! state assoc :context-menu/show false))
 
+(defn handle-move-notifications
+  [e uid state page-name]
+  (rf/dispatch [:notification/move-to-read page-name uid])
+  (.. e preventDefault)
+  (swap! state assoc :context-menu/show false))
+
 (defn context-menu-el
   "Only option in context menu right now is copy block ref(s)."
   [_block state]
@@ -65,7 +73,9 @@
         handle-click-outside (fn [e]
                                (when (and (:context-menu/show @state)
                                           (not (.. @ref (contains (.. e -target)))))
-                                 (swap! state assoc :context-menu/show false)))]
+                                 (swap! state assoc :context-menu/show false)))
+        current              @(rf/subscribe [:current-route/name])
+        current-page         @(rf/subscribe [:current-route/page-title])]
     (r/create-class
       {:display-name           "context-menu"
        :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
@@ -89,4 +99,7 @@
                                         "Copy unformatted"]
                                        (when (empty? selected-items)
                                          [:> Button {:on-mouse-down (fn [e] (handle-click-comment e uid state))}
-                                          "Comment"])]])))})))
+                                          "Comment"])
+                                       (when (some #{current-page} bot/athens-users )
+                                         [:> Button {:on-mouse-down (fn [e] (handle-move-notifications e uid state current-page))}
+                                          "Move notifications to read"])]])))})))

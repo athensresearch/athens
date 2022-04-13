@@ -512,10 +512,6 @@
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
 
-
-          (when @(rf/subscribe [:comment/show-comment-textarea? uid])
-            [right-side/right-side-comments [] uid])
-
           (when @(rf/subscribe [:comment/show-comment-textarea? uid])
             [inline-comments/inline-comments [] uid false])
 
@@ -535,8 +531,6 @@
           (when (and @(rf/subscribe [:comment/show-right-side-comments?])
                      comment)
             [right-side/right-side-comments comment uid])
-
-          
 
           ;; Children
           (when (and (seq children)

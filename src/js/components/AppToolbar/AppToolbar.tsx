@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Help, Menu as MenuIcon, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
 
 import { Button } from '@/Button';
+import { Badge }  from '@/Concept/Badge';
 import { WindowButtons } from './components/WindowButtons';
 
 const AppToolbarWrapper = styled.header`
@@ -170,6 +171,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isShowInlineComments,
     isShowRightSideComments,
     isShowNotifications,
+    notificationCount,
     onPressCommandBar: handlePressCommandBar,
     onPressDailyNotes: handlePressDailyNotes,
     onPressAllPages: handlePressAllPages,
@@ -187,6 +189,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onClickInlineComments: handleClickInlineComments,
     onClickRightSideComments: handleClickRightSideComments,
     onClickNotifications: handleClickNotifications,
+    onShiftClickNotifications: handleShiftClickNotifications,
     onPressClose: handlePressClose,
     databaseMenu,
     presenceDetails,
@@ -223,10 +226,12 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       </Button>
 
       <Button shape='round'
-       onClick={handleClickNotifications}>
-        {isShowNotifications ?
-          <Button shape='round' variant='filled'> N </Button>
-          : <Button shape='round' variant='gray'> N </Button> }
+       onClick={(e) => {
+                  console.log(e)
+                  if (e.shiftKey){
+                     handleShiftClickNotifications();}
+                  else {handleClickNotifications();}}}>
+       <Badge badgeContent={notificationCount} > N </Badge>
         </Button>
 
     </AppToolbar.MainControls>

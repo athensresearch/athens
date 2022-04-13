@@ -205,9 +205,22 @@
     (let [current-user  @(rf/subscribe [:username])
           userpage      (str "@" current-user)
           page-uid      (common-db/get-page-uid @db/dsdb userpage)]
-      (println "Notifications?"(pos-int? (count (common-db/get-children-uids @db/dsdb [:block/uid (first (common-db/get-children-uids @db/dsdb [:node/title userpage]))]))))
-      (println "Notifications?"(count (common-db/get-children-uids @db/dsdb [:block/uid (first (common-db/get-children-uids @db/dsdb [:node/title userpage]))])))
       {:fx [[:dispatch [:navigate :page {:id page-uid}]]]})))
+
+(rf/reg-event-fx
+  :notification/open-in-sidebar
+  (fn [_ _]
+    (let [current-user @(rf/subscribe [:username])
+          userpage     (str "@" current-user)]
+      {:fx [[:dispatch [:right-sidebar/open-page  userpage]]]})))
+
+(rf/reg-event-fx
+  :notification/move-to-read
+  (fn [{:keys [db]} [_ page-name uid]]
+    (let [children   (common-db/get-children-uids @db/dsdb [:block/uid uid])
+          read-block (second (common-db/get-children-uids @db/dsdb [:node/title page-name]))]
+      {:fx [[:dispatch [:drop-multi/child {:source-uids children
+                                           :target-uid read-block}]]]})))
 
 
 (rf/reg-fx
@@ -220,8 +233,8 @@
         {})))
 
 (rf/reg-sub
-  :notification/show-notif-alert?
+  :notification/to-read-count
   (fn [_ _]
-    (let [userpage (str "@" @(rf/subscribe [:username]))
-          notif?   (pos-int? (count (common-db/get-children-uids @db/dsdb [:block/uid (first (common-db/get-children-uids @db/dsdb [:node/title userpage]))])))]
-      notif?)))
+    (let [userpage      (str "@" @(rf/subscribe [:username]))
+          notif-count   (count (common-db/get-children-uids @db/dsdb [:block/uid (first (common-db/get-children-uids @db/dsdb [:node/title userpage]))]))]
+      notif-count)))
