@@ -591,8 +591,8 @@ const components = {
 Tooltip.defaultProps = { ...Tooltip.defaultProps, openDelay: 500 }
 
 const config = {
-  initialColorMode: 'dark',
-  useSystemColorMode: true,
+  initialColorMode: 'system',
+  colorModeManager: 'localStorage',
 }
 
 const styles = {
