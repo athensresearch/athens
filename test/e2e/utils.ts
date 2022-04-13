@@ -92,7 +92,7 @@ export const inputInAthena = async (page: Page, query: string) => {
 }
 
 
-export const pageTitleLocator = ".page-header > h1.page-title > .block";
+export const pageTitleLocator = ".page-header > h1.page-title .block";
 
 export const createPage = async (page: Page, title: string) => {
     await inputInAthena(page, title);
@@ -109,7 +109,7 @@ export const createPage = async (page: Page, title: string) => {
 
 export const deleteCurrentPage = async (page: Page) => {
     // Open page elipsis menu
-    await page.click(".node-page > header > button");
+    await page.click(".page-header > h1.page-title button");
     await page.click('button:has-text("Delete Page")');
     await page.click('button:nth-child(6)');
 }
