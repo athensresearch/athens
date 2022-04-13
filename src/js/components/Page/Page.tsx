@@ -141,7 +141,7 @@ export const DailyNotesPage = ({ isReal, children }) => <Box
   minHeight="calc(100vh - 10rem)"
   sx={{
     "--page-padding-v": "1rem",
-    "--page-padding-h": "4rem"
+    "--page-padding-h": "2.5rem"
   }}
 >{children}</Box>
 
