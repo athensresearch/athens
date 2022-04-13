@@ -1,4 +1,4 @@
-import { Box, IconButton, ButtonGroup, Tooltip } from '@chakra-ui/react';
+import { Button, Divider, Center, Box, Heading, IconButton, ButtonGroup, Tooltip } from '@chakra-ui/react';
 import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
 
 const PAGE_PROPS = {
@@ -26,6 +26,17 @@ const TITLE_PROPS = {
   whiteSpace: "pre-line",
   wordBreak: "break-word",
   fontWeight: "bold",
+}
+
+export const PageNotFound = ({ title, onClickHome, children }) => {
+  return <Center height="100vh" gap="1rem" flexDirection="column">
+    <Heading>404: {title ? `${title} not found`
+      : `Page not found`}</Heading>
+    {onClickHome
+      ? <Button onClick={onClickHome}>Return home</Button>
+      : <Button as="a" href="/">Return home</Button>}
+    {children && (<><Divider /> children</>)}
+  </Center>
 }
 
 export const PageContainer = ({ children, uid, type }) => <Box
