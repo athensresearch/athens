@@ -214,6 +214,7 @@
           userpage     (str "@" current-user)]
       {:fx [[:dispatch [:right-sidebar/open-page  userpage]]]})))
 
+
 (rf/reg-event-fx
   :notification/move-to-read
   (fn [{:keys [db]} [_ page-name uid]]
