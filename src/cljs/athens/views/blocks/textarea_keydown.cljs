@@ -8,7 +8,7 @@
     [athens.events.selection :as select-events]
     [athens.router :as router]
     [athens.subs.selection :as select-subs]
-    [athens.util :as util :refer [scroll-if-needed shortcut-key? escape-str]]
+    [athens.util :as util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
     [athens.views.blocks.internal-representation :as internal-representation]
     [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
@@ -817,6 +817,11 @@
       ;; used for paste, to determine if shift key was held down
       (swap! state assoc :last-keydown d-event)
       (swap! state assoc :last-e e)
+
+      ;; update caret position for search dropdowns and for up/down
+      (when (nil? (:search/type @state))
+        (let [caret-position (get-caret-position (.. e -target))]
+          (swap! state assoc :caret-position caret-position)))
 
       ;; dispatch center
       ;; only when nothing is selected or duplicate/events dispatched
