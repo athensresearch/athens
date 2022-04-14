@@ -398,8 +398,7 @@
             {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
-            is-current-route?                                                   (or (and daily-note? on-daily-notes?)
-                                                                                    (= @(subscribe [:current-route/uid]) uid)
+            is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
                                                                                     (= @(subscribe [:current-route/page-title]) title))]
 
         (sync-title title state)
