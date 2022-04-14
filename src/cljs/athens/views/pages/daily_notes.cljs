@@ -14,7 +14,9 @@
 
   Bug: It's still possible for a day to not get created. The UI for this just shows an empty page without a title. Acceptable bug :)"
   [ids]
-  (keep #(reactive/get-reactive-block-document [:block/uid %]) ids))
+  (->> ids
+       (keep #(reactive/get-reactive-block-document [:block/uid %]))
+       (filter :block/uid)))
 
 
 ;; Components
