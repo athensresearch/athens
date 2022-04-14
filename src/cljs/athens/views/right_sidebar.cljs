@@ -87,7 +87,8 @@
                                     :on-mouse-down #(swap! state assoc :dragging true)
                                     :class (when (:dragging @state) "is-dragging")}]
                                   [:> Flex
-                                   {:flexDirection "column"
+                                   {:class "right-sidebar-content"
+                                    :flexDirection "column"
                                     :flex 1;
                                     :maxHeight "calc(100vh - 3.25rem - 1px)"
                                     :width (str (:width @state) "vw")
