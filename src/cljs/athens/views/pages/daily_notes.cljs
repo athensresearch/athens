@@ -22,25 +22,24 @@
 
 (defn page
   []
-  (let [note-refs (subscribe [:daily-notes/items])]
+  (let [note-uids (subscribe [:daily-notes/items])]
     (fn []
-      (if (empty? @note-refs)
+      (if (empty? @note-uids)
         (dispatch [:daily-note/next (dates/get-day)])
-        (let [notes (reactive-pull-many @note-refs)]
-          [:> VStack {:id "daily-notes"
-                      :minHeight "calc(100vh + 1px)"
-                      :display        "flex"
-                      :gap            "1.5rem"
-                      :py             "6rem"
-                      :px             "2rem"
-                      :alignItems    "center"
-                      :flex           "1 1 100%"
-                      :flexDirection "column"}
-           (doall
-             (for [{:keys [block/uid]} notes]
-               [:> DailyNotesPage {:key uid
-                                   :isReal true}
-                [node-page/page [:block/uid uid]]]))
-           [:> DailyNotesPage {:isReal false}
-            [:> PageHeader
-             [:> TitleContainer "Earlier"]]]])))))
+        [:> VStack {:id "daily-notes"
+                    :minHeight "calc(100vh + 1px)"
+                    :display        "flex"
+                    :gap            "1.5rem"
+                    :py             "6rem"
+                    :px             "2rem"
+                    :alignItems    "center"
+                    :flex           "1 1 100%"
+                    :flexDirection "column"}
+         (doall
+           (for [uid @note-uids]
+             [:> DailyNotesPage {:key uid
+                                 :isReal true}
+              [node-page/page [:block/uid uid]]]))
+         [:> DailyNotesPage {:isReal false}
+          [:> PageHeader
+           [:> TitleContainer "Earlier"]]]]))))
