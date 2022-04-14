@@ -340,7 +340,7 @@
          (when (not= string (:string/previous @state))
            (swap! state assoc :string/previous string :string/local string))
 
-           (println selected-items)
+         (println selected-items)
 
          [:> Container {:isDragging (and dragging (not is-selected))
                         :isSelected is-selected

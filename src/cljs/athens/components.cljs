@@ -91,7 +91,7 @@
                            :position "relative"
                            :display "flex"
                            :sx {"> .block-container" {:ml 0
-                           :flex 1
+                                                      :flex 1
                                                       :pr "1.3rem"
                                                       "textarea" {:background "transparent"}}}}
                    (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
@@ -101,11 +101,11 @@
                        {:linked-ref false}
                        {:block-embed? true}]
                       (when-not @(subscribe [:editing/is-editing uid])
-                      [:> ButtonGroup {:height "2em" :size "xs" :flex "0 0 auto" :zIndex "5" :alignItems "center"}
-                        [:> IconButton {:on-click (fn [e]
-                                                    (.. e stopPropagation)
-                                                    (dispatch [:editing/uid uid]))}
-                         [:> PencilIcon]]])])])
+                        [:> ButtonGroup {:height "2em" :size "xs" :flex "0 0 auto" :zIndex "5" :alignItems "center"}
+                         [:> IconButton {:on-click (fn [e]
+                                                     (.. e stopPropagation)
+                                                     (dispatch [:editing/uid uid]))}
+                          [:> PencilIcon]]])])])
       ;; roam actually hides the brackets around [[embed]]
       [:span "{{" content "}}"])))
 
