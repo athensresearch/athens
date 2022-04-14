@@ -1133,10 +1133,7 @@
                             [:right-sidebar/open-item page-uid]
 
                             (not (dates/is-daily-note page-uid))
-                            [:navigate :page {:id page-uid}]
-
-                            (dates/is-daily-note page-uid)
-                            [:daily-note/add page-uid])]]]})))
+                            [:navigate :page {:id page-uid}])]]]})))
 
 
 (reg-event-fx
