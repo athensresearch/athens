@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.29](https://github.com/athensresearch/athens/compare/v2.0.0-beta.28...v2.0.0-beta.29) (2022-04-13)
+
+
+### Refactors
+
+* don't use where-triple filter if there's no since-order ([3c96236](https://github.com/athensresearch/athens/commit/3c9623611889f90e3533596edce31af20deabaa0))
+
+## [2.0.0-test](https://github.com/athensresearch/athens/compare/v2.0.0-beta.27...v2.0.0-test) (2022-04-08)
+
+
+### Bug Fixes
+
+* use scalable ordering for events ([cce15ef](https://github.com/athensresearch/athens/commit/cce15ef4bb797126a18c12d911149e3e59f82785))
+
+
+* fix ([39cedd6](https://github.com/athensresearch/athens/commit/39cedd6a5447702912da2bbbb90fd6883d41059a))
+* update clojure ([a86ecfe](https://github.com/athensresearch/athens/commit/a86ecfeaf9f24bfcefefd758a9ecdb0a1034a8ae))
+
 ## [2.0.0-beta.28](https://github.com/athensresearch/athens/compare/v2.0.0-beta.27...v2.0.0-beta.28) (2022-04-12)
 
 
