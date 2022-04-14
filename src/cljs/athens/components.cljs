@@ -1,7 +1,7 @@
 (ns athens.components
   (:require
     ["/components/Icons/Icons" :refer [PencilIcon]]
-    ["@chakra-ui/react" :refer [Checkbox Box IconButton Button]]
+    ["@chakra-ui/react" :refer [Checkbox Box IconButton Button ButtonGroup]]
     [athens.db :as db]
     [athens.parse-renderer :refer [component]]
     [athens.reactive :as reactive]
@@ -86,8 +86,12 @@
       (r/with-let [embed-id (random-uuid)]
                   [:> Box {:class "block-embed"
                            :bg "background.basement"
+                           :flex 1
+                           :pr 1
                            :position "relative"
+                           :display "flex"
                            :sx {"> .block-container" {:ml 0
+                           :flex 1
                                                       :pr "1.3rem"
                                                       "textarea" {:background "transparent"}}}}
                    (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
@@ -97,16 +101,11 @@
                        {:linked-ref false}
                        {:block-embed? true}]
                       (when-not @(subscribe [:editing/is-editing uid])
-                        [:> IconButton {:position "absolute"
-                                        :right 1
-                                        :top 1
-                                        :size "xs"
-                                        :fontSize "1rem"
-                                        :zIndex "5"
-                                        :on-click (fn [e]
+                      [:> ButtonGroup {:height "2em" :size "xs" :flex "0 0 auto" :zIndex "5" :alignItems "center"}
+                        [:> IconButton {:on-click (fn [e]
                                                     (.. e stopPropagation)
                                                     (dispatch [:editing/uid uid]))}
-                         [:> PencilIcon]])])])
+                         [:> PencilIcon]]])])])
       ;; roam actually hides the brackets around [[embed]]
       [:span "{{" content "}}"])))
 
