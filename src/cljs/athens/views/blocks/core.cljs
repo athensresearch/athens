@@ -328,6 +328,7 @@
                                      block)
              {:keys [dragging]}    @state
              is-selected           @(rf/subscribe [::select-subs/selected? uid])
+             selected-items       @(rf/subscribe [::select-subs/items])
              present-user          @(rf/subscribe [:presence/has-presence uid])
              is-presence           (seq present-user)]
 
@@ -338,6 +339,8 @@
          ;; Write also from backspace, which can join bottom block's contents to top the block.
          (when (not= string (:string/previous @state))
            (swap! state assoc :string/previous string :string/local string))
+
+           (println selected-items)
 
          [:> Container {:isDragging (and dragging (not is-selected))
                         :isSelected is-selected
@@ -375,11 +378,15 @@
                                                         (or (and (true? linked-ref) (not (:linked-ref/open @state)))
                                                             (and (false? linked-ref) (not open))))
                                                "closed-with-children")
-                       :block block
                        :uidSanitizedBlock uid-sanitized-block
                        :shouldShowDebugDetails (util/re-frame-10x-open?)
-                       :onCopyRef #(handle-copy-refs nil uid)
-                       :onCopyUnformatted #(handle-copy-unformatted uid)
+                       :menuActions (clj->js [{:children
+                                               (if (> (count selected-items) 1)
+                                                 "Copy selected block refs"
+                                                 "Copy block ref")
+                                               :onClick #(handle-copy-refs nil uid)}
+                                              {:children "Copy unformatted text"
+                                               :onClick #(handle-copy-unformatted uid)}])
                        :onClick        (fn [e]
                                          (let [shift? (.-shiftKey e)]
                                            (rf/dispatch [:reporting/navigation {:source :block-bullet

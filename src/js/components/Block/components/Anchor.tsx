@@ -75,6 +75,7 @@ export interface AnchorProps {
   onDragStart: () => void;
   onDragEnd: () => void;
   onClick: () => void;
+  menuActions: any;
 }
 
 const anchorButtonStyleProps = (isClosedWithChildren) => {
@@ -138,13 +139,11 @@ export const Anchor = (props: AnchorProps) => {
   const { isClosedWithChildren,
     anchorElement,
     shouldShowDebugDetails,
-    onCopyRef,
-    onCopyUnformatted,
     onDragStart,
     onDragEnd,
     onClick,
-    block,
     uidSanitizedBlock,
+    menuActions,
   } = props;
 
   // Early return with just the button, to avoid rendering the menu
@@ -189,12 +188,16 @@ export const Anchor = (props: AnchorProps) => {
       </IconButton>
       <Portal
       >
-        <MenuList>
-          <MenuItem onClick={onCopyRef}>Copy block refs</MenuItem>
-          <MenuItem onClick={onCopyUnformatted}>Copy unformatted</MenuItem>
+        <MenuList
+          // prevent changing selection when clicking on the menu
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {menuActions.map((action) => {
+            return <MenuItem {...action} />
+          })}
           {shouldShowDebugDetails && (
             <>
-              <MenuDivider />
+              {menuActions && <MenuDivider />}
               <MenuGroup title="Debug details">
                 <Box px={4} pb={3}>
                   {propertiesList(uidSanitizedBlock)}
@@ -203,6 +206,6 @@ export const Anchor = (props: AnchorProps) => {
             </>)}
         </MenuList>
       </Portal>
-    </Menu>
+    </Menu >
   )
 };
