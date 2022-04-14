@@ -18,8 +18,6 @@
                          (str "((" uid "))")
                          (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
                               (string/join "")))]
-    (println selected-items)
-    (println data)
     (.. js/navigator -clipboard (writeText data))
     (toast (clj->js {:title (if (> (count selected-items) 1)
                               "Copied refs to clipboard"
