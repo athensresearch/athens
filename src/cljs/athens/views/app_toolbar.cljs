@@ -35,8 +35,16 @@
         merge-open?            (r/atom false)
         os                     (util/get-os)
         on-left-sidebar-toggle #(rf/dispatch [:left-sidebar/toggle])
-        on-back                #(.back js/window.history)
-        on-forward             #(.forward js/window.history)
+        on-back                (fn [_]
+                                 (rf/dispatch [:reporting/navigation {:source :app-toolbar
+                                                                      :target :back
+                                                                      :pane   :main-pane}])
+                                 (.back js/window.history))
+        on-forward             (fn [_]
+                                 (rf/dispatch [:reporting/navigation {:source :app-toolbar
+                                                                      :target :forward
+                                                                      :pane   :main-pane}])
+                                 (.forward js/window.history))
         on-daily-pages         (fn [_]
                                  (rf/dispatch [:reporting/navigation {:source :app-toolbar
                                                                       :target :home
