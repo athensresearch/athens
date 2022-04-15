@@ -215,10 +215,9 @@
                      :justifySelf "flex-end"
                      :size "sm"
                      :alignSelf "center"
-                     :fontSize "75%"
+                     :fontSize "70%"
                      :color "foreground.secondary"
                      :bg "transparent"
-                     :mr "0.5em"
                      :borderRadius "full"
                      :sx {"span" {:display "contents"}
                           "button svg:first-of-type" {:marginRight "0.25rem"}}}

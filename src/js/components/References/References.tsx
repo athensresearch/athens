@@ -29,9 +29,6 @@ export const ReferenceHeader = ({ onClick, title }) => {
     onClick={onClick}
     textAlign="left"
     justifyContent="flex-start"
-    textTransform="uppercase"
-    fontWeight="bold"
-    fontSize="xs"
     color="foreground.secondary"
     display="flex"
   >{title}</Button>
@@ -40,10 +37,12 @@ export const ReferenceHeader = ({ onClick, title }) => {
 export const ReferenceGroup = ({ title, onClickTitle, children }) => {
   return (
     <VStack
+      borderTop="1px solid"
+      borderColor="separator.divider"
       className="reference-group"
       align="stretch"
-      spacing={2}
-      py={2}
+      spacing={4}
+      py={6}
     >
       {title && <ReferenceHeader onClick={onClickTitle} title={title} />}
       {children}
@@ -120,7 +119,12 @@ export const PageReferences = withErrorBoundary(({ children, count, title, defau
         {isShowingContent && extras}
       </HStack>
       <Collapse in={isShowingContent} unmountOnExit>
-        <VStack spacing={0} pl={4} py={0} align="stretch">
+        <VStack
+          spacing={0}
+          pl={4}
+          py={0}
+          align="stretch"
+        >
           {children}
         </VStack>
       </Collapse>
