@@ -12,6 +12,8 @@ const _Content = ({ children, fontSize, ...props }) => {
     justifyContent="stretch"
     position="relative"
     overflow="visible"
+    fontWeight="normal"
+    letterSpacing="normal"
     zIndex={2}
     flexGrow={1}
     wordBreak="break-word"
