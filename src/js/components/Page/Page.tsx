@@ -86,15 +86,6 @@ export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenI
   {children}
 
   <ButtonGroup gridArea="extras" size="sm">
-    {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
-      <IconButton
-        aria-label='Open in right sidebar'
-        color="foreground.secondary"
-        variant="ghost"
-        onClick={onClickOpenInSidebar}
-      >
-        <ArrowRightOnBoxIcon boxSize="1.5em" />
-      </IconButton></Tooltip>}
     {onClickOpenInMainView && <Tooltip label="Open in main view">
       <IconButton
         aria-label='Open in main view'
@@ -103,6 +94,15 @@ export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenI
         onClick={onClickOpenInMainView}
       >
         <ArrowLeftOnBoxIcon boxSize="1.5em" />
+      </IconButton></Tooltip>}
+    {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
+      <IconButton
+        aria-label='Open in right sidebar'
+        color="foreground.secondary"
+        variant="ghost"
+        onClick={onClickOpenInSidebar}
+      >
+        <ArrowRightOnBoxIcon boxSize="1.5em" />
       </IconButton></Tooltip>}
   </ButtonGroup>
 </Box>
