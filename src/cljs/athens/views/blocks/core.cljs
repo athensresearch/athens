@@ -1,8 +1,8 @@
 (ns athens.views.blocks.core
   (:require
-    ["/components/Block/components/Anchor"   :refer [Anchor]]
-    ["/components/Block/components/Container" :refer [Container]]
-    ["/components/Block/components/Toggle"   :refer [Toggle]]
+    ["/components/Block/Anchor"   :refer [Anchor]]
+    ["/components/Block/Container" :refer [Container]]
+    ["/components/Block/Toggle"   :refer [Toggle]]
     ["/components/Layout/Layout"   :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common.logging                   :as log]

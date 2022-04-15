@@ -1,6 +1,6 @@
 (ns athens.views.blocks.content
   (:require
-    ["/components/Block/components/Content" :refer [Content]]
+    ["/components/Block/Content" :refer [Content]]
     [athens.config :as config]
     [athens.db :as db]
     [athens.events.selection :as select-events]

@@ -1,6 +1,6 @@
 (ns athens.views.pages.node-page
   (:require
-    ["/components/Block/components/Anchor" :refer [Anchor]]
+    ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
     ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon]]
     ["/components/Layout/Layout" :refer [PageReferences ReferenceBlock ReferenceGroup]]
