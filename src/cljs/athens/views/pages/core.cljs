@@ -8,12 +8,12 @@
     [athens.views.pages.graph :as graph]
     [athens.views.pages.page :as page]
     [athens.views.pages.settings :as settings]
-    [goog.functions :refer [throttle]]
+    [goog.functions :refer [debounce]]
     [re-frame.core :as rf]))
 
 
 (def throttled-scroll
-  (throttle #(rf/dispatch [:daily-note/scroll]) 200))
+  (debounce #(rf/dispatch [:daily-note/scroll]) 25))
 
 
 ;; View
