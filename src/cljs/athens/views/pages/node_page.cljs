@@ -1,11 +1,12 @@
 (ns athens.views.pages.node-page
   (:require
     ["/components/Block/Anchor" :refer [Anchor]]
+    ["/components/Block/Container" :refer [Container]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
     ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
-    ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+    ["@chakra-ui/react" :refer [Flex Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
     [athens.common.utils :as utils]
@@ -167,17 +168,21 @@
 
 (defn placeholder-block-el
   [parent-uid]
-  [:> Box {:class "block-container"
-           :pl "1em"
-           :display "flex"}
-   [:> Anchor]
-   [:> Button {:variant "link"
-               :flex "1 1 100%"
-               :pl 1
-               :textAlign "left"
-               :justifyContent "flex-start"
-               :onClick #(handle-new-first-child-block-click parent-uid)}
-    "Click here to add content..."]])
+  [:> Container
+   [:div.block-body
+    [:> Anchor]
+    [:> Button {:flex "1 1 100%"
+                :py 0
+                :height "100%"
+                :px 2
+                :textAlign "left"
+                :gridArea "content"
+                :color "foreground.secondary"
+                :justifyContent "flex-start"
+                :cursor "text"
+                :fontWeight "normal"
+                :onClick #(handle-new-first-child-block-click parent-uid)}
+     "Type to begin..."]]])
 
 
 (defn sync-title
