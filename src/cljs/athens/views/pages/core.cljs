@@ -61,8 +61,8 @@
                   "::WebkitScrollbar-corner" {:bg "background.basement"}
                   "::WebkitScrollbar-thumb" {:bg "background.upper"
                                              :borderRadius "full"}
-                  "> .node-page:first-child, .block-page:first-child" {:mt 0
-                                                                       :pt "var(--app-header-height)"}}
+                  "> .node-page:first-of-type, .block-page:first-of-type" {:mt 0
+                                                                           :pt "var(--app-header-height)"}}
              :on-scroll (when (= @route-name :home)
                           throttled-scroll)}
      (case @route-name
