@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { XmarkIcon, ChevronRightIcon, PageFillIcon, BlockFillIcon, GraphIcon } from '@/Icons/Icons';
+import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon } from '@/Icons/Icons';
 import { Button, IconButton, Box, useDisclosure, Collapse, Text, VStack, HStack } from '@chakra-ui/react';
 import { withErrorBoundary } from 'react-error-boundary';
 
@@ -23,9 +23,18 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
         position="relative"
         gridArea="secondary-content"
         sx={{
-          "--page-padding-v": "1rem",
-          "--page-padding-h": "0rem",
           "--page-title-font-size": "1.25rem",
+          ".node-page, .block-page": {
+            "--page-padding": "1rem",
+          },
+          ".page-header": {
+            pb: 1
+          },
+          ".page-body": {},
+          ".page-footer": {
+            px: 0,
+            py: 4
+          }
         }}
         initial={{
           width: 0,
@@ -46,7 +55,10 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
   </AnimatePresence>
 }
 
-const typeIcon = (type) => { return { "node": <PageFillIcon />, "graph": <GraphIcon />, "block": <BlockFillIcon /> }[type] };
+const typeIcon = (type, isOpen) => {
+  return isOpen ? { "node": <PageFillIcon />, "graph": <GraphIcon />, "block": <BlockFillIcon /> }[type]
+    : { "node": <PageIcon />, "graph": <GraphIcon />, "block": <BlockIcon /> }[type]
+};
 
 export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children }) => {
 
@@ -97,10 +109,13 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
           {canToggle && (
             <ChevronRightIcon
               transform={isOpen ? "rotate(90deg)" : null}
+              transitionProperty="common"
+              transitionDuration="0.15s"
+              transitionTimingFunction="ease-in-out"
               justifySelf="center"
             />
           )}
-          {typeIcon(type)}
+          {typeIcon(type, isOpen)}
           <Box
             flex="1 1 100%"
             tabIndex={-1}

@@ -11,8 +11,10 @@ const PAGE_PROPS = {
   gridTemplateRows: "auto 1fr auto",
   marginInline: "auto",
   sx: {
-    "--page-padding-v": "6rem",
-    "--page-padding-h": "2rem"
+    "--page-padding": "3rem",
+    "&:not(.right-sidebar &)": {
+      mt: 2,
+    }
   }
 }
 
@@ -41,7 +43,7 @@ export const PageNotFound = ({ title, onClickHome, children }) => {
 
 export const PageContainer = ({ children, uid, type }) => <Box
   {...PAGE_PROPS}
-  minHeight="100vh"
+  flexGrow={1}
   data-ui={uid}
   className={type + '-page'}
   flexDirection="column"
@@ -68,8 +70,9 @@ export const HeaderImage = ({ src }) => <Box
 
 export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenInMainView }) => <Box
   as="header"
-  px="var(--page-padding-h)"
-  pt="var(--page-padding-v)"
+  className="page-header"
+  pt="var(--page-padding)"
+  px="var(--page-padding)"
   pb={4}
   gridArea="header"
   display="grid"
@@ -78,13 +81,6 @@ export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenI
   alignItems="center"
   gridTemplateAreas="'breadcrumb breadcrumb' 
   'title extras'"
-  className="page-header"
-  borderBottom="1px solid transparent"
-
-  // Page headers without images get a nice border
-  {...!image && ({
-    borderBottomColor: "separator.divider"
-  })}
 >
   {image && <HeaderImage src={image} />}
   {children}
@@ -113,19 +109,21 @@ export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenI
 
 export const PageBody = ({ children }) => <Box
   as="main"
-  pt={4}
-  // inset the left margin to account for block toggles
-  px="calc(var(--page-padding-h) - 1em)"
-  pr="var(--page-padding-h)"
+  className="page-body"
+  // outset slightly for block toggles
+  pl="calc(var(--page-padding) - 1em)"
+  pr="var(--page-padding)"
   gridArea="content"
 >{children}</Box>
 
 export const PageFooter = ({ children }) => <Box
   as="footer"
-  pt={4}
+  className="page-footer"
+  p="var(--page-padding)"
+  pb="var(--page-padding)"
   gridArea="footer"
-  px="var(--page-padding-h)"
 >{children}</Box>
+
 
 export const DailyNotesPage = ({ isReal, children }) => <Box
   {...PAGE_PROPS}
@@ -139,10 +137,6 @@ export const DailyNotesPage = ({ isReal, children }) => <Box
   transitionDuration="0s"
   borderRadius="0.5rem"
   minHeight="calc(100vh - 10rem)"
-  sx={{
-    "--page-padding-v": "1rem",
-    "--page-padding-h": "2.5rem"
-  }}
 >{children}</Box>
 
 

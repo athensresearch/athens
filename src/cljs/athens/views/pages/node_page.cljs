@@ -213,10 +213,11 @@
                      "aria-label" "Page menu"
                      :gridArea "menu"
                      :justifySelf "flex-end"
-                     :size "md"
+                     :size "sm"
                      :alignSelf "center"
+                     :fontSize "75%"
+                     :color "foreground.secondary"
                      :bg "transparent"
-                     :width "2.25em"
                      :mr "0.5em"
                      :borderRadius "full"
                      :sx {"span" {:display "contents"}

@@ -12,7 +12,7 @@ import {
   ContrastIcon,
   DailyNotesIcon,
   GraphIcon,
-  EllipsisHorizontalIcon
+  EllipsisHorizontalCircleIcon
 } from '@/Icons/Icons';
 
 import {
@@ -72,6 +72,7 @@ const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) 
 });
 
 const AppToolbarWrapper = ({ children, ...props }) => <Flex
+  className="app-toolbar"
   gridArea="app-header"
   borderBottom="1px solid transparent"
   justifyContent="space-between"
@@ -227,7 +228,7 @@ const SecondaryToolbarItems = (items) => {
 const SecondaryToolbarOverflowMenu = (items) => {
   return <Menu>
     {({ isOpen }) => <>
-      <ToolbarIconButton size="sm" as={MenuButton} isActive={isOpen}><EllipsisHorizontalIcon /></ToolbarIconButton>
+      <ToolbarIconButton size="sm" as={MenuButton} isActive={isOpen}><EllipsisHorizontalCircleIcon /></ToolbarIconButton>
       <Portal>
         <MenuList>
           {items.map((item) => (<MenuItem
@@ -316,7 +317,13 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   ];
 
   return (
-    <AppToolbarWrapper className={isRightSidebarOpen ? 'is-right-sidebar-open' : ''} {...rest}>
+    <AppToolbarWrapper
+      className={[
+        "app-toolbar",
+        isRightSidebarOpen && 'is-right-sidebar-open',
+      ].filter(Boolean).join(' ')}
+      {...rest}
+    >
       <HStack flex="1">
         <ButtonGroup size="sm" mr="auto">
           {databaseMenu}
