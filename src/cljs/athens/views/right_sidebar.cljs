@@ -1,7 +1,7 @@
 (ns athens.views.right-sidebar
   (:require
     ["/components/Icons/Icons" :refer [RightSidebarAddIcon]]
-    ["/components/Layout/Layout" :refer [RightSidebarContainer SidebarItem]]
+    ["/components/Layout/RightSidebar" :refer [RightSidebarContainer SidebarItem]]
     ["@chakra-ui/react" :refer [Flex Text Box]]
     [athens.parse-renderer :as parse-renderer]
     [athens.views.pages.block-page :as block-page]
@@ -87,7 +87,8 @@
                                     :on-mouse-down #(swap! state assoc :dragging true)
                                     :class (when (:dragging @state) "is-dragging")}]
                                   [:> Flex
-                                   {:flexDirection "column"
+                                   {:class "right-sidebar-content"
+                                    :flexDirection "column"
                                     :flex 1;
                                     :maxHeight "calc(100vh - 3.25rem - 1px)"
                                     :width (str (:width @state) "vw")

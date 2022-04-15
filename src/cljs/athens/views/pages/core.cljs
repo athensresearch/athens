@@ -26,6 +26,7 @@
       (toast (clj->js {:status "info"
                        :title "Reconnecting to server..."})))
     [:> Box {:flex "1 1 100%"
+             :class "main-content"
              :position "relative"
              :gridArea "main-content"
              :alignItems "flex-start"
@@ -59,7 +60,9 @@
                                        :height "0.5rem"}
                   "::WebkitScrollbar-corner" {:bg "background.basement"}
                   "::WebkitScrollbar-thumb" {:bg "background.upper"
-                                             :borderRadius "full"}}
+                                             :borderRadius "full"}
+                  "> .node-page:first-child, .block-page:first-child" {:mt 0
+                                                                       :pt "var(--app-header-height)"}}
              :on-scroll (when (= @route-name :home)
                           throttled-scroll)}
      (case @route-name

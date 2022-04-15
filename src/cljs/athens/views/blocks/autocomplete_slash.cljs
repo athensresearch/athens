@@ -1,6 +1,6 @@
 (ns athens.views.blocks.autocomplete-slash
   (:require
-    ["/components/Block/components/Autocomplete" :refer [Autocomplete AutocompleteButton]]
+    ["/components/Block/Autocomplete" :refer [Autocomplete AutocompleteButton]]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [reagent.core :as r]))
 

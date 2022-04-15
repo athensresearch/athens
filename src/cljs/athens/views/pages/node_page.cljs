@@ -1,10 +1,10 @@
 (ns athens.views.pages.node-page
   (:require
-    ["/components/Block/components/Anchor" :refer [Anchor]]
+    ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
     ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon]]
-    ["/components/Layout/Layout" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
+    ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
@@ -213,11 +213,11 @@
                      "aria-label" "Page menu"
                      :gridArea "menu"
                      :justifySelf "flex-end"
-                     :size "md"
+                     :size "sm"
                      :alignSelf "center"
+                     :fontSize "70%"
+                     :color "foreground.secondary"
                      :bg "transparent"
-                     :width "2.25em"
-                     :mr "0.5em"
                      :borderRadius "full"
                      :sx {"span" {:display "contents"}
                           "button svg:first-of-type" {:marginRight "0.25rem"}}}
@@ -271,8 +271,11 @@
     (fn [_]
       (let [{:keys [block parents embed-id]} @state
             block (reactive/get-reactive-block-document (:db/id block))]
-        [:> VStack {:spacing 0 :align "stretch"}
-         [:> Breadcrumb {:fontSize "sm" :pl 4 :variant "strict" :color "foreground.secondary"}
+        [:> VStack {:spacing 0
+                    :align "stretch"}
+         [:> Breadcrumb {:fontSize "sm"
+                         :variant "strict"
+                         :color "foreground.secondary"}
           (doall
             (for [{:keys [node/title block/string block/uid]} parents]
               [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}

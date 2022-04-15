@@ -1,7 +1,7 @@
 (ns athens.views.pages.block-page
   (:require
-    ["/components/Layout/Layout" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
+    ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink]]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]

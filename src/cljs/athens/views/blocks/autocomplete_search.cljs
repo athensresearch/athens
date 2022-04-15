@@ -1,6 +1,6 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-    ["/components/Block/components/Autocomplete" :refer [Autocomplete AutocompleteButton]]
+    ["/components/Block/Autocomplete" :refer [Autocomplete AutocompleteButton]]
     ["@chakra-ui/react" :refer [Text]]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [clojure.string :as string]))
