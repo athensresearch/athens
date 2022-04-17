@@ -245,7 +245,7 @@
                              [:span {:class   "hashtag"
                                      :style {:cursor "pointer"}
                                      "data-page-title" (parse-title title-coll)
-                                     #_:onClick #_(fn [e]
+                                     :onClick (fn [e]
                                                     (let [parsed-title (parse-title title-coll)
                                                           shift?       (.-shiftKey e)]
                                                       (rf/dispatch [:reporting/navigation {:source :pr-hashtag
