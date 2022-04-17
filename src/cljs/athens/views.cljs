@@ -1,9 +1,13 @@
 (ns athens.views
   (:require
+    ["/components/Preview/Preview" :refer [InteractionManager Preview]]
     ["/theme/theme" :refer [theme]]
     ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center]]
+    [athens.common-db :as common-db]
     [athens.config]
+    [athens.db :as db]
     [athens.electron.db-modal :as db-modal]
+    [athens.router :refer [navigate-page navigate-uid]]
     [athens.style :refer [zoom]]
     [athens.subs]
     [athens.views.app-toolbar :as app-toolbar]
@@ -12,8 +16,10 @@
     [athens.views.help :refer [help-popup]]
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
+    [athens.views.pages.node-page :as node-page]
     [athens.views.right-sidebar :as right-sidebar]
-    [re-frame.core :as rf]))
+    [re-frame.core :as rf]
+    [reagent.core :as r]))
 
 
 ;; Components
@@ -29,6 +35,8 @@
 (defn main
   []
   (let [loading    (rf/subscribe [:loading?])
+        preview (r/atom {:value nil :type nil})
+        preview-pos (r/atom nil)
         modal      (rf/subscribe [:modal])]
     (fn []
       [:div (merge {:style {:display "contents"}}
@@ -70,7 +78,28 @@
                         ".os-windows &" {"--toolbar-height" "44px"}
                         ".os-linux &" {"--toolbar-height" "44px"}}}
                   [app-toolbar/app-toolbar]
-                  [left-sidebar/left-sidebar]
-                  [pages/view]
-                  [right-sidebar/right-sidebar]
+                  [:> InteractionManager
+                   {:setPreviewPos (fn [pos] (reset! preview-pos pos))
+                    :setPreview (fn [value type] (reset! preview {:value value :type type}))
+                    :onNavigateUid (fn [uid e] (navigate-uid uid e))
+                    :onNavigatePage (fn [title e] (navigate-page title e))}
+                   [left-sidebar/left-sidebar]
+                   [pages/view]
+                   [right-sidebar/right-sidebar]]
+
+
+                  [:> Preview {:pos @preview-pos
+                               :isOpen (:value @preview)}
+                   (let [val (:value @preview)
+                         type (:type @preview)]
+                     (println type)
+                     (cond
+                       (= type "page") (let [page-eid (common-db/e-by-av @db/dsdb :node/title val)]
+                                         (println val)
+                                         [node-page/page page-eid])
+                       (= type "url") [:iframe {:src val
+                       :border "none"
+                                                :width "10rem"
+                                                :height "10rem"}]))]
+
                   [devtool-component]]])]])))

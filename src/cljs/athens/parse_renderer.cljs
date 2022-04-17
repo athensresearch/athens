@@ -87,6 +87,7 @@
    (cond
      (not (str/blank? title))
      [:span {:class "link"
+             "data-page-title" (parse-title title-coll)
              :title from
              :on-click (fn [e]
                          (let [parsed-title (parse-title title-coll)
@@ -103,6 +104,7 @@
      :else
      (into [:span {:class "link"
                    :title from
+                   "data-page-title" (parse-title title-coll)
                    :on-click (fn [e]
                                (let [parsed-title (parse-title title-coll)
                                      shift?       (.-shiftKey e)]
@@ -240,29 +242,27 @@
      :page-link            (fn [{_from :from :as attr} & title-coll]
                              (render-page-link attr title-coll))
      :hashtag              (fn [{_from :from} & title-coll]
-                             [:> Button (merge link-props
-                                               {:variant "link"
-                                                :class   "hashtag"
-                                                :color  "inherit"
-                                                :fontWeight "inherit"
-                                                :_hover {:textDecoration "none"}
-                                                :onClick (fn [e]
-                                                           (let [parsed-title (parse-title title-coll)
-                                                                 shift?       (.-shiftKey e)]
-                                                             (rf/dispatch [:reporting/navigation {:source :pr-hashtag
-                                                                                                  :target :hashtag
-                                                                                                  :pane   (if shift?
-                                                                                                            :right-pane
-                                                                                                            :main-pane)}])
-                                                             (router/navigate-page parsed-title e)))})
+                             [:span {:class   "hashtag"
+                                     :style {:cursor "pointer"}
+                                     "data-page-title" (parse-title title-coll)
+                                     #_:onClick #_(fn [e]
+                                                    (let [parsed-title (parse-title title-coll)
+                                                          shift?       (.-shiftKey e)]
+                                                      (rf/dispatch [:reporting/navigation {:source :pr-hashtag
+                                                                                           :target :hashtag
+                                                                                           :pane   (if shift?
+                                                                                                     :right-pane
+                                                                                                     :main-pane)}])
+                                                      (router/navigate-page parsed-title e)))}
                               [:> Text fm-props "#"]
-                              [:span {:class "contents"} title-coll]])
+                              title-coll])
      :block-ref            (fn [{_from :from :as attr} ref-uid]
                              (render-block-ref attr ref-uid uid))
      :url-image            (fn [{url :src alt :alt}]
                              [:> Box {:class "url-image"
                                       :as "img"
                                       :borderRadius "md"
+                                      :loading "lazy" 
                                       :alt   alt
                                       :src   url}])
      :url-link             (fn [{url :url} text]
@@ -281,14 +281,13 @@
                                           (assoc :title title))
                               text])
      :autolink             (fn [{:keys [text target]}]
-                             [:<>
+                             [:> Text {:class  "autolink"
+                                       :as "span"
+                                       :color "link"
+                                       :href target
+                                       :target "_blank"}
                               [:> Text fm-props "<"]
-                              [:> Link (merge
-                                         link-props
-                                         {:class  "autolink contents"
-                                          :href target
-                                          :target "_blank"})
-                               text]
+                              text
                               [:> Text fm-props ">"]])
      :text-run              (fn [& contents]
                               (apply conj [:span {:class "text-run"}] contents))

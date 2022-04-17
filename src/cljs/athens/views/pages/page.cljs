@@ -15,6 +15,8 @@
   (let [title    (rf/subscribe [:current-route/page-title])
         page-eid (common-db/e-by-av @db/dsdb :node/title @title)]
     [:> PageContainer {:uid page-eid :type "node"}
+    (println @title)
+    (println page-eid)
      (if (int? page-eid)
        [node-page/page page-eid]
        [:> PageNotFound {:title @title

@@ -6,7 +6,7 @@
     ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
-    ["@chakra-ui/react" :refer [Flex Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+    ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
     [athens.common.utils :as utils]
@@ -451,24 +451,23 @@
             [menu-dropdown node daily-note?]]]]
 
          [:> PageBody
-
           ;; Children
-          (if (empty? children)
-            [placeholder-block-el uid]
-            [:div
-             (for [{:block/keys [uid] :as child} children]
-               ^{:key uid}
-               [perf-mon/hoc-perfmon {:span-name "block-el"}
-                [blocks/block-el child]])])]
+           (if (empty? children)
+             [placeholder-block-el uid]
+             [:div
+              (for [{:block/keys [uid] :as child} children]
+                ^{:key uid}
+                [perf-mon/hoc-perfmon {:span-name "block-el"}
+                 [blocks/block-el child]])])]
 
          ;; References
-         [:> PageFooter
-          [:> VStack {:spacing 2 :py 4 :align "stretch"}
-           [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
-            [linked-ref-el state title]]
-           (when-not on-daily-notes?
-             [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
-              [unlinked-ref-el state unlinked-refs title]])]]]))))
+          [:> PageFooter
+           [:> VStack {:spacing 2 :py 4 :align "stretch"}
+            [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
+             [linked-ref-el state title]]
+            (when-not on-daily-notes?
+              [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
+               [unlinked-ref-el state unlinked-refs title]])]]]))))
 
 
 (defn page
