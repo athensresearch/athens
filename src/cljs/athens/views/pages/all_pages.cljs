@@ -1,6 +1,7 @@
 (ns athens.views.pages.all-pages
   (:require
     ["/components/Icons/Icons" :refer [ChevronUpIcon ChevronDownIcon]]
+    ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
     ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button Box]]
     [athens.common-db          :as common-db]
     [athens.dates              :as dates]
@@ -95,42 +96,43 @@
   (let [all-pages (common-db/get-all-pages @db/dsdb)]
     (fn []
       (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
-        [:> Box {:px 4
-                 :width "100%"
-                 :maxWidth "75rem"
-                 :margin "calc(var(--app-header-height) + 2rem) auto 5rem"}
-         [:> Table {:variant "striped"}
-          [:> Thead
-           [:> Tr
-            [sortable-header :title "Title"]
-            [sortable-header :links-count "Links" "6rem" true]
-            [sortable-header :modified "Modified" "14rem" false {:date? true}]
-            [sortable-header :created "Created" "14rem" false {:date? true}]]]
-          [:> Tbody
-           (doall
-             (for [{:keys    [block/uid node/title block/_refs]
-                    modified :edit/time
-                    created  :create/time} sorted-pages]
-               [:> Tr {:key uid}
-                [:> Td
-                 [:> Button {:variant "link"
-                             :justifyContent "flex-start"
-                             :textAlign "left"
-                             :padding "0"
-                             :color "link"
-                             :display "block"
-                             :maxWidth "100%"
-                             :whiteSpace "wrap"
-                             :wordBreak "break-all"
-                             :onClick (fn [e]
-                                        (let [shift? (.-shiftKey e)]
-                                          (rf/dispatch [:reporting/navigation {:source :all-pages
-                                                                               :target :page
-                                                                               :pane   (if shift?
-                                                                                         :right-pane
-                                                                                         :main-pane)}])
-                                          (router/navigate-page title e)))}
-                  title]]
-                [:> Td {:width "6rem" :whiteSpace "nowrap"  :color "foreground.secondary" :isNumeric true} (count _refs)]
-                [:> Td {:width "14rem" :whiteSpace "nowrap" :fontSize "sm" :color "foreground.secondary"} (dates/date-string modified)]
-                [:> Td {:width "14rem" :whiteSpace "nowrap" :fontSize "sm" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))
+        [:> AllPagesTable {:sortedPages sorted-pages}]
+        #_[:> Box {:px 4
+                   :width "100%"
+                   :maxWidth "75rem"
+                   :margin "calc(var(--app-header-height) + 2rem) auto 5rem"}
+           #_[:> Table {:variant "striped"}
+              [:> Thead
+               [:> Tr
+                [sortable-header :title "Title"]
+                [sortable-header :links-count "Links" "6rem" true]
+                [sortable-header :modified "Modified" "14rem" false {:date? true}]
+                [sortable-header :created "Created" "14rem" false {:date? true}]]]
+              [:> Tbody
+               (doall
+                (for [{:keys    [block/uid node/title block/_refs]
+                       modified :edit/time
+                       created  :create/time} sorted-pages]
+                  [:> Tr {:key uid}
+                   [:> Td
+                    [:> Button {:variant "link"
+                                :justifyContent "flex-start"
+                                :textAlign "left"
+                                :padding "0"
+                                :color "link"
+                                :display "block"
+                                :maxWidth "100%"
+                                :whiteSpace "wrap"
+                                :wordBreak "break-all"
+                                :onClick (fn [e]
+                                           (let [shift? (.-shiftKey e)]
+                                             (rf/dispatch [:reporting/navigation {:source :all-pages
+                                                                                  :target :page
+                                                                                  :pane   (if shift?
+                                                                                            :right-pane
+                                                                                            :main-pane)}])
+                                             (router/navigate-page title e)))}
+                     title]]
+                   [:> Td {:width "6rem" :whiteSpace "nowrap"  :color "foreground.secondary" :isNumeric true} (count _refs)]
+                   [:> Td {:width "14rem" :whiteSpace "nowrap" :fontSize "sm" :color "foreground.secondary"} (dates/date-string modified)]
+                   [:> Td {:width "14rem" :whiteSpace "nowrap" :fontSize "sm" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))
