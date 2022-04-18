@@ -77,27 +77,30 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
     px={4}
     width="100%"
     maxWidth="75rem"
-    margin="calc(var(--app-header-height) + 2rem) auto 5rem"
-    height="calc(100% - var(--app-header-height) - 6rem)"
+    sx={{ "--margin-top": "2rem" }}
+    margin="calc(var(--app-header-height) + var(--margin-top)) auto 0"
+    height="calc(100vh - var(--app-header-height) - var(--margin-top))"
   >
     <Table variant="striped"
       sx={{
         "tr > *:nth-child(1)": {
-          flex: "0 0 calc(100% - 30rem)"
+          flex: "1 1 calc(100% - 30rem)"
         },
         "tr > *:nth-child(2)": {
-          flex: "0 0 10rem"
+          flex: "0 0 12rem"
         },
         "tr > *:nth-child(3)": {
-          flex: "0 0 10rem"
+          flex: "0 0 12rem"
         },
         "tr > *:nth-child(4)": {
-          flex: "0 0 10rem"
+          flex: "0 0 12rem"
         },
       }}
     >
       <Thead>
-        <Tr display="flex">
+        <Tr
+          display="flex"
+        >
           {columns.map((column, index) => {
             return <Th key={index}>
               <Button
