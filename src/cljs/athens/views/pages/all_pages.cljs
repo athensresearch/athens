@@ -1,8 +1,6 @@
 (ns athens.views.pages.all-pages
   (:require
-    ["/components/Icons/Icons" :refer [ChevronUpIcon ChevronDownIcon]]
     ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
-    ["@chakra-ui/react" :refer [Table Thead Tr Th Tbody Td Button Box]]
     [athens.common-db          :as common-db]
     [athens.dates              :as dates]
     [athens.db                 :as db]
@@ -61,78 +59,25 @@
        :dispatch [:posthog/report-feature :all-pages]})))
 
 
-;; Components
-
-(defn- sortable-header
-  ([column-id label width is-numeric?]
-   (let [sorted-by @(rf/subscribe [:all-pages/sorted-by])
-         growing?  @(rf/subscribe [:all-pages/sort-order-ascending?])
-         sort-icon (if growing? (r/as-element [:> ChevronUpIcon])
-                       (r/as-element [:> ChevronDownIcon]))]
-     [:> Th {:width width
-             :border 0
-             :isNumeric is-numeric?}
-      [:> Button {:onClick #(rf/dispatch [:all-pages/sort-by column-id])
-                  :size "sm"
-                  :textTransform "uppercase"
-                  :justifyContent (if is-numeric? "flex-end" "flex-start")
-                  :display "flex"
-                  :height "1em"
-                  :overflow "hidden"
-                  :gap "0.25em"
-                  :variant "link"
-                  :leftIcon (when (and is-numeric?
-                                       (= column-id sorted-by))
-                              sort-icon)
-                  :rightIcon (when (and (not is-numeric?)
-                                        (= column-id sorted-by))
-                               sort-icon)
-                  :_hover {:textDecoration "none"}}
-       label]])))
-
 
 (defn page
   []
   (let [all-pages (common-db/get-all-pages @db/dsdb)]
     (fn []
       (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
-        [:> AllPagesTable {:sortedPages sorted-pages}]
-        #_[:> Box {:px 4
-                   :width "100%"
-                   :maxWidth "75rem"
-                   :margin "calc(var(--app-header-height) + 2rem) auto 5rem"}
-           #_[:> Table {:variant "striped"}
-              [:> Thead
-               [:> Tr
-                [sortable-header :title "Title"]
-                [sortable-header :links-count "Links" "6rem" true]
-                [sortable-header :modified "Modified" "14rem" false {:date? true}]
-                [sortable-header :created "Created" "14rem" false {:date? true}]]]
-              [:> Tbody
-               (doall
-                (for [{:keys    [block/uid node/title block/_refs]
-                       modified :edit/time
-                       created  :create/time} sorted-pages]
-                  [:> Tr {:key uid}
-                   [:> Td
-                    [:> Button {:variant "link"
-                                :justifyContent "flex-start"
-                                :textAlign "left"
-                                :padding "0"
-                                :color "link"
-                                :display "block"
-                                :maxWidth "100%"
-                                :whiteSpace "wrap"
-                                :wordBreak "break-all"
-                                :onClick (fn [e]
-                                           (let [shift? (.-shiftKey e)]
-                                             (rf/dispatch [:reporting/navigation {:source :all-pages
-                                                                                  :target :page
-                                                                                  :pane   (if shift?
-                                                                                            :right-pane
-                                                                                            :main-pane)}])
-                                             (router/navigate-page title e)))}
-                     title]]
-                   [:> Td {:width "6rem" :whiteSpace "nowrap"  :color "foreground.secondary" :isNumeric true} (count _refs)]
-                   [:> Td {:width "14rem" :whiteSpace "nowrap" :fontSize "sm" :color "foreground.secondary"} (dates/date-string modified)]
-                   [:> Td {:width "14rem" :whiteSpace "nowrap" :fontSize "sm" :color "foreground.secondary"} (dates/date-string created)]]))]]]))))
+        [:> AllPagesTable {:sortedPages (clj->js sorted-pages)
+                           :sortedBy @(rf/subscribe [:all-pages/sorted-by])
+                           :sortDirection (if @(rf/subscribe [:all-pages/sort-order-ascending?]) "asc" "desc")
+                           :onClickSort #(rf/dispatch [:all-pages/sort-by (cond
+                                                                            (= % "title") :title
+                                                                            (= % "links-count") :links-count
+                                                                            (= % "modified") :modified
+                                                                            (= % "created") :created)])
+                           :onClickItem (fn [e title]
+                                          (let [shift? (.-shiftKey e)]
+                                            (rf/dispatch [:reporting/navigation {:source :all-pages
+                                                                                 :target :page
+                                                                                 :pane   (if shift?
+                                                                                           :right-pane
+                                                                                           :main-pane)}])
+                                            (router/navigate-page title e)))}]))))
