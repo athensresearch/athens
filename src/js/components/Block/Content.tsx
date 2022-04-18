@@ -51,7 +51,7 @@ const _Content = ({ children, fontSize, ...props }) => {
         gridArea: "main",
       },
       // activate interactive content (links, buttons, etc.)
-      "a, .link, .hashtag, .autolink, label, video, embed, iframe, img": {
+      "a, .url-link, .autolink, link, .hashtag, button, label, video, embed, iframe, img": {
         pointerEvents: "auto",
         position: 'relative',
         zIndex: 2,
@@ -128,11 +128,6 @@ const _Content = ({ children, fontSize, ...props }) => {
         paddingBottom: "1em",
         "&last:-child": { paddingBottom: 0 },
       },
-      "mark.contents.highlight": {
-        padding: "0 0.2em",
-        borderRadius: "0.125rem",
-        background: "highlight",
-      }
     }}
     {...props}
   > {children}</Box>

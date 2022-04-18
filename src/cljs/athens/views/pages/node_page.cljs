@@ -224,11 +224,10 @@
                      :color "foreground.secondary"
                      :bg "transparent"
                      :borderRadius "full"
-                     :sx {"span" {:display "contents"}
-                          "button svg:first-of-type" {:marginRight "0.25rem"}}}
+                     :sx {"span" {:display "contents"}}}
       [:> EllipsisHorizontalIcon]]
      [:> Portal
-      [:> MenuList {:sx {"button svg:first-of-type" {:marginRight "0.25rem"}}}
+      [:> MenuList
        [:<>
         (if sidebar
           [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])

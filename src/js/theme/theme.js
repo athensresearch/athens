@@ -56,7 +56,7 @@ const semanticTokens = {
       default: "0 0.25rem 1rem #00000055",
     },
     tooltip: {
-      default: "0 0.25rem 1rem #00000055",
+      default: "0 0.125rem 0.5rem #00000055",
     },
     dialog: {
       default: "0 0.25rem 1rem #00000022",
@@ -82,7 +82,7 @@ const semanticTokens = {
       _dark: '#1A1A1A'
     },
     "background.basement": {
-      default: '#FAF8F6',
+      default: '#fff',
       _dark: '#111'
     },
     "background.upper": {
@@ -94,7 +94,7 @@ const semanticTokens = {
       _dark: '#333'
     },
     "background.vibrancy": {
-      default: '#ffffff99',
+      default: '#ffffffaa',
       _dark: '#222222aa'
     },
     // foreground colors
@@ -606,6 +606,12 @@ const styles = {
     },
     "#chakra-toast-manager-top-right, #chakra-toast-manager-top, #chakra-toast-manager-top-left": {
       margin: "3rem 1rem"
+    },
+    mark: {
+      background: "highlight",
+      color: "highlightContrast",
+      padding: '0 0.2em',
+      borderRadius: "sm",
     }
   }
 }
