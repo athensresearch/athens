@@ -606,6 +606,12 @@ const styles = {
     },
     "#chakra-toast-manager-top-right, #chakra-toast-manager-top, #chakra-toast-manager-top-left": {
       margin: "3rem 1rem"
+    },
+    mark: {
+      background: "highlight",
+      color: "highlightContrast",
+      padding: '0 0.2em',
+      borderRadius: "sm",
     }
   }
 }
