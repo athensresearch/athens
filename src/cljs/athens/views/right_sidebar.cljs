@@ -28,7 +28,7 @@
            :fontSize "80%"
            :borderRadius "0.5rem"
            :lineHeight 1.3}
-   [:> RightSidebarAddIcon {:boxSize "4rem"}]
+   [:> RightSidebarAddIcon {:boxSize "4rem" :color "foreground.tertiary"}]
    [:> Text {:maxWidth "15em"}
     "Hold " [:kbd "shift"] " when clicking a page link to view the page in the sidebar."]])
 

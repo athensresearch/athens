@@ -24,7 +24,8 @@
                 :borderTopColor (when (:above @drag) "brand")
                 :borderBottomColor (when (:below @drag) "brand")}
        [:> Button {:variant "ghost"
-                   :mx "1rem"
+                   :mx "1.25rem"
+                   :size "sm"
                    :display "inline-block"
                    :textAlign "left"
                    :justifyContent "flex-start"
