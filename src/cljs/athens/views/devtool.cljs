@@ -1,124 +1,22 @@
 (ns athens.views.devtool
   (:require
-    ["/components/Button/Button" :refer [Button]]
-    ["@material-ui/icons/ChevronLeft" :default ChevronLeft]
-    ["@material-ui/icons/Clear" :default Clear]
-    ["@material-ui/icons/History" :default History]
-    ["@material-ui/icons/ShortText" :default ShortText]
+    ["/components/Icons/Icons" :refer [XmarkIcon ChevronLeftIcon]]
+    ["@chakra-ui/react" :refer [Box IconButton Button Table Thead Tbody Th Tr Td Input ButtonGroup]]
     [athens.config :as config]
     [athens.db :as db :refer [dsdb]]
-    [athens.style :refer [color]]
-    [athens.views.textinput :refer [textinput-style]]
     [cljs.pprint :as pp]
     [clojure.core.protocols :as core-p]
     [clojure.datafy :refer [nav datafy]]
     [datascript.core :as d]
     [datascript.db]
-    [komponentit.autosize :as autosize]
     [me.tonsky.persistent-sorted-set]
     [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [reagent.ratom]
-    [sci.core :as sci]
-    [stylefy.core :as stylefy :refer [use-style]])
+    [sci.core :as sci])
   (:import
     (goog.events
       KeyCodes)))
-
-
-;; Styles
-
-
-(def container-style
-  {:grid-area     "devtool"
-   :flex-direction "column"
-   :background    (color :background-minus-1)
-   :position      "relative"
-   :width         "100vw"
-   :height        "33vh"
-   :display       "flex"
-   :overflow-y    "auto"
-   :right         0
-   :z-index       2})
-
-
-(def tabs-style
-  {:padding         "0 0.5rem"
-   :flex            "0 0 auto"
-   :background      (color :background-minus-1)
-   :display         "flex"
-   :align-items     "stretch"
-   :justify-content "space-between"
-   ::stylefy/manual [[:button {:border-radius "0"}]]})
-
-
-(def tabs-section-style
-  {:display "flex"
-   :align-items "stretch"})
-
-
-(def panels-style
-  {:overflow-y "auto"
-   :padding "0.5rem"})
-
-
-(def current-location-style
-  {:display       "flex"
-   :align-items   "center"
-   :flex          "1 1 100%"
-   :font-size     "14px"
-   :border-bottom [["1px solid" (color :background-minus-1) 10]]})
-
-
-(def current-location-name-style
-  {:font-weight "bold"
-   :font-size "inherit"
-   :margin-block "0"
-   :margin-inline-start "1em"
-   :margin-inline-end "1em"})
-
-
-(def current-location-controls-style {:margin-inline-start "1em"})
-
-
-(def devtool-table-style
-  {:border-collapse "collapse"
-   :font-size       "12px"
-   :font-family     "IBM Plex Sans Condensed"
-   :letter-spacing  "-0.01em"
-   :margin          "0.5rem 0 0"
-   :border-spacing  "0"
-   :min-width       "100%"
-   ::stylefy/manual [[:td {:border-top [["1px solid " (color :border-color)]]
-                           :padding    "0.125rem"}]
-                     [:tbody {:vertical-align "top"}]
-                     [:th {:text-align "left" :padding "0.125rem 0.125rem" :white-space "nowrap"}]
-                     [:tr {:transition "all 0.05s ease"}]
-                     [:td:first-child :th:first-child {:padding-left "0.5rem"}]
-                     [:td:last-child :th-last-child {:padding-right "0.5rem"}]
-                     [:tbody [:tr:hover {:cursor     "pointer"
-                                         :background (color :background-minus-1)
-                                         :color (color :header-text-color)}]]
-                     [:td>ul {:padding    "0"
-                              :margin     "0"
-                              :list-style "none"}]
-                     [:td [:li {:margin      "0 0 0.25rem"
-                                :padding-top "0.25rem" ;
-                                :border-top  (str "1px solid " (color :border-color))}]]
-                     [:td [:li:first-child {:border-top "none" :margin-top "0" :padding-top "0"}]]
-                     [:a {:color (color :link-color)}]
-                     [:a:hover {:text-decoration "underline"}]]})
-
-
-(def edn-viewer-style {:font-size "12px"})
-
-
-(def query-input-style
-  (merge textinput-style {:width "100%"
-                          :min-height "2.5rem"
-                          :font-size "12px"
-                          :background (color :background-color)
-                          :font-family "IBM Plex Mono"}))
 
 
 ;; Components
@@ -173,36 +71,34 @@
   [_ _ _]
   (let [limit (r/atom 20)]
     (fn [headers rows add-nav!]
-      [:div
-       [:table (use-style devtool-table-style)
-        [:thead
-         [:tr (for [h headers]
-                ^{:key h} [:th h])]]
-        [:tbody
+      [:> Box {:width "100%"}
+       [:> Table {:width "100%"}
+        [:> Thead
+         [:> Tr (for [h headers]
+                  ^{:key h} [:> Th h])]]
+        [:> Tbody
          (doall
            (for [row (take @limit rows)]
 
              ^{:key row}
-             [:tr {:on-click #(add-nav! [(first row)
-                                         (-> row meta :row-value)])}
+             [:> Tr {:on-click #(add-nav! [(first row)
+                                           (-> row meta :row-value)])}
               (for [i (range (count row))]
                 (let [cell (get row i)]
                   ^{:key (str row i cell)}
-                  [:td (if (nil? cell)
-                         ""
-                         (pr-str cell))]))]))]] ; use the edn-viewer here as well?
+                  [:> Td (if (nil? cell)
+                           ""
+                           (pr-str cell))]))]))]] ; use the edn-viewer here as well?
        (when (< @limit (count rows))
-         [:> Button {:on-click #(swap! limit + 10)
-                     :style {:width "100%"
-                             :justify-content "center"
-                             :margin "0.25rem 0"}}
+         [:> Button {:onClick #(swap! limit + 10)
+                     :width "100%"}
           "Load More"])])))
 
 
 ;; TODO add truncation of long strings here
 (defn edn-viewer
   [data _]
-  [:pre (use-style edn-viewer-style) [:code (with-out-str (pp/pprint data))]])
+  [:> Box {:as "pre" :fontSize "12px"} [:code (with-out-str (pp/pprint data))]])
 
 
 (defn coll-viewer
@@ -318,13 +214,13 @@
             applicable-vs (applicable-viewers datafied-data)
             viewer-name (or (:viewer @state) (first applicable-vs))
             viewer (get-in indexed-viewers [viewer-name :athens.viewer/fn])]
-        [:div
-         [:div {:style {:display "flex"
-                        :flex-direction "row"
-                        :flex-wrap "no-wrap"
-                        :align-items "stretch"
-                        :justify-content "space-between"}}
-          [:div (use-style current-location-style)
+        [:> Box
+         [:> Box {:display "flex"
+                  :flexDirection "row"
+                  :flexWrap "no-wrap"
+                  :alignItems "stretch"
+                  :justifyContent "space-between"}
+          [:> Box
            (doall
              (for [i (-> navs count range)]
                (let [nav (get navs i)]
@@ -334,9 +230,9 @@
                                                        (-> s
                                                            (update :navs subvec 0 i)
                                                            (dissoc :viewer))))}
-                  [:<> [:> ChevronLeft] [:span (first nav)]]])))
-           [:h3 (use-style current-location-name-style) (pr-str (type navved-data))]
-           [:div (use-style current-location-controls-style)
+                  [:<> [:> ChevronLeftIcon] [:span (first nav)]]])))
+           [:h3 (pr-str (type navved-data))]
+           [:div
             [:span "View as "]
             (for [v applicable-vs]
               (let [click-fn #(swap! state assoc :viewer v)]
@@ -434,12 +330,16 @@
 
 (defn query-component
   [{:keys [eval-str result error]}]
-  [:div (use-style {:height "100%"})
-   [autosize/textarea (use-style query-input-style
-                                 {:value eval-str
-                                  :resize "none"
-                                  :on-change handle-box-change!
-                                  :on-key-down handle-box-key-down!})]
+  [:div {:style {:height "100%"}}
+   [:> Input {:value eval-str
+              :width "100%"
+              :minHeight "2.5rem"
+              :fontSize "12px"
+              :background "background.basement"
+              :fontFamily "code"
+              :resize "none"
+              :on-change handle-box-change!
+              :on-key-down handle-box-key-down!}]
    (if-not error
      [data-browser result]
      [error-component result])])
@@ -452,8 +352,8 @@
 
 (defn devtool-close-el
   []
-  [:> Button {:on-click #(dispatch [:devtool/toggle])}
-   [:> Clear]])
+  [:> IconButton {:onClick #(dispatch [:devtool/toggle])}
+   [:> XmarkIcon]])
 
 
 (defn devtool-el
@@ -461,17 +361,28 @@
   (when devtool?
     (let [{:keys [active-panel]} @state
           switch-panel (fn [panel] (swap! state assoc :active-panel panel))]
-      [:div (use-style container-style)
-       [:nav (use-style tabs-style)
-        [:div (use-style tabs-section-style)
-         [:> Button {:on-click #(switch-panel :query)
-                     :is-pressed (= active-panel :query)}
-          [:<> [:> ShortText] [:span "Query"]]]
-         [:> Button {:on-click #(switch-panel :txes)
-                     :is-pressed (= active-panel :txes)}]
-         [:<> [:> History] [:span "Transactions"]]]
+      [:> Box {:gridArea      "devtool"
+               :flexDirection "column"
+               :background    "background.basement"
+               :position      "relative"
+               :width         "100vw"
+               :height        "33vh"
+               :display       "flex"
+               :overflowY     "auto"
+               :right         0
+               :zIndex        2}
+       [:> ButtonGroup
+        [:> Button {:onClick #(switch-panel :query)
+                    :isActive (= active-panel :query)}
+         "Query"]
+        [:> Button {:onClick #(switch-panel :txes)
+                    :mr "auto"
+                    :isActive (= active-panel :txes)}
+         "Transactions"]
+
         [devtool-close-el]]
-       [:div (use-style panels-style)
+       [:> Box {:overflowY "auto"
+                :padding "0.5rem"}
         (case active-panel
           :query [query-component @state]
           :txes [txes-component @state])]])))

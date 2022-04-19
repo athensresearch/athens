@@ -24,7 +24,7 @@ test('athena create new page then click create page', async ({ page }) => {
   await inputInAthena(page, title);
 
   await Promise.all([
-    page.click('text=Create Page: ' + title),
+    page.click('text=Create page' + title),
     page.waitForNavigation()
   ]);
   await expect(page.locator(pageTitleLocator)).toHaveText(title);
@@ -33,6 +33,7 @@ test('athena create new page then click create page', async ({ page }) => {
 });
 
 test('athena search block then enter on result', async ({ page }) => {
+  const title = 'Welcome to Athens, Open-Source Networked Thought!';
   await waitForBoot(page);
   await inputInAthena(page, 'welcome');
 
@@ -42,16 +43,15 @@ test('athena search block then enter on result', async ({ page }) => {
   await page.press('[placeholder="Find or Create Page"]', 'ArrowDown');
   // Press Enter
   await page.press('[placeholder="Find or Create Page"]', 'Enter');
-
-  await expect(page.locator(".block-page > h1 > textarea")).toHaveValue('Welcome to Athens, Open-Source Networked Thought!');
+  await expect(page.locator(pageTitleLocator)).toHaveText(title);
 });
 
 test('athena search block then click on result', async ({ page }) => {
+  const title = 'Welcome to Athens, Open-Source Networked Thought!';
   await waitForBoot(page);
   await inputInAthena(page, 'welcome');
   // Click text=WelcomeWelcome to Athens, Open-Source Networked Thought!
-  await page.click('text=WelcomeWelcome to Athens, Open-Source Networked Thought!');
-  await expect(page.locator(".block-page > h1 > textarea")).toHaveValue('Welcome to Athens, Open-Source Networked Thought!');
-
+  await page.click('text=' + title);
+  await expect(page.locator(pageTitleLocator)).toHaveText(title);
 });
 
