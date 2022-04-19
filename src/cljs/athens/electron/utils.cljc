@@ -35,6 +35,14 @@
 (def log #(require-or-error "electron-log"))
 
 
+;; Electron ipcMain Channels
+
+(def ipcMainChannels
+  {:toggle-max-or-min-win-channel "toggle-max-or-min-active-win"
+   :close-win-channel "close-win"
+   :exit-fullscreen-win-channel "exit-fullscreen-win"})
+
+
 ;; DB utils
 
 (def DB-INDEX "index.transit")
