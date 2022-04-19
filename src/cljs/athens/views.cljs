@@ -1,6 +1,6 @@
 (ns athens.views
   (:require
-    ["/components/Preview/Preview" :refer [InteractionManager Preview]]
+    ["/components/InteractionManager/InteractionManager" :refer [InteractionManager Preview]]
     ["/theme/theme" :refer [theme]]
     ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center]]
     [athens.common-db :as common-db]
@@ -16,7 +16,7 @@
     [athens.views.help :refer [help-popup]]
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
-    [athens.views.pages.node-page :as node-page]
+    [athens.views.pages.node-preview :as node-preview]
     [athens.views.right-sidebar :as right-sidebar]
     [re-frame.core :as rf]
     [reagent.core :as r]))
@@ -27,7 +27,7 @@
 (defn alert
   []
   (let [alert- (rf/subscribe [:alert])]
-    (when-not (nil? @alert-)
+  (when-not (nil? @alert-)
       (js/alert (str @alert-))
       (rf/dispatch [:alert/unset]))))
 
@@ -79,14 +79,14 @@
                         ".os-linux &" {"--toolbar-height" "44px"}}}
                   [app-toolbar/app-toolbar]
                   [:> InteractionManager
-                   {:setPreviewPos (fn [pos] (reset! preview-pos pos))
+                   {:shouldShowPreviews true
+                    :setPreviewPos (fn [pos] (reset! preview-pos pos))
                     :setPreview (fn [value type] (reset! preview {:value value :type type}))
                     :onNavigateUid (fn [uid e] (navigate-uid uid e))
                     :onNavigatePage (fn [title e] (navigate-page title e))}
                    [left-sidebar/left-sidebar]
                    [pages/view]
                    [right-sidebar/right-sidebar]]
-
 
                   [:> Preview {:pos @preview-pos
                                :isOpen (:value @preview)}
@@ -96,7 +96,7 @@
                      (cond
                        (= type "page") (let [page-eid (common-db/e-by-av @db/dsdb :node/title val)]
                                          (println val)
-                                         [node-page/page page-eid])
+                                         [node-preview/page page-eid])
                        (= type "url") [:iframe {:src val
                        :border "none"
                                                 :width "10rem"
