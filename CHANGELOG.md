@@ -2,6 +2,127 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.30](https://github.com/athensresearch/athens/compare/v2.0.0-beta.29...v2.0.0-beta.30) (2022-04-19)
+
+
+### Features
+
+* add new edit icons ([bb0f40d](https://github.com/athensresearch/athens/commit/bb0f40de9db77a167284859317f402476fe88bca))
+* add working 404 page ([21012be](https://github.com/athensresearch/athens/commit/21012be5e0b6b21b5a750a22d7d17fee30ccfcea))
+* can open in sidebar from inline ref breadcrumb ([fd4f56c](https://github.com/athensresearch/athens/commit/fd4f56cf12bc6e2674f18690cdf2ac1b13f1542f))
+* JVM Crash Reporting ([226c793](https://github.com/athensresearch/athens/commit/226c79374a8fe6a0081f6d487b6566b049eb964d))
+* new page header controls ([01724ee](https://github.com/athensresearch/athens/commit/01724ee1be050da21fe9e67db0f5e50e53b81768))
+* separate button for open in sidebar ([c35c78c](https://github.com/athensresearch/athens/commit/c35c78c5ea6655202c50e822fae289adb813a29d))
+* separate button for open in sidebar ([bf694f1](https://github.com/athensresearch/athens/commit/bf694f1f9564ee4869503de6120bb5b14a02054e))
+* show "open in main view" for daily notes ([2f99633](https://github.com/athensresearch/athens/commit/2f9963350f6c3bbb28fdcca7495466940107dc78))
+* use new edit icon ([51fcd03](https://github.com/athensresearch/athens/commit/51fcd03fe0c1ff09467af54f120e9e08d380318d))
+
+
+### Bug Fixes
+
+* 404 shows properly on page-by-title ([8a35ace](https://github.com/athensresearch/athens/commit/8a35ace7528b5b155d75d6f0de4be0dd980a388e))
+* add person icon ([35aa390](https://github.com/athensresearch/athens/commit/35aa39036485fe7889fc247716493eb20f4b2564))
+* all pages table wraps and stretches ([7463254](https://github.com/athensresearch/athens/commit/7463254fb272ace20e5429881540a765ddd4679d))
+* also identify page by uid ([f8d1148](https://github.com/athensresearch/athens/commit/f8d11488757e6503f05a98b15e288f950161a7e4))
+* arrow up and down from blocks works ([ba8d3cb](https://github.com/athensresearch/athens/commit/ba8d3cb63fa5fdf1a32225f261285ffef3def0e0))
+* block embed controls properly placed ([2f6bd9e](https://github.com/athensresearch/athens/commit/2f6bd9e74824d6312df96d89ddf426d38740c93d))
+* block toggle and anchor properly sized ([c15679e](https://github.com/athensresearch/athens/commit/c15679ef2f28259e3eec36cfbc501592d4c36b72))
+* breadcrumbs allowed to be big again, and checkboxes not broken ([780876d](https://github.com/athensresearch/athens/commit/780876df33e2efb36be1516ce411cfbc3141ee9e))
+* breadcrumbs should wrap ([0266059](https://github.com/athensresearch/athens/commit/02660594dd03f791a1e789904c716e0bdb51a686))
+* can click sidebar to scroll ([2574d34](https://github.com/athensresearch/athens/commit/2574d34a8a497b8496f2a337d85858cd5ac62678))
+* can copy multiple block refs ([e151792](https://github.com/athensresearch/athens/commit/e15179292f33a252d982d10a5cbfc093f6ce0b6a))
+* can drag-select in sidebar ([0c5a4a4](https://github.com/athensresearch/athens/commit/0c5a4a4c171dcbb11fb55f0f789e0fd85946b4ad))
+* can scroll to items in sidebar again ([5284874](https://github.com/athensresearch/athens/commit/528487497663689b2f892a06be6a761b3f11b184))
+* centered daily notes ([653ccc8](https://github.com/athensresearch/athens/commit/653ccc86b70751fabf3408c87d7f22cec5b19d8f))
+* consistent page widths ([a82f418](https://github.com/athensresearch/athens/commit/a82f418fbbc9a2f64173716f6e11886f865332c8))
+* correct chevron direction in references ([b9b92d6](https://github.com/athensresearch/athens/commit/b9b92d617005627d527069ec780ad2a2576e1754))
+* correct transition on apptoolbar ([9fe3982](https://github.com/athensresearch/athens/commit/9fe39825a45c335c9a81a153fea7bebf08d28267))
+* css prop should go in sx ([6426355](https://github.com/athensresearch/athens/commit/6426355a5d745b15940cd057d05d8cbbd37dbce9))
+* don't add new pages to daily pages ([67745a4](https://github.com/athensresearch/athens/commit/67745a43705c33768e40b6829e3c9a244820722c))
+* don't import athens.utils in electron ([c8578ce](https://github.com/athensresearch/athens/commit/c8578ce577ed205240ed39824266620e60a45992))
+* embeds only as broken as on release ([ae5dbae](https://github.com/athensresearch/athens/commit/ae5dbae1758d39ae348f7bb1a8df04818b5d6e26))
+* flip page open buttons for daily pages ([74cadcc](https://github.com/athensresearch/athens/commit/74cadccc0016bebd915c335166e954d7b5942944))
+* force consistent typography on block text and textarea ([e432025](https://github.com/athensresearch/athens/commit/e432025b17b9442aee415043f44557cdac09f2c2))
+* inline menu closes on click outside ([870250b](https://github.com/athensresearch/athens/commit/870250b858f1f718cf63ca2e3a8c59d781879d23))
+* linked refs in block work ([e6707fb](https://github.com/athensresearch/athens/commit/e6707fbb2e75b7c59784066e05ef3ba854af4616))
+* mark/highlight colors are global ([81750cd](https://github.com/athensresearch/athens/commit/81750cd6bd08b94537a0b383a6a8f8df33071738))
+* misc minor layout issues ([9bdf174](https://github.com/athensresearch/athens/commit/9bdf1749cdd6c4535341dc90ee9eddd4ecea5079))
+* more types of links included in block interaction passthrough ([84522d9](https://github.com/athensresearch/athens/commit/84522d9e12e55da941e71b76d79bb7e6ef323b4e))
+* nested links clickable again ([270c05a](https://github.com/athensresearch/athens/commit/270c05a3c3d741bed35f4fe655ebcbde94285f96))
+* no nil uids on daily pages ([7cecc4f](https://github.com/athensresearch/athens/commit/7cecc4febf146190bf4cc1d7409e17361992b347))
+* node page button shouldn't squish ([eb02b0a](https://github.com/athensresearch/athens/commit/eb02b0a024677e598644d2553f969a4d97e4ca77))
+* open page in sidebar shouldn't open graph ([6afcc68](https://github.com/athensresearch/athens/commit/6afcc682f051ed8a7e1d0a26ddd4ede11ff0febb))
+* pass more tests ([49bb181](https://github.com/athensresearch/athens/commit/49bb1813421cea53131863bf09e089d8bd3a46e6))
+* passing more tests ([5bdede1](https://github.com/athensresearch/athens/commit/5bdede134f376eab564d3d3acac248b032699b71))
+* perf and key error on daily notes ([c31cbfc](https://github.com/athensresearch/athens/commit/c31cbfc75193e1149943853e64991db98652b3c5))
+* proper icon size in table header ([1bb3350](https://github.com/athensresearch/athens/commit/1bb3350bd5d6f110e71353236952ceecbccbc903))
+* proper indentation for blocks in embeds ([8bfff9d](https://github.com/athensresearch/athens/commit/8bfff9df339d7bc1a9adb502862c76fbad25a721))
+* proper toast message on permalink action ([a68de83](https://github.com/athensresearch/athens/commit/a68de8397c8b42f2f2999ce255ca86046ea0d93f))
+* reduce excess spacing around daily notes ([0e02491](https://github.com/athensresearch/athens/commit/0e02491ff14b51b354304aed96e66ade339a31aa))
+* remove :first-child warning ([fedbec0](https://github.com/athensresearch/athens/commit/fedbec025eee7972d2b1e78eb5213fddd3d96f59))
+* remove content area until editing ([c3ec4a9](https://github.com/athensresearch/athens/commit/c3ec4a94db04da35c3cdd1cd01f546ec2c63f215))
+* remove some println ([04dd227](https://github.com/athensresearch/athens/commit/04dd227d2e37d2e11b97623f669f5f46b997094e))
+* sidebar items state in db ([39f8365](https://github.com/athensresearch/athens/commit/39f8365339f4329323d5543b5415ee44aec961a0))
+* solve another cause of collapsed checkboxes ([4502d52](https://github.com/athensresearch/athens/commit/4502d52dabda8becf74b65a2903bbe99d6b30509))
+* solve cause of extra title wrapping ([0ce0063](https://github.com/athensresearch/athens/commit/0ce00632f81ccb7493e17d83a70e2c3f2cf3e1af))
+* solve some cases of improper buttons in page header ([b2e350b](https://github.com/athensresearch/athens/commit/b2e350bdf912e51753a288b4eed5bf32068e2012))
+* throttle dispatches on-scroll ([f560575](https://github.com/athensresearch/athens/commit/f560575bcbbd8c7d646c09abb31968d748bcfd8f))
+* use a debounce instead of throttle for scroll ([e16f5c4](https://github.com/athensresearch/athens/commit/e16f5c465aca6b029b238e94f0a27f4489a15531))
+* use correct property for menu title spcing ([c716d37](https://github.com/athensresearch/athens/commit/c716d37fa5d93f0d7874dec98f82c51760844fd1))
+* use correct property for menu title spcing ([0ece2ec](https://github.com/athensresearch/athens/commit/0ece2ec816cb3663412bb80ccb4f629b1db8952a))
+* use theme on loading screen ([f57a3c4](https://github.com/athensresearch/athens/commit/f57a3c4a10ede0b4f32860f9ac9ec8fc670c0c56))
+
+
+### Performance
+
+* early returns for menus in blocks ([38bda25](https://github.com/athensresearch/athens/commit/38bda25ab291c8298b59a42217bd7125daaee0fd))
+* only include autocompletes on active block ([ee29db5](https://github.com/athensresearch/athens/commit/ee29db51fab5d20d024fb7cb751accf05524f882))
+* remove unused css ([506ff8c](https://github.com/athensresearch/athens/commit/506ff8c611d37d410042cf91b6f6bccc1da72899))
+* use system fonts for speed ([e4c26eb](https://github.com/athensresearch/athens/commit/e4c26eb5b8795c9df3bd287ac35abcddd72e91f6))
+
+
+### Refactors
+
+* blocks use new inline refs component ([5c238ab](https://github.com/athensresearch/athens/commit/5c238ab6da968b8ad5c9ab02456306879f63b42c))
+* chakra window icons ([8ab8636](https://github.com/athensresearch/athens/commit/8ab86367b581890bfc816cb7c00a3c4b73de5eb9))
+* dedicated space for presence on blocks ([3348dc5](https://github.com/athensresearch/athens/commit/3348dc5e8bd95cf212f7e2d28ea672f52be732d1))
+* functioning block menu ([a57e7d5](https://github.com/athensresearch/athens/commit/a57e7d5d133148b1f46285502751eb094118ea73))
+* make sure every menu and popover is lazy ([b281dda](https://github.com/athensresearch/athens/commit/b281dda46598ab03744372cdcd710bed7b647847))
+* midflight reducing getcaretpos ([6a28dcc](https://github.com/athensresearch/athens/commit/6a28dccd86d0ab746d17efb5c5f9defa37310438))
+* minor cleanup ([4f42fe4](https://github.com/athensresearch/athens/commit/4f42fe48a440fcca58c0f14d8c75032c14118bbb))
+* move block components out of redundant comps folder ([f049f60](https://github.com/athensresearch/athens/commit/f049f607b30d1be14e3d8ea86af9d435c0ab078d))
+* move reference components to new file ([79502a7](https://github.com/athensresearch/athens/commit/79502a72394b5c5b45f0134ed82336b3510c3c2f))
+* new file for sidebar components ([c1686b1](https://github.com/athensresearch/athens/commit/c1686b16c0b4acb6740c155acb54fe65ee751752))
+* no mui in graph ([2fd482b](https://github.com/athensresearch/athens/commit/2fd482b7a071a92f1881e348c18d0410f798dd74))
+* only one title component ([e37150e](https://github.com/athensresearch/athens/commit/e37150e391b0a8640dd0654b451fab5d6f25c8ad))
+* replace and remove material-ui ([95dc4bb](https://github.com/athensresearch/athens/commit/95dc4bb75a0d66ace8f9983d9ae099149fca8e43))
+* replace material icons on node page ([cc1bfd5](https://github.com/athensresearch/athens/commit/cc1bfd578417d01f7d2c353ff172c03f157066b4))
+* retire stylefy and garden ([2184c10](https://github.com/athensresearch/athens/commit/2184c10cdafe26350a9d89bf5f1f5edf7a61b223))
+* rework node page titles ([82e1e97](https://github.com/athensresearch/athens/commit/82e1e971a3b1918f1ef21fb1b5a4e150fa8ccef1))
+* reworking linked ref styles ([84b0ff0](https://github.com/athensresearch/athens/commit/84b0ff0b6f1d09d5c98626d5edcaa8fcb5fa3211))
+* undo class changes to textarea ([1e7c2b4](https://github.com/athensresearch/athens/commit/1e7c2b446edf217cb5716cac883e9ccd7f0d33f8))
+* use correct block container styles ([1cd833f](https://github.com/athensresearch/athens/commit/1cd833f98597e915d441391aa78cd7aefa938f3b))
+* use correct block container styles ([20e1cbe](https://github.com/athensresearch/athens/commit/20e1cbe127374516f8e53e94372adb652254882c))
+
+
+* cleanup ([9fedb20](https://github.com/athensresearch/athens/commit/9fedb20391b2b2864864ad3ae14b1bd8ee7dfffb))
+* fix lint issues ([059d421](https://github.com/athensresearch/athens/commit/059d421ae7677df6d21e68044a6e94d71d836562))
+* fix lint issues ([e880ef5](https://github.com/athensresearch/athens/commit/e880ef5b7fbe710cc0f9369292f0055d8edb4b2e))
+* happy little comment around fragile styles ([4f4cb42](https://github.com/athensresearch/athens/commit/4f4cb421b0825566d324da70278f5ab2dae3a095))
+* lint fixes ([259622a](https://github.com/athensresearch/athens/commit/259622af6ad83042b0c0b1e65373bc4fd7597d19))
+* lint fixes ([43b2b0b](https://github.com/athensresearch/athens/commit/43b2b0b34ad4f6591b01902d6ae92f343fd9e56d))
+* lint fixes ([0be358d](https://github.com/athensresearch/athens/commit/0be358d38c15b448d507bdb7390a6b2936080641))
+* lint fixes ([fef4597](https://github.com/athensresearch/athens/commit/fef459763f468cdf341007e736de0ca6c44343c5))
+* linting ([7bc4e09](https://github.com/athensresearch/athens/commit/7bc4e099b6a1574fe7d00081274edd9c0e8aa200))
+* linting ([c941068](https://github.com/athensresearch/athens/commit/c9410683d96292f1579ee69ea805a0051568e0f2))
+* linting fixes ([6dc3771](https://github.com/athensresearch/athens/commit/6dc37710a98c4b6b2f000965799044a2fcfb38a6))
+* minor cleanup ([b5d4197](https://github.com/athensresearch/athens/commit/b5d41970fd8561aec73dea4991a13d18a7cd96a2))
+* remove console logs ([41f107d](https://github.com/athensresearch/athens/commit/41f107dee03cce831ab442372b36f6f634d6fcce))
+* remove outdated comment ([e4fca23](https://github.com/athensresearch/athens/commit/e4fca23e48145df8de185f0342c471ba672d5131))
+* remove unused bindin ([f93e275](https://github.com/athensresearch/athens/commit/f93e275c547b7362970138ba44f98af260f33a6b))
+* update e2e page selectors ([6dc8d07](https://github.com/athensresearch/athens/commit/6dc8d07a4f1459d58eba7ad868f1c5de6364113d))
+* update e2e to new copy ref text ([558af98](https://github.com/athensresearch/athens/commit/558af98fa0f3c34ec952cc11e40739636797fea5))
+
 ## [2.0.0-beta.29](https://github.com/athensresearch/athens/compare/v2.0.0-beta.28...v2.0.0-beta.29) (2022-04-13)
 
 
