@@ -157,7 +157,7 @@
     "babel-plugin-styled-components": "^1.13.2",
     "babel-plugin-transform-imports": "^2.0.0",
     "concurrently": "^6.2.1",
-    "electron": "^12.2.3",
+    "electron": "^13.6.6",
     "electron-builder": "22.14",
     "electron-builder-notarize": "^1.2.0",
     "gh-pages": "^2.2.0",
