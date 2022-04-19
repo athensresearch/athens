@@ -17,7 +17,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
     display="flex"
     lineHeight="2em"
     position="relative"
-    borderRadius="0.125rem"
+    borderRadius="sm"
     justifyContent="flex-start"
     flexDirection="column"
     background="var(--block-surface-color)"
@@ -61,7 +61,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         gridTemplateRows: "0 1fr 0",
         gridTemplateAreas:
           "'above above above above above' 'toggle bullet content refs presence' 'below below below below below'",
-        borderRadius: "0.5rem",
+        borderRadius: "sm",
         minHeight: '2em',
         position: "relative",
       },
@@ -95,7 +95,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       },
       "&.is-linked-ref": { bg: "background-attic" },
       ".block-container": {
-        marginLeft: "2rem",
+        marginLeft: "2em",
         gridArea: "body"
       }
     }}

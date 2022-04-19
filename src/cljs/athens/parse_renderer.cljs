@@ -1,7 +1,7 @@
 ^:cljstyle/ignore
 (ns athens.parse-renderer
   (:require
-   ["@chakra-ui/react" :refer [Link Button Text Box]]
+   ["@chakra-ui/react" :refer [Button Text Box]]
    ["katex" :as katex]
    ["katex/dist/contrib/mhchem"]
    [athens.config :as config]
@@ -88,7 +88,6 @@
      (not (str/blank? title))
      [:span {:class "link"
              "data-page-title" (parse-title title-coll)
-             :title from
              :on-click (fn [e]
                          (let [parsed-title (parse-title title-coll)
                                shift?       (.-shiftKey e)]
@@ -103,7 +102,6 @@
 
      :else
      (into [:span {:class "link"
-                   :title from
                    "data-page-title" (parse-title title-coll)
                    :on-click (fn [e]
                                (let [parsed-title (parse-title title-coll)

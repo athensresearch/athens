@@ -1,4 +1,5 @@
-import { Box, Portal } from '@chakra-ui/react';
+import React from 'react';
+import { Box, Popover, PopoverContent, PopoverTrigger, Portal } from '@chakra-ui/react';
 
 const targetIsPageLink = (e) => e?.target?.classList?.contains('link');
 const targetIsUrlLink = (e) => e?.target?.classList?.contains('url-link');
@@ -12,6 +13,7 @@ const attrIf = (e, condition, attr) => {
 
 export const InteractionManager = ({
   children,
+  shouldShowPreviews,
   onNavigateUid,
   onNavigatePage,
   setPreviewPos,
@@ -19,35 +21,38 @@ export const InteractionManager = ({
 }) => {
 
   // When hovering a page, link, breadcrumb, etc.
-  const handleMouseOver = (e) => {
-    setPreviewPos({ x: e.clientX, y: e.clientY });
+  const handlemouseMove = (e) => {
 
-    const previewedPage = attrIf(e, targetIsPageLink, 'data-page-title');
-    if (previewedPage) {
-      setPreview(previewedPage, 'page');
-      return;
+    if (shouldShowPreviews) {
+      setPreviewPos({ x: e.clientX, y: e.clientY });
+
+      const previewedPage = attrIf(e, targetIsPageLink, 'data-page-title');
+      if (previewedPage) {
+        setPreview(previewedPage, 'page');
+        return;
+      }
+
+      const previewedHashtag = attrIf(e, targetIsHashtag, 'data-page-title');
+      if (previewedHashtag) {
+        setPreview(previewedHashtag, 'page');
+        return;
+      }
+
+      const previewedUrl = attrIf(e, targetIsUrlLink, 'href');
+      if (previewedUrl) {
+        setPreview(previewedUrl, 'url');
+        return;
+      }
+
+      const previewedAutoUrl = attrIf(e, targetIsAutolink, 'href');
+      if (previewedAutoUrl) {
+        console.log('found autolink');
+        setPreview(previewedAutoUrl, 'url');
+        return;
+      }
+
+      setPreview(null, null);
     }
-
-    const previewedHashtag = attrIf(e, targetIsHashtag, 'data-page-title');
-    if (previewedHashtag) {
-      setPreview(previewedHashtag, 'page');
-      return;
-    }
-
-    const previewedUrl = attrIf(e, targetIsUrlLink, 'href');
-    if (previewedUrl) {
-      setPreview(previewedUrl, 'url');
-      return;
-    }
-
-    const previewedAutoUrl = attrIf(e, targetIsAutolink, 'href');
-    if (previewedAutoUrl) {
-      console.log('found autolink');
-      setPreview(previewedAutoUrl, 'url');
-      return;
-    }
-
-    setPreview(null, null);
   }
 
 
@@ -88,8 +93,8 @@ export const InteractionManager = ({
   return (
     <Box
       display="contents"
-      onMouseOver={handleMouseOver}
-      onScroll={handleMouseOver}
+      onMouseMove={handlemouseMove}
+      onScroll={handlemouseMove}
       onClick={handleClick}
     >
       {children}
@@ -97,25 +102,31 @@ export const InteractionManager = ({
 }
 
 export const Preview = ({ isOpen, pos, children }) => {
-  if (isOpen) {
-    return <Portal>
+  if (!isOpen) return null;
+
+  return <Popover
+    isOpen={true}
+    placement="bottom-start"
+    autoFocus={false}
+  >
+    <PopoverTrigger>
       <Box
-        pointerEvents="none"
         position="fixed"
-        p={4}
-        borderRadius="lg"
-        shadow="popover"
+        pointerEvents="none"
         left={pos?.x + 10}
         top={pos?.y + 10}
+      />
+    </PopoverTrigger>
+    <Portal >
+      <PopoverContent
+        pointerEvents="none"
+        p={4}
         background="background.upper"
-        height="20rem"
         width="20rem"
         overflow="hidden"
       >
         {children}
-      </Box>
+      </PopoverContent>
     </Portal>
-  } else {
-    return null;
-  }
+  </Popover>
 }

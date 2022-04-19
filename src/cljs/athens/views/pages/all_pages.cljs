@@ -114,7 +114,9 @@
                [:> Tr {:key uid}
                 [:> Td
                  [:> Button {:variant "link"
+                             :className "link"
                              :justifyContent "flex-start"
+                             "data-page-title" title
                              :textAlign "left"
                              :padding "0"
                              :color "link"
