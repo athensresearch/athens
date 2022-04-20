@@ -32,17 +32,17 @@
         localStorage.setItem("day8.re-frame-10x.show-panel","\"true\"")
         localStorage.setItem("day8.re-frame-10x.using-trace?","\"true\"")
       }
-      function isBrowserSupported() {
-        return userAgent.indexOf("chrome/") > -1;
+      function isBrowserUnsupported() {
+        return userAgent.indexOf("AppleWebKit/") > -1;
       }
       function showUnsupportedBrowserWarning() {
           let warnDiv = window.document.createElement("div");
-          warnDiv.innerText = "Only browsers based on Chrome/Chromium are supported";
+          warnDiv.innerText = "Safari based browsers based are not supported";
           window.document.body.appendChild(warnDiv);
       }
     </script>
     <script>
-      if (!isBrowserSupported()) {
+      if (isBrowserUnsupported()) {
         showUnsupportedBrowserWarning();
       } else {
         var electron = isElectron()
