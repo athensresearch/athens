@@ -1,155 +1,79 @@
 (ns athens.views.left-sidebar
   (:require
+    ["@chakra-ui/react" :refer [VStack Flex Heading Button Link Flex]]
+    ["framer-motion" :refer [AnimatePresence motion]]
     [athens.reactive :as reactive]
     [athens.router   :as router]
-    [athens.style    :refer [color OPACITIES]]
     [athens.util     :as util]
     [re-frame.core   :as rf]
-    [reagent.core    :as r]
-    [stylefy.core    :as stylefy :refer [use-style use-sub-style]]))
-
-
-;; Styles
-
-
-(def left-sidebar-style
-  {:width 0
-   :grid-area "left-sidebar"
-   :height "100%"
-   :display "flex"
-   :flex-direction "column"
-   :overflow-x "hidden"
-   :overflow-y "auto"
-   ::stylefy/supports {"overflow-y: overlay"
-                       {:overflow-y "overlay"}}
-   :transition "width 0.5s ease"
-   ::stylefy/sub-styles {:top-line {:margin-bottom "2.5rem"
-                                    :display "flex"
-                                    :flex "0 0 auto"
-                                    :justify-content "space-between"}
-                         :footer {:flex "0 0 auto"
-                                  :margin "auto 2rem 0"
-                                  :align-self "stretch"
-                                  :display "grid"
-                                  :grid-auto-flow "column"
-                                  :grid-template-columns "1fr auto auto"
-                                  :grid-gap "0.25rem"}
-                         :small-icon {:font-size "16px"}
-                         :large-icon {:font-size "22px"}}
-   ::stylefy/manual [[:&.is-open {:width "18rem"}]
-                     [:&.is-closed {:width "0"}]]})
-
-
-(def left-sidebar-content-style
-  {:width "18rem"
-   :height "100%"
-   :display "flex"
-   :flex-direction "column"
-   :padding "7.5rem 0 1rem"
-   :transition "opacity 0.5s ease"
-   :opacity 0
-   ::stylefy/manual [[:&.is-open {:opacity 1}]
-                     [:&.is-closed {:opacity 0}]]})
-
-
-(def shortcuts-list-style
-  {:flex "1 1 100%"
-   :display "flex"
-   :list-style "none"
-   :flex-direction "column"
-   :padding "0 2rem"
-   :margin "0 0 2rem"
-   :overflow-y "auto"
-   ::stylefy/supports {"overflow-y: overlay"
-                       {:overflow-y "overlay"}}
-   ::stylefy/sub-styles {:heading {:flex "0 0 auto"
-                                   :opacity (:opacity-med OPACITIES)
-                                   :line-height "1"
-                                   :margin "0 0 0.25rem"
-                                   :font-size "inherit"}}})
-
-
-(def shortcut-style
-  {:color (color :link-color)
-   :cursor "pointer"
-   :display "flex"
-   :flex "0 0 auto"
-   :padding "0.25rem 0"
-   :transition "opacity 0.05s ease"
-   ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
-
-
-(def notional-logotype-style
-  {:font-family "IBM Plex Serif"
-   :font-size "18px"
-   :opacity (:opacity-med OPACITIES)
-   :letter-spacing "-0.05em"
-   :font-weight "bold"
-   :text-decoration "none"
-   :justify-self "flex-start"
-   :color (color :header-text-color)
-   :transition "opacity 0.05s ease"
-   ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
-
-
-(def version-style
-  {:color "inherit"
-   :text-decoration "none"
-   :opacity 0.3
-   :font-size "clamp(12px, 100%, 14px)"
-   ::stylefy/mode [[:hover {:opacity (:opacity-high OPACITIES)}]]})
+    [reagent.core    :as r]))
 
 
 ;; Components
+
+(def expanded-sidebar-width "clamp(12rem, 25vw, 18rem)")
 
 
 (defn shortcut-component
   [_]
   (let [drag (r/atom nil)]
     (fn [[order title]]
-      [:li
-       [:a (use-style (merge shortcut-style
-                             (case @drag
-                               :above {:border-top [["1px" "solid" (color :link-color)]]}
-                               :below {:border-bottom [["1px" "solid" (color :link-color)]]}
-                               {}))
-                      {:on-click      (fn [e]
-                                        (let [shift? (.-shiftKey e)]
-                                          (rf/dispatch [:reporting/navigation {:source :left-sidebar
-                                                                               :target :page
-                                                                               :pane   (if shift?
-                                                                                         :right-pane
-                                                                                         :main-pane)}])
-                                          (router/navigate-page title e)))
-                       :draggable     true
-                       :on-drag-over  (fn [e]
-                                        (.. e preventDefault)
-                                        (let [offset       (util/mouse-offset e)
-                                              middle-y     (util/vertical-center (.. e -target))
-                                              ;; find closest li because sometimes event.target is anchor tag
-                                              ;; if nextSibling is null, then target is last li and therefore end of list
-                                              closest-li   (.. e -target (closest "li"))
-                                              next-sibling (.. closest-li -nextElementSibling)
-                                              last-child?  (nil? next-sibling)]
-                                          (cond
-                                            (> middle-y (:y offset))                   (reset! drag :above)
-                                            (and (< middle-y (:y offset)) last-child?) (reset! drag :below))))
-                       :on-drag-start (fn [e]
-                                        (set! (.. e -dataTransfer -dropEffect) "move")
-                                        (.. e -dataTransfer (setData "text/plain" order)))
-                       :on-drag-end   (fn [_])
-                       :on-drag-leave (fn [_] (reset! drag nil))
-                       :on-drop       (fn [e]
-                                        (let [source-order (js/parseInt (.. e -dataTransfer (getData "text/plain")))]
-                                          (prn source-order order)
-                                          (cond
-                                            (= source-order order) nil
-                                            (and (= source-order
-                                                    (dec order))
-                                                 (= @drag :above)) nil
-                                            (= @drag :below)       (rf/dispatch [:left-sidebar/drop source-order order :after])
-                                            :else                  (rf/dispatch [:left-sidebar/drop source-order order :before])))
-                                        (reset! drag nil))})
+      [:> Flex {:as "li"
+                :align "stretch"
+                :border "1px solid transparent"
+                :borderTopColor (when (:above @drag) "brand")
+                :borderBottomColor (when (:below @drag) "brand")}
+       [:> Button {:variant "ghost"
+                   :mx "1.25rem"
+                   :size "sm"
+                   :display "inline-block"
+                   :textAlign "left"
+                   :justifyContent "flex-start"
+                   :overflow "hidden"
+                   :fontWeight "normal"
+                   :whiteSpace "nowrap"
+                   :textOverflow "ellipsis"
+                   :flex "1"
+                   :boxShadow "0 0 0 0.25rem transparent"
+                   :_focus {:outline "none"}
+                   :_active {:transitionDuration "0s"}
+                   :on-click (fn [e]
+                               (let [shift? (.-shiftKey e)]
+                                 (rf/dispatch [:reporting/navigation {:source :left-sidebar
+                                                                      :target :page
+                                                                      :pane   (if shift?
+                                                                                :right-pane
+                                                                                :main-pane)}])
+                                 (router/navigate-page title e)))
+                   :draggable     true
+                   :on-drag-over  (fn [e]
+                                    (.. e preventDefault)
+                                    (let [offset       (util/mouse-offset e)
+                                          middle-y     (util/vertical-center (.. e -target))
+                                          ;; find closest li because sometimes event.target is anchor tag
+                                          ;; if nextSibling is null, then target is last li and therefore end of list
+                                          closest-li   (.. e -target (closest "li"))
+                                          next-sibling (.. closest-li -nextElementSibling)
+                                          last-child?  (nil? next-sibling)]
+                                      (cond
+                                        (> middle-y (:y offset))                   (reset! drag :above)
+                                        (and (< middle-y (:y offset)) last-child?) (reset! drag :below))))
+                   :on-drag-start (fn [e]
+                                    (set! (.. e -dataTransfer -dropEffect) "move")
+                                    (.. e -dataTransfer (setData "text/plain" order)))
+                   :on-drag-end   (fn [_])
+                   :on-drag-leave (fn [_] (reset! drag nil))
+                   :on-drop       (fn [e]
+                                    (let [source-order (js/parseInt (.. e -dataTransfer (getData "text/plain")))]
+                                      (prn source-order order)
+                                      (cond
+                                        (= source-order order) nil
+                                        (and (= source-order
+                                                (dec order))
+                                             (= @drag :above)) nil
+                                        (= @drag :below)       (rf/dispatch [:left-sidebar/drop source-order order :after])
+                                        :else                  (rf/dispatch [:left-sidebar/drop source-order order :before])))
+                                    (reset! drag nil))}
         title]])))
 
 
@@ -157,19 +81,42 @@
   []
   (let [open?     (rf/subscribe [:left-sidebar/open])
         shortcuts (reactive/get-reactive-shortcuts)]
-    (fn []
-      [:div (use-style left-sidebar-style
-                       {:class (if @open?
-                                 "is-open"
-                                 "is-closed")})
-       [:div (use-style left-sidebar-content-style
-                        {:class (if @open?
-                                  "is-open"
-                                  "is-closed")})
+    [:> AnimatePresence {:initial false}
+     (when @open?
+       [:> (.-div motion)
+        {:style {:display "flex"
+                 :flex-direction "column"
+                 :height "100%"
+                 :zIndex 1
+                 :alignItems "stretch"
+                 :gridArea "left-sidebar"
+                 :position "relative"
+                 :overflow "hidden"}
+         :initial {:width 0
+                   :opacity 0}
+         :animate {:width expanded-sidebar-width
+                   :opacity 1}
+         :exit {:width 0
+                :opacity 0}}
 
         ;; SHORTCUTS
-        [:ol (use-style shortcuts-list-style)
-         [:h2 (use-sub-style shortcuts-list-style :heading)
+        [:> VStack {:as "ol"
+                    :align "stretch"
+                    :width expanded-sidebar-width
+                    :py "1rem"
+                    :marginTop "7rem"
+                    :spacing "0.25rem"
+                    :overflowY "auto"
+                    :backdropFilter "blur(1em)"
+                    :borderRadius "lg"
+                    :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}
+                         :listStyle "none"
+                         :WebkitAppRegion "no-drag"}}
+         [:> Heading {:as "h2"
+                      :px "2rem"
+                      :pb "0.5rem"
+                      :size "sm"
+                      :color "foreground.secondary"}
           "Shortcuts"]
          (doall
            (for [sh shortcuts]
@@ -177,10 +124,20 @@
              [shortcut-component sh]))]
 
         ;; LOGO + BOTTOM BUTTONS
-        [:footer (use-sub-style left-sidebar-style :footer)
-         [:a (use-style notional-logotype-style {:href "https://github.com/athensresearch/athens/issues/new/choose" :target "_blank"}) "Athens"]
-         [:h5 (use-style {:align-self "center"})
-          [:a (use-style version-style {:href   "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
-                                        :target "_blank"})
-           (athens.util/athens-version)]]]]])))
-
+        [:> Flex {:as "footer"
+                  :width expanded-sidebar-width
+                  :flexWrap "wrap"
+                  :gap "0.25em 0.5em"
+                  :fontSize "sm"
+                  :p "2rem"
+                  :mt "auto"}
+         [:> Link {:fontWeight "bold"
+                   :display "inline-block"
+                   :href "https://github.com/athensresearch/athens/issues/new/choose"
+                   :target "_blank"}
+          "Athens"]
+         [:> Link {:color "foreground.secondary"
+                   :display "inline-block"
+                   :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
+                   :target "_blank"}
+          (athens.util/athens-version)]]])]))

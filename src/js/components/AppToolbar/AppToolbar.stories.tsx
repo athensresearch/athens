@@ -1,32 +1,20 @@
 import React from 'react';
-import styled from 'styled-components';
 import { BADGE, Storybook } from '@/utils/storybook';
-import { mockDatabases } from '@/concept/DatabaseMenu/mockData';
 import * as mockPresence from '@/PresenceDetails/mockData';
 import { useAppState } from '@/utils/useAppState';
 
 import { AppToolbar, AppToolbarProps } from './AppToolbar';
-import { DatabaseMenu } from '@/concept/DatabaseMenu';
 import { PresenceDetails } from '@/PresenceDetails';
-
-const ToolbarStoryWrapper = styled(Storybook.Desktop)`
-  > * {
-    /* Make the macOS toolbar behave inside the story */
-    position: static !important;
-    width: 100%;
-  }
-`;
 
 
 export default {
   title: 'Sections/AppToolbar',
   component: AppToolbar,
-  subcomponents: { DatabaseMenu, PresenceDetails },
+  subcomponents: { PresenceDetails },
   argTypes: {},
   parameters: {
     badges: [BADGE.DEV]
   },
-  decorators: [(Story) => <ToolbarStoryWrapper>{Story()}</ToolbarStoryWrapper>]
 };
 
 const Template = (args: AppToolbarProps) => {
@@ -53,7 +41,6 @@ const Template = (args: AppToolbarProps) => {
   } = useAppState();
 
   return <AppToolbar
-    databaseMenu={<DatabaseMenu />}
     route={route}
     isWinFullscreen={isWinFullscreen}
     isWinFocused={isWinFocused}

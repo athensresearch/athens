@@ -10,6 +10,10 @@
                 :output-dir       "resources/public/js/compiled"
                 :asset-path       "js/compiled"
                 :modules          {:app {:init-fn athens.core/init}}
+                ;; Don't try to polyfill for generators, we don't try to support older browsers
+                ;; and it breaks some libraries we use (ForceGraph2D) when other imports change.
+                ;; https://github.com/thheller/shadow-cljs/issues/854
+                :js-options       {:babel-preset-config {:targets {:chrome 80}}}
                 :compiler-options {:closure-warnings   {:global-this :off}
                                    :infer-externs      :auto
                                    :closure-defines    {re-frame.trace.trace-enabled? true}
@@ -27,6 +31,7 @@
                      :output-dir       "resources/public/js/compiled"
                      :asset-path       "js/compiled"
                      :modules          {:renderer {:init-fn athens.core/init}}
+                     :js-options       {:babel-preset-config {:targets {:chrome 80}}}
                      :compiler-options {:closure-warnings   {:global-this :off}
                                         :infer-externs      :auto
                                         :closure-defines    {re-frame.trace.trace-enabled? true}
@@ -45,6 +50,7 @@
           :main {:target           :node-script
                  :output-to        "resources/main.js"
                  :main             athens.main.core/main
+                 :js-options       {:babel-preset-config {:targets {:chrome 80}}}
                  :compiler-options {:output-feature-set :es-next
                                     :reader-features  #{:electron}}}
 

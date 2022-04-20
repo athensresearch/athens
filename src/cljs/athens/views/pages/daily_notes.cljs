@@ -1,39 +1,11 @@
 (ns athens.views.pages.daily-notes
   (:require
+    ["/components/Page/Page" :refer [PageHeader TitleContainer DailyNotesPage]]
+    ["@chakra-ui/react" :refer [VStack]]
     [athens.dates :as dates]
     [athens.reactive :as reactive]
-    [athens.style :refer [DEPTH-SHADOWS]]
     [athens.views.pages.node-page :as node-page]
-    [re-frame.core :refer [dispatch subscribe]]
-    [stylefy.core :refer [use-style]]))
-
-
-;; Styles
-
-
-(def daily-notes-scroll-area-style
-  {:min-height "calc(100vh + 1px)"
-   :display        "flex"
-   :padding        "1.25rem 0"
-   :align-items    "stretch"
-   :flex           "1 1 100%"
-   :flex-direction "column"})
-
-
-(def daily-notes-page-style
-  {:box-shadow (:16 DEPTH-SHADOWS)
-   :align-self "stretch"
-   :justify-self "stretch"
-   :margin "1.25rem 2.5rem"
-   :padding "1rem 2rem"
-   :transition-duration "0s"
-   :border-radius "0.5rem"
-   :min-height "calc(100vh - 10rem)"})
-
-
-(def daily-notes-notional-page-style
-  (merge daily-notes-page-style {:box-shadow (:4 DEPTH-SHADOWS)
-                                 :opacity "0.5"}))
+    [re-frame.core :refer [dispatch subscribe]]))
 
 
 (defn reactive-pull-many
@@ -42,7 +14,9 @@
 
   Bug: It's still possible for a day to not get created. The UI for this just shows an empty page without a title. Acceptable bug :)"
   [ids]
-  (keep #(reactive/get-reactive-block-document [:block/uid %]) ids))
+  (->> ids
+       (keep #(reactive/get-reactive-block-document [:block/uid %]))
+       (filter :block/uid)))
 
 
 ;; Components
@@ -55,12 +29,20 @@
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (dates/get-day)])
         (let [notes (reactive-pull-many @note-refs)]
-          [:div#daily-notes (use-style daily-notes-scroll-area-style)
+          [:> VStack {:id "daily-notes"
+                      :minHeight "calc(100vh + 1px)"
+                      :display        "flex"
+                      :gap            "1.5rem"
+                      :py             "6rem"
+                      :px             "2rem"
+                      :alignItems    "center"
+                      :flex           "1 1 100%"
+                      :flexDirection "column"}
            (doall
              (for [{:keys [block/uid]} notes]
-               ^{:key uid}
-               [:<>
-                [:div (use-style daily-notes-page-style)
-                 [node-page/page [:block/uid uid]]]]))
-           [:div (use-style daily-notes-notional-page-style)
-            [:h1 "Earlier"]]])))))
+               [:> DailyNotesPage {:key uid
+                                   :isReal true}
+                [node-page/page [:block/uid uid]]]))
+           [:> DailyNotesPage {:isReal false}
+            [:> PageHeader
+             [:> TitleContainer "Earlier"]]]])))))

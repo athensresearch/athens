@@ -1,6 +1,8 @@
 (ns athens.util
   (:require
     ["/textarea" :as getCaretCoordinates]
+    ["/theme/theme" :refer [theme]]
+    ["@chakra-ui/react" :refer [createStandaloneToast]]
     [athens.config :as config]
     [athens.electron.utils :as electron.utils]
     [clojure.string :as string]
@@ -14,12 +16,7 @@
       KeyCodes)))
 
 
-;; Electron ipcMain Channels
-
-(def ipcMainChannels
-  {:toggle-max-or-min-win-channel "toggle-max-or-min-active-win"
-   :close-win-channel "close-win"
-   :exit-fullscreen-win-channel "exit-fullscreen-win"})
+(def toast (createStandaloneToast (clj->js {:theme theme})))
 
 
 ;; embed block
@@ -217,8 +214,8 @@
   (let [os (.. js/window -navigator -appVersion)]
     (cond
       (re-find #"Windows" os) :windows
-      (re-find #"Linux" os) :linux
-      (re-find #"Mac" os) :mac)))
+      (re-find #"Mac" os) :mac
+      :else :linux)))
 
 
 (defn is-mac?

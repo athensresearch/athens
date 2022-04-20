@@ -3,54 +3,37 @@
       "
       Graph and controls are designed to work with local and global graph
       global graphs vs local graphs -- local graphs have an explicit root node
-      and customizations are based on that where as global doesn't have an explicit root
-
-      Relies on material ui comps for user inputs."}
-  athens.views.pages.graph
+      and customizations are based on that where as global doesn't have an explicit root"}
+ athens.views.pages.graph
   (:require
-    ["@material-ui/core/ExpansionPanel" :as ExpansionPanel]
-    ["@material-ui/core/ExpansionPanelDetails" :as ExpansionPanelDetails]
-    ["@material-ui/core/ExpansionPanelSummary" :as ExpansionPanelSummary]
-    ["@material-ui/core/Slider" :as Slider]
-    ["@material-ui/core/Switch" :as Switch]
-    ["@material-ui/icons/KeyboardArrowRight" :default KeyboardArrowRight]
-    ["@material-ui/icons/KeyboardArrowUp" :default KeyboardArrowUp]
-    ["react-force-graph-2d" :as ForceGraph2D]
-    [athens.dates :as dates]
-    [athens.db :as db]
-    [athens.router :as router]
-    [athens.style :as styles]
-    [clojure.set :as set]
-    [datascript.core :as d]
-    [re-frame.core :as rf :refer [subscribe]]
-    [reagent.core :as r]
-    [reagent.dom :as dom]
-    [stylefy.core :as stylefy :refer [use-style]]))
+   ["@chakra-ui/react" :refer [Box Switch VStack FormControl FormLabel Input Accordion AccordionButton AccordionItem AccordionPanel]]
+   ["react-force-graph-2d" :as ForceGraph2D]
+   [athens.dates :as dates]
+   [athens.db :as db]
+   [athens.router :as router]
+   [clojure.set :as set]
+   [datascript.core :as d]
+   [re-frame.core :as rf :refer [subscribe]]
+   [reagent.core :as r]
+   [reagent.dom :as dom]))
+
+
+(def THEME-DARK
+  {:graph-node-normal   "hsla(0, 0%, 100%, 0.57)"
+   :graph-node-hlt      "#498eda"
+   :graph-link-normal   "#ffffff11"})
+
+
+(def THEME-LIGHT
+  {:graph-node-normal   "#909090"
+   :graph-node-hlt      "#0075E1"
+   :graph-link-normal   "#cfcfcf"})
 
 
 ;; all graph refs(react refs) reside in this atom
 ;; saving this to re-frame db is not ideal because of serialization
 ;; and objects losing their refs
 (def graph-ref-map (r/atom {}))
-
-
-;; -------------------------------------------------------------------
-;; --- material ui ---
-
-
-(def m-slider (r/adapt-react-class (.-default Slider)))
-
-
-(def m-expansion-panel (r/adapt-react-class (.-default ExpansionPanel)))
-
-
-(def m-expansion-panel-details (r/adapt-react-class (.-default ExpansionPanelDetails)))
-
-
-(def m-expansion-panel-summary (r/adapt-react-class (.-default ExpansionPanelSummary)))
-
-
-(def m-switch (r/adapt-react-class (.-default Switch)))
 
 
 ;; -------------------------------------------------------------------
@@ -174,138 +157,88 @@
 ;; --- comps ---
 
 
-(defn graph-control-style
-  [theme]
-  {:position        "absolute"
-   :right           "10px"
-   :font-size       "14px"
-   :z-index         2
-   ::stylefy/manual [[:.MuiExpansionPanelDetails-root {:flex-flow "column"
-                                                       :color     "grey"}
-                      [:.switch {:display         "flex"
-                                 :justify-content "space-between"
-                                 :align-items     "center"}]]
-                     [:.MuiSvgIcon-root {:font-size "1.2rem"}]
-                     [:.MuiExpansionPanelSummary-content {:justify-content "space-between"}
-                      [:&.Mui-expanded {:margin     "24px 0"
-                                        :min-height "unset"}]]
-                     [:.MuiExpansionPanelSummary-root
-                      [:&.Mui-expanded {:min-height "unset"}]]
-                     [:.MuiPaper-root {:background (:graph-control-bg theme)
-                                       :color      (:graph-control-color theme)
-                                       :margin     "10px 0 2px 0"}
-                      [:&.Mui-expanded {:margin "0 0 5px 0"}]]]})
-
-
-(defn expansion-panel
-  [{:keys [heading controls]} local-node-eid]
-  (r/with-let [is-open? (r/atom false)]
-              (let [graph-conf @(subscribe [:graph/conf])
-                    graph-ref  (get @graph-ref-map (or local-node-eid :global))]
-                [m-expansion-panel
-                 [m-expansion-panel-summary
-                  {:onClick #(swap! is-open? not)}
-                  [:<> [:span heading] (if @is-open? [:> KeyboardArrowUp] [:> KeyboardArrowRight])]]
-                 [m-expansion-panel-details
-                  (doall
-                    (for [{:keys [key comp label onChange no-simulation-reheat? props class]} controls]
-                      ^{:key key}
-                      [:div {:class class} label
-                       [comp
-                        (merge
-                          props
-                          {:value    (key graph-conf)
-                           :color    "primary"
-                           :onChange (fn [_ n-val]
-                                       (and onChange (onChange n-val))
-                                       (rf/dispatch [:graph/set-conf key n-val])
-                                       (when-not no-simulation-reheat?
-                                         (.d3ReheatSimulation graph-ref)))})]]))]])))
-
-
 (defn graph-controls
-  "Uses a generic expansion panel(not super generic)
-   while this comp dictates all the controls and manipulations that can be made to the graph
-   Look at comment below for code theme - to get a sense of the structure"
-  ([] [graph-controls nil])
-  ([local-node-eid]
-   (fn []
-     (let [graph-conf     @(subscribe [:graph/conf])
-           graph-ref      (get @graph-ref-map (or local-node-eid :global))
-           theme          (if @(rf/subscribe [:theme/dark]) styles/THEME-DARK styles/THEME-LIGHT)
-
-           ;; code theme
-           ;; category -- for eg node-section and section related data
-           ;; controls -- for eg node-controls and their props
-           ;; props -- for eg orphans? inside a control are props for the editing-comp(for slider or toggle)
-           ;; other-keys describe more about the comp
-           node-controls  [{:key                   :hlt-link-levels
-                            :label                 "No. of link levels to highlight"
-                            :props                 {:min   1
-                                                    :max   5
-                                                    :step  1
-                                                    :marks true}
-                            :comp                  m-slider
-                            :no-simulation-reheat? true}
-                           {:key                   :orphans?
-                            :label                 "Orphan nodes"
-                            :comp                  m-switch
-                            :props                 {:checked (:orphans? graph-conf)}
-                            :class                 "switch"
-                            :no-simulation-reheat? true}
-                           {:key                   :daily-notes?
-                            :label                 "Daily notes"
-                            :comp                  m-switch
-                            :props                 {:checked (:daily-notes? graph-conf)}
-                            :class                 "switch"
-                            :no-simulation-reheat? true}]
-           node-section   {:heading  "Nodes"
-                           :controls node-controls}
-
-
-           force-controls [{:key      :link-distance
-                            :label    "Link Distance"
-                            :props    {:min 5
-                                       :max 95}
-                            :comp     m-slider
-                            :class    "slider"
-                            :onChange (fn [val] (and graph-ref (.. graph-ref (d3Force "link") (distance val))))}
-                           {:key      :charge-strength
-                            :label    "Attraction force"
-                            :props    {:min -30
-                                       :max 0}
-                            :comp     m-slider
-                            :class    "slider"
-                            :onChange (fn [val] (and graph-ref (.. graph-ref (d3Force "charge") (strength val))))}]
-           force-section  {:heading  "Forces"
-                           :controls force-controls}
-
-           local-controls [{:key                   :local-depth
-                            :label                 "Local Depth"
-                            :props                 {:min   1
-                                                    :max   5
-                                                    :step  1
-                                                    :marks true}
-                            :class                 "slider"
-                            :comp                  m-slider
-                            :no-simulation-reheat? true}
-                           {:key                   :root-links-only?
-                            :label                 "Only root links"
-                            :comp                  m-switch
-                            :class                 "switch"
-                            :props                 {:checked (:root-links-only? graph-conf)}
-                            :no-simulation-reheat? true}]
-           local-section  {:heading  "Local options"
-                           :controls local-controls}]
-       [:div (use-style (graph-control-style theme))
-        (doall
-          (for [{:keys [heading] :as section} (remove nil? [(when-not local-node-eid
-                                                              node-section)
-                                                            force-section
-                                                            (when local-node-eid
-                                                              local-section)])]
-            ^{:key heading}
-            [expansion-panel section local-node-eid]))]))))
+  [local-node-eid]
+  (fn []
+    (let [graph-conf     @(subscribe [:graph/conf])
+          graph-ref      (get @graph-ref-map (or local-node-eid :global))]
+      [:> Accordion {:width "14em"
+                     :position "absolute"
+                     :bg "background.basement"
+                     :overflow "hidden"
+                     :p 0
+                     :borderRadius "md"
+                     :allowToggle true
+                     :allowMultiple true
+                     :bottom 2
+                     :right 2}
+       (when-not local-node-eid
+         [:> AccordionItem {:borderTop 0}
+          [:> AccordionButton {:borderRadius "sm"}
+           "Nodes"]
+          [:> AccordionPanel
+           [:> VStack {:align "stretch"}
+            [:> FormControl
+             [:> FormLabel "Highlighted link levels"]
+             [:> Input {:type "number"
+                        :value (or (:hlt-link-levels graph-conf) 1)
+                        :min 1
+                        :max 5
+                        :step 1
+                        :onChange (fn [e] (rf/dispatch [:graph/set-conf :hlt-link-levels (.. e -target -value)]))}]]
+            [:> Switch {:isChecked (:orphans? graph-conf)
+                        :onChange (fn [e]
+                                    (rf/dispatch [:graph/set-conf :orphans? (.. e -target -checked)])
+                                    (.d3ReheatSimulation graph-ref))}
+             "Orphan nodes"]
+            [:> Switch {:isChecked (:daily-notes? graph-conf)
+                        :onChange (fn [e]
+                                    (rf/dispatch [:graph/set-conf :daily-notes? (.. e -target -checked)])
+                                    (.d3ReheatSimulation graph-ref))}
+             "Daily notes"]]]])
+       [:> AccordionItem
+        [:> AccordionButton {:borderRadius "sm"}
+         "Forces"]
+        [:> AccordionPanel
+         [:> VStack {:align "stretch"}
+          [:> FormControl
+           [:> FormLabel "Link distance"]
+           [:> Input {:type "number"
+                      :value (:link-distance graph-conf)
+                      :min 5
+                      :max 95
+                      :step 10
+                      :onChange (fn [e]
+                                  ((and graph-ref (.. graph-ref (d3Force "link") (distance (.. e -target -value)))))
+                                  (.d3ReheatSimulation graph-ref))}]]
+          [:> FormControl
+           [:> FormLabel "Attraction force"]
+           [:> Input {:type "number"
+                      :value (:charge-strength graph-conf)
+                      :min -30
+                      :max 0
+                      :step 5
+                      :onChange (fn [e]
+                                  ((and graph-ref (.. graph-ref (d3Force "charge") (distance (.. e -target -value)))))
+                                  (.d3ReheatSimulation graph-ref))}]]]]]
+       (when local-node-eid
+         [:> AccordionItem
+          [:> AccordionButton {:borderRadius "sm"}
+           "Local options"]
+          [:> AccordionPanel
+           [:> VStack {:align "stretch"}
+            [:> FormControl
+             [:> FormLabel "Local depth"]
+             [:> Input {:type "number"
+                        :value (:local-depth graph-conf)
+                        :min 1
+                        :max 5
+                        :step 1
+                        :onChange (fn [e] (rf/dispatch [:graph/set-conf :local-depth (.. e -target -value)]))}]]
+            [:> Switch {:isChecked (:root-links-only? graph-conf)
+                        :onChange (fn [e]
+                                    (rf/dispatch [:graph/set-conf :root-links-only? (.. e -target -checked)]))}
+             "Only root links?"]]]])])))
 
 
 (defn graph-root
@@ -322,12 +255,13 @@
        {:component-did-mount
         (fn [this]
           (let [dom-node   (dom/dom-node this)
+                dom-root (if local-node-eid ".graph-page" "#app")
                 graph-conf @(subscribe [:graph/conf])
                 graph-ref  (get @graph-ref-map (or local-node-eid :global))]
             ;; set canvas dimensions
-            (swap! dimensions assoc :width (-> dom-node (.. (closest ".graph-page"))
+            (swap! dimensions assoc :width (-> dom-node (.. (closest dom-root))
                                                .-parentNode .-clientWidth))
-            (swap! dimensions assoc :height (-> dom-node (.. (closest ".graph-page"))
+            (swap! dimensions assoc :height (-> dom-node (.. (closest dom-root))
                                                 .-parentNode .-clientHeight))
             ;; set init forces for graph
             (when graph-ref
@@ -414,15 +348,15 @@
                                                                  (contains? filtered-nodes-set (get link-obj "target"))))))
 
                 theme                            (if dark?
-                                                   styles/THEME-DARK
-                                                   styles/THEME-LIGHT)]
+                                                   THEME-DARK
+                                                   THEME-LIGHT)]
             [:> ForceGraph2D
              {:graphData        {:nodes nodes
                                  :links links}
               ;; example data
               #_{:nodes [{"id" "foo", "name" "name1", "val" 1}
-                         {"id" "bar", "name" "name2", "val" 10}]
-                 :links [{"source" "foo", "target" "bar"}]}
+                        {"id" "bar", "name" "name2", "val" 10}]
+                :links [{"source" "foo", "target" "bar"}]}
               :width            (:width  @dimensions)
               :height           (:height @dimensions)
               :ref              #(swap! graph-ref-map assoc (or local-node-eid :global) %)
@@ -489,8 +423,22 @@
    (let [local-node-eid (when block-uid
                           (->> [:block/uid block-uid] (d/pull @db/dsdb '[:db/id])
                                :db/id))]
-     [:div.graph-page
-      {:style (merge (when local-node-eid {:min-height "500px"})
-                     {:position "relative"})}
-      [graph-controls local-node-eid]
-      [graph-root local-node-eid]])))
+     [:<>
+      [:> Box (if local-node-eid
+                {:class "graph-page"
+                 :alignSelf "stretch"
+                 :justifySelf "stretch"
+                 :overflow "hidden"
+                 :height "20em"
+                 :borderRadius "lg"
+                 :bg "background.basement"
+                 :position "relative"}
+                {:class "graph-page"
+                 :gridColumn "1 / -1"
+                 :position "fixed"
+                 :top 0
+                 :left 0
+                 :width "100vw"
+                 :height "100vh"})
+       [graph-root local-node-eid]]
+      [graph-controls local-node-eid]])))

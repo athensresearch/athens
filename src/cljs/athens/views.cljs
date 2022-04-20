@@ -1,15 +1,11 @@
 (ns athens.views
   (:require
-    ["/components/Spinner/Spinner" :refer [Spinner]]
-    ["/components/utils/style/style" :refer [GlobalStyles]]
-    ["@material-ui/core/Snackbar" :as Snackbar]
-    ["@react-aria/overlays" :refer [OverlayProvider]]
+    ["/theme/theme" :refer [theme]]
+    ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center]]
     [athens.config]
     [athens.electron.db-modal :as db-modal]
-    [athens.electron.utils :as electron.utils]
     [athens.style :refer [zoom]]
     [athens.subs]
-    [athens.util :refer [get-os]]
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.devtool :refer [devtool-component]]
@@ -17,27 +13,10 @@
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
-    [re-frame.core :as rf]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
-
-
-;; Styles
-
-
-(def app-wrapper-style
-  {:display "grid"
-   :grid-template-areas
-   "'app-header app-header app-header'
-    'left-sidebar main-content secondary-content'
-   'devtool devtool devtool'"
-   :grid-template-columns "auto 1fr auto"
-   :grid-template-rows "auto 1fr auto"
-   :height "100vh"})
+    [re-frame.core :as rf]))
 
 
 ;; Components
-
 
 (defn alert
   []
@@ -47,62 +26,49 @@
       (rf/dispatch [:alert/unset]))))
 
 
-;; Snackbar
-
-(def m-snackbar (r/adapt-react-class (.-default Snackbar)))
-
-
-(rf/reg-sub
-  :db/snack-msg
-  (fn [db]
-    (:db/snack-msg db)))
-
-
-(rf/reg-event-db
-  :show-snack-msg
-  (fn [db [_ msg-opts]]
-    (js/setTimeout #(rf/dispatch [:show-snack-msg {}]) 4000)
-    (assoc db :db/snack-msg msg-opts)))
-
-
 (defn main
   []
   (let [loading    (rf/subscribe [:loading?])
-        os         (get-os)
-        electron?  electron.utils/electron?
         modal      (rf/subscribe [:modal])]
     (fn []
-      [:> OverlayProvider
-       [:div (merge {:style {:display "contents"}}
-                    (zoom))
-        [:> GlobalStyles]
+      [:div (merge {:style {:display "contents"}}
+                   (zoom))
+       [:> ChakraProvider {:theme theme,
+                           :bg "background.basement"}
         [help-popup]
         [alert]
-        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
-          [m-snackbar
-           {:message msg
-            :open (boolean msg)}
-           [:span
-            {:style {:background-color (case type
-                                         :success "green"
-                                         "red")
-                     :padding "10px 20px"
-                     :color "white"}}
-            msg]])
         [athena-component]
         (cond
           (and @loading @modal) [db-modal/window]
 
-          @loading [:> Spinner]
+          @loading
+          [:> Center {:height "100vh"}
+           [:> Flex {:width 28
+                     :flexDirection "column"
+                     :gap 2
+                     :color "foreground.secondary"
+                     :borderRadius "lg"
+                     :placeItems "center"
+                     :placeContent "center"
+                     :height 28}
+            [:> Spinner {:size "xl"}]]]
 
           :else [:<>
                  (when @modal [db-modal/window])
-                 [:div (use-style app-wrapper-style
-                                  {:class [(case os
-                                             :windows "os-windows"
-                                             :mac "os-mac"
-                                             :linux "os-linux")
-                                           (when electron? "is-electron")]})
+                 [:> Grid
+                  {:gridTemplateColumns "auto 1fr auto"
+                   :gridTemplateRows "auto 1fr auto"
+                   :grid-template-areas
+                   "'app-header app-header app-header'
+                      'left-sidebar main-content secondary-content'
+                    'devtool devtool devtool'"
+                   :height "100vh"
+                   :overflow "hidden"
+                   :sx {"WebkitAppRegion" "drag"
+                        "--app-toolbar-height" "3.25rem"
+                        ".os-mac &" {"--app-header-height" "52px"}
+                        ".os-windows &" {"--toolbar-height" "44px"}
+                        ".os-linux &" {"--toolbar-height" "44px"}}}
                   [app-toolbar/app-toolbar]
                   [left-sidebar/left-sidebar]
                   [pages/view]
