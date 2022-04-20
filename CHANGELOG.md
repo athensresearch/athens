@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.31](https://github.com/athensresearch/athens/compare/v2.0.0-beta.30...v2.0.0-beta.31) (2022-04-20)
+
+
+### Features
+
+* don't autoblock non-chrome browsers ([81324e0](https://github.com/athensresearch/athens/commit/81324e050c372119711464c44be9d3212fe05a2b))
+* Navigate back when user deletes current page ([bbdafc4](https://github.com/athensresearch/athens/commit/bbdafc44e7a454fcc3d7d69bf3ea5bbd41713ea8))
+
+
+### Bug Fixes
+
+* can click toolbar buttons ([93accb3](https://github.com/athensresearch/athens/commit/93accb38ee4611eb991b1bda94bf88230b2b513e))
+* consider unknown OS to be linux ([449653f](https://github.com/athensresearch/athens/commit/449653fb9b97c5d43e1c94094bfd987a7fe8511f))
+* safari user agent is lower case ([b0bff69](https://github.com/athensresearch/athens/commit/b0bff693bd5765a965523bd3c38d3ad9572a0d11))
+* show unsupported message for safari only ([ee33753](https://github.com/athensresearch/athens/commit/ee33753446ecef06a00dfd347b330b27f822c8e9)), closes [/github.com/athensresearch/athens/pull/2096#issuecomment-1083101498](https://github.com/athensresearch//github.com/athensresearch/athens/pull/2096/issues/issuecomment-1083101498)
+* still support chrome ([7cf620a](https://github.com/athensresearch/athens/commit/7cf620a8ea0d25e2900aae90a6625c872ae5d4c4))
+
+
+* update shadow-cljs, cljs, tick ([0dfcd36](https://github.com/athensresearch/athens/commit/0dfcd36bf43910dfb846bf8e8d2a9b6315d1801a))
+
 ## [2.0.0-beta.30](https://github.com/athensresearch/athens/compare/v2.0.0-beta.29...v2.0.0-beta.30) (2022-04-19)
 
 
