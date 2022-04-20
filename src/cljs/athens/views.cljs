@@ -2,11 +2,12 @@
   (:require
     ["/components/InteractionManager/InteractionManager" :refer [InteractionManager Preview]]
     ["/theme/theme" :refer [theme]]
-    ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center]]
+    ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center Text]]
     [athens.common-db :as common-db]
     [athens.config]
     [athens.db :as db]
     [athens.electron.db-modal :as db-modal]
+    [athens.reactive               :as reactive]
     [athens.router :refer [navigate-page navigate-uid]]
     [athens.style :refer [zoom]]
     [athens.subs]
@@ -15,6 +16,7 @@
     [athens.views.devtool :refer [devtool-component]]
     [athens.views.help :refer [help-popup]]
     [athens.views.left-sidebar :as left-sidebar]
+    [athens.views.pages.block-preview :as block-preview]
     [athens.views.pages.core :as pages]
     [athens.views.pages.node-preview :as node-preview]
     [athens.views.right-sidebar :as right-sidebar]
@@ -92,14 +94,11 @@
                                :isOpen (:value @preview)}
                    (let [val (:value @preview)
                          type (:type @preview)]
-                     (println type)
                      (cond
                        (= type "page") (let [page-eid (common-db/e-by-av @db/dsdb :node/title val)]
-                                         (println val)
                                          [node-preview/page page-eid])
-                       (= type "url") [:iframe {:src val
-                       :border "none"
-                                                :width "10rem"
-                                                :height "10rem"}]))]
+                       (= type "block") (let [block-eid (reactive/get-reactive-block-or-page-by-uid val)]
+                                         [block-preview/page block-eid])
+                       (= type "url") [:> Text val]))]
 
                   [devtool-component]]])]])))

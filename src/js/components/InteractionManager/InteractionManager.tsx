@@ -5,6 +5,7 @@ const targetIsPageLink = (e) => e?.target?.classList?.contains('link');
 const targetIsUrlLink = (e) => e?.target?.classList?.contains('url-link');
 const targetIsHashtag = (e) => e?.target?.classList?.contains('hashtag');
 const targetIsAutolink = (e) => e?.target?.classList?.contains('autolink');
+const targetIsBlockRef = (e) => e?.target?.classList?.contains('block-ref');
 
 const attrIf = (e, condition, attr) => {
   if ((e.target) && condition(e)) return e.target.getAttribute(attr);
@@ -35,6 +36,12 @@ export const InteractionManager = ({
       const previewedHashtag = attrIf(e, targetIsHashtag, 'data-page-title');
       if (previewedHashtag) {
         setPreview(previewedHashtag, 'page');
+        return;
+      }
+
+      const previewedBlockRef = attrIf(e, targetIsBlockRef, 'data-uid');
+      if (previewedBlockRef) {
+        setPreview(previewedBlockRef, 'block');
         return;
       }
 

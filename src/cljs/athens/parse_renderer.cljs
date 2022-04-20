@@ -133,6 +133,7 @@
     (if block
       [:> Button {:variant "link"
                   :as "a"
+                  :data-uid ref-uid
                   :title (-> from
                              (str/replace "]("
                                           "]\n---\n(")
