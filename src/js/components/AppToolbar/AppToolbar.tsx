@@ -46,14 +46,12 @@ interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'
 const toolbarButtonStyle = {
   variant: "ghost",
   color: "foreground.secondary",
-  sx: { WebkitAppRegion: "no-drag" }
 }
 
 const toolbarIconButtonStyle = {
   variant: "ghost",
   color: "foreground.secondary",
   sx: {
-    WebkitAppRegion: "no-drag",
     "svg": {
       fontSize: "1.5em"
     }
@@ -94,6 +92,9 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
     "&.is-right-sidebar-open": {
       borderBottomColor: 'separator.divider',
       bg: "background.floor",
+    },
+    "button, a": {
+      WebkitAppRegion: "no-drag"
     },
     ".is-fullscreen &": {
       height: '44px'
