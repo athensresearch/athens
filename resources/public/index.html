@@ -32,17 +32,20 @@
         localStorage.setItem("day8.re-frame-10x.show-panel","\"true\"")
         localStorage.setItem("day8.re-frame-10x.using-trace?","\"true\"")
       }
-      function isBrowserSupported() {
-        return userAgent.indexOf("chrome/") > -1;
+      function isBrowserUnsupported() {
+        var isWebkit = userAgent.indexOf("applewebkit/") > -1;
+        var isChrome = userAgent.indexOf("chrome/") > -1;
+        // Chrome also has applewebkit in the useragent, but it is supported.
+        return isWebkit && !isChrome;
       }
       function showUnsupportedBrowserWarning() {
           let warnDiv = window.document.createElement("div");
-          warnDiv.innerText = "Only browsers based on Chrome/Chromium are supported";
+          warnDiv.innerText = "Safari based browsers based are not supported";
           window.document.body.appendChild(warnDiv);
       }
     </script>
     <script>
-      if (!isBrowserSupported()) {
+      if (isBrowserUnsupported()) {
         showUnsupportedBrowserWarning();
       } else {
         var electron = isElectron()

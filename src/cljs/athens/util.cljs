@@ -228,7 +228,8 @@
    [(case os
       :windows "os-windows"
       :mac "os-mac"
-      :linux "os-linux")
+      :linux "os-linux"
+      "os-linux")
     (if electron? "is-electron" "is-web")
     (if theme-dark? "is-theme-dark" "is-theme-light")
     (when win-focused? "is-focused")
