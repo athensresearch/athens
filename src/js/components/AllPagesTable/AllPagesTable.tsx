@@ -16,15 +16,23 @@ const Row = ({ index, data, style }) => {
   return (
     <Tr
       style={style}
-      width="100%"
+      maxWidth="75rem"
+      marginLeft="auto"
+      marginRight="auto"
       display="flex"
+      sx={{
+        left: "auto !important"
+      }}
       className={index % 2 ? 'index-even' : 'index-odd'}
     >
-      <Td>
+      <Td
+        overflow="hidden"
+      >
         <Button
           onClick={data[index].onClick}
           variant="link"
           color="link"
+          width="100%"
           display="block"
           justifyContent="flex-start"
           whiteSpace="nowrap"
@@ -74,17 +82,18 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
 
   return <Box
     ref={containerRef}
-    px={4}
+    sx={{
+      "--margin-top": "2rem",
+    }}
+    paddingTop="calc(var(--app-header-height) + var(--margin-top))"
     width="100%"
-    maxWidth="75rem"
-    sx={{ "--margin-top": "2rem" }}
-    margin="calc(var(--app-header-height) + var(--margin-top)) auto 0"
-    height="calc(100vh - var(--app-header-height) - var(--margin-top))"
+    height="100%"
   >
     <Table variant="striped"
+      height="100%"
       sx={{
         "tr > *:nth-child(1)": {
-          flex: "1 1 calc(100% - 30rem)"
+          flex: "0 0 calc(100% - 36rem)"
         },
         "tr > *:nth-child(2)": {
           flex: "0 0 12rem"
@@ -100,6 +109,9 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
       <Thead>
         <Tr
           display="flex"
+          width="100%"
+          maxWidth="75rem"
+          margin="auto"
         >
           {columns.map((column, index) => {
             return <Th key={index}>
@@ -126,7 +138,16 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
       </Thead>
       <Tbody
         position="relative"
+        display="flex"
         width="100%"
+        height="100%"
+        sx={{
+          // target the container that renders the row items
+          "> div > div": {
+            display: "flex",
+            justifyContent: "center",
+          }
+        }}
       >
         <List
           height={containerHeight}
@@ -136,10 +157,10 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
           style={{
             position: "absolute",
             top: 0,
-            left: 0,
+            left: "auto",
+            right: "auto",
             width: "100%",
           }}
-          width="100%"
         >
           {Row}
         </List>
