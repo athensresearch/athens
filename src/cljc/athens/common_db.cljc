@@ -2,15 +2,14 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
-    [athens.common.logging        :as log]
-    [athens.parser                :as parser]
-    [athens.patterns              :as patterns]
-    [clojure.data                 :as data]
-    [clojure.pprint               :as pp]
-    [clojure.set                  :as set]
-    [clojure.string               :as string]
-    [clojure.walk                 :as walk]
-    [datascript.core              :as d])
+    [athens.common.logging   :as log]
+    [athens.parser           :as parser]
+    [clojure.data            :as data]
+    [clojure.pprint          :as pp]
+    [clojure.set             :as set]
+    [clojure.string          :as string]
+    [clojure.walk            :as walk]
+    [datascript.core         :as d])
   #?(:cljs
      (:require-macros
        [athens.common.sentry :as sentry-m :refer [wrap-span wrap-span-no-new-tx]])))
@@ -280,12 +279,12 @@
   "Find and replace linked ref with new linked ref, based on title change."
   [linked-refs old-title new-title]
   (map (fn [{:block/keys [uid string] :node/keys [title]}]
-         (let [[string kw] (if title
+         (let [[text kw]   (if title
                              [title :node/title]
                              [string :block/string])
-               new-str (string/replace string
-                                       (patterns/linked old-title)
-                                       (str "$1$3$4" new-title "$2$5"))]
+               old-wrapped (str "[[" old-title "]]")
+               new-wrapped (str "[[" new-title "]]")
+               new-str     (string/replace text old-wrapped new-wrapped)]
            {:db/id [:block/uid uid]
             kw     new-str}))
        linked-refs))

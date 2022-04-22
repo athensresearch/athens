@@ -33,7 +33,7 @@
       (fixture/transact-with-middleware setup-txs)
       (let [uid-by-title    (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             rename-page-txs (atomic-resolver/resolve-to-tx @@fixture/connection
-                                                           (atomic-graph-ops/make-page-rename-op test-title-from test-title-to))]
+                                                           (graph-ops/build-page-rename-op @@fixture/connection test-title-from test-title-to))]
 
         (t/is (= test-page-uid uid-by-title))
         (d/transact! @fixture/connection rename-page-txs)
@@ -58,7 +58,7 @@
       (fixture/transact-with-middleware setup-txs)
       (let [uid-by-title    (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)
             rename-page-txs (atomic-resolver/resolve-to-tx @@fixture/connection
-                                                           (atomic-graph-ops/make-page-rename-op test-title-from test-title-to))]
+                                                           (graph-ops/build-page-rename-op @@fixture/connection test-title-from test-title-to))]
         (t/is (= test-page-uid uid-by-title))
         (d/transact! @fixture/connection rename-page-txs)
         (let [uid-by-title (common-db/v-by-ea @@fixture/connection [:node/title test-title-to] :block/uid)
@@ -66,6 +66,81 @@
           (t/is (nil? (common-db/v-by-ea @@fixture/connection [:node/title test-title-from] :block/uid)))
           (t/is (= test-page-uid uid-by-title))
           (t/is (= test-string-to block-string)))))))
+
+
+(t/deftest page-rename-resulting-in-page-creation
+  (let [title-from   "abc"
+        nested-title "def"
+        title-to     (str "[[" nested-title "]] " title-from)
+        setup-repr   [{:page/title     title-from
+                       :block/children []}]]
+    (fixture/setup! setup-repr)
+    (t/is (empty? (common-db/get-page-document @@fixture/connection [:node/title nested-title])))
+    (t/is (seq (common-db/get-page-document @@fixture/connection [:node/title title-from])))
+    (let [rename-op (graph-ops/build-page-rename-op @@fixture/connection title-from title-to)]
+      (fixture/op-resolve-transact! rename-op)
+      (t/is (empty? (common-db/get-page-document @@fixture/connection [:node/title title-from])))
+      (t/is (seq (common-db/get-page-document @@fixture/connection [:node/title title-to])))
+      (t/is (seq (common-db/get-page-document @@fixture/connection [:node/title nested-title]))))
+    (fixture/teardown! setup-repr)))
+
+
+(t/deftest page-rename-resulting-in-page-creation-and-link-renames
+  (let [title-from   "abc"
+        nested-title "def"
+        title-to     (str "[[" nested-title "]] " title-from)
+        block-uid    "random-block-uid"
+        block-start  (str "[[" title-from "]]")
+        block-end    (str "[[" title-to "]]")
+        setup-repr   [{:page/title     title-from
+                       :block/children [{:block/uid    block-uid
+                                         :block/string block-start}]}]]
+    (fixture/setup! setup-repr)
+    (t/is (empty? (common-db/get-page-document @@fixture/connection [:node/title nested-title])))
+    (t/is (= block-start (common-db/get-block-string @@fixture/connection block-uid)))
+    (let [rename-op (graph-ops/build-page-rename-op @@fixture/connection title-from title-to)]
+      (fixture/op-resolve-transact! rename-op)
+      (t/is (seq (common-db/get-page-document @@fixture/connection [:node/title nested-title])))
+      (t/is (seq (common-db/get-page-document @@fixture/connection [:node/title title-to])))
+      (t/is (= block-end (common-db/get-block-string @@fixture/connection block-uid))))
+    (fixture/teardown! setup-repr)))
+
+
+(t/deftest page-rename-not-allowing-for-regex-injection
+  (t/testing "nested page name"
+    (let [title-from    "abc"
+          title-nested1 "def"
+          title-nested2 "ghi"
+          title-full    (str "[[" title-nested1 "]] " title-from)
+          title-to      (str "[[" title-nested2 "]] " title-from)
+          setup-repr    [{:page/title     title-nested1
+                          :block/children []}
+                         {:page/title     title-nested2
+                          :block/children []}
+                         {:page/title     title-full
+                          :block/children []}]]
+      (fixture/setup! setup-repr)
+      (t/is (seq (common-db/get-page-document @@fixture/connection [:node/title title-full])))
+      (t/is (empty? (common-db/get-page-document @@fixture/connection [:node/title title-to])))
+      (let [rename-op (graph-ops/build-page-rename-op @@fixture/connection title-full title-to)]
+        (fixture/op-resolve-transact! rename-op)
+        (t/is (empty? (common-db/get-page-document @@fixture/connection [:node/title title-full])))
+        (t/is (seq (common-db/get-page-document @@fixture/connection [:node/title title-to]))))
+      (fixture/teardown! setup-repr)))
+
+  (t/testing "nested parentheses in page name"
+    (let [title-from "(abc) def"
+          title-to   "(123) def"
+          setup-repr [{:page/title     title-from
+                       :block/children []}]]
+      (fixture/setup! setup-repr)
+      (t/is (seq (common-db/get-page-document @@fixture/connection [:node/title title-from])))
+      (t/is (empty? (common-db/get-page-document @@fixture/connection [:node/title title-to])))
+      (let [rename-op (graph-ops/build-page-rename-op @@fixture/connection title-from title-to)]
+        (fixture/op-resolve-transact! rename-op)
+        (t/is (empty? (common-db/get-page-document @@fixture/connection [:node/title title-from])))
+        (t/is (seq (common-db/get-page-document @@fixture/connection [:node/title title-to])))
+        (fixture/teardown! setup-repr)))))
 
 
 (t/deftest page-rename-undo-test
@@ -80,7 +155,7 @@
       (fixture/setup! setup-repr)
       (t/is (seq (get-page-by-title from-title)))
       (t/is (nil? (get-page-by-title to-title)))
-      (let [[rename-db rename-event] (fixture/op-resolve-transact! (atomic-graph-ops/make-page-rename-op from-title to-title))]
+      (let [[rename-db rename-event] (fixture/op-resolve-transact! (graph-ops/build-page-rename-op @@fixture/connection from-title to-title))]
         (t/is (nil? (get-page-by-title from-title)))
         (t/is (seq (get-page-by-title to-title)))
         (fixture/undo! rename-db rename-event)
@@ -107,7 +182,7 @@
       (t/is (seq (get-page-by-title from-title)))
       (t/is (nil? (get-page-by-title to-title)))
       (t/is (= start-str (get-str)))
-      (let [[rename-db rename-event] (fixture/op-resolve-transact! (atomic-graph-ops/make-page-rename-op from-title to-title))]
+      (let [[rename-db rename-event] (fixture/op-resolve-transact! (graph-ops/build-page-rename-op @@fixture/connection from-title to-title))]
         (t/is (nil? (get-page-by-title from-title)))
         (t/is (seq (get-page-by-title to-title)))
         (t/is (= end-str (get-str)))
@@ -136,7 +211,7 @@
       (t/is (seq (get-page-by-title from-title)))
       (t/is (nil? (get-page-by-title to-title)))
       (t/is (= start-str (get-str)))
-      (let [[rename-db rename-event] (fixture/op-resolve-transact! (atomic-graph-ops/make-page-rename-op from-title to-title))]
+      (let [[rename-db rename-event] (fixture/op-resolve-transact! (graph-ops/build-page-rename-op @@fixture/connection from-title to-title))]
         (t/is (nil? (get-page-by-title from-title)))
         (t/is (seq (get-page-by-title to-title)))
         (t/is (= end-str (get-str)))
