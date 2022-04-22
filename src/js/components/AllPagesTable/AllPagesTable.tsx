@@ -11,20 +11,30 @@ const DISPLAY_TITLES = {
 }
 
 
+// react-window adds style props to the children, but
+// we don't want all of them, and we'd rather not
+// override them below.
+const removedStyleKeys = ['left', 'right', 'width'];
+const filterStyle = (style) => Object.keys(style).reduce((acc, key) => {
+  if (!removedStyleKeys.includes(key)) {
+    acc[key] = style[key];
+  }
+  return acc;
+}, {});
+
+
 const Row = ({ index, data, style }) => {
 
   const item = data[index];
-  console.log(item)
+
   return (
     <Tr
-      style={style}
-      maxWidth="75rem"
+      style={filterStyle(style)}
+      width="var(--child-width)"
+      maxWidth="var(--max-child-width)"
       marginLeft="auto"
       marginRight="auto"
       display="flex"
-      sx={{
-        left: "auto !important"
-      }}
       className={index % 2 ? 'index-even' : 'index-odd'}
     >
       <Td
@@ -86,11 +96,12 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
 
   return <Box
     width="100%"
-    px={4}
     height="100vh"
     sx={{
       "--margin-top": "2rem",
       "--thead-height": "8rem",
+      "--child-width": "75rem",
+      "--max-child-width": "max(100% - 4rem)",
     }}
   >
     <Table variant="striped"
@@ -119,8 +130,8 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
       <Thead>
         <Tr
           display="flex"
-          width="100%"
-          maxWidth="75rem"
+          width="var(--child-width)"
+          maxWidth="var(--max-child-width)"
           margin="auto"
         >
           {columns.map((column, index) => {
@@ -158,7 +169,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
         ref={containerRef}
         sx={{
           // target the container that renders the row items
-          "> div > div": {
+          "> div > tbody": {
             display: "flex",
             justifyContent: "center",
           }
@@ -167,6 +178,8 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
         <List
           height={containerHeight}
           itemCount={rows.length}
+          outerElementType="div"
+          innerElementType="tbody"
           itemSize={52}
           itemData={rows}
           style={{
