@@ -1,13 +1,12 @@
 (ns athens.views.pages.all-pages
   (:require
-    ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
-    [athens.common-db          :as common-db]
-    #_ [athens.dates              :as dates]
-    [athens.db                 :as db]
-    [athens.router             :as router]
-    [clojure.string            :refer [lower-case]]
-    [re-frame.core             :as rf]
-    #_ [reagent.core              :as r]))
+   ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
+   [athens.common-db          :as common-db]
+   [athens.dates              :as dates]
+   [athens.db                 :as db]
+   [athens.router             :as router]
+   [clojure.string            :refer [lower-case]]
+   [re-frame.core             :as rf]))
 
 
 ;; Sort state and logic
@@ -66,6 +65,7 @@
       (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
         [:> AllPagesTable {:sortedPages (clj->js sorted-pages :keyword-fn str)
                            :sortedBy @(rf/subscribe [:all-pages/sorted-by])
+                           :dateFormatFn #(dates/date-string %)
                            :sortDirection (if @(rf/subscribe [:all-pages/sort-order-ascending?]) "asc" "desc")
                            :onClickSort #(rf/dispatch [:all-pages/sort-by (cond
                                                                             (= % "title") :title

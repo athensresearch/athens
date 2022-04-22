@@ -12,7 +12,9 @@ const DISPLAY_TITLES = {
 
 
 const Row = ({ index, data, style }) => {
+
   const item = data[index];
+  console.log(item)
   return (
     <Tr
       style={style}
@@ -59,14 +61,16 @@ const getHeight = (el) => {
   }
 }
 
-export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirection, onClickSort }) => {
+export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirection, onClickSort, dateFormatFn }) => {
   const containerRef = React.useRef();
   const [containerHeight, setContainerHeight] = React.useState(500);
   const columns = ['title', 'links-count', 'modified', 'created'];
   const rows = React.useMemo(() => sortedPages.map((row) => {
     return {
       ...row,
-      onClick: (e) => onClickItem(e, row.title)
+      onClick: (e) => onClickItem(e, row.title),
+      ":edit/time": dateFormatFn(row[":edit/time"]),
+      ":create/time": dateFormatFn(row[":create/time"]),
     }
   }), [sortedPages]);
 
@@ -93,16 +97,22 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
       height="100vh"
       sx={{
         "tr > *:nth-child(1)": {
-          flex: "0 0 calc(100% - 36rem)"
+          flex: "0 0 calc(100% - 35rem)"
         },
         "tr > *:nth-child(2)": {
-          flex: "0 0 12rem"
+          flex: "0 0 7rem",
+          color: "foreground.secondary",
+          fontSize: "sm"
         },
         "tr > *:nth-child(3)": {
-          flex: "0 0 12rem"
+          flex: "0 0 14rem",
+          color: "foreground.secondary",
+          fontSize: "sm"
         },
         "tr > *:nth-child(4)": {
-          flex: "0 0 12rem"
+          flex: "0 0 14rem",
+          color: "foreground.secondary",
+          fontSize: "sm"
         },
       }}
     >
