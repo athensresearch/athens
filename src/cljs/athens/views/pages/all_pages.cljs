@@ -1,12 +1,12 @@
 (ns athens.views.pages.all-pages
   (:require
-   ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
-   [athens.common-db          :as common-db]
-   [athens.dates              :as dates]
-   [athens.db                 :as db]
-   [athens.router             :as router]
-   [clojure.string            :refer [lower-case]]
-   [re-frame.core             :as rf]))
+    ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
+    [athens.common-db          :as common-db]
+    [athens.dates              :as dates]
+    [athens.db                 :as db]
+    [athens.router             :as router]
+    [clojure.string            :refer [lower-case]]
+    [re-frame.core             :as rf]))
 
 
 ;; Sort state and logic
