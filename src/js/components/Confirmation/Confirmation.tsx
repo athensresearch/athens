@@ -42,7 +42,7 @@ export const Confirmation = ({
                 {cancelText || 'Cancel'}
               </Button>
               <Button
-                colorScheme='red'
+                colorScheme="highlight"
                 onClick={() => {
                   onConfirm();
                   onClose()
