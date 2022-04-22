@@ -110,7 +110,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
       "--margin-top": "2rem",
       "--thead-height": "8rem",
       "--child-width": "75rem",
-      "--max-child-width": "max(100% - 4rem)",
+      "--max-child-width": "max(100vw - 4rem)",
     }}
   >
     <Table variant="striped"
