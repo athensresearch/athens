@@ -23,6 +23,15 @@ const filterStyle = (style) => Object.keys(style).reduce((acc, key) => {
 }, {});
 
 
+const renderDate = (date) => {
+  if (typeof date === 'string') {
+    return date
+  } else {
+    return "—"
+  }
+}
+
+
 const Row = ({ index, data, style }) => {
 
   const item = data[index];
@@ -57,8 +66,8 @@ const Row = ({ index, data, style }) => {
         </Button>
       </Td>
       <Td>{item[":block/_refs"]?.length || 0}</Td>
-      <Td>{item[":edit/time"]}</Td>
-      <Td>{item[":create/time"]}</Td>
+      <Td>{renderDate(item[":edit/time"])}</Td>
+      <Td>{renderDate(item[":create/time"])}</Td>
     </Tr>
   )
 };
@@ -108,7 +117,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
       height="100vh"
       sx={{
         "tr > *:nth-child(1)": {
-          flex: "0 0 calc(100% - 35rem)"
+          flex: "0 0 calc(100% - 39rem)"
         },
         "tr > *:nth-child(2)": {
           flex: "0 0 7rem",
@@ -116,12 +125,12 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
           fontSize: "sm"
         },
         "tr > *:nth-child(3)": {
-          flex: "0 0 14rem",
+          flex: "0 0 16rem",
           color: "foreground.secondary",
           fontSize: "sm"
         },
         "tr > *:nth-child(4)": {
-          flex: "0 0 14rem",
+          flex: "0 0 16rem",
           color: "foreground.secondary",
           fontSize: "sm"
         },
@@ -169,7 +178,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
         ref={containerRef}
         sx={{
           // target the container that renders the row items
-          "> div > tbody": {
+          "> div > div": {
             display: "flex",
             justifyContent: "center",
           }
@@ -178,8 +187,6 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
         <List
           height={containerHeight}
           itemCount={rows.length}
-          outerElementType="div"
-          innerElementType="tbody"
           itemSize={52}
           itemData={rows}
           style={{
