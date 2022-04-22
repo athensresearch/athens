@@ -9,13 +9,6 @@
   (re-pattern (str "(?i)(?<!#)(?<!\\[\\[)" string "(?!\\]\\])")))
 
 
-(defn update-links-in-block
-  [s old-title new-title]
-  (clojure.string/replace s
-                          (linked old-title)
-                          (str "$1$3$4" new-title "$2$5")))
-
-
 ;; Matches a date with an ordinal number (roam format), considering the correct ordinal
 ;; suffix based on the ending number of the date
 ;; Regular expression, with test cases can be found here https://regex101.com/r/vOzOl9/1
