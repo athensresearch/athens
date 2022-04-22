@@ -1,9 +1,38 @@
-import { Box } from "@chakra-ui/react";
+import { Box, Button, ButtonGroup } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, ...props }) => {
+const dummyActions = [
+  { children: "UID", onClick: ({ uid }) => console.log(uid) },
+  { children: "Children", onClick: ({ childrenUids }) => console.log(childrenUids) },
+  { children: "isOpen", onClick: ({ isOpen }) => console.log(isOpen) },
+];
+
+const Actions = ({ actions, uid, childrenUids, hasChildren, isOpen }) => {
+  return (
+    <ButtonGroup
+      className="block-actions"
+      size="xs"
+      zIndex="tooltip"
+      isAttached={true}
+      position="absolute"
+      top={0}
+      right={0}
+      transform="translateY(-50%)"
+    >
+      {actions.map(a => <Button {...a}
+        key={a.children}
+        onClick={(e) => {
+          a.onClick({ e, uid, childrenUids, hasChildren, isOpen });
+        }}
+      />)}
+    </ButtonGroup>
+  )
+}
+
+const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, actions = dummyActions, ...props }) => {
+
   return <Box
     className={[
       "block-container",
@@ -65,6 +94,9 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         minHeight: '2em',
         position: "relative",
       },
+      "&:hover:not(:)": {
+        bg: "background.upper"
+      },
       "&:hover > .block-toggle, &:focus-within > .block-toggle": { opacity: "1" },
       "button.block-edit-toggle": {
         position: "absolute",
@@ -97,10 +129,24 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       ".block-container": {
         marginLeft: "2em",
         gridArea: "body"
+      },
+      ".block-actions": {
+        display: "none",
+      },
+      "&.is-hovered > .block-actions": {
+        display: "block",
       }
     }}
     {...props}
-  > {children}</Box >;
+  > {children}
+    <Actions
+      actions={actions}
+      uid={uid}
+      childrenUids={childrenUids}
+      hasChildren={hasChildren}
+      isOpen={isOpen}
+    />
+  </Box>;
 }
 
 export const Container = withErrorBoundary(_Container, { fallback: <p>{ERROR_MESSAGE}</p> });

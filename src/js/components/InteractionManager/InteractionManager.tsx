@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Popover, PopoverContent, PopoverTrigger, Portal } from '@chakra-ui/react';
 
+const getClosestBlock = (e) => e?.target?.closest('.block-container');
 const targetIsPageLink = (e) => e?.target?.classList?.contains('link');
 const targetIsUrlLink = (e) => e?.target?.classList?.contains('url-link');
 const targetIsHashtag = (e) => e?.target?.classList?.contains('hashtag');
@@ -14,6 +15,7 @@ const attrIf = (e, condition, attr) => {
 
 export const InteractionManager = ({
   children,
+  shouldSetBlockIsHovered = true,
   shouldShowPreviews,
   onNavigateUid,
   onNavigatePage,
@@ -59,6 +61,15 @@ export const InteractionManager = ({
       }
 
       setPreview(null, null);
+    }
+
+    if (shouldSetBlockIsHovered) {
+      const targetBlock = getClosestBlock(e);
+      if (targetBlock) {
+        e.stopPropagation();
+        targetBlock.classList.add('is-hovered');
+        targetBlock.addEventListener('mouseout', () => targetBlock.classList.remove('is-hovered'));
+      }
     }
   }
 
