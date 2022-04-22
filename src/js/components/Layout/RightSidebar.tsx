@@ -10,7 +10,6 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
       <Container
         className="right-sidebar"
         display="flex"
-        WebkitAppRegion="no-drag"
         flexDirection="column"
         height="calc(100% - 3.25rem)"
         marginTop="3.25rem"
@@ -22,6 +21,7 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
         position="relative"
         gridArea="secondary-content"
         sx={{
+          "WebkitAppRegion": "no-drag",
           "--page-title-font-size": "1.25rem",
           ".node-page, .block-page": {
             "--page-padding": "1rem",

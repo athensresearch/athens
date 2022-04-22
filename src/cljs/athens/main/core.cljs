@@ -5,8 +5,7 @@
     ["electron-updater" :refer [autoUpdater]]
     ["electron-window-state" :as electron-window-state]
     [athens.electron.utils :as electron.utils]
-    [athens.menu :refer [menu-template]]
-    [athens.util :refer [ipcMainChannels]]))
+    [athens.menu :refer [menu-template]]))
 
 
 ;; This flag controls whether we check for updates on startup.
@@ -51,7 +50,7 @@
 (defn init-electron-handlers
   []
   (doto ipcMain
-    (.handle (:toggle-max-or-min-win-channel ipcMainChannels)
+    (.handle (:toggle-max-or-min-win-channel electron.utils/ipcMainChannels)
              (fn [_ toggle-min?]
                (when-let [active-win (.getFocusedWindow BrowserWindow)]
                  (if toggle-min?
@@ -61,10 +60,10 @@
                    (if (.isMaximized active-win)
                      (.unmaximize active-win)
                      (.maximize active-win))))))
-    (.handle (:close-win-channel ipcMainChannels)
+    (.handle (:close-win-channel electron.utils/ipcMainChannels)
              (fn []
                (.quit app)))
-    (.handle (:exit-fullscreen-win-channel ipcMainChannels)
+    (.handle (:exit-fullscreen-win-channel electron.utils/ipcMainChannels)
              (fn []
                (when-let [active-win (.getFocusedWindow BrowserWindow)]
                  (.setFullScreen active-win false)))))

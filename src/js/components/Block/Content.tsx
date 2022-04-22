@@ -127,11 +127,6 @@ const _Content = ({ children, fontSize, ...props }) => {
         paddingBottom: "1em",
         "&last:-child": { paddingBottom: 0 },
       },
-      "mark.contents.highlight": {
-        padding: "0 0.2em",
-        borderRadius: "0.125rem",
-        background: "highlight",
-      }
     }}
     {...props}
   > {children}</Box>
