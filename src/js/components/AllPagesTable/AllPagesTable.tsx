@@ -11,20 +11,39 @@ const DISPLAY_TITLES = {
 }
 
 
+// react-window adds style props to the children, but
+// we don't want all of them, and we'd rather not
+// override them below.
+const removedStyleKeys = ['left', 'right', 'width'];
+const filterStyle = (style) => Object.keys(style).reduce((acc, key) => {
+  if (!removedStyleKeys.includes(key)) {
+    acc[key] = style[key];
+  }
+  return acc;
+}, {});
+
+
+const renderDate = (date) => {
+  if (typeof date === 'string') {
+    return date
+  } else {
+    return "—"
+  }
+}
+
+
 const Row = ({ index, data, style }) => {
 
   const item = data[index];
-  console.log(item)
+
   return (
     <Tr
-      style={style}
-      maxWidth="75rem"
+      style={filterStyle(style)}
+      width="var(--child-width)"
+      maxWidth="var(--max-child-width)"
       marginLeft="auto"
       marginRight="auto"
       display="flex"
-      sx={{
-        left: "auto !important"
-      }}
       className={index % 2 ? 'index-even' : 'index-odd'}
     >
       <Td
@@ -47,8 +66,8 @@ const Row = ({ index, data, style }) => {
         </Button>
       </Td>
       <Td>{item[":block/_refs"]?.length || 0}</Td>
-      <Td>{item[":edit/time"]}</Td>
-      <Td>{item[":create/time"]}</Td>
+      <Td>{renderDate(item[":edit/time"])}</Td>
+      <Td>{renderDate(item[":create/time"])}</Td>
     </Tr>
   )
 };
@@ -86,18 +105,19 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
 
   return <Box
     width="100%"
-    px={4}
     height="100vh"
     sx={{
       "--margin-top": "2rem",
       "--thead-height": "8rem",
+      "--child-width": "75rem",
+      "--max-child-width": "max(100vw - 4rem)",
     }}
   >
     <Table variant="striped"
       height="100vh"
       sx={{
         "tr > *:nth-child(1)": {
-          flex: "0 0 calc(100% - 35rem)"
+          flex: "0 0 calc(100% - 39rem)"
         },
         "tr > *:nth-child(2)": {
           flex: "0 0 7rem",
@@ -105,12 +125,12 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
           fontSize: "sm"
         },
         "tr > *:nth-child(3)": {
-          flex: "0 0 14rem",
+          flex: "0 0 16rem",
           color: "foreground.secondary",
           fontSize: "sm"
         },
         "tr > *:nth-child(4)": {
-          flex: "0 0 14rem",
+          flex: "0 0 16rem",
           color: "foreground.secondary",
           fontSize: "sm"
         },
@@ -119,8 +139,8 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
       <Thead>
         <Tr
           display="flex"
-          width="100%"
-          maxWidth="75rem"
+          width="var(--child-width)"
+          maxWidth="var(--max-child-width)"
           margin="auto"
         >
           {columns.map((column, index) => {
