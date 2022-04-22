@@ -63,7 +63,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
   const containerRef = React.useRef();
   const [containerHeight, setContainerHeight] = React.useState(500);
   const columns = ['title', 'links-count', 'modified', 'created'];
-  const rows = React.useMemo(() => sortedPages.map((row, index) => {
+  const rows = React.useMemo(() => sortedPages.map((row) => {
     return {
       ...row,
       onClick: (e) => onClickItem(e, row.title)
@@ -81,16 +81,15 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
   })
 
   return <Box
-    ref={containerRef}
+    width="100%"
+    height="100vh"
     sx={{
       "--margin-top": "2rem",
+      "--thead-height": "8rem",
     }}
-    paddingTop="calc(var(--app-header-height) + var(--margin-top))"
-    width="100%"
-    height="100%"
   >
     <Table variant="striped"
-      height="100%"
+      height="100vh"
       sx={{
         "tr > *:nth-child(1)": {
           flex: "0 0 calc(100% - 36rem)"
@@ -114,12 +113,16 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
           margin="auto"
         >
           {columns.map((column, index) => {
-            return <Th key={index}>
+            return <Th
+              key={index}
+              height="var(--thead-height)"
+            >
               <Button
                 onClick={() => onClickSort(column)}
                 size="sm"
                 variant="link"
                 height="1em"
+                marginTop="calc(var(--thead-height) - 3em)"
                 justifyContent="flex-start"
                 display="flex"
                 rightIcon={
@@ -140,7 +143,8 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
         position="relative"
         display="flex"
         width="100%"
-        height="100%"
+        height="calc(100vh - var(--thead-height))"
+        ref={containerRef}
         sx={{
           // target the container that renders the row items
           "> div > div": {
@@ -160,6 +164,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
             left: "auto",
             right: "auto",
             width: "100%",
+            paddingBottom: "2rem",
           }}
         >
           {Row}
