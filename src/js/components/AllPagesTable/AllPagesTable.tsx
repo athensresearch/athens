@@ -41,12 +41,12 @@ const Row = ({ index, data, style }) => {
           textAlign="left"
           padding="0"
         >
-          {DISPLAY_TITLES[item.title] || item.title}
+          {DISPLAY_TITLES[item[":node/title"]] || item[":node/title"]}
         </Button>
       </Td>
-      <Td>{item._refs?.length || 0}</Td>
-      <Td>{item.time}</Td>
-      <Td>test</Td>
+      <Td>{item[":block/_refs"]?.length || 0}</Td>
+      <Td>{item[":edit/time"]}</Td>
+      <Td>{item[":create/time"]}</Td>
     </Tr>
   )
 };

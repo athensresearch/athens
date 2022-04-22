@@ -64,7 +64,7 @@
   (let [all-pages (common-db/get-all-pages @db/dsdb)]
     (fn []
       (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
-        [:> AllPagesTable {:sortedPages (clj->js sorted-pages)
+        [:> AllPagesTable {:sortedPages (clj->js sorted-pages :keyword-fn str)
                            :sortedBy @(rf/subscribe [:all-pages/sorted-by])
                            :sortDirection (if @(rf/subscribe [:all-pages/sort-order-ascending?]) "asc" "desc")
                            :onClickSort #(rf/dispatch [:all-pages/sort-by (cond
