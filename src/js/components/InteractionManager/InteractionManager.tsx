@@ -33,17 +33,10 @@ export const InteractionManager = ({
   // When hovering a page, link, breadcrumb, etc.
   const handleMouseMove = React.useCallback((e) => {
 
-    if (shouldShowPreviews) {
-      showPreview(e, setPreviewPos, setPreview);
-    }
+    if (shouldSetBlockIsHovered) setBlockHovered(e);
+    if (shouldShowActions) showActions(e, lastE, setLastE, setActionsPos, setActions);
+    if (shouldShowPreviews) showPreview(e, lastE, setLastE, setPreviewPos, setPreview);
 
-    if (shouldSetBlockIsHovered) {
-      setBlockHovered(e);
-    }
-
-    if (shouldShowActions) {
-      showActions(e, lastE, setLastE, setActionsPos, setActions);
-    }
   }, [target, shouldShowPreviews, shouldSetBlockIsHovered, shouldShowActions]);
 
 
@@ -116,13 +109,12 @@ export const Preview = ({ isOpen, pos, children, isScrolling }) => {
       <Box
         position="fixed"
         pointerEvents="none"
-        left={pos?.x + 10}
-        top={pos?.y + 10}
+        left={pos?.x}
+        top={pos?.y}
       />
     </PopoverTrigger>
     <Portal>
       <PopoverContent
-        opacity={isScrolling ? 0.5 : 1}
         pointerEvents="none"
         p={4}
         background="background.upper"
@@ -135,7 +127,7 @@ export const Preview = ({ isOpen, pos, children, isScrolling }) => {
   </Popover>
 }
 
-export const Actions = ({ actions, pos, isScrolling }) => {
+export const Actions = ({ actions, pos, isScrolling, isUsingActions, setIsUsingActions }) => {
   if (!actions) return null;
   const extraActions = actions.filter(a => a.isExtra);
   const defaultActions = actions.filter(a => !a.isExtra);

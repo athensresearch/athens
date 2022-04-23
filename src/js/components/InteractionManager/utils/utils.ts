@@ -10,61 +10,78 @@ export const attrIf = (e, condition, attr) => {
   return false;
 };
 
-export const showPreview = (e, setPreviewPos, setPreview) => {
-  setPreviewPos({ x: e.clientX, y: e.clientY });
+const posOfPointer = (e) => ({ x: e.clientX + 10, y: e.clientY + 10 });
+const posOfTargetBottomEnd = (e) => {
+  const rect = e.target.getBoundingClientRect();
+  return { x: rect.left + rect.width, y: rect.top + rect.height };
+};
+const posOfTargetBottomStart = (e) => {
+  const rect = e.target.getBoundingClientRect();
+  return { x: rect.left, y: rect.top + rect.height };
+};
+
+export const showPreview = (e, lastE, setLastE, setPreviewPos, setPreview) => {
+  // if the hovered event looks the same as the last event, return
+  if (e.target && (e?.target === lastE?.target)) return;
 
   const previewedPage = attrIf(e, targetIsPageLink, 'data-page-title');
   if (previewedPage) {
     setPreview(previewedPage, 'page');
+    setPreviewPos(posOfTargetBottomStart(e));
     return;
   }
 
   const previewedHashtag = attrIf(e, targetIsHashtag, 'data-page-title');
   if (previewedHashtag) {
     setPreview(previewedHashtag, 'page');
+    setPreviewPos(posOfTargetBottomStart(e));
     return;
   }
 
   const previewedBlockRef = attrIf(e, targetIsBlockRef, 'data-uid');
   if (previewedBlockRef) {
     setPreview(previewedBlockRef, 'block');
+    setPreviewPos(posOfTargetBottomStart(e));
     return;
   }
 
   const previewedUrl = attrIf(e, targetIsUrlLink, 'href');
   if (previewedUrl) {
     setPreview(previewedUrl, 'url');
+    setPreviewPos(posOfTargetBottomStart(e));
     return;
   }
 
   const previewedAutoUrl = attrIf(e, targetIsAutolink, 'href');
   if (previewedAutoUrl) {
     setPreview(previewedAutoUrl, 'url');
+    setPreviewPos(posOfTargetBottomStart(e));
     return;
   }
 
+  setLastE(e);
   setPreview(null, null);
 }
 
-export const showActions = (e, lastE, setLastE, setActionsPos, setActions) => {
+export const showActions = (e, lastE, setLastE, setActionsPos, setActions, isUsingActions) => {
+  // if the hovered event looks the same as the last event, return
+  if (e.target && (e?.target === lastE?.target)) return;
+
   // get the hovered block
   const closestBlock = getClosestBlock(e);
 
   // if there's no block, return
-  if (!closestBlock) return;
-
-  // if the hovered event looks the same as the last event, return
-  if (e.target && (e?.target === lastE?.target)) return;
+  if (!closestBlock) {
+    setActionsPos(null);
+    setActions(null);
+    return;
+  };
 
   // Otherwise, we have a block
   if (closestBlock) {
-    console.log('hovered', closestBlock)
 
-    //
     let targetPos = closestBlock?.getBoundingClientRect();
     setActionsPos({ x: targetPos.left + targetPos.width, y: targetPos.top });
-    // uid = closestBlock.getAttribute('data-uid');
-    // childrenUids = closestBlock.getAttribute('data-children-uids');
     setActions([
       { children: "test 1" },
       { children: "test 2" },
