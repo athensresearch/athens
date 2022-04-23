@@ -347,6 +347,15 @@
                         :isLinkedRef (and (false? initial-open) (= uid linked-ref-uid))
                         :hasPresence is-presence
                         :uid uid
+                        :actions (clj->js (list
+                                           {:children "Copy text"
+                                           :isExtra true
+                                            :onClick #(handle-copy-unformatted uid)}
+                                           {:children (if (> (count selected-items) 1)
+                                                        "Copy selected refs"
+                                                        "Copy ref")
+                                            :isExtra true
+                                            :onClick #(handle-copy-refs nil uid)}))
                         ;; need to know children for selection resolution
                         :childrenUids children-uids
                         ;; :show-editable-dom allows us to render the editing elements (like the textarea)

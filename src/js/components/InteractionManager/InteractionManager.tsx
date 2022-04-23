@@ -1,77 +1,50 @@
+
 import React from 'react';
-import { Box, Popover, PopoverContent, PopoverTrigger, Portal } from '@chakra-ui/react';
-
-const getClosestBlock = (e) => e?.target?.closest('.block-container');
-const targetIsPageLink = (e) => e?.target?.classList?.contains('link');
-const targetIsUrlLink = (e) => e?.target?.classList?.contains('url-link');
-const targetIsHashtag = (e) => e?.target?.classList?.contains('hashtag');
-const targetIsAutolink = (e) => e?.target?.classList?.contains('autolink');
-const targetIsBlockRef = (e) => e?.target?.classList?.contains('block-ref');
-
-const attrIf = (e, condition, attr) => {
-  if ((e.target) && condition(e)) return e.target.getAttribute(attr);
-  return false;
-};
+import { Box, Popover, PopoverContent, PopoverTrigger, Portal, Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react';
+import { EllipsisHorizontalIcon } from "@/Icons/Icons";
+import {
+  attrIf,
+  showPreview,
+  showActions,
+  setBlockHovered,
+  targetIsAutolink,
+  targetIsUrlLink,
+  targetIsPageLink,
+  targetIsHashtag
+} from './utils/utils';
 
 export const InteractionManager = ({
   children,
+  isScrolling,
+  setIsScrolling,
   shouldSetBlockIsHovered = true,
+  shouldShowActions = true,
   shouldShowPreviews,
   onNavigateUid,
   onNavigatePage,
   setPreviewPos,
   setPreview,
+  setActionsPos,
+  setActions,
 }) => {
+  const [target, setTarget] = React.useState(null);
+  const [lastE, setLastE] = React.useState(null);
 
   // When hovering a page, link, breadcrumb, etc.
-  const handlemouseMove = (e) => {
+  const handleMouseMove = React.useCallback((e) => {
 
     if (shouldShowPreviews) {
-      setPreviewPos({ x: e.clientX, y: e.clientY });
-
-      const previewedPage = attrIf(e, targetIsPageLink, 'data-page-title');
-      if (previewedPage) {
-        setPreview(previewedPage, 'page');
-        return;
-      }
-
-      const previewedHashtag = attrIf(e, targetIsHashtag, 'data-page-title');
-      if (previewedHashtag) {
-        setPreview(previewedHashtag, 'page');
-        return;
-      }
-
-      const previewedBlockRef = attrIf(e, targetIsBlockRef, 'data-uid');
-      if (previewedBlockRef) {
-        setPreview(previewedBlockRef, 'block');
-        return;
-      }
-
-      const previewedUrl = attrIf(e, targetIsUrlLink, 'href');
-      if (previewedUrl) {
-        setPreview(previewedUrl, 'url');
-        return;
-      }
-
-      const previewedAutoUrl = attrIf(e, targetIsAutolink, 'href');
-      if (previewedAutoUrl) {
-        console.log('found autolink');
-        setPreview(previewedAutoUrl, 'url');
-        return;
-      }
-
-      setPreview(null, null);
+      showPreview(e, setPreviewPos, setPreview);
     }
 
     if (shouldSetBlockIsHovered) {
-      const targetBlock = getClosestBlock(e);
-      if (targetBlock) {
-        e.stopPropagation();
-        targetBlock.classList.add('is-hovered');
-        targetBlock.addEventListener('mouseout', () => targetBlock.classList.remove('is-hovered'));
-      }
+      setBlockHovered(e);
     }
-  }
+
+    if (shouldShowActions) {
+      showActions(e, lastE, setLastE, setActionsPos, setActions);
+    }
+  }, [target, shouldShowPreviews, shouldSetBlockIsHovered, shouldShowActions]);
 
 
   // When clicking a page, link, breadcrumb, etc.
@@ -105,21 +78,33 @@ export const InteractionManager = ({
       window.history.pushState({}, '', clickedAutoLink);
       return;
     }
-
   }
 
   return (
     <Box
       display="contents"
-      onMouseMove={handlemouseMove}
-      onScroll={handlemouseMove}
       onClick={handleClick}
+      onMouseMove={(e) => {
+        // update the target in state so we
+        // can use it to memoize the mousemove event
+        if (e.target !== target) { setTarget(e.target) };
+        // then handle the move events
+        handleMouseMove(e);
+      }}
+      onWheel={(e) => {
+        if (!isScrolling) {
+          setIsScrolling(true)
+          setTimeout(() => {
+            setIsScrolling(false)
+          }, 500)
+        }
+      }}
     >
       {children}
     </Box>)
 }
 
-export const Preview = ({ isOpen, pos, children }) => {
+export const Preview = ({ isOpen, pos, children, isScrolling }) => {
   if (!isOpen) return null;
 
   return <Popover
@@ -135,8 +120,9 @@ export const Preview = ({ isOpen, pos, children }) => {
         top={pos?.y + 10}
       />
     </PopoverTrigger>
-    <Portal >
+    <Portal>
       <PopoverContent
+        opacity={isScrolling ? 0.5 : 1}
         pointerEvents="none"
         p={4}
         background="background.upper"
@@ -147,4 +133,45 @@ export const Preview = ({ isOpen, pos, children }) => {
       </PopoverContent>
     </Portal>
   </Popover>
+}
+
+export const Actions = ({ actions, pos, isScrolling }) => {
+  if (!actions) return null;
+  const extraActions = actions.filter(a => a.isExtra);
+  const defaultActions = actions.filter(a => !a.isExtra);
+
+  return (
+    <ButtonGroup
+      className="block-actions"
+      size="xs"
+      zIndex="tooltip"
+      isAttached={true}
+      position="absolute"
+      top={pos?.y}
+      left={pos?.x}
+      transform="translateY(-50%) translateX(-100%)"
+      opacity={isScrolling ? 0.5 : 1}
+    >
+      {defaultActions.map(a => <Button
+        key={a.children}
+        {...a}
+      />)}
+      {extraActions.length > 0 && (
+        <Menu
+          isLazy={true}
+        >
+          <MenuButton
+            as={Button}
+            size="xs"
+            zIndex="tooltip"
+          >
+            <EllipsisHorizontalIcon />
+          </MenuButton>
+          <MenuList>
+            {extraActions.map(a => <MenuItem key={a.children} {...a} />)}
+          </MenuList>
+        </Menu>
+      )}
+    </ButtonGroup>
+  )
 }

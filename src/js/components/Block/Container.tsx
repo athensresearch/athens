@@ -1,15 +1,13 @@
-import { Box, Button, ButtonGroup } from "@chakra-ui/react";
+import { Box, Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList, Portal } from "@chakra-ui/react";
+import { EllipsisHorizontalIcon } from "@/Icons/Icons";
 import { withErrorBoundary } from "react-error-boundary";
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
-const dummyActions = [
-  { children: "UID", onClick: ({ uid }) => console.log(uid) },
-  { children: "Children", onClick: ({ childrenUids }) => console.log(childrenUids) },
-  { children: "isOpen", onClick: ({ isOpen }) => console.log(isOpen) },
-];
+const Actions = ({ actions }) => {
+  const extraActions = actions.filter(a => a.isExtra);
+  const defaultActions = actions.filter(a => !a.isExtra);
 
-const Actions = ({ actions, uid, childrenUids, hasChildren, isOpen }) => {
   return (
     <ButtonGroup
       className="block-actions"
@@ -21,18 +19,31 @@ const Actions = ({ actions, uid, childrenUids, hasChildren, isOpen }) => {
       right={0}
       transform="translateY(-50%)"
     >
-      {actions.map(a => <Button {...a}
+      {defaultActions.map(a => <Button
         key={a.children}
-        onClick={(e) => {
-          a.onClick({ e, uid, childrenUids, hasChildren, isOpen });
-        }}
+        {...a}
       />)}
+      {extraActions.length > 0 && (
+        <Menu
+          isLazy={true}
+        >
+          <MenuButton
+            as={Button}
+            size="xs"
+            zIndex="tooltip"
+          >
+            <EllipsisHorizontalIcon />
+          </MenuButton>
+          <MenuList>
+            {extraActions.map(a => <MenuItem key={a.children} {...a} />)}
+          </MenuList>
+        </Menu>
+      )}
     </ButtonGroup>
   )
 }
 
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, actions = dummyActions, ...props }) => {
-
+const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, actions, ...props }) => {
   return <Box
     className={[
       "block-container",
@@ -130,22 +141,17 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         marginLeft: "2em",
         gridArea: "body"
       },
-      ".block-actions": {
-        display: "none",
+      "&.is-hovered": {
+        bg: "background.upper",
       },
-      "&.is-hovered > .block-actions": {
-        display: "block",
-      }
     }}
     {...props}
-  > {children}
-    <Actions
-      actions={actions}
-      uid={uid}
-      childrenUids={childrenUids}
-      hasChildren={hasChildren}
-      isOpen={isOpen}
-    />
+  >
+    {children}
+    {/* {actions && (
+      <Actions
+        actions={actions}
+      />)} */}
   </Box>;
 }
 
