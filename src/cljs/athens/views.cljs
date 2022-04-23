@@ -37,11 +37,7 @@
 (defn main
   []
   (let [loading    (rf/subscribe [:loading?])
-        is-scrolling (r/atom false)
         preview (r/atom {:value nil :type nil})
-        preview-pos (r/atom nil)
-        actions (r/atom nil)
-        actions-pos (r/atom nil)
         modal      (rf/subscribe [:modal])]
     (fn []
       [:div (merge {:style {:display "contents"}}
@@ -85,31 +81,22 @@
                   [app-toolbar/app-toolbar]
                   [:> InteractionManager
                    {:shouldShowPreviews true
-                    :isScrolling @is-scrolling
-                    :setIsScrolling (fn [is] (reset! is-scrolling is))
-                    :setPreviewPos (fn [pos] (reset! preview-pos pos))
+                    ;;
                     :setPreview (fn [value type] (reset! preview {:value value :type type}))
-                    :setActionsPos (fn [pos] (reset! actions-pos pos))
-                    :setActions (fn [actions-list] (reset! actions actions-list))
+                    :actions (list 1 2 3)
+                    :previewEl (r/as-element (let [val (:value @preview)
+                                                   type (:type @preview)]
+                                               (cond
+                                                 (= type "page") (let [page-eid (common-db/e-by-av @db/dsdb :node/title val)]
+                                                                   [node-preview/page page-eid])
+                                                 (= type "block") (let [block-eid (reactive/get-reactive-block-or-page-by-uid val)]
+                                                                    [block-preview/page block-eid])
+                                                 (= type "url") [:> Text val])))
+                                                 ;;
                     :onNavigateUid (fn [uid e] (navigate-uid uid e))
                     :onNavigatePage (fn [title e] (navigate-page title e))}
                    [left-sidebar/left-sidebar]
                    [pages/view]
-                   [right-sidebar/right-sidebar]
-                   
-                   [:> Actions {:pos @actions-pos
-                                :isScrolling @is-scrolling
-                                :actions @actions}]
-                   [:> Preview {:pos @preview-pos
-                                :isScrolling @is-scrolling
-                                :isOpen (:value @preview)}
-                    (let [val (:value @preview)
-                          type (:type @preview)]
-                      (cond
-                        (= type "page") (let [page-eid (common-db/e-by-av @db/dsdb :node/title val)]
-                                          [node-preview/page page-eid])
-                        (= type "block") (let [block-eid (reactive/get-reactive-block-or-page-by-uid val)]
-                                           [block-preview/page block-eid])
-                        (= type "url") [:> Text val]))]]
+                   [right-sidebar/right-sidebar]]
 
                   [devtool-component]]])]])))

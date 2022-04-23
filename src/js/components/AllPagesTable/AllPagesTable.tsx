@@ -46,12 +46,12 @@ const Row = ({ index, data, style }) => {
       display="flex"
       className={index % 2 ? 'index-even' : 'index-odd'}
     >
-      <Td
-        overflow="hidden"
-      >
+      <Td overflow="hidden">
         <Button
           onClick={data[index].onClick}
+          data-page-title={item[":node/title"]}
           variant="link"
+          className="link"
           color="link"
           width="100%"
           display="block"
@@ -62,7 +62,7 @@ const Row = ({ index, data, style }) => {
           textAlign="left"
           padding="0"
         >
-          {DISPLAY_TITLES[item[":node/title"]] || item[":node/title"]}
+          {item[":node/title"]}
         </Button>
       </Td>
       <Td>{item[":block/_refs"]?.length || 0}</Td>

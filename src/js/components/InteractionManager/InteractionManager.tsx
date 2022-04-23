@@ -13,89 +13,6 @@ import {
   targetIsHashtag
 } from './utils/utils';
 
-export const InteractionManager = ({
-  children,
-  isScrolling,
-  setIsScrolling,
-  shouldSetBlockIsHovered = true,
-  shouldShowActions = true,
-  shouldShowPreviews,
-  onNavigateUid,
-  onNavigatePage,
-  setPreviewPos,
-  setPreview,
-  setActionsPos,
-  setActions,
-}) => {
-  const [target, setTarget] = React.useState(null);
-  const [lastE, setLastE] = React.useState(null);
-
-  // When hovering a page, link, breadcrumb, etc.
-  const handleMouseMove = React.useCallback((e) => {
-
-    if (shouldSetBlockIsHovered) setBlockHovered(e);
-    if (shouldShowActions) showActions(e, lastE, setLastE, setActionsPos, setActions);
-    if (shouldShowPreviews) showPreview(e, lastE, setLastE, setPreviewPos, setPreview);
-
-  }, [target, shouldShowPreviews, shouldSetBlockIsHovered, shouldShowActions]);
-
-
-  // When clicking a page, link, breadcrumb, etc.
-  const handleClick = (e) => {
-
-    const clickedPage = attrIf(e, targetIsPageLink, 'data-page-title');
-    if (clickedPage) {
-      onNavigatePage(clickedPage, e);
-      return;
-    }
-
-    const clickedHashtag = attrIf(e, targetIsHashtag, 'data-page-title');
-    if (clickedHashtag) {
-      onNavigatePage(clickedHashtag, e);
-      return;
-    }
-
-    // Anchor links
-    const clickedUrlLink = attrIf(e, targetIsUrlLink, 'href');
-    if (clickedUrlLink) {
-      e.preventDefault();
-      e.stopPropagation();
-      window.history.pushState({}, '', clickedUrlLink);
-      return;
-    }
-
-    const clickedAutoLink = attrIf(e, targetIsAutolink, 'href');
-    if (clickedAutoLink) {
-      e.preventDefault();
-      e.stopPropagation();
-      window.history.pushState({}, '', clickedAutoLink);
-      return;
-    }
-  }
-
-  return (
-    <Box
-      display="contents"
-      onClick={handleClick}
-      onMouseMove={(e) => {
-        // update the target in state so we
-        // can use it to memoize the mousemove event
-        if (e.target !== target) { setTarget(e.target) };
-        // then handle the move events
-        handleMouseMove(e);
-      }}
-      onWheel={(e) => {
-        if (!isScrolling) {
-          setIsScrolling(true)
-          setTimeout(() => {
-            setIsScrolling(false)
-          }, 500)
-        }
-      }}
-    >
-      {children}
-    </Box>)
-}
 
 export const Preview = ({ isOpen, pos, children, isScrolling }) => {
   if (!isOpen) return null;
@@ -167,3 +84,103 @@ export const Actions = ({ actions, pos, isScrolling, isUsingActions, setIsUsingA
     </ButtonGroup>
   )
 }
+
+export const InteractionManager = ({
+  children,
+  shouldSetBlockIsHovered = true,
+  shouldShowActions = true,
+  shouldShowPreviews,
+  previewEl,
+  setPreview,
+  onNavigateUid,
+  onNavigatePage,
+}) => {
+  const [target, setTarget] = React.useState(null);
+  const [lastE, setLastE] = React.useState(null);
+  const [isUsingActions, setIsUsingActions] = React.useState(false);
+  const [isScrolling, setIsScrolling] = React.useState(false);
+  const [previewPos, setPreviewPos] = React.useState(null);
+  const [actionsPos, setActionsPos] = React.useState(null);
+  const [actions, setActions] = React.useState(null);
+
+  // When hovering a page, link, breadcrumb, etc.
+  const handleMouseMove = React.useCallback((e) => {
+    if (shouldSetBlockIsHovered) setBlockHovered(e);
+    if (shouldShowActions) showActions(e, lastE, setLastE, setActionsPos, setActions, isUsingActions);
+    if (shouldShowPreviews) showPreview(e, lastE, setLastE, setPreviewPos, setPreview);
+  }, [target, shouldShowPreviews, shouldSetBlockIsHovered, shouldShowActions]);
+
+
+  // When clicking a page, link, breadcrumb, etc.
+  const handleClick = (e) => {
+
+    const clickedPage = attrIf(e, targetIsPageLink, 'data-page-title');
+    if (clickedPage) {
+      onNavigatePage(clickedPage, e);
+      return;
+    }
+
+    const clickedHashtag = attrIf(e, targetIsHashtag, 'data-page-title');
+    if (clickedHashtag) {
+      onNavigatePage(clickedHashtag, e);
+      return;
+    }
+
+    // Anchor links
+    const clickedUrlLink = attrIf(e, targetIsUrlLink, 'href');
+    if (clickedUrlLink) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.history.pushState({}, '', clickedUrlLink);
+      return;
+    }
+
+    const clickedAutoLink = attrIf(e, targetIsAutolink, 'href');
+    if (clickedAutoLink) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.history.pushState({}, '', clickedAutoLink);
+      return;
+    }
+  }
+
+  return (
+    <Box
+      display="contents"
+      onClick={handleClick}
+      onMouseMove={(e) => {
+        // update the target in state so we
+        // can use it to memoize the mousemove event
+        if (e.target !== target) { setTarget(e.target) };
+        // then handle the move events
+        handleMouseMove(e);
+      }}
+      onWheel={(e) => {
+        if (!isScrolling) {
+          setIsScrolling(true)
+          setTimeout(() => {
+            setIsScrolling(false)
+          }, 1000)
+        }
+      }}
+    >
+      {children}
+      {!isScrolling &&
+        <>
+          <Preview
+            isOpen={!!previewEl}
+            pos={previewPos}
+            isScrolling={isScrolling}
+          >
+            {previewEl}</Preview>
+          <Actions
+            actions={actions}
+            pos={actionsPos}
+            isScrolling={isScrolling}
+            isUsingActions={isUsingActions}
+            setIsUsingActions={setIsUsingActions}
+          />
+        </>}
+    </Box>)
+}
+
