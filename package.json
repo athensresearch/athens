@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "2.0.0-beta.29",
+  "version": "2.0.0-beta.31",
   "description": "An open-source knowledege graph for research and notetaking",
   "repository": {
     "type": "git",
@@ -133,6 +133,7 @@
     "react-force-graph-2d": "^1.19.0",
     "react-highlight.js": "1.0.7",
     "react-intersection-observer": "^8.32.1",
+    "react-window": "^1.8.6",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
@@ -168,7 +169,7 @@
     "playwright": "^1.17.1",
     "rimraf": "^3.0.2",
     "serve": "^13.0.2",
-    "shadow-cljs": "^2.15.3",
+    "shadow-cljs": "^2.18.0",
     "source-map-support": "^0.5.19",
     "standard-version": "^9.3.1",
     "storybook-dark-mode": "^1.0.8",

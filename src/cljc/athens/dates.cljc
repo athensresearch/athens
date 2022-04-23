@@ -2,7 +2,7 @@
   (:require
     [cljc.java-time.local-date :as local-date]
     [clojure.string :as string]
-    [tick.alpha.api :as t]
+    [tick.core :as t]
     [tick.locale-en-us]))
 
 
@@ -15,14 +15,14 @@
   "Returns today's date or a date OFFSET days before today"
   ([] (get-day 0))
   ([offset]
-   (let [day (t/-
+   (let [day (t/<<
                (t/date-time)
                (t/new-duration offset :days))]
      {:uid   (t/format US-format day)
       :title (t/format title-format day)}))
   ([date offset]
-   (let [day (t/-
-               (-> date (t/at "0"))
+   (let [day (t/<<
+               (-> date (t/at "00:00"))
                (t/new-duration offset :days))]
      {:uid   (t/format US-format day)
       :title (t/format title-format day)})))

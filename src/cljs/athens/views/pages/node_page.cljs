@@ -249,13 +249,13 @@
                                 ;; if page being deleted is in right sidebar, remove from right sidebar
                                 (when (contains? @(subscribe [:right-sidebar/items]) uid)
                                   (dispatch [:right-sidebar/close-item uid]))
-                                ;; if page being deleted is open, navigate to all pages
+                                ;; if page being deleted is open, navigate to back
                                 (when (or (= @(subscribe [:current-route/page-title]) title)
                                           (= @(subscribe [:current-route/uid]) uid))
                                   (rf/dispatch [:reporting/navigation {:source :page-title-delete
-                                                                       :target :all-pages
+                                                                       :target :back
                                                                        :pane   :main-pane}])
-                                  (router/navigate :pages))
+                                  (.back js/window.history))
                                 ;; if daily note, delete page and remove from daily notes, otherwise just delete page
                                 (if daily-note?
                                   (dispatch [:daily-note/delete uid title])

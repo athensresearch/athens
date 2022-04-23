@@ -528,7 +528,15 @@ const components = {
         },
         tbody: {
           tr: {
+            // Reset the default striped background so we can
+            // set it more robustly below, including support
+            // for virtualized tables.
             "&:nth-of-type(odd)": {
+              td: {
+                background: 'none'
+              }
+            },
+            "&:nth-of-type(odd):not(.index-even), &.index-odd": {
               td: {
                 background: "background.upper",
                 "&:first-of-type": {
