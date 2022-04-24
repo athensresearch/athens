@@ -4,17 +4,17 @@ import { Box, Popover, PopoverContent, PopoverTrigger, Portal, Button, ButtonGro
 import { EllipsisHorizontalIcon } from "@/Icons/Icons";
 import {
   attrIf,
-  showPreview,
-  showActions,
-  setBlockHovered,
-  targetIsAutolink,
-  targetIsUrlLink,
-  targetIsPageLink,
-  targetIsHashtag
+  updatePreview,
+  updateActions,
+  updateBlockHover,
+  getIsTargetAutolink,
+  getIsTargetUrlLink,
+  getIsTargetPageLink,
+  getIsTargetHashtag
 } from './utils/utils';
 
 
-export const Preview = ({ isOpen, pos, children, isScrolling }) => {
+export const Preview = ({ isOpen, pos, children }) => {
   if (!isOpen) return null;
 
   return <Popover
@@ -44,13 +44,50 @@ export const Preview = ({ isOpen, pos, children, isScrolling }) => {
   </Popover>
 }
 
-export const Actions = ({ actions, pos, isScrolling, isUsingActions, setIsUsingActions }) => {
+export const Actions = ({ actions, pos, isUsingActions, setIsUsingActions, hideActions }) => {
+
+  // Exit if there are no actions to show
   if (!actions) return null;
-  const extraActions = actions.filter(a => a.isExtra);
-  const defaultActions = actions.filter(a => !a.isExtra);
+
+  // Update the provided actions with
+  // behavior specific to the floating actions menu
+  const actionsWithBehavior = actions.map(a => ({
+    ...a,
+  }));
+
+  // Divide up the actions into normal and extras (for the menu)
+  const defaultActions = actionsWithBehavior.filter(a => !a.isExtra);
+  const extraActions = actionsWithBehavior.filter(a => a.isExtra);
+
+  const [isFocused, setIsFocused] = React.useState(false);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  // Handle when you're interacting with the actions
+  React.useLayoutEffect(() => {
+    if (isHovered || isFocused) {
+      console.log('setIsUsingActions', true);
+      setIsUsingActions(true);
+    } else {
+      console.log('setIsUsingActions', false);
+      setIsUsingActions(false);
+    }
+  }, [isFocused, isHovered, isUsingActions]);
+
+  // Close the actions on esc
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (e.key === 'Escape') {
+      setIsFocused(false);
+      hideActions();
+    }
+  }
 
   return (
     <ButtonGroup
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onKeyDown={handleKeyDown}
       className="block-actions"
       size="xs"
       zIndex="tooltip"
@@ -59,7 +96,6 @@ export const Actions = ({ actions, pos, isScrolling, isUsingActions, setIsUsingA
       top={pos?.y}
       left={pos?.x}
       transform="translateY(-50%) translateX(-100%)"
-      opacity={isScrolling ? 0.5 : 1}
     >
       {defaultActions.map(a => <Button
         key={a.children}
@@ -97,37 +133,57 @@ export const InteractionManager = ({
 }) => {
   const [target, setTarget] = React.useState(null);
   const [lastE, setLastE] = React.useState(null);
-  const [isUsingActions, setIsUsingActions] = React.useState(false);
   const [isScrolling, setIsScrolling] = React.useState(false);
   const [previewPos, setPreviewPos] = React.useState(null);
+  const [isUsingActions, setIsUsingActions] = React.useState(false);
   const [actionsPos, setActionsPos] = React.useState(null);
   const [actions, setActions] = React.useState(null);
 
+  // 
+  const hideActions = () => {
+    setActions(null);
+    setActionsPos(null);
+    setIsUsingActions(false);
+  }
+
   // When hovering a page, link, breadcrumb, etc.
   const handleMouseMove = React.useCallback((e) => {
-    if (shouldSetBlockIsHovered) setBlockHovered(e);
-    if (shouldShowActions) showActions(e, lastE, setLastE, setActionsPos, setActions, isUsingActions);
-    if (shouldShowPreviews) showPreview(e, lastE, setLastE, setPreviewPos, setPreview);
+
+    // if the hovered event looks the same as the last event, return
+    if (e.target && (e?.target === lastE?.target)) {
+      console.log('skipped because same target');
+      return
+    };
+
+    shouldSetBlockIsHovered && updateBlockHover(e);
+    // if (isUsingActions) {
+    // console.log('skipped updated actions because is using actions');
+    // } else {
+    shouldShowActions && updateActions(e, setActionsPos, setActions, isUsingActions);
+    // }
+    shouldShowPreviews && updatePreview(e, setPreviewPos, setPreview);
+
+    setLastE(e);
   }, [target, shouldShowPreviews, shouldSetBlockIsHovered, shouldShowActions]);
 
 
   // When clicking a page, link, breadcrumb, etc.
   const handleClick = (e) => {
 
-    const clickedPage = attrIf(e, targetIsPageLink, 'data-page-title');
+    const clickedPage = attrIf(e, getIsTargetPageLink, 'data-page-title');
     if (clickedPage) {
       onNavigatePage(clickedPage, e);
       return;
     }
 
-    const clickedHashtag = attrIf(e, targetIsHashtag, 'data-page-title');
+    const clickedHashtag = attrIf(e, getIsTargetHashtag, 'data-page-title');
     if (clickedHashtag) {
       onNavigatePage(clickedHashtag, e);
       return;
     }
 
     // Anchor links
-    const clickedUrlLink = attrIf(e, targetIsUrlLink, 'href');
+    const clickedUrlLink = attrIf(e, getIsTargetUrlLink, 'href');
     if (clickedUrlLink) {
       e.preventDefault();
       e.stopPropagation();
@@ -135,7 +191,7 @@ export const InteractionManager = ({
       return;
     }
 
-    const clickedAutoLink = attrIf(e, targetIsAutolink, 'href');
+    const clickedAutoLink = attrIf(e, getIsTargetAutolink, 'href');
     if (clickedAutoLink) {
       e.preventDefault();
       e.stopPropagation();
@@ -152,35 +208,42 @@ export const InteractionManager = ({
         // update the target in state so we
         // can use it to memoize the mousemove event
         if (e.target !== target) { setTarget(e.target) };
+        // reset scroll state in case you're
+        // moving fast and you don't want to
+        // wait for it to reset
+        if (isScrolling) setIsScrolling(false);
         // then handle the move events
         handleMouseMove(e);
       }}
-      onWheel={(e) => {
+      // Create a scrolling state so we can
+      // hide the actions and preview while
+      // scrolling. It would be nice to avoid this,
+      // but the positioning of the overlays
+      // is static, so they'd be floating in space
+      // without this.
+      onWheel={() => {
         if (!isScrolling) {
           setIsScrolling(true)
           setTimeout(() => {
             setIsScrolling(false)
-          }, 1000)
+          }, 1500)
         }
       }}
     >
       {children}
-      {!isScrolling &&
-        <>
-          <Preview
-            isOpen={!!previewEl}
-            pos={previewPos}
-            isScrolling={isScrolling}
-          >
-            {previewEl}</Preview>
-          <Actions
-            actions={actions}
-            pos={actionsPos}
-            isScrolling={isScrolling}
-            isUsingActions={isUsingActions}
-            setIsUsingActions={setIsUsingActions}
-          />
-        </>}
+      <Preview
+        isOpen={!!previewEl && !isScrolling}
+        pos={previewPos}
+      >
+        {previewEl}
+      </Preview>
+      <Actions
+        actions={actions}
+        pos={actionsPos}
+        hideActions={hideActions}
+        isUsingActions={isUsingActions}
+        setIsUsingActions={setIsUsingActions}
+      />
     </Box>)
 }
 

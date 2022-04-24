@@ -81,6 +81,8 @@
                   [app-toolbar/app-toolbar]
                   [:> InteractionManager
                    {:shouldShowPreviews true
+                    :shouldShowActions true
+                    :shouldSetBlockIsHovered true
                     ;;
                     :setPreview (fn [value type] (reset! preview {:value value :type type}))
                     :actions (list 1 2 3)

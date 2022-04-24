@@ -142,7 +142,6 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         gridArea: "body"
       },
       "&.is-hovered": {
-        bg: "background.upper",
       },
     }}
     {...props}

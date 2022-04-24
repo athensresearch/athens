@@ -1,102 +1,141 @@
-export const getClosestBlock = (e) => e?.target?.closest('.block-container');
-export const targetIsPageLink = (e) => e?.target?.classList?.contains('link');
-export const targetIsUrlLink = (e) => e?.target?.classList?.contains('url-link');
-export const targetIsHashtag = (e) => e?.target?.classList?.contains('hashtag');
-export const targetIsAutolink = (e) => e?.target?.classList?.contains('autolink');
-export const targetIsBlockRef = (e) => e?.target?.classList?.contains('block-ref');
+import React from "react";
 
-export const attrIf = (e, condition, attr) => {
-  if ((e.target) && condition(e)) return e.target.getAttribute(attr);
+// Helpers for the InteractionManager
+export const getClosestBlock = (e) => e?.target?.closest('.block-container');
+export const getIsTargetInBlockActions = (e) => e?.target?.closest('block-actions');
+export const getIsTargetPageLink = (e) => e?.target?.classList?.contains('link');
+export const getIsTargetUrlLink = (e) => e?.target?.classList?.contains('url-link');
+export const getIsTargetHashtag = (e) => e?.target?.classList?.contains('hashtag');
+export const getIsTargetAutolink = (e) => e?.target?.classList?.contains('autolink');
+export const getIsTargetBlockRef = (e) => e?.target?.classList?.contains('block-ref');
+
+interface TargetPos {
+  x: number;
+  y: number;
+}
+
+/* 
+  Returns an attibute of the event target if the
+  target meets a provided condition.
+  Returns false if the target does not meet the condition.
+  Returns the attribute if the target meets the condition.
+*/
+export const attrIf = (e: React.MouseEvent<HTMLElement>, condition: (e: React.MouseEvent<HTMLElement>) => boolean, attr: string): string | false => {
+  if ((e.target) && condition(e)) {
+    const target = e.target as HTMLElement;
+    return target.getAttribute(attr)
+  };
   return false;
 };
 
-const posOfPointer = (e) => ({ x: e.clientX + 10, y: e.clientY + 10 });
-const posOfTargetBottomEnd = (e) => {
-  const rect = e.target.getBoundingClientRect();
+const posOfPointer = (e: React.MouseEvent<HTMLElement>): TargetPos => ({ x: e.clientX + 10, y: e.clientY + 10 });
+const posOfTargetBottomEnd = (e: React.MouseEvent<HTMLElement>): TargetPos => {
+  const target = e.target as HTMLElement;
+  const rect = target.getBoundingClientRect() as DOMRect;
   return { x: rect.left + rect.width, y: rect.top + rect.height };
 };
-const posOfTargetBottomStart = (e) => {
-  const rect = e.target.getBoundingClientRect();
+
+const posOfTargetBottomStart = (e: React.MouseEvent<HTMLElement>): TargetPos => {
+  const target = e.target as HTMLElement;
+  const rect = target.getBoundingClientRect() as DOMRect;
   return { x: rect.left, y: rect.top + rect.height };
 };
 
-export const showPreview = (e, lastE, setLastE, setPreviewPos, setPreview) => {
-  // if the hovered event looks the same as the last event, return
-  if (e.target && (e?.target === lastE?.target)) return;
+// 
+export const updatePreview = (e: React.MouseEvent<HTMLElement>, setPreviewPos, setPreview) => {
 
-  const previewedPage = attrIf(e, targetIsPageLink, 'data-page-title');
+  const previewedPage = attrIf(e, getIsTargetPageLink, 'data-page-title');
   if (previewedPage) {
     setPreview(previewedPage, 'page');
     setPreviewPos(posOfTargetBottomStart(e));
     return;
   }
 
-  const previewedHashtag = attrIf(e, targetIsHashtag, 'data-page-title');
+  const previewedHashtag = attrIf(e, getIsTargetHashtag, 'data-page-title');
   if (previewedHashtag) {
     setPreview(previewedHashtag, 'page');
     setPreviewPos(posOfTargetBottomStart(e));
     return;
   }
 
-  const previewedBlockRef = attrIf(e, targetIsBlockRef, 'data-uid');
+  const previewedBlockRef = attrIf(e, getIsTargetBlockRef, 'data-uid');
   if (previewedBlockRef) {
     setPreview(previewedBlockRef, 'block');
     setPreviewPos(posOfTargetBottomStart(e));
     return;
   }
 
-  const previewedUrl = attrIf(e, targetIsUrlLink, 'href');
+  const previewedUrl = attrIf(e, getIsTargetUrlLink, 'href');
   if (previewedUrl) {
     setPreview(previewedUrl, 'url');
     setPreviewPos(posOfTargetBottomStart(e));
     return;
   }
 
-  const previewedAutoUrl = attrIf(e, targetIsAutolink, 'href');
+  const previewedAutoUrl = attrIf(e, getIsTargetAutolink, 'href');
   if (previewedAutoUrl) {
     setPreview(previewedAutoUrl, 'url');
     setPreviewPos(posOfTargetBottomStart(e));
     return;
   }
 
-  setLastE(e);
   setPreview(null, null);
 }
 
-export const showActions = (e, lastE, setLastE, setActionsPos, setActions, isUsingActions) => {
-  // if the hovered event looks the same as the last event, return
-  if (e.target && (e?.target === lastE?.target)) return;
+const clearActions = (setActions, setActionsPos) => {
+  setActions(null);
+  setActionsPos(null);
+}
 
-  // get the hovered block
-  const closestBlock = getClosestBlock(e);
+//
+const setActionsOnBlock = (block, setActions, setActionsPos) => {
 
-  // if there's no block, return
-  if (!closestBlock) {
-    setActionsPos(null);
-    setActions(null);
-    return;
-  };
+  // if we have a block...
+  if (block) {
+    // get the bounding box
+    const blockBox = block.getBoundingClientRect();
+    // update the position to the top-right corner of the block
+    setActionsPos({ x: blockBox.left + blockBox.width, y: blockBox.top });
 
-  // Otherwise, we have a block
-  if (closestBlock) {
-
-    let targetPos = closestBlock?.getBoundingClientRect();
-    setActionsPos({ x: targetPos.left + targetPos.width, y: targetPos.top });
+    // and populate the actions menu with actions pertaining to the block
+    // This should be updated based on the block type
     setActions([
       { children: "test 1" },
       { children: "test 2" },
       { children: "test 3", isExtra: true },
       { children: "test 4" }
     ]);
-  };
-  setLastE(e);
+  } else {
+    // if we don't have a block, reset actions and position
+    clearActions(setActions, setActionsPos);
+  }
 }
 
-export const setBlockHovered = (e) => {
+// Determine whether to show block actions
+// based on mousemove event target
+export const updateActions = (e: React.MouseEvent<HTMLElement>, setActionsPos, setActions, isUsingActions) => {
+
+  // get details about the hovered element
+  const closestBlock = getClosestBlock(e);
+  if (closestBlock) {
+    setActionsOnBlock(closestBlock, setActions, setActionsPos);
+    return;
+  } else if (!isUsingActions) {
+    clearActions(setActions, setActionsPos);
+    return;
+  }
+}
+
+// If I'm hovering anywhere within a block, set a class on that block
+export const updateBlockHover = (e: React.MouseEvent<HTMLElement>) => {
+
+  // get the closest block
   const targetBlock = getClosestBlock(e);
+
   if (targetBlock) {
-    e.stopPropagation();
+    // if we're hovering over a block, add the hover class
     targetBlock.classList.add('is-hovered');
+    // and remove the class when the mouse leaves the block
     targetBlock.addEventListener('mouseout', () => targetBlock.classList.remove('is-hovered'));
   }
 }
