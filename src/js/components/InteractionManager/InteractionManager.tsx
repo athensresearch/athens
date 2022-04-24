@@ -75,13 +75,13 @@ export const InteractionManager = ({
 
     const clickedPage = attrIf(e, getIsTargetPageLink, 'data-page-title');
     if (clickedPage) {
-      onNavigatePage(clickedPage, e);
+      onNavigatePage(e, clickedPage);
       return;
     }
 
     const clickedHashtag = attrIf(e, getIsTargetHashtag, 'data-page-title');
     if (clickedHashtag) {
-      onNavigatePage(clickedHashtag, e);
+      onNavigatePage(e, clickedHashtag);
       return;
     }
 

@@ -1,6 +1,6 @@
 (ns athens.views
   (:require
-    ["/components/InteractionManager/InteractionManager" :refer [InteractionManager Preview Actions]]
+    ["/components/InteractionManager/InteractionManager" :refer [InteractionManager]]
     ["/theme/theme" :refer [theme]]
     ["@chakra-ui/react" :refer [ChakraProvider Flex Grid Spinner Center Text]]
     [athens.common-db :as common-db]
@@ -81,7 +81,7 @@
                   [app-toolbar/app-toolbar]
                   [:> InteractionManager
                    {:shouldShowPreviews true
-                    :shouldShowActions true
+                    :shouldShowActions false
                     :shouldSetBlockIsHovered true
                     :actions (clj->js [{:children "log uid"
                                         :onClick (fn [e block] (js/console.log block))}])
