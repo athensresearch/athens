@@ -94,9 +94,8 @@
                                                  (= type "block") (let [block-eid (reactive/get-reactive-block-or-page-by-uid val)]
                                                                     [block-preview/page block-eid])
                                                  (= type "url") [:> Text val])))
-                                                 ;;
-                    :onNavigateUid (fn [uid e] (navigate-uid uid e))
-                    :onNavigatePage (fn [title e] (navigate-page title e))}
+                    :onNavigateUid (fn [e uid] (navigate-uid uid e))
+                    :onNavigatePage (fn [e title] (navigate-page title e))}
                    [left-sidebar/left-sidebar]
                    [pages/view]
                    [right-sidebar/right-sidebar]]
