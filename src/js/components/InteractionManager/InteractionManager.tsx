@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Box, Popover, PopoverContent, PopoverTrigger, Portal, Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react';
-import { EllipsisHorizontalIcon } from "@/Icons/Icons";
+import { Box, ButtonProps } from '@chakra-ui/react';
+import { Preview } from './Preview';
+import { Actions } from './Actions';
 import {
   attrIf,
   updatePreview,
@@ -13,114 +14,16 @@ import {
   getIsTargetHashtag
 } from './utils/utils';
 
-
-export const Preview = ({ isOpen, pos, children }) => {
-  if (!isOpen) return null;
-
-  return <Popover
-    isOpen={true}
-    placement="bottom-start"
-    autoFocus={false}
-  >
-    <PopoverTrigger>
-      <Box
-        position="fixed"
-        pointerEvents="none"
-        left={pos?.x}
-        top={pos?.y}
-      />
-    </PopoverTrigger>
-    <Portal>
-      <PopoverContent
-        pointerEvents="none"
-        p={4}
-        background="background.upper"
-        width="20rem"
-        overflow="hidden"
-      >
-        {children}
-      </PopoverContent>
-    </Portal>
-  </Popover>
-}
-
-export const Actions = ({ actions, pos, isUsingActions, setIsUsingActions, hideActions, actionsUid }) => {
-  // Exit if there are no actions to show
-  if (!actions) return null;
-
-  // Update the provided actions with
-  // behavior specific to use in the floating actions menu
-  const actionsWithBehavior = actions.map(a => ({
-    ...a,
-    onClick: (e) => {
-      const block = { uid: actionsUid }
-      return a.onClick(e, block);
-    }
-  }));
-
-  // Divide up the actions into normal and extras (for the menu)
-  const defaultActions = actionsWithBehavior.filter(a => !a.isExtra);
-  const extraActions = actionsWithBehavior.filter(a => a.isExtra);
-
-  const [isFocused, setIsFocused] = React.useState(false);
-  const [isHovered, setIsHovered] = React.useState(false);
-
-  // Handle when you're interacting with the actions
-  React.useLayoutEffect(() => {
-    if (isHovered || isFocused) {
-      console.log('setIsUsingActions', true);
-      setIsUsingActions(true);
-    } else {
-      console.log('setIsUsingActions', false);
-      setIsUsingActions(false);
-    }
-  }, [isFocused, isHovered, isUsingActions]);
-
-  // Close the actions on esc
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
-    if (e.key === 'Escape') {
-      setIsFocused(false);
-      hideActions();
-    }
-  }
-
-  return (
-    <ButtonGroup
-      onFocus={() => setIsFocused(true)}
-      onBlur={() => setIsFocused(false)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onKeyDown={handleKeyDown}
-      className="block-actions"
-      size="xs"
-      zIndex="tooltip"
-      isAttached={true}
-      position="absolute"
-      top={pos?.y}
-      left={pos?.x}
-      transform="translateY(-50%) translateX(-100%)"
-    >
-      {/* Common actions are displayed directly */}
-      {defaultActions.map(a => <Button key={a.children} {...a} />)}
-      {/* Uncommon actions are placed in an overflow menu */}
-      {extraActions.length > 0 && (
-        <Menu
-          isLazy={true}
-        >
-          <MenuButton
-            as={Button}
-            size="xs"
-            zIndex="tooltip"
-          >
-            <EllipsisHorizontalIcon />
-          </MenuButton>
-          <MenuList>
-            {extraActions.map(a => <MenuItem key={a.children} {...a} />)}
-          </MenuList>
-        </Menu>
-      )}
-    </ButtonGroup>
-  )
+interface InteractionManagerProps {
+  children: React.ReactNode;
+  shouldSetBlockIsHovered: boolean;
+  shouldShowPreviews: boolean;
+  shouldShowActions: boolean;
+  actions: ButtonProps[];
+  previewEl: React.ReactNode;
+  setPreview: (value: any, type: string) => void;
+  onNavigateUid: (e: any, uid: string) => void;
+  onNavigatePage: (e: any, title: string) => void;
 }
 
 export const InteractionManager = ({
@@ -133,7 +36,7 @@ export const InteractionManager = ({
   setPreview,
   onNavigateUid,
   onNavigatePage,
-}) => {
+}: InteractionManagerProps): React.ReactElement => {
   const [target, setTarget] = React.useState(null);
   const [lastE, setLastE] = React.useState(null);
   const [isScrolling, setIsScrolling] = React.useState(false);
@@ -142,8 +45,8 @@ export const InteractionManager = ({
   const [actionsPos, setActionsPos] = React.useState(null);
   const [actionsUid, setActionsUid] = React.useState(null);
 
-  // TODO: combine with clearActions
-  const hideActions = () => {
+  // Clear the actions and reset actions data
+  const clearActions = (): void => {
     setActionsPos(null);
     setActionsUid(null);
     setIsUsingActions(false);
@@ -152,16 +55,18 @@ export const InteractionManager = ({
   // When hovering a page, link, breadcrumb, etc.
   const handleMouseMove = React.useCallback((e) => {
 
-    // if the hovered event looks the same as the last event, return
+    // if the hovered event looks the same as the last event, do nothing
     if (e.target && (e?.target === lastE?.target)) {
+      setLastE(e);
       return
     };
 
     shouldSetBlockIsHovered && updateBlockHover(e);
-    shouldShowActions && updateActions(e, setActionsPos, isUsingActions, setActionsUid);
-    shouldShowPreviews && updatePreview(e, setPreviewPos, setPreview);
+    shouldShowActions && updateActions({ e, setActionsPos, isUsingActions, setActionsUid, clearActions });
+    shouldShowPreviews && updatePreview({ e, setPreviewPos, setPreview });
 
     setLastE(e);
+    return;
   }, [target, shouldShowPreviews, shouldSetBlockIsHovered, shouldShowActions]);
 
 
@@ -238,7 +143,7 @@ export const InteractionManager = ({
       <Actions
         actions={actions}
         pos={actionsPos}
-        hideActions={hideActions}
+        clearActions={clearActions}
         isUsingActions={isUsingActions}
         setIsUsingActions={setIsUsingActions}
         actionsUid={actionsUid}

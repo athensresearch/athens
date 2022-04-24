@@ -83,9 +83,9 @@
                    {:shouldShowPreviews true
                     :shouldShowActions true
                     :shouldSetBlockIsHovered true
-                    :setPreview (fn [value type] (reset! preview {:value value :type type}))
                     :actions (clj->js [{:children "log uid"
                                         :onClick (fn [e block] (js/console.log block))}])
+                    :setPreview (fn [value type] (reset! preview {:value value :type type}))
                     :previewEl (r/as-element (let [val (:value @preview)
                                                    type (:type @preview)]
                                                (cond
