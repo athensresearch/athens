@@ -91,6 +91,7 @@ export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenI
         aria-label='Open in main view'
         color="foreground.secondary"
         variant="ghost"
+        colorScheme="subtle"
         onClick={onClickOpenInMainView}
       >
         <ArrowLeftOnBoxIcon boxSize="1.5em" />
@@ -100,6 +101,7 @@ export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenI
         aria-label='Open in right sidebar'
         color="foreground.secondary"
         variant="ghost"
+        colorScheme="subtle"
         onClick={onClickOpenInSidebar}
       >
         <ArrowRightOnBoxIcon boxSize="1.5em" />
