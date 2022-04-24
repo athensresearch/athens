@@ -12,14 +12,14 @@ export const Confirmation = ({
 }) => {
   const cancelRef = React.useRef();
 
-  const { isOpen: isConfirmOpen,
+  const {
     onClose: onConfirmClose } = useDisclosure({
       defaultIsOpen: isOpen,
       onClose: onClose
     })
 
   return (<AlertDialog
-    isOpen={isConfirmOpen}
+    isOpen={isOpen}
     leastDestructiveRef={cancelRef}
     onClose={onConfirmClose}
   >
@@ -42,7 +42,7 @@ export const Confirmation = ({
                 {cancelText || 'Cancel'}
               </Button>
               <Button
-                colorScheme='red'
+                colorScheme="highlight"
                 onClick={() => {
                   onConfirm();
                   onClose()

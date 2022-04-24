@@ -45,12 +45,12 @@ interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'
 
 const toolbarButtonStyle = {
   variant: "ghost",
-  color: "foreground.secondary",
+  colorScheme: "subtle",
 }
 
 const toolbarIconButtonStyle = {
   variant: "ghost",
-  color: "foreground.secondary",
+  colorScheme: "subtle",
   sx: {
     "svg": {
       fontSize: "1.5em"
@@ -219,7 +219,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
 const SecondaryToolbarItems = (items) => {
   return <ButtonGroup size="sm">
     {items.map((item) => <Tooltip label={item.label} key={item.label}>
-      <ToolbarIconButton variant="ghost" color="foreground.secondary" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
+      <ToolbarIconButton variant="ghost" colorScheme="subtle" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
         {item.icon}
       </ToolbarIconButton>
     </Tooltip>)}

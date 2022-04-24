@@ -159,7 +159,8 @@
             ;; NOTE: alert should be global reusable component, not local to node_page
             (swap! state assoc
                    :alert/show true
-                   :alert/message (str "\"" local "\"" " already exists, merge pages?")
+                   :alert/message (str "\"" local "\"" " already exists. Merge pages?")
+                   :alert/confirm-text "Merge"
                    :alert/confirm-fn confirm-fn
                    :alert/cancel-fn cancel-fn)))))))
 
@@ -204,6 +205,7 @@
    :alert/message        nil
    :alert/confirm-fn     nil
    :alert/cancel-fn      nil
+   :alert/confirm-text   nil
    "Linked References"   true
    "Unlinked References" false})
 
@@ -402,7 +404,7 @@
         (reset! unlinked-refs [])
         (reset! block-uid (:block/uid node)))
       (let [{:block/keys [children uid] title :node/title}                      node
-            {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
+            {:alert/keys [message confirm-fn cancel-fn confirm-text] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
             is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
@@ -412,10 +414,11 @@
 
         [:<>
 
-         [:> Confirmation {:isOpen    alert-show
-                           :title     message
-                           :onConfirm confirm-fn
-                           :onClose   cancel-fn}]
+         [:> Confirmation {:isOpen      alert-show
+                           :title       message
+                           :confirmText confirm-text
+                           :onConfirm   confirm-fn
+                           :onClose     cancel-fn}]
          ;; Header
          [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
                                                   (fn [e] (router/navigate-page title e)))

@@ -335,19 +335,46 @@ const components = {
           opacity: 0.8,
         }
       },
-      solid: {
-        bg: "interaction.surface",
-        _hover: {
-          bg: "interaction.surface.hover"
-        },
-        _active: {
-          color: 'foreground.primary',
-          bg: 'interaction.surface.active',
-        },
+      solid: ({ colorScheme, colorMode }) => {
+
+        const highlightColor = (colorMode === 'dark')
+          ? theme.semanticTokens.colors["link"]._dark
+          : theme.semanticTokens.colors["link"].default;
+
+        if (colorScheme === 'highlight') {
+          return ({
+            color: highlightColor,
+            bg: "interaction.surface",
+            _hover: {
+              bg: "interaction.surface.hover"
+            },
+            _active: {
+              color: 'foreground.primary',
+              bg: 'interaction.surface.active',
+            },
+          })
+        } else {
+          return ({
+            bg: "interaction.surface",
+            _hover: {
+              bg: "interaction.surface.hover"
+            },
+            _active: {
+              color: 'foreground.primary',
+              bg: 'interaction.surface.active',
+            },
+          })
+        }
       },
       ghost: {
         bg: "transparent",
-        color: "foreground.primary",
+        color: (colorScheme) => {
+          if (colorScheme === 'subtle') {
+            return "foreground.secondary"
+          } else {
+            return "foreground.primary"
+          }
+        },
         _hover: {
           bg: "interaction.surface.hover"
         },
