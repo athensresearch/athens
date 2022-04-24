@@ -82,46 +82,38 @@ export const updatePreview = (e: React.MouseEvent<HTMLElement>, setPreviewPos, s
   setPreview(null, null);
 }
 
-const clearActions = (setActions, setActionsPos) => {
-  setActions(null);
+const clearActions = (setActionsPos) => {
   setActionsPos(null);
 }
 
 //
-const setActionsOnBlock = (block, setActions, setActionsPos) => {
-
+const setActionsOnBlock = (block, setActionsPos, setActionsUid) => {
   // if we have a block...
   if (block) {
     // get the bounding box
     const blockBox = block.getBoundingClientRect();
     // update the position to the top-right corner of the block
     setActionsPos({ x: blockBox.left + blockBox.width, y: blockBox.top });
-
-    // and populate the actions menu with actions pertaining to the block
-    // This should be updated based on the block type
-    setActions([
-      { children: "test 1" },
-      { children: "test 2" },
-      { children: "test 3", isExtra: true },
-      { children: "test 4" }
-    ]);
+    setActionsUid(block.getAttribute('data-uid'));
   } else {
     // if we don't have a block, reset actions and position
-    clearActions(setActions, setActionsPos);
+    clearActions(setActionsPos);
   }
 }
 
 // Determine whether to show block actions
 // based on mousemove event target
-export const updateActions = (e: React.MouseEvent<HTMLElement>, setActionsPos, setActions, isUsingActions) => {
+export const updateActions = (e: React.MouseEvent<HTMLElement>, setActionsPos, isUsingActions, setActionsUid) => {
 
   // get details about the hovered element
   const closestBlock = getClosestBlock(e);
   if (closestBlock) {
-    setActionsOnBlock(closestBlock, setActions, setActionsPos);
+    setActionsOnBlock(closestBlock, setActionsPos, setActionsUid);
+    setActionsUid(closestBlock.getAttribute('data-uid'));
     return;
   } else if (!isUsingActions) {
-    clearActions(setActions, setActionsPos);
+    clearActions(setActionsPos);
+    setActionsUid(null);
     return;
   }
 }

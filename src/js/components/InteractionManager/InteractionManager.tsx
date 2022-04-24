@@ -44,15 +44,18 @@ export const Preview = ({ isOpen, pos, children }) => {
   </Popover>
 }
 
-export const Actions = ({ actions, pos, isUsingActions, setIsUsingActions, hideActions }) => {
-
+export const Actions = ({ actions, pos, isUsingActions, setIsUsingActions, hideActions, actionsUid }) => {
   // Exit if there are no actions to show
   if (!actions) return null;
 
   // Update the provided actions with
-  // behavior specific to the floating actions menu
+  // behavior specific to use in the floating actions menu
   const actionsWithBehavior = actions.map(a => ({
     ...a,
+    onClick: (e) => {
+      const block = { uid: actionsUid }
+      return a.onClick(e, block);
+    }
   }));
 
   // Divide up the actions into normal and extras (for the menu)
@@ -97,10 +100,9 @@ export const Actions = ({ actions, pos, isUsingActions, setIsUsingActions, hideA
       left={pos?.x}
       transform="translateY(-50%) translateX(-100%)"
     >
-      {defaultActions.map(a => <Button
-        key={a.children}
-        {...a}
-      />)}
+      {/* Common actions are displayed directly */}
+      {defaultActions.map(a => <Button key={a.children} {...a} />)}
+      {/* Uncommon actions are placed in an overflow menu */}
       {extraActions.length > 0 && (
         <Menu
           isLazy={true}
@@ -123,9 +125,10 @@ export const Actions = ({ actions, pos, isUsingActions, setIsUsingActions, hideA
 
 export const InteractionManager = ({
   children,
-  shouldSetBlockIsHovered = true,
-  shouldShowActions = true,
+  shouldSetBlockIsHovered,
+  shouldShowActions,
   shouldShowPreviews,
+  actions,
   previewEl,
   setPreview,
   onNavigateUid,
@@ -137,12 +140,12 @@ export const InteractionManager = ({
   const [previewPos, setPreviewPos] = React.useState(null);
   const [isUsingActions, setIsUsingActions] = React.useState(false);
   const [actionsPos, setActionsPos] = React.useState(null);
-  const [actions, setActions] = React.useState(null);
+  const [actionsUid, setActionsUid] = React.useState(null);
 
-  // 
+  // TODO: combine with clearActions
   const hideActions = () => {
-    setActions(null);
     setActionsPos(null);
+    setActionsUid(null);
     setIsUsingActions(false);
   }
 
@@ -151,16 +154,11 @@ export const InteractionManager = ({
 
     // if the hovered event looks the same as the last event, return
     if (e.target && (e?.target === lastE?.target)) {
-      console.log('skipped because same target');
       return
     };
 
     shouldSetBlockIsHovered && updateBlockHover(e);
-    // if (isUsingActions) {
-    // console.log('skipped updated actions because is using actions');
-    // } else {
-    shouldShowActions && updateActions(e, setActionsPos, setActions, isUsingActions);
-    // }
+    shouldShowActions && updateActions(e, setActionsPos, isUsingActions, setActionsUid);
     shouldShowPreviews && updatePreview(e, setPreviewPos, setPreview);
 
     setLastE(e);
@@ -243,6 +241,7 @@ export const InteractionManager = ({
         hideActions={hideActions}
         isUsingActions={isUsingActions}
         setIsUsingActions={setIsUsingActions}
+        actionsUid={actionsUid}
       />
     </Box>)
 }
