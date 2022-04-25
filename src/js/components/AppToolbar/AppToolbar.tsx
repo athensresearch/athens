@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Help, Menu as MenuIcon, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
 
 import { Button } from '@/Button';
+import { Badge }  from '@/concept/Badge';
 import { WindowButtons } from './components/WindowButtons';
 
 const AppToolbarWrapper = styled.header`
