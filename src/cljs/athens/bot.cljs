@@ -19,6 +19,7 @@
    "[[@Stuart]]"      "<@!229346773104066562>"
    "[[@Athens Team]]" "<@&858004385215938560>"})
 
+
 (def athens-users
   ["@Stuart" "@Alex" "@Jeff" "@Filipe" "@Sid"])
 
