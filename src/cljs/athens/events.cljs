@@ -229,13 +229,6 @@
                (update db :athena/recent-items conj selected-page))))
 
 
-(reg-event-db
-  :devtool/toggle
-  [(interceptors/sentry-span-no-new-tx "devtool/toggle")]
-  (fn [db _]
-    (update db :devtool/open not)))
-
-
 (reg-event-fx
   :help/toggle
   [(interceptors/sentry-span-no-new-tx "help/toggle")]

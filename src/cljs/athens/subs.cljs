@@ -60,12 +60,6 @@
 
 
 (rf/reg-sub
-  :devtool/open
-  (fn-traced [db _]
-             (:devtool/open db)))
-
-
-(rf/reg-sub
   :left-sidebar/open
   (fn-traced [db _]
              (:left-sidebar/open db)))

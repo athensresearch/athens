@@ -102,7 +102,6 @@
                                            KeyCodes.DASH      (dispatch [:zoom/out])
                                            KeyCodes.ZERO      (dispatch [:zoom/reset])
                                            KeyCodes.K         (dispatch [:athena/toggle])
-                                           KeyCodes.G         (dispatch [:devtool/toggle])
                                            KeyCodes.Z         (do
                                                                 ;; Disable the default undo behaviour.
                                                                 ;; Chrome has a textarea undo that does not behave like
