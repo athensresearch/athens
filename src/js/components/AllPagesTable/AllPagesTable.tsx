@@ -87,7 +87,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
   const rows = React.useMemo(() => sortedPages.map((row) => {
     return {
       ...row,
-      onClick: (e) => onClickItem(e, row.title),
+      onClick: (e) => onClickItem(e, row[":node/title"]),
       ":edit/time": dateFormatFn(row[":edit/time"]),
       ":create/time": dateFormatFn(row[":create/time"]),
     }
