@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.32](https://github.com/athensresearch/athens/compare/v2.0.0-beta.31...v2.0.0-beta.32) (2022-04-27)
+
+
+### Features
+
+* initial virtualizing ([b0e4380](https://github.com/athensresearch/athens/commit/b0e4380fe2660d534153f9738fa73199b9ea1ce7))
+* sortable styled table ([0141331](https://github.com/athensresearch/athens/commit/0141331e577fefc04b905259b4ba5f189cb2f50a))
+
+
+### Bug Fixes
+
+* can merge pages again ([e52234c](https://github.com/athensresearch/athens/commit/e52234cabea30e6d99ee49c9a56d5650f7ada8a9))
+* constrain all-pages width ([b397133](https://github.com/athensresearch/athens/commit/b39713384453b89cce75a44df39822a3f6d79f96))
+* copy on embed blocks ([3a891fe](https://github.com/athensresearch/athens/commit/3a891fe09d0b3c641e66f710fb9d5e73996e345b))
+* disambiguate edit and create time ([5c06600](https://github.com/athensresearch/athens/commit/5c06600a1268478cab14a572e02d1c21c0cbec70))
+* properly format and display dates in table ([8467018](https://github.com/athensresearch/athens/commit/8467018185267c2d2f325d1d7101aa5dc07c0104))
+* table works for many and few pages ([7e577fb](https://github.com/athensresearch/athens/commit/7e577fb6968c81be6cd357955a4023d0c3a47c88))
+* working confirmation dialog for page merge ([8e67abe](https://github.com/athensresearch/athens/commit/8e67abebacf2f13678a5ef476024252fefb50003))
+
+
+* cleanup ([dcfd5aa](https://github.com/athensresearch/athens/commit/dcfd5aab2cd2032cf6ff8b7f5a26fcd971b5f4a7))
+* fix ([48df468](https://github.com/athensresearch/athens/commit/48df46827972236e8f0f98a30e51fe68835be9d8))
+
+
+### Refactors
+
+* add new colorscheme for subtle and highlight buttons ([4e3a191](https://github.com/athensresearch/athens/commit/4e3a191d11ba8b3f956b3f78d41b28f138524c62))
+* cleaner style application in all-pages table ([91e3b2d](https://github.com/athensresearch/athens/commit/91e3b2df8915b764ae77ade612f6369a637bdbcb))
+
+
+### Documentation
+
+* update readme ([9f545ef](https://github.com/athensresearch/athens/commit/9f545ef45685a08688a2ad1c3c150b2ae6a7b55f))
+
 ## [2.0.0-beta.31](https://github.com/athensresearch/athens/compare/v2.0.0-beta.30...v2.0.0-beta.31) (2022-04-20)
 
 
