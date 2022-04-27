@@ -201,7 +201,8 @@
   [^js e]
   (let [uids @(subscribe [::select-subs/items])]
     (when (not-empty uids)
-      (let [copy-data      (->> uids
+      (let [uids           (mapv (comp first db/uid-and-embed-id) uids)
+            copy-data      (->> uids
                                 (map #(common-db/get-block-document @db/dsdb [:block/uid %]))
                                 (map #(blocks-to-clipboard-data 0 %))
                                 (apply str))
