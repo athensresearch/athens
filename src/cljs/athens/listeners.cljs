@@ -101,7 +101,9 @@
                                            KeyCodes.EQUALS    (dispatch [:zoom/in])
                                            KeyCodes.DASH      (dispatch [:zoom/out])
                                            KeyCodes.ZERO      (dispatch [:zoom/reset])
-                                           KeyCodes.K         (dispatch [:athena/toggle])
+                                           KeyCodes.K         (do
+                                                                (dispatch [:athena/toggle])
+                                                                (.. e preventDefault))
                                            KeyCodes.G         (dispatch [:devtool/toggle])
                                            KeyCodes.Z         (do
                                                                 ;; Disable the default undo behaviour.
@@ -127,7 +129,8 @@
                                                         (rf/dispatch [:reporting/navigation {:source :kbd-alt-d
                                                                                              :target :home
                                                                                              :pane   :main-pane}])
-                                                        (router/nav-daily-notes))
+                                                        (router/nav-daily-notes)
+                                                        (.. e preventDefault))
                                            KeyCodes.G (do
                                                         (rf/dispatch [:reporting/navigation {:source :kbd-alt-g
                                                                                              :target :graph
