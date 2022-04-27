@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.33](https://github.com/athensresearch/athens/compare/v2.0.0-beta.32...v2.0.0-beta.33) (2022-04-27)
+
+
+### Bug Fixes
+
+* row title is addressed by full name ([70ac275](https://github.com/athensresearch/athens/commit/70ac2758d44829bec57a4f4be977f7c5568bb806))
+
 ## [2.0.0-beta.32](https://github.com/athensresearch/athens/compare/v2.0.0-beta.31...v2.0.0-beta.32) (2022-04-27)
 
 
