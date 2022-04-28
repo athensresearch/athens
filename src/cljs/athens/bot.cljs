@@ -75,7 +75,9 @@
   [db parent sender receivers ref]
   (mapcat
     (fn [receiver]
-      (create-notification-event db parent sender receiver ref))
+      (let [receiver-page? (common-db/get-page @db/dsdb [:node/title receiver])]
+        (when receiver-page?
+          (create-notification-event db parent sender receiver ref))))
     receivers))
 
 
