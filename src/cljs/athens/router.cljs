@@ -264,7 +264,7 @@
   [graph-id]
   (let [url (js/URL. (if electron.utils/electron?
                        ;; Use live web client + page route on electron.
-                       (str "https://athensresearch.github.io/athens/"
+                       (str "https://web.athensresearch.org/"
                             js/window.location.hash)
                        js/window.location))]
     (.. url -searchParams (set graph-param-key graph-id))
