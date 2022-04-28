@@ -152,7 +152,6 @@
                :win-focused?        true
                :athena/open         false
                :athena/recent-items '()
-               :devtool/open        false
                :left-sidebar/open   false
                :right-sidebar/open  false
                :right-sidebar/items {}

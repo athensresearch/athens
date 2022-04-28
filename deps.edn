@@ -16,7 +16,6 @@
   metosin/reitit                        #:mvn{:version "0.5.13"}
   metosin/komponentit                   #:mvn{:version "0.3.10"}
   instaparse/instaparse                 #:mvn{:version "1.4.10"}
-  borkdude/sci                          #:mvn{:version "0.2.5"}
   tick/tick                             #:mvn{:version "0.5.0-RC5"}
   cljc.java-time/cljc.java-time         #:mvn{:version "0.1.9"}
   com.rpl/specter                       #:mvn{:version "1.1.3"}
