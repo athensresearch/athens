@@ -104,7 +104,6 @@
                                            KeyCodes.K         (do
                                                                 (dispatch [:athena/toggle])
                                                                 (.. e preventDefault))
-                                           KeyCodes.G         (dispatch [:devtool/toggle])
                                            KeyCodes.Z         (do
                                                                 ;; Disable the default undo behaviour.
                                                                 ;; Chrome has a textarea undo that does not behave like

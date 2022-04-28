@@ -8,7 +8,6 @@
     [athens.subs]
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
-    [athens.views.devtool :refer [devtool-component]]
     [athens.views.help :refer [help-popup]]
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
@@ -60,8 +59,7 @@
                    :gridTemplateRows "auto 1fr auto"
                    :grid-template-areas
                    "'app-header app-header app-header'
-                      'left-sidebar main-content secondary-content'
-                    'devtool devtool devtool'"
+                      'left-sidebar main-content secondary-content'"
                    :height "100vh"
                    :overflow "hidden"
                    :sx {"WebkitAppRegion" "drag"
@@ -72,5 +70,4 @@
                   [app-toolbar/app-toolbar]
                   [left-sidebar/left-sidebar]
                   [pages/view]
-                  [right-sidebar/right-sidebar]
-                  [devtool-component]]])]])))
+                  [right-sidebar/right-sidebar]]])]])))
