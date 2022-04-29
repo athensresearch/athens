@@ -592,6 +592,8 @@
                                     block-ref (str (replace-first head #"(?s)(.*)\(\(" "")
                                                    (replace-first tail #"(?s)\)\)(.*)" ""))]
 
+                                (.. e preventDefault)
+
                                 ;; save block before navigating away
                                 ((:string/save-fn @state))
 

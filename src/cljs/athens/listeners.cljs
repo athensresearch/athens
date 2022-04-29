@@ -113,6 +113,9 @@
                                                                 (if shift
                                                                   (dispatch [:redo])
                                                                   (dispatch [:undo])))
+                                           ;; Disable the default "Open file..." behaviour.
+                                           ;; We use this for navigation instead.
+                                           KeyCodes.O         (.. e preventDefault)
                                            KeyCodes.BACKSLASH (if shift
                                                                 (dispatch [:right-sidebar/toggle])
                                                                 (dispatch [:left-sidebar/toggle]))
