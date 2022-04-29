@@ -29,6 +29,23 @@
       utils/remote-db?))
 
 
+(defn add-db
+  [rfdb {:keys [id] :as db}]
+  (assoc-in rfdb [:athens/persist :db-picker/all-dbs id] db))
+
+
+(defn contains-db?
+  [rfdb id]
+  (get-in rfdb [:athens/persist :db-picker/all-dbs id]))
+
+
+(defn add-and-select
+  [rfdb {:keys [id] :as db}]
+  (cond-> rfdb
+    (not (contains-db? rfdb id)) (add-db db)
+    true                         (select-db id)))
+
+
 (rf/reg-sub
   :db-picker/all-dbs
   (fn [db _]
@@ -51,8 +68,8 @@
 ;; Adding a db with the same id will overwrite the previous one.
 (rf/reg-event-fx
   :db-picker/add-and-select-db
-  (fn [{:keys [db]} [_ {:keys [id] :as added-db}]]
-    {:db       (assoc-in db [:athens/persist :db-picker/all-dbs id] added-db)
+  (fn [{:keys [db]} [_ added-db]]
+    {:db       (add-db db added-db)
      :dispatch [:db-picker/select-db added-db]}))
 
 
