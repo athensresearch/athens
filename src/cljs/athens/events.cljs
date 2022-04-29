@@ -516,14 +516,14 @@
 
 (reg-event-db
   :daily-note/reset
-  (fn [db [_ uid]]
-    (assoc db :daily-notes/items uid)))
+  (fn [db [_ uids]]
+    (assoc db :daily-notes/items uids)))
 
 
 (reg-event-db
   :daily-note/add
   (fn [db [_ uid]]
-    (update db :daily-notes/items (comp rseq sort distinct conj) uid)))
+    (update db :daily-notes/items (comp vec rseq sort distinct conj) uid)))
 
 
 (reg-event-fx
