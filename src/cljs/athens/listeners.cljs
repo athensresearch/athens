@@ -113,9 +113,21 @@
                                                                 (if shift
                                                                   (dispatch [:redo])
                                                                   (dispatch [:undo])))
-                                           ;; Disable the default "Open file..." behaviour.
-                                           ;; We use this for navigation instead.
-                                           KeyCodes.O         (.. e preventDefault)
+                                           KeyCodes.O         (do
+                                                                ;; Disable the default "Open file..." behaviour.
+                                                                ;; We use this for navigation instead.
+                                                                (.. e preventDefault)
+                                                                (when alt
+                                                                  ;; When alt is also pressed, zoom out of current block page
+                                                                  (when-let [parent-uid (->> [:block/uid @(subscribe [:current-route/uid])]
+                                                                                             (common-db/get-parent-eid @db/dsdb)
+                                                                                             second)]
+                                                                    (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-alt-o
+                                                                                                         :target :block
+                                                                                                         :pane   (if shift
+                                                                                                                   :right-pane
+                                                                                                                   :main-pane)}])
+                                                                    (router/navigate-uid parent-uid e))))
                                            KeyCodes.BACKSLASH (if shift
                                                                 (dispatch [:right-sidebar/toggle])
                                                                 (dispatch [:left-sidebar/toggle]))

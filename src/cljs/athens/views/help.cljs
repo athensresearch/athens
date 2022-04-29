@@ -161,6 +161,8 @@
    {:name  "Navigation"
     :items [{:description "Zoom into current block"
              :shortcut    "mod+o"}
+            {:description "Zoom out of current block"
+             :shortcut    "mod+alt+o"}
             {:description "Open page or block link"
              :shortcut    "mod+o"}
             {:description "Fold block"
