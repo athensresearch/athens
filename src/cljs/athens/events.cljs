@@ -904,12 +904,25 @@
     {:db (undo/reset db)}))
 
 
+(defn window-uid?
+  "Returns true if uid matches the toplevel window.
+  Only works for the main window."
+  [uid]
+  (let [[uid _]    (db/uid-and-embed-id uid)
+        window-uid (or @(subscribe [:current-route/uid])
+                       (->> @(subscribe [:current-route/page-title])
+                            (common-db/get-page-uid @db/dsdb)))]
+    (and uid window-uid (= uid window-uid))))
+
+
 (reg-event-fx
   :up
   [(interceptors/sentry-span-no-new-tx "up")]
   (fn [_ [_ uid target-pos]]
-    (let [prev-block-uid (db/prev-block-uid uid)]
-      {:dispatch [:editing/uid (or prev-block-uid uid) target-pos]})))
+    (let [prev-block-uid  (db/prev-block-uid uid)
+          prev-block-uid' (when-not (window-uid? prev-block-uid)
+                            prev-block-uid)]
+      {:dispatch [:editing/uid (or prev-block-uid' uid) target-pos]})))
 
 
 (reg-event-fx
