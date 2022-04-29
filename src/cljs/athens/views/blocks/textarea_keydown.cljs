@@ -352,6 +352,7 @@
   [e uid state]
   (let [{:keys [key-code
                 shift
+                meta
                 ctrl
                 target
                 selection]}              (destruct-key-down e)
@@ -386,18 +387,19 @@
                                                                                        up? :first
                                                                                        down? :last)])))
 
-      ;; Control: fold or unfold blocks
-      ctrl (cond
-             left?          nil
-             right?         nil
-             (or up? down?) (let [[uid _]        (db/uid-and-embed-id uid)
-                                  new-open-state (cond
-                                                   up?   false
-                                                   down? true)
-                                  event          [:block/open {:block-uid uid
-                                                               :open?     new-open-state}]]
-                              (.. e preventDefault)
-                              (dispatch event)))
+      ;; Control (Command on mac): fold or unfold blocks
+      (shortcut-key? meta ctrl)
+      (cond
+        left?          nil
+        right?         nil
+        (or up? down?) (let [[uid _]        (db/uid-and-embed-id uid)
+                             new-open-state (cond
+                                              up?   false
+                                              down? true)
+                             event          [:block/open {:block-uid uid
+                                                          :open?     new-open-state}]]
+                         (.. e preventDefault)
+                         (dispatch event)))
 
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
