@@ -471,7 +471,7 @@
 
 
 (defntrace prev-block-uid
-  "If order 0, go to parent.
+  "If order 0, go to parent (if not a page).
    If order n but block is closed, go to prev sibling.
    If order n and block is OPEN, go to prev sibling's deepest child."
   [uid]
@@ -484,9 +484,12 @@
         prev-block                    (cond
                                         (zero? (:block/order block)) parent
                                         (false? open)                prev-sibling
-                                        (true? open)                 (deepest-child-block [:block/uid prev-sibling-uid]))]
-    (cond-> (:block/uid prev-block)
-      embed-id (str "-embed-" embed-id))))
+                                        (true? open)                 (deepest-child-block [:block/uid prev-sibling-uid]))
+        prev-block-uid                (:block/uid prev-block)]
+    (when (and prev-block-uid
+               (not (:node/title prev-block)))
+      (cond-> prev-block-uid
+        embed-id (str "-embed-" embed-id)))))
 
 
 (defntrace next-sibling-recursively
