@@ -158,6 +158,15 @@
              :shortcut    "mod+shift+v"}
             {:description "Convert to checkbox"
              :shortcut    "mod+enter"}]}
+   {:name  "Navigation"
+    :items [{:description "Zoom into current block"
+             :shortcut    "mod+o"}
+            {:description "Open page or block link"
+             :shortcut    "mod+o"}
+            {:description "Fold block"
+             :shortcut    "mod+up"}
+            {:description "Unfold block"
+             :shortcut    "mod+up"}]}
    {:name  "Selection"
     :items [{:description "Select previous block"
              :shortcut    "shift+up"}
