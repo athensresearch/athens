@@ -37,6 +37,16 @@
 
 
 (reg-sub
+  :current-route/uid-compat
+  :<- [:current-route/uid]
+  :<- [:current-route/page-title]
+  (fn [[uid title]]
+    (or uid
+        (when title
+          (common-db/get-page-uid @db/dsdb title)))))
+
+
+(reg-sub
   :current-route/name
   (fn [db]
     (-> db :current-route :data :name)))

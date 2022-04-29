@@ -88,8 +88,21 @@
                 shift
                 alt]
          :as   destruct-keys} (util/destruct-key-down e)
-        editing-uid           @(subscribe [:editing/uid])]
+        editing-uid           @(subscribe [:editing/uid])
+        window-uid            (or @(subscribe [:current-route/uid-compat])
+                                  (when (= @(subscribe [:current-route/name]) :home)
+                                    ;; On daily notes, assume you're on the first note.
+                                    (-> @(subscribe [:daily-notes/items])
+                                        first)))]
     (cond
+      (and (nil? editing-uid)
+           window-uid
+           (= key-code KeyCodes.UP))     (dispatch [:editing/last-child window-uid])
+
+      (and (nil? editing-uid)
+           window-uid
+           (= key-code KeyCodes.DOWN))   (dispatch [:editing/first-child window-uid])
+
       (util/navigate-key? destruct-keys) (condp = key-code
                                            KeyCodes.LEFT  (when (nil? editing-uid)
                                                             (.back js/window.history))

@@ -537,16 +537,30 @@
      (next-block-uid uid))))
 
 
-(defntrace get-first-child-uid
+(defntrace get-sorted-children
   [uid db]
   (when uid
     (try
-      (->> (d/pull db [{:block/children [:block/uid :block/order]}] [:block/uid uid])
+      (->> (d/pull db [{:block/children [:block/uid :block/order :block/open]}] [:block/uid uid])
            sort-block-children
-           :block/children
-           first
-           :block/uid)
+           :block/children)
       (catch :default _))))
+
+
+(defn get-first-child-uid
+  [uid db]
+  (-> (get-sorted-children uid db)
+      first
+      :block/uid))
+
+
+(defn get-last-child-uid
+  [parent-uid db]
+  (let [{:block/keys [uid open]} (-> (get-sorted-children parent-uid db) last)]
+    (cond
+      (not uid) parent-uid
+      open      (recur uid db)
+      :else     uid)))
 
 
 ;; history

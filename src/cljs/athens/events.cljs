@@ -405,6 +405,14 @@
       {:dispatch [:editing/uid first-block-uid]})))
 
 
+(reg-event-fx
+  :editing/last-child
+  [(interceptors/sentry-span-no-new-tx "editing/last-child")]
+  (fn [_ [_ uid]]
+    (when-let [last-block-uid (db/get-last-child-uid uid @db/dsdb)]
+      {:dispatch [:editing/uid last-block-uid]})))
+
+
 (defn select-up
   [selected-items]
   (let [first-item       (first selected-items)
@@ -909,9 +917,7 @@
   Only works for the main window."
   [uid]
   (let [[uid _]    (db/uid-and-embed-id uid)
-        window-uid (or @(subscribe [:current-route/uid])
-                       (->> @(subscribe [:current-route/page-title])
-                            (common-db/get-page-uid @db/dsdb)))]
+        window-uid @(subscribe [:current-route/uid-compat])]
     (and uid window-uid (= uid window-uid))))
 
 
