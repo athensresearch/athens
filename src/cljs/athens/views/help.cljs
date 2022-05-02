@@ -168,7 +168,7 @@
             {:description "Fold block"
              :shortcut    "mod+up"}
             {:description "Unfold block"
-             :shortcut    "mod+up"}]}
+             :shortcut    "mod+down"}]}
    {:name  "Selection"
     :items [{:description "Select previous block"
              :shortcut    "shift+up"}
