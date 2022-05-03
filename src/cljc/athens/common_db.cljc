@@ -279,12 +279,19 @@
   "Find and replace linked ref with new linked ref, based on title change."
   [linked-refs old-title new-title]
   (map (fn [{:block/keys [uid string] :node/keys [title]}]
-         (let [[text kw]   (if title
-                             [title :node/title]
-                             [string :block/string])
-               old-wrapped (str "[[" old-title "]]")
-               new-wrapped (str "[[" new-title "]]")
-               new-str     (string/replace text old-wrapped new-wrapped)]
+         (let [[text kw]      (if title
+                                [title :node/title]
+                                [string :block/string])
+               has-spaces?    (string/includes? new-title " ")
+               old-wrapped    (str "[[" old-title "]]")
+               new-wrapped    (str "[[" new-title "]]")
+               old-naked-hash (str "#" old-title)
+               new-naked-hash (if has-spaces?
+                                (str "#[[" new-title "]]")
+                                (str "#" new-title))
+               new-str        (-> text
+                                  (string/replace old-wrapped new-wrapped)
+                                  (string/replace old-naked-hash new-naked-hash))]
            {:db/id [:block/uid uid]
             kw     new-str}))
        linked-refs))

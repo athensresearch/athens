@@ -224,3 +224,63 @@
           (t/is (nil? (get-page-by-title from-title)))
           (t/is (seq (get-page-by-title to-title)))
           (t/is (= end-str (get-str))))))))
+
+
+(t/deftest page-rename-also-hashtag-test
+  (t/testing "when naked hashtag stays naked"
+    (let [title-from "abc"
+          title-to   "def"
+          b1-uid     "b1"
+          b2-uid     "b2"
+          b3-uid     "b3"
+          b1-from    (str "#" title-from)
+          b2-from    (str "[[" title-from "]]")
+          b3-from    (str "#[[" title-from "]]")
+          b1-to      (str "#" title-to)
+          b2-to      (str "[[" title-to "]]")
+          b3-to      (str "#[[" title-to "]]")
+          setup-repr [{:page/title     title-from
+                       :block/children [{:block/uid    b1-uid
+                                         :block/string b1-from}
+                                        {:block/uid    b2-uid
+                                         :block/string b2-from}
+                                        {:block/uid    b3-uid
+                                         :block/string b3-from}]}]]
+      (fixture/setup! setup-repr)
+      (t/is (= b1-from (common-db/get-block-string @@fixture/connection b1-uid)))
+      (t/is (= b2-from (common-db/get-block-string @@fixture/connection b2-uid)))
+      (t/is (= b3-from (common-db/get-block-string @@fixture/connection b3-uid)))
+      (fixture/op-resolve-transact! (graph-ops/build-page-rename-op @@fixture/connection title-from title-to))
+      (t/is (= b1-to (common-db/get-block-string @@fixture/connection b1-uid)))
+      (t/is (= b2-to (common-db/get-block-string @@fixture/connection b2-uid)))
+      (t/is (= b3-to (common-db/get-block-string @@fixture/connection b3-uid)))
+      (fixture/teardown! setup-repr)))
+
+  (t/testing "when naked hashtag is wrapped"
+    (let [title-from "abc"
+          title-to   "def ghi"
+          b1-uid     "b1"
+          b2-uid     "b2"
+          b3-uid     "b3"
+          b1-from    (str "#" title-from)
+          b2-from    (str "[[" title-from "]]")
+          b3-from    (str "#[[" title-from "]]")
+          b1-to      (str "#[[" title-to "]]")
+          b2-to      (str "[[" title-to "]]")
+          b3-to      (str "#[[" title-to "]]")
+          setup-repr [{:page/title     title-from
+                       :block/children [{:block/uid    b1-uid
+                                         :block/string b1-from}
+                                        {:block/uid    b2-uid
+                                         :block/string b2-from}
+                                        {:block/uid    b3-uid
+                                         :block/string b3-from}]}]]
+      (fixture/setup! setup-repr)
+      (t/is (= b1-from (common-db/get-block-string @@fixture/connection b1-uid)))
+      (t/is (= b2-from (common-db/get-block-string @@fixture/connection b2-uid)))
+      (t/is (= b3-from (common-db/get-block-string @@fixture/connection b3-uid)))
+      (fixture/op-resolve-transact! (graph-ops/build-page-rename-op @@fixture/connection title-from title-to))
+      (t/is (= b1-to (common-db/get-block-string @@fixture/connection b1-uid)))
+      (t/is (= b2-to (common-db/get-block-string @@fixture/connection b2-uid)))
+      (t/is (= b3-to (common-db/get-block-string @@fixture/connection b3-uid)))
+      (fixture/teardown! setup-repr))))
