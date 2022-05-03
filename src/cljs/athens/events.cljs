@@ -473,6 +473,12 @@
 
 
 (reg-event-fx
+  :alert/js
+  (fn [_ [_ message]]
+    {:alert/js! message}))
+
+
+(reg-event-fx
   :confirm/js
   (fn [_ [_ message true-cb false-cb]]
     {:confirm/js! [message true-cb false-cb]}))
