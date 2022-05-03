@@ -298,16 +298,13 @@
 
 
 (defn linked-ref-el
-  [state title]
-  (let [linked?     "Linked References"
-        linked-refs (wrap-span-no-new-tx "get-reactive-linked-references"
+  [title]
+  (let [linked-refs (wrap-span-no-new-tx "get-reactive-linked-references"
                                          (reactive/get-reactive-linked-references [:node/title title]))]
     (when (not-empty linked-refs)
       [:> PageReferences {:count (count linked-refs)
                           :title "Linked References"
-                          :onOpen (fn [] (swap! state update linked? not))
-                          :onClose (fn [] (swap! state update linked? not))
-                          :defaultIsOpen (get @state linked?)}
+                          :defaultIsOpen (> 10 (count linked-refs))}
        (doall
          (for [[group-title group] linked-refs]
            [:> ReferenceGroup {:key (str "group-" group-title)
@@ -467,7 +464,7 @@
          [:> PageFooter
           [:> VStack {:spacing 2 :py 4 :align "stretch"}
            [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
-            [linked-ref-el state title]]
+            [linked-ref-el title]]
            (when-not on-daily-notes?
              [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
               [unlinked-ref-el state unlinked-refs title]])]]]))))
