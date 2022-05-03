@@ -7,36 +7,17 @@
 
 # Athens
 
-Athens is an open-source knowledge graph that helps individuals and organizations solve complex problems by enabling them to capture, compose, and recombine ideas.
-
-**[Download the free desktop app](https://athensresearch.github.io/docs/user_guide/installation)**
-
-**Check out our beta [self-hosted solution](https://athensresearch.github.io/docs/developer_guide/self-hosted) for those looking to collaborate in real-time.**
+Athens helps research teams capture and synthesize knowledge together. Built on a graph database, Athens helps map and communicate complex knowledge in wicked domains.
 
 **[Demo Athens in your browser (no changes are saved)](https://athensresearch.github.io/athens)**
 
-⬇️ Click to watch video demoing the value of Athens ⬇️ 
-[![7f9876cb28bd455a9de52673efefa2c8-00001](https://user-images.githubusercontent.com/8952138/115828768-00a9a480-a3c3-11eb-9b44-ae5488434ce2.gif)](https://www.loom.com/share/7f9876cb28bd455a9de52673efefa2c8)
+**[Download the free desktop app](https://github.com/athensresearch/athens/releases)**
 
-### Private
+## Multiplayer Graphs
 
-You can use Athens as a local desktop app that saves data to your filesystem or with a [self-hosted server](https://athensresearch.github.io/docs/developer_guide/self-hosted) for multi-device or multi-user access.
+- **[Sign-up for our hosted collaborative graphs closed beta waitlist](https://airtable.com/shrY7IPuiwDi0BTSS)**
+- Or, **[self-host your own collaborative graph](https://athensresearch.github.io/docs/developer_guide/self-hosted)**
 
-### Collaborative
-
-You can use the collaborative version of Athens for block-level and page-level presence, or if you want to easily use Athens from multiple computers.
-
-### Community-Driven
-
-Athens has a Discord with over 2,200 members. We handle support and feature development on Discord and GitHub. Every Sunday at 11am Pacific, we have a community call. You can help shape Athens — [join us](https://discord.gg/GCJaV3V)!
-
-# Problem
-
-The problem today is that we are getting drowned in information. If we don't take notes, we forget everything. So we take notes, but then we have too many notes! Search doesn't work. Folders don't work. And no one does tagging.
-
-Athens lets you take notes without praying to the search gods, without double-clicking endlessly on folders, and without manual tagging.
-
-Athens does this with **[[bidirectional links]]** and **((block references))** that let you to take notes on anything from any page. Just [[link]] or ((reference)) another page or block - and voilà! - you can now go to this page and see all the places that linked back to it. The next time you press `[[` or `((`, you will be indexing through your previous notes, helping you connect the dots. You've started creating a graph of your knowledge!
 
 # Contributing
 

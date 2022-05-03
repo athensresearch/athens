@@ -6,6 +6,7 @@
     [athens.dates                :as dates]
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
+    [athens.electron.utils       :as electron.utils]
     [athens.interceptors         :as interceptors]
     [athens.utils.sentry         :as sentry]
     [day8.re-frame.tracing       :refer-macros [fn-traced]]
@@ -33,6 +34,16 @@
   :current-route/page-title
   (fn [db]
     (-> db :current-route :path-params :title)))
+
+
+(reg-sub
+  :current-route/uid-compat
+  :<- [:current-route/uid]
+  :<- [:current-route/page-title]
+  (fn [[uid title]]
+    (or uid
+        (when title
+          (common-db/get-page-uid @db/dsdb title)))))
 
 
 (reg-sub
@@ -261,7 +272,11 @@
 (defn create-url-with-graph-param
   "Create a URL containing graph-id."
   [graph-id]
-  (let [url (js/URL. js/window.location)]
+  (let [url (js/URL. (if electron.utils/electron?
+                       ;; Use live web client + page route on electron.
+                       (str "https://web.athensresearch.org/"
+                            js/window.location.hash)
+                       js/window.location))]
     (.. url -searchParams (set graph-param-key graph-id))
     (.toString url)))
 

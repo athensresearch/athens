@@ -152,7 +152,6 @@
                :win-focused?        true
                :athena/open         false
                :athena/recent-items '()
-               :devtool/open        false
                :left-sidebar/open   false
                :right-sidebar/open  false
                :right-sidebar/items {}
@@ -472,7 +471,7 @@
 
 
 (defntrace prev-block-uid
-  "If order 0, go to parent.
+  "If order 0, go to parent (if not a page).
    If order n but block is closed, go to prev sibling.
    If order n and block is OPEN, go to prev sibling's deepest child."
   [uid]
@@ -485,9 +484,12 @@
         prev-block                    (cond
                                         (zero? (:block/order block)) parent
                                         (false? open)                prev-sibling
-                                        (true? open)                 (deepest-child-block [:block/uid prev-sibling-uid]))]
-    (cond-> (:block/uid prev-block)
-      embed-id (str "-embed-" embed-id))))
+                                        (true? open)                 (deepest-child-block [:block/uid prev-sibling-uid]))
+        prev-block-uid                (:block/uid prev-block)]
+    (when (and prev-block-uid
+               (not (:node/title prev-block)))
+      (cond-> prev-block-uid
+        embed-id (str "-embed-" embed-id)))))
 
 
 (defntrace next-sibling-recursively
@@ -535,16 +537,30 @@
      (next-block-uid uid))))
 
 
-(defntrace get-first-child-uid
+(defntrace get-sorted-children
   [uid db]
   (when uid
     (try
-      (->> (d/pull db [{:block/children [:block/uid :block/order]}] [:block/uid uid])
+      (->> (d/pull db [{:block/children [:block/uid :block/order :block/open]}] [:block/uid uid])
            sort-block-children
-           :block/children
-           first
-           :block/uid)
+           :block/children)
       (catch :default _))))
+
+
+(defn get-first-child-uid
+  [uid db]
+  (-> (get-sorted-children uid db)
+      first
+      :block/uid))
+
+
+(defn get-last-child-uid
+  [parent-uid db]
+  (let [{:block/keys [uid open]} (-> (get-sorted-children parent-uid db) last)]
+    (cond
+      (not uid) parent-uid
+      open      (recur uid db)
+      :else     uid)))
 
 
 ;; history

@@ -229,13 +229,6 @@
                (update db :athena/recent-items conj selected-page))))
 
 
-(reg-event-db
-  :devtool/toggle
-  [(interceptors/sentry-span-no-new-tx "devtool/toggle")]
-  (fn [db _]
-    (update db :devtool/open not)))
-
-
 (reg-event-fx
   :help/toggle
   [(interceptors/sentry-span-no-new-tx "help/toggle")]
@@ -412,6 +405,14 @@
       {:dispatch [:editing/uid first-block-uid]})))
 
 
+(reg-event-fx
+  :editing/last-child
+  [(interceptors/sentry-span-no-new-tx "editing/last-child")]
+  (fn [_ [_ uid]]
+    (when-let [last-block-uid (db/get-last-child-uid uid @db/dsdb)]
+      {:dispatch [:editing/uid last-block-uid]})))
+
+
 (defn select-up
   [selected-items]
   (let [first-item       (first selected-items)
@@ -523,14 +524,14 @@
 
 (reg-event-db
   :daily-note/reset
-  (fn [db [_ uid]]
-    (assoc db :daily-notes/items uid)))
+  (fn [db [_ uids]]
+    (assoc db :daily-notes/items uids)))
 
 
 (reg-event-db
   :daily-note/add
   (fn [db [_ uid]]
-    (update db :daily-notes/items (comp rseq sort distinct conj) uid)))
+    (update db :daily-notes/items (comp vec rseq sort distinct conj) uid)))
 
 
 (reg-event-fx
@@ -911,12 +912,23 @@
     {:db (undo/reset db)}))
 
 
+(defn window-uid?
+  "Returns true if uid matches the toplevel window.
+  Only works for the main window."
+  [uid]
+  (let [[uid _]    (db/uid-and-embed-id uid)
+        window-uid @(subscribe [:current-route/uid-compat])]
+    (and uid window-uid (= uid window-uid))))
+
+
 (reg-event-fx
   :up
   [(interceptors/sentry-span-no-new-tx "up")]
   (fn [_ [_ uid target-pos]]
-    (let [prev-block-uid (db/prev-block-uid uid)]
-      {:dispatch [:editing/uid (or prev-block-uid uid) target-pos]})))
+    (let [prev-block-uid  (db/prev-block-uid uid)
+          prev-block-uid' (when-not (window-uid? prev-block-uid)
+                            prev-block-uid)]
+      {:dispatch [:editing/uid (or prev-block-uid' uid) target-pos]})))
 
 
 (reg-event-fx
