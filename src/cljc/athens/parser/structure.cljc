@@ -4,8 +4,8 @@
   Discovers following structure references:
   * [x] `[[...]]` page links
   * [x] `#...` naked hashtags
-  * [x] `#[[...]] braced hashtags
-  * [x] `((...)) block refs
+  * [x] `#[[...]]` braced hashtags
+  * [x] `((...))` block refs
   * [x] Ignore structure when in code blocks
   * [x] `{{type: ((...))}}` typed block refs
   * [ ] `{{type: ((...)), atr1: val1}}` typed block refs with optional attributes"

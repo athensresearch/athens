@@ -2,15 +2,14 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
-    [athens.common.logging        :as log]
-    [athens.parser                :as parser]
-    [athens.patterns              :as patterns]
-    [clojure.data                 :as data]
-    [clojure.pprint               :as pp]
-    [clojure.set                  :as set]
-    [clojure.string               :as string]
-    [clojure.walk                 :as walk]
-    [datascript.core              :as d])
+    [athens.common.logging   :as log]
+    [athens.parser           :as parser]
+    [clojure.data            :as data]
+    [clojure.pprint          :as pp]
+    [clojure.set             :as set]
+    [clojure.string          :as string]
+    [clojure.walk            :as walk]
+    [datascript.core         :as d])
   #?(:cljs
      (:require-macros
        [athens.common.sentry :as sentry-m :refer [wrap-span wrap-span-no-new-tx]])))
@@ -280,12 +279,19 @@
   "Find and replace linked ref with new linked ref, based on title change."
   [linked-refs old-title new-title]
   (map (fn [{:block/keys [uid string] :node/keys [title]}]
-         (let [[string kw] (if title
-                             [title :node/title]
-                             [string :block/string])
-               new-str (string/replace string
-                                       (patterns/linked old-title)
-                                       (str "$1$3$4" new-title "$2$5"))]
+         (let [[text kw]      (if title
+                                [title :node/title]
+                                [string :block/string])
+               has-spaces?    (string/includes? new-title " ")
+               old-wrapped    (str "[[" old-title "]]")
+               new-wrapped    (str "[[" new-title "]]")
+               old-naked-hash (str "#" old-title)
+               new-naked-hash (if has-spaces?
+                                (str "#[[" new-title "]]")
+                                (str "#" new-title))
+               new-str        (-> text
+                                  (string/replace old-wrapped new-wrapped)
+                                  (string/replace old-naked-hash new-naked-hash))]
            {:db/id [:block/uid uid]
             kw     new-str}))
        linked-refs))

@@ -1127,7 +1127,7 @@
   :page/rename
   (fn [_ [_ {:keys [old-name new-name callback] :as args}]]
     (log/debug ":page/rename args:" (pr-str (select-keys args [:old-name :new-name])))
-    (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-rename-op old-name new-name))]
+    (let [event (common-events/build-atomic-event (graph-ops/build-page-rename-op @db/dsdb old-name new-name))]
       {:fx [[:dispatch [:resolve-transact-forward event]]
             [:invoke-callback callback]]})))
 

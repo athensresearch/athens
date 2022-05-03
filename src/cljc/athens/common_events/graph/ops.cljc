@@ -24,6 +24,27 @@
                                        (atomic/make-block-new-op block-uid location)])))))
 
 
+(defn build-page-rename-op
+  "Creates `:page/rename` & optionally `:page/new` ops."
+  [db title-from title-to]
+  (let [links-old      (common-db/find-page-links title-from)
+        links-new      (common-db/find-page-links title-to)
+        just-new       (set/difference links-new links-old)
+        new-titles     (remove #(seq (common-db/get-page-uid db %))
+                               just-new)
+        atomic-pages   (when-not (empty? new-titles)
+                         (into []
+                               (for [title new-titles]
+                                 (build-page-new-op db title))))
+        atomic-rename  (atomic/make-page-rename-op title-from title-to)
+        page-rename-op (if (empty? atomic-pages)
+                         atomic-rename
+                         (composite/make-consequence-op {:op/type :page/rename}
+                                                        (conj atomic-pages
+                                                              atomic-rename)))]
+    page-rename-op))
+
+
 (defn build-block-save-op
   "Creates `:block/save` op, taking into account context.
   So it might be a composite or atomic event, depending if new page link is present and if pages exist."

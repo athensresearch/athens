@@ -246,7 +246,7 @@
       (let [{original-block-refs :block/refs} (get-block test-block-uid)
             {original-page-refs :block/refs}  (get-page test-page-uid)
             target-page-new-title             "Target page new"
-            rename-page-event                 (atomic-graph-ops/make-page-rename-op target-page-title target-page-new-title)
+            rename-page-event                 (graph-ops/build-page-rename-op @@fixture/connection target-page-title target-page-new-title)
             rename-page-txs                   (atomic-resolver/resolve-to-tx @@fixture/connection rename-page-event)]
 
         ;; Page should have refs to it.
@@ -278,7 +278,7 @@
       (let [{block-backrefs :block/_refs} (get-block test-block-uid)
             {page-backrefs :block/_refs}  (get-page test-page-uid)
             target-page-new-title         (str "ref to ((" test-block-uid "))")
-            rename-page-event             (atomic-graph-ops/make-page-rename-op target-page-title target-page-new-title)
+            rename-page-event             (graph-ops/build-page-rename-op @@fixture/connection target-page-title target-page-new-title)
             rename-page-txs               (atomic-resolver/resolve-to-tx @@fixture/connection rename-page-event)]
 
         ;; Page should have ref to block, but not to page.

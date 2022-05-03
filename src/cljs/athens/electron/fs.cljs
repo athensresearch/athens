@@ -24,6 +24,9 @@
         newer?     (< prev-mtime curr-mtime)]
     (when (and prev-mtime curr-mtime newer?)
       (let [block-text js/document.activeElement.value
+            ;; TODO we should not interact with clipboard without clear user interaction,
+            ;;      this is most common error we see right now in Sentry
+            ;;      It would be better to store below information in re-frame
             _          (.. js/navigator -clipboard (writeText block-text))
             _          (write-bkp)
             confirm    (js/window.confirm (str "New file found. Copying your current block to the clipboard, and saving your current db."
