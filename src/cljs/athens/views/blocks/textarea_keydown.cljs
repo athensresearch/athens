@@ -352,6 +352,7 @@
   [e uid state]
   (let [{:keys [key-code
                 shift
+                meta
                 ctrl
                 target
                 selection]}              (destruct-key-down e)
@@ -386,18 +387,19 @@
                                                                                        up? :first
                                                                                        down? :last)])))
 
-      ;; Control: fold or unfold blocks
-      ctrl (cond
-             left?          nil
-             right?         nil
-             (or up? down?) (let [[uid _]        (db/uid-and-embed-id uid)
-                                  new-open-state (cond
-                                                   up?   false
-                                                   down? true)
-                                  event          [:block/open {:block-uid uid
-                                                               :open?     new-open-state}]]
-                              (.. e preventDefault)
-                              (dispatch event)))
+      ;; Control (Command on mac): fold or unfold blocks
+      (shortcut-key? meta ctrl)
+      (cond
+        left?          nil
+        right?         nil
+        (or up? down?) (let [[uid _]        (db/uid-and-embed-id uid)
+                             new-open-state (cond
+                                              up?   false
+                                              down? true)
+                             event          [:block/open {:block-uid uid
+                                                          :open?     new-open-state}]]
+                         (.. e preventDefault)
+                         (dispatch event)))
 
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
@@ -556,7 +558,7 @@
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
   [e uid state]
-  (let [{:keys [key-code head tail selection target value shift]} (destruct-key-down e)]
+  (let [{:keys [key-code head tail selection target value shift alt]} (destruct-key-down e)]
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
                                                               closest-block-page (.. target (closest ".block-page"))
@@ -577,6 +579,7 @@
 
       (= key-code KeyCodes.H) (surround-and-set e state "^^")
 
+      ;; if alt is pressed, zoom out of current block page
       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
       ;; if caret on a #hashtag, navigate to that page
       ;; if caret within ((uid)), navigate to that uid
@@ -590,10 +593,24 @@
                                     block-ref (str (replace-first head #"(?s)(.*)\(\(" "")
                                                    (replace-first tail #"(?s)\)\)(.*)" ""))]
 
+                                (.. e preventDefault)
+
                                 ;; save block before navigating away
                                 ((:string/save-fn @state))
 
                                 (cond
+                                  alt
+                                  (when-let [parent-uid (->> [:block/uid @(subscribe [:current-route/uid])]
+                                                             (common-db/get-parent-eid @db/dsdb)
+                                                             second)]
+                                    (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-alt-o
+                                                                         :target :block
+                                                                         :pane   (if shift
+                                                                                   :right-pane
+                                                                                   :main-pane)}])
+                                    (router/navigate-uid parent-uid e))
+
+
                                   (and (re-find #"(?s)\[\[" head)
                                        (re-find #"(?s)\]\]" tail)
                                        (nil? (re-find #"(?s)\[" link))

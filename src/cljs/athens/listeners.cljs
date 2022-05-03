@@ -88,8 +88,21 @@
                 shift
                 alt]
          :as   destruct-keys} (util/destruct-key-down e)
-        editing-uid           @(subscribe [:editing/uid])]
+        editing-uid           @(subscribe [:editing/uid])
+        window-uid            (or @(subscribe [:current-route/uid-compat])
+                                  (when (= @(subscribe [:current-route/name]) :home)
+                                    ;; On daily notes, assume you're on the first note.
+                                    (-> @(subscribe [:daily-notes/items])
+                                        first)))]
     (cond
+      (and (nil? editing-uid)
+           window-uid
+           (= key-code KeyCodes.UP))     (dispatch [:editing/last-child window-uid])
+
+      (and (nil? editing-uid)
+           window-uid
+           (= key-code KeyCodes.DOWN))   (dispatch [:editing/first-child window-uid])
+
       (util/navigate-key? destruct-keys) (condp = key-code
                                            KeyCodes.LEFT  (when (nil? editing-uid)
                                                             (.back js/window.history))
@@ -113,6 +126,21 @@
                                                                 (if shift
                                                                   (dispatch [:redo])
                                                                   (dispatch [:undo])))
+                                           KeyCodes.O         (do
+                                                                ;; Disable the default "Open file..." behaviour.
+                                                                ;; We use this for navigation instead.
+                                                                (.. e preventDefault)
+                                                                (when alt
+                                                                  ;; When alt is also pressed, zoom out of current block page
+                                                                  (when-let [parent-uid (->> [:block/uid @(subscribe [:current-route/uid])]
+                                                                                             (common-db/get-parent-eid @db/dsdb)
+                                                                                             second)]
+                                                                    (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-alt-o
+                                                                                                         :target :block
+                                                                                                         :pane   (if shift
+                                                                                                                   :right-pane
+                                                                                                                   :main-pane)}])
+                                                                    (router/navigate-uid parent-uid e))))
                                            KeyCodes.BACKSLASH (if shift
                                                                 (dispatch [:right-sidebar/toggle])
                                                                 (dispatch [:left-sidebar/toggle]))
