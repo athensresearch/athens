@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.34](https://github.com/athensresearch/athens/compare/v2.0.0-beta.33...v2.0.0-beta.34) (2022-05-04)
+
+
+### Features
+
+* add navigation section to help ([590a275](https://github.com/athensresearch/athens/commit/590a275c50d3acca47e03b0d6f8a9bd6e22d49e8))
+* mod+alt+o zooms out of current block ([e446f0c](https://github.com/athensresearch/athens/commit/e446f0c1517476ce350cb2c10418b8226341d55f))
+* Permalink creates db if needed, and works on electron ([#2175](https://github.com/athensresearch/athens/issues/2175)) ([13b5241](https://github.com/athensresearch/athens/commit/13b5241d10082dc68fb79c28d10194477f853cd2))
+* pressing up/down with no focus takes you to last/first block ([c6f7806](https://github.com/athensresearch/athens/commit/c6f7806e6f3847ab45cd740a5f42178ebb8ec1fc))
+
+
+### Bug Fixes
+
+* :daily-notes/items should always be a vector ([d06a359](https://github.com/athensresearch/athens/commit/d06a359f841dac83e0e1355aa12f4dea99a3f26b))
+* `:page/rename` & `:page/merge` w/o regex injection. ([4a817bb](https://github.com/athensresearch/athens/commit/4a817bb01b13dc44b8433206b6f7593056ff3fff))
+* also handle naked hashtag in nested page renames ([206d34c](https://github.com/athensresearch/athens/commit/206d34c9ccbc861684b0cc0e8b2682fd505c1757))
+* disable "open file..." dialog on cmd/ctrl+o ([18a818a](https://github.com/athensresearch/athens/commit/18a818a083c9f18cdc2aa57b6a062cb573591155))
+* fold shortcut should use shortcut key on mac ([79f7ad7](https://github.com/athensresearch/athens/commit/79f7ad701bfbd77b1a61efb3063a3c6ad53ea828))
+* page linked refs start closed when 10+ ([ce77fa9](https://github.com/athensresearch/athens/commit/ce77fa96cc7e48d8c444fa002a50c6293599b072))
+* prev-block-uid should not try to go to pages ([1ede064](https://github.com/athensresearch/athens/commit/1ede0641b30e6f24425348302390ccacf7f56d85))
+* prevent browser defaults that focus URL ([c94b162](https://github.com/athensresearch/athens/commit/c94b16229a76c1f36866aa18cc1fd9c59e7334ee))
+* restore the alert/js event ([f34b69c](https://github.com/athensresearch/athens/commit/f34b69cd9edc8bde2158650e209956cb4286a296))
+* unfold block is mod+down ([e42c5c7](https://github.com/athensresearch/athens/commit/e42c5c7a83977314e75be0b73569de7d2f58e7f8))
+* up on first window child should not lose block focus ([805065e](https://github.com/athensresearch/athens/commit/805065e301701a0485e85b496da9ec03ffc51044))
+
+
+### Refactors
+
+* also not used anymore ([c2c9ae7](https://github.com/athensresearch/athens/commit/c2c9ae76d9e65f8e67212e45b8f68526a4560c67))
+* remove devtool ([b24bad6](https://github.com/athensresearch/athens/commit/b24bad69ca92596a58bec4bb479c740c7943d932))
+* removed now dead `patterns/linked` ([0dfe2d0](https://github.com/athensresearch/athens/commit/0dfe2d0dbf3b193de89123b0df37239bf24e8820))
+
 ## [2.0.0-beta.33](https://github.com/athensresearch/athens/compare/v2.0.0-beta.32...v2.0.0-beta.33) (2022-04-27)
 
 
