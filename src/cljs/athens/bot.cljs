@@ -208,7 +208,7 @@
     (let [current-user  @(rf/subscribe [:username])
           userpage      (str "@" current-user)
           page-uid      (common-db/get-page-uid @db/dsdb userpage)]
-      {:fx [[:dispatch [:navigate :page {:id page-uid}]]]})))
+      {:fx [[:dispatch [:navigate :page-by-title {:title userpage}]]]})))
 
 (rf/reg-event-fx
   :notification/open-in-sidebar
