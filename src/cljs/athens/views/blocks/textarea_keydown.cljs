@@ -133,12 +133,14 @@
                           :page db/search-in-node-title
                           :hashtag db/search-in-node-title
                           :template db/search-in-block-content
+                          :add-to db/search-in-node-title
                           :slash filter-slash-options)
         regex           (case type
                           :block #"(?s).*\(\("
                           :page #"(?s).*\[\["
                           :hashtag #"(?s).*#"
                           :template #"(?s).*;;"
+                          :add-to #"(?s).*\+"
                           :slash #"(?s).*/")
         find            (re-find regex head)
         query-start-idx (count find)
@@ -300,6 +302,28 @@
          (replace-selection-with "")
          (dispatch [:paste-internal uid (:string/local @state) target-ir])
          (swap! state assoc :search/type nil))))))
+
+
+;; see `auto-complete-slash` for how this arity-overloaded
+;; function is used.
+(defn auto-complete-add-to
+  ([state e]
+   (let [{:search/keys [index results]} @state
+         target (.. e -target)
+         {:keys [node/title]} (nth results index nil)
+         expansion title]
+     (auto-complete-add-to state target expansion)))
+
+  ([state target expansion]
+   (let [{:keys [start head]} (destruct-target target)
+         start-idx (count (re-find #"(?s).*\+" head))]
+     (if (nil? expansion)
+       (swap! state assoc :search/type nil)
+       (do
+         (set-selection target start-idx start)
+         (replace-selection-with (str "[[" expansion "]]"))
+         (swap! state assoc :search/type nil)
+         (dispatch [:add-to (:string/local @state) (:block/uid @state) expansion]))))))
 
 
 ;; Arrow Keys
@@ -492,7 +516,8 @@
              :page (auto-complete-inline state e)
              :block (auto-complete-inline state e)
              :hashtag (auto-complete-hashtag state e)
-             :template (auto-complete-template state e))
+             :template (auto-complete-template state e)
+             :add-to (auto-complete-add-to state e))
       ;; shift-enter: add line break to textarea and move cursor to the next line.
       shift (replace-selection-with "\n")
       ;; cmd-enter: cycle todo states, then move cursor to the end of the line.
@@ -760,6 +785,8 @@
       (and (= "#" look-behind-char) (= type :hashtag)) (swap! state assoc :search/type nil)
       ;; semicolon: close dropdown
       (and (= ";" look-behind-char) (= type :template)) (swap! state assoc :search/type nil)
+      ;; plus: close dropdown
+      (and (= "+" look-behind-char) (= type :at)) (swap! state assoc :search/type nil)
       ;; dropdown is open: update query
       type (update-query state head "" type))))
 
@@ -800,6 +827,11 @@
                                            :search/index 0
                                            :search/query ""
                                            :search/type :template
+                                           :search/results [])
+      (and (= key "+") (nil? type)) (swap! state assoc
+                                           :search/index 0
+                                           :search/query ""
+                                           :search/type :add-to
                                            :search/results [])
       type (update-query state head key type))))
 
