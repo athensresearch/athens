@@ -1,9 +1,83 @@
-import { Box } from "@chakra-ui/react";
+import React from 'react';
+import { Box, Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList, Portal } from "@chakra-ui/react";
+import { EllipsisHorizontalIcon } from "@/Icons/Icons";
 import { withErrorBoundary } from "react-error-boundary";
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, ...props }) => {
+interface Action {
+  label: string;
+  onClick: () => void;
+  isExtra?: boolean;
+  children?: React.ReactNode;
+}
+
+interface ActionsProps {
+  actions: Action[];
+  isUsingActions: boolean;
+  setIsUsingActions: (isUsingActions: boolean) => void;
+}
+
+const TEST_ACTIONS = [
+  {
+    label: "Test action 1",
+    onClick: () => {
+      console.log("Test action 1 clicked");
+    }
+  },
+  {
+    label: "Test action 2",
+    onClick: () => {
+      console.log("Test action 2 clicked");
+    }
+  },
+]
+
+const Actions = ({ actions, isUsingActions, setIsUsingActions }: ActionsProps) => {
+  const extraActions = actions.filter(a => a.isExtra);
+  const defaultActions = actions.filter(a => !a.isExtra);
+
+  console.log('showwing actions')
+
+  return (
+    <ButtonGroup
+      className="block-actions"
+      size="xs"
+      zIndex="tooltip"
+      isAttached={true}
+      position="absolute"
+      top={0}
+      right={0}
+      transform="translateY(-50%)"
+      onFocus={() => setIsUsingActions(true)}
+      onBlur={() => setIsUsingActions(false)}
+    >
+      {defaultActions.map(a => <Button
+        key={a.label}
+        {...a}
+      />)}
+      {extraActions.length > 0 && (
+        <Menu isLazy={true}>
+          <MenuButton
+            as={Button}
+            size="xs"
+            zIndex="tooltip"
+          >
+            <EllipsisHorizontalIcon />
+          </MenuButton>
+          <MenuList>
+            {extraActions.map(a => <MenuItem key={a.label} {...a} />)}
+          </MenuList>
+        </Menu>
+      )}
+    </ButtonGroup>
+  )
+}
+
+const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, actions, ...props }) => {
+  const [shouldShowActions, setShouldShowActions] = React.useState(false);
+  const [isUsingActions, setIsUsingActions] = React.useState(false);
+
   return <Box
     className={[
       "block-container",
@@ -17,13 +91,14 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
     display="flex"
     lineHeight="2em"
     position="relative"
-    borderRadius="0.125rem"
+    borderRadius="sm"
     justifyContent="flex-start"
     flexDirection="column"
     background="var(--block-surface-color)"
     opacity={isDragging ? 0.5 : 1}
     data-uid={uid}
     data-childrenuids={childrenUids}
+
     sx={{
       "&.show-tree-indicator:before": {
         content: "''",
@@ -61,9 +136,12 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         gridTemplateRows: "0 1fr 0",
         gridTemplateAreas:
           "'above above above above above' 'toggle bullet content refs presence' 'below below below below below'",
-        borderRadius: "0.5rem",
+        borderRadius: "sm",
         minHeight: '2em',
         position: "relative",
+      },
+      "&:hover:not(:)": {
+        bg: "background.upper"
       },
       "&:hover > .block-toggle, &:focus-within > .block-toggle": { opacity: "1" },
       "button.block-edit-toggle": {
@@ -95,12 +173,33 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       },
       "&.is-linked-ref": { bg: "background-attic" },
       ".block-container": {
-        marginLeft: "2rem",
+        marginLeft: "2em",
         gridArea: "body"
-      }
+      },
+      "&.is-hovered": {
+      },
     }}
     {...props}
-  > {children}</Box >;
+    onMouseEnter={(e) => {
+      const target = e.target as HTMLElement;
+      setShouldShowActions(true);
+      props.onMouseEnter(e);
+    }}
+    onMouseLeave={(e) => {
+      props.onMouseLeave(e);
+      if (!isUsingActions) {
+        setShouldShowActions(false)
+      }
+    }}
+  >
+    {children}
+    {(true && shouldShowActions) && (
+      <Actions
+        actions={TEST_ACTIONS}
+        isUsingActions={isUsingActions}
+        setIsUsingActions={setIsUsingActions}
+      />)}
+  </Box>;
 }
 
 export const Container = withErrorBoundary(_Container, { fallback: <p>{ERROR_MESSAGE}</p> });
