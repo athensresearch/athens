@@ -1,84 +1,48 @@
 import React from 'react';
-import { Box, Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList, Portal } from "@chakra-ui/react";
-import { EllipsisHorizontalIcon } from "@/Icons/Icons";
+import { Box, Portal } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
+import { Actions } from './Actions';
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
-interface Action {
-  label: string;
-  onClick: () => void;
-  isExtra?: boolean;
-  children?: React.ReactNode;
+// Helpers
+
+const targetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: string): boolean => {
+  // if hovered element's closest block container has the current UID,
+  // we're hovering the current block. Otherwise return false
+  const closestBlockContainer = target.closest('.block-container') as HTMLElement;
+  return (closestBlockContainer?.dataset?.uid === thisBlockUid)
 }
 
-interface ActionsProps {
-  actions: Action[];
-  isUsingActions: boolean;
-  setIsUsingActions: (isUsingActions: boolean) => void;
-}
+// Component
 
-const TEST_ACTIONS = [
-  {
-    label: "Test action 1",
-    onClick: () => {
-      console.log("Test action 1 clicked");
-    }
-  },
-  {
-    label: "Test action 2",
-    onClick: () => {
-      console.log("Test action 2 clicked");
-    }
-  },
-]
-
-const Actions = ({ actions, isUsingActions, setIsUsingActions }: ActionsProps) => {
-  const extraActions = actions.filter(a => a.isExtra);
-  const defaultActions = actions.filter(a => !a.isExtra);
-
-  console.log('showwing actions')
-
-  return (
-    <ButtonGroup
-      className="block-actions"
-      size="xs"
-      zIndex="tooltip"
-      isAttached={true}
-      position="absolute"
-      top={0}
-      right={0}
-      transform="translateY(-50%)"
-      onFocus={() => setIsUsingActions(true)}
-      onBlur={() => setIsUsingActions(false)}
-    >
-      {defaultActions.map(a => <Button
-        key={a.label}
-        {...a}
-      />)}
-      {extraActions.length > 0 && (
-        <Menu isLazy={true}>
-          <MenuButton
-            as={Button}
-            size="xs"
-            zIndex="tooltip"
-          >
-            <EllipsisHorizontalIcon />
-          </MenuButton>
-          <MenuList>
-            {extraActions.map(a => <MenuItem key={a.label} {...a} />)}
-          </MenuList>
-        </Menu>
-      )}
-    </ButtonGroup>
-  )
-}
-
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, actions, ...props }) => {
-  const [shouldShowActions, setShouldShowActions] = React.useState(false);
+const _Container = ({ children, isEditing, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, actions, ...props }) => {
+  const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
   const [isUsingActions, setIsUsingActions] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const handleMouseOver = (e) => {
+    setIsHoveredNotChild(targetIsCurrentBlockNotChild(e.target, uid));
+  }
+
+  const handleMouseLeave = (e) => {
+    if (!isUsingActions) {
+      console.log('closed because not using actions');
+      setIsHoveredNotChild(false);
+    }
+  }
+
+  const handleFocus = (e) => setIsHoveredNotChild(targetIsCurrentBlockNotChild(e.target, uid));
+
+  const handleBlur = (e) => {
+    if (!isUsingActions) {
+      console.log('closed because not using actions');
+      setIsHoveredNotChild(false);
+    }
+  }
 
   return <Box
+    ref={containerRef}
     className={[
       "block-container",
       isDragging ? "is-dragging" : "",
@@ -86,6 +50,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       isOpen ? "is-open" : "",
       (hasChildren && isOpen) ? "show-tree-indicator" : "",
       isLinkedRef ? "is-linked-ref" : "",
+      isHoveredNotChild && "is-hovered-not-child",
       hasPresence ? "is-presence" : "",
     ].filter(Boolean).join(' ')}
     display="flex"
@@ -180,23 +145,19 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       },
     }}
     {...props}
-    onMouseEnter={(e) => {
-      const target = e.target as HTMLElement;
-      setShouldShowActions(true);
-      props.onMouseEnter(e);
-    }}
+    onMouseOver={handleMouseOver}
+    onFocus={handleFocus}
+    onBlur={handleBlur}
     onMouseLeave={(e) => {
-      props.onMouseLeave(e);
-      if (!isUsingActions) {
-        setShouldShowActions(false)
-      }
+      if (props?.onMouseLeave) props.onMouseLeave(e);
+      handleMouseLeave(e);
     }}
+
   >
     {children}
-    {(true && shouldShowActions) && (
+    {(!isEditing && (isHoveredNotChild || isUsingActions)) && (
       <Actions
-        actions={TEST_ACTIONS}
-        isUsingActions={isUsingActions}
+        actions={actions}
         setIsUsingActions={setIsUsingActions}
       />)}
   </Box>;

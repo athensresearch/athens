@@ -342,11 +342,21 @@
 
          [:> Container {:isDragging (and dragging (not is-selected))
                         :isSelected is-selected
+                        :isEditing @(rf/subscribe [:editing/is-editing uid])
                         :hasChildren (seq children)
                         :isOpen open
                         :isLinkedRef (and (false? initial-open) (= uid linked-ref-uid))
                         :hasPresence is-presence
                         :uid uid
+                        :actions (clj->js [{:children
+                                            (if (> (count selected-items) 1)
+                                              "Copy selected block refs"
+                                              "Copy block ref")
+                                            :isExtra true
+                                            :onClick #(handle-copy-refs nil uid)}
+                                           {:children "Copy unformatted text"
+                                            :isExtra true
+                                            :onClick #(handle-copy-unformatted uid)}])
                         ;; need to know children for selection resolution
                         :childrenUids children-uids
                         ;; :show-editable-dom allows us to render the editing elements (like the textarea)
