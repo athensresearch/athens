@@ -64,6 +64,9 @@ export const Actions = ({ actions, setIsUsingActions }: ActionsProps): JSX.Eleme
                 >
                   <EllipsisHorizontalIcon />
                 </MenuButton>
+                {/* Create a backdrop to capture
+                mouse events and prevent accidentally
+                closing the menu */}
                 {isOpen && <Box
                   position="fixed"
                   left="-100vw"
