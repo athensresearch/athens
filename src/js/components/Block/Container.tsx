@@ -1,13 +1,22 @@
 import React from 'react';
-import { Box, Portal } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
 import { Actions } from './Actions';
+
+const DEFAULT_CONFIG = {
+  shouldMinimizeOutline: true
+}
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
 // Helpers
 
-const targetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: string): boolean => {
+const isEventTargetBlock = (target: HTMLElement): boolean => {
+  console.log(target.closest(".block-container"), !!target.closest(".block-container"));
+  return !!target.closest(".block-container");
+}
+
+const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: string): boolean => {
   // if hovered element's closest block container has the current UID,
   // we're hovering the current block. Otherwise return false
   const closestBlockContainer = target.closest('.block-container') as HTMLElement;
@@ -21,18 +30,27 @@ const _Container = ({ children, isEditing, isDragging, isSelected, isOpen, hasCh
   const [isUsingActions, setIsUsingActions] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  const config = DEFAULT_CONFIG;
+
   const handleMouseOver = (e) => {
-    setIsHoveredNotChild(targetIsCurrentBlockNotChild(e.target, uid));
+    setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
   }
 
   const handleMouseLeave = (e) => {
+    const relatedTarget = e?.relatedTarget as HTMLElement;
+
     if (!isUsingActions) {
-      console.log('closed because not using actions');
-      setIsHoveredNotChild(false);
+      if (isEventTargetBlock(relatedTarget)) {
+        setIsHoveredNotChild(false);
+      } else {
+        setTimeout(() => {
+          setIsHoveredNotChild(false);
+        }, 1000);
+      }
     }
   }
 
-  const handleFocus = (e) => setIsHoveredNotChild(targetIsCurrentBlockNotChild(e.target, uid));
+  const handleFocus = (e) => setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
 
   const handleBlur = (e) => {
     if (!isUsingActions) {
@@ -65,6 +83,23 @@ const _Container = ({ children, isEditing, isDragging, isSelected, isOpen, hasCh
     data-childrenuids={childrenUids}
 
     sx={{
+      ...config.shouldMinimizeOutline && ({
+        // Hide block anchor and toggle unless hovering this block
+        ".anchor:not(.closed-with-children)": {
+          opacity: 0,
+        },
+        ".toggle": {
+          opacity: 0,
+        },
+        "&.is-hovered-not-child": {
+          "> .block-body > .anchor": {
+            opacity: 1,
+          },
+          "> .block-body > .toggle": {
+            opacity: 1,
+          }
+        },
+      }),
       "&.show-tree-indicator:before": {
         content: "''",
         position: "absolute",
