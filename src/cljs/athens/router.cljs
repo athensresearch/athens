@@ -266,7 +266,7 @@
   (let [window-url (js/URL. js/window.location)
         name       (.. window-url -searchParams (get graph-name-param-key))
         url        (.. window-url -searchParams (get graph-url-param-key))
-        password   (.. window-url -searchParams (get graph-password-param-key))]
+        password   (js/atob (.. window-url -searchParams (get graph-password-param-key)))]
     (when url
       ;; Replace history with a version without the graph params.
       (.. window-url -searchParams (delete graph-name-param-key))
@@ -286,5 +286,5 @@
                                js/window.location))]
     (.. created-url -searchParams (set graph-name-param-key name))
     (.. created-url -searchParams (set graph-url-param-key url))
-    (.. created-url -searchParams (set graph-password-param-key password))
+    (.. created-url -searchParams (set graph-password-param-key (js/btoa password)))
     (.toString created-url)))
