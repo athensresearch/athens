@@ -253,30 +253,38 @@
 
 ;; Permalink param processing
 
-(def graph-param-key "graph")
+(def graph-name-param-key "graph-name")
+(def graph-url-param-key "graph-url")
+(def graph-password-param-key "graph-password")
 
 
-(defn consume-graph-param
-  "Removes and returns the graph-id in the current URL, if any."
+(defn consume-graph-params
+  "Removes and returns the graph params in the current URL, if any."
   []
   ;; Note: don't use the reitit.frontend functions here, as the router
   ;; it not yet initialized during boot.
-  (let [url       (js/URL. js/window.location)
-        graph-id  (.. url -searchParams (get graph-param-key))]
-    ;; Replace history with a version without the graph param.
-    (.. url -searchParams (delete graph-param-key))
-    (js/history.replaceState js/history.state nil url)
-    graph-id))
+  (let [window-url (js/URL. js/window.location)
+        name       (.. window-url -searchParams (get graph-name-param-key))
+        url        (.. window-url -searchParams (get graph-url-param-key))
+        password   (.. window-url -searchParams (get graph-password-param-key))]
+    (when url
+      ;; Replace history with a version without the graph params.
+      (.. window-url -searchParams (delete graph-name-param-key))
+      (.. window-url -searchParams (delete graph-url-param-key))
+      (.. window-url -searchParams (delete graph-password-param-key))
+      (js/history.replaceState js/history.state nil window-url)
+      [(or name url) url password])))
 
 
-(defn create-url-with-graph-param
+(defn create-url-with-graph-params
   "Create a URL containing graph-id."
-  [graph-id]
-  (let [url (js/URL. (if electron.utils/electron?
-                       ;; Use live web client + page route on electron.
-                       (str "https://web.athensresearch.org/"
-                            js/window.location.hash)
-                       js/window.location))]
-    (.. url -searchParams (set graph-param-key graph-id))
-    (.toString url)))
-
+  [name url password]
+  (let [created-url (js/URL. (if electron.utils/electron?
+                               ;; Use live web client + page route on electron.
+                               (str "https://web.athensresearch.org/"
+                                    js/window.location.hash)
+                               js/window.location))]
+    (.. created-url -searchParams (set graph-name-param-key name))
+    (.. created-url -searchParams (set graph-url-param-key url))
+    (.. created-url -searchParams (set graph-password-param-key password))
+    (.toString created-url)))

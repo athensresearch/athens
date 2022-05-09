@@ -32,9 +32,9 @@
 
 (defn copy-permalink
   []
-  (let [selected-db @(rf/subscribe [:db-picker/selected-db])
-        url (router/create-url-with-graph-param (:id selected-db))]
-    (.. js/navigator -clipboard (writeText url))
+  (let [{:keys [name url password]} @(rf/subscribe [:db-picker/selected-db])
+        created-url (router/create-url-with-graph-params name url password)]
+    (.. js/navigator -clipboard (writeText created-url))
     (util/toast (clj->js {:status "info"
                           :position "top-right"
                           :title "Copied permalink to clipboard"}))))
