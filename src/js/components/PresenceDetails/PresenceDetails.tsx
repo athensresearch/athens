@@ -67,7 +67,8 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
     handleUpdateProfile,
     connectionStatus,
   } = props;
-  const showablePersons = [...currentPageMembers, ...differentPageMembers];
+  const otherPersons = [...currentPageMembers, ...differentPageMembers];
+  const showablePersons = otherPersons.length > 0 ? otherPersons : [currentUser];
   const [shouldShowProfileSettings, setShouldShowProfileSettings] = React.useState(false);
 
   return connectionStatus === "local" ? (
