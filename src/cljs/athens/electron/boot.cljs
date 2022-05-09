@@ -14,12 +14,13 @@
   [(rf/inject-cofx :local-storage :athens/persist)]
   (fn [{:keys [local-storage]} [_ first-boot?]]
     (let [boot-tx             (sentry/transaction-start "boot-sequence")
-          id-param            (router/consume-graph-param)
+          param-db            (when-let [graph-params (router/consume-graph-params)]
+                                (apply utils/self-hosted-db graph-params))
           init-app-db         (cond->
                                 ;; Init it from local storage.
                                 (wrap-span-no-new-tx "db/init-app-db" (db/init-app-db local-storage))
                                 ;; Select the db in id-param if there.
-                                id-param (db-picker/add-and-select (utils/self-hosted-db id-param id-param "")))
+                                param-db (db-picker/add-and-select param-db))
           all-dbs             (db-picker/all-dbs init-app-db)
           selected-db         (db-picker/selected-db init-app-db)
           default-db          (utils/get-default-db)
