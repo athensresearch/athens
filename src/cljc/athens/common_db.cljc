@@ -162,14 +162,6 @@
          (map :block/uid))))
 
 
-(defn retract-uid-recursively-tx
-  "Retract all blocks of a page, including the page."
-  [db uid]
-  (mapv (fn [uid]
-          [:db/retractEntity [:block/uid uid]])
-        (get-children-uids-recursively db uid)))
-
-
 (defn get-block
   "Fetches whole block based on `:db/id`."
   [db eid]
@@ -437,6 +429,71 @@
                             [?parents :block/children ?e]]
                           db))]
     (= (count parents) 1)))
+
+
+;; TODO: support removing two string refs from the same block.
+(defn retract-uid-recursively-tx
+  "Retract all blocks of a page, including the page.
+  Replaces block string refs to removed entities by their ref text."
+  [db uid]
+  (let [children              (:block/children (get-block db [:block/uid uid]))
+        has-kids?             (seq children)
+        descendants-uids      (when has-kids?
+                                (loop [acc        []
+                                       to-look-at children]
+                                  (if-let [look-at (first to-look-at)]
+                                    (let [c-uid   (:block/uid look-at)
+                                          c-block (get-block db [:block/uid c-uid])]
+                                      (recur (conj acc c-uid)
+                                             (apply conj (rest to-look-at)
+                                                    (:block/children c-block))))
+                                    acc)))
+        all-uids-to-remove    (conj (set descendants-uids) uid)
+        uid->refs             (->> all-uids-to-remove
+                                   (map (fn [uid]
+                                          (let [block    (get-block db [:block/uid uid])
+                                                rev-refs (set (:block/_refs block))]
+                                            (when-not (empty? rev-refs)
+                                              [uid (set rev-refs)]))))
+                                   (remove nil?)
+                                   (into {}))
+        ref-eids              (mapcat second uid->refs)
+        eids->uids            (->> ref-eids
+                                   (map (fn [{id :db/id}]
+                                          [id (v-by-ea db id :block/uid)]))
+                                   (into {}))
+        removed-uid->uid-refs (->> uid->refs
+                                   (map (fn [[k refs]]
+                                          [k (set
+                                               (for [{eid :db/id} refs
+                                                     :let         [uid (eids->uids eid)]
+                                                     :when        (not (contains? all-uids-to-remove uid))]
+                                                 uid))]))
+                                   (remove #(empty? (second %)))
+                                   (into {}))
+        asserts               (->> removed-uid->uid-refs
+                                   (mapcat (fn [[removed-uid referenced-uids]]
+                                             (let [removed-string (v-by-ea db [:block/uid removed-uid] :block/string)
+                                                   from-string    (str "((" removed-uid "))")]
+                                               (map (fn [uid]
+                                                      (if-not removed-string
+                                                        {:block/uid uid}
+                                                        (let [string (get-block-string db uid)
+                                                              title  (get-page-title db uid)]
+                                                          (cond-> {:block/uid uid}
+                                                            string (merge {:block/string (string/replace string from-string removed-string)})
+                                                            title  (merge {:node/title (string/replace title from-string removed-string)})))))
+                                                    referenced-uids)))))
+        has-asserts?          (seq asserts)
+        retract-kids          (mapv (fn [uid]
+                                      [:db/retractEntity [:block/uid uid]])
+                                    descendants-uids)
+        retract-entity        [:db/retractEntity [:block/uid uid]]
+        txs                   (cond-> []
+                                has-kids?    (into retract-kids)
+                                has-asserts? (into asserts)
+                                true         (conj retract-entity))]
+    txs))
 
 
 (def block-document-pull-vector-for-copy
