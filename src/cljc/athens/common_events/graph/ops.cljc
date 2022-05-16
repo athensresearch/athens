@@ -8,6 +8,23 @@
     [clojure.set                          :as set]))
 
 
+(defn build-location-op
+  "Creates composite op with `:page/new` for any missing page in location.
+  If no page creation is needed, returns original op."
+  [db location original-op]
+  (let [parent-page-title (-> location :page/title)
+        prop-page-title   (-> location :relation :page/title)
+        create-parent?    (and parent-page-title (not (common-db/e-by-av db :node/title parent-page-title)))
+        create-prop?      (and prop-page-title (not (common-db/e-by-av db :node/title prop-page-title)))]
+    (if (or create-parent? create-prop?)
+      (composite/make-consequence-op {:op/type (:op/type original-op)}
+                                     (cond-> []
+                                       create-parent? (conj (atomic/make-page-new-op parent-page-title))
+                                       create-prop?   (conj (atomic/make-page-new-op prop-page-title))
+                                       true           (conj original-op)))
+      original-op)))
+
+
 (defn build-page-new-op
   "Creates `:page/new` & optionally `:block/new` ops.
   If page already exists, just creates atomic `:block/new`.
@@ -17,11 +34,8 @@
   ([db page-title block-uid]
    (let [location (common-db/compat-position db {:page/title page-title
                                                  :relation  :first})]
-     (if (common-db/e-by-av db :node/title page-title)
-       (atomic/make-block-new-op block-uid location)
-       (composite/make-consequence-op {:op/type :page/new}
-                                      [(atomic/make-page-new-op page-title)
-                                       (atomic/make-block-new-op block-uid location)])))))
+     (->> (atomic/make-block-new-op block-uid location)
+          (build-location-op db location)))))
 
 
 (defn build-page-rename-op
@@ -43,6 +57,18 @@
                                                         (conj atomic-pages
                                                               atomic-rename)))]
     page-rename-op))
+
+
+(defn build-block-new-op
+  [db block-uid location]
+  (->> (atomic/make-block-new-op block-uid location)
+       (build-location-op db location)))
+
+
+(defn build-block-move-op
+  [db block-uid position]
+  (->> (atomic/make-block-move-op block-uid position)
+       (build-location-op db position)))
 
 
 (defn build-block-save-op

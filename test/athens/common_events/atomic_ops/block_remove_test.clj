@@ -543,3 +543,26 @@
         (t/is (= [(fixture/get-repr lookup)] exp-repr)
               "Redo removed block and children, and replaced ref with text"))
       (fixture/teardown! setup-repr))))
+
+
+(t/deftest remove-prop
+  (fixture/setup! [{:page/title "title"
+                    :block/properties
+                    {"key" #:block{:uid    "uid"
+                                   :string ""}}}])
+  (fixture/op-resolve-transact! (atomic-graph-ops/make-block-remove-op "uid"))
+  (fixture/is #{{:page/title "key"}
+                {:page/title "title"}}))
+
+
+(t/deftest remove-prop-parent
+  (fixture/setup! [{:page/title "title"
+                    :block/children
+                    [#:block{:uid    "parent-uid"
+                             :string ""
+                             :properties
+                             {"key" #:block{:uid    "uid"
+                                            :string ""}}}]}])
+  (fixture/op-resolve-transact! (atomic-graph-ops/make-block-remove-op "parent-uid"))
+  (fixture/is #{{:page/title "key"}
+                {:page/title "title"}}))

@@ -52,10 +52,17 @@
                :after]]])
 
 
+(def property-position
+  [:map
+   block-id
+   [:relation [:map page-id]]])
+
+
 (def block-position
   [:or
    child-position
-   sibling-position])
+   sibling-position
+   property-position])
 
 
 (def op-block-new

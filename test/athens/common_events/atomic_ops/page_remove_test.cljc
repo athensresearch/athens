@@ -218,3 +218,12 @@
       ;; wrong link was stripped of `[[]]`
       (t/is page-link (:block/string (common-db/get-block @@fixture/connection [:block/uid block-2-uid])))
       (fixture/teardown! setup-repr))))
+
+
+(t/deftest remove-prop-k
+  (fixture/setup! [{:page/title "title"
+                    :block/properties
+                    {"key" #:block{:uid    "uid"
+                                   :string ""}}}])
+  (fixture/op-resolve-transact! (atomic-graph-ops/make-page-remove-op "key"))
+  (fixture/is #{{:page/title "title"}}))

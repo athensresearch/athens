@@ -7,6 +7,7 @@
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common-events.resolver.undo   :as undo]
     [athens.common.logging                :as log]
+    [clojure.test                         :as t]
     [datascript.core                      :as d]))
 
 
@@ -39,8 +40,13 @@
 
 
 (defn get-repr
-  [lookup]
-  (common-db/get-internal-representation @@connection lookup))
+  ([]
+   (->> @@connection
+        common-db/get-all-pages
+        (mapv (fn [p] (get-repr [:node/title (:node/title p)])))
+        set))
+  ([lookup]
+   (common-db/get-internal-representation @@connection lookup)))
 
 
 (defn op-resolve-transact!
@@ -85,3 +91,11 @@
     (when title
       (-> (atomic-graph-ops/make-page-remove-op title)
           op-resolve-transact!))))
+
+
+(defn is
+  [repr]
+  (t/is (= repr (get-repr)))
+  ;; Also check there are no blocks outside of pages
+  ;; (i.e. get-repr returns all blocks)
+  (t/is (empty? (common-db/orphan-block-uids @@connection))))

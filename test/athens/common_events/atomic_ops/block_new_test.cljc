@@ -3,6 +3,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
+    [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     #_[clojure.pprint                       :as pp]
     [clojure.test                         :as t]
@@ -358,3 +359,28 @@
             (t/is (= [#:block{:uid   new-test-uid
                               :order 0}] (get-children))))))
       (fixture/teardown! setup-repr))))
+
+
+(t/deftest rel-property
+  (fixture/setup! [{:page/title "title"}])
+  (fixture/op-resolve-transact!
+    (graph-ops/build-block-new-op @@fixture/connection "uid" {:page/title "title"
+                                                              :relation   {:page/title "key"}}))
+  (fixture/is #{{:page/title "key"}
+                {:page/title "title"
+                 :block/properties
+                 {"key" #:block{:uid    "uid"
+                                :string ""}}}}))
+
+
+(t/deftest rel-property-repeat-fail
+  (fixture/setup! [{:page/title "title"
+                    :block/properties
+                    {"key" #:block{:uid    "uid"
+                                   :string ""}}}])
+  (t/is (thrown-with-msg? #?(:cljs js/Error
+                             :clj ExceptionInfo)
+                          #"Location already contains key"
+          (fixture/op-resolve-transact!
+            (graph-ops/build-block-new-op @@fixture/connection "uid" {:page/title "title"
+                                                                      :relation   {:page/title "key"}})))))
