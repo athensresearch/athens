@@ -1,0 +1,5 @@
+{;; :password   "SuchWow"
+ ;; :in-memory? true
+ :fluree     {:servers ["http://localhost:8090"]}
+ :datascript {:persist-base-path "./athens-data/datascript/persist/"}
+ :nrepl      {:port 8877}}

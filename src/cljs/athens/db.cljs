@@ -1,17 +1,19 @@
 (ns athens.db
   (:require
+    [athens.common-db :as common-db]
+    [athens.common.logging :as log]
+    [athens.common.sentry :refer-macros [defntrace]]
+    [athens.electron.utils :as electron.utils]
     [athens.patterns :as patterns]
     [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull q]]
-    [re-frame.core :refer [dispatch]]))
+    [re-frame.core :as rf]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
 
-(def athens-url "https://raw.githubusercontent.com/athensresearch/athens/master/data/athens.datoms")
 (def help-url   "https://raw.githubusercontent.com/athensresearch/athens/master/data/help.datoms")
 (def ego-url    "https://raw.githubusercontent.com/athensresearch/athens/master/data/ego.datoms")
 
@@ -29,12 +31,117 @@
    :daily-notes?     true})
 
 
+(def default-pallete
+  #{"#DDA74C"
+    "#C45042"
+    "#611A58"
+    "#21A469"
+    "#009FB8"
+    "#0062BE"})
+
+
+(def greek-pantheon
+  #{"Zeus"
+    "Hera"
+    "Poseidon"
+    "Demeter"
+    "Athena"
+    "Apollo"
+    "Artemis"
+    "Ares"
+    "Aphrodite"
+    "Hephaestus"
+    "Hermes"
+    "Dionysus"
+    ;; Technically not part of the Olympians, but a cool guy nonetheless.
+    "Hades"
+    ;; Son of either Zeus and Persephone or Hades and persephone.
+    ;; Nothing to do with a recent video game at all.
+    "Zagreus"})
+
+
+(def default-settings
+  {:email       nil
+   :username    (rand-nth (vec greek-pantheon))
+   :color       (rand-nth (vec default-pallete))
+   :monitoring  true
+   :backup-time 15})
+
+
+(def default-athens-persist
+  {;; Increase this number when making breaking changes to the persistence format.
+   :persist/version 2
+   :theme/dark      false
+   :graph-conf      default-graph-conf
+   :settings        default-settings})
+
+
+;; -- update -------------------------------------------------------------
+
+(defn update-legacy-to-latest
+  "Add settings in the legacy format to the latest persist format."
+  [latest]
+  ;; This value was not saved in local storage proper, saving it there
+  ;; to enable use of update-when-found.
+  (js/localStorage.setItem "monitoring" (not (try (.. js/window -posthog has_opted_out_capturing)
+                                                  (catch :default _ true))))
+  (let [update-when-found (fn [x keyseq k xf]
+                            (if-some [v (js/localStorage.getItem k)]
+                              (assoc-in x keyseq (xf v))
+                              x))
+        str->boolean (fn [x] (= x "true"))]
+    (-> latest
+        (update-when-found [:settings :email] "auth/email" identity)
+        (update-when-found [:settings :username] "user/name" identity)
+        (update-when-found [:settings :backup-time] "debounce-save-time" js/Number)
+        (update-when-found [:settings :monitoring] "monitoring" str->boolean)
+        (update-when-found [:theme/dark] "theme/dark" str->boolean)
+        (update-when-found [:graph-conf] "graph-conf" edn/read-string))))
+
+
+(defn update-v1-to-v2
+  [persisted]
+  (-> persisted
+      (assoc-in [:settings :color] (:color default-settings))
+      (assoc :persist/version 2)))
+
+
+(defn- recreate-self-hosted-dbs
+  [dbs]
+  (into {} (map (fn [[k {:keys [name url password] :as db}]]
+                  [k (if (electron.utils/remote-db? db)
+                       (electron.utils/self-hosted-db name url password)
+                       db)])
+                dbs)))
+
+
+(defn update-v2-to-v3
+  [persisted]
+  (-> persisted
+      (update :db-picker/all-dbs recreate-self-hosted-dbs)
+      (assoc :persist/version 3)))
+
+
+(defn update-persisted
+  "Updates persisted to the latest format."
+  [{:keys [:persist/version] :as persisted}]
+  ;; Anything saved under the :athens/persist key will be automatically
+  ;; persisted and loaded between sessions.
+  (if-not version
+    ;; Legacy is updated to latest directly by cherry-picking data
+    ;; from local storage into the latest format.
+    (update-legacy-to-latest default-athens-persist)
+    ;; Data saved in previous versions of the current format need to be updated.
+    (let [v< #(< version %)]
+      (cond-> persisted
+        ;; Update persisted by applying each update fn incrementally.
+        (v< 2) update-v1-to-v2
+        (v< 3) update-v2-to-v3))))
+
+
 ;; -- re-frame -----------------------------------------------------------
 
-(defonce rfdb {:user                {:name (or (js/localStorage.getItem "user/name")
-                                               "Socrates")}
-               :db/filepath         nil
-               :db/synced           true
+(defonce rfdb {:db/synced           true
                :db/mtime            nil
                :current-route       nil
                :loading?            true
@@ -45,7 +152,6 @@
                :win-focused?        true
                :athena/open         false
                :athena/recent-items '()
-               :devtool/open        false
                :left-sidebar/open   false
                :right-sidebar/open  false
                :right-sidebar/items {}
@@ -53,9 +159,16 @@
                :mouse-down          false
                :daily-notes/items   []
                :selection           {:items []}
-               :theme/dark          false
-               :zoom-level          1
-               :graph-conf          default-graph-conf})
+               :help/open?          false
+               :zoom-level          0
+               :fs/watcher          nil
+               :presence            {}
+               :connection-status   :disconnected})
+
+
+(defn init-app-db
+  [persisted]
+  (merge rfdb {:athens/persist (update-persisted persisted)}))
 
 
 ;; -- JSON Parsing ----------------------------------------------------
@@ -126,22 +239,7 @@
 
 ;; -- Datascript and Posh ------------------------------------------------
 
-(def schema
-  {:schema/version {}
-   :block/uid      {:db/unique :db.unique/identity}
-   :node/title     {:db/unique :db.unique/identity}
-   :attrs/lookup   {:db/cardinality :db.cardinality/many}
-   :block/children {:db/cardinality :db.cardinality/many
-                    :db/valueType :db.type/ref}
-   :block/refs     {:db/cardinality :db.cardinality/many
-                    :db/valueType :db.type/ref}})
-
-
-(defonce dsdb (d/create-conn schema))
-
-
-;; todo: turn into an effect
-(posh! dsdb)
+(defonce dsdb (d/create-conn common-db/schema))
 
 
 (defn e-by-av
@@ -191,53 +289,6 @@
             @dsdb rules eid order)))
 
 
-(defn dec-after
-  [eid order]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at
-              :where (dec-after ?p ?at ?ch ?new-o)]
-            @dsdb rules eid order)))
-
-
-(defn plus-after
-  [eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at ?x
-              :where (plus-after ?p ?at ?ch ?new-o ?x)]
-            @dsdb rules eid order x)))
-
-
-(defn minus-after
-  [eid order x]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at ?x
-              :where (minus-after ?p ?at ?ch ?new-o ?x)]
-            @dsdb rules eid order x)))
-
-
-(defn not-contains?
-  [coll v]
-  (not (contains? coll v)))
-
-
-(defn last-child?
-  [uid]
-  (->> (d/q '[:find ?sib-uid ?sib-o
-              :in $ % ?uid
-              :where
-              (siblings ?uid ?sib)
-              [?sib :block/uid ?sib-uid]
-              [?sib :block/order ?sib-o]]
-            @dsdb rules uid)
-       (sort-by second)
-       last
-       first
-       (= uid)))
-
-
 (defn uid-and-embed-id
   [uid]
   (or (some->> uid
@@ -255,7 +306,7 @@
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order :block/header {:block/children ...} :block/refs :block/_refs])
+  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs])
 
 
 (def node-document-pull-vector
@@ -267,60 +318,62 @@
   '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
-(defn get-block-document
-  [id]
-  (->> @(pull dsdb block-document-pull-vector id)
-       sort-block-children))
+(defntrace get-node-document
+  [id db]
+  (when (d/entity db id)
+    (->> (d/pull db node-document-pull-vector id)
+         sort-block-children)))
 
 
-(defn get-node-document
-  ([id]
-   (->> @(pull dsdb node-document-pull-vector id)
-        sort-block-children))
-  ([id db]
-   (->> (d/pull db node-document-pull-vector id)
-        sort-block-children)))
-
-
-(defn get-roam-node-document
+(defntrace get-roam-node-document
   [id db]
   (->> (d/pull db roam-node-document-pull-vector id)
        sort-block-children))
 
 
-(defn get-athens-datoms
-  "Copy REPL output to athens-datoms.cljs"
-  [id]
-  (->> @(pull dsdb (filter #(not (or (= % :db/id) (= % :block/_refs))) node-document-pull-vector) id)
-       sort-block-children))
-
-
-(defn shape-parent-query
+(defntrace shape-parent-query
   "Normalize path from deeply nested block to root node."
   [pull-results]
   (->> (loop [b   pull-results
               res []]
-         (if (:node/title b)
-           (conj res b)
-           (recur (first (:block/_children b))
-                  (conj res (dissoc b :block/_children)))))
+         (cond
+           ;; There's no page in these pull results, log and exit.
+           (nil? b)        (do
+                             (log/warn "No parent found in" (pr-str pull-results))
+                             [])
+           ;; Found the page.
+           (:node/title b) (conj res b)
+           ;; Recur with the parent.
+           :else           (recur (first (:block/_children b))
+                                  (conj res (dissoc b :block/_children)))))
        (rest)
        (reverse)
        vec))
 
 
-(defn get-parents-recursively
+(defntrace get-parents-recursively
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
-       shape-parent-query))
+  (when (d/entity @dsdb id)
+    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
+         shape-parent-query)))
 
 
-(defn get-block
+(defntrace get-root-parent-page
+  "Returns the root parent page or returns the block because this block is a page."
+  [uid]
+  ;; make sure block first exists
+  (when-let [block (d/entity @dsdb [:block/uid uid])]
+    (let [opt1 (first (get-parents-recursively [:block/uid uid]))]
+      (or opt1 block))))
+
+
+(defntrace get-block
   [id]
-  @(pull dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
+  (when (d/entity @dsdb id)
+    (d/pull @dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id)))
 
 
-(defn get-parent
+(defntrace get-parent
   [id]
   (-> (d/entity @dsdb id)
       :block/_children
@@ -329,83 +382,26 @@
       get-block))
 
 
-(defn get-older-sib
-  [uid]
-  (let [sib-uid   (d/q '[:find ?uid .
-                         :in $ % ?target-uid
-                         :where
-                         (siblings ?target-uid ?sib)
-                         [?target-e :block/uid ?target-uid]
-                         [?target-e :block/order ?target-o]
-                         [(dec ?target-o) ?prev-sib-order]
-                         [?sib :block/order ?prev-sib-order]
-                         [?sib :block/uid ?uid]]
-                       @dsdb rules uid)
-        older-sib (get-block [:block/uid sib-uid])]
-    older-sib))
-
-
-(defn same-parent?
-  "Given a coll of uids, determine if uids are all direct children of the same parent."
-  [uids]
-  (let [parents (->> uids
-                     (mapv (comp first uid-and-embed-id))
-                     (d/q '[:find ?parents
-                            :in $ [?uids ...]
-                            :where
-                            [?e :block/uid ?uids]
-                            [?parents :block/children ?e]]
-                          @dsdb))]
-    (= (count parents) 1)))
-
-
-(defn deepest-child-block
+(defntrace deepest-child-block
   [id]
-  (let [document (->> (d/pull @dsdb '[:block/order :block/uid {:block/children ...}] id)
+  (let [document (->> (d/pull @dsdb '[:block/order :block/uid :block/open {:block/children ...}] id)
                       sort-block-children)]
     (loop [block document]
-      (let [{:block/keys [children]} block
+      (let [{:block/keys [children open]} block
             n (count children)]
-        (if (zero? n)
+        (if (or (zero? n)
+                (not open))
           block
           (recur (get children (dec n))))))))
 
 
-(defn get-children-recursively
-  "Get list of children UIDs for given block ID (including the root block's UID)"
-  [uid]
-  (when-let [eid (e-by-av :block/uid uid)]
-    (->> eid
-         (d/pull @dsdb '[:block/order :block/uid {:block/children ...}])
-         (tree-seq :block/children :block/children)
-         (map :block/uid))))
-
-
-(defn retract-page-recursively
-  "Retract all blocks of a page, excluding the page. Used to reset athens/Welcome page.
-  Page is excluded because block/uid will be generated by walk-string if [[athens/Welcome]] doesn't already exist."
-  [title]
-  (let [eid (e-by-av :node/title title)
-        uid (v-by-ea eid :block/uid)]
-    (->> (get-children-recursively uid)
-         (mapv (fn [uid] [:db/retractEntity [:block/uid uid]]))
-         next)))
-
-
-(defn retract-uid-recursively
-  "Retract all blocks of a page, including the page."
-  [uid]
-  (mapv (fn [uid] [:db/retractEntity [:block/uid uid]])
-        (get-children-recursively uid)))
-
-
-(defn re-case-insensitive
+(defntrace re-case-insensitive
   "More options here https://clojuredocs.org/clojure.core/re-pattern"
   [query]
   (re-pattern (str "(?i)" (escape-str query))))
 
 
-(defn search-exact-node-title
+(defntrace search-exact-node-title
   [query]
   (d/entity @dsdb [:node/title query]))
 
@@ -428,7 +424,7 @@
          (d/datoms @dsdb :aevt :node/title))))))
 
 
-(defn get-root-parent-node
+(defn get-root-parent-node-from-block
   [block]
   (loop [b block]
     (cond
@@ -454,7 +450,7 @@
          (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
          (sequence
            (comp
-             (keep get-root-parent-node)
+             (keep get-root-parent-node-from-block)
              (map #(dissoc % :block/_children)))))))))
 
 
@@ -474,25 +470,29 @@
          @dsdb rules uid find-order)))
 
 
-(defn prev-block-uid
-  "If order 0, go to parent.
+(defntrace prev-block-uid
+  "If order 0, go to parent (if not a page).
    If order n but block is closed, go to prev sibling.
    If order n and block is OPEN, go to prev sibling's deepest child."
   [uid]
-  (let [[uid embed-id]  (uid-and-embed-id uid)
-        block           (get-block [:block/uid uid])
-        parent          (get-parent [:block/uid uid])
-        prev-sibling    (nth-sibling uid -1)
-        {:block/keys    [open uid]} prev-sibling
-        prev-block      (cond
-                          (zero? (:block/order block)) parent
-                          (false? open) prev-sibling
-                          (true? open) (deepest-child-block [:block/uid uid]))]
-    (cond-> (:block/uid prev-block)
-      embed-id (str "-embed-" embed-id))))
+  (let [[uid embed-id]                (uid-and-embed-id uid)
+        block                         (get-block [:block/uid uid])
+        parent                        (get-parent [:block/uid uid])
+        prev-sibling                  (nth-sibling uid -1)
+        {:block/keys      [open]
+         prev-sibling-uid :block/uid} prev-sibling
+        prev-block                    (cond
+                                        (zero? (:block/order block)) parent
+                                        (false? open)                prev-sibling
+                                        (true? open)                 (deepest-child-block [:block/uid prev-sibling-uid]))
+        prev-block-uid                (:block/uid prev-block)]
+    (when (and prev-block-uid
+               (not (:node/title prev-block)))
+      (cond-> prev-block-uid
+        embed-id (str "-embed-" embed-id)))))
 
 
-(defn next-sibling-recursively
+(defntrace next-sibling-recursively
   "Search for next sibling. If not there (i.e. is last child), find sibling of parent.
   If parent is root, go to next sibling."
   [uid]
@@ -537,6 +537,32 @@
      (next-block-uid uid))))
 
 
+(defntrace get-sorted-children
+  [uid db]
+  (when uid
+    (try
+      (->> (d/pull db [{:block/children [:block/uid :block/order :block/open]}] [:block/uid uid])
+           sort-block-children
+           :block/children)
+      (catch :default _))))
+
+
+(defn get-first-child-uid
+  [uid db]
+  (-> (get-sorted-children uid db)
+      first
+      :block/uid))
+
+
+(defn get-last-child-uid
+  [parent-uid db]
+  (let [{:block/keys [uid open]} (-> (get-sorted-children parent-uid db) last)]
+    (cond
+      (not uid) parent-uid
+      open      (recur uid db)
+      :else     uid)))
+
+
 ;; history
 
 (defonce history (atom '()))
@@ -566,15 +592,15 @@
 
 ;; -- Linked & Unlinked References ----------
 
-(defn get-ref-ids
+(defntrace get-ref-ids
   [pattern]
-  @(q '[:find [?e ...]
-        :in $ ?regex
-        :where
-        [?e :block/string ?s]
-        [(re-find ?regex ?s)]]
-      dsdb
-      pattern))
+  (d/q '[:find [?e ...]
+         :in $ ?regex
+         :where
+         [?e :block/string ?s]
+         [(re-find ?regex ?s)]]
+       @dsdb
+       pattern))
 
 
 (defn merge-parents-and-block
@@ -582,7 +608,7 @@
   (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively v)))
                            {}
                            ref-ids)
-        blocks (map (fn [id] (get-block-document id)) ref-ids)]
+        blocks (map (fn [id] (get-block id)) ref-ids)]
     (mapv
       (fn [block]
         (merge block {:block/parents (get parents (:db/id block))}))
@@ -592,10 +618,10 @@
 (defn group-by-parent
   [blocks]
   (group-by (fn [x]
-              (-> x
-                  :block/parents
-                  first
-                  :node/title))
+              (let [parent (-> x
+                               :block/parents
+                               first)]
+                [(:node/title parent) (:edit/time parent 0)]))
             blocks))
 
 
@@ -604,65 +630,10 @@
   (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
-(defn get-linked-references
-  "For node-page references UI."
-  [title]
-  (->> @(pull dsdb '[* :block/_refs] [:node/title title])
-       :block/_refs
-       (mapv :db/id)
-       merge-parents-and-block
-       group-by-parent
-       (sort-by :db/id)
-       vec
-       rseq))
-
-
-(defn get-linked-block-references
-  "For block-page references UI."
-  [block]
-  (->> (:block/_refs block)
-       (mapv :db/id)
-       merge-parents-and-block
-       group-by-parent
-       vec))
-
-
-(defn get-unlinked-references
+(defntrace get-unlinked-references
   "For node-page references UI."
   [title]
   (-> title patterns/unlinked get-data))
-
-
-(defn linked-refs-count
-  [title]
-  (d/q '[:find (count ?u) .
-         :in $ ?t
-         :where
-         [?e :node/title ?t]
-         [?r :block/refs ?e]
-         [?r :block/uid ?u]]
-       @dsdb
-       title))
-
-
-(defn replace-linked-refs
-  "For a given title, unlinks [[brackets]], #[[brackets]], and #brackets."
-  [title]
-  (let [pattern (patterns/linked title)]
-    (->> pattern
-         get-ref-ids
-         (d/pull-many @dsdb [:db/id :block/string])
-         (mapv (fn [x]
-                 (let [new-str (string/replace (:block/string x) pattern title)]
-                   (assoc x :block/string new-str)))))))
-
-
-(defn pull-nil
-  [db selector id]
-  (try
-    (d/pull db selector id)
-    (catch js/Error _e
-      nil)))
 
 
 ;; -- save ------------------------------------------------------------
@@ -670,12 +641,10 @@
 
 (defn transact-state-for-uid
   "uid -> Current block
-   state -> Look at state atom in block-el"
-  [uid state]
-  (let [{:string/keys [local previous]} @state
-        eid (e-by-av :block/uid uid)]
-    (when (and (not= local previous) eid)
-      (swap! state assoc :string/previous local)
-      (let [new-block-string {:db/id [:block/uid uid] :block/string local}
-            tx-data          [new-block-string]]
-        (dispatch [:transact tx-data])))))
+   state -> Look at state atom in block-el
+   source -> reporting source"
+  [uid state source]
+  (let [{:string/keys [local]} @state]
+    (rf/dispatch [:block/save {:uid    uid
+                               :string local
+                               :source source}])))

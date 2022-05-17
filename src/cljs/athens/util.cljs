@@ -1,33 +1,36 @@
 (ns athens.util
   (:require
     ["/textarea" :as getCaretCoordinates]
+    ["/theme/theme" :refer [theme]]
+    ["@chakra-ui/react" :refer [createStandaloneToast]]
     [athens.config :as config]
+    [athens.electron.utils :as electron.utils]
     [clojure.string :as string]
+    [cognitect.transit :as tr]
     [com.rpl.specter :as s]
-    [goog.dom :refer [getElement setProperties]]
-    [posh.reagent :refer [#_pull]]
-    [tick.alpha.api :as t]
-    [tick.locale-en-us])
+    [goog.dom :refer [getElement setProperties]])
   (:require-macros
-    [com.rpl.specter :refer [recursive-path]]))
+    [com.rpl.specter :refer [recursive-path]])
+  (:import
+    (goog.events
+      KeyCodes)))
 
 
-(defn gen-block-uid
-  []
-  (subs (str (random-uuid)) 27))
-
-
-;; Electron ipcMain Channels
-
-(def ipcMainChannels
-  {:toggle-max-or-min-win-channel "toggle-max-or-min-active-win"
-   :close-win-channel "close-win"
-   :exit-fullscreen-win-channel "exit-fullscreen-win"})
+(def toast (createStandaloneToast (clj->js {:theme theme})))
 
 
 ;; embed block
 
 (declare specter-recursive-path)
+
+
+(defn embed-uid->original-uid
+  "Return the original-uid for uid if it is embed, otherwise returns uid.
+   Embeds have a modified and local uid to make them unique for selection and focus.
+   But for presence, the original uid is used instead because the embed uid
+   is not present in other clients."
+  [uid]
+  (-> uid (string/split #"-embed-") first))
 
 
 (defn recursively-modify-block-for-embed
@@ -176,62 +179,6 @@
   (.. event -target -value))
 
 
-;; -- Date and Time ------------------------------------------------------
-
-
-(def date-col-format (t/formatter "LLLL dd, yyyy h':'mma"))
-(def US-format (t/formatter "MM-dd-yyyy"))
-(def title-format (t/formatter "LLLL dd, yyyy"))
-
-
-(defn now-ts
-  []
-  (-> (js/Date.) .getTime))
-
-
-(defn get-day
-  "Returns today's date or a date OFFSET days before today"
-  ([] (get-day 0))
-  ([offset]
-   (let [day (t/-
-               (t/date-time)
-               (t/new-duration offset :days))]
-     {:uid   (t/format US-format day)
-      :title (t/format title-format day)}))
-  ([date offset]
-   (let [day (t/-
-               (-> date (t/at "0"))
-               (t/new-duration offset :days))]
-     {:uid   (t/format US-format day)
-      :title (t/format title-format day)})))
-
-
-(defn date-string
-  [ts]
-  (if (not ts)
-    [:span "(unknown date)"]
-    (as->
-      (t/instant ts) x
-      (t/date-time x)
-      (t/format date-col-format x)
-      (string/replace x #"AM" "am")
-      (string/replace x #"PM" "pm"))))
-
-
-(defn uid-to-date
-  [uid]
-  (try
-    (let [[m d y] (string/split uid "-")
-          rejoin (string/join "-" [y m d])]
-      (t/date rejoin))
-    (catch js/Object _ nil)))
-
-
-(defn is-daily-note
-  [uid]
-  (boolean (uid-to-date uid)))
-
-
 ;; -- Regex -----------------------------------------------------------
 
 ;; https://stackoverflow.com/a/11672480
@@ -267,8 +214,13 @@
   (let [os (.. js/window -navigator -appVersion)]
     (cond
       (re-find #"Windows" os) :windows
-      (re-find #"Linux" os) :linux
-      (re-find #"Mac" os) :mac)))
+      (re-find #"Mac" os) :mac
+      :else :linux)))
+
+
+(defn is-mac?
+  []
+  (= (get-os) :mac))
 
 
 (defn app-classes
@@ -276,12 +228,27 @@
    [(case os
       :windows "os-windows"
       :mac "os-mac"
-      :linux "os-linux")
+      :linux "os-linux"
+      "os-linux")
     (if electron? "is-electron" "is-web")
-    (if theme-dark? "theme-dark" "theme-light")
+    (if theme-dark? "is-theme-dark" "is-theme-light")
     (when win-focused? "is-focused")
     (when win-fullscreen? "is-fullscreen")
     (when win-maximized? "is-maximized")]))
+
+
+(defn add-body-classes
+  [classes]
+  (let [cl js/document.body.classList]
+    (doseq [class (remove nil? classes)]
+      (.add cl class))))
+
+
+(defn switch-body-classes
+  [[from to]]
+  (let [cl js/document.body.classList]
+    (.add cl to)
+    (.remove cl from)))
 
 
 (defn shortcut-key?
@@ -291,6 +258,19 @@
     (or (and (= os :mac) meta)
         (and (= os :windows) ctrl)
         (and (= os :linux) ctrl))))
+
+
+(defn navigate-key?
+  "Used to navigate between current and last page
+  Use meta for mac, alt for others."
+  [{:keys [key-code
+           meta
+           alt]}]
+  (let [os (get-os)]
+    (and (#{KeyCodes.LEFT KeyCodes.RIGHT} key-code)
+         (or (and (= os :mac) meta)
+             (and (= os :windows) alt)
+             (and (= os :linux) alt)))))
 
 
 ;; re-frame-10x
@@ -326,31 +306,36 @@
         (open-10x)))))
 
 
-(defn electron?
-  []
-  (let [user-agent (.. js/navigator -userAgent toLowerCase)]
-    (boolean (re-find #"electron" user-agent))))
-
-
 ;; (goog-define COMMIT_URL "")
 
 
 (defn athens-version
   []
   (cond
-    (electron?) (.. (js/require "electron") -remote -app getVersion)))
+    electron.utils/electron? (electron.utils/version)))
 
 
 ;; (not (string/blank? COMMIT_URL)) COMMIT_URL
 ;; :else "Web"))
 
 
-;; Window
+;; Local Storage
+;; Inspired by intermine/bluegenes:
+;; https://github.com/intermine/bluegenes/blob/4589ef8b09b26dcf23d434d4d7d9d56fd01a259f/src/cljs/bluegenes/effects.cljs#L14-L30
 
-(defn get-window-size
-  "Reads window size from local-storage and returns the values as a vector"
-  []
-  (let [ws (js/localStorage.getItem "ws/window-size")]
-    (if (nil? ws)
-      '[800 600]
-      (map #(js/parseInt %) (string/split ws ",")))))
+(defn local-storage-set!
+  "Set v to local storage under k, replacing the value that was there before.
+  k is coerced to string, v is written as json-verbose transit."
+  [k v]
+  (if (some? v)
+    (.setItem js/localStorage (str k) (tr/write (tr/writer :json-verbose) v))
+    (.removeItem js/localStorage (str k))))
+
+
+(defn local-storage-get
+  "Get value from local storage under k.
+  k is coerced to string, v is read as json-verbose transit."
+  [k]
+  (tr/read (tr/reader :json-verbose) (.getItem js/localStorage (str k))))
+
+

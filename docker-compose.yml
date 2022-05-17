@@ -1,0 +1,68 @@
+# NB: Always use immutable tags (e.g. not latest etc) on docker refs.
+# Any :latest tags on this file will be replaced with athens release version on release.
+
+version: "3.4"
+services:
+  athens:
+    image: ghcr.io/athensresearch/athens:latest
+    # Uncomment the build sections if you want docker compose to build them locally.
+    # Note: when building locally on a M1 mac, the athens image seems to hang on connecting
+    # to fluree for no clear reason, but if you remove all memory flags on the
+    # script/docker-run-lan-party.sh script it doesn't hang anymore. Maybe an issue with
+    # docker on M1, unclear.
+    # build:
+    #   context: .
+    #   dockerfile: athens.dockerfile
+    restart: always
+    depends_on:
+      fluree:
+        condition: service_healthy
+    ports:
+      - 3010:3010 # Change this according to CONFIG_EDN.
+    volumes:
+      - ./athens-data/logs:/srv/athens/logs
+      - ./athens-data/datascript:/srv/athens/datascript
+    environment:
+      # Uses system env vars for settings if available.
+      # CONFIG_EDN is deep merged with the default config file.
+      - CONFIG_EDN=${CONFIG_EDN:-{}}
+    healthcheck:
+      test: curl -f localhost:3010/health-check
+      interval: 15s
+      timeout: 60s
+      retries: 10
+      start_period: 15s
+
+
+  nginx:
+    image: ghcr.io/athensresearch/nginx:latest
+    # build:
+    #  context: .
+    #  dockerfile: nginx.dockerfile
+    restart: always
+    depends_on:
+      athens:
+        condition: service_healthy
+    restart: always
+    ports:
+      - 80:80
+
+  fluree:
+    # Under default settings maximum recommended event size is 2mb.
+    # Can be increased via fdb-memory-reindex-max to up to 10mb.
+    image: fluree/ledger:1.0.0-beta17
+    restart: always
+    ports:
+      - 8090:8090
+    volumes:
+      - ./athens-data/fluree:/var/lib/fluree
+    healthcheck:
+      # TODO: this health check won't work after fluree/ledger:1.0.0-beta17 because
+      # the fluree images no longer contain curl because they use smaller docker base images.
+      # We need to find another way of doing it to update. Once we find it, we can also
+      # update our container to a smaller JDK version.
+      test: curl -f localhost:8090/fdb/health
+      interval: 15s
+      timeout: 30s
+      retries: 3
+      start_period: 15s

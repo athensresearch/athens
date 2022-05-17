@@ -1,26 +1,27 @@
 (ns athens.components
   (:require
-    ["@material-ui/icons/Edit" :default Edit]
+    ["/components/Icons/Icons" :refer [PencilIcon]]
+    ["@chakra-ui/react" :refer [Checkbox Box IconButton Button ButtonGroup]]
     [athens.db :as db]
     [athens.parse-renderer :refer [component]]
-    [athens.style :refer [color]]
-    [athens.util :refer [now-ts recursively-modify-block-for-embed]]
+    [athens.reactive :as reactive]
+    [athens.util :refer [recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
+    [re-frame.core :as rf :refer [dispatch subscribe]]
+    [reagent.core :as r]))
 
 
 (defn todo-on-click
   [uid from-str to-str]
-  (let [current-block-content (:block/string (db/get-block [:block/uid uid]))]
-    (dispatch [:transact [{:block/uid    uid
-                           :block/string (clojure.string/replace
-                                           current-block-content
+  (let [current-block-content (:block/string (db/get-block [:block/uid uid]))
+        new-block-content     (str/replace current-block-content
                                            from-str
-                                           to-str)
-                           :edit/time    (now-ts)}]])))
+                                           to-str)]
+    (rf/dispatch [:block/save {:uid       uid
+                               :string    new-block-content
+                               :add-time? true
+                               :source    :todo-click}])))
 
 
 (defn span-click-stop
@@ -28,25 +29,27 @@
    TODO() - might be a good idea to keep an edit icon at top right
      for every component."
   [children]
-  [:span {:on-click (fn [e]
-                      (.. e stopPropagation))}
+  [:span {:style {:display "contents"}
+          :on-click (fn [e] (.. e stopPropagation))}
    children])
 
 
 (defmethod component :todo
   [_content uid]
   [span-click-stop
-   [:input {:type      "checkbox"
-            :checked   false
-            :on-change #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}]])
+   [:> Checkbox {:isChecked false
+                 :verticalAlign "middle"
+                 :transform "translateY(-1px)"
+                 :onChange #(todo-on-click uid #"\{\{\[\[TODO\]\]\}\}" "{{[[DONE]]}}")}]])
 
 
 (defmethod component :done
   [_content uid]
   [span-click-stop
-   [:input {:type      "checkbox"
-            :checked   true
-            :on-change #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}]])
+   [:> Checkbox {:isChecked   true
+                 :verticalAlign "middle"
+                 :transform "translateY(-1px)"
+                 :onChange #(todo-on-click uid #"\{\{\[\[DONE\]\]\}\}" "{{[[TODO]]}}")}]])
 
 
 (defmethod component :youtube
@@ -67,22 +70,9 @@
 (defmethod component :self
   [content _uid]
   [span-click-stop
-   [:button {:style {:color       "red"
-                     :font-family "IBM Plex Mono"}}
+   [:> Button {:variant "link"
+               :color "red"}
     content]])
-
-
-(def block-embed-adjustments
-  {:background (color :background-minus-2 :opacity-med)
-   :position   "relative"
-   ::stylefy/manual [[:>.block-container {:margin-left "0"
-                                          ::stylefy/manual [[:textarea {:background "transparent"}]]}]
-                     [:>svg              {:position   "absolute"
-                                          :right      "5px"
-                                          :top        "5px"
-                                          :font-size  "1rem"
-                                          :z-index    "5"
-                                          :cursor     "pointer"}]]})
 
 
 (defmethod component :block-embed
@@ -94,18 +84,28 @@
     ;; todo -- not reactive. some cases where delete then ctrl-z doesn't work
     (if (db/e-by-av :block/uid block-uid)
       (r/with-let [embed-id (random-uuid)]
-                  [:div.block-embed (use-style block-embed-adjustments)
-                   (let [block (db/get-block-document [:block/uid block-uid])]
+                  [:> Box {:class "block-embed"
+                           :bg "background.basement"
+                           :flex 1
+                           :pr 1
+                           :position "relative"
+                           :display "flex"
+                           :sx {"> .block-container" {:ml 0
+                                                      :flex 1
+                                                      :pr "1.3rem"
+                                                      "textarea" {:background "transparent"}}}}
+                   (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
                      [:<>
                       [blocks/block-el
                        (recursively-modify-block-for-embed block embed-id)
                        {:linked-ref false}
                        {:block-embed? true}]
                       (when-not @(subscribe [:editing/is-editing uid])
-                        [:> Edit
-                         {:on-click (fn [e]
-                                      (.. e stopPropagation)
-                                      (dispatch [:editing/uid uid]))}])])])
+                        [:> ButtonGroup {:height "2em" :size "xs" :flex "0 0 auto" :zIndex "5" :alignItems "center"}
+                         [:> IconButton {:on-click (fn [e]
+                                                     (.. e stopPropagation)
+                                                     (dispatch [:editing/uid uid]))}
+                          [:> PencilIcon]]])])])
       ;; roam actually hides the brackets around [[embed]]
       [:span "{{" content "}}"])))
 

@@ -4,24 +4,25 @@
     ["@sentry/react" :as Sentry]
     ["@sentry/tracing" :as tracing]
     [athens.coeffects]
+    [athens.common.logging :as log]
     [athens.components]
     [athens.config :as config]
     [athens.db :refer [dsdb]]
     [athens.effects]
-    [athens.electron]
+    [athens.electron.core]
+    [athens.electron.utils :as electron.utils]
     [athens.events]
+    [athens.interceptors]
     [athens.listeners :as listeners]
     [athens.router :as router]
     [athens.style :as style]
     [athens.subs]
     [athens.util :as util]
     [athens.views :as views]
-    [cljs.reader :refer [read-string]]
+    [datalog-console.integrations.datascript :as datalog-console]
     [goog.dom :refer [getElement]]
-    [goog.object :as gobj]
     [re-frame.core :as rf]
-    [reagent.dom :as r-dom]
-    [stylefy.core :as stylefy]))
+    [reagent.dom :as r-dom]))
 
 
 (goog-define SENTRY_DSN "")
@@ -30,13 +31,14 @@
 (defn dev-setup
   []
   (when config/debug?
-    (println "dev mode")))
+    (log/info "dev mode")))
 
 
 (defn ^:dev/after-load mount-root
-  []
+  [first-boot?]
   (rf/clear-subscription-cache!)
-  (router/init-routes!)
+  (when-not first-boot?
+    (router/init-routes!))
   (r-dom/render [views/main]
                 (getElement "app")))
 
@@ -51,10 +53,13 @@
   "Two checks for sentry: once on init and once on beforeSend."
   []
   (when (sentry-on?)
-    (.init Sentry (clj->js {:dsn SENTRY_DSN
+    (.init Sentry (clj->js {:dsn              SENTRY_DSN
                             :release          (str "athens@" (util/athens-version))
-                            :integrations     [(new (.. tracing -Integrations -BrowserTracing))
-                                               (new (.. integrations -CaptureConsole) (clj->js {:levels ["warn" "error" "debug" "assert"]}))]
+                            :integrations     [(tracing/Integrations.BrowserTracing.)
+                                               (Sentry/Integrations.Breadcrumbs. (clj->js {:console false}))
+                                               ;; NOTE This configuration is not working, we're not capturing these levels
+                                               (integrations/CaptureConsole. (clj->js {:levels ["warn" "error" "assert"]}))
+                                               (integrations/ReportingObserver. (clj->js {:types ["crash"]}))]
                             :environment      (if config/debug? "development" "production")
                             :beforeSend       #(when (sentry-on?) %)
                             :tracesSampleRate 1.0}))))
@@ -70,42 +75,17 @@
 
 (defn init-ipcRenderer
   []
-  (when (util/electron?)
-    (let [ipcRenderer       (.. (js/require "electron") -ipcRenderer)
-          update-available? (.sendSync ipcRenderer "check-update" "renderer")]
+  (when electron.utils/electron?
+    (let [update-available? (.sendSync (electron.utils/ipcRenderer) "check-update" "renderer")]
       (when update-available?
         (when (js/window.confirm "Update available. Would you like to update and restart to the latest version?")
-          (.sendSync ipcRenderer "confirm-update"))))))
+          (.sendSync (electron.utils/ipcRenderer) "confirm-update"))))))
 
 
-(defn init-windowsize
-  "When the app is initialized, check if we should use the last window size and if so, set the current window size to that value"
+(defn init-styles
   []
-  (when (util/electron?)
-    (let [curWindow        (.getCurrentWindow athens.electron/remote)
-          [lastx lasty]    (util/get-window-size)]
-      (.setSize curWindow lastx lasty)
-      (.center curWindow)
-      (.on ^js curWindow "close" (fn [e]
-                                   (let [sender (.-sender e)
-                                         [x y] (.getSize ^js sender)]
-                                     (rf/dispatch [:window/set-size [x y]])))))))
-
-
-(defn init-datalog-console
-  []
-  (js/document.documentElement.setAttribute "__datalog-console-remote-installed__" true)
-  (let [conn dsdb]
-    (.addEventListener js/window "message"
-                       (fn [event]
-                         (when-let [devtool-message (gobj/getValueByKeys event "data" ":datalog-console.client/devtool-message")]
-                           (let [msg-type (:type (read-string devtool-message))]
-                             (case msg-type
-
-                               :datalog-console.client/request-whole-database-as-string
-                               (.postMessage js/window #js {":datalog-console.remote/remote-message" (pr-str @conn)} "*")
-
-                               nil)))))))
+  (util/add-body-classes (util/app-classes {:os        (util/get-os)
+                                            :electron? electron.utils/electron?})))
 
 
 (defn init
@@ -113,13 +93,11 @@
   (set-global-alert!)
   (init-sentry)
   (init-ipcRenderer)
-  (init-windowsize)
   (style/init)
-  (stylefy/tag "body" style/app-styles)
+  (init-styles)
   (listeners/init)
-  (init-datalog-console)
-  (if (util/electron?)
-    (rf/dispatch-sync [:boot/desktop])
-    (rf/dispatch-sync [:boot/web]))
+  (when config/debug?
+    (datalog-console/enable! {:conn dsdb}))
+  (rf/dispatch-sync [:boot true])
   (dev-setup)
-  (mount-root))
+  (mount-root true))
