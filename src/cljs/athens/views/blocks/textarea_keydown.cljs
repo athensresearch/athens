@@ -557,7 +557,7 @@
 
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
-  [e uid {:keys [save-fn] :as _state-hooks} state]
+  [e uid {:keys [save-fn] :as _state-hooks}]
   (let [{:keys [key-code head tail selection target value shift alt]} (destruct-key-down e)]
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
@@ -825,7 +825,7 @@
 
 
 (defn textarea-key-down
-  [e uid {:keys [save-fn] :as state-hooks} state]
+  [e uid {:as state-hooks} state]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when @(subscribe [:editing/is-editing uid])
     (let [d-event (destruct-key-down e)
@@ -853,6 +853,6 @@
           (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
           (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
           (= key-code KeyCodes.ESC)       (handle-escape e state)
-          (shortcut-key? meta ctrl)       (handle-shortcuts e uid state-hooks state)
+          (shortcut-key? meta ctrl)       (handle-shortcuts e uid state-hooks)
           (is-character-key? e)           (write-char e uid state))))))
 
