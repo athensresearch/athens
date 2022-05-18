@@ -18,8 +18,8 @@
 
 
 (defn inline-search-el
-  [_block]
-  (fn [block state]
+  [_block state]
+  (fn [block _state]
     (let [{:keys [last-e]} @state
           {:search/keys [index results type query]} @state
           is-open (some #(= % type) [:page :block :hashtag :template])]
