@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.35](https://github.com/athensresearch/athens/compare/v2.0.0-beta.34...v2.0.0-beta.35) (2022-05-18)
+
+
+### Features
+
+* permalink includes graph name and password ([5424b05](https://github.com/athensresearch/athens/commit/5424b0558b73aea7a0d67d8448e7844e914ffa48))
+
+
+### Bug Fixes
+
+* don't control dialog inputs ([7c59bbd](https://github.com/athensresearch/athens/commit/7c59bbdfed4c28910b449a787e758590ae4326fe))
+* don't show plaintext password on permalink ([6351d1d](https://github.com/athensresearch/athens/commit/6351d1d53c7ff10b94eabf5e7665fd6280ae14bb))
+* show own user on presence if there are no other users ([de5aead](https://github.com/athensresearch/athens/commit/de5aeada02f0f11eb178914d5b3d5d29ea772b85))
+
 ## [2.0.0-beta.34](https://github.com/athensresearch/athens/compare/v2.0.0-beta.33...v2.0.0-beta.34) (2022-05-04)
 
 
