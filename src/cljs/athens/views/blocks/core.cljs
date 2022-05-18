@@ -307,10 +307,10 @@
                         :inline-refs/open   false
                         :inline-refs/states {}
                         :block/uid          uid})
-         save-fn (partial db/transact-state-for-uid (or original-uid uid) state)
-         idle-fn (gfns/debounce #(save-fn :autosave) 2000)]
+         savep-fn (partial db/transact-state-for-uid (or original-uid uid) state)
+         save-fn #(savep-fn :block-save)
+         idle-fn (gfns/debounce #(savep-fn :autosave) 2000)]
      (swap! state assoc
-            :string/save-fn #(save-fn :block-save)
             :string/idle-fn idle-fn)
 
      (fn [block linked-ref-data opts]
@@ -395,7 +395,10 @@
                                            (router/navigate-uid uid e)))
                        :on-drag-start   (fn [e] (bullet-drag-start e uid state))
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
-           [content/block-content-el block state]
+
+           ;; XXX: render view
+           [content/block-content-el block {:save-fn save-fn
+                                            :idle-fn idle-fn} state]
 
            [presence/inline-presence-el uid]
 
@@ -408,6 +411,7 @@
                   (swap! state update :inline-refs/open not)))
               (:inline-refs/open @state)])]
 
+          ;; XXX: part of view/edit embedable
           [autocomplete-search/inline-search-el block state]
           [autocomplete-slash/slash-menu-el block state]
 

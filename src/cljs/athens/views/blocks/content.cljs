@@ -178,7 +178,7 @@
 
 (defn textarea-click
   "If shift key is held when user clicks across multiple blocks, select the blocks."
-  [e target-uid _state]
+  [e target-uid]
   (let [[target-uid _] (db/uid-and-embed-id target-uid)
         source-uid     @(rf/subscribe [:editing/uid])
         shift?         (.-shiftKey e)]
@@ -200,7 +200,7 @@
 (defn textarea-mouse-down
   "Attach global mouseup listener. Listener can't be local because user might let go of mousedown off of a block.
   See https://javascript.info/mouse-events-basics#events-order"
-  [e _uid _]
+  [e _uid]
   (.. e stopPropagation)
   (when (false? (.. e -shiftKey))
     (rf/dispatch [:editing/target (.. e -target)])
@@ -213,7 +213,7 @@
 (defn textarea-mouse-enter
   "When mouse-down, user is selecting multiple blocks with click+drag.
   Use same algorithm as shift-enter, only updating the source and target."
-  [e target-uid _]
+  [e target-uid]
   (let [source-uid @(rf/subscribe [:editing/uid])
         mouse-down @(rf/subscribe [:mouse-down])]
     (when mouse-down
@@ -228,7 +228,7 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [block state]
+  [block {:keys [save-fn] :as state-hooks} state]
   (let [{:block/keys [uid original-uid header]} block
         editing? (rf/subscribe [:editing/is-editing uid])
         selected-items (rf/subscribe [::select-subs/items])]
@@ -249,11 +249,11 @@
                                :id             (str "editable-uid-" uid)
                                :on-change      (fn [e] (textarea-change e uid state))
                                :on-paste       (fn [e] (textarea-paste e uid state))
-                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state))
-                               :on-blur        (:string/save-fn @state)
-                               :on-click       (fn [e] (textarea-click e uid state))
-                               :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
-                               :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}])
+                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks state))
+                               :on-blur        save-fn
+                               :on-click       (fn [e] (textarea-click e uid))
+                               :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))
+                               :on-mouse-down  (fn [e] (textarea-mouse-down e uid))}])
          ;; TODO pass `state` to parse-and-render
          [parse-and-render (:string/local @state) (or original-uid uid)]]))))
 

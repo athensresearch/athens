@@ -540,9 +540,9 @@
 
 (defn surround-and-set
   ;; Default to n=2 because it's more common.
-  ([e state surround-text]
-   (surround-and-set e state surround-text 2))
-  ([e _ surround-text n]
+  ([e surround-text]
+   (surround-and-set e surround-text 2))
+  ([e surround-text n]
    (let [{:keys [selection start end target]} (destruct-key-down e)
          selection?       (not= start end)]
      (.preventDefault e)
@@ -557,7 +557,7 @@
 
 ;; TODO: put text caret in correct position
 (defn handle-shortcuts
-  [e uid state]
+  [e uid {:keys [save-fn] :as _state-hooks} state]
   (let [{:keys [key-code head tail selection target value shift alt]} (destruct-key-down e)]
     (cond
       (and (= key-code KeyCodes.A) (= selection value)) (let [closest-node-page  (.. target (closest ".node-page"))
@@ -569,15 +569,15 @@
                                                                                       (mapv :block/uid))]
                                                           (dispatch [::select-events/set-items children]))
 
-      (= key-code KeyCodes.B) (surround-and-set e state "**")
+      (= key-code KeyCodes.B) (surround-and-set e "**")
 
-      (= key-code KeyCodes.I) (surround-and-set e state "*" 1)
+      (= key-code KeyCodes.I) (surround-and-set e "*" 1)
 
-      (= key-code KeyCodes.Y) (surround-and-set e state "~~")
+      (= key-code KeyCodes.Y) (surround-and-set e "~~")
 
-      (= key-code KeyCodes.U) (surround-and-set e state "--")
+      (= key-code KeyCodes.U) (surround-and-set e "--")
 
-      (= key-code KeyCodes.H) (surround-and-set e state "^^")
+      (= key-code KeyCodes.H) (surround-and-set e "^^")
 
       ;; if alt is pressed, zoom out of current block page
       ;; if caret within [[brackets]] or #[[brackets]], navigate to that page
@@ -596,7 +596,7 @@
                                 (.. e preventDefault)
 
                                 ;; save block before navigating away
-                                ((:string/save-fn @state))
+                                (save-fn)
 
                                 (cond
                                   alt
@@ -825,12 +825,13 @@
 
 
 (defn textarea-key-down
-  [e uid state]
+  [e uid {:keys [save-fn] :as state-hooks} state]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when @(subscribe [:editing/is-editing uid])
     (let [d-event (destruct-key-down e)
           {:keys [meta ctrl key-code]} d-event]
 
+      ;; TODO: make these more local state
       ;; used for paste, to determine if shift key was held down
       (swap! state assoc :last-keydown d-event)
       (swap! state assoc :last-e e)
@@ -852,6 +853,6 @@
           (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
           (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
           (= key-code KeyCodes.ESC)       (handle-escape e state)
-          (shortcut-key? meta ctrl)       (handle-shortcuts e uid state)
+          (shortcut-key? meta ctrl)       (handle-shortcuts e uid state-hooks state)
           (is-character-key? e)           (write-char e uid state))))))
 
