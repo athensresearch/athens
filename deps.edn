@@ -1,4 +1,4 @@
-{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen" "test"]
+{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen" "test" "resources"]
 
  :deps
  {org.clojure/clojure                   #:mvn{:version "1.11.1"}
@@ -40,6 +40,7 @@
   ;; web server
   http-kit/http-kit                     #:mvn{:version "2.5.3"}
   compojure/compojure                   #:mvn{:version "1.6.2"}
+  ring/ring-core                        #:mvn{:version "1.9.5"}
   ;; data validation
   metosin/malli                         #:mvn{:version "0.5.1"}
   ;; networked repl
