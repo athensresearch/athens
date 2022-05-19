@@ -19,7 +19,7 @@
    (integration-test-fixture [] test-fn))
 
   ([datoms test-fn]
-   (let [conn (d/create-conn common-db/schema)]
+   (let [conn (common-db/create-conn)]
      (d/transact! conn datoms)
      (reset! connection conn)
 

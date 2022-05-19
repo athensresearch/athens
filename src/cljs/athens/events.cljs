@@ -42,7 +42,7 @@
 (reg-event-fx
   :create-in-memory-conn
   (fn [_ _]
-    (let [conn (d/create-conn common-db/schema)]
+    (let [conn (common-db/create-conn)]
       (doseq [[_id data] athens-datoms/welcome-events]
         (atomic-resolver/resolve-transact! conn data))
       {:async-flow {:id             :db-in-mem-load

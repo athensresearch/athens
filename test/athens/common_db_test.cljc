@@ -9,6 +9,40 @@
          ExceptionInfo))))
 
 
+(t/deftest version
+  (let [conn (common-db/create-conn)]
+    (t/is (= (common-db/db-versions @conn) #{0 1 2}))
+    (t/is (= (common-db/version conn) 2))))
+
+
+(t/deftest migrate-conn
+  (let [conn (-> (common-db/create-conn)
+                 (common-db/migrate-conn!))]
+    (t/is (= (d/schema @conn)
+             (merge common-db/v1-bootstrap-schema common-db/v1-schema common-db/v2-schema)))
+    (t/is (= (common-db/db-versions @conn)
+             #{0 1 2}))))
+
+
+(t/deftest reset-conn
+  (let [old-conn (common-db/migrate-conn! (d/create-conn) :up-to 1)
+        new-conn (common-db/create-conn)
+        block    {:block/uid    "uid"
+                  :block/string "string"}]
+    (t/is (= (d/schema @old-conn)
+             (merge common-db/v1-bootstrap-schema common-db/v1-schema)))
+    (t/is (= (common-db/db-versions @old-conn)
+             #{0 1}))
+    (d/transact! old-conn [block])
+    (t/is (= (d/pull @old-conn '[:block/uid :block/string] [:block/uid "uid"]) block))
+    (common-db/reset-conn! new-conn @old-conn)
+    (t/is (= (d/schema @new-conn)
+             (merge common-db/v1-bootstrap-schema common-db/v1-schema common-db/v2-schema)))
+    (t/is (= (common-db/db-versions @new-conn)
+             #{0 1 2}))
+    (t/is (= (d/pull @old-conn '[:block/uid :block/string] [:block/uid "uid"]) block))))
+
+
 (t/deftest get-internal-representation
   (let [gir (fn [tx-data eid]
               (-> common-db/empty-db

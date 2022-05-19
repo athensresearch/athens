@@ -239,7 +239,7 @@
 
 ;; -- Datascript and Posh ------------------------------------------------
 
-(defonce dsdb (d/create-conn common-db/schema))
+(defonce dsdb (common-db/create-conn))
 
 
 (defn e-by-av

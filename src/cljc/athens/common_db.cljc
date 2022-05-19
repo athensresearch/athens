@@ -2,14 +2,15 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
-    [athens.common.logging   :as log]
-    [athens.parser           :as parser]
-    [clojure.data            :as data]
-    [clojure.pprint          :as pp]
-    [clojure.set             :as set]
-    [clojure.string          :as string]
-    [clojure.walk            :as walk]
-    [datascript.core         :as d])
+    [athens.common.logging    :as log]
+    [athens.common.migrations :as migrations]
+    [athens.parser            :as parser]
+    [clojure.data             :as data]
+    [clojure.pprint           :as pp]
+    [clojure.set              :as set]
+    [clojure.string           :as string]
+    [clojure.walk             :as walk]
+    [datascript.core          :as d])
   #?(:cljs
      (:require-macros
        [athens.common.sentry :as sentry-m :refer [wrap-span wrap-span-no-new-tx]])))
@@ -45,12 +46,73 @@
                            :db/unique     :db.unique/identity}})
 
 
-;; TODO: generalize and use athens.self-hosted.migrate to migrate existing datascript dbs
-;; For now (the prototyping stage) it is enough that only new servers can use the new schema.
-(def schema (merge v1-schema v2-schema))
+(def v1-bootstrap-schema
+  {:migrations/version {:db/unique :db.unique/identity}})
 
 
-(def empty-db (d/empty-db schema))
+(defn db-versions
+  [db]
+  (->> (d/datoms db :aevt :migrations/version)
+       (mapv #(nth % 2))
+       (concat [0])
+       set))
+
+
+(defn version
+  [conn]
+  (apply max (db-versions @conn)))
+
+
+(defn set-version!
+  [conn version]
+  (d/transact! conn [{:migrations/version version}]))
+
+
+(defn transact-schema!
+  [conn schema]
+  (let [current-schema (d/schema @conn)
+        merged-schema  (merge current-schema schema)]
+    ;; NB: there is no way to update the schema of an existing conn.
+    ;; This returns a new conn, any watchers will have to be added again.
+    (reset! conn (-> (d/datoms @conn :eavt)
+                     (d/conn-from-datoms merged-schema)
+                     deref))))
+
+
+(def bootstrap-migrations
+  [[1 #(when (= (version %) 0)
+         (transact-schema! % v1-bootstrap-schema))]])
+
+
+(def migrations
+  [[1 #(transact-schema! % v1-schema)]
+   [2 #(transact-schema! % v2-schema)]])
+
+
+(defn migrate-conn!
+  [conn & {:as opts}]
+  (migrations/migrate! conn migrations bootstrap-migrations version set-version! opts)
+  conn)
+
+
+(defn create-conn
+  []
+  (migrate-conn! (d/create-conn)))
+
+
+(defn reset-conn!
+  [conn db]
+  (if (= (version conn) (version (atom db)))
+    (d/reset-conn! conn db)
+    ;; Migrate db before resetting conn to it dbs content.
+    (->> (d/conn-from-db db)
+         migrate-conn!
+         deref
+         (d/reset-conn! conn))))
+
+
+(def empty-db
+  (d/db (create-conn)))
 
 
 (defn e-by-av

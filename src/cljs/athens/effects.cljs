@@ -12,7 +12,6 @@
     [cljs.core.async             :refer [go <!]]
     [cljs.core.async.interop     :refer [<p!]]
     [com.stuartsierra.component  :as component]
-    [datascript.core             :as d]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection          :refer [setCursorPosition]]
     [malli.core                  :as m]
@@ -39,7 +38,7 @@
     ;; the watchers from processing a massive tx-report.
     (reactive/unwatch!)
     (wrap-span-no-new-tx "ds/reset-conn"
-                         (d/reset-conn! db/dsdb new-db))
+                         (common-db/reset-conn! db/dsdb new-db))
     (when-not skip-health-check?
       (wrap-span-no-new-tx "db/health-check"
                            (common-db/health-check db/dsdb)))
