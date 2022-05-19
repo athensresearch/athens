@@ -115,7 +115,7 @@
   - User pastes and last keydown has shift -> default
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
-  [e uid state]
+  [e uid {:keys [update-fn read-value] :as _state-hooks} state]
   (let [data                    (.. e -clipboardData)
         text-data               (.getData data "text/plain")
         ;; With internal representation
@@ -130,14 +130,15 @@
         {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
         img-regex           #"(?i)^image/(p?jpeg|gif|png)$"
         callback            (fn [new-str]
-                              (js/setTimeout #(swap! state assoc :string/local new-str)
+                              (js/setTimeout #(update-fn new-str)
                                              50))
 
         ;; External to internal representation
         text-to-inter (when-not (str/blank? text-data)
                         (internal-representation/text-to-internal-representation text-data))
         line-breaks   (re-find #"\r?\n" text-data)
-        no-shift      (-> @state :last-keydown :shift not)]
+        no-shift      (-> @state :last-keydown :shift not)
+        local-value   @read-value]
 
 
     (cond
@@ -145,7 +146,7 @@
       internal?
       (do
         (.. e preventDefault)
-        (rf/dispatch [:paste-internal uid (:string/local @state) repr-with-new-uids]))
+        (rf/dispatch [:paste-internal uid local-value repr-with-new-uids]))
 
       ;; For images
       (seq (filter (fn [item]
@@ -159,7 +160,7 @@
       (and line-breaks no-shift)
       (do
         (.. e preventDefault)
-        (rf/dispatch [:paste-internal uid (:string/local @state) text-to-inter]))
+        (rf/dispatch [:paste-internal uid local-value text-to-inter]))
 
       (not no-shift)
       (do
@@ -171,9 +172,9 @@
 
 
 (defn textarea-change
-  [e _uid state]
-  (swap! state assoc :string/local (.. e -target -value))
-  ((:string/idle-fn @state)))
+  [e _uid {:keys [idle-fn update-fn]}]
+  (update-fn (.. e -target -value))
+  (idle-fn))
 
 
 (defn textarea-click
@@ -228,7 +229,7 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [block {:keys [save-fn] :as state-hooks} state]
+  [block {:keys [save-fn read-value] :as state-hooks} state]
   (let [{:block/keys [uid original-uid header]} block
         editing? (rf/subscribe [:editing/is-editing uid])
         selected-items (rf/subscribe [::select-subs/items])]
@@ -243,17 +244,17 @@
          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
          ;; When block is in editing mode or the editing DOM elements are rendered
          (when (or (:show-editable-dom @state) @editing?)
-           [autosize/textarea {:value          (:string/local @state)
+           [autosize/textarea {:value          @read-value
                                :class          ["block-input-textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
                                ;; :auto-focus  true
                                :id             (str "editable-uid-" uid)
-                               :on-change      (fn [e] (textarea-change e uid state))
-                               :on-paste       (fn [e] (textarea-paste e uid state))
+                               :on-change      (fn [e] (textarea-change e uid state-hooks))
+                               :on-paste       (fn [e] (textarea-paste e uid state-hooks state))
                                :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks state))
                                :on-blur        save-fn
                                :on-click       (fn [e] (textarea-click e uid))
                                :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))
                                :on-mouse-down  (fn [e] (textarea-mouse-down e uid))}])
          ;; TODO pass `state` to parse-and-render
-         [parse-and-render (:string/local @state) (or original-uid uid)]]))))
+         [parse-and-render @read-value (or original-uid uid)]]))))
 

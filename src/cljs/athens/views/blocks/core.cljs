@@ -22,10 +22,12 @@
     [athens.views.blocks.content             :as content]
     [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+    #_[clojure.pprint :as pprint]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
-    [reagent.core                            :as r]))
+    [reagent.core                            :as r]
+    [reagent.ratom                           :as ratom]))
 
 
 ;; Inline refs
@@ -288,8 +290,7 @@
   ([block linked-ref-data _opts]
    (let [{:keys [linked-ref initial-open linked-ref-uid parent-uids]} linked-ref-data
          {:block/keys [uid original-uid]} block
-         state (r/atom {:string/local       nil
-                        :string/previous    nil
+         state (r/atom {:string/previous    nil
                         ;; one of #{:page :block :slash :hashtag :template}
                         :search/type        nil
                         :search/results     nil
@@ -307,11 +308,23 @@
                         :inline-refs/open   false
                         :inline-refs/states {}
                         :block/uid          uid})
-         savep-fn (partial db/transact-state-for-uid (or original-uid uid) state)
-         save-fn #(savep-fn :block-save)
-         idle-fn (gfns/debounce #(savep-fn :autosave) 2000)]
-     (swap! state assoc
-            :string/idle-fn idle-fn)
+         local-value (r/atom nil)
+         savep-fn (partial db/transact-state-for-uid (or original-uid uid))
+         save-fn #(savep-fn @local-value :block-save)
+         idle-fn (gfns/debounce #(savep-fn @local-value :autosave)
+                                2000)
+         update-fn #(reset! local-value %)
+         read-value (ratom/reaction @local-value)
+         state-hooks {:save-fn save-fn
+                      :idle-fn idle-fn
+                      :update-fn update-fn
+                      :read-value read-value}]
+     ;; TODO: remove debugger code
+     #_(add-watch state :watcher
+                (fn [_key _atom old-state new-state]
+                  (log/debug "state watcher")
+                  (log/debug "\nold:\n" (with-out-str (pprint/pprint old-state)))
+                  (log/debug "\nnew:\n" (with-out-str (pprint/pprint new-state)))))
 
      (fn [block linked-ref-data opts]
        (let [ident                [:block/uid (or original-uid uid)]
@@ -338,7 +351,8 @@
          ;; Write on initialization
          ;; Write also from backspace, which can join bottom block's contents to top the block.
          (when (not= string (:string/previous @state))
-           (swap! state assoc :string/previous string :string/local string))
+           (update-fn string)
+           (swap! state assoc :string/previous string))
 
          [:> Container {:isDragging (and dragging (not is-selected))
                         :isSelected is-selected
@@ -397,8 +411,7 @@
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
 
            ;; XXX: render view
-           [content/block-content-el block {:save-fn save-fn
-                                            :idle-fn idle-fn} state]
+           [content/block-content-el block state-hooks state]
 
            [presence/inline-presence-el uid]
 
@@ -412,7 +425,7 @@
               (:inline-refs/open @state)])]
 
           ;; XXX: part of view/edit embedable
-          [autocomplete-search/inline-search-el block state]
+          [autocomplete-search/inline-search-el block state-hooks state]
           [autocomplete-slash/slash-menu-el block state]
 
           ;; Inline refs

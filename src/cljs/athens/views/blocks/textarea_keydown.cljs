@@ -217,14 +217,14 @@
 ;; see `auto-complete-slash` for how this arity-overloaded
 ;; function is used.
 (defn auto-complete-hashtag
-  ([state e]
+  ([state-hooks state e]
    (let [{:search/keys [index results]} @state
          target (.. e -target)
          {:keys [node/title block/uid]} (nth results index nil)
          expansion (or title uid)]
-     (auto-complete-hashtag state target expansion)))
+     (auto-complete-hashtag state-hooks state target expansion)))
 
-  ([state target expansion]
+  ([{:as _state-hooks} state target expansion]
    (let [{:keys [start head]} (destruct-target target)
          start-idx (count (re-find #"(?s).*#" head))]
      (if (nil? expansion)
@@ -274,14 +274,14 @@
 ;; see `auto-complete-slash` for how this arity-overloaded
 ;; function is used.
 (defn auto-complete-template
-  ([state e]
+  ([{:as state-hooks} state e]
    (let [{:search/keys [index results]} @state
          target (.. e -target)
          {:keys [block/uid]} (nth results index nil)
          expansion uid]
-     (auto-complete-template state target expansion)))
+     (auto-complete-template state-hooks state target expansion)))
 
-  ([state target expansion]
+  ([{:keys [read-value] :as _state-hooks} state target expansion]
    (let [{:keys [start head]} (destruct-target target)
          start-idx (count (re-find #"(?s).*;;" head))
          source-ir (->> [:block/uid expansion]
@@ -298,7 +298,7 @@
        (do
          (set-selection target (- start-idx 2) start)
          (replace-selection-with "")
-         (dispatch [:paste-internal uid (:string/local @state) target-ir])
+         (dispatch [:paste-internal uid @read-value target-ir])
          (swap! state assoc :search/type nil))))))
 
 
@@ -447,14 +447,14 @@
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
-  [e _uid state]
+  [e _uid {:keys [read-value] :as _state-hooks}]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items                 @(subscribe [::select-subs/items])
         editing-uid                    @(subscribe [:editing/uid])
         current-root-uid               @(subscribe [:current-route/uid])
         [editing-uid embed-id]         (db/uid-and-embed-id editing-uid)
-        local-string                   (:string/local @state)]
+        local-string                   @read-value]
     (when (empty? selected-items)
       (if shift
         (dispatch [:unindent {:uid              editing-uid
@@ -482,7 +482,7 @@
 
 
 (defn handle-enter
-  [e uid state]
+  [e uid {:as state-hooks} state]
   (let [{:keys [shift ctrl meta value start] :as d-key-down} (destruct-key-down e)
         {:search/keys [type]} @state]
     (.. e preventDefault)
@@ -491,8 +491,8 @@
              :slash (auto-complete-slash state e)
              :page (auto-complete-inline state e)
              :block (auto-complete-inline state e)
-             :hashtag (auto-complete-hashtag state e)
-             :template (auto-complete-template state e))
+             :hashtag (auto-complete-hashtag state-hooks state e)
+             :template (auto-complete-template state-hooks state e))
       ;; shift-enter: add line break to textarea and move cursor to the next line.
       shift (replace-selection-with "\n")
       ;; cmd-enter: cycle todo states, then move cursor to the end of the line.
@@ -683,7 +683,7 @@
 
 
 (defn handle-pair-char
-  [e _ state]
+  [e _ {:keys [read-value]} state]
   (let [{:keys [key target start end selection value]} (destruct-key-down e)
         close-pair (get PAIR-CHARS key)
         lookbehind-char (nth value start nil)]
@@ -698,8 +698,8 @@
       (= selection "") (let [new-idx (inc start)]
                          (replace-selection-with (str key close-pair))
                          (set-cursor-position target new-idx)
-                         (when (>= (count (:string/local @state)) 4)
-                           (let [four-char        (subs (:string/local @state) (dec start) (+ start 3))
+                         (when (>= (count @read-value) 4)
+                           (let [four-char        (subs @read-value (dec start) (+ start 3))
                                  double-brackets? (= "[[]]" four-char)
                                  double-parens?   (= "(())" four-char)
                                  type             (cond double-brackets? :page
@@ -717,8 +717,8 @@
       (not= selection "") (let [surround-selection (surround selection key)]
                             (replace-selection-with surround-selection)
                             (set-selection target (inc start) (inc end))
-                            (let [four-char        (str (subs (:string/local @state) (dec start) (inc start))
-                                                        (subs (:string/local @state) (+ end 1) (+ end 3)))
+                            (let [four-char        (str (subs @read-value (dec start) (inc start))
+                                                        (subs @read-value (+ end 1) (+ end 3)))
                                   double-brackets? (= "[[]]" four-char)
                                   double-parens?   (= "(())" four-char)
                                   type             (cond double-brackets? :page
@@ -806,7 +806,7 @@
 
 (defn handle-delete
   "Delete has the same behavior as pressing backspace on the next block."
-  [e uid state]
+  [e uid {:keys [read-value]} state]
   (let [{:keys [start end value]} (destruct-key-down e)
         no-selection?             (= start end)
         end?                      (= end (count value))
@@ -819,9 +819,9 @@
                    (cond-> next-block-uid
                      embed-id (str "-embed-" embed-id))
                    (:block/string next-block)
-                   (when-not (= (:string/local @state)
+                   (when-not (= @read-value
                                 (:block/string @state))
-                     (:string/local @state))])))))
+                     @read-value)])))))
 
 
 (defn textarea-key-down
@@ -847,11 +847,11 @@
       (when (empty? @(subscribe [::select-subs/items]))
         (cond
           (arrow-key-direction e)         (handle-arrow-key e uid state)
-          (pair-char? e)                  (handle-pair-char e uid state)
-          (= key-code KeyCodes.TAB)       (handle-tab e uid state)
-          (= key-code KeyCodes.ENTER)     (handle-enter e uid state)
+          (pair-char? e)                  (handle-pair-char e uid state-hooks state)
+          (= key-code KeyCodes.TAB)       (handle-tab e uid state-hooks)
+          (= key-code KeyCodes.ENTER)     (handle-enter e uid state-hooks state)
           (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
-          (= key-code KeyCodes.DELETE)    (handle-delete e uid state)
+          (= key-code KeyCodes.DELETE)    (handle-delete e uid state-hooks state)
           (= key-code KeyCodes.ESC)       (handle-escape e state)
           (shortcut-key? meta ctrl)       (handle-shortcuts e uid state-hooks)
           (is-character-key? e)           (write-char e uid state))))))
