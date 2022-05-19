@@ -4,7 +4,6 @@
     [athens.athens-datoms :as datoms]
     [athens.self-hosted.event-log-migrations :as event-log-migrations]
     [athens.self-hosted.fluree.utils :as fu]
-    [athens.self-hosted.migrate :as migrate]
     [clojure.core.async :as async]
     [clojure.data :as data]
     [clojure.data.json :as json]
@@ -178,7 +177,7 @@
        (log/info "Fluree ledger for event-log not found, creating" ledger)
        @(fdb/new-ledger conn ledger)
        (fdb/wait-for-ledger-ready conn ledger)
-       (migrate/migrate-ledger! conn ledger event-log-migrations/migrations)
+       (event-log-migrations/migrate! conn ledger)
        (when seed-events
          (let [block (atom nil)]
            (log/info "Populating fresh ledger with initial events...")
@@ -189,7 +188,7 @@
            (fu/wait-for-block conn ledger @block)
            (log/info "✅ Fluree local ledger up to date.")))
        (log/info "✅ Fluree ledger for event-log created."))
-     (migrate/migrate-ledger! conn ledger event-log-migrations/migrations))))
+     (event-log-migrations/migrate! conn ledger))))
 
 
 #_(defn events-since
