@@ -306,13 +306,15 @@
                                                :context-menu/y     nil
                                                :context-menu/show  false
                                                :caret-position     nil
-                                               :show-editable-dom  false
                                                :linked-ref/open    (or (false? linked-ref) initial-open)
                                                :inline-refs/open   false
                                                :inline-refs/states {}
                                                :block/uid          uid})
          local-value                  (r/atom nil)
          old-value                    (r/atom nil)
+         show-edit?                   (r/atom false)
+         hide-edit-fn                 #(reset! show-edit? false)
+         show-edit-fn                 #(reset! show-edit? true)
          savep-fn                     (partial db/transact-state-for-uid (or original-uid uid))
          save-fn                      #(savep-fn @local-value :block-save)
          idle-fn                      (gfns/debounce #(savep-fn @local-value :autosave)
@@ -326,7 +328,8 @@
                                        :update-fn      update-fn
                                        :update-old-fn  update-old-fn
                                        :read-value     read-value
-                                       :read-old-value read-old-value}]
+                                       :read-old-value read-old-value
+                                       :show-edit?     show-edit?}]
      ;; TODO: remove debugger code
      #_(add-watch state :watcher
                 (fn [_key _atom old-state new-state]
@@ -343,10 +346,10 @@
                            _refs]} (merge (reactive/get-reactive-block-document ident) block)
              children-uids         (set (map :block/uid children))
              uid-sanitized-block   (s/transform
-                                     (specter-recursive-path #(contains? % :block/uid))
-                                     (fn [{:block/keys [original-uid uid] :as block}]
-                                       (assoc block :block/uid (or original-uid uid)))
-                                     block)
+                                    (specter-recursive-path #(contains? % :block/uid))
+                                    (fn [{:block/keys [original-uid uid] :as block}]
+                                      (assoc block :block/uid (or original-uid uid)))
+                                    block)
              {:keys [dragging]}    @state
              is-selected           @(rf/subscribe [::select-subs/selected? uid])
              selected-items        @(rf/subscribe [::select-subs/items])
@@ -371,12 +374,12 @@
                         :uid          uid
                         ;; need to know children for selection resolution
                         :childrenUids children-uids
-                        ;; :show-editable-dom allows us to render the editing elements (like the textarea)
+                        ;; show-edit? allows us to render the editing elements (like the textarea)
                         ;; even when not editing this block. When true, clicking the block content will pass
                         ;; the clicks down to the underlying textarea. The textarea is expensive to render,
                         ;; so we avoid rendering it when it's not needed.
-                        :onMouseEnter #(swap! state assoc :show-editable-dom true)
-                        :onMouseLeave #(swap! state assoc :show-editable-dom false)
+                        :onMouseEnter show-edit-fn
+                        :onMouseLeave hide-edit-fn
                         :onDragOver   (fn [e] (block-drag-over e block state))
                         :onDragLeave  (fn [e] (block-drag-leave e block state))
                         :onDrop       (fn [e] (block-drop e block state))}
