@@ -1,6 +1,6 @@
 (ns athens.views.blocks.textarea-keydown
   (:require
-    ["/components/Icons/Icons" :refer [TimeNowIcon PersonIcon CheckboxIcon CalendarNowIcon CalendarTomorrowIcon CalendarYesterdayIcon BlockEmbedIcon TemplateIcon HTMLEmbedIcon YoutubeIcon]]
+    ["/components/Icons/Icons" :refer [TimeNowIcon PersonIcon CheckboxIcon CalendarNowIcon CalendarTomorrowIcon CalendarYesterdayIcon BlockEmbedIcon TemplateIcon HTMLEmbedIcon YoutubeIcon ArrowRightOnBoxIcon]]
     [athens.common-db :as common-db]
     [athens.common.utils :as common.utils]
     [athens.dates :as dates]
@@ -101,7 +101,8 @@
      ["YouTube Embed" YoutubeIcon "{{[[youtube]]: }}" nil 2]
      ["iframe Embed"  HTMLEmbedIcon "{{iframe: }}" nil 2]
      ["Block Embed"   BlockEmbedIcon "{{[[embed]]: (())}}" nil 4]
-     ["Template"      TemplateIcon ";;" nil nil]]
+     ["Template"      TemplateIcon ";;" nil nil]
+     ["Add reference to page" ArrowRightOnBoxIcon "#" nil nil]]
     @(subscribe [:db-picker/remote-db?])
     (conj (let [username (:username @(rf/subscribe [:presence/current-user]))]
             [(str "Me (" username ")") PersonIcon (fn [] (str "[[" username "]]")) nil nil]))))
@@ -140,7 +141,7 @@
                           :page #"(?s).*\[\["
                           :hashtag #"(?s).*#"
                           :template #"(?s).*;;"
-                          :add-to #"(?s).*\+"
+                          :add-to #"(?s).*#"
                           :slash #"(?s).*/")
         find            (re-find regex head)
         query-start-idx (count find)
@@ -212,6 +213,11 @@
      (when (= caption "Template")
        (swap! state assoc
               :search/type :template
+              :search/query ""
+              :search/results []))
+     (when (= caption "Add reference to page")
+       (swap! state assoc
+              :search/type :add-to
               :search/query ""
               :search/results [])))))
 
@@ -316,12 +322,12 @@
 
   ([state target expansion]
    (let [{:keys [start head]} (destruct-target target)
-         start-idx (count (re-find #"(?s).*\+" head))]
+         start-idx (count (re-find #"(?s).*#" head))]
      (if (nil? expansion)
        (swap! state assoc :search/type nil)
        (do
-         (set-selection target start-idx start)
-         (replace-selection-with (str "[[" expansion "]]"))
+         (set-selection target (dec start-idx) start)
+         (replace-selection-with "")
          (swap! state assoc :search/type nil)
          (dispatch [:add-to (:string/local @state) (:block/uid @state) expansion]))))))
 
@@ -782,11 +788,9 @@
       ;; slash: close dropdown
       (and (= "/" look-behind-char) (= type :slash)) (swap! state assoc :search/type nil)
       ;; hashtag: close dropdown
-      (and (= "#" look-behind-char) (= type :hashtag)) (swap! state assoc :search/type nil)
+      (and (= "#" look-behind-char) (#{:hashtag :add-to} type)) (swap! state assoc :search/type nil)
       ;; semicolon: close dropdown
       (and (= ";" look-behind-char) (= type :template)) (swap! state assoc :search/type nil)
-      ;; plus: close dropdown
-      (and (= "+" look-behind-char) (= type :at)) (swap! state assoc :search/type nil)
       ;; dropdown is open: update query
       type (update-query state head "" type))))
 
@@ -827,11 +831,6 @@
                                            :search/index 0
                                            :search/query ""
                                            :search/type :template
-                                           :search/results [])
-      (and (= key "+") (nil? type)) (swap! state assoc
-                                           :search/index 0
-                                           :search/query ""
-                                           :search/type :add-to
                                            :search/results [])
       type (update-query state head key type))))
 

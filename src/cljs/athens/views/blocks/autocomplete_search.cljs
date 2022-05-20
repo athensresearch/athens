@@ -34,7 +34,7 @@
                      :px "0.8rem"
                      :fontStyle "italics"}
             (str "Search for a " (if (= type :add-to)
-                                   "page to add to"
+                                   "page to add a reference to"
                                    (symbol type)))]
            (doall
              (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
