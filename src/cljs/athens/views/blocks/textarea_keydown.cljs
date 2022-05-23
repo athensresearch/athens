@@ -217,14 +217,14 @@
 ;; see `auto-complete-slash` for how this arity-overloaded
 ;; function is used.
 (defn auto-complete-hashtag
-  ([state-hooks state e]
+  ([block-uid state-hooks state e]
    (let [{:search/keys [index results]} @state
          target (.. e -target)
          {:keys [node/title block/uid]} (nth results index nil)
          expansion (or title uid)]
-     (auto-complete-hashtag state-hooks state target expansion)))
+     (auto-complete-hashtag block-uid state-hooks state target expansion)))
 
-  ([{:as _state-hooks} state target expansion]
+  ([_block-uid {:as _state-hooks} state target expansion]
    (let [{:keys [start head]} (destruct-target target)
          start-idx (count (re-find #"(?s).*#" head))]
      (if (nil? expansion)
@@ -274,14 +274,14 @@
 ;; see `auto-complete-slash` for how this arity-overloaded
 ;; function is used.
 (defn auto-complete-template
-  ([{:as state-hooks} state e]
+  ([block-uid {:as state-hooks} state e]
    (let [{:search/keys [index results]} @state
          target (.. e -target)
          {:keys [block/uid]} (nth results index nil)
          expansion uid]
-     (auto-complete-template state-hooks state target expansion)))
+     (auto-complete-template block-uid state-hooks state target expansion)))
 
-  ([{:keys [read-value] :as _state-hooks} state target expansion]
+  ([block-uid {:keys [read-value] :as _state-hooks} state target expansion]
    (let [{:keys [start head]} (destruct-target target)
          start-idx (count (re-find #"(?s).*;;" head))
          source-ir (->> [:block/uid expansion]
@@ -290,15 +290,14 @@
          target-ir (->> source-ir
                         internal-representation/new-uids-map
                         (internal-representation/update-uids source-ir)
-                        (into []))
-         uid (:block/uid @state)]
+                        (into []))]
      (if (or (nil? expansion)
              (nil? target-ir))
        (swap! state assoc :search/type nil)
        (do
          (set-selection target (- start-idx 2) start)
          (replace-selection-with "")
-         (dispatch [:paste-internal uid @read-value target-ir])
+         (dispatch [:paste-internal block-uid @read-value target-ir])
          (swap! state assoc :search/type nil))))))
 
 
@@ -491,8 +490,8 @@
              :slash (auto-complete-slash state e)
              :page (auto-complete-inline state e)
              :block (auto-complete-inline state e)
-             :hashtag (auto-complete-hashtag state-hooks state e)
-             :template (auto-complete-template state-hooks state e))
+             :hashtag (auto-complete-hashtag uid state-hooks state e)
+             :template (auto-complete-template uid state-hooks state e))
       ;; shift-enter: add line break to textarea and move cursor to the next line.
       shift (replace-selection-with "\n")
       ;; cmd-enter: cycle todo states, then move cursor to the end of the line.

@@ -14,7 +14,7 @@
                  :hashtag  textarea-keydown/auto-complete-hashtag
                  :template textarea-keydown/auto-complete-template
                  textarea-keydown/auto-complete-inline)]
-    (f state-hooks state target expansion)))
+    (f uid state-hooks state target expansion)))
 
 
 (defn inline-search-el
