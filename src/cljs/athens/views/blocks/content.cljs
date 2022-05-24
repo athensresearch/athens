@@ -14,7 +14,8 @@
     [clojure.string :as str]
     [goog.events :as goog-events]
     [komponentit.autosize :as autosize]
-    [re-frame.core :as rf])
+    [re-frame.core :as rf]
+    [reagent.core :as r])
   (:import
     (goog.events
       EventType)))
@@ -232,7 +233,10 @@
   [block {:keys [save-fn read-value show-edit?] :as state-hooks} state]
   (let [{:block/keys [uid original-uid header]} block
         editing? (rf/subscribe [:editing/is-editing uid])
-        selected-items (rf/subscribe [::select-subs/items])]
+        selected-items (rf/subscribe [::select-subs/items])
+        caret-position (r/atom nil)]
+    #_(add-watch caret-position :watcher (fn [_ _ old new]
+                                         (println "caret-position:" (pr-str old) "->" (pr-str new))))
     (fn [_block _state]
       (let [font-size (case header
                         1 "2.1em"
@@ -250,7 +254,7 @@
                                :id             (str "editable-uid-" uid)
                                :on-change      (fn [e] (textarea-change e uid state-hooks))
                                :on-paste       (fn [e] (textarea-paste e uid state-hooks state))
-                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks state))
+                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position state))
                                :on-blur        save-fn
                                :on-click       (fn [e] (textarea-click e uid))
                                :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))

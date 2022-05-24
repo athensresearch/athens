@@ -348,31 +348,30 @@
 
 
 (defn handle-arrow-key
-  [e uid state]
+  [e uid caret-position state]
   (let [{:keys [key-code
                 shift
                 meta
                 ctrl
                 target
-                selection]}              (destruct-key-down e)
-        selection?                       (not (blank? selection))
-        start?                           (block-start? e)
-        end?                             (block-end? e)
-        {:search/keys   [results
-                         type
-                         index]
-         caret-position :caret-position} @state
-        textarea-height                  (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
-        {:keys [top height]}             caret-position
-        rows                             (js/Math.round (/ textarea-height height))
-        row                              (js/Math.ceil (/ top height))
-        top-row?                         (= row 1)
-        bottom-row?                      (= row rows)
-        up?                              (= key-code KeyCodes.UP)
-        down?                            (= key-code KeyCodes.DOWN)
-        left?                            (= key-code KeyCodes.LEFT)
-        right?                           (= key-code KeyCodes.RIGHT)
-        [char-offset _]                  (get-end-points target)]
+                selection]}    (destruct-key-down e)
+        selection?             (not (blank? selection))
+        start?                 (block-start? e)
+        end?                   (block-end? e)
+        {:search/keys [results
+                       type
+                       index]} @state
+        textarea-height        (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
+        {:keys [top height]}   @caret-position
+        rows                   (js/Math.round (/ textarea-height height))
+        row                    (js/Math.ceil (/ top height))
+        top-row?               (= row 1)
+        bottom-row?            (= row rows)
+        up?                    (= key-code KeyCodes.UP)
+        down?                  (= key-code KeyCodes.DOWN)
+        left?                  (= key-code KeyCodes.LEFT)
+        right?                 (= key-code KeyCodes.RIGHT)
+        [char-offset _]        (get-end-points target)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
@@ -383,7 +382,7 @@
                   (and down? bottom-row?)) (do
                                              (.. target blur)
                                              (dispatch [::select-events/add-item uid (cond
-                                                                                       up? :first
+                                                                                       up?   :first
                                                                                        down? :last)])))
 
       ;; Control (Command on mac): fold or unfold blocks
@@ -423,22 +422,22 @@
 
 
       (or (and left? start?)
-          (and up? end?))         (do (.. e preventDefault)
-                                      (dispatch [:up uid :end]))
+          (and up? end?)) (do (.. e preventDefault)
+                              (dispatch [:up uid :end]))
 
-      (and down? end?)            (do (.. e preventDefault)
-                                      (dispatch [:down uid :end]))
+      (and down? end?) (do (.. e preventDefault)
+                           (dispatch [:down uid :end]))
 
       ;; going RIGHT at last index should always go to index 0 of block below
-      (and right? end?)           (do (.. e preventDefault)
-                                      (dispatch [:down uid 0]))
+      (and right? end?) (do (.. e preventDefault)
+                            (dispatch [:down uid 0]))
 
       ;; index 0 is special - always go to index 0 when going up or down
       ;; when caret is anywhere between start and end preserve the position and offset by char
-      (and up? top-row?)          (do (.. e preventDefault)
-                                      (dispatch [:up uid char-offset]))
-      (and down? bottom-row?)     (do (.. e preventDefault)
-                                      (dispatch [:down uid char-offset])))))
+      (and up? top-row?)      (do (.. e preventDefault)
+                                  (dispatch [:up uid char-offset]))
+      (and down? bottom-row?) (do (.. e preventDefault)
+                                  (dispatch [:down uid char-offset])))))
 
 
 ;; Tab
@@ -824,7 +823,7 @@
 
 
 (defn textarea-key-down
-  [e uid {:as state-hooks} state]
+  [e uid {:as state-hooks} caret-position state]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when @(subscribe [:editing/is-editing uid])
     (let [d-event (destruct-key-down e)
@@ -837,15 +836,15 @@
 
       ;; update caret position for search dropdowns and for up/down
       (when (nil? (:search/type @state))
-        (let [caret-position (get-caret-position (.. e -target))]
-          (swap! state assoc :caret-position caret-position)))
+        (let [caret-pos (get-caret-position (.. e -target))]
+          (reset! caret-position caret-pos)))
 
       ;; dispatch center
       ;; only when nothing is selected or duplicate/events dispatched
       ;; after some ops(like delete) can cause errors
       (when (empty? @(subscribe [::select-subs/items]))
         (cond
-          (arrow-key-direction e)         (handle-arrow-key e uid state)
+          (arrow-key-direction e)         (handle-arrow-key e uid caret-position state)
           (pair-char? e)                  (handle-pair-char e uid state-hooks state)
           (= key-code KeyCodes.TAB)       (handle-tab e uid state-hooks)
           (= key-code KeyCodes.ENTER)     (handle-enter e uid state-hooks state)

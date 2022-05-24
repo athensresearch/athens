@@ -305,7 +305,6 @@
                                                :context-menu/x     nil
                                                :context-menu/y     nil
                                                :context-menu/show  false
-                                               :caret-position     nil
                                                :linked-ref/open    (or (false? linked-ref) initial-open)
                                                :inline-refs/open   false
                                                :inline-refs/states {}
