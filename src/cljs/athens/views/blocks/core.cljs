@@ -20,8 +20,10 @@
     [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
     [athens.views.blocks.bullet              :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content             :as content]
-    [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
+    [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs handle-click-comment]]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+    [athens.views.comments.core :as comments]
+    [athens.views.comments.inline :as inline-comments]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
@@ -319,6 +321,7 @@
                            string
                            open
                            children
+                           comment
                            _refs]} (merge (reactive/get-reactive-block-document ident) block)
              children-uids         (set (map :block/uid children))
              uid-sanitized-block   (s/transform
@@ -330,7 +333,11 @@
              is-selected           @(rf/subscribe [::select-subs/selected? uid])
              selected-items       @(rf/subscribe [::select-subs/items])
              present-user          @(rf/subscribe [:presence/has-presence uid])
-             is-presence           (seq present-user)]
+             is-presence           (seq present-user)
+             ;; TODO Just for testing, remove later
+             #_#_comment               [{:author "Sid"
+                                         :string "This is a dummy comment"
+                                         :time    "12:09"}]]
 
          ;; (prn uid is-selected)
 
@@ -384,7 +391,10 @@
                                                  "Copy block ref")
                                                :onClick #(handle-copy-refs nil uid)}
                                               {:children "Copy unformatted text"
-                                               :onClick #(handle-copy-unformatted uid)}])
+                                               :onClick #(handle-copy-unformatted uid)}
+                                              (when (empty? selected-items)
+                                                {:children "Comment"
+                                                 :onClick  (fn [e] (handle-click-comment e uid state))})])
                        :onClick        (fn [e]
                                          (let [shift? (.-shiftKey e)]
                                            (rf/dispatch [:reporting/navigation {:source :block-bullet
@@ -416,6 +426,16 @@
                      (not= :block-embed? opts)
                      (:inline-refs/open @state))
             [inline-linked-refs-el state uid])
+
+          ;; Comments textarea
+          (when @(rf/subscribe [:comment/show-comment-textarea? uid])
+            [inline-comments/inline-comments  uid false])
+
+          ;; Show comments when the toggle is on
+          (when (and @(rf/subscribe [:comment/show-inline-comments?])
+                     comment)
+            (println "show comments now")
+            [inline-comments/inline-comments comment uid true])
 
           ;; Children
           (when (and (seq children)

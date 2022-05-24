@@ -12,7 +12,10 @@ import {
   ContrastIcon,
   DailyNotesIcon,
   GraphIcon,
-  EllipsisHorizontalCircleIcon
+  EllipsisHorizontalCircleIcon,
+  ViewIcon,
+  ViewOffIcon
+
 } from '@/Icons/Icons';
 
 import {
@@ -261,6 +264,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isLeftSidebarOpen,
     isRightSidebarOpen,
     isCommandBarOpen,
+    isShowInlineComments,
+    onClickInlineComments: handleClickInlineComments,
     onPressCommandBar: handlePressCommandBar,
     onPressDailyNotes: handlePressDailyNotes,
     onPressAllPages: handlePressAllPages,
@@ -293,6 +298,18 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   }, [isThemeDark, toggleColorMode])
 
   const secondaryTools = [
+    {
+     label: "Show comments",
+     isActive: isShowInlineComments,
+     onClick: handleClickInlineComments,
+     icon: <ViewIcon/>
+    },
+    {
+     label: "Hide comments",
+     isActive: !isShowInlineComments,
+     onClick: handleClickInlineComments,
+     icon: <ViewOffIcon/>
+    },
     {
       label: "Help",
       isActive: isHelpOpen,
