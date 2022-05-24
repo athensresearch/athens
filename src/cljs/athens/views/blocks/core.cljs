@@ -429,7 +429,7 @@
 
           ;; Comments textarea
           (when @(rf/subscribe [:comment/show-comment-textarea? uid])
-            [inline-comments/inline-comments  uid false])
+            [inline-comments/inline-comments [] uid false])
 
           ;; Show comments when the toggle is on
           (when (and @(rf/subscribe [:comment/show-inline-comments?])
