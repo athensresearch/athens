@@ -142,12 +142,15 @@ jobs:
            name: app
            path: resources
 
-       - name: Deploy
-         uses: peaceiris/actions-gh-pages@v3
+       - name: Copy built app to a vercel prod deploy folder
+         run: mkdir -p vercel-prod/vercel-static/athens && cp -R resources/public/. vercel-prod/vercel-static/athens/
+
+       - uses: amondnet/vercel-action@v20
          with:
-           github_token: ${{ secrets.GITHUB_TOKEN }}
-           publish_dir: ./resources/public
-           force_orphan: true
+           vercel-token: ${{ secrets.VERCEL_TOKEN }}
+           vercel-org-id: ${{ secrets.VERCEL_ORG_ID}}
+           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
+           vercel-args: './vercel-prod/ --prod'
 
 
    release-electron:
