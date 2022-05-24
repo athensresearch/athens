@@ -162,7 +162,8 @@
                :zoom-level          0
                :fs/watcher          nil
                :presence            {}
-               :connection-status   :disconnected})
+               :connection-status   :disconnected
+               :comment/show-inline-comments true})
 
 
 (defn init-app-db
