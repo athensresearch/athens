@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.36](https://github.com/athensresearch/athens/compare/v2.0.0-beta.35...v2.0.0-beta.36) (2022-05-24)
+
+
+### Features
+
+* serve web client from athens server ([775c981](https://github.com/athensresearch/athens/commit/775c98102bf4797d8111015b54a7885e51eee44a))
+
+
+* release web to vercel ([e52f6e2](https://github.com/athensresearch/athens/commit/e52f6e258919e0eba066192520746174e2d77c88))
+* release-server now requires build-app ([1b3ef1d](https://github.com/athensresearch/athens/commit/1b3ef1d1b3236705237bd5cca7e560144694d57b))
+
 ## [2.0.0-beta.35](https://github.com/athensresearch/athens/compare/v2.0.0-beta.34...v2.0.0-beta.35) (2022-05-18)
 
 
