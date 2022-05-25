@@ -30,7 +30,7 @@
 
 (defn replace-roam-date
   [string]
-  (clojure.string/replace string athens.patterns/roam-date ","))
+  (string/replace string roam-date ","))
 
 
 ;; https://stackoverflow.com/a/11672480
