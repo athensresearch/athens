@@ -40,6 +40,7 @@
             (map #(str "\\" %) esc-chars))))
 
 
+;; TODO: consider https://clojuredocs.org/clojure.string/re-quote-replacement if this causes problems.
 (defn escape-str
   "Take a string and escape all regex special characters in it"
   [str]
