@@ -189,6 +189,38 @@
 
 (t/deftest inline-structure
 
+  (t/testing "boundaries"
+    (utils/parses-to sut/inline-parser->ast
+
+                     "*em*"
+                     [:paragraph
+                      [:emphasis
+                       [:text-run "em"]]]
+
+                     "* not em *"
+                     [:paragraph
+                      [:text-run "* not em *"]]
+
+                     "*not em *" ; TODO: fails, is parsed to [:paragraph [:emphasis [:text-run "not em "]]]
+                     [:paragraph
+                      [:text-run "*not em *"]]
+
+                     "* not em*"
+                     [:paragraph
+                      [:text-run "* not em*"]]
+
+                     "not*em*not"
+                     [:paragraph
+                      [:text-run "not*em*not"]]
+
+                     "not*em*" ; TODO: fails, is parsed to [:paragraph [:text-run "not"] [:emphasis [:text-run "em"]]]
+                     [:paragraph
+                      [:text-run "not*em*"]]
+
+                     "*em*not"
+                     [:paragraph
+                      [:text-run "*em*not"]]))
+
   (t/testing "backslash escapes"
     (utils/parses-to sut/inline-parser->ast
 
