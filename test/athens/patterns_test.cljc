@@ -20,7 +20,6 @@
     "#[[foo bar]]"))
 
 
-;; From https://regex101.com/r/vOzOl9/1, mentioned in patterns/roam-date
 (deftest replace-roam-date
   ;; matches
   (are [x y] (= (patterns/replace-roam-date x) y)

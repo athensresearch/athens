@@ -11,13 +11,6 @@
   (re-pattern (str "(?i)(?<!#)(?<!\\[\\[)" string "(?!\\]\\])")))
 
 
-;; Matches a date with an ordinal number (roam format), considering the correct ordinal
-;; suffix based on the ending number of the date
-;; Regular expression, with test cases can be found here https://regex101.com/r/vOzOl9/1
-;; Any update to this should be done after testing it using the previous regex101 link
-(def roam-date #"((?<=\s1\d)th|(?<=(\s|[023456789])\d)((?<=1)st|(?<=2)nd|(?<=3)rd|(?<=[4567890])th)),(?=\s\d{4})")
-
-
 (defn date
   [str]
   (re-find #"(?=\d{2}-\d{2}-\d{4}).*" str))
@@ -28,9 +21,43 @@
   (re-find #"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{1,2}(?:st|nd|rd|th),\s\d{4}\b" str))
 
 
+(def ordinal->number
+  {"1st"  "1"
+   "2nd"  "2"
+   "3rd"  "3"
+   "4th"  "4"
+   "5th"  "5"
+   "6th"  "6"
+   "7th"  "7"
+   "8th"  "8"
+   "9th"  "9"
+   "10th" "10"
+   "11th" "11"
+   "12th" "12"
+   "13th" "13"
+   "14th" "14"
+   "15th" "15"
+   "16th" "16"
+   "17th" "17"
+   "18th" "18"
+   "19th" "19"
+   "20th" "20"
+   "21st" "21"
+   "22nd" "22"
+   "23rd" "23"
+   "24th" "24"
+   "25th" "25"
+   "26th" "26"
+   "27th" "27"
+   "28th" "28"
+   "29th" "29"
+   "30th" "30"
+   "31st" "31"})
+
+
 (defn replace-roam-date
   [string]
-  (string/replace string roam-date ","))
+  (string/replace string #"\d?\d(?:st|nd|rd|th)" #(or (ordinal->number %) %)))
 
 
 ;; https://stackoverflow.com/a/11672480
