@@ -17,7 +17,8 @@
   (are [x] (nil? (re-find (patterns/unlinked "foo bar") x))
     "[[foo bar]]"
     "[[Foo Bar]]"
-    "#[[foo bar]]"))
+    "#[[foo bar]]"
+    "#foo bar"))
 
 
 (deftest replace-roam-date
