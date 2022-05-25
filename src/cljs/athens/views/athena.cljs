@@ -25,19 +25,16 @@
   [query txt]
   (if-not query
     txt
-    (let [query-pattern (patterns/highlight query)]
-      (doall
-        (map-indexed (fn [i part]
-                       (println i part query-pattern (re-find query-pattern part))
-                       (if (re-find query-pattern part)
-                         [:> Text {:as           "span"
-                                   :background   "highlight"
-                                   :color        "highlightContrast"
-                                   :borderRadius "0.1rem"
-                                   :padding      "0 0.125em"
-                                   :key i} part]
-                         part))
-                     (str/split txt query-pattern))))))
+    (map-indexed (fn [i part]
+                   (if (= part query)
+                     [:> Text {:as           "span"
+                               :background   "highlight"
+                               :color        "highlightContrast"
+                               :borderRadius "0.1rem"
+                               :padding      "0 0.125em"
+                               :key i} part]
+                     part))
+                 (patterns/split-on txt query))))
 
 
 (defn create-search-handler

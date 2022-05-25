@@ -90,6 +90,20 @@
   (re-pattern (str "(?i)" (escape-str query))))
 
 
-(defn highlight
-  [query]
-  (re-pattern (str "(?i)" "((?<=" (escape-str query) ")|(?=" (escape-str query) "))")))
+(defn split-on
+  "Splits string whenever value is encountered. Returns all substrings including value."
+  [s value]
+  (loop [last-idx       0
+         word-start-idx (string/index-of s value)
+         ret            []]
+    (if word-start-idx
+      (let [word-end-idx' (+ word-start-idx (count value))]
+        (recur word-end-idx'
+               (string/index-of s value word-end-idx')
+               (-> ret
+                   (conj (subs s last-idx word-start-idx))
+                   (conj (subs s word-start-idx word-end-idx')))))
+      (conj ret (subs s last-idx)))))
+
+
+(split-on "foo bar baz" "bar")

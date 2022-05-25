@@ -72,5 +72,5 @@
 
 
 (deftest highlight
-  (is (= ["foo " "bar" " baz"] (string/split "foo bar baz" (patterns/highlight "bar"))))
-  (is (= ["foo " "(bar)" " baz"] (string/split "foo (bar) baz" (patterns/highlight "(bar)")))))
+  (is (= ["foo " "bar" " baz"] (patterns/split-on "foo bar baz" "bar")))
+  (is (= ["foo " "(bar)" " baz"] (patterns/split-on "foo (bar) baz" "(bar)"))))
