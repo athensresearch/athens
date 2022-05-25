@@ -77,7 +77,7 @@ inline = recur
 (* regex lookbehinds `?<!` don't work at the start of a token so we're not using them *)
    
 code-span = <#'`'>
-            #'(?s)([^`]|(?<=\\s)`(?=\\s))+'
+            #'(?s)([^`]|\\B`(?=\\s))+'
             <#'`(?!\\w)'>
 
 strong-emphasis = <#'\\*\\*(?!\\s)'>
@@ -149,7 +149,7 @@ latex = <#'\\$\\$(?!\\s)'>
 (* every delimiter used as inline span boundary has to be added below *)
 
 (* anything but special chars *)
-text-run = #'(?:[^\\*`\\^~\\[!<\\(\\#\\$\\{\\r\\n]|(?<=\\S)[`!\\#\\$\\{])+'
+text-run = #'(?:[^\\*`\\^~\\[!<\\(\\#\\$\\{\\r\\n]|\\b[`!\\#\\$\\{])+'
 
 (* any special char *)
 <special-char> = #'[\\*`^~\\[!<\\(\\#\\$\\{]'
