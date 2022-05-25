@@ -301,14 +301,12 @@
                                                :search/index       nil
                                                :dragging           false
                                                :drag-target        nil
-                                               :last-keydown       nil
                                                :context-menu/x     nil
                                                :context-menu/y     nil
                                                :context-menu/show  false
                                                :linked-ref/open    (or (false? linked-ref) initial-open)
                                                :inline-refs/open   false
-                                               :inline-refs/states {}
-                                               :block/uid          uid})
+                                               :inline-refs/states {}})
          local-value                  (r/atom nil)
          old-value                    (r/atom nil)
          show-edit?                   (r/atom false)

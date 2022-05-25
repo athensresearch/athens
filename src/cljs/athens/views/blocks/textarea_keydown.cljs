@@ -823,16 +823,13 @@
 
 
 (defn textarea-key-down
-  [e uid {:as state-hooks} caret-position state]
+  [e uid {:as state-hooks} caret-position last-key-w-shift? state]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when @(subscribe [:editing/is-editing uid])
     (let [d-event (destruct-key-down e)
-          {:keys [meta ctrl key-code]} d-event]
+          {:keys [meta ctrl shift key-code]} d-event]
 
-      ;; TODO: make these more local state
-      ;; used for paste, to determine if shift key was held down
-      (swap! state assoc :last-keydown d-event)
-      (swap! state assoc :last-e e)
+      (reset! last-key-w-shift? shift)
 
       ;; update caret position for search dropdowns and for up/down
       (when (nil? (:search/type @state))

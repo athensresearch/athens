@@ -116,7 +116,7 @@
   - User pastes and last keydown has shift -> default
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
-  [e uid {:keys [update-fn read-value] :as _state-hooks} state]
+  [e uid {:keys [update-fn read-value] :as _state-hooks} last-key-w-shift?]
   (let [data                    (.. e -clipboardData)
         text-data               (.getData data "text/plain")
         ;; With internal representation
@@ -138,7 +138,7 @@
         text-to-inter (when-not (str/blank? text-data)
                         (internal-representation/text-to-internal-representation text-data))
         line-breaks   (re-find #"\r?\n" text-data)
-        no-shift      (-> @state :last-keydown :shift not)
+        no-shift      (not @last-key-w-shift?)
         local-value   @read-value]
 
 
@@ -234,7 +234,8 @@
   (let [{:block/keys [uid original-uid header]} block
         editing? (rf/subscribe [:editing/is-editing uid])
         selected-items (rf/subscribe [::select-subs/items])
-        caret-position (r/atom nil)]
+        caret-position (r/atom nil)
+        last-key-w-shift? (r/atom nil)]
     #_(add-watch caret-position :watcher (fn [_ _ old new]
                                          (println "caret-position:" (pr-str old) "->" (pr-str new))))
     (fn [_block _state]
@@ -253,8 +254,8 @@
                                ;; :auto-focus  true
                                :id             (str "editable-uid-" uid)
                                :on-change      (fn [e] (textarea-change e uid state-hooks))
-                               :on-paste       (fn [e] (textarea-paste e uid state-hooks state))
-                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position state))
+                               :on-paste       (fn [e] (textarea-paste e uid state-hooks last-key-w-shift?))
+                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position last-key-w-shift? state))
                                :on-blur        save-fn
                                :on-click       (fn [e] (textarea-click e uid))
                                :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))
