@@ -2,7 +2,7 @@
   (:require
     [athens.common.utils :as utils]
     [athens.parser.impl  :as sut]
-    [clojure.test        :as t :refer [deftest is testing]]))
+    [clojure.test        :as t]))
 
 
 (t/deftest block-structure
