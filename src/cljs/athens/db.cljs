@@ -586,14 +586,14 @@
 ;; -- Linked & Unlinked References ----------
 
 (defntrace get-ref-ids
-  [pattern]
+  [unlinked-f]
   (d/q '[:find [?e ...]
-         :in $ ?regex
+         :in $ ?unlinked-f
          :where
          [?e :block/string ?s]
-         [(re-find ?regex ?s)]]
+         [(?unlinked-f ?s)]]
        @dsdb
-       pattern))
+       unlinked-f))
 
 
 (defn merge-parents-and-block
@@ -618,15 +618,10 @@
             blocks))
 
 
-(defn get-data
-  [pattern]
-  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
-
-
 (defntrace get-unlinked-references
   "For node-page references UI."
   [title]
-  (-> title patterns/unlinked get-data))
+  (-> (partial patterns/contains-unlinked? title) get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
 ;; -- save ------------------------------------------------------------

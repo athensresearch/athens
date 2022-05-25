@@ -3,14 +3,6 @@
     [clojure.string :as string]))
 
 
-(defn unlinked
-  "Exclude #title or [[title]].
-   JavaScript negative lookarounds https://javascript.info/regexp-lookahead-lookbehind
-   Lookarounds don't consume characters https://stackoverflow.com/questions/27179991/regex-matching-multiple-negative-lookahead "
-  [string]
-  (re-pattern (str "(?i)(?<!#)(?<!\\[\\[)" string "(?!\\]\\])")))
-
-
 (defn date
   [str]
   (re-find #"(?=\d{2}-\d{2}-\d{4}).*" str))
@@ -72,6 +64,24 @@
   "Take a string and escape all regex special characters in it"
   [str]
   (string/escape str regex-esc-char-map))
+
+
+(defn contains-unlinked?
+  "Returns true if string contains title unlinked (e.g. not as #title or [[title]])."
+  [title string]
+  ;; This would be easier with a lookbehind: (re-pattern (str "(?i)(?!#)(?!\\[\\[)" string "(?!\\]\\])"))
+  ;; But Safari doesn't support lookbehinds, so we're using a more complex trick
+  ;; https://www.rexegg.com/regex-best-trick.html#pseudoregex.
+  ;; The regex to find unlinked foo bar would be #foo bar|\[\[foo bar\]\]|(foo bar)
+  ;; the general formula is NotThis|NotThat|GoAway|(WeWantThis)
+  ;; The way it works is that the bad cases fall outside the capture group, so the capture
+  ;; group will only contain the right thing.
+  ;; We need to look inside the capture groups with this method though.
+  (let [t (escape-str title)]
+    (-> (re-pattern (str "(?i)" "#" t "|\\[\\[" t "\\]\\]|(" t ")"))
+        (re-find string)
+        second
+        boolean)))
 
 
 (defn re-case-insensitive

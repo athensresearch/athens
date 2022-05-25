@@ -5,16 +5,16 @@
     [clojure.test :refer [deftest is are]]))
 
 
-(deftest unlinked
+(deftest contains-unlinked?
   ;; matches
-  (are [x] (some? (re-find (patterns/unlinked "foo bar") x))
+  (are [x] (patterns/contains-unlinked? "foo bar" x)
     "foo bar"
     "Foo Bar"
     "foo bar baz"
     "baz foo bar")
 
   ;; does not match
-  (are [x] (nil? (re-find (patterns/unlinked "foo bar") x))
+  (are [x] (not (patterns/contains-unlinked? "foo bar" x))
     "[[foo bar]]"
     "[[Foo Bar]]"
     "#[[foo bar]]"
