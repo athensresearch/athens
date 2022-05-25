@@ -3,7 +3,8 @@
     ["/components/Icons/Icons" :refer [PageAddIcon XmarkIcon ArrowRightIcon]]
     ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
     [athens.common.utils :as utils]
-    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
+    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title]]
+    [athens.patterns     :as patterns]
     [athens.router       :as router]
     [athens.subs]
     [athens.util         :refer [scroll-into-view]]
@@ -22,7 +23,7 @@
 
 (defn highlight-match
   [query txt]
-  (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
+  (let [query-pattern (patterns/highlight query)]
     (doall
       (map-indexed (fn [i part]
                      (if (re-find query-pattern part)

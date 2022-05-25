@@ -1,4 +1,6 @@
-(ns athens.patterns)
+(ns athens.patterns
+  (:require
+    [clojure.string :as string]))
 
 
 (defn unlinked
@@ -30,3 +32,26 @@
   [string]
   (clojure.string/replace string athens.patterns/roam-date ","))
 
+
+;; https://stackoverflow.com/a/11672480
+(def regex-esc-char-map
+  (let [esc-chars "()*&^%$#![]"]
+    (zipmap esc-chars
+            (map #(str "\\" %) esc-chars))))
+
+
+(defn escape-str
+  "Take a string and escape all regex special characters in it"
+  [str]
+  (string/escape str regex-esc-char-map))
+
+
+(defn re-case-insensitive
+  "More options here https://clojuredocs.org/clojure.core/re-pattern"
+  [query]
+  (re-pattern (str "(?i)" (escape-str query))))
+
+
+(defn highlight
+  [query]
+  (re-case-insensitive (str "((?<=" query ")|(?=" query "))")))

@@ -5,7 +5,6 @@
     [athens.common.sentry :refer-macros [defntrace]]
     [athens.electron.utils :as electron.utils]
     [athens.patterns :as patterns]
-    [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
@@ -395,12 +394,6 @@
           (recur (get children (dec n))))))))
 
 
-(defntrace re-case-insensitive
-  "More options here https://clojuredocs.org/clojure.core/re-pattern"
-  [query]
-  (re-pattern (str "(?i)" (escape-str query))))
-
-
 (defntrace search-exact-node-title
   [query]
   (d/entity @dsdb [:node/title query]))
@@ -413,7 +406,7 @@
    (if (string/blank? query)
      (vector)
      (let [exact-match            (when exclude-exact-match? query)
-           case-insensitive-query (re-case-insensitive query)]
+           case-insensitive-query (patterns/re-case-insensitive query)]
        (sequence
          (comp
            (filter (every-pred
@@ -439,7 +432,7 @@
   ([query n]
    (if (string/blank? query)
      (vector)
-     (let [case-insensitive-query (re-case-insensitive query)]
+     (let [case-insensitive-query (patterns/re-case-insensitive query)]
        (->>
          (d/datoms @dsdb :aevt :block/string)
          (sequence
