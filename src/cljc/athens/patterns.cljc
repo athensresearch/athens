@@ -54,4 +54,4 @@
 
 (defn highlight
   [query]
-  (re-case-insensitive (str "((?<=" query ")|(?=" query "))")))
+  (re-pattern (str "(?i)" "((?<=" (escape-str query) ")|(?=" (escape-str query) "))")))

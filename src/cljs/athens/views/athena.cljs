@@ -23,14 +23,21 @@
 
 (defn highlight-match
   [query txt]
-  (let [query-pattern (patterns/highlight query)]
-    (doall
-      (map-indexed (fn [i part]
-                     (if (re-find query-pattern part)
-                       [:> Text {:class "result-highlight"
-                                 :key i} part]
-                       part))
-                   (str/split txt query-pattern)))))
+  (if-not query
+    txt
+    (let [query-pattern (patterns/highlight query)]
+      (doall
+        (map-indexed (fn [i part]
+                       (println i part query-pattern (re-find query-pattern part))
+                       (if (re-find query-pattern part)
+                         [:> Text {:as           "span"
+                                   :background   "highlight"
+                                   :color        "highlightContrast"
+                                   :borderRadius "0.1rem"
+                                   :padding      "0 0.125em"
+                                   :key i} part]
+                         part))
+                     (str/split txt query-pattern))))))
 
 
 (defn create-search-handler
@@ -232,7 +239,7 @@
                      :prefix   "Create page"
                      :preview  nil
                      :type     :page
-                     :query    query
+                     :query    nil
                      :icon     (r/as-element [:> PageAddIcon])
                      :active?  (= i index)
                      :on-click (fn [e]
