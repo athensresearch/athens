@@ -677,9 +677,14 @@
                       [:latex "\\LaTeX"]]
 
                      ;; can have newlines inside
+                     ;; NOTE: not working in JS environment same as in JVM
                      "$$abc\ndef$$"
-                     [:paragraph
-                      [:latex "abc\ndef"]]
+                     #?(:clj  [:paragraph
+                               [:latex "abc\ndef"]]
+                        :cljs [:paragraph
+                               [:text-run "$$abc"]
+                               [:newline "\n"]
+                               [:text-run "def$$"]])
 
                      ;; can have $ inside
                      "$$abc $ d$$"
