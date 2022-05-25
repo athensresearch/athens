@@ -231,10 +231,17 @@
     (utils/parses-to sut/inline-parser->ast
 
                      ;; Any ASCII punctuation character may be backslash-escaped
+                     ;; NOTE: not working in JS environment same as in JVM
                      "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"
-                     [:paragraph
-                      [:text-run
-                       "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"]]
+                     #?(:clj  [:paragraph
+                               [:text-run
+                                "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"]]
+                        :cljs [:paragraph
+                               [:text-run "\\!\\\"\\"]
+                               [:hashtag {:from "#\\"} "\\"]
+                               "$"
+                               [:text-run
+                                "\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"]])
 
                      ;; Backslashes before other characters are treated as literal backslashes:
                      "\\→\\A\\a\\ \\3\\φ\\«"
