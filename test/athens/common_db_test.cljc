@@ -1,6 +1,7 @@
 (ns athens.common-db-test
   (:require
     [athens.common-db :as common-db]
+    [athens.common-events.bfs :as bfs]
     [clojure.test     :as t]
     [datascript.core  :as d])
   #?(:clj
@@ -258,3 +259,43 @@
                {:before "page 1"
                 :after "page 3"}) "Neighbor before and after."))))
 
+
+(t/deftest get-block-property-document
+  (let [db (bfs/db-from-repr [{:page/title "title"
+                               :block/properties
+                               {"key" #:block{:uid    "uid1"
+                                              :string "one"
+                                              :children
+                                              [#:block{:uid    "uid2"
+                                                       :string "two"}]
+                                              :properties
+                                              {"another-key"
+                                               #:block{:uid    "uid3"
+                                                       :string "three"}}}}}])]
+
+    (t/is (= (common-db/get-block-property-document db [:node/title "title"])
+             {"key"
+              {:block/children
+               [{:block/open   true,
+                 :block/order  0,
+                 :block/string "two",
+                 :block/uid    "uid2",
+                 :db/id        6}],
+               :block/key    #:node{:title "key"},
+               :block/open   true,
+               :block/string "one",
+               :block/uid    "uid1",
+               :db/id        5,
+               :block/_property-of
+               [{:block/key    #:node{:title "another-key"},
+                 :block/open   true,
+                 :block/string "three",
+                 :block/uid    "uid3",
+                 :db/id        8}],
+               :block/properties
+               {"another-key"
+                {:block/key    #:node{:title "another-key"},
+                 :block/open   true,
+                 :block/string "three",
+                 :block/uid    "uid3",
+                 :db/id        8}}}}))))
