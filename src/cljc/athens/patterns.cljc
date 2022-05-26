@@ -105,5 +105,3 @@
                    (conj (subs s word-start-idx word-end-idx')))))
       (conj ret (subs s last-idx)))))
 
-
-(split-on "foo bar baz" "bar")
