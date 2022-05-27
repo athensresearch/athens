@@ -8,6 +8,7 @@
     [athens.common.utils :as utils]
     [athens.db :as db]
     [datascript.core :as d]
+    [athens.common-db :as common-db]
     [posh.reagent :as p]))
 
 
@@ -94,7 +95,7 @@
 
 (defntrace get-reactive-block-document
   [id]
-  (->> @(p/pull db/dsdb block-document-pull-vector id)
+  (->> @(p/pull db/dsdb common-db/block-document-pull-vector id)
        db/sort-block-children))
 
 

@@ -22,8 +22,8 @@
     [athens.views.blocks.content             :as content]
     [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs handle-click-comment]]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    [athens.views.comments.core :as comments]
-    [athens.views.comments.inline :as inline-comments]
+    [athens.views.comments.core              :as comments]
+    [athens.views.comments.inline            :as inline-comments]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
@@ -321,7 +321,6 @@
                            string
                            open
                            children
-                           comment
                            _refs]} (merge (reactive/get-reactive-block-document ident) block)
              children-uids         (set (map :block/uid children))
              uid-sanitized-block   (s/transform
@@ -334,10 +333,7 @@
              selected-items       @(rf/subscribe [::select-subs/items])
              present-user          @(rf/subscribe [:presence/has-presence uid])
              is-presence           (seq present-user)
-             ;; TODO Just for testing, remove later
-             #_#_comment               [{:author "Sid"
-                                         :string "This is a dummy comment"
-                                         :time    "12:09"}]]
+             comment-thread-uid?   (comments/get-comment-thread-uid @db/dsdb uid)]
 
          ;; (prn uid is-selected)
 
@@ -433,9 +429,8 @@
 
           ;; Show comments when the toggle is on
           (when (and @(rf/subscribe [:comment/show-inline-comments?])
-                     comment)
-            (println "show comments now")
-            [inline-comments/inline-comments comment uid true])
+                     comment-thread-uid?)
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb comment-thread-uid?) uid true])
 
           ;; Children
           (when (and (seq children)

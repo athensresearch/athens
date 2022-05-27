@@ -366,7 +366,7 @@
   "Fetches whole property document for block."
   [db id]
   (-> (d/pull db [:block/_property-of] id)
-      (update :block/_property-of (partial get-block-document db))
+      (update :block/_property-of #(mapv (fn [{:db/keys [id]}] (get-block-document db id)) %))
       add-property-map
       :block/properties))
 

@@ -2,6 +2,7 @@
   (:require
     [re-frame.core               :as rf]
     [goog.events                 :as events]
+    [athens.parse-renderer       :as parse-renderer]
     ["/components/Block/Anchor"  :refer [Anchor]]
     ["@chakra-ui/react"          :refer [Button Input]]
     ["/components/Icons/Icons"   :refer [ChatIcon]])
@@ -41,7 +42,7 @@
                                     (when (= (.. e -keyCode) KeyCodes.ENTER)
                                       (re-frame.core/dispatch [:comment/write-comment uid @comment-string username])
                                       (re-frame.core/dispatch [:comment/hide-comment-textarea])
-                                      (reset! comment-string nil)))
+                                      (reset! comment-string "")))
                      :variant     "filled"}]
          [:> Button {:style    {:float "right"
                                 :margin-top "9px"
@@ -49,7 +50,7 @@
                      :on-click (fn [_]
                                  (re-frame.core/dispatch [:comment/write-comment uid @comment-string username])
                                  (re-frame.core/dispatch [:comment/hide-comment-textarea])
-                                 (reset! comment-string nil))}
+                                 (reset! comment-string ""))}
           "Send"]]))))
 
 
@@ -141,5 +142,6 @@
        (when-not (:hide? @state)
          [:div.comments {:style comments-styles}
           (for [item data]
+            ^{:key item}
             [comment-el item])
           [inline-comment-textarea uid]])])))

@@ -1,6 +1,13 @@
 (ns athens.views.comments.core
-  (:require   [athens.db :as db]
-              [re-frame.core :as rf]))
+  (:require [athens.db :as db]
+            [re-frame.core :as rf]
+            [athens.common-db :as common-db]
+            [athens.common.utils :as common.utils]
+            [athens.common-events.graph.composite :as composite]
+            [athens.common-events.graph.atomic :as atomic-graph-ops]
+            [athens.common-events.graph.ops :as graph-ops]
+            [athens.common-events.bfs :as bfs]
+            [athens.common-events :as common-events]))
 
 
 (rf/reg-sub
@@ -30,3 +37,61 @@
     (let [current-state (:comment/show-inline-comments db)]
       (println "toggle inline comments" current-state)
       {:db (assoc db :comment/show-inline-comments (not current-state))})))
+
+
+(defn thread-child->comment
+  [comment-block]
+  (let [comment-uid (:block/uid comment-block)
+        properties  (common-db/get-block-property-document @db/dsdb [:block/uid comment-uid])]
+    {:block/uid comment-uid
+     :string (:block/string comment-block)
+     :author (:block/string (get properties ":comment/author"))
+     :time   (:block/string (get properties ":comment/time"))}))
+
+
+(defn get-comments-in-thread
+  [db thread-uid]
+  (->> (common-db/get-block-document db [:block/uid thread-uid])
+       :block/children
+       (map thread-child->comment)))
+
+
+(defn get-comment-thread-uid
+  [db parent-block-uid]
+  (-> (common-db/get-block-property-document @db/dsdb [:block/uid parent-block-uid])
+      ;; TODO Multiple threads
+      ;; I think for multiple we would have a top level property for all threads
+      ;; Individual threads are child of the property
+      (get ":comment/threads")
+      :block/uid))
+
+
+(defn new-comment
+  [db thread-uid comment-string author time]
+  (->> (bfs/internal-representation->atomic-ops db
+                                                [#:block{:uid    (common.utils/gen-block-uid)
+                                                         :string comment-string
+                                                         :properties
+                                                         {":comment/author" #:block{:string author
+                                                                                    :uid    (common.utils/gen-block-uid)}
+                                                          ":comment/time"   #:block{:string time
+                                                                                    :uid    (common.utils/gen-block-uid)}}}]
+                                                {:block/uid thread-uid
+                                                 :relation  :last})
+       (composite/make-consequence-op {:op/type :new-comment})))
+
+
+(rf/reg-event-fx
+  :comment/write-comment
+  (fn [{db :db} [_ uid comment-string author]]
+    (let [thread-exists?            (get-comment-thread-uid @db/dsdb uid)
+          thread-uid                (or thread-exists?
+                                        (common.utils/gen-block-uid))
+          active-comment-ops        (composite/make-consequence-op {:op/type :active-comments-op}
+                                                                   (concat (if thread-exists?
+                                                                             []
+                                                                             [(graph-ops/build-block-new-op @db/dsdb thread-uid {:block/uid uid
+                                                                                                                                 :relation  {:page/title ":comment/threads"}})])
+                                                                           [(new-comment @db/dsdb  thread-uid comment-string author "12:09 pm")]))
+          event                     (common-events/build-atomic-event active-comment-ops)]
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
