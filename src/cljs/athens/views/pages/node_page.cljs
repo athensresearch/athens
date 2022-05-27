@@ -13,9 +13,10 @@
     [athens.dates :as dates]
     [athens.db :as db :refer [get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+    [athens.patterns :as patterns]
     [athens.reactive :as reactive]
     [athens.router :as router]
-    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
+    [athens.util :refer [get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.hoc.perf-mon :as perf-mon]
@@ -345,7 +346,7 @@
                                                           :flexShrink 0
                                                           :onClick link-all-unlinked}
                                                "Link all"])
-                        :onOpen  #(let [un-refs (get-unlinked-references (escape-str title))]
+                        :onOpen  #(let [un-refs (get-unlinked-references (patterns/escape-str title))]
                                     (swap! state assoc unlinked? true)
                                     (reset! unlinked-refs un-refs))
                         :onClose #(swap! state assoc unlinked? false)}
