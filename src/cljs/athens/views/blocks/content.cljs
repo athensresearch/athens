@@ -230,7 +230,7 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [block {:keys [save-fn read-value show-edit?] :as state-hooks} state]
+  [block {:keys [save-fn read-value show-edit?] :as state-hooks} last-event state]
   (let [{:block/keys [uid original-uid header]} block
         editing? (rf/subscribe [:editing/is-editing uid])
         selected-items (rf/subscribe [::select-subs/items])
@@ -238,7 +238,7 @@
         last-key-w-shift? (r/atom nil)]
     #_(add-watch caret-position :watcher (fn [_ _ old new]
                                          (println "caret-position:" (pr-str old) "->" (pr-str new))))
-    (fn [_block _state]
+    (fn [_block _last-event _state]
       (let [font-size (case header
                         1 "2.1em"
                         2 "1.7em"
@@ -255,7 +255,7 @@
                                :id             (str "editable-uid-" uid)
                                :on-change      (fn [e] (textarea-change e uid state-hooks))
                                :on-paste       (fn [e] (textarea-paste e uid state-hooks last-key-w-shift?))
-                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position last-key-w-shift? state))
+                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position last-key-w-shift? last-event state))
                                :on-blur        save-fn
                                :on-click       (fn [e] (textarea-click e uid))
                                :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))

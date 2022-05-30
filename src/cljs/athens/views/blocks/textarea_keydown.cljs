@@ -5,8 +5,10 @@
     [athens.common.utils :as common.utils]
     [athens.dates :as dates]
     [athens.db :as db]
+    [athens.events.inline-search :as inline-search.events]
     [athens.events.selection :as select-events]
     [athens.router :as router]
+    [athens.subs.inline-search :as inline-search.subs]
     [athens.subs.selection :as select-subs]
     [athens.util :as util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
     [athens.views.blocks.internal-representation :as internal-representation]
@@ -145,7 +147,7 @@
         new-query       (str (subs head query-start-idx) key)
         results         (query-fn new-query)]
     (if (and (= type :slash) (empty? results))
-      (swap! state assoc :search/type nil)
+      (rf/dispatch [::inline-search.events/close!])
       (swap! state assoc
              :search/index 0
              :search/query new-query
@@ -193,8 +195,7 @@
          ;; the regex is evaluated greedily, yielding the last
          ;; occurrence in head (head = text up to cursor)
          start-idx (dec (count (re-find #"(?s).*/" head)))]
-     (swap! state assoc
-            :search/type nil)
+     (rf/dispatch [::inline-search.events/close!])
 
      (println "ran auto-complete-slash")
      (set-selection target start-idx start)
@@ -203,13 +204,13 @@
        (let [new-idx (+ start-idx (count expand) (- pos))]
          (set-cursor-position target new-idx)
          (when (= caption "Block Embed")
+           (rf/dispatch [::inline-search.events/set-type! :block])
            (swap! state assoc
-                  :search/type :block
                   :search/query ""
                   :search/results []))))
      (when (= caption "Template")
+       (rf/dispatch [::inline-search.events/set-type! :template])
        (swap! state assoc
-              :search/type :template
               :search/query ""
               :search/results [])))))
 
@@ -228,12 +229,11 @@
    (let [{:keys [start head]} (destruct-target target)
          start-idx (count (re-find #"(?s).*#" head))]
      (if (nil? expansion)
-       (swap! state assoc :search/type nil)
+       (rf/dispatch [::inline-search.events/close!])
        (do
          (set-selection target start-idx start)
          (replace-selection-with (str "[[" expansion "]]"))
-         (swap! state assoc
-                :search/type nil))))))
+         (rf/dispatch [::inline-search.events/close!]))))))
 
 
 ;; see `auto-complete-slash` for how this arity-overloaded
@@ -268,7 +268,7 @@
                                         query))
                              2)]
        (set-cursor-position target new-cursor-pos))
-     (swap! state assoc :search/type nil))))
+     (rf/dispatch [::inline-search.events/close!]))))
 
 
 ;; see `auto-complete-slash` for how this arity-overloaded
@@ -293,12 +293,12 @@
                         (into []))]
      (if (or (nil? expansion)
              (nil? target-ir))
-       (swap! state assoc :search/type nil)
+       (rf/dispatch [::inline-search.events/close!])
        (do
          (set-selection target (- start-idx 2) start)
          (replace-selection-with "")
          (dispatch [:paste-internal block-uid @read-value target-ir])
-         (swap! state assoc :search/type nil))))))
+         (rf/dispatch [::inline-search.events/close!]))))))
 
 
 ;; Arrow Keys
@@ -359,8 +359,8 @@
         start?                 (block-start? e)
         end?                   (block-end? e)
         {:search/keys [results
-                       type
                        index]} @state
+        type                   @(rf/subscribe [::inline-search.subs/type])
         textarea-height        (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
         {:keys [top height]}   @caret-position
         rows                   (js/Math.round (/ textarea-height height))
@@ -401,7 +401,9 @@
 
       ;; Type, one of #{:slash :block :page}: If slash commands or inline search is open, cycle through options
       type (cond
-             (or left? right?) (swap! state assoc :search/index 0 :search/type nil)
+             (or left? right?) (do
+                                 (rf/dispatch [::inline-search.events/close!])
+                                 (swap! state assoc :search/index 0))
              (or up? down?)    (let [cur-index    index
                                      min-index    0
                                      max-index    (max-idx results)
@@ -468,10 +470,10 @@
 
 (defn handle-escape
   "BUG: escape is fired 24 times for some reason."
-  [e state]
+  [e]
   (.. e preventDefault)
-  (if (:search/type @state)
-    (swap! state assoc :search/type nil)
+  (if @(rf/subscribe [::inline-search.subs/type])
+    (rf/dispatch [::inline-search.events/close!])
     (dispatch [:editing/uid nil])))
 
 
@@ -482,7 +484,7 @@
 (defn handle-enter
   [e uid {:as state-hooks} state]
   (let [{:keys [shift ctrl meta value start] :as d-key-down} (destruct-key-down e)
-        {:search/keys [type]} @state]
+        type @(rf/subscribe [::inline-search.subs/type])]
     (.. e preventDefault)
     (cond
       type (case type
@@ -691,7 +693,7 @@
       ;; when close char, increment caret index without writing more
       (some #(= % key lookbehind-char)
             [")" "}" "\"" "]"]) (do (set-cursor-position target (inc start))
-                                    (swap! state assoc :search/type nil))
+                                    (rf/dispatch [::inline-search.events/close!]))
 
       (= selection "") (let [new-idx (inc start)]
                          (replace-selection-with (str key close-pair))
@@ -703,8 +705,8 @@
                                  type             (cond double-brackets? :page
                                                         double-parens? :block)]
                              (when type
+                               (rf/dispatch [::inline-search.events/set-type! type])
                                (swap! state assoc
-                                      :search/type type
                                       :search/query ""
                                       :search/results []
                                       ;; It's cleaner to explicitly set this to nil to avoid
@@ -724,8 +726,8 @@
                                   query-fn         (cond double-brackets? db/search-in-node-title
                                                          double-parens? db/search-in-block-content)]
                               (when type
+                                (rf/dispatch [::inline-search.events/set-type! type])
                                 (swap! state assoc
-                                       :search/type type
                                        :search/query selection
                                        :search/results (query-fn selection)
                                        :search/index 0)))))))
@@ -740,7 +742,7 @@
         sub-str (subs value (dec start) (inc start))
         possible-pair (#{"[]" "{}" "()"} sub-str)
         head    (subs value 0 (dec start))
-        {:search/keys [type]} @state
+        type @(rf/subscribe [::inline-search.subs/type])
         look-behind-char (nth value (dec start) nil)]
 
     (cond
@@ -748,16 +750,16 @@
       ;; pair char: hide inline search and auto-balance
       possible-pair (do
                       (.. e preventDefault)
-                      (swap! state assoc :search/type nil)
+                      (rf/dispatch [::inline-search.events/close!])
                       (set-selection target (dec start) (inc start))
                       (replace-selection-with ""))
 
       ;; slash: close dropdown
-      (and (= "/" look-behind-char) (= type :slash)) (swap! state assoc :search/type nil)
+      (and (= "/" look-behind-char) (= type :slash)) (rf/dispatch [::inline-search.events/close!])
       ;; hashtag: close dropdown
-      (and (= "#" look-behind-char) (= type :hashtag)) (swap! state assoc :search/type nil)
+      (and (= "#" look-behind-char) (= type :hashtag)) (rf/dispatch [::inline-search.events/close!])
       ;; semicolon: close dropdown
-      (and (= ";" look-behind-char) (= type :template)) (swap! state assoc :search/type nil)
+      (and (= ";" look-behind-char) (= type :template)) (rf/dispatch [::inline-search.events/close!])
       ;; dropdown is open: update query
       type (update-query state head "" type))))
 
@@ -777,28 +779,32 @@
   If user writes a character while there is a slash/type, update query and results."
   [e _uid state]
   (let [{:keys [head key value start]} (destruct-key-down e)
-        {:search/keys [type]} @state
+        type @(rf/subscribe [::inline-search.subs/type])
         look-behind-char (nth value (dec start) nil)]
     (cond
-      (and (= key " ") (= type :hashtag)) (swap! state assoc
-                                                 :search/type nil
-                                                 :search/results [])
-      (and (= key "/") (nil? type)) (swap! state assoc
-                                           :search/index 0
-                                           :search/query ""
-                                           :search/type :slash
-                                           :search/results (slash-options))
-      (and (= key "#") (nil? type)) (swap! state assoc
-                                           :search/index 0
-                                           :search/query ""
-                                           :search/type :hashtag
-                                           :search/results [])
+      (and (= key " ") (= type :hashtag)) (do
+                                            (rf/dispatch [::inline-search.events/close!])
+                                            (swap! state assoc
+                                                   :search/results []))
+      (and (= key "/") (nil? type)) (do
+                                      (rf/dispatch [::inline-search.events/set-type! :slash])
+                                      (swap! state assoc
+                                             :search/index 0
+                                             :search/query ""
+                                             :search/results (slash-options)))
+      (and (= key "#") (nil? type)) (do
+                                      (rf/dispatch [::inline-search.events/set-type! :hashtag])
+                                      (swap! state assoc
+                                             :search/index 0
+                                             :search/query ""
+                                             :search/results []))
       (and (= key ";" look-behind-char)
-           (nil? type))             (swap! state assoc
-                                           :search/index 0
-                                           :search/query ""
-                                           :search/type :template
-                                           :search/results [])
+           (nil? type))             (do
+                                      (rf/dispatch [::inline-search.events/set-type! :template])
+                                      (swap! state assoc
+                                             :search/index 0
+                                             :search/query ""
+                                             :search/results []))
       type (update-query state head key type))))
 
 
@@ -823,16 +829,17 @@
 
 
 (defn textarea-key-down
-  [e uid {:as state-hooks} caret-position last-key-w-shift? state]
+  [e uid {:as state-hooks} caret-position last-key-w-shift? last-event state]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when @(subscribe [:editing/is-editing uid])
     (let [d-event (destruct-key-down e)
           {:keys [meta ctrl shift key-code]} d-event]
 
+      (reset! last-event e)
       (reset! last-key-w-shift? shift)
 
       ;; update caret position for search dropdowns and for up/down
-      (when (nil? (:search/type @state))
+      (when (nil? @(rf/subscribe [::inline-search.subs/type]))
         (let [caret-pos (get-caret-position (.. e -target))]
           (reset! caret-position caret-pos)))
 
@@ -847,7 +854,7 @@
           (= key-code KeyCodes.ENTER)     (handle-enter e uid state-hooks state)
           (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
           (= key-code KeyCodes.DELETE)    (handle-delete e uid state-hooks state)
-          (= key-code KeyCodes.ESC)       (handle-escape e state)
+          (= key-code KeyCodes.ESC)       (handle-escape e)
           (shortcut-key? meta ctrl)       (handle-shortcuts e uid state-hooks)
           (is-character-key? e)           (write-char e uid state))))))
 

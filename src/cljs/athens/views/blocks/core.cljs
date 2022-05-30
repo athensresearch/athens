@@ -295,7 +295,7 @@
          {:block/keys [uid
                        original-uid]} block
          state                        (r/atom {;; one of #{:page :block :slash :hashtag :template}
-                                               :search/type        nil
+                                               ;; :search/type        nil
                                                :search/results     nil
                                                :search/query       nil
                                                :search/index       nil
@@ -326,7 +326,8 @@
                                        :update-old-fn  update-old-fn
                                        :read-value     read-value
                                        :read-old-value read-old-value
-                                       :show-edit?     show-edit?}]
+                                       :show-edit?     show-edit?}
+         last-event                   (r/atom nil)]
      ;; TODO: remove debugger code
      #_(add-watch state :watcher
                 (fn [_key _atom old-state new-state]
@@ -419,7 +420,7 @@
                        :on-drag-end            (fn [e] (bullet-drag-end e uid state))}]
 
            ;; XXX: render view
-           [content/block-content-el block state-hooks state]
+           [content/block-content-el block state-hooks last-event state]
 
            [presence/inline-presence-el uid]
 
@@ -433,8 +434,8 @@
               (:inline-refs/open @state)])]
 
           ;; XXX: part of view/edit embedable
-          [autocomplete-search/inline-search-el block state-hooks state]
-          [autocomplete-slash/slash-menu-el block state]
+          [autocomplete-search/inline-search-el block state-hooks last-event state]
+          [autocomplete-slash/slash-menu-el block last-event state]
 
           ;; Inline refs
           (when (and (> (count _refs) 0)
