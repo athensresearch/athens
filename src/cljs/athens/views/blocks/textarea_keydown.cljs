@@ -7,10 +7,11 @@
     [athens.db :as db]
     [athens.events.inline-search :as inline-search.events]
     [athens.events.selection :as select-events]
+    [athens.patterns :as patterns]
     [athens.router :as router]
     [athens.subs.inline-search :as inline-search.subs]
     [athens.subs.selection :as select-subs]
-    [athens.util :as util :refer [scroll-if-needed get-caret-position shortcut-key? escape-str]]
+    [athens.util :as util :refer [scroll-if-needed get-caret-position shortcut-key?]]
     [athens.views.blocks.internal-representation :as internal-representation]
     [clojure.string :refer [replace-first blank? includes? lower-case]]
     [goog.dom :refer [getElement]]
@@ -252,7 +253,7 @@
   ([state target expansion]
    (let [{:search/keys [query]} @state
          {:keys [end]} (destruct-target target)
-         query        (escape-str query)]
+         query        (patterns/escape-str query)]
 
      ;; assumption: cursor or selection is immediately before the closing brackets
 
