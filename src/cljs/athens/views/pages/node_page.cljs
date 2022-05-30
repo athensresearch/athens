@@ -401,12 +401,14 @@
         (reset! state init-state)
         (reset! unlinked-refs [])
         (reset! block-uid (:block/uid node)))
-      (let [{:block/keys [children uid] title :node/title}                      node
+      (let [{:block/keys [children uid properties] title :node/title}           node
             {:alert/keys [message confirm-fn cancel-fn confirm-text] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
             is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
-                                                                                    (= @(subscribe [:current-route/page-title]) title))]
+                                                                                    (= @(subscribe [:current-route/page-title]) title))
+            header-image-url                                                    (-> properties (get ":header/url") :block/string)]
+
 
         (sync-title title state)
 
@@ -418,10 +420,14 @@
                            :onConfirm   confirm-fn
                            :onClose     cancel-fn}]
          ;; Header
-         [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
-                                                  (fn [e] (router/navigate-page title e)))
-                         :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
-                                                 #(dispatch [:right-sidebar/open-item uid]))}
+         [:> PageHeader {:onClickOpenInMainView  (when-not is-current-route?
+                                                   (fn [e] (router/navigate-page title e)))
+                         :onClickOpenInSidebar   (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                                                   #(dispatch [:right-sidebar/open-item uid]))
+                         :onChangeHeaderImageUrl (fn [url] (dispatch [:properties/update [:node/title title] ":header/url" url]))
+                         :headerImageUrl         (or header-image-url
+                                                     ;; TODO: remove this default image, only here for testing.
+                                                     "https://images.unsplash.com/photo-1651721675073-a992af85dfed?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2670&q=80")}
 
           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
            ;; Prevent editable textarea if a node/title is a date

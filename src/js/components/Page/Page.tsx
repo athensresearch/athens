@@ -1,4 +1,8 @@
-import { Button, Divider, Center, Box, Heading, IconButton, ButtonGroup, Tooltip } from '@chakra-ui/react';
+import React from 'react';
+import {
+  Button, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
+  Tooltip, FormLabel
+} from '@chakra-ui/react';
 import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
 
 const PAGE_PROPS = {
@@ -50,64 +54,79 @@ export const PageContainer = ({ children, uid, type }) => <Box
   marginInline="auto"
 >{children}</Box>
 
-export const HeaderImage = ({ src }) => <Box
-  as="img"
+export const HeaderImage = ({ src }) => <Image
   src={src}
-  position="absolute"
-  left="0"
-  right="0"
-  top="0"
+  marginTop="1rem"
+  gridArea="image"
+  borderRadius="md"
   width="100%"
   overflow="hidden"
-  opacity="0.125"
-  pointerEvents="none"
   objectFit="cover"
-  height="20em"
-  sx={{
-    maskImage: "linear-gradient(to bottom, black, black calc(100% - 4rem), transparent)"
-  }}
 />
 
-export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenInMainView }) => <Box
-  as="header"
-  className="page-header"
-  pt="var(--page-padding)"
-  px="var(--page-padding)"
-  pb={4}
-  gridArea="header"
-  display="grid"
-  gridTemplateColumns="1fr auto"
-  gridTemplateRows="auto auto"
-  alignItems="center"
-  gridTemplateAreas="'breadcrumb breadcrumb' 
-  'title extras'"
->
-  {image && <HeaderImage src={image} />}
-  {children}
+export const PageHeader = ({
+  children,
+  onChangeHeaderImageUrl,
+  headerImageUrl,
+  onClickOpenInSidebar,
+  onClickOpenInMainView }
+) => {
+  const [isPropertiesOpen, setIsPropertiesOpen] = React.useState(false)
 
-  <ButtonGroup gridArea="extras" size="sm">
-    {onClickOpenInMainView && <Tooltip label="Open in main view">
-      <IconButton
-        aria-label='Open in main view'
-        color="foreground.secondary"
-        variant="ghost"
-        colorScheme="subtle"
-        onClick={onClickOpenInMainView}
-      >
-        <ArrowLeftOnBoxIcon boxSize="1.5em" />
-      </IconButton></Tooltip>}
-    {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
-      <IconButton
-        aria-label='Open in right sidebar'
-        color="foreground.secondary"
-        variant="ghost"
-        colorScheme="subtle"
-        onClick={onClickOpenInSidebar}
-      >
-        <ArrowRightOnBoxIcon boxSize="1.5em" />
-      </IconButton></Tooltip>}
-  </ButtonGroup>
-</Box>
+  return (<Box
+    as="header"
+    className="page-header"
+    pt="var(--page-padding)"
+    px="var(--page-padding)"
+    pb={4}
+    gridArea="header"
+    display="grid"
+    gridTemplateColumns="1fr auto"
+    gridTemplateRows="auto auto auto"
+    alignItems="center"
+    gridTemplateAreas="'breadcrumb breadcrumb' 
+  'title extras'
+  'properties properties'
+  'image image'"
+  >
+    {children}
+
+    <ButtonGroup gridArea="extras" size="sm">
+      <Button onClick={() => setIsPropertiesOpen(!isPropertiesOpen)}>Properties</Button>
+      {onClickOpenInMainView && <Tooltip label="Open in main view">
+        <IconButton
+          aria-label='Open in main view'
+          color="foreground.secondary"
+          variant="ghost"
+          colorScheme="subtle"
+          onClick={onClickOpenInMainView}
+        >
+          <ArrowLeftOnBoxIcon boxSize="1.5em" />
+        </IconButton></Tooltip>}
+      {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
+        <IconButton
+          aria-label='Open in right sidebar'
+          color="foreground.secondary"
+          variant="ghost"
+          colorScheme="subtle"
+          onClick={onClickOpenInSidebar}
+        >
+          <ArrowRightOnBoxIcon boxSize="1.5em" />
+        </IconButton></Tooltip>}
+    </ButtonGroup>
+
+    {isPropertiesOpen && <Box gridArea="properties">
+      <FormControl>
+        <FormLabel>Header image url</FormLabel>
+        <Input defaultValue={headerImageUrl} onBlur={(e) => onChangeHeaderImageUrl(e.target.value)} />
+      </FormControl>
+    </Box>
+    }
+
+
+    {headerImageUrl && <HeaderImage src={headerImageUrl} />}
+  </Box>)
+}
 
 export const PageBody = ({ children }) => <Box
   as="main"
