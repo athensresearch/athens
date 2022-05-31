@@ -4,6 +4,7 @@
   Functions in this namespace should be used very deliberately to avoid performance overheads.
   No other namespace should import posh.reagent."
   (:require
+    [athens.common-db :as common-db]
     [athens.common.sentry :refer-macros [defntrace]]
     [athens.common.utils :as utils]
     [athens.db :as db]
@@ -76,26 +77,37 @@
        rseq))
 
 
+(def recursive-properties-document-pull-vector
+  '[{:block/_property-of [:block/uid :block/string :block/order :block/refs
+                          {:block/key [:node/title]}
+                          {:block/children ...}
+                          {:block/_property-of ...}]}])
+
+
 (def node-document-pull-vector
-  '[:db/id :block/uid :node/title :page/sidebar
-    {:block/children [:block/uid :block/order]}])
+  (vec (concat '[:db/id :block/uid :node/title :page/sidebar
+                 {:block/children [:block/uid :block/order]}]
+               recursive-properties-document-pull-vector)))
 
 
 (defntrace get-reactive-node-document
   [id]
   (->> @(p/pull db/dsdb node-document-pull-vector id)
-       db/sort-block-children))
+       common-db/sort-block-children
+       common-db/add-property-map))
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/_refs
-    {:block/children [:block/uid :block/order]}])
+  (vec (concat '[:db/id :block/uid :block/string :block/open :block/_refs
+                 {:block/children [:block/uid :block/order]}]
+               recursive-properties-document-pull-vector)))
 
 
 (defntrace get-reactive-block-document
   [id]
   (->> @(p/pull db/dsdb block-document-pull-vector id)
-       db/sort-block-children))
+       common-db/sort-block-children
+       common-db/add-property-map))
 
 
 (defntrace get-reactive-parents-recursively
