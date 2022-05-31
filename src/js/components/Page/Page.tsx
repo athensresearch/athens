@@ -67,7 +67,7 @@ export const HeaderImage = ({ src }) => <Image
 export const PageHeader = ({
   children,
   onChangeHeaderImageUrl,
-  headerImageUrl = "https://images.unsplash.com/photo-1651721675073-a992af85dfed?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2670&q=80",
+  headerImageUrl,
   onClickOpenInSidebar,
   onClickOpenInMainView }
 ) => {
