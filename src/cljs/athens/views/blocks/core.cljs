@@ -2,7 +2,9 @@
   (:require
     ["/components/Block/Anchor"              :refer [Anchor]]
     ["/components/Block/Container"           :refer [Container]]
+    ["/components/Block/Reactions"           :refer [Reactions]]
     ["/components/Block/Toggle"              :refer [Toggle]]
+    ["/components/EmojiPicker/EmojiPicker"   :refer [EmojiPickerPopover]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common.logging                   :as log]
@@ -34,6 +36,11 @@
 ;; It would be nicer to have inline refs code in a different file, but it's
 ;; much easier to resolve the circular dependency if they are on the same one.
 (declare block-el)
+
+
+(def reactions
+  [["💋" ["filipe" "alex"]]
+   ["🔥"       ["stuart"]]])
 
 
 (defn ref-comp
@@ -346,6 +353,7 @@
                         :isOpen open
                         :isLinkedRef (and (false? initial-open) (= uid linked-ref-uid))
                         :hasPresence is-presence
+                        :actions (clj->js [(r/as-element [:> EmojiPickerPopover {:onEmojiSelected (fn [e] js/console.log e)}])])
                         :uid uid
                         ;; need to know children for selection resolution
                         :childrenUids children-uids
@@ -397,6 +405,8 @@
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
            [content/block-content-el block state]
 
+           (when reactions [:> Reactions {:reactions (clj->js reactions)}])
+           
            [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))

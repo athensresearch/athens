@@ -1,10 +1,33 @@
+import React from 'react';
 import { Box } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
+import { Actions } from './Actions';
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, ...props }) => {
+const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: string): boolean => {
+  if (!target) return false;
+
+  // if hovered element's closest block container has the current UID,
+  // we're hovering the current block. Otherwise return false
+  const closestBlockContainer = target.closest('.block-container') as HTMLElement;
+  return (closestBlockContainer?.dataset?.uid === thisBlockUid)
+}
+
+const _Container = ({ children, reactions, isEditing, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, actions, ...props }) => {
+
+  const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
+  const [isUsingActions, setIsUsingActions] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const handleMouseOver = (e) => {
+    setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
+  }
+
+  const handleMouseLeave = () => isHoveredNotChild && setIsHoveredNotChild(false);
+
   return <Box
+    ref={containerRef}
     className={[
       "block-container",
       isDragging ? "is-dragging" : "",
@@ -12,6 +35,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       isOpen ? "is-open" : "",
       (hasChildren && isOpen) ? "show-tree-indicator" : "",
       isLinkedRef ? "is-linked-ref" : "",
+      isHoveredNotChild && "is-hovered-not-child",
       hasPresence ? "is-presence" : "",
     ].filter(Boolean).join(' ')}
     display="flex"
@@ -58,9 +82,12 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       ".block-body": {
         display: "grid",
         gridTemplateColumns: "1em 1em 1fr auto",
-        gridTemplateRows: "0 1fr 0",
+        gridTemplateRows: "0 1fr auto 0",
         gridTemplateAreas:
-          "'above above above above above' 'toggle bullet content refs presence' 'below below below below below'",
+          `'above above above above above'
+           'toggle bullet content refs presence'
+           '_ _ reactions reactions reactions'
+           'below below below below below'`,
         borderRadius: "0.5rem",
         minHeight: '2em',
         position: "relative",
@@ -95,12 +122,25 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       },
       "&.is-linked-ref": { bg: "background-attic" },
       ".block-container": {
-        marginLeft: "2rem",
+        marginLeft: "2em",
         gridArea: "body"
       }
     }}
     {...props}
-  > {children}</Box >;
+    onMouseOver={handleMouseOver}
+    onMouseLeave={(e) => {
+      if (props?.onMouseLeave) props.onMouseLeave(e);
+      handleMouseLeave();
+    }}
+  >
+
+    {children}
+    {(!isEditing && (isHoveredNotChild || isUsingActions)) && (
+      <Actions
+        actions={actions}
+        setIsUsingActions={setIsUsingActions}
+      />)}
+  </Box>;
 }
 
 export const Container = withErrorBoundary(_Container, { fallback: <p>{ERROR_MESSAGE}</p> });
