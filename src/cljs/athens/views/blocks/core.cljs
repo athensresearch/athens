@@ -1,6 +1,7 @@
 (ns athens.views.blocks.core
   (:require
     ["/components/Block/Container"           :refer [Container]]
+    ["/components/EmojiPicker/EmojiPicker"   :refer [EmojiPickerPopover]]
     ["@chakra-ui/react"                      :refer [MenuList MenuItem]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
@@ -207,10 +208,10 @@
                               _refs]} (merge (reactive/get-reactive-block-document ident) block)
                 children-uids         (set (map :block/uid children))
                 uid-sanitized-block   (s/transform
-                                        (specter-recursive-path #(contains? % :block/uid))
-                                        (fn [{:block/keys [original-uid uid] :as block}]
-                                          (assoc block :block/uid (or original-uid uid)))
-                                        block)
+                                       (specter-recursive-path #(contains? % :block/uid))
+                                       (fn [{:block/keys [original-uid uid] :as block}]
+                                         (assoc block :block/uid (or original-uid uid)))
+                                       block)
                 is-selected           @(rf/subscribe [::select-subs/selected? uid])
                 present-user          @(rf/subscribe [:presence/has-presence uid])
                 is-presence           (seq present-user)]
@@ -230,6 +231,7 @@
                            :isOpen       open
                            :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
                            :hasPresence  is-presence
+                           :actions      (clj->js [(r/as-element [:> EmojiPickerPopover {:onEmojiSelected (fn [e] js/console.log e)}])])
                            :uid          uid
                            ;; need to know children for selection resolution
                            :childrenUids children-uids
