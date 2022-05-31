@@ -19,19 +19,21 @@
 (defn slash-menu-el
   [_block last-event state]
   (let [inline-search-type (rf/subscribe [::inline-search.subs/type])
+        inline-search-index (rf/subscribe [::inline-search.subs/index])
         open? (ratom/reaction (= @inline-search-type :slash))]
     (fn [block _last-event _state]
-      (let [{:search/keys [index results]} @state]
+      (let [{:search/keys [results]} @state]
         [:> Autocomplete {:event @last-event
                           :isOpen @open?
                           :onClose #(rf/dispatch [::inline-search.events/close!])}
          (when @open?
-           (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
-             [:> AutocompleteButton {:key     text
-                                     :id      (str "dropdown-item-" i)
-                                     :command kbd
-                                     :isActive (when (= i index) "isActive")
-                                     :onClick (fn [_] (slash-item-click state block item))}
-              [:<>
-               [(r/adapt-react-class icon) {:boxSize 6 :mr 3 :ml 0}]
-               text]]))]))))
+           (doall
+            (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
+              [:> AutocompleteButton {:key     text
+                                      :id      (str "dropdown-item-" i)
+                                      :command kbd
+                                      :isActive (when (= i @inline-search-index) "isActive")
+                                      :onClick (fn [_] (slash-item-click state block item))}
+               [:<>
+                [(r/adapt-react-class icon) {:boxSize 6 :mr 3 :ml 0}]
+                text]])))]))))

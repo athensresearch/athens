@@ -298,7 +298,7 @@
                                                ;; :search/type        nil
                                                :search/results     nil
                                                :search/query       nil
-                                               :search/index       nil
+                                               ;; :search/index       nil
                                                :dragging           false
                                                :drag-target        nil
                                                :context-menu/x     nil
