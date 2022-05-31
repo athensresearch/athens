@@ -24,22 +24,23 @@
 (defn inline-search-el
   [_block {:as state-hooks} last-event state]
   (let [inline-search-type (rf/subscribe [::inline-search.subs/type])
-        inline-search-index (rf/subscribe [::inline-search.subs/index])]
+        inline-search-index (rf/subscribe [::inline-search.subs/index])
+        inline-search-results (rf/subscribe [::inline-search.subs/results])]
     (fn [block {:as _state-hooks} _last-event _state]
-      (let [{:search/keys [results query]} @state
+      (let [{:search/keys [query]} @state
             is-open (some #(= % @inline-search-type) [:page :block :hashtag :template])]
         [:> Autocomplete {:event @last-event
                           :isOpen is-open
                           :onClose #(rf/dispatch [::inline-search.events/close!])}
          (when is-open
            (if (or (string/blank? query)
-                   (empty? results))
+                   (empty? @inline-search-results))
              [:> Text {:py "0.4rem"
                        :px "0.8rem"
                        :fontStyle "italics"}
               (str "Search for a " (symbol @inline-search-type))]
              (doall
-              (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
+              (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list @inline-search-results)]
                 [:> AutocompleteButton {:key (str "inline-search-item" uid)
                                         :isActive (= i @inline-search-index)
                                         :onClick (fn [_] (inline-item-click state-hooks state (:block/uid block) (or title uid)))

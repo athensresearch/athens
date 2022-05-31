@@ -296,7 +296,7 @@
                        original-uid]} block
          state                        (r/atom {;; one of #{:page :block :slash :hashtag :template}
                                                ;; :search/type        nil
-                                               :search/results     nil
+                                               ;; :search/results     nil
                                                :search/query       nil
                                                ;; :search/index       nil
                                                :dragging           false

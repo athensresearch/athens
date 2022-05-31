@@ -151,9 +151,8 @@
       (rf/dispatch [::inline-search.events/close!])
       (do
         (rf/dispatch [::inline-search.events/set-index! 0])
-        (swap! state assoc
-               :search/query new-query
-               :search/results results)))))
+        (rf/dispatch [::inline-search.events/set-results! results])
+        (swap! state assoc :search/query new-query)))))
 
 
 ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
@@ -182,8 +181,8 @@
   ([state e]
    (let [target (.. e -target)
          inline-search-index (rf/subscribe [::inline-search.subs/index])
-         {:search/keys [results]} @state
-         item (nth results @inline-search-index)]
+         inline-search-results (rf/subscribe [::inline-search.subs/results])
+         item (nth @inline-search-results @inline-search-index)]
      (println "ran auto-complete-slash")
      (auto-complete-slash state target item)))
   ;; here comes the autocompletion logic itself,
@@ -208,14 +207,13 @@
          (set-cursor-position target new-idx)
          (when (= caption "Block Embed")
            (rf/dispatch [::inline-search.events/set-type! :block])
-           (swap! state assoc
-                  :search/query ""
-                  :search/results []))))
+           (rf/dispatch [::inline-search.events/clear-results!])
+           (swap! state assoc :search/query ""))))
      (when (= caption "Template")
        (rf/dispatch [::inline-search.events/set-type! :template])
+       (rf/dispatch [::inline-search.events/clear-results!])
        (swap! state assoc
-              :search/query ""
-              :search/results [])))))
+              :search/query "")))))
 
 
 ;; see `auto-complete-slash` for how this arity-overloaded
@@ -223,9 +221,9 @@
 (defn auto-complete-hashtag
   ([block-uid state-hooks state e]
    (let [inline-search-index (rf/subscribe [::inline-search.subs/index])
-         {:search/keys [results]} @state
+         inline-search-results (rf/subscribe [::inline-search.subs/results])
          target (.. e -target)
-         {:keys [node/title block/uid]} (nth results @inline-search-index nil)
+         {:keys [node/title block/uid]} (nth @inline-search-results @inline-search-index nil)
          expansion (or title uid)]
      (auto-complete-hashtag block-uid state-hooks state target expansion)))
 
@@ -245,11 +243,11 @@
 (defn auto-complete-inline
   ([state e]
    (let [inline-search-index (rf/subscribe [::inline-search.subs/index])
-         {:search/keys [results]} @state
+         inline-search-results (rf/subscribe [::inline-search.subs/results])
          ;; (nth results (or index 0) nil) returns the index-th result
          ;; If (= index nil) or index is out of bounds, returns nil
          ;; For example, index can be nil if (= results [])
-         {:keys [node/title block/uid]} (nth results (or @inline-search-index 0) nil)
+         {:keys [node/title block/uid]} (nth @inline-search-results (or @inline-search-index 0) nil)
          target (.. e -target)
          expansion    (or title uid)]
      (auto-complete-inline state target expansion)))
@@ -281,9 +279,9 @@
 (defn auto-complete-template
   ([block-uid {:as state-hooks} state e]
    (let [inline-search-index (rf/subscribe [::inline-search.subs/index])
-         {:search/keys [results]} @state
+         inline-search-results (rf/subscribe [::inline-search.subs/results])
          target (.. e -target)
-         {:keys [block/uid]} (nth results @inline-search-index nil)
+         {:keys [block/uid]} (nth @inline-search-results @inline-search-index nil)
          expansion uid]
      (auto-complete-template block-uid state-hooks state target expansion)))
 
@@ -360,24 +358,24 @@
                 meta
                 ctrl
                 target
-                selection]}    (destruct-key-down e)
-        selection?             (not (blank? selection))
-        start?                 (block-start? e)
-        end?                   (block-end? e)
-        {:search/keys [results]} @state
-        index                  @(rf/subscribe [::inline-search.subs/index])
-        type                   @(rf/subscribe [::inline-search.subs/type])
-        textarea-height        (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
-        {:keys [top height]}   @caret-position
-        rows                   (js/Math.round (/ textarea-height height))
-        row                    (js/Math.ceil (/ top height))
-        top-row?               (= row 1)
-        bottom-row?            (= row rows)
-        up?                    (= key-code KeyCodes.UP)
-        down?                  (= key-code KeyCodes.DOWN)
-        left?                  (= key-code KeyCodes.LEFT)
-        right?                 (= key-code KeyCodes.RIGHT)
-        [char-offset _]        (get-end-points target)]
+                selection]} (destruct-key-down e)
+        selection?          (not (blank? selection))
+        start?              (block-start? e)
+        end?                (block-end? e)
+        type                @(rf/subscribe [::inline-search.subs/type])
+        results             @(rf/subscribe [::inline-search.subs/results])
+        index               @(rf/subscribe [::inline-search.subs/index])
+        textarea-height      (.. target -offsetHeight) ; this height is accurate, but caret-position height is not updating
+        {:keys [top height]} @caret-position
+        rows                 (js/Math.round (/ textarea-height height))
+        row                  (js/Math.ceil (/ top height))
+        top-row?             (= row 1)
+        bottom-row?          (= row rows)
+        up?                  (= key-code KeyCodes.UP)
+        down?                (= key-code KeyCodes.DOWN)
+        left?                (= key-code KeyCodes.LEFT)
+        right?               (= key-code KeyCodes.RIGHT)
+        [char-offset _]      (get-end-points target)]
 
     (cond
       ;; Shift: select block if leaving block content boundaries (top or bottom rows). Otherwise select textarea text (default)
@@ -716,9 +714,8 @@
                                ;; seemingly nondeterministic behavior caused by a
                                ;; previous value of :search/index
                                (rf/dispatch [::inline-search.events/set-index! nil])
-                               (swap! state assoc
-                                      :search/query ""
-                                      :search/results [])))))
+                               (rf/dispatch [::inline-search.events/clear-results!])
+                               (swap! state assoc :search/query "")))))
 
       (not= selection "") (let [surround-selection (surround selection key)]
                             (replace-selection-with surround-selection)
@@ -734,9 +731,8 @@
                               (when type
                                 (rf/dispatch [::inline-search.events/set-type! type])
                                 (rf/dispatch [::inline-search.events/set-index! 0])
-                                (swap! state assoc
-                                       :search/query selection
-                                       :search/results (query-fn selection))))))))
+                                (rf/dispatch [::inline-search.events/set-results! (query-fn selection)])
+                                (swap! state assoc :search/query selection)))))))
 
 
 ;; Backspace
@@ -790,27 +786,23 @@
     (cond
       (and (= key " ") (= type :hashtag)) (do
                                             (rf/dispatch [::inline-search.events/close!])
-                                            (swap! state assoc
-                                                   :search/results []))
+                                            (rf/dispatch [::inline-search.events/clear-results!]))
       (and (= key "/") (nil? type)) (do
                                       (rf/dispatch [::inline-search.events/set-type! :slash])
                                       (rf/dispatch [::inline-search.events/set-index! 0])
-                                      (swap! state assoc
-                                             :search/query ""
-                                             :search/results (slash-options)))
+                                      (rf/dispatch [::inline-search.events/set-results! (slash-options)])
+                                      (swap! state assoc :search/query ""))
       (and (= key "#") (nil? type)) (do
                                       (rf/dispatch [::inline-search.events/set-type! :hashtag])
                                       (rf/dispatch [::inline-search.events/set-index! 0])
-                                      (swap! state assoc
-                                             :search/query ""
-                                             :search/results []))
+                                      (rf/dispatch [::inline-search.events/clear-results!])
+                                      (swap! state assoc :search/query ""))
       (and (= key ";" look-behind-char)
            (nil? type))             (do
                                       (rf/dispatch [::inline-search.events/set-type! :template])
                                       (rf/dispatch [::inline-search.events/set-index! 0])
-                                      (swap! state assoc
-                                             :search/query ""
-                                             :search/results []))
+                                      (rf/dispatch [::inline-search.events/clear-results!])
+                                      (swap! state assoc :search/query ""))
       type (update-query state head key type))))
 
 
