@@ -10,7 +10,7 @@
 
 
 (defn inline-item-click
-  [state-hooks state uid expansion]
+  [state-hooks uid expansion]
   (let [id     (str "#editable-uid-" uid)
         target (.. js/document (querySelector id))
         type   (rf/subscribe [::inline-search.subs/type])
@@ -18,22 +18,22 @@
                  :hashtag  textarea-keydown/auto-complete-hashtag
                  :template textarea-keydown/auto-complete-template
                  textarea-keydown/auto-complete-inline)]
-    (f uid state-hooks state target expansion)))
+    (f uid state-hooks target expansion)))
 
 
 (defn inline-search-el
-  [_block {:as state-hooks} last-event state]
+  [_block {:as state-hooks} last-event]
   (let [inline-search-type (rf/subscribe [::inline-search.subs/type])
         inline-search-index (rf/subscribe [::inline-search.subs/index])
-        inline-search-results (rf/subscribe [::inline-search.subs/results])]
+        inline-search-results (rf/subscribe [::inline-search.subs/results])
+        inline-search-query (rf/subscribe [::inline-search.subs/query])]
     (fn [block {:as _state-hooks} _last-event _state]
-      (let [{:search/keys [query]} @state
-            is-open (some #(= % @inline-search-type) [:page :block :hashtag :template])]
+      (let [is-open (some #(= % @inline-search-type) [:page :block :hashtag :template])]
         [:> Autocomplete {:event @last-event
                           :isOpen is-open
                           :onClose #(rf/dispatch [::inline-search.events/close!])}
          (when is-open
-           (if (or (string/blank? query)
+           (if (or (string/blank? @inline-search-query)
                    (empty? @inline-search-results))
              [:> Text {:py "0.4rem"
                        :px "0.8rem"
@@ -43,6 +43,6 @@
               (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list @inline-search-results)]
                 [:> AutocompleteButton {:key (str "inline-search-item" uid)
                                         :isActive (= i @inline-search-index)
-                                        :onClick (fn [_] (inline-item-click state-hooks state (:block/uid block) (or title uid)))
+                                        :onClick (fn [_] (inline-item-click state-hooks (:block/uid block) (or title uid)))
                                         :id (str "inline-search-item" uid)}
                  (or title string)]))))]))))

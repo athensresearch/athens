@@ -230,7 +230,7 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [block {:keys [save-fn read-value show-edit?] :as state-hooks} last-event state]
+  [block {:keys [save-fn read-value show-edit?] :as state-hooks} last-event]
   (let [{:block/keys [uid original-uid header]} block
         editing? (rf/subscribe [:editing/is-editing uid])
         selected-items (rf/subscribe [::select-subs/items])
@@ -255,11 +255,10 @@
                                :id             (str "editable-uid-" uid)
                                :on-change      (fn [e] (textarea-change e uid state-hooks))
                                :on-paste       (fn [e] (textarea-paste e uid state-hooks last-key-w-shift?))
-                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position last-key-w-shift? last-event state))
+                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position last-key-w-shift? last-event))
                                :on-blur        save-fn
                                :on-click       (fn [e] (textarea-click e uid))
                                :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))
                                :on-mouse-down  (fn [e] (textarea-mouse-down e uid))}])
-         ;; TODO pass `state` to parse-and-render
          [parse-and-render @read-value (or original-uid uid)]]))))
 

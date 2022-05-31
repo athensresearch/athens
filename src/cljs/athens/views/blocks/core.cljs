@@ -294,12 +294,7 @@
                  parent-uids]}        linked-ref-data
          {:block/keys [uid
                        original-uid]} block
-         state                        (r/atom {;; one of #{:page :block :slash :hashtag :template}
-                                               ;; :search/type        nil
-                                               ;; :search/results     nil
-                                               :search/query       nil
-                                               ;; :search/index       nil
-                                               :dragging           false
+         state                        (r/atom {:dragging           false
                                                :drag-target        nil
                                                :context-menu/x     nil
                                                :context-menu/y     nil
@@ -420,7 +415,7 @@
                        :on-drag-end            (fn [e] (bullet-drag-end e uid state))}]
 
            ;; XXX: render view
-           [content/block-content-el block state-hooks last-event state]
+           [content/block-content-el block state-hooks last-event]
 
            [presence/inline-presence-el uid]
 
@@ -434,8 +429,8 @@
               (:inline-refs/open @state)])]
 
           ;; XXX: part of view/edit embedable
-          [autocomplete-search/inline-search-el block state-hooks last-event state]
-          [autocomplete-slash/slash-menu-el block last-event state]
+          [autocomplete-search/inline-search-el block state-hooks last-event]
+          [autocomplete-slash/slash-menu-el block last-event]
 
           ;; Inline refs
           (when (and (> (count _refs) 0)

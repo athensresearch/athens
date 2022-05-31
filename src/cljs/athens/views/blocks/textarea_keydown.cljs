@@ -130,7 +130,7 @@
   write-char appends key character. Pass empty string during backspace.
   query-start is determined by doing a greedy regex find up to head.
   Head goes up to the text caret position."
-  [state head key type]
+  [head key type]
   (let [query-fn        (case type
                           :block db/search-in-block-content
                           :page db/search-in-node-title
@@ -152,7 +152,7 @@
       (do
         (rf/dispatch [::inline-search.events/set-index! 0])
         (rf/dispatch [::inline-search.events/set-results! results])
-        (swap! state assoc :search/query new-query)))))
+        (rf/dispatch [::inline-search.events/set-query! new-query])))))
 
 
 ;; https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
@@ -178,19 +178,19 @@
 ;; 2- if results, do find and replace properly
 (defn auto-complete-slash
   ;; this signature is called to process keyboard events.
-  ([state e]
+  ([e]
    (let [target (.. e -target)
          inline-search-index (rf/subscribe [::inline-search.subs/index])
          inline-search-results (rf/subscribe [::inline-search.subs/results])
          item (nth @inline-search-results @inline-search-index)]
      (println "ran auto-complete-slash")
-     (auto-complete-slash state target item)))
+     (auto-complete-slash target item)))
   ;; here comes the autocompletion logic itself,
   ;; independent of the input method the user used.
   ;; `expansion` is the identifier of the page or block
   ;; (i.e., UID of block or title of page) that shall be
   ;; inserted.
-  ([state target item]
+  ([target item]
    (let [{:keys [start head]} (destruct-target target)
          [caption _ expansion _ pos] item
          expand    (if (fn? expansion) (expansion) expansion)
@@ -208,26 +208,25 @@
          (when (= caption "Block Embed")
            (rf/dispatch [::inline-search.events/set-type! :block])
            (rf/dispatch [::inline-search.events/clear-results!])
-           (swap! state assoc :search/query ""))))
+           (rf/dispatch [::inline-search.events/clear-query!]))))
      (when (= caption "Template")
        (rf/dispatch [::inline-search.events/set-type! :template])
        (rf/dispatch [::inline-search.events/clear-results!])
-       (swap! state assoc
-              :search/query "")))))
+       (rf/dispatch [::inline-search.events/clear-query!])))))
 
 
 ;; see `auto-complete-slash` for how this arity-overloaded
 ;; function is used.
 (defn auto-complete-hashtag
-  ([block-uid state-hooks state e]
+  ([block-uid state-hooks e]
    (let [inline-search-index (rf/subscribe [::inline-search.subs/index])
          inline-search-results (rf/subscribe [::inline-search.subs/results])
          target (.. e -target)
          {:keys [node/title block/uid]} (nth @inline-search-results @inline-search-index nil)
          expansion (or title uid)]
-     (auto-complete-hashtag block-uid state-hooks state target expansion)))
+     (auto-complete-hashtag block-uid state-hooks target expansion)))
 
-  ([_block-uid {:as _state-hooks} _state target expansion]
+  ([_block-uid {:as _state-hooks} target expansion]
    (let [{:keys [start head]} (destruct-target target)
          start-idx (count (re-find #"(?s).*#" head))]
      (if (nil? expansion)
@@ -241,7 +240,7 @@
 ;; see `auto-complete-slash` for how this arity-overloaded
 ;; function is used.
 (defn auto-complete-inline
-  ([state e]
+  ([_block-uid _state-hooks e]
    (let [inline-search-index (rf/subscribe [::inline-search.subs/index])
          inline-search-results (rf/subscribe [::inline-search.subs/results])
          ;; (nth results (or index 0) nil) returns the index-th result
@@ -250,10 +249,10 @@
          {:keys [node/title block/uid]} (nth @inline-search-results (or @inline-search-index 0) nil)
          target (.. e -target)
          expansion    (or title uid)]
-     (auto-complete-inline state target expansion)))
+     (auto-complete-inline _block-uid _state-hooks target expansion)))
 
-  ([state target expansion]
-   (let [{:search/keys [query]} @state
+  ([_block-uid _state-hooks target expansion]
+   (let [query @(rf/subscribe [::inline-search.subs/query])
          {:keys [end]} (destruct-target target)
          query        (patterns/escape-str query)]
 
@@ -277,15 +276,15 @@
 ;; see `auto-complete-slash` for how this arity-overloaded
 ;; function is used.
 (defn auto-complete-template
-  ([block-uid {:as state-hooks} state e]
+  ([block-uid {:as state-hooks} e]
    (let [inline-search-index (rf/subscribe [::inline-search.subs/index])
          inline-search-results (rf/subscribe [::inline-search.subs/results])
          target (.. e -target)
          {:keys [block/uid]} (nth @inline-search-results @inline-search-index nil)
          expansion uid]
-     (auto-complete-template block-uid state-hooks state target expansion)))
+     (auto-complete-template block-uid state-hooks target expansion)))
 
-  ([block-uid {:keys [read-value] :as _state-hooks} _state target expansion]
+  ([block-uid {:keys [read-value] :as _state-hooks} target expansion]
    (let [{:keys [start head]} (destruct-target target)
          start-idx (count (re-find #"(?s).*;;" head))
          source-ir (->> [:block/uid expansion]
@@ -352,7 +351,7 @@
 
 
 (defn handle-arrow-key
-  [e uid caret-position state]
+  [e uid caret-position]
   (let [{:keys [key-code
                 shift
                 meta
@@ -486,17 +485,17 @@
 
 
 (defn handle-enter
-  [e uid {:as state-hooks} state]
+  [e uid {:as state-hooks}]
   (let [{:keys [shift ctrl meta value start] :as d-key-down} (destruct-key-down e)
         type @(rf/subscribe [::inline-search.subs/type])]
     (.. e preventDefault)
     (cond
       type (case type
-             :slash (auto-complete-slash state e)
-             :page (auto-complete-inline state e)
-             :block (auto-complete-inline state e)
-             :hashtag (auto-complete-hashtag uid state-hooks state e)
-             :template (auto-complete-template uid state-hooks state e))
+             :slash (auto-complete-slash e)
+             :page (auto-complete-inline uid state-hooks e)
+             :block (auto-complete-inline uid state-hooks e)
+             :hashtag (auto-complete-hashtag uid state-hooks e)
+             :template (auto-complete-template uid state-hooks e))
       ;; shift-enter: add line break to textarea and move cursor to the next line.
       shift (replace-selection-with "\n")
       ;; cmd-enter: cycle todo states, then move cursor to the end of the line.
@@ -687,7 +686,7 @@
 
 
 (defn handle-pair-char
-  [e _ {:keys [read-value]} state]
+  [e _ {:keys [read-value]}]
   (let [{:keys [key target start end selection value]} (destruct-key-down e)
         close-pair (get PAIR-CHARS key)
         lookbehind-char (nth value start nil)]
@@ -715,7 +714,7 @@
                                ;; previous value of :search/index
                                (rf/dispatch [::inline-search.events/set-index! nil])
                                (rf/dispatch [::inline-search.events/clear-results!])
-                               (swap! state assoc :search/query "")))))
+                               (rf/dispatch [::inline-search.events/clear-query!])))))
 
       (not= selection "") (let [surround-selection (surround selection key)]
                             (replace-selection-with surround-selection)
@@ -732,13 +731,13 @@
                                 (rf/dispatch [::inline-search.events/set-type! type])
                                 (rf/dispatch [::inline-search.events/set-index! 0])
                                 (rf/dispatch [::inline-search.events/set-results! (query-fn selection)])
-                                (swap! state assoc :search/query selection)))))))
+                                (rf/dispatch [::inline-search.events/set-query! selection])))))))
 
 
 ;; Backspace
 
 (defn handle-backspace
-  [e uid state]
+  [e uid]
   (let [{:keys [start value target end]} (destruct-key-down e)
         no-selection? (= start end)
         sub-str (subs value (dec start) (inc start))
@@ -763,7 +762,7 @@
       ;; semicolon: close dropdown
       (and (= ";" look-behind-char) (= type :template)) (rf/dispatch [::inline-search.events/close!])
       ;; dropdown is open: update query
-      type (update-query state head "" type))))
+      type (update-query head "" type))))
 
 
 ;; Character: for queries
@@ -779,7 +778,7 @@
 (defn write-char
   "When user types /, trigger slash menu.
   If user writes a character while there is a slash/type, update query and results."
-  [e _uid state]
+  [e _uid]
   (let [{:keys [head key value start]} (destruct-key-down e)
         type @(rf/subscribe [::inline-search.subs/type])
         look-behind-char (nth value (dec start) nil)]
@@ -791,24 +790,24 @@
                                       (rf/dispatch [::inline-search.events/set-type! :slash])
                                       (rf/dispatch [::inline-search.events/set-index! 0])
                                       (rf/dispatch [::inline-search.events/set-results! (slash-options)])
-                                      (swap! state assoc :search/query ""))
+                                      (rf/dispatch [::inline-search.events/clear-query!]))
       (and (= key "#") (nil? type)) (do
                                       (rf/dispatch [::inline-search.events/set-type! :hashtag])
                                       (rf/dispatch [::inline-search.events/set-index! 0])
                                       (rf/dispatch [::inline-search.events/clear-results!])
-                                      (swap! state assoc :search/query ""))
+                                      (rf/dispatch [::inline-search.events/clear-query!]))
       (and (= key ";" look-behind-char)
            (nil? type))             (do
                                       (rf/dispatch [::inline-search.events/set-type! :template])
                                       (rf/dispatch [::inline-search.events/set-index! 0])
                                       (rf/dispatch [::inline-search.events/clear-results!])
-                                      (swap! state assoc :search/query ""))
-      type (update-query state head key type))))
+                                      (rf/dispatch [::inline-search.events/clear-query!]))
+      type (update-query head key type))))
 
 
 (defn handle-delete
   "Delete has the same behavior as pressing backspace on the next block."
-  [e uid {:keys [read-value]} state]
+  [e uid {:keys [read-value read-old-value]}]
   (let [{:keys [start end value]} (destruct-key-down e)
         no-selection?             (= start end)
         end?                      (= end (count value))
@@ -821,13 +820,12 @@
                    (cond-> next-block-uid
                      embed-id (str "-embed-" embed-id))
                    (:block/string next-block)
-                   (when-not (= @read-value
-                                (:block/string @state))
+                   (when-not (= @read-value @read-old-value)
                      @read-value)])))))
 
 
 (defn textarea-key-down
-  [e uid {:as state-hooks} caret-position last-key-w-shift? last-event state]
+  [e uid {:as state-hooks} caret-position last-key-w-shift? last-event]
   ;; don't process key events from block that lost focus (quick Enter & Tab)
   (when @(subscribe [:editing/is-editing uid])
     (let [d-event (destruct-key-down e)
@@ -846,13 +844,13 @@
       ;; after some ops(like delete) can cause errors
       (when (empty? @(subscribe [::select-subs/items]))
         (cond
-          (arrow-key-direction e)         (handle-arrow-key e uid caret-position state)
-          (pair-char? e)                  (handle-pair-char e uid state-hooks state)
+          (arrow-key-direction e)         (handle-arrow-key e uid caret-position)
+          (pair-char? e)                  (handle-pair-char e uid state-hooks)
           (= key-code KeyCodes.TAB)       (handle-tab e uid state-hooks)
-          (= key-code KeyCodes.ENTER)     (handle-enter e uid state-hooks state)
-          (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state)
-          (= key-code KeyCodes.DELETE)    (handle-delete e uid state-hooks state)
+          (= key-code KeyCodes.ENTER)     (handle-enter e uid state-hooks)
+          (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid)
+          (= key-code KeyCodes.DELETE)    (handle-delete e uid state-hooks)
           (= key-code KeyCodes.ESC)       (handle-escape e)
           (shortcut-key? meta ctrl)       (handle-shortcuts e uid state-hooks)
-          (is-character-key? e)           (write-char e uid state))))))
+          (is-character-key? e)           (write-char e uid))))))
 

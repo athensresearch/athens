@@ -10,14 +10,14 @@
 
 
 (defn slash-item-click
-  [state block item]
+  [block item]
   (let [id        (str "#editable-uid-" (:block/uid block))
         target    (.. js/document (querySelector id))]
-    (textarea-keydown/auto-complete-slash state target item)))
+    (textarea-keydown/auto-complete-slash target item)))
 
 
 (defn slash-menu-el
-  [_block last-event state]
+  [_block last-event]
   (let [inline-search-type (rf/subscribe [::inline-search.subs/type])
         inline-search-index (rf/subscribe [::inline-search.subs/index])
         inline-search-results (rf/subscribe [::inline-search.subs/results])
@@ -33,7 +33,7 @@
                                     :id      (str "dropdown-item-" i)
                                     :command kbd
                                     :isActive (when (= i @inline-search-index) "isActive")
-                                    :onClick (fn [_] (slash-item-click state block item))}
+                                    :onClick (fn [_] (slash-item-click block item))}
              [:<>
               [(r/adapt-react-class icon) {:boxSize 6 :mr 3 :ml 0}]
               text]])))])))
