@@ -566,3 +566,29 @@
   (fixture/op-resolve-transact! (atomic-graph-ops/make-block-remove-op "parent-uid"))
   (fixture/is #{{:page/title "key"}
                 {:page/title "title"}}))
+
+
+(t/deftest remove-prop-parent-deep
+  (fixture/setup! [{:page/title "title"
+                    :block/children
+                    [#:block{:uid    "parent-uid"
+                             :string ""
+                             :properties
+                             {"comments/thread"
+                              #:block{:uid    "thread-uid"
+                                      :string ""
+                                      :children
+                                      [#:block{:uid    "deep-1"
+                                               :string ""
+                                               :properties
+                                               {"deep-prop" #:block{:uid    "deep-1-1"
+                                                                    :string ""}}}
+                                       #:block{:uid    "deep-2"
+                                               :string ""
+                                               :properties
+                                               {"deep-prop" #:block{:uid    "deep-2-1"
+                                                                    :string ""}}}]}}}]}])
+  (fixture/op-resolve-transact! (atomic-graph-ops/make-block-remove-op "parent-uid"))
+  (fixture/is #{{:page/title "comments/thread"}
+                {:page/title "deep-prop"}
+                {:page/title "title"}}))

@@ -2,9 +2,11 @@
   (:refer-clojure :exclude [descendants])
   (:require
     [athens.common-db                     :as common-db]
+    [athens.common-events                 :as common-events]
     [athens.common-events.graph.atomic    :as atomic]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops       :as graph-ops]
+    [athens.common-events.resolver.atomic :as atomic-resolver]
     [clojure.string                       :as string]
     [clojure.walk                         :as walk]))
 
@@ -176,3 +178,12 @@
                                       new-block-str? (conj block-save-op)
                                       empty-block? (conj remove-op))))))
 
+
+(defn db-from-repr
+  [repr]
+  (let [conn (common-db/create-conn)]
+    (->> repr
+         (build-paste-op @conn)
+         common-events/build-atomic-event
+         (atomic-resolver/resolve-transact! conn))
+    @conn))

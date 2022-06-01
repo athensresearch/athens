@@ -8,7 +8,6 @@
     [athens.common.utils :as utils]
     [athens.db :as db]
     [datascript.core :as d]
-    [athens.common-db :as common-db]
     [posh.reagent :as p]))
 
 
@@ -77,26 +76,37 @@
        rseq))
 
 
+(def recursive-properties-document-pull-vector
+  '[{:block/_property-of [:block/uid :block/string :block/order :block/refs
+                          {:block/key [:node/title]}
+                          {:block/children ...}
+                          {:block/_property-of ...}]}])
+
+
 (def node-document-pull-vector
-  '[:db/id :block/uid :node/title :page/sidebar
-    {:block/children [:block/uid :block/order]}])
+  (vec (concat '[:db/id :block/uid :node/title :page/sidebar
+                 {:block/children [:block/uid :block/order]}]
+               recursive-properties-document-pull-vector)))
 
 
 (defntrace get-reactive-node-document
   [id]
   (->> @(p/pull db/dsdb node-document-pull-vector id)
-       db/sort-block-children))
+       common-db/sort-block-children
+       common-db/add-property-map))
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/_refs
-    {:block/children [:block/uid :block/order]}])
+  (vec (concat '[:db/id :block/uid :block/string :block/open :block/_refs
+                 {:block/children [:block/uid :block/order]}]
+               recursive-properties-document-pull-vector)))
 
 
 (defntrace get-reactive-block-document
   [id]
-  (->> @(p/pull db/dsdb common-db/block-document-pull-vector id)
-       db/sort-block-children))
+  (->> @(p/pull db/dsdb block-document-pull-vector id)
+       common-db/sort-block-children
+       common-db/add-property-map))
 
 
 (defntrace get-reactive-parents-recursively
