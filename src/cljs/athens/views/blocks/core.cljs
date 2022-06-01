@@ -5,15 +5,18 @@
     ["/components/Block/Toggle"              :refer [Toggle]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    #_[clojure.pprint :as pprint]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
     [athens.electron.utils                   :as electron.utils]
+    [athens.events.linked-refs               :as linked-ref.events]
     [athens.events.selection                 :as select-events]
     [athens.parse-renderer                   :as parse-renderer]
     [athens.reactive                         :as reactive]
     [athens.router                           :as router]
     [athens.self-hosted.presence.views       :as presence]
+    [athens.subs.linked-refs                 :as linked-ref.subs]
     [athens.subs.selection                   :as select-subs]
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.autocomplete-search :as autocomplete-search]
@@ -22,7 +25,6 @@
     [athens.views.blocks.content             :as content]
     [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    #_[clojure.pprint :as pprint]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
@@ -299,7 +301,6 @@
                                                :context-menu/x     nil
                                                :context-menu/y     nil
                                                :context-menu/show  false
-                                               :linked-ref/open    (or (false? linked-ref) initial-open)
                                                :inline-refs/open   false
                                                :inline-refs/states {}})
          local-value                  (r/atom nil)
@@ -322,7 +323,9 @@
                                        :read-value     read-value
                                        :read-old-value read-old-value
                                        :show-edit?     show-edit?}
-         last-event                   (r/atom nil)]
+         last-event                   (r/atom nil)
+         linked-ref-open?             (rf/subscribe [::linked-ref.subs/open? uid])]
+     (rf/dispatch [::linked-ref.events/set-open! uid (or (false? linked-ref) initial-open)])
      ;; TODO: remove debugger code
      #_(add-watch state :watcher
                 (fn [_key _atom old-state new-state]
@@ -381,17 +384,17 @@
 
           [:div.block-body
            (when (seq children)
-             [:> Toggle {:isOpen  (if (or (and (true? linked-ref) (:linked-ref/open @state))
+             [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
                                           (and (false? linked-ref) open))
                                     true
                                     false)
                          :onClick (fn [e]
                                     (.. e stopPropagation)
                                     (if (true? linked-ref)
-                                      (swap! state update :linked-ref/open not)
+                                      (rf/dispatch [::linked-ref.events/toggle-open! uid])
                                       (toggle uid (not open))))}])
            [:> Anchor {:isClosedWithChildren   (when (and (seq children)
-                                                          (or (and (true? linked-ref) (not (:linked-ref/open @state)))
+                                                          (or (and (true? linked-ref) (not @linked-ref-open?))
                                                               (and (false? linked-ref) (not open))))
                                                  "closed-with-children")
                        :uidSanitizedBlock      uid-sanitized-block
@@ -440,7 +443,7 @@
 
           ;; Children
           (when (and (seq children)
-                     (or (and (true? linked-ref) (:linked-ref/open @state))
+                     (or (and (true? linked-ref) @linked-ref-open?)
                          (and (false? linked-ref) open)))
             (for [child children]
               [:<> {:key (:db/id child)}
