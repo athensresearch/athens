@@ -610,7 +610,7 @@
         has-asserts?          (seq asserts)
         retract-kids          (mapv (fn [uid]
                                       [:db/retractEntity [:block/uid uid]])
-                                    descendants-uids)
+                                    (reverse descendants-uids))
         retract-entity        [:db/retractEntity [:block/uid uid]]
         txs                   (cond-> []
                                 has-descendants? (into retract-kids)
