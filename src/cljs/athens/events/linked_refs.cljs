@@ -3,6 +3,12 @@
 
 
 (rf/reg-event-db
+  ::cleanup!
+  (fn [db [_ uid]]
+    (update db :linked-ref dissoc uid)))
+
+
+(rf/reg-event-db
   ::set-open!
   (fn [db [_ uid open?]]
     #_(println ::set-open! (pr-str uid) (pr-str open?))

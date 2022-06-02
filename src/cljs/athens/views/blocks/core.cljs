@@ -342,124 +342,130 @@
                   (log/debug "\nold:\n" (with-out-str (pprint/pprint old-state)))
                   (log/debug "\nnew:\n" (with-out-str (pprint/pprint new-state)))))
 
-     (fn [block linked-ref-data opts]
-       (let [ident                 [:block/uid (or original-uid uid)]
-             {:block/keys [uid
-                           string
-                           open
-                           children
-                           _refs]} (merge (reactive/get-reactive-block-document ident) block)
-             children-uids         (set (map :block/uid children))
-             uid-sanitized-block   (s/transform
-                                    (specter-recursive-path #(contains? % :block/uid))
-                                    (fn [{:block/keys [original-uid uid] :as block}]
-                                      (assoc block :block/uid (or original-uid uid)))
-                                    block)
-             {:keys [dragging]}    @state
-             is-selected           @(rf/subscribe [::select-subs/selected? uid])
-             selected-items        @(rf/subscribe [::select-subs/items])
-             present-user          @(rf/subscribe [:presence/has-presence uid])
-             is-presence           (seq present-user)]
+     (r/create-class
+      {:component-will-unmount
+       (fn [_]
+         (rf/dispatch [::linked-ref.events/cleanup! uid])
+         (rf/dispatch [::inline-refs.events/cleanup! uid]))
+       :reagent-render
+       (fn [block linked-ref-data opts]
+         (let [ident                 [:block/uid (or original-uid uid)]
+               {:block/keys [uid
+                             string
+                             open
+                             children
+                             _refs]} (merge (reactive/get-reactive-block-document ident) block)
+               children-uids         (set (map :block/uid children))
+               uid-sanitized-block   (s/transform
+                                      (specter-recursive-path #(contains? % :block/uid))
+                                      (fn [{:block/keys [original-uid uid] :as block}]
+                                        (assoc block :block/uid (or original-uid uid)))
+                                      block)
+               {:keys [dragging]}    @state
+               is-selected           @(rf/subscribe [::select-subs/selected? uid])
+               selected-items        @(rf/subscribe [::select-subs/items])
+               present-user          @(rf/subscribe [:presence/has-presence uid])
+               is-presence           (seq present-user)]
 
-         ;; (prn uid is-selected)
+           ;; (prn uid is-selected)
 
-         ;; If datascript string value does not equal local value, overwrite local value.
-         ;; Write on initialization
-         ;; Write also from backspace, which can join bottom block's contents to top the block.
-         (when (not= string @old-value)
-           (update-fn string)
-           (update-old-fn string))
+           ;; If datascript string value does not equal local value, overwrite local value.
+           ;; Write on initialization
+           ;; Write also from backspace, which can join bottom block's contents to top the block.
+           (when (not= string @old-value)
+             (update-fn string)
+             (update-old-fn string))
 
-         [:> Container {:isDragging   (and dragging (not is-selected))
-                        :isSelected   is-selected
-                        :hasChildren  (seq children)
-                        :isOpen       open
-                        :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
-                        :hasPresence  is-presence
-                        :uid          uid
-                        ;; need to know children for selection resolution
-                        :childrenUids children-uids
-                        ;; show-edit? allows us to render the editing elements (like the textarea)
-                        ;; even when not editing this block. When true, clicking the block content will pass
-                        ;; the clicks down to the underlying textarea. The textarea is expensive to render,
-                        ;; so we avoid rendering it when it's not needed.
-                        :onMouseEnter show-edit-fn
-                        :onMouseLeave hide-edit-fn
-                        :onDragOver   (fn [e] (block-drag-over e block state))
-                        :onDragLeave  (fn [e] (block-drag-leave e block state))
-                        :onDrop       (fn [e] (block-drop e block state))}
+           [:> Container {:isDragging   (and dragging (not is-selected))
+                          :isSelected   is-selected
+                          :hasChildren  (seq children)
+                          :isOpen       open
+                          :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
+                          :hasPresence  is-presence
+                          :uid          uid
+                          ;; need to know children for selection resolution
+                          :childrenUids children-uids
+                          ;; show-edit? allows us to render the editing elements (like the textarea)
+                          ;; even when not editing this block. When true, clicking the block content will pass
+                          ;; the clicks down to the underlying textarea. The textarea is expensive to render,
+                          ;; so we avoid rendering it when it's not needed.
+                          :onMouseEnter show-edit-fn
+                          :onMouseLeave hide-edit-fn
+                          :onDragOver   (fn [e] (block-drag-over e block state))
+                          :onDragLeave  (fn [e] (block-drag-leave e block state))
+                          :onDrop       (fn [e] (block-drop e block state))}
 
-          (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
+            (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
-          [:div.block-body
-           (when (seq children)
-             [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
-                                          (and (false? linked-ref) open))
-                                    true
-                                    false)
-                         :onClick (fn [e]
-                                    (.. e stopPropagation)
-                                    (if (true? linked-ref)
-                                      (rf/dispatch [::linked-ref.events/toggle-open! uid])
-                                      (toggle uid (not open))))}])
-           [:> Anchor {:isClosedWithChildren   (when (and (seq children)
-                                                          (or (and (true? linked-ref) (not @linked-ref-open?))
-                                                              (and (false? linked-ref) (not open))))
-                                                 "closed-with-children")
-                       :uidSanitizedBlock      uid-sanitized-block
-                       :shouldShowDebugDetails (util/re-frame-10x-open?)
-                       :menuActions            (clj->js [{:children
-                                                          (if (> (count selected-items) 1)
-                                                            "Copy selected block refs"
-                                                            "Copy block ref")
-                                                          :onClick #(handle-copy-refs nil uid)}
-                                                         {:children "Copy unformatted text"
-                                                          :onClick  #(handle-copy-unformatted uid)}])
-                       :onClick                (fn [e]
-                                                 (let [shift? (.-shiftKey e)]
-                                                   (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                        :target :block
-                                                                                        :pane   (if shift?
-                                                                                                  :right-pane
-                                                                                                  :main-pane)}])
-                                                   (router/navigate-uid uid e)))
-                       :on-drag-start          (fn [e] (bullet-drag-start e uid state))
-                       :on-drag-end            (fn [e] (bullet-drag-end e uid state))}]
+            [:div.block-body
+             (when (seq children)
+               [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
+                                            (and (false? linked-ref) open))
+                                      true
+                                      false)
+                           :onClick (fn [e]
+                                      (.. e stopPropagation)
+                                      (if (true? linked-ref)
+                                        (rf/dispatch [::linked-ref.events/toggle-open! uid])
+                                        (toggle uid (not open))))}])
+             [:> Anchor {:isClosedWithChildren   (when (and (seq children)
+                                                            (or (and (true? linked-ref) (not @linked-ref-open?))
+                                                                (and (false? linked-ref) (not open))))
+                                                   "closed-with-children")
+                         :uidSanitizedBlock      uid-sanitized-block
+                         :shouldShowDebugDetails (util/re-frame-10x-open?)
+                         :menuActions            (clj->js [{:children
+                                                            (if (> (count selected-items) 1)
+                                                              "Copy selected block refs"
+                                                              "Copy block ref")
+                                                            :onClick #(handle-copy-refs nil uid)}
+                                                           {:children "Copy unformatted text"
+                                                            :onClick  #(handle-copy-unformatted uid)}])
+                         :onClick                (fn [e]
+                                                   (let [shift? (.-shiftKey e)]
+                                                     (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                          :target :block
+                                                                                          :pane   (if shift?
+                                                                                                    :right-pane
+                                                                                                    :main-pane)}])
+                                                     (router/navigate-uid uid e)))
+                         :on-drag-start          (fn [e] (bullet-drag-start e uid state))
+                         :on-drag-end            (fn [e] (bullet-drag-end e uid state))}]
 
-           ;; XXX: render view
-           [content/block-content-el block state-hooks last-event]
+             ;; XXX: render view
+             [content/block-content-el block state-hooks last-event]
 
-           [presence/inline-presence-el uid]
+             [presence/inline-presence-el uid]
 
-           (when (and (> (count _refs) 0) (not= :block-embed? opts))
-             [block-refs-count-el
-              (count _refs)
-              (fn [e]
-                (if (.. e -shiftKey)
-                  (rf/dispatch [:right-sidebar/open-item uid])
-                  (rf/dispatch [::inline-refs.events/toggle-open! uid])))
-              @inline-refs-open?])]
+             (when (and (> (count _refs) 0) (not= :block-embed? opts))
+               [block-refs-count-el
+                (count _refs)
+                (fn [e]
+                  (if (.. e -shiftKey)
+                    (rf/dispatch [:right-sidebar/open-item uid])
+                    (rf/dispatch [::inline-refs.events/toggle-open! uid])))
+                @inline-refs-open?])]
 
-          ;; XXX: part of view/edit embedable
-          [autocomplete-search/inline-search-el block state-hooks last-event]
-          [autocomplete-slash/slash-menu-el block last-event]
+            ;; XXX: part of view/edit embedable
+            [autocomplete-search/inline-search-el block state-hooks last-event]
+            [autocomplete-slash/slash-menu-el block last-event]
 
-          ;; Inline refs
-          (when (and (> (count _refs) 0)
-                     (not= :block-embed? opts)
-                     @inline-refs-open?)
-            [inline-linked-refs-el uid])
+            ;; Inline refs
+            (when (and (> (count _refs) 0)
+                       (not= :block-embed? opts)
+                       @inline-refs-open?)
+              [inline-linked-refs-el uid])
 
-          ;; Children
-          (when (and (seq children)
-                     (or (and (true? linked-ref) @linked-ref-open?)
-                         (and (false? linked-ref) open)))
-            (for [child children]
-              [:<> {:key (:db/id child)}
-               [block-el child
-                (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
-                opts]]))
+            ;; Children
+            (when (and (seq children)
+                       (or (and (true? linked-ref) @linked-ref-open?)
+                           (and (false? linked-ref) open)))
+              (for [child children]
+                [:<> {:key (:db/id child)}
+                 [block-el child
+                  (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
+                  opts]]))
 
-          (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
-          (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])])))))
+            (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
+            (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])]))}))))
 
