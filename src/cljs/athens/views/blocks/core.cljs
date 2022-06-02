@@ -43,64 +43,71 @@
 
 
 (defn ref-comp
-  [block parent-state]
-  (let [orig-uid        (:block/uid block)
-        state           (r/cursor parent-state [:inline-refs/states orig-uid])
-        has-children?   (-> block :block/children boolean)
-        parents         (cond-> (:block/parents block)
-                          ;; If the ref has children, move it to breadcrumbs and show children.
-                          has-children? (conj block))
-        ;; Reset state on parent each time the component is created.
-        ;; To clear state, open/close the inline refs.
-        _               (reset! state {:block     block
-                                       :embed-id  (random-uuid)
-                                       :open?     true
-                                       :parents   parents
-                                       :focus?    (not has-children?)})
-        linked-ref-data {:linked-ref     true
-                         :initial-open   false
-                         :linked-ref-uid (:block/uid block)
-                         :parent-uids    (set (map :block/uid (:block/parents block)))}]
+  [block]
+  (let [orig-uid            (:block/uid block)
+        has-children?       (-> block :block/children boolean)
+        parents             (cond-> (:block/parents block)
+                              ;; If the ref has children, move it to breadcrumbs and show children.
+                              has-children? (conj block))
+        state-reset         {:block    block
+                             :embed-id (random-uuid)
+                             :open?    true
+                             :parents  parents
+                             :focus?   (not has-children?)}
+        linked-ref-data     {:linked-ref     true
+                             :initial-open   false
+                             :linked-ref-uid (:block/uid block)
+                             :parent-uids    (set (map :block/uid (:block/parents block)))}
+        inline-ref-open?    (rf/subscribe [::inline-refs.subs/state-open? orig-uid])
+        inline-ref-focus?   (rf/subscribe [::inline-refs.subs/state-focus? orig-uid])
+        inline-ref-block    (rf/subscribe [::inline-refs.subs/state-block orig-uid])
+        inline-ref-parents  (rf/subscribe [::inline-refs.subs/state-parents orig-uid])
+        inline-ref-embed-id (rf/subscribe [::inline-refs.subs/state-embed-id orig-uid])]
+    ;; Reset state on parent each time the component is created.
+    ;; To clear state, open/close the inline refs.
+    (rf/dispatch [::inline-refs.events/set-state! orig-uid state-reset])
     (fn [_]
-      (let [{:keys [block parents embed-id]} @state
-            block (reactive/get-reactive-block-document (:db/id block))]
+      (let [block (reactive/get-reactive-block-document (:db/id @inline-ref-block))]
         [:<>
          [:> HStack {:lineHeight "1"}
-          [:> Toggle {:isOpen (:open? @state)
+          [:> Toggle {:isOpen   @inline-ref-open?
                       :on-click (fn [e]
                                   (.. e stopPropagation)
-                                  (swap! state update :open? not))}]
+                                  (rf/dispatch [::inline-refs.events/toggle-state-open! orig-uid]))}]
 
           [:> Breadcrumb {:fontSize "xs" :color "foreground.secondary"}
            (doall
-             (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
-                   (if (or (:open? @state) (not (:focus? @state)))
-                     parents
-                     (conj parents block))]
-               [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
-                [:> BreadcrumbLink {:onClick (fn [e]
-                                               (let [shift? (.-shiftKey e)]
-                                                 (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                      :target :block
-                                                                                      :pane   (if shift?
-                                                                                                :right-pane
-                                                                                                :main-pane)}])
-                                                 (let [new-B (db/get-block [:block/uid uid])
-                                                       new-P (concat
-                                                               (take-while (fn [b] (not= (:block/uid b) uid)) parents)
-                                                               [breadcrumb-block])]
-                                                   (.. e stopPropagation)
-                                                   (swap! state assoc :block new-B :parents new-P :focus? false))))}
+            (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
+                  (if (or @inline-ref-open?
+                          (not @inline-ref-focus?))
+                    @inline-ref-parents
+                    (conj @inline-ref-parents block))]
+              [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
+               [:> BreadcrumbLink {:onClick (fn [e]
+                                              (let [shift? (.-shiftKey e)]
+                                                (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                     :target :block
+                                                                                     :pane   (if shift?
+                                                                                               :right-pane
+                                                                                               :main-pane)}])
+                                                (let [new-B (db/get-block [:block/uid uid])
+                                                      new-P (concat
+                                                             (take-while (fn [b] (not= (:block/uid b) uid)) @inline-ref-parents)
+                                                             [breadcrumb-block])]
+                                                  (.. e stopPropagation)
+                                                  (rf/dispatch [::inline-refs.events/set-block! orig-uid new-B])
+                                                  (rf/dispatch [::inline-refs.events/set-parents! orig-uid new-P])
+                                                  (rf/dispatch [::inline-refs.events/set-focus! orig-uid false]))))}
                  [parse-renderer/parse-and-render (or title string) uid]]]))]]
 
-         (when (:open? @state)
-           (if (:focus? @state)
+         (when @inline-ref-open?
+           (if @inline-ref-focus?
 
              ;; Display the single child block only when focusing.
              ;; This is the default behaviour for a ref without children, for brevity.
              [:div.block-embed {:fontSize "0.7em"}
               [block-el
-               (util/recursively-modify-block-for-embed block embed-id)
+               (util/recursively-modify-block-for-embed block @inline-ref-embed-id)
                linked-ref-data
                {:block-embed? true}]]
 
@@ -109,13 +116,13 @@
              (for [child (:block/children block)]
                [:<> {:key (:db/id child)}
                 [block-el
-                 (util/recursively-modify-block-for-embed child embed-id)
+                 (util/recursively-modify-block-for-embed child @inline-ref-embed-id)
                  linked-ref-data
                  {:block-embed? true}]])))]))))
 
 
 (defn inline-linked-refs-el
-  [state uid]
+  [uid]
   (let [refs (reactive/get-reactive-linked-references [:block/uid uid])]
     (when (not-empty refs)
       [:> VStack {:as "aside"
@@ -135,7 +142,7 @@
             (doall
               (for [block' group]
                 [:> ReferenceBlock {:key (str "ref-" (:block/uid block'))}
-                 [ref-comp block' state]]))]))])))
+                 [ref-comp block']]))]))])))
 
 
 ;; Components
@@ -302,9 +309,7 @@
                                                :drag-target        nil
                                                :context-menu/x     nil
                                                :context-menu/y     nil
-                                               :context-menu/show  false
-                                               ;; :inline-refs/open   false
-                                               :inline-refs/states {}})
+                                               :context-menu/show  false})
          local-value                  (r/atom nil)
          old-value                    (r/atom nil)
          show-edit?                   (r/atom false)
@@ -443,7 +448,7 @@
           (when (and (> (count _refs) 0)
                      (not= :block-embed? opts)
                      @inline-refs-open?)
-            [inline-linked-refs-el state uid])
+            [inline-linked-refs-el uid])
 
           ;; Children
           (when (and (seq children)
