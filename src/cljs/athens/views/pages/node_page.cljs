@@ -8,6 +8,7 @@
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
+    [athens.common-events.graph.ops :as graph-ops]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
     [athens.common.utils :as utils]
     [athens.dates :as dates]
@@ -423,7 +424,9 @@
                                                    (fn [e] (router/navigate-page title e)))
                          :onClickOpenInSidebar   (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
                                                    #(dispatch [:right-sidebar/open-item uid]))
-                         :onChangeHeaderImageUrl (fn [url] (dispatch [:properties/update [:node/title title] ":header/url" url]))
+                         :onChangeHeaderImageUrl (fn [url]
+                                                   (dispatch [:properties/update-in [:node/title title] [":header/url"]
+                                                              (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))
                          :headerImageUrl         (or header-image-url
                                                      ;; TODO: remove this default image, only here for testing.
                                                      "https://images.unsplash.com/photo-1651721675073-a992af85dfed?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2670&q=80")}

@@ -1766,20 +1766,15 @@
 
 
 (reg-event-fx
-  :properties/update
-  (fn [_ [_ id k value]]
-    (log/debug ":properties/update args" id k value)
-    (let [block-or-page (common-db/get-block @db/dsdb id)
-          prop-uid      (-> block-or-page :block/properties (get k) :block/uid)
-          op            (if prop-uid
-                          (graph-ops/build-block-save-op @db/dsdb prop-uid value)
-                          (let [prop-uid (common.utils/gen-block-uid)
-                                position (merge {:relation {:page/title k}}
-                                                (if-let [title (:node/title block-or-page)]
-                                                  {:page/title title}
-                                                  {:block/uid (:block/uid block-or-page)}))]
-                            (composite-ops/make-consequence-op {:op/type :properties/update}
-                                                               [(graph-ops/build-block-new-op @db/dsdb prop-uid position)
-                                                                (graph-ops/build-block-save-op @db/dsdb prop-uid value)])))
-          event         (common-events/build-atomic-event op)]
-      {:fx [[:dispatch-n [[:resolve-transact-forward event]]]]})))
+  :properties/update-in
+  (fn [_ [_ id ks f]]
+    (log/debug ":properties/update-in args" id ks)
+    (let [db                  @db/dsdb
+          uid                 (common-db/get-block-uid db id)
+          [prop-uid path-ops] (graph-ops/build-property-path db uid ks)
+          f-ops               (f db prop-uid)]
+      (when (seq f-ops)
+        {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
+                                                            (composite-ops/make-consequence-op {:op/type :properties/update})
+                                                            common-events/build-atomic-event)]]]]}))))
+
