@@ -4,6 +4,7 @@
   Functions in this namespace should be used very deliberately to avoid performance overheads.
   No other namespace should import posh.reagent."
   (:require
+    [athens.common-db :as common-db]
     [athens.common.sentry :refer-macros [defntrace]]
     [athens.common.utils :as utils]
     [athens.db :as db]
@@ -132,6 +133,6 @@
 
 (comment
   ;; Print what ratoms are active.
-  (-> (ratoms) utils/spy)
+  (-> (ratoms) utils/spy))
   ;;
-  )
+
