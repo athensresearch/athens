@@ -7,7 +7,10 @@
     ["/components/EmojiPicker/EmojiPicker"   :refer [EmojiPickerPopover]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    [athens.common-db                        :as common-db]
+    [athens.common-events.graph.ops          :as graph-ops]
     [athens.common.logging                   :as log]
+    [athens.common.utils                     :as utils]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
     [athens.electron.utils                   :as electron.utils]
@@ -36,11 +39,6 @@
 ;; It would be nicer to have inline refs code in a different file, but it's
 ;; much easier to resolve the circular dependency if they are on the same one.
 (declare block-el)
-
-
-(def reactions
-  [["💋" ["filipe" "alex"]]
-   ["🔥"       ["stuart"]]])
 
 
 (defn ref-comp
@@ -286,6 +284,33 @@
                              :open?     open}]))
 
 
+;; TODO: removing last user on an emoji should remove the emoji
+;; TODO: removing the last emoji reaction should remove the :reactions/emojis prop
+;; TODO: when we have time as first class, there's no need to save the timestamp as block string
+;; TODO: store time prop for both reaction and user-id, use for sorting (doesn't sort reaction yet)
+(defn toggle-reaction
+  "Toggle reaction on block uid. Does nothing if there's no user.
+  Stores emojis in the [:reactions/emojis reaction user-id] property path. "
+  [id reaction user-id]
+  (rf/dispatch [:properties/update-in id [":reactions" reaction user-id]
+                (fn [db prop-uid]
+                  [(if (common-db/get-block db [:block/uid prop-uid])
+                     (graph-ops/build-block-remove-op @db/dsdb prop-uid)
+                     (graph-ops/build-block-save-op db prop-uid (str (utils/now-ts))))])]))
+
+
+(defn props->reactions
+  [props]
+  (->> (get props ":reactions")
+       :block/properties
+       (mapv (fn [[k {props :block/properties}]]
+               [k (->> props
+                       (map (fn [[user-id {timestamp :block/string}]]
+                              [timestamp user-id]))
+                       (sort-by first)
+                       (mapv second))]))))
+
+
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([block]
@@ -326,6 +351,7 @@
                            string
                            open
                            children
+                           properties
                            _refs]} (merge (reactive/get-reactive-block-document ident) block)
              children-uids         (set (map :block/uid children))
              uid-sanitized-block   (s/transform
@@ -337,7 +363,12 @@
              is-selected           @(rf/subscribe [::select-subs/selected? uid])
              selected-items       @(rf/subscribe [::select-subs/items])
              present-user          @(rf/subscribe [:presence/has-presence uid])
-             is-presence           (seq present-user)]
+             is-presence           (seq present-user)
+             ;; TODO: user-id for presence users is their username, TDB what it is for real auth users.
+             ;; TODO: what should happen for local or in-memory db? there's no presence, atm it's hardcoded to "stuart"
+             user-id               (or (:username @(rf/subscribe [:presence/current-user]))
+                                       "stuart")
+             reactions             (props->reactions properties)]
 
          ;; (prn uid is-selected)
 
@@ -405,8 +436,10 @@
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
            [content/block-content-el block state]
 
-           (when reactions [:> Reactions {:reactions (clj->js reactions)}])
-           
+           (when reactions [:> Reactions {:reactions (clj->js reactions)
+                                          :currentUser user-id
+                                          :onToggleReaction (partial toggle-reaction ident)}])
+
            [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))

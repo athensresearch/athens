@@ -41,7 +41,7 @@ const ReactionItem = ({ reaction, onToggleReaction, currentUser }: ReactionItemP
   </Button>
 }
 
-export const Reactions = ({ reactions, onToggleReaction, currentUser = 'stuart' }: ReactionsProps): JSX.Element | null => {
+export const Reactions = ({ reactions, onToggleReaction, currentUser }: ReactionsProps): JSX.Element | null => {
   if (!reactions) return null;
 
   return (
@@ -59,7 +59,7 @@ export const Reactions = ({ reactions, onToggleReaction, currentUser = 'stuart' 
         onToggleReaction={onToggleReaction}
         currentUser={currentUser}
       />))}
-      <EmojiPickerPopover onEmojiSelected={(event) => console.log(event.detail.unicode)} />
+      <EmojiPickerPopover onEmojiSelected={(event) => onToggleReaction(event.detail.unicode, currentUser)} />
     </ButtonGroup>
   );
 };
