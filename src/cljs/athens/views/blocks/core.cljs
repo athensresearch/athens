@@ -10,12 +10,14 @@
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
     [athens.electron.utils                   :as electron.utils]
+    [athens.events.inline-refs               :as inline-refs.events]
     [athens.events.linked-refs               :as linked-ref.events]
     [athens.events.selection                 :as select-events]
     [athens.parse-renderer                   :as parse-renderer]
     [athens.reactive                         :as reactive]
     [athens.router                           :as router]
     [athens.self-hosted.presence.views       :as presence]
+    [athens.subs.inline-refs                 :as inline-refs.subs]
     [athens.subs.linked-refs                 :as linked-ref.subs]
     [athens.subs.selection                   :as select-subs]
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
@@ -301,7 +303,7 @@
                                                :context-menu/x     nil
                                                :context-menu/y     nil
                                                :context-menu/show  false
-                                               :inline-refs/open   false
+                                               ;; :inline-refs/open   false
                                                :inline-refs/states {}})
          local-value                  (r/atom nil)
          old-value                    (r/atom nil)
@@ -324,8 +326,10 @@
                                        :read-old-value read-old-value
                                        :show-edit?     show-edit?}
          last-event                   (r/atom nil)
-         linked-ref-open?             (rf/subscribe [::linked-ref.subs/open? uid])]
+         linked-ref-open?             (rf/subscribe [::linked-ref.subs/open? uid])
+         inline-refs-open?            (rf/subscribe [::inline-refs.subs/open? uid])]
      (rf/dispatch [::linked-ref.events/set-open! uid (or (false? linked-ref) initial-open)])
+     (rf/dispatch [::inline-refs.events/set-open! uid false])
      ;; TODO: remove debugger code
      #_(add-watch state :watcher
                 (fn [_key _atom old-state new-state]
@@ -428,8 +432,8 @@
               (fn [e]
                 (if (.. e -shiftKey)
                   (rf/dispatch [:right-sidebar/open-item uid])
-                  (swap! state update :inline-refs/open not)))
-              (:inline-refs/open @state)])]
+                  (rf/dispatch [::inline-refs.events/toggle-open! uid])))
+              @inline-refs-open?])]
 
           ;; XXX: part of view/edit embedable
           [autocomplete-search/inline-search-el block state-hooks last-event]
@@ -438,7 +442,7 @@
           ;; Inline refs
           (when (and (> (count _refs) 0)
                      (not= :block-embed? opts)
-                     (:inline-refs/open @state))
+                     @inline-refs-open?)
             [inline-linked-refs-el state uid])
 
           ;; Children
