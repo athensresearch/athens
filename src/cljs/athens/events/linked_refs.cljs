@@ -1,5 +1,6 @@
 (ns athens.events.linked-refs
-  (:require [re-frame.core :as rf]))
+  (:require
+    [re-frame.core :as rf]))
 
 
 (rf/reg-event-db

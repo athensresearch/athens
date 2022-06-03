@@ -40,9 +40,9 @@
                        :fontStyle "italics"}
               (str "Search for a " (symbol @inline-search-type))]
              (doall
-              (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list @inline-search-results)]
-                [:> AutocompleteButton {:key (str "inline-search-item" uid)
-                                        :isActive (= i @inline-search-index)
-                                        :onClick (fn [_] (inline-item-click state-hooks (:block/uid block) (or title uid)))
-                                        :id (str "inline-search-item" uid)}
-                 (or title string)]))))]))))
+               (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list @inline-search-results)]
+                 [:> AutocompleteButton {:key (str "inline-search-item" uid)
+                                         :isActive (= i @inline-search-index)
+                                         :onClick (fn [_] (inline-item-click state-hooks (:block/uid block) (or title uid)))
+                                         :id (str "inline-search-item" uid)}
+                  (or title string)]))))]))))

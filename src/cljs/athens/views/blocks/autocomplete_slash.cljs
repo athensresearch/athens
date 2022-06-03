@@ -28,12 +28,12 @@
                         :onClose #(rf/dispatch [::inline-search.events/close!])}
        (when @open?
          (doall
-          (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list @inline-search-results)]
-            [:> AutocompleteButton {:key     text
-                                    :id      (str "dropdown-item-" i)
-                                    :command kbd
-                                    :isActive (when (= i @inline-search-index) "isActive")
-                                    :onClick (fn [_] (slash-item-click block item))}
-             [:<>
-              [(r/adapt-react-class icon) {:boxSize 6 :mr 3 :ml 0}]
-              text]])))])))
+           (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list @inline-search-results)]
+             [:> AutocompleteButton {:key     text
+                                     :id      (str "dropdown-item-" i)
+                                     :command kbd
+                                     :isActive (when (= i @inline-search-index) "isActive")
+                                     :onClick (fn [_] (slash-item-click block item))}
+              [:<>
+               [(r/adapt-react-class icon) {:boxSize 6 :mr 3 :ml 0}]
+               text]])))])))

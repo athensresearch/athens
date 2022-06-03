@@ -1,6 +1,7 @@
 (ns athens.events.inline-search
   "Inline Search Events"
-  (:require [re-frame.core :as rf]))
+  (:require
+    [re-frame.core :as rf]))
 
 
 (rf/reg-event-db
