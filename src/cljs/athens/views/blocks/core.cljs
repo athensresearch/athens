@@ -5,11 +5,11 @@
     ["/components/Block/Toggle"              :refer [Toggle]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
-    #_[clojure.pprint :as pprint]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
     [athens.electron.utils                   :as electron.utils]
+    [athens.events.dragging                  :as drag.events]
     [athens.events.inline-refs               :as inline-refs.events]
     [athens.events.linked-refs               :as linked-ref.events]
     [athens.events.selection                 :as select-events]
@@ -17,6 +17,7 @@
     [athens.reactive                         :as reactive]
     [athens.router                           :as router]
     [athens.self-hosted.presence.views       :as presence]
+    [athens.subs.dragging                    :as drag.subs]
     [athens.subs.inline-refs                 :as inline-refs.subs]
     [athens.subs.linked-refs                 :as linked-ref.subs]
     [athens.subs.selection                   :as select-subs]
@@ -168,7 +169,7 @@
   If above midpoint, show drop indicator above block.
   If no children and over X pixels from the left, show child drop indicator.
   If below midpoint, show drop indicator below."
-  [e block state]
+  [e block]
   (.. e preventDefault)
   (.. e stopPropagation)
   (let [{:block/keys [children
@@ -184,14 +185,16 @@
                                dragging?           nil
                                is-selected?        nil
                                (or (neg? y)
-                                   (< y middle-y))         :before
+                                   (< y middle-y)) :before
                                (and (< middle-y y)
-                                    (> 50 x))              :after
+                                    (> 50 x))      :after
                                (or (not open)
                                    (and (empty? children)
-                                        (< 50 x)))         :first)]
-    (when target
-      (swap! state assoc :drag-target target))))
+                                        (< 50 x))) :first)
+        prev-target          @(rf/subscribe [::drag.subs/drag-target uid])]
+    (when (and target
+               (not= prev-target target))
+      (rf/dispatch [::drag.events/set-drag-target! uid target]))))
 
 
 (defn drop-bullet
@@ -244,11 +247,11 @@
   "Handle dom drop events, read more about drop events at:
   : https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API#Define_a_drop_zone"
 
-  [e block state]
+  [e block]
   (.. e stopPropagation)
   (let [{target-uid :block/uid} block
         [target-uid _]          (db/uid-and-embed-id target-uid)
-        {:keys [drag-target]}   @state
+        drag-target             @(rf/subscribe [::drag.subs/drag-target target-uid])
         source-uid              (.. e -dataTransfer (getData "text/plain"))
         effect-allowed          (.. e -dataTransfer -effectAllowed)
         items                   (array-seq (.. e -dataTransfer -items))
@@ -259,31 +262,31 @@
                                      (not= source-uid target-uid)
                                      (or (= effect-allowed "link")
                                          (= effect-allowed "move")))
-        selected-items           @(rf/subscribe [::select-subs/items])]
+        selected-items          @(rf/subscribe [::select-subs/items])]
 
     (cond
-      (re-find img-regex datatype) (when electron.utils/electron?
-                                     (images/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
+      (re-find img-regex datatype)     (when electron.utils/electron?
+                                         (images/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
                                            (drop-bullet source-uid target-uid drag-target effect-allowed)
                                            (drop-bullet-multi selected-items target-uid drag-target))))
 
     (rf/dispatch [:mouse-down/unset])
-    (swap! state assoc :drag-target nil)))
+    (rf/dispatch [::drag.events/cleanup! target-uid])))
 
 
 (defn block-drag-leave
   "When mouse leaves block, remove any drop area indicator.
   Ignore if target-uid and related-uid are the same — user went over a child component and we don't want flicker."
-  [e block state]
+  [e block]
   (.. e preventDefault)
   (.. e stopPropagation)
   (let [{target-uid :block/uid} block
         related-uid (util/get-dataset-uid (.. e -relatedTarget))]
     (when-not (= related-uid target-uid)
       ;; (prn target-uid related-uid  "LEAVE")
-      (swap! state assoc :drag-target nil))))
+      (rf/dispatch [::drag.events/cleanup! target-uid]))))
 
 
 (defn toggle
@@ -305,11 +308,6 @@
                  parent-uids]}        linked-ref-data
          {:block/keys [uid
                        original-uid]} block
-         state                        (r/atom {:dragging           false
-                                               :drag-target        nil
-                                               :context-menu/x     nil
-                                               :context-menu/y     nil
-                                               :context-menu/show  false})
          local-value                  (r/atom nil)
          old-value                    (r/atom nil)
          show-edit?                   (r/atom false)
@@ -332,23 +330,19 @@
                                        :show-edit?     show-edit?}
          last-event                   (r/atom nil)
          linked-ref-open?             (rf/subscribe [::linked-ref.subs/open? uid])
-         inline-refs-open?            (rf/subscribe [::inline-refs.subs/open? uid])]
+         inline-refs-open?            (rf/subscribe [::inline-refs.subs/open? uid])
+         dragging?                    (rf/subscribe [::drag.subs/dragging? uid])
+         drag-target                  (rf/subscribe [::drag.subs/drag-target uid])]
      (rf/dispatch [::linked-ref.events/set-open! uid (or (false? linked-ref) initial-open)])
      (rf/dispatch [::inline-refs.events/set-open! uid false])
-     ;; TODO: remove debugger code
-     #_(add-watch state :watcher
-                (fn [_key _atom old-state new-state]
-                  (log/debug "state watcher")
-                  (log/debug "\nold:\n" (with-out-str (pprint/pprint old-state)))
-                  (log/debug "\nnew:\n" (with-out-str (pprint/pprint new-state)))))
 
      (r/create-class
       {:component-will-unmount
-       (fn [_]
+       (fn will-unmount-block [_]
          (rf/dispatch [::linked-ref.events/cleanup! uid])
          (rf/dispatch [::inline-refs.events/cleanup! uid]))
        :reagent-render
-       (fn [block linked-ref-data opts]
+       (fn render-block [block linked-ref-data opts]
          (let [ident                 [:block/uid (or original-uid uid)]
                {:block/keys [uid
                              string
@@ -361,7 +355,6 @@
                                       (fn [{:block/keys [original-uid uid] :as block}]
                                         (assoc block :block/uid (or original-uid uid)))
                                       block)
-               {:keys [dragging]}    @state
                is-selected           @(rf/subscribe [::select-subs/selected? uid])
                selected-items        @(rf/subscribe [::select-subs/items])
                present-user          @(rf/subscribe [:presence/has-presence uid])
@@ -376,7 +369,7 @@
              (update-fn string)
              (update-old-fn string))
 
-           [:> Container {:isDragging   (and dragging (not is-selected))
+           [:> Container {:isDragging   (and @dragging? (not is-selected))
                           :isSelected   is-selected
                           :hasChildren  (seq children)
                           :isOpen       open
@@ -391,11 +384,11 @@
                           ;; so we avoid rendering it when it's not needed.
                           :onMouseEnter show-edit-fn
                           :onMouseLeave hide-edit-fn
-                          :onDragOver   (fn [e] (block-drag-over e block state))
-                          :onDragLeave  (fn [e] (block-drag-leave e block state))
-                          :onDrop       (fn [e] (block-drop e block state))}
+                          :onDragOver   (fn [e] (block-drag-over e block))
+                          :onDragLeave  (fn [e] (block-drag-leave e block))
+                          :onDrop       (fn [e] (block-drop e block))}
 
-            (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
+            (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
             [:div.block-body
              (when (seq children)
@@ -429,8 +422,8 @@
                                                                                                     :right-pane
                                                                                                     :main-pane)}])
                                                      (router/navigate-uid uid e)))
-                         :on-drag-start          (fn [e] (bullet-drag-start e uid state))
-                         :on-drag-end            (fn [e] (bullet-drag-end e uid state))}]
+                         :on-drag-start          (fn [e] (bullet-drag-start e uid))
+                         :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
 
              ;; XXX: render view
              [content/block-content-el block state-hooks last-event]
@@ -466,6 +459,6 @@
                   (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
                   opts]]))
 
-            (when (= (:drag-target @state) :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
-            (when (= (:drag-target @state) :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])]))}))))
+            (when (= @drag-target :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
+            (when (= @drag-target :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])]))}))))
 
