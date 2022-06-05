@@ -3,55 +3,14 @@
     [re-frame.core               :as rf]
     [goog.events                 :as events]
     [athens.parse-renderer       :as parse-renderer]
+    [athens.util :as util]
     ["/components/Block/Anchor"  :refer [Anchor]]
-    ["@chakra-ui/react"          :refer [Button Input]]
-    ["/components/Icons/Icons"   :refer [ChatIcon]])
+    ["/components/Comments/Comments" :refer [InlineCommentInput CommentCounter]]
+    ["@chakra-ui/react"          :refer [Button Input Box Text VStack HStack Textarea]]
+    ["/components/Icons/Icons"   :refer [ChatFilledIcon ChevronDownIcon ChevronRightIcon]])
   (:import
     (goog.events
       KeyCodes)))
-
-
-;; Styles
-
-(def comments-styles
-  {:margin-left "30px"
-   :background-color "#e7e7e7"
-   :border-radius "5px"
-   :width "95%"})
-
-(def comment-styles
-  {:padding "5px 10px 5px 10px"})
-
-(def author-style {:font-size "80%" :margin-right "15px" :color "gray"})
-
-(def content-style {:font-size "90%"})
-
-(def time-style {:font-size "80%" :color "gray"})
-
-(defn inline-comment-textarea
-  [uid]
-  (let [comment-string (reagent.core/atom "")]
-    (fn [uid]
-      (let [username @(rf/subscribe [:username])]
-        [:div
-         [:> Input  {:placeholder "Add a comment..." :style {:width "90%"
-                                                             :margin "10px"}
-                     :on-change   (fn [e] (reset! comment-string (.. e -target -value)))
-                     :value       @comment-string
-                     :on-key-down (fn [e]
-                                    (when (= (.. e -keyCode) KeyCodes.ENTER)
-                                      (re-frame.core/dispatch [:comment/write-comment uid @comment-string username])
-                                      (re-frame.core/dispatch [:comment/hide-comment-textarea])
-                                      (reset! comment-string "")))
-                     :variant     "filled"}]
-         [:> Button {:style    {:float "right"
-                                :margin-top "9px"
-                                :margin-right "1px"}
-                     :on-click (fn [_]
-                                 (re-frame.core/dispatch [:comment/write-comment uid @comment-string username])
-                                 (re-frame.core/dispatch [:comment/hide-comment-textarea])
-                                 (reset! comment-string ""))}
-          "Send"]]))))
 
 
 (defn copy-comment-uid
@@ -59,7 +18,11 @@
   (let [uid (:block/uid comment-data)
         ref (str "((" uid "))")]
     (.. js/navigator -clipboard (writeText ref))
+    (util/toast (clj->js {:status "info"
+                          :position "top-right"
+                          :title "Copied uid to clipboard"}))
     (swap! state update :comment/show? not)))
+
 
 (defn show-comment-context-menu
   [comment-data state]
@@ -80,6 +43,7 @@
                                    [:> Button {:on-mouse-down #(copy-comment-uid comment-data state)}
                                     "Copy comment uid"]]])})))
 
+
 (defn comment-el
   [item]
   (let [{:keys [string time author block/uid]} item
@@ -88,60 +52,85 @@
         state (reagent.core/atom {:comment/show? false
                                   :comment/x     nil
                                   :comment/y     nil})]
-
     (fn [item]
-      [:<>
-       [:div.comment (merge
-                       {:on-context-menu (fn [e]
-                                           (swap! state update :comment/show? not)
-                                           (swap! state assoc :comment/x (.-clientX e)
-                                                              :comment/y (.-clientY e)))
-                        :on-click  #(swap! state assoc :comment/show? false)}
-                       {:style     comment-styles})
-        (when (:comment/show? @state)
-          [show-comment-context-menu item state])
+      [:> HStack {:mb "-1px"
+                  :borderTop "1px solid"
+                  :display "grid"
+                  :py 1
+                  :alignItems "baseline"
+                  :gridTemplateColumns "5em auto 1fr"
+                  :gridTemplateRows "2em auto"
+                  :gridTemplateAreas "'author anchor comment' '_ _ comment'"
+                  :borderTopColor "separator.divider"
+                  :sx {"> button.anchor" {:height "100%"}
+                       "> button.anchor:not([data-active])" {:opacity 0}
+                       ":hover > button.anchor" {:opacity 1}}}
+       [:> Text {:fontWeight "bold"
+                 :gridArea "author"
+                 :fontSize "sm"
+                 :flex "0 0 4em"
+                 :noOfLines 0}
+        author]
+       [show-comment-context-menu item state]
+       [:> Box {:flex 1
+                :gridArea "comment"
+                :lineHeight 1.5
+                :fontSize "sm"}
+        ;; In future this should be rendered differently for reply type and ref-type
+        [athens.parse-renderer/parse-and-render string uid]]
+       (when (pos? linked-refs-count)
+         [:> Text linked-refs-count])])))
 
-        [:span {:style author-style}
-         author]
-        [:span {:style content-style}
-         ;; In future this should be rendered differently for reply type and ref-type
-         [athens.parse-renderer/parse-and-render string uid]]
-        [:div (merge
-                     {:style {:float "right"}}
-                     time-style)
-         (when (pos? linked-refs-count)
-           [:span {:style {:margin-right "30px"}} linked-refs-count])
-         [:span time]]]])))
+
+
 
 
 (defn inline-comments
   [data uid hide?]
-  (let [state        (reagent.core/atom {:hide? hide?})
-        num-comments (count data)
+  (let [state         (reagent.core/atom {:hide? hide?})
+        num-comments  (count data)
         first-comment (first data)
+        username @(rf/subscribe [:username])        
         {:keys [author string time]} first-comment]
     (fn [data uid]
-      [:<>
+      [:> VStack (merge
+                  (when-not (:hide? @state)
+                    {:bg "background.upper"})
+                  {:gridArea "comments"
+                   :color "foreground.secondary"
+                   :flex "1 0 auto"
+                   :spacing 0
+                   :borderRadius "md"
+                   :align "stretch"})
        ;; add time, author, and preview
-       [:div {}
-        [:> Button {:style    (merge comments-styles {:width "95%" :font-weight "normal"})
-                    :on-click #(swap! state update :hide? not)}
-         (if (:hide? @state)
-           [:<>
-            [:> ChatIcon]
-            [:span {:style {:padding "6px"}} num-comments]
-            [:div {:style {:width "100%"}}
-             [:span {:style {:margin-right "5px" :font-size "90%" :color "gray"}} (str "@" author)]
-             [:span {:style (merge {:overflow      "hidden"
-                                    :text-overflow "ellipsis"
-                                    :white-space   "nowrap"}
-                                   content-style)} string]]
-           [:span {:style time-style} time]]
-           [:span {:style {:margin-left "30px" :font-style "90%" }} "Hide Comments"])]]
+       [:> Button (merge
+                   (when-not (:hide? @state)
+                     {:bg "background.upper"
+                      :borderColor "transparent"
+                      :borderBottomRadius 0})
+                   {:justifyContent "flex-start"
+                    :color "foreground.secondary"
+                    :variant "outline"
+                    :size "sm"
+                    :gap 2
+                    :flex "1 0 auto"
+                    :onClick #(swap! state update :hide? not)})
+        (if (:hide? @state)
+          [:<>
+           [:> ChevronRightIcon]
+           [:> CommentCounter {:count num-comments}]
+           [:> Text "Comments"]]
+          [:<>
+           [:> ChevronDownIcon]
+           [:> CommentCounter {:count num-comments}]
+           [:> Text "Comments"]])]
 
        (when-not (:hide? @state)
-         [:div.comments {:style comments-styles}
+         [:> Box {:pl 8
+                  :pr 4
+                  :pb 4}
           (for [item data]
             ^{:key item}
             [comment-el item])
-          [inline-comment-textarea uid]])])))
+          [:> InlineCommentInput
+           {:onSubmitComment #(re-frame.core/dispatch [:comment/write-comment uid % username])}]])])))
