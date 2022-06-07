@@ -91,14 +91,17 @@
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})]
     (fn [block]
-      (let [{:block/keys [string children uid] :db/keys [id]} block]
+      (let [{:block/keys [string children uid] :db/keys [id]} block
+            is-current-route? (= @(subscribe [:current-route/uid]) uid)]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
         [:<>
 
          ;; Header
-         [:> PageHeader {:onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+         [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
+                                                  (fn [e] (router/navigate-uid uid e)))
+                         :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
                                                  #(dispatch [:right-sidebar/open-item uid]))}
 
           ;; Parent Context
