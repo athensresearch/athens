@@ -403,6 +403,17 @@
                        :on-drag-end     (fn [e] (bullet-drag-end e uid state))}]
            [content/block-content-el block state]
 
+          ;; Comments textarea
+          #_ (when @(rf/subscribe [:comment/show-comment-textarea? uid])
+            [inline-comments/inline-comments [] uid false])
+
+          ;; Show comments when the toggle is on
+          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
+                    (and @(rf/subscribe [:comment/show-inline-comments?])
+                         comment-thread-uid?))
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb comment-thread-uid?) uid true])
+
+
            [presence/inline-presence-el uid]
 
            (when (and (> (count _refs) 0) (not= :block-embed? opts))
@@ -422,15 +433,6 @@
                      (not= :block-embed? opts)
                      (:inline-refs/open @state))
             [inline-linked-refs-el state uid])
-
-          ;; Comments textarea
-          (when @(rf/subscribe [:comment/show-comment-textarea? uid])
-            [inline-comments/inline-comments [] uid false])
-
-          ;; Show comments when the toggle is on
-          (when (and @(rf/subscribe [:comment/show-inline-comments?])
-                     comment-thread-uid?)
-            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb comment-thread-uid?) uid true])
 
           ;; Children
           (when (and (seq children)
