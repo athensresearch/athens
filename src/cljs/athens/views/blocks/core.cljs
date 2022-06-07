@@ -290,7 +290,7 @@
          {:block/keys [uid original-uid]} block
          state (r/atom {:string/local       nil
                         :string/previous    nil
-                        ;; one of #{:page :block :slash :hashtag :template}
+                        ;; one of #{:page :block :slash :hashtag :template :add-to}
                         :search/type        nil
                         :search/results     nil
                         :search/query       nil

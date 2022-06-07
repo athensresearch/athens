@@ -1625,21 +1625,22 @@
 (reg-event-fx
   :paste-internal
   [(interceptors/sentry-span-no-new-tx "paste-internal")]
-  (fn [_ [_ uid local-str internal-representation]]
+  (fn [_ [_ uid local-str internal-representation target-uid skip-focus?]]
     (when (seq internal-representation)
       (let [[uid]      (db/uid-and-embed-id uid)
             op         (bfs/build-paste-op @db/dsdb
-                                           uid
+                                           (or target-uid uid)
                                            local-str
                                            internal-representation)
             new-titles (graph-ops/ops->new-page-titles op)
             new-uids   (graph-ops/ops->new-block-uids op)
             [_rm add]  (graph-ops/structural-diff @db/dsdb op)
             event      (common-events/build-atomic-event op)
-            focus-uid  (-> (graph-ops/contains-op? op :block/new)
-                           first
-                           :op/args
-                           :block/uid)]
+            focus-uid  (when-not skip-focus?
+                         (-> (graph-ops/contains-op? op :block/new)
+                             first
+                             :op/args
+                             :block/uid))]
         (log/debug "paste internal event is" (pr-str event))
         {:fx [[:async-flow {:id             :paste-internal-async-flow
                             :db-path        [:async-flow :paste-internal]
@@ -1764,3 +1765,13 @@
                   (atomic-graph-ops/make-block-open-op block-uid open?))]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
+
+(rf/reg-event-fx
+  :add-to
+  [(interceptors/sentry-span-no-new-tx "add-to")]
+  (fn [_ [_ string uid page-title]]
+    (log/debug ":add-to args" uid page-title)
+    (let [page-uid   (common-db/get-page-uid @db/dsdb page-title)
+          ref-ir     [{:block/uid    (common.utils/gen-block-uid)
+                       :block/string (str "((" uid "))")}]]
+      {:fx [[:dispatch [:paste-internal uid string ref-ir page-uid true]]]})))

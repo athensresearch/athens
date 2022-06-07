@@ -117,8 +117,10 @@
          ;; - else the parent is the current block's parent
          current-block-parent?    (and children
                                        open)
+         is-page?                 (common-db/get-page-title db uid)
          empty-block?             (and (string/blank? local-str)
-                                       (empty? children))
+                                       (empty? children)
+                                       (not is-page?))
          new-block-str?           (not= local-str string)
          ;; If block has a new local-str, write that
          block-save-op            (when new-block-str?
@@ -135,8 +137,11 @@
                                     empty-block? current-block-parent-uid
                                     current-block-parent? uid
                                     :else current-block-parent-uid)
-         default-position         (common-db/compat-position db {:block/uid block-position
-                                                                 :relation  new-block-order})
+         default-position         (common-db/compat-position db (if is-page?
+                                                                  {:page/title (common-db/get-page-title db uid)
+                                                                   :relation :last}
+                                                                  {:block/uid block-position
+                                                                   :relation  new-block-order}))
          ir-ops                   (internal-representation->atomic-ops db internal-representation default-position)
          remove-op                (when empty-block?
                                     (graph-ops/build-block-remove-op db uid))]
