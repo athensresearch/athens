@@ -246,7 +246,7 @@
              [editor/editor-component
               block-el
               true
-              reactive-block
+              (or original-uid uid) ; ident ;; reactive-block
               linked-ref-data
               uid-sanitized-block
               state-hooks

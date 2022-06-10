@@ -1,8 +1,10 @@
 (ns athens.views.jetsam
   "This is for experimentation with re-usability of block view/edit."
-  (:require [athens.views.blocks.content :as b-content]
-            [athens.views.blocks.core :as block]
-            [reagent.core :as r]))
+  (:require
+    [athens.views.blocks.content :as b-content]
+    [athens.views.blocks.core :as block]
+    [reagent.core :as r]))
+
 
 (defn jetsam-component
   "Experiments with embedding"
@@ -21,7 +23,8 @@
                          :idle-fn    #(println "idle-fn" (pr-str %))
                          :read-value value-atom
                          :show-edit? show-edit-atom?}]
-    (fn jetsam-component-render-fn []
+    (fn jetsam-component-render-fn
+      []
       [:div {:class "jetsam"
              :style {:position         "absolute"
                      :left             "25vh"
@@ -30,5 +33,6 @@
                      :height           "50vh"
                      :background-color "lightgreen"}}
        [b-content/block-content-el block state-hooks last-event]])))
+
 
 ;; TODO introduce re-usable edit/view so we don't need to include individual parts of block editing experience
