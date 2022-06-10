@@ -71,5 +71,5 @@
                   [app-toolbar/app-toolbar]
                   [left-sidebar/left-sidebar]
                   [pages/view]
-                  #_[jetsam/jetsam-component]
+                  [jetsam/jetsam-component]
                   [right-sidebar/right-sidebar]]])]])))

@@ -2,7 +2,6 @@
   "This is for experimentation with re-usability of block view/edit."
   (:require
     [athens.views.blocks.content :as b-content]
-    [athens.views.blocks.core :as block]
     [reagent.core :as r]))
 
 
