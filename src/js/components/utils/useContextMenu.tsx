@@ -5,28 +5,32 @@ import {
   MenuProps,
   Placement,
   Portal,
+  PortalProps,
   useControllableState,
   useOutsideClick
 } from "@chakra-ui/react";
 
 export type MenuSource = "cursor" | "box";
-export type SourceBox = { x: number; y: number; width: number; height: number };
+export type MenuTargetRect = { left: number; top: number; width: number; height: number };
 export interface useContextMenuProps {
-  ref: React.RefObject<HTMLElement>;
-  content: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
+  ref: React.RefObject<HTMLDivElement>;
   source?: MenuSource;
   placement?: Placement;
   menuProps?: MenuProps;
+  portalProps?: PortalProps;
+}
+export interface ContextMenuProps {
+  children: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
 export const useContextMenu = ({
   ref,
-  content,
   source,
   placement,
-  menuProps
+  menuProps,
+  portalProps
 }: useContextMenuProps) => {
-  const menuTargetPosition = React.useRef<SourceBox | null>(null);
+  const menuTargetRect = React.useRef<MenuTargetRect | null>(null);
   const [isOpen, setIsOpen] = useControllableState({ defaultValue: false });
   const menuRef = React.useRef(null);
 
@@ -42,17 +46,17 @@ export const useContextMenu = ({
   const handleContextMenu = (e) => {
     e.preventDefault();
     if (source === "cursor") {
-      menuTargetPosition.current = {
-        x: e.clientX,
-        y: e.clientY,
+      menuTargetRect.current = {
+        left: e.clientX,
+        top: e.clientY,
         width: 0,
         height: 0
       };
     } else {
       const box = ref.current.getBoundingClientRect();
-      menuTargetPosition.current = {
-        x: box.x,
-        y: box.y,
+      menuTargetRect.current = {
+        left: box.x,
+        top: box.y,
         width: box.width,
         height: box.height
       };
@@ -61,12 +65,10 @@ export const useContextMenu = ({
   };
 
   // The menu that will be returned
-  const ContextMenu = () => {
-    const rect = menuTargetPosition.current;
-
-    return (
+  const ContextMenu = ({ children }: ContextMenuProps) => {
+    return isOpen ? (
       <Menu
-        isOpen={isOpen}
+        isOpen={true}
         placement={placement}
         closeOnBlur={true}
         onClose={() => setIsOpen(false)}
@@ -75,21 +77,20 @@ export const useContextMenu = ({
         <MenuButton
           style={{
             position: "absolute",
-            pointerEvents: "none", // prevent the created box from receiving events
-            left: rect.x,
-            top: rect.y,
-            width: rect.width,
-            height: rect.height
+            pointerEvents: "none",
+            ...menuTargetRect.current,
+            left: 0,
+            top: 0
           }}
         />
-        <Portal>
-          {React.cloneElement(content, {
-            ...content.props,
+        <Portal {...portalProps}>
+          {React.cloneElement(children, {
+            ...children.props,
             ref: menuRef
           })}
         </Portal>
       </Menu>
-    );
+    ) : null;
   };
 
   const menuSourceProps = {
