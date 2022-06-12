@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 
 export type MenuSource = "cursor" | "box";
-export type MenuTargetRect = { left: number; top: number; width: number; height: number };
+export type MenuTargetRect = { position?: "fixed" | "absolute", left?: number; top?: number; width?: number; height?: number };
 export interface useContextMenuProps {
   ref: React.RefObject<HTMLDivElement>;
   source?: MenuSource;
@@ -44,24 +44,28 @@ export const useContextMenu = ({
   // then set the target box according to the source rect,
   // then open the menu
   const handleContextMenu = (e) => {
-    e.preventDefault();
-    if (source === "cursor") {
-      menuTargetRect.current = {
-        left: e.clientX,
-        top: e.clientY,
-        width: 0,
-        height: 0
-      };
-    } else {
-      const box = ref.current.getBoundingClientRect();
-      menuTargetRect.current = {
-        left: box.x,
-        top: box.y,
-        width: box.width,
-        height: box.height
-      };
+    if (e.target === ref.current || ref.current.contains(e.target as Node)) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (source === "cursor") {
+        menuTargetRect.current = {
+          position: "absolute",
+          left: e.clientX,
+          top: e.clientY,
+        };
+      } else {
+        const box = ref.current.getBoundingClientRect();
+        menuTargetRect.current = {
+          position: "fixed",
+          left: box.x,
+          top: box.y,
+          width: box.width,
+          height: box.height
+        };
+      }
+      setIsOpen(true);
     }
-    setIsOpen(true);
   };
 
   // The menu that will be returned
@@ -76,11 +80,8 @@ export const useContextMenu = ({
       >
         <MenuButton
           style={{
-            position: "absolute",
             pointerEvents: "none",
             ...menuTargetRect.current,
-            left: 0,
-            top: 0
           }}
         />
         <Portal {...portalProps}>
