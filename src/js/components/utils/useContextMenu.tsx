@@ -50,14 +50,14 @@ export const useContextMenu = ({
 
       if (source === "cursor") {
         menuTargetRect.current = {
-          position: "absolute",
-          left: e.clientX,
-          top: e.clientY,
+          position: "fixed",
+          left: e.pageX,
+          top: e.pageY,
         };
       } else {
         const box = ref.current.getBoundingClientRect();
         menuTargetRect.current = {
-          position: "fixed",
+          position: "absolute",
           left: box.x,
           top: box.y,
           width: box.width,
@@ -71,26 +71,26 @@ export const useContextMenu = ({
   // The menu that will be returned
   const ContextMenu = ({ children }: ContextMenuProps) => {
     return isOpen ? (
-      <Menu
-        isOpen={true}
-        placement={placement}
-        closeOnBlur={true}
-        onClose={() => setIsOpen(false)}
-        {...menuProps}
-      >
-        <MenuButton
-          style={{
-            pointerEvents: "none",
-            ...menuTargetRect.current,
-          }}
-        />
-        <Portal {...portalProps}>
+      <Portal {...portalProps}>
+        <Menu
+          isOpen={true}
+          placement={placement}
+          closeOnBlur={true}
+          onClose={() => setIsOpen(false)}
+          {...menuProps}
+        >
+          <MenuButton
+            style={{
+              pointerEvents: "none",
+              ...menuTargetRect.current,
+            }}
+          />
           {React.cloneElement(children, {
             ...children.props,
             ref: menuRef
           })}
-        </Portal>
-      </Menu>
+        </Menu>
+      </Portal>
     ) : null;
   };
 

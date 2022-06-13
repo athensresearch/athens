@@ -1,14 +1,14 @@
 import React from 'react';
-import {
-  Box, MenuList,
-  MenuItem
-} from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
 import { useContextMenu } from '@/utils/useContextMenu';
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, ...props }) => {
+// Don't open the context menu on these elements
+const CONTAINER_CONTEXT_MENU_FILTERED_TAGS = ["A", "BUTTON", "INPUT", "TEXTAREA", "LABEL", "VIDEO", "EMBED", "IFRAME", "IMG"];
+
+const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, ...props }) => {
   const ref = React.useRef(null);
 
   const {
@@ -18,7 +18,6 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
   } = useContextMenu({
     ref,
     source: "cursor",
-    // placement: "bottom-end"
   });
 
   return <>
@@ -121,14 +120,21 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         }
       }}
       {...menuSourceProps}
+      onContextMenu={
+        (e) => {
+          const target = e.target as HTMLElement;
+          // Don't open the context menu on these e.target as HTMLElement;
+          if (!CONTAINER_CONTEXT_MENU_FILTERED_TAGS.includes(target.tagName)) {
+            menuSourceProps.onContextMenu(e);
+          }
+        }
+      }
       {...props}
     >
       {children}
     </Box>
     <ContextMenu>
-      <MenuList>
-        <MenuItem>test item</MenuItem>
-      </MenuList>
+      {menu}
     </ContextMenu>
   </>;
 }
