@@ -349,39 +349,40 @@
                                                       "Link all"])
                         :onOpen        #(swap! state assoc unlinked? true)
                         :onClose       #(swap! state assoc unlinked? false)}
-     (for [[[group-title] group] @unlinked-refs]
-       [:> ReferenceGroup
-        {:title group-title
-         :onClickTitle (fn [e]
-                         (let [shift?       (.-shiftKey e)
-                               parsed-title (parse-renderer/parse-title group-title)]
-                           (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
-                                                                :target :page
-                                                                :pane   (if shift?
-                                                                          :right-pane
-                                                                          :main-pane)}])
-                           (router/navigate-page parsed-title e)))}
-        (doall
-          (for [block group]
-            [:> ReferenceBlock
-             {:key (str "ref-" (:block/uid block))
-              :actions (when unlinked?
-                         (r/as-element [:> Button {:marginTop "1.5em"
-                                                   :size "xs"
-                                                   :flex "0 0"
-                                                   :float "right"
-                                                   :variant "link"
-                                                   :onClick (fn []
-                                                              (let [hm                (into (hash-map) @unlinked-refs)
-                                                                    new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
-                                                                                                                                  (= uid (:block/uid block)))
-                                                                                                                                %))
-                                                                                           seq)]
-                                                                ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
-                                                                (reset! unlinked-refs new-unlinked-refs)
-                                                                (dispatch [:unlinked-references/link block title])))}
-                                        "Link"]))}
-             [ref-comp block]]))])]))
+     (doall
+       (for [[[group-title] group] @unlinked-refs]
+         [:> ReferenceGroup
+          {:title        group-title
+           :onClickTitle (fn [e]
+                           (let [shift?       (.-shiftKey e)
+                                 parsed-title (parse-renderer/parse-title group-title)]
+                             (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
+                                                                  :target :page
+                                                                  :pane   (if shift?
+                                                                            :right-pane
+                                                                            :main-pane)}])
+                             (router/navigate-page parsed-title e)))}
+          (doall
+            (for [block group]
+              [:> ReferenceBlock
+               {:key     (str "ref-" (:block/uid block))
+                :actions (when unlinked?
+                           (r/as-element [:> Button {:marginTop "1.5em"
+                                                     :size      "xs"
+                                                     :flex      "0 0"
+                                                     :float     "right"
+                                                     :variant   "link"
+                                                     :onClick   (fn []
+                                                                  (let [hm                (into (hash-map) @unlinked-refs)
+                                                                        new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
+                                                                                                                                      (= uid (:block/uid block)))
+                                                                                                                                    %))
+                                                                                               seq)]
+                                                                    ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
+                                                                    (reset! unlinked-refs new-unlinked-refs)
+                                                                    (dispatch [:unlinked-references/link block title])))}
+                                          "Link"]))}
+               [ref-comp block]]))]))]))
 
 
 ;; TODO: where to put page-level link filters?
