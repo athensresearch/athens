@@ -48,10 +48,13 @@ export const useContextMenu = ({
     handler: () => setIsOpen(false)
   });
 
-  // ContextMenu event handler:
-  // Prevent the default context menu event,
-  // then set the target box according to the source rect,
-  // then open the menu
+  /**
+   * ContextMenu event handler
+   * Prevent the default context menu event,
+   * then set the target box according to the source rect,
+   * then open the menu
+   * @param e Event
+   */
   const handleContextMenu = (e: MouseEvent) => {
     if (e.target === ref.current || ref.current.contains(e.target as Node)) {
       e.preventDefault();
