@@ -4,7 +4,7 @@
     ["/components/Block/Container"           :refer [Container]]
     ["/components/Block/Toggle"              :refer [Toggle]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack MenuList MenuItem]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -357,7 +357,14 @@
                         :onMouseLeave    #(swap! state assoc :show-editable-dom false)
                         :onDragOver      (fn [e] (block-drag-over e block state))
                         :onDragLeave     (fn [e] (block-drag-leave e block state))
-                        :onDrop           (fn [e] (block-drop e block state))}
+                        :onDrop          (fn [e] (block-drop e block state))
+                        :menu            (r/as-element [:> MenuList
+                                                        [:> MenuItem {:children (if (> (count selected-items) 1)
+                                                                                  "Copy selected block refs"
+                                                                                  "Copy block ref")
+                                                                      :onClick #(handle-copy-refs nil uid)}]
+                                                        [:> MenuItem {:children "Copy unformatted text"
+                                                                      :onClick #(handle-copy-unformatted uid)}]])}
 
           (when (= (:drag-target @state) :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
