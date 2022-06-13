@@ -1,6 +1,7 @@
 (ns athens.views.blocks.core
   (:require
     ["/components/Block/Container"           :refer [Container]]
+    ["@chakra-ui/react"                      :refer [MenuList MenuItem]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -13,8 +14,9 @@
     [athens.subs.dragging                    :as drag.subs]
     [athens.subs.selection                   :as select-subs]
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
+    [athens.views.blocks.context-menu        :as ctx-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    [athens.views.blocks.editor :as editor]
+    [athens.views.blocks.editor              :as editor]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
@@ -182,7 +184,8 @@
                                        :read-old-value read-old-value
                                        :show-edit?     show-edit?}
          dragging?                    (rf/subscribe [::drag.subs/dragging? uid])
-         drag-target                  (rf/subscribe [::drag.subs/drag-target uid])]
+         drag-target                  (rf/subscribe [::drag.subs/drag-target uid])
+         selected-items               (rf/subscribe [::select-subs/items])]
      (rf/dispatch [::linked-ref.events/set-open! uid (or (false? linked-ref) initial-open)])
      (rf/dispatch [::inline-refs.events/set-open! uid false])
 
@@ -237,7 +240,15 @@
                            :onMouseLeave hide-edit-fn
                            :onDragOver   (fn [e] (block-drag-over e block))
                            :onDragLeave  (fn [e] (block-drag-leave e block))
-                           :onDrop       (fn [e] (block-drop e block))}
+                           :onDrop       (fn [e] (block-drop e block))
+                           ;; TODO Stuart: this isn't used for context menu
+                           :menu         (r/as-element [:> MenuList
+                                                        [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                                  "Copy selected block refs"
+                                                                                  "Copy block ref")
+                                                                      :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                                        [:> MenuItem {:children "Copy unformatted text"
+                                                                      :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])}
 
              (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 

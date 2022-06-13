@@ -1,27 +1,27 @@
 (ns athens.views.blocks.editor
   (:require
-    ["/components/Block/Anchor"              :refer [Anchor]]
-    ["/components/Block/Toggle"              :refer [Toggle]]
+    ["/components/Block/Anchor"                :refer [Anchor]]
+    ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
-    [athens.db                               :as db]
-    [athens.events.inline-refs               :as inline-refs.events]
-    [athens.events.linked-refs               :as linked-ref.events]
-    [athens.parse-renderer                   :as parse-renderer]
-    [athens.reactive                         :as reactive]
-    [athens.router                           :as router]
-    [athens.self-hosted.presence.views       :as presence]
-    [athens.subs.inline-refs                 :as inline-refs.subs]
-    [athens.subs.linked-refs                 :as linked-ref.subs]
-    [athens.subs.selection                   :as select-subs]
-    [athens.util                             :as util]
-    [athens.views.blocks.autocomplete-search :as autocomplete-search]
-    [athens.views.blocks.autocomplete-slash  :as autocomplete-slash]
-    [athens.views.blocks.bullet              :refer [bullet-drag-start bullet-drag-end]]
-    [athens.views.blocks.content             :as content]
-    [athens.views.blocks.context-menu        :refer [handle-copy-unformatted handle-copy-refs]]
-    [re-frame.core :as rf]
-    [reagent.core :as r]))
+    ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    [athens.db                                 :as db]
+    [athens.events.inline-refs                 :as inline-refs.events]
+    [athens.events.linked-refs                 :as linked-ref.events]
+    [athens.parse-renderer                     :as parse-renderer]
+    [athens.reactive                           :as reactive]
+    [athens.router                             :as router]
+    [athens.self-hosted.presence.views         :as presence]
+    [athens.subs.inline-refs                   :as inline-refs.subs]
+    [athens.subs.linked-refs                   :as linked-ref.subs]
+    [athens.subs.selection                     :as select-subs]
+    [athens.util                               :as util]
+    [athens.views.blocks.autocomplete-search   :as autocomplete-search]
+    [athens.views.blocks.autocomplete-slash    :as autocomplete-slash]
+    [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
+    [athens.views.blocks.content               :as content]
+    [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs]]
+    [re-frame.core                             :as rf]
+    [reagent.core                              :as r]))
 
 
 (defn toggle
@@ -183,6 +183,7 @@
                                                 "closed-with-children")
                       :uidSanitizedBlock      uid-sanitized-block
                       :shouldShowDebugDetails (util/re-frame-10x-open?)
+                      ;; TODO Stuart: this is used for context menu
                       :menuActions            (clj->js [{:children
                                                          (if (> (count @selected-items) 1)
                                                            "Copy selected block refs"
