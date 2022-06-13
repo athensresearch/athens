@@ -23,6 +23,15 @@ export interface ContextMenuProps {
   children: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
+/**
+ * Creates a context menu interaction on the target
+ * @param ref The target element
+ * @param source The visual source of the menu
+ * @param placement The placement of the menu
+ * @param menuProps The props to pass to the inner Menu component
+ * @param portalProps The props to pass to the inner Portal component
+ * @returns An object containing the props for the menu target, the menu component, and the state of the menu
+ */
 export const useContextMenu = ({
   ref,
   source,
@@ -43,7 +52,7 @@ export const useContextMenu = ({
   // Prevent the default context menu event,
   // then set the target box according to the source rect,
   // then open the menu
-  const handleContextMenu = (e) => {
+  const handleContextMenu = (e: MouseEvent) => {
     if (e.target === ref.current || ref.current.contains(e.target as Node)) {
       e.preventDefault();
       e.stopPropagation();
@@ -68,7 +77,10 @@ export const useContextMenu = ({
     }
   };
 
-  // The menu that will be returned
+  /**
+   * A wrapper around Chakra's Menu with adjustments
+   * for use as a context menu
+   */
   const ContextMenu = ({ children }: ContextMenuProps) => {
     return isOpen ? (
       <Portal {...portalProps}>
