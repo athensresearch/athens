@@ -405,12 +405,10 @@
             daily-note?       (dates/is-daily-note uid)
             on-daily-notes?   (= :home @(subscribe [:current-route/name]))
             is-current-route? (or (= @(subscribe [:current-route/uid]) uid)
-                                  (= @(subscribe [:current-route/page-title]) title))]
+                                  (= @(subscribe [:current-route/page-title]) title))
+            get-and-reset-unlinked-refs #(reset! unlinked-refs (get-unlinked-references (patterns/escape-str title)))]
 
-        (js/setTimeout
-          #(reset! unlinked-refs (get-unlinked-references (patterns/escape-str title)))
-          500)
-
+        (js/setTimeout get-and-reset-unlinked-refs 500)
         (sync-title title state)
 
         [:<>
