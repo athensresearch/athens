@@ -109,13 +109,10 @@ jobs:
        - uses: ./.github/custom-actions/node-env
 
        - name: Compile JS Assets for production
-         run: yarn prod --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\" athens.main.core/AUTO_UPDATE ${AUTO_UPDATE}}}"
+         run: yarn prod --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\"}}"
          env:
            SENTRY_DSN: ${{ secrets.sentry_dsn }}
            COMMIT_URL: "https://github.com/${{github.repository}}/commit/${{github.sha}}"
-           # See athens.main.core/AUTO_UPDATE for more details.
-           # TODO: set to true when publishing auto-update information for 2.0.0-beta.
-           AUTO_UPDATE: false
 
        - name: Run client e2e tests over the prod build
          run: yarn client:e2e
@@ -216,9 +213,7 @@ jobs:
            # release the app after building
            release: ${{ startsWith(github.ref, 'refs/tags/v') }}
 
-           # TODO: remove publishAutoUpdate setting when we think enough 1.0.0-beta
-           # users have updated to 1.0.0, otherwise they will be auto-updated to 2.0.0-beta.
-           args: -c.publish.publishAutoUpdate=false ${{ matrix.electron-arch-overrides }}
+           args: ${{ matrix.electron-arch-overrides }}
 
          env:
            # macOS notarization API key
