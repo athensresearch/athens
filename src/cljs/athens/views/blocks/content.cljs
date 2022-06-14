@@ -1,21 +1,23 @@
 (ns athens.views.blocks.content
   (:require
-    ["/components/Block/Content" :refer [Content]]
-    [athens.config :as config]
-    [athens.db :as db]
-    [athens.events.selection :as select-events]
-    [athens.parse-renderer :refer [parse-and-render]]
-    [athens.subs.selection :as select-subs]
-    [athens.util :as util]
+    ["/components/Block/Content"                 :refer [Content]]
+    [athens.config                               :as config]
+    [athens.db                                   :as db]
+    [athens.events.selection                     :as select-events]
+    [athens.parse-renderer                       :refer [parse-and-render]]
+    [athens.subs.selection                       :as select-subs]
+    [athens.util                                 :as util]
+    [athens.views.blocks.autocomplete-search     :as autocomplete-search]
+    [athens.views.blocks.autocomplete-slash      :as autocomplete-slash]
     [athens.views.blocks.internal-representation :as internal-representation]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [clojure.edn :as edn]
-    [clojure.set :as set]
-    [clojure.string :as str]
-    [goog.events :as goog-events]
-    [komponentit.autosize :as autosize]
-    [re-frame.core :as rf]
-    [reagent.core :as r])
+    [athens.views.blocks.textarea-keydown        :as textarea-keydown]
+    [clojure.edn                                 :as edn]
+    [clojure.set                                 :as set]
+    [clojure.string                              :as str]
+    [goog.events                                 :as goog-events]
+    [komponentit.autosize                        :as autosize]
+    [re-frame.core                               :as rf]
+    [reagent.core                                :as r])
   (:import
     (goog.events
       EventType)))
@@ -244,21 +246,24 @@
                         2 "1.7em"
                         3 "1.3em"
                         "1em")]
-        [:> Content {:fontSize font-size
-                     :on-click  (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
-         ;; NOTE: komponentit forces reflow, likely a performance bottle neck
-         ;; When block is in editing mode or the editing DOM elements are rendered
-         (when (or @show-edit? @editing?)
-           [autosize/textarea {:value          @read-value
-                               :class          ["block-input-textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
-                               ;; :auto-focus  true
-                               :id             (str "editable-uid-" uid)
-                               :on-change      (fn [e] (textarea-change e uid state-hooks))
-                               :on-paste       (fn [e] (textarea-paste e uid state-hooks last-key-w-shift?))
-                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position last-key-w-shift? last-event))
-                               :on-blur        save-fn
-                               :on-click       (fn [e] (textarea-click e uid))
-                               :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))
-                               :on-mouse-down  (fn [e] (textarea-mouse-down e uid))}])
-         [parse-and-render @read-value (or original-uid uid)]]))))
+        [:<>
+         [:> Content {:fontSize font-size
+                      :on-click  (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
+          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
+          ;; When block is in editing mode or the editing DOM elements are rendered
+          (when (or @show-edit? @editing?)
+            [autosize/textarea {:value          @read-value
+                                :class          ["block-input-textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
+                                ;; :auto-focus  true
+                                :id             (str "editable-uid-" uid)
+                                :on-change      (fn [e] (textarea-change e uid state-hooks))
+                                :on-paste       (fn [e] (textarea-paste e uid state-hooks last-key-w-shift?))
+                                :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position last-key-w-shift? last-event))
+                                :on-blur        save-fn
+                                :on-click       (fn [e] (textarea-click e uid))
+                                :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))
+                                :on-mouse-down  (fn [e] (textarea-mouse-down e uid))}])
+          [parse-and-render @read-value (or original-uid uid)]]
+         [autocomplete-search/inline-search-el block state-hooks last-event]
+         [autocomplete-slash/slash-menu-el block last-event]]))))
 

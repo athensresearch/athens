@@ -15,8 +15,6 @@
     [athens.subs.linked-refs                   :as linked-ref.subs]
     [athens.subs.selection                     :as select-subs]
     [athens.util                               :as util]
-    [athens.views.blocks.autocomplete-search   :as autocomplete-search]
-    [athens.views.blocks.autocomplete-slash    :as autocomplete-slash]
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content               :as content]
     [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs]]
@@ -150,20 +148,20 @@
 
 
 (defn editor-component
-  [block-el children? uid linked-ref-data uid-sanitized-block state-hooks opts]
+  [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts]
   (let [{:keys [linked-ref
                 parent-uids]} linked-ref-data
+        uid                   (:block/uid block-o)
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
         selected-items        (rf/subscribe [::select-subs/items])
         last-event            (r/atom nil)]
     (fn editor-component-render
-      [_block-el _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
-      (let [{:block/keys [uid
+      [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
+      (let [{:block/keys [;; uid
                           open
                           children
-                          _refs]
-             :as         block} (reactive/get-reactive-block-document [:block/uid uid])]
+                          _refs]} (reactive/get-reactive-block-document [:block/uid uid])]
         [:<>
          [:div.block-body
           (when (and children?
@@ -183,13 +181,12 @@
                                                 "closed-with-children")
                       :uidSanitizedBlock      uid-sanitized-block
                       :shouldShowDebugDetails (util/re-frame-10x-open?)
-                      ;; TODO Stuart: this is used for context menu
                       :menuActions            (clj->js [{:children
                                                          (if (> (count @selected-items) 1)
-                                                           "Copy selected block refs"
-                                                           "Copy block ref")
+                                                           "[edit] Copy selected block refs"
+                                                           "[edit] Copy block ref")
                                                          :onClick #(handle-copy-refs nil uid)}
-                                                        {:children "Copy unformatted text"
+                                                        {:children "[edit] Copy unformatted text"
                                                          :onClick  #(handle-copy-unformatted uid)}])
                       :onClick                (fn [e]
                                                 (let [shift? (.-shiftKey e)]
@@ -202,7 +199,7 @@
                       :on-drag-start          (fn [e] (bullet-drag-start e uid))
                       :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
 
-          [content/block-content-el block state-hooks last-event]
+          [content/block-content-el block-o state-hooks last-event]
 
           [presence/inline-presence-el uid]
 
@@ -215,9 +212,6 @@
                  (rf/dispatch [::inline-refs.events/toggle-open! uid])))
              @inline-refs-open?])]
 
-         [autocomplete-search/inline-search-el block state-hooks last-event]
-         [autocomplete-slash/slash-menu-el block last-event]
-
          ;; Inline refs
          (when (and (> (count _refs) 0)
                     (not= :block-embed? opts)
@@ -228,9 +222,10 @@
          (when (and (seq children)
                     (or (and (true? linked-ref) @linked-ref-open?)
                         (and (false? linked-ref) open)))
-           (for [child children]
-             [:<> {:key (:db/id child)}
-              [block-el child
-               (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid child)))
-               opts]]))]))))
+           (for [child children
+                 :let  [child-uid (:block/uid child)]]
+             ^{:key (:db/id child)}
+             [block-el child
+              (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))
+              opts]))]))))
 

@@ -163,6 +163,7 @@
                  linked-ref-uid]}     linked-ref-data
          {:block/keys [uid
                        original-uid]} block
+         block-o                      (reactive/get-reactive-block-document [:block/uid uid])
          local-value                  (r/atom nil)
          old-value                    (r/atom nil)
          show-edit?                   (r/atom false)
@@ -241,21 +242,20 @@
                            :onDragOver   (fn [e] (block-drag-over e block))
                            :onDragLeave  (fn [e] (block-drag-leave e block))
                            :onDrop       (fn [e] (block-drop e block))
-                           ;; TODO Stuart: this isn't used for context menu
                            :menu         (r/as-element [:> MenuList
                                                         [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                                  "Copy selected block refs"
-                                                                                  "Copy block ref")
+                                                                                  "[cont] Copy selected block refs"
+                                                                                  "[cont] Copy block ref")
                                                                       :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                                        [:> MenuItem {:children "Copy unformatted text"
+                                                        [:> MenuItem {:children "[cont] Copy unformatted text"
                                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])}
 
              (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
              [editor/editor-component
               block-el
+              block-o
               true
-              (or original-uid uid) ; ident ;; reactive-block
               linked-ref-data
               uid-sanitized-block
               state-hooks
