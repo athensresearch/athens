@@ -150,7 +150,13 @@ jobs:
            vercel-token: ${{ secrets.VERCEL_TOKEN }}
            vercel-org-id: ${{ secrets.VERCEL_ORG_ID}}
            vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
-           vercel-args: './vercel-prod/ --prod'
+           vercel-args: './vercel-release/'
+           # Poor mans ternary operator https://github.com/actions/runner/issues/409#issuecomment-727565588
+           alias-domains: ${{ env.PRERELEASE && env.PRERELEASE_DOMAIN || env.RELEASE_DOMAIN }}
+         env:
+           PRERELEASE: ${{ contains(github.ref, '-alpha.') || contains(github.ref, '-beta.') || contains(github.ref, '-rc.')}}
+           PRERELEASE_DOMAIN: https://beta.athensresearch.org
+           RELEASE_DOMAIN: https://web.athensresearch.org
 
 
    release-electron:
