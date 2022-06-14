@@ -232,15 +232,18 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [block {:keys [save-fn read-value show-edit?] :as state-hooks} last-event]
-  (let [{:block/keys [uid original-uid header]} block
-        editing? (rf/subscribe [:editing/is-editing uid])
-        selected-items (rf/subscribe [::select-subs/items])
-        caret-position (r/atom nil)
-        last-key-w-shift? (r/atom nil)]
+  [block {:keys [save-fn read-value show-edit?] :as state-hooks}]
+  (let [{:block/keys [uid
+                      original-uid
+                      header]} block
+        editing?               (rf/subscribe [:editing/is-editing uid])
+        selected-items         (rf/subscribe [::select-subs/items])
+        caret-position         (r/atom nil)
+        last-key-w-shift?      (r/atom nil)
+        last-event             (r/atom nil)]
     #_(add-watch caret-position :watcher (fn [_ _ old new]
                                          (println "caret-position:" (pr-str old) "->" (pr-str new))))
-    (fn [_block _last-event _state]
+    (fn [_block _state-hooks]
       (let [font-size (case header
                         1 "2.1em"
                         2 "1.7em"
@@ -248,7 +251,7 @@
                         "1em")]
         [:<>
          [:> Content {:fontSize font-size
-                      :on-click  (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
+                      :on-click (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
           ;; NOTE: komponentit forces reflow, likely a performance bottle neck
           ;; When block is in editing mode or the editing DOM elements are rendered
           (when (or @show-edit? @editing?)

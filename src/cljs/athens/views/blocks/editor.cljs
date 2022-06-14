@@ -154,8 +154,7 @@
         uid                   (:block/uid block-o)
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
-        selected-items        (rf/subscribe [::select-subs/items])
-        last-event            (r/atom nil)]
+        selected-items        (rf/subscribe [::select-subs/items])]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
       (let [{:block/keys [;; uid
@@ -199,7 +198,7 @@
                       :on-drag-start          (fn [e] (bullet-drag-start e uid))
                       :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
 
-          [content/block-content-el block-o state-hooks last-event]
+          [content/block-content-el block-o state-hooks]
 
           [presence/inline-presence-el uid]
 
