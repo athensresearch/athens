@@ -53,3 +53,5 @@ vercel-static/*
 !vercel-static/index.html
 !vercel-state/athens/.gitignore
 .vercel
+vercel-release/*
+!vercel-release/package.json
