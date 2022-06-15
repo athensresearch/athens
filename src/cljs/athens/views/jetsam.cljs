@@ -28,18 +28,19 @@
         delete-handler    (fn jetsam-delete-handler
                             [_uid _d-key-down]
                             (println "delete didn't break shit this time"))
-        state-hooks       {:save-fn           #(do
-                                                 (println "save-fn" (pr-str %)))
-                           :update-fn         #(do
-                                                 (println "update-fn" (pr-str %))
-                                                 (save-fn %))
-                           :idle-fn           #(println "idle-fn" (pr-str %))
-                           :read-value        value-atom
-                           :show-edit?        show-edit-atom?
-                           :enter-handler     enter-handler
-                           :tab-handler       tab-handler
-                           :backspace-handler backspace-handler
-                           :delete-handler    delete-handler}]
+        state-hooks       {:save-fn                 #(do
+                                                       (println "save-fn" (pr-str %)))
+                           :update-fn               #(do
+                                                       (println "update-fn" (pr-str %))
+                                                       (save-fn %))
+                           :idle-fn                 #(println "idle-fn" (pr-str %))
+                           :read-value              value-atom
+                           :show-edit?              show-edit-atom?
+                           :enter-handler           enter-handler
+                           :tab-handler             tab-handler
+                           :backspace-handler       backspace-handler
+                           :delete-handler          delete-handler
+                           :default-verbatim-paste? true}]
     (fn jetsam-component-render-fn
       []
       [:div {:class "jetsam block-container"

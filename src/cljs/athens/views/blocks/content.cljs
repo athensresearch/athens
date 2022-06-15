@@ -118,7 +118,9 @@
   - User pastes and last keydown has shift -> default
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
-  [e uid {:keys [update-fn read-value] :as _state-hooks} last-key-w-shift?]
+  [e uid {:keys [update-fn read-value default-verbatim-paste?]
+          :or   {default-verbatim-paste? false}
+          :as   _state-hooks} last-key-w-shift?]
   (let [data                    (.. e -clipboardData)
         text-data               (.getData data "text/plain")
         ;; With internal representation
@@ -149,7 +151,9 @@
       internal?
       (do
         (.. e preventDefault)
-        (rf/dispatch [:paste-internal uid local-value repr-with-new-uids]))
+        (if default-verbatim-paste?
+          (textarea-keydown/replace-selection-with text-data)
+          (rf/dispatch [:paste-internal uid local-value repr-with-new-uids])))
 
       ;; For images
       (seq (filter (fn [item]
@@ -163,7 +167,9 @@
       (and line-breaks no-shift)
       (do
         (.. e preventDefault)
-        (rf/dispatch [:paste-internal uid local-value text-to-inter]))
+        (if default-verbatim-paste?
+          (textarea-keydown/replace-selection-with text-data)
+          (rf/dispatch [:paste-internal uid local-value text-to-inter])))
 
       (not no-shift)
       (do
