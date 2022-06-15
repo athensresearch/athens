@@ -242,6 +242,7 @@
         item                    (first items)
         datatype                (.. item -type)
         img-regex               #"(?i)^image/(p?jpeg|gif|png)$"
+        audio-regex             #"(?i)^audio/(p?wav|mp3)$"
         valid-text-drop         (and (not (nil? drag-target))
                                      (not= source-uid target-uid)
                                      (or (= effect-allowed "link")
@@ -251,6 +252,9 @@
     (cond
       (re-find img-regex datatype) (when electron.utils/electron?
                                      (images/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
+      (re-find audio-regex datatype) (when electron.utils/electron?
+                                       (images/dnd-audio target-uid drag-target item (second (re-find audio-regex datatype))))
+
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
                                            (drop-bullet source-uid target-uid drag-target effect-allowed)
