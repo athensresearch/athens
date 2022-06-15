@@ -183,7 +183,6 @@
          inline-search-index (rf/subscribe [::inline-search.subs/index block-uid])
          inline-search-results (rf/subscribe [::inline-search.subs/results block-uid])
          item (nth @inline-search-results @inline-search-index)]
-     (println "ran auto-complete-slash")
      (auto-complete-slash block-uid target item)))
   ;; here comes the autocompletion logic itself,
   ;; independent of the input method the user used.
@@ -199,7 +198,6 @@
          start-idx (dec (count (re-find #"(?s).*/" head)))]
      (rf/dispatch [::inline-search.events/close! block-uid])
 
-     (println "ran auto-complete-slash")
      (set-selection target start-idx start)
      (replace-selection-with expand)
      (when pos

@@ -51,6 +51,3 @@
                      :height           "50vh"
                      :background-color "lightgreen"}}
        [b-content/block-content-el block-o state-hooks]])))
-
-
-;; TODO introduce re-usable edit/view so we don't need to include individual parts of block editing experience

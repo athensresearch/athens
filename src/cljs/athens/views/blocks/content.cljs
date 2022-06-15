@@ -247,8 +247,6 @@
         caret-position         (r/atom nil)
         last-key-w-shift?      (r/atom nil)
         last-event             (r/atom nil)]
-    #_(add-watch caret-position :watcher (fn [_ _ old new]
-                                         (println "caret-position:" (pr-str old) "->" (pr-str new))))
     (fn [_block _state-hooks]
       (let [font-size (case header
                         1 "2.1em"
@@ -266,7 +264,6 @@
                                 ;; :auto-focus  true
                                 :id             (str "editable-uid-" uid)
                                 :on-change      (fn [e] (textarea-change e uid state-hooks))
-                                ;; TODO: paste interpretation as paste or verbatim paste
                                 :on-paste       (fn [e] (textarea-paste e uid state-hooks last-key-w-shift?))
                                 :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position last-key-w-shift? last-event))
                                 :on-blur        save-fn
