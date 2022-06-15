@@ -18,8 +18,7 @@
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content               :as content]
     [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs]]
-    [re-frame.core                             :as rf]
-    [reagent.core                              :as r]))
+    [re-frame.core                             :as rf]))
 
 
 (defn toggle

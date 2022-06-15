@@ -450,25 +450,25 @@
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
-  [e _uid {:keys [read-value] :as _state-hooks}]
+  [e uid {:keys [read-value tab-handler] :as _state-hooks}]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items                 @(subscribe [::select-subs/items])
-        editing-uid                    @(subscribe [:editing/uid])
         current-root-uid               @(subscribe [:current-route/uid])
-        [editing-uid embed-id]         (db/uid-and-embed-id editing-uid)
+        [uid embed-id]                 (db/uid-and-embed-id uid)
         local-string                   @read-value]
     (when (empty? selected-items)
-      (if shift
-        (dispatch [:unindent {:uid              editing-uid
-                              :d-key-down       d-key-down
-                              :context-root-uid current-root-uid
-                              :embed-id         embed-id
-                              :local-string     local-string}])
-        (dispatch [:indent
-                   {:uid           editing-uid
-                    :d-key-down    d-key-down
-                    :local-string  local-string}])))))
+      (if (fn? tab-handler)
+        (tab-handler uid embed-id d-key-down)
+        (if shift
+          (dispatch [:unindent {:uid              uid
+                                :d-key-down       d-key-down
+                                :context-root-uid current-root-uid
+                                :embed-id         embed-id
+                                :local-string     local-string}])
+          (dispatch [:indent {:uid          uid
+                              :d-key-down   d-key-down
+                              :local-string local-string}]))))))
 
 
 (defn handle-escape
@@ -485,19 +485,24 @@
 
 
 (defn handle-enter
-  [e uid {:as state-hooks}]
-  (let [{:keys [shift ctrl meta value start] :as d-key-down} (destruct-key-down e)
-        type @(rf/subscribe [::inline-search.subs/type uid])]
+  [e uid {:keys [enter-handler] :as state-hooks}]
+  (let [{:keys [shift
+                ctrl
+                meta
+                value
+                start]
+         :as   d-key-down} (destruct-key-down e)
+        type               @(rf/subscribe [::inline-search.subs/type uid])]
     (.. e preventDefault)
     (cond
-      type (case type
-             :slash (auto-complete-slash uid e)
-             :page (auto-complete-inline uid state-hooks e)
-             :block (auto-complete-inline uid state-hooks e)
-             :hashtag (auto-complete-hashtag uid state-hooks e)
-             :template (auto-complete-template uid state-hooks e))
+      type                      (case type
+                                  :slash    (auto-complete-slash uid e)
+                                  :page     (auto-complete-inline uid state-hooks e)
+                                  :block    (auto-complete-inline uid state-hooks e)
+                                  :hashtag  (auto-complete-hashtag uid state-hooks e)
+                                  :template (auto-complete-template uid state-hooks e))
       ;; shift-enter: add line break to textarea and move cursor to the next line.
-      shift (replace-selection-with "\n")
+      shift                     (replace-selection-with "\n")
       ;; cmd-enter: cycle todo states, then move cursor to the end of the line.
       ;; 13 is the length of the {{[[TODO]]}} and {{[[DONE]]}} string
       ;; this trick depends on the fact that they are of the same length.
@@ -507,8 +512,8 @@
                                       first               (subs value 0 13)
                                       current-prefix      (cond (= first todo-prefix) todo-prefix
                                                                 (= first done-prefix) done-prefix
-                                                                :else no-prefix)
-                                      new-prefix          (cond (= current-prefix no-prefix) todo-prefix
+                                                                :else                 no-prefix)
+                                      new-prefix          (cond (= current-prefix no-prefix)   todo-prefix
                                                                 (= current-prefix todo-prefix) done-prefix
                                                                 (= current-prefix done-prefix) no-prefix)
                                       new-cursor-position (+ start (- (count current-prefix)) (count new-prefix))]
@@ -516,7 +521,9 @@
                                   (replace-selection-with new-prefix)
                                   (set-cursor-position (.. e -target) new-cursor-position))
       ;; default: may mutate blocks, important action, no delay on 1st event, then throttled
-      :else (throttled-dispatch-sync [:enter uid d-key-down]))))
+      :else                     (if (fn? enter-handler)
+                                  (enter-handler uid d-key-down)
+                                  (throttled-dispatch-sync [:enter uid d-key-down])))))
 
 
 ;; Pair Chars: auto-balance for backspace and writing chars
@@ -737,7 +744,7 @@
 ;; Backspace
 
 (defn handle-backspace
-  [e uid]
+  [e uid {:keys [backspace-handler] :as _state-hooks}]
   (let [{:keys [start value target end]} (destruct-key-down e)
         no-selection? (= start end)
         sub-str (subs value (dec start) (inc start))
@@ -747,7 +754,9 @@
         look-behind-char (nth value (dec start) nil)]
 
     (cond
-      (and (block-start? e) no-selection?) (dispatch [:backspace uid value])
+      (and (block-start? e) no-selection?) (if (fn? backspace-handler)
+                                             (backspace-handler uid value)
+                                             (dispatch [:backspace uid value]))
       ;; pair char: hide inline search and auto-balance
       possible-pair (do
                       (.. e preventDefault)
@@ -807,21 +816,23 @@
 
 (defn handle-delete
   "Delete has the same behavior as pressing backspace on the next block."
-  [e uid {:keys [read-value read-old-value]}]
-  (let [{:keys [start end value]} (destruct-key-down e)
-        no-selection?             (= start end)
-        end?                      (= end (count value))
-        ;; using original block uid(o-uid) data to get next block
-        [o-uid embed-id]          (db/uid-and-embed-id uid)
-        next-block-uid            (db/next-block-uid o-uid)]
-    (when (and no-selection? end? next-block-uid)
-      (let [next-block (db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
-        (dispatch [:backspace
-                   (cond-> next-block-uid
-                     embed-id (str "-embed-" embed-id))
-                   (:block/string next-block)
-                   (when-not (= @read-value @read-old-value)
-                     @read-value)])))))
+  [e uid {:keys [read-value read-old-value delete-handler]}]
+  (let [{:keys [start end value] :as d-key-down} (destruct-key-down e)]
+    (if (fn? delete-handler)
+      (delete-handler uid d-key-down)
+      (let [no-selection?             (= start end)
+            end?                      (= end (count value))
+            ;; using original block uid(o-uid) data to get next block
+            [o-uid embed-id]          (db/uid-and-embed-id uid)
+            next-block-uid            (db/next-block-uid o-uid)]
+        (when (and no-selection? end? next-block-uid)
+          (let [next-block (db/get-block [:block/uid (-> next-block-uid db/uid-and-embed-id first)])]
+            (dispatch [:backspace
+                       (cond-> next-block-uid
+                         embed-id (str "-embed-" embed-id))
+                       (:block/string next-block)
+                       (when-not (= @read-value @read-old-value)
+                         @read-value)])))))))
 
 
 (defn textarea-key-down
@@ -848,7 +859,7 @@
           (pair-char? e)                  (handle-pair-char e uid state-hooks)
           (= key-code KeyCodes.TAB)       (handle-tab e uid state-hooks)
           (= key-code KeyCodes.ENTER)     (handle-enter e uid state-hooks)
-          (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid)
+          (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state-hooks)
           (= key-code KeyCodes.DELETE)    (handle-delete e uid state-hooks)
           (= key-code KeyCodes.ESC)       (handle-escape uid e)
           (shortcut-key? meta ctrl)       (handle-shortcuts e uid state-hooks)

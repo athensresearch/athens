@@ -260,6 +260,7 @@
                                 ;; :auto-focus  true
                                 :id             (str "editable-uid-" uid)
                                 :on-change      (fn [e] (textarea-change e uid state-hooks))
+                                ;; TODO: paste interpretation as paste or verbatim paste
                                 :on-paste       (fn [e] (textarea-paste e uid state-hooks last-key-w-shift?))
                                 :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position last-key-w-shift? last-event))
                                 :on-blur        save-fn
