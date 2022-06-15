@@ -244,10 +244,10 @@
                            :onDrop       (fn [e] (block-drop e block))
                            :menu         (r/as-element [:> MenuList
                                                         [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                                  "[cont] Copy selected block refs"
-                                                                                  "[cont] Copy block ref")
+                                                                                  "Copy selected block refs"
+                                                                                  "Copy block ref")
                                                                       :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                                        [:> MenuItem {:children "[cont] Copy unformatted text"
+                                                        [:> MenuItem {:children "Copy unformatted text"
                                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])}
 
              (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])

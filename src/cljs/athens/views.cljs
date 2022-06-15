@@ -9,7 +9,7 @@
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.help :refer [help-popup]]
-    [athens.views.jetsam :as jetsam]
+    #_[athens.views.jetsam :as jetsam]
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.right-sidebar :as right-sidebar]
@@ -71,5 +71,5 @@
                   [app-toolbar/app-toolbar]
                   [left-sidebar/left-sidebar]
                   [pages/view]
-                  [jetsam/jetsam-component]
+                  #_[jetsam/jetsam-component]
                   [right-sidebar/right-sidebar]]])]])))

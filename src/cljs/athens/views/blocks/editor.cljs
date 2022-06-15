@@ -181,10 +181,10 @@
                       :shouldShowDebugDetails (util/re-frame-10x-open?)
                       :menuActions            (clj->js [{:children
                                                          (if (> (count @selected-items) 1)
-                                                           "[edit] Copy selected block refs"
-                                                           "[edit] Copy block ref")
+                                                           "Copy selected block refs"
+                                                           "Copy block ref")
                                                          :onClick #(handle-copy-refs nil uid)}
-                                                        {:children "[edit] Copy unformatted text"
+                                                        {:children "Copy unformatted text"
                                                          :onClick  #(handle-copy-unformatted uid)}])
                       :onClick                (fn [e]
                                                 (let [shift? (.-shiftKey e)]
