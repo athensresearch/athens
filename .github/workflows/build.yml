@@ -167,15 +167,7 @@ jobs:
 
      strategy:
        matrix:
-         os: [ubuntu-latest, windows-latest]
-         electron-arch-overrides: [""]
-         # Separate out the arm64 macos build, those are the longest builds.
-         # package.json still includes configuration to build both targets.
-         include:
-           - os: macos-latest
-             electron-arch-overrides: "-c.mac.target.target=dmg -c.mac.target.arch=x64"
-           - os: macos-latest
-             electron-arch-overrides: "-c.mac.target.target=dmg -c.mac.target.arch=arm64"
+         os: [ubuntu-latest, windows-latest, macos-latest]
 
      steps:
        - uses: actions/checkout@v2
@@ -212,8 +204,6 @@ jobs:
            # If the commit is tagged with a version (e.g. "v1.0.0"),
            # release the app after building
            release: ${{ startsWith(github.ref, 'refs/tags/v') }}
-
-           args: ${{ matrix.electron-arch-overrides }}
 
          env:
            # macOS notarization API key
