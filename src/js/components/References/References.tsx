@@ -76,7 +76,7 @@ export const PageReferences = withErrorBoundary(({ children, count, title, defau
     onOpen: onOpen
   });
 
-  const isShowingContent = defaultIsOpen;
+  const isShowingContent = isOpen && !!children;
 
   return (
     <VStack
