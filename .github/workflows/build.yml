@@ -150,7 +150,7 @@ jobs:
            scope: athens-research
            vercel-args: './vercel-release/'
            # Poor mans ternary operator https://github.com/actions/runner/issues/409#issuecomment-727565588
-           alias-domains: ${{ env.PRERELEASE && env.PRERELEASE_DOMAIN || env.RELEASE_DOMAIN }}
+           alias-domains: ${{ env.PRERELEASE == 'true' && env.PRERELEASE_DOMAIN || env.RELEASE_DOMAIN }}
          env:
            PRERELEASE: ${{ contains(github.ref, '-alpha.') || contains(github.ref, '-beta.') || contains(github.ref, '-rc.')}}
            PRERELEASE_DOMAIN: beta.athensresearch.org
