@@ -40,7 +40,8 @@
                            :tab-handler             tab-handler
                            :backspace-handler       backspace-handler
                            :delete-handler          delete-handler
-                           :default-verbatim-paste? true}]
+                           :default-verbatim-paste? true
+                           :keyboard-navigation?    false}]
     (fn jetsam-component-render-fn
       []
       [:div {:class "jetsam block-container"

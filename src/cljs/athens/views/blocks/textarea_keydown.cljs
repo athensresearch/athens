@@ -349,7 +349,10 @@
 
 
 (defn handle-arrow-key
-  [e uid caret-position]
+  [e uid {:keys [keyboard-navigation?]
+          :or   {keyboard-navigation? true}
+          :as   _state-hooks}
+   caret-position]
   (let [{:keys [key-code
                 shift
                 meta
@@ -425,22 +428,27 @@
 
 
       (or (and left? start?)
-          (and up? end?)) (do (.. e preventDefault)
-                              (dispatch [:up uid :end]))
+          (and up? end?)) (when keyboard-navigation?
+                            (.. e preventDefault)
+                            (dispatch [:up uid :end]))
 
-      (and down? end?) (do (.. e preventDefault)
-                           (dispatch [:down uid :end]))
+      (and down? end?) (when keyboard-navigation?
+                         (.. e preventDefault)
+                         (dispatch [:down uid :end]))
 
       ;; going RIGHT at last index should always go to index 0 of block below
-      (and right? end?) (do (.. e preventDefault)
-                            (dispatch [:down uid 0]))
+      (and right? end?) (when keyboard-navigation?
+                          (.. e preventDefault)
+                          (dispatch [:down uid 0]))
 
       ;; index 0 is special - always go to index 0 when going up or down
       ;; when caret is anywhere between start and end preserve the position and offset by char
-      (and up? top-row?)      (do (.. e preventDefault)
-                                  (dispatch [:up uid char-offset]))
-      (and down? bottom-row?) (do (.. e preventDefault)
-                                  (dispatch [:down uid char-offset])))))
+      (and up? top-row?)      (when keyboard-navigation?
+                                (.. e preventDefault)
+                                (dispatch [:up uid char-offset]))
+      (and down? bottom-row?) (when keyboard-navigation?
+                                (.. e preventDefault)
+                                (dispatch [:down uid char-offset])))))
 
 
 ;; Tab
@@ -853,7 +861,7 @@
       ;; after some ops(like delete) can cause errors
       (when (empty? @(subscribe [::select-subs/items]))
         (cond
-          (arrow-key-direction e)         (handle-arrow-key e uid caret-position)
+          (arrow-key-direction e)         (handle-arrow-key e uid state-hooks caret-position)
           (pair-char? e)                  (handle-pair-char e uid state-hooks)
           (= key-code KeyCodes.TAB)       (handle-tab e uid state-hooks)
           (= key-code KeyCodes.ENTER)     (handle-enter e uid state-hooks)
