@@ -88,9 +88,9 @@ jobs:
          id: restore-shadow-cljs-build-cache
          with:
            path: ./.shadow-cljs
-           key: ${{ runner.os }}-v1-shadow-cljs-build-cache-${{ hashFiles('yarn.lock') }}
+           key: ${{ runner.os }}-v2-shadow-cljs-build-cache-${{ hashFiles('yarn.lock') }}
            restore-keys: |
-             ${{ runner.os }}-v1-shadow-cljs-build-cache
+             ${{ runner.os }}-v2-shadow-cljs-build-cache
 
        - name: Compile JS assets for dev
          run: yarn client:dev-build
