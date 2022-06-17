@@ -5,7 +5,6 @@
     [athens.common.sentry :refer-macros [defntrace]]
     [athens.electron.utils :as electron.utils]
     [athens.patterns :as patterns]
-    [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
@@ -395,12 +394,6 @@
           (recur (get children (dec n))))))))
 
 
-(defntrace re-case-insensitive
-  "More options here https://clojuredocs.org/clojure.core/re-pattern"
-  [query]
-  (re-pattern (str "(?i)" (escape-str query))))
-
-
 (defntrace search-exact-node-title
   [query]
   (d/entity @dsdb [:node/title query]))
@@ -413,7 +406,7 @@
    (if (string/blank? query)
      (vector)
      (let [exact-match            (when exclude-exact-match? query)
-           case-insensitive-query (re-case-insensitive query)]
+           case-insensitive-query (patterns/re-case-insensitive query)]
        (sequence
          (comp
            (filter (every-pred
@@ -439,7 +432,7 @@
   ([query n]
    (if (string/blank? query)
      (vector)
-     (let [case-insensitive-query (re-case-insensitive query)]
+     (let [case-insensitive-query (patterns/re-case-insensitive query)]
        (->>
          (d/datoms @dsdb :aevt :block/string)
          (sequence
@@ -593,14 +586,14 @@
 ;; -- Linked & Unlinked References ----------
 
 (defntrace get-ref-ids
-  [pattern]
+  [unlinked-f]
   (d/q '[:find [?e ...]
-         :in $ ?regex
+         :in $ ?unlinked-f
          :where
          [?e :block/string ?s]
-         [(re-find ?regex ?s)]]
+         [(?unlinked-f ?s)]]
        @dsdb
-       pattern))
+       unlinked-f))
 
 
 (defn merge-parents-and-block
@@ -625,15 +618,10 @@
             blocks))
 
 
-(defn get-data
-  [pattern]
-  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
-
-
 (defntrace get-unlinked-references
   "For node-page references UI."
   [title]
-  (-> title patterns/unlinked get-data))
+  (-> (partial patterns/contains-unlinked? title) get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
 ;; -- save ------------------------------------------------------------
@@ -641,10 +629,9 @@
 
 (defn transact-state-for-uid
   "uid -> Current block
-   state -> Look at state atom in block-el
+   new-string -> new `:block/string` value
    source -> reporting source"
-  [uid state source]
-  (let [{:string/keys [local]} @state]
-    (rf/dispatch [:block/save {:uid    uid
-                               :string local
-                               :source source}])))
+  [uid new-string source]
+  (rf/dispatch [:block/save {:uid    uid
+                             :string new-string
+                             :source source}]))

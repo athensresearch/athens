@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
-import { Menu, MenuList, MenuItem, MenuGroup, MenuDivider, MenuButton, IconButton, Portal, Box, Text } from '@chakra-ui/react';
+import { MenuList, MenuItem, MenuGroup, MenuDivider, IconButton, Box, Text } from '@chakra-ui/react';
+import { useContextMenu } from '@/utils/useContextMenu';
 
 const ANCHORS = {
   CIRCLE: <svg viewBox="0 0 24 24">
@@ -57,19 +58,12 @@ const propertiesList = (block) => {
 }
 
 export interface AnchorProps {
-  /**
-   * What style of anchor to display
-   */
   anchorElement?: 'circle' | 'dash' | number;
-  /**
-   * Whether block is closed and has children
-   */
   isClosedWithChildren: boolean;
   block: any;
   uidSanitizedBlock: any;
   shouldShowDebugDetails: boolean;
   as: ReactNode;
-  onContextMenu: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
   onCopyRef: () => void;
   onCopyUnformatted: () => void;
   onDragStart: () => void;
@@ -78,7 +72,7 @@ export interface AnchorProps {
   menuActions: any;
 }
 
-const anchorButtonStyleProps = (isClosedWithChildren) => {
+const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
   return ({
     bg: "transparent",
     "aria-label": "Block anchor",
@@ -134,7 +128,6 @@ const anchorButtonStyleProps = (isClosedWithChildren) => {
  * A handle and indicator of a block's position in the document
 */
 export const Anchor = (props: AnchorProps) => {
-  const [isOpen, setIsOpen] = React.useState(false);
 
   const { isClosedWithChildren,
     anchorElement,
@@ -145,67 +138,46 @@ export const Anchor = (props: AnchorProps) => {
     uidSanitizedBlock,
     menuActions,
   } = props;
+  const ref = React.useRef(null);
 
-  // Early return with just the button, to avoid rendering the menu
-  // with all its juicy portaling goodness.
-  if (!isOpen) {
-    return <IconButton
+  const {
+    menuSourceProps,
+    ContextMenu,
+    isOpen: isContextMenuOpen
+  } = useContextMenu({
+    ref,
+    source: "box"
+  });
+
+  return <>
+    <IconButton
+      ref={ref}
       aria-label="Block anchor"
       {...anchorButtonStyleProps(isClosedWithChildren)}
+      {...menuSourceProps}
       onDragStart={onDragStart}
       onClick={onClick}
       onDragEnd={onDragEnd}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsOpen(true);
-      }}
+      isActive={isContextMenuOpen}
     >
       {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
     </IconButton>
-  }
+    {(menuActions) && <ContextMenu>
+      <MenuList>
+        {menuActions.map((action) => {
+          return <MenuItem {...action} />
+        })}
+        {shouldShowDebugDetails && (
+          <>
+            {menuActions && <MenuDivider />}
+            <MenuGroup title="Debug details">
+              <Box px={4} pb={3}>
+                {propertiesList(uidSanitizedBlock)}
+              </Box>
+            </MenuGroup>
+          </>)}
+      </MenuList>
+    </ContextMenu>}
+  </>
 
-  return (
-    <Menu
-      isOpen={true}
-      isLazy={true}
-      onClose={() => setIsOpen(false)}
-    >
-      <IconButton
-        aria-label="Block anchor"
-        {...anchorButtonStyleProps(isClosedWithChildren)}
-        onDragStart={onDragStart}
-        onClick={onClick}
-        onDragEnd={onDragEnd}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsOpen(true);
-        }}
-        as={MenuButton}
-      >
-        {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
-      </IconButton>
-      <Portal
-      >
-        <MenuList
-          // prevent changing selection when clicking on the menu
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          {menuActions.map((action) => {
-            return <MenuItem {...action} />
-          })}
-          {shouldShowDebugDetails && (
-            <>
-              {menuActions && <MenuDivider />}
-              <MenuGroup title="Debug details">
-                <Box px={4} pb={3}>
-                  {propertiesList(uidSanitizedBlock)}
-                </Box>
-              </MenuGroup>
-            </>)}
-        </MenuList>
-      </Portal>
-    </Menu >
-  )
 };

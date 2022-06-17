@@ -2,6 +2,102 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0-beta.1](https://github.com/athensresearch/athens/compare/v2.0.0-beta.37...v2.1.0-beta.1) (2022-06-16)
+
+
+### Features
+
+* add context menu hook ([5c0b549](https://github.com/athensresearch/athens/commit/5c0b549e6ec49d7f6548f70c55a0b13b374d9a85))
+* anchor uses new context menu hook ([8c5423e](https://github.com/athensresearch/athens/commit/8c5423effb31d3708ce0bd1173c23001257f4300))
+* context menu also works on block container ([7c16441](https://github.com/athensresearch/athens/commit/7c164417b6e579936784c085bea8e58302fd0c4c))
+
+
+### Bug Fixes
+
+* defaultIsOpen state for linked refs ([59fbb60](https://github.com/athensresearch/athens/commit/59fbb6088471eda9f5915cd2729fdfd5c4c2fc03))
+
+
+### Enhancements
+
+* if a block open in right sidebar is not in main view, ([0ef8836](https://github.com/athensresearch/athens/commit/0ef8836f57e052b9e1be1c7f2292911e0b0b4290))
+
+
+### Refactors
+
+* **block:** use new contextmenu for blocks ([66a9d33](https://github.com/athensresearch/athens/commit/66a9d339b1701853885e403dde6edd0e536f46ca))
+
+
+### Documentation
+
+* add versioning ADR ([1c75e5f](https://github.com/athensresearch/athens/commit/1c75e5f53d266597baf409311092567a0710be2a))
+
+
+* bump to 2.1.0 range ([0b081e8](https://github.com/athensresearch/athens/commit/0b081e89e65c033c0332a2c9a82bb1016494876f))
+* deploy prerelease to beta domain ([f348a99](https://github.com/athensresearch/athens/commit/f348a99498411a09c70148a37885af74159fbbde))
+* docstrings ([ffca46a](https://github.com/athensresearch/athens/commit/ffca46aa42e9ec38a1f7df53b0ff2bc946a132ac))
+* docstrings ([15176d9](https://github.com/athensresearch/athens/commit/15176d93909e0c477873609b5bcf67beff8bdc66))
+* don't build macos in parallel ([6d987e4](https://github.com/athensresearch/athens/commit/6d987e4b7977da3fe81a867b67b55cb0dbc72dab))
+* fix ([492c362](https://github.com/athensresearch/athens/commit/492c362e00e226ea5ea027e5fbb96524c4e7beb3))
+* re-enable auto updates for electron ([ee29f33](https://github.com/athensresearch/athens/commit/ee29f3325f09801acd9b9cae3fb4af3cea6d5d4c))
+
+## [2.0.0-beta.37](https://github.com/athensresearch/athens/compare/v2.0.0-beta.36...v2.0.0-beta.37) (2022-05-27)
+
+
+### Features
+
+* remove safari unsupported warning ([e39d530](https://github.com/athensresearch/athens/commit/e39d530f561172591af4c02d80d29a123a12c6fc))
+
+
+### Bug Fixes
+
+* athena should highlight results ([ea5abe5](https://github.com/athensresearch/athens/commit/ea5abe5d6bdeb77b5849645f3eb32962305e9a9a))
+
+
+### Refactors
+
+* don't use lookbehind in replace-roam-date ([3f4066a](https://github.com/athensresearch/athens/commit/3f4066a0029e995b7c7a8c293b5a8b3f2be17755))
+* move regex fns into athens.patterns cljc ([ded5f2a](https://github.com/athensresearch/athens/commit/ded5f2aafe0a46ae3aaec05e6ad044b1a6d0a9d9))
+* refactor highlight to not use lookbehind ([c4d386c](https://github.com/athensresearch/athens/commit/c4d386cff7d11f741b64cab2da28f48ad95fb3c4))
+* refactor unlinked to not use lookbehind ([870e39e](https://github.com/athensresearch/athens/commit/870e39ef8bed67bfe22c1a76da5cc58d59c8c6de))
+* remove lookbehind from instaparse ([c8bfa5b](https://github.com/athensresearch/athens/commit/c8bfa5bc47303a545b8a58ba3ce8004fe976eb33))
+* remove unused backtick token ([d3e1877](https://github.com/athensresearch/athens/commit/d3e18775d594ccff3ea965a33be0af5742d47eea))
+* use same file for clj and cljs parser tests ([2575222](https://github.com/athensresearch/athens/commit/2575222d2e178885d3221ad0083380037439826a))
+* use word boundary instead of positive lookbehind in parser ([6a4f3cd](https://github.com/athensresearch/athens/commit/6a4f3cd971b0bc1f36834ef6e64a16aa6fc5aad2))
+
+
+* add boundary tests ([4e66a13](https://github.com/athensresearch/athens/commit/4e66a1306df013595a3d3d8f32462f45fb9f38fb))
+* add hashtag test for unlinked ([6405bdc](https://github.com/athensresearch/athens/commit/6405bdc582ac355e7f63561cc2f5c2d24ca89709))
+* add tests for athens.patterns ([bab8d71](https://github.com/athensresearch/athens/commit/bab8d71ad62abaa9b78c77027b7098355862b653))
+* disable failing lookbehind tests ([6a406a0](https://github.com/athensresearch/athens/commit/6a406a0b8e629735417ebcaf01e0886944eeb0ff))
+* more tests for roam-date ([7ea9d3f](https://github.com/athensresearch/athens/commit/7ea9d3f9c107274aee12fa13d41f8a454056575f))
+* remove unused vars ([e14e53d](https://github.com/athensresearch/athens/commit/e14e53da0afc7ea0a1f76e740a6e32006cfa8495))
+* update backslash escapes test for cljs output ([be1e5df](https://github.com/athensresearch/athens/commit/be1e5dfa13ad8677076e74367e522e105df4dae5))
+
+## [2.0.0-beta.36](https://github.com/athensresearch/athens/compare/v2.0.0-beta.35...v2.0.0-beta.36) (2022-05-24)
+
+
+### Features
+
+* serve web client from athens server ([775c981](https://github.com/athensresearch/athens/commit/775c98102bf4797d8111015b54a7885e51eee44a))
+
+
+* release web to vercel ([e52f6e2](https://github.com/athensresearch/athens/commit/e52f6e258919e0eba066192520746174e2d77c88))
+* release-server now requires build-app ([1b3ef1d](https://github.com/athensresearch/athens/commit/1b3ef1d1b3236705237bd5cca7e560144694d57b))
+
+## [2.0.0-beta.35](https://github.com/athensresearch/athens/compare/v2.0.0-beta.34...v2.0.0-beta.35) (2022-05-18)
+
+
+### Features
+
+* permalink includes graph name and password ([5424b05](https://github.com/athensresearch/athens/commit/5424b0558b73aea7a0d67d8448e7844e914ffa48))
+
+
+### Bug Fixes
+
+* don't control dialog inputs ([7c59bbd](https://github.com/athensresearch/athens/commit/7c59bbdfed4c28910b449a787e758590ae4326fe))
+* don't show plaintext password on permalink ([6351d1d](https://github.com/athensresearch/athens/commit/6351d1d53c7ff10b94eabf5e7665fd6280ae14bb))
+* show own user on presence if there are no other users ([de5aead](https://github.com/athensresearch/athens/commit/de5aeada02f0f11eb178914d5b3d5d29ea772b85))
+
 ## [2.0.0-beta.34](https://github.com/athensresearch/athens/compare/v2.0.0-beta.33...v2.0.0-beta.34) (2022-05-04)
 
 
