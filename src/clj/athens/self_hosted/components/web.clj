@@ -8,7 +8,9 @@
     [athens.self-hosted.web.presence   :as presence]
     [com.stuartsierra.component        :as component]
     [compojure.core                    :as compojure]
-    [org.httpkit.server                :as http]))
+    [org.httpkit.server                :as http]
+    [ring.middleware.resource          :as ring.resource]
+    [ring.util.response                :as ring.response]))
 
 
 ;; WebSocket handlers
@@ -118,9 +120,15 @@
                                                         :body "ok"}))
 
 
+(compojure/defroutes web-client
+                     (-> (compojure/GET "/" [] (ring.response/resource-response "public/index.html"))
+                         (ring.resource/wrap-resource "public")))
+
+
 (defn make-handler
   [datascript fluree config]
-  (compojure/routes health-check-route
+  (compojure/routes web-client
+                    health-check-route
                     (make-ws-route datascript fluree config)))
 
 

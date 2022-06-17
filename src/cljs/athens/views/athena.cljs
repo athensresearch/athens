@@ -3,7 +3,8 @@
     ["/components/Icons/Icons" :refer [PageAddIcon XmarkIcon ArrowRightIcon]]
     ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
     [athens.common.utils :as utils]
-    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
+    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title]]
+    [athens.patterns     :as patterns]
     [athens.router       :as router]
     [athens.subs]
     [athens.util         :refer [scroll-into-view]]
@@ -22,14 +23,18 @@
 
 (defn highlight-match
   [query txt]
-  (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
-    (doall
-      (map-indexed (fn [i part]
-                     (if (re-find query-pattern part)
-                       [:> Text {:class "result-highlight"
-                                 :key i} part]
-                       part))
-                   (str/split txt query-pattern)))))
+  (if-not query
+    txt
+    (map-indexed (fn [i part]
+                   (if (= part query)
+                     [:> Text {:as           "span"
+                               :background   "highlight"
+                               :color        "highlightContrast"
+                               :borderRadius "0.1rem"
+                               :padding      "0 0.125em"
+                               :key i} part]
+                     part))
+                 (patterns/split-on txt query))))
 
 
 (defn create-search-handler
@@ -231,7 +236,7 @@
                      :prefix   "Create page"
                      :preview  nil
                      :type     :page
-                     :query    query
+                     :query    nil
                      :icon     (r/as-element [:> PageAddIcon])
                      :active?  (= i index)
                      :on-click (fn [e]

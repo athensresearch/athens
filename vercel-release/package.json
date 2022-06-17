@@ -1,0 +1,7 @@
+{
+    "description": "dummy package.json for the release-web github actions job",
+    "scripts": {
+        "vercel:install": "echo skipping install",
+        "vercel:build": "echo skipping build"
+    }
+}
