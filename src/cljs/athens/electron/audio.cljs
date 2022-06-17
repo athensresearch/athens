@@ -1,38 +1,38 @@
-(ns athens.electron.images
+(ns athens.electron.audio
   (:require
     [athens.common.utils :as common.utils]
     [athens.db :as db]
     [athens.electron.utils :as electron.utils]
     [re-frame.core :as rf]))
 
-
-;; Image Paste
-(defn save-image
+(defn save-audio
   ([item extension]
-   (save-image "" "" item extension))
+   (save-audio "" "" item extension))
   ([head tail item extension]
-   (let [{:keys [images-dir name]}          @(rf/subscribe [:db-picker/selected-db])
-         _                (prn head tail images-dir name item extension)
+   ;; TODO: change images-dir to audios-dir, for some reason returns nil even if I added the path and key in the utils.clj local-db.
+   (let [{:keys [name] audios-dir :images-dir} @(rf/subscribe [:db-picker/selected-db])
+         _                (prn head tail audios-dir name item extension)
          file             (.getAsFile item)
-         img-filename     (.resolve (electron.utils/path) images-dir (str "img-" name "-" (common.utils/gen-block-uid) "." extension))
+         audio-filename   (.resolve (electron.utils/path)
+                                    audios-dir
+                                    (str "audio-" name "-" (common.utils/gen-block-uid) "." extension))
          reader           (js/FileReader.)
-         new-str          (str head "![](" "file://" img-filename ")" tail)
+         new-str          (str head "^[](" "file://" audio-filename ")" tail)
          cb               (fn [e]
-                            (let [img-data (as->
-                                             (.. e -target -result) x
-                                             (clojure.string/replace-first x #"data:image/(jpeg|gif|png);base64," "")
-                                             (js/Buffer. x "base64"))]
-                              (when-not (.existsSync (electron.utils/fs) images-dir)
-                                (.mkdirSync (electron.utils/fs) images-dir))
-                              (.writeFileSync (electron.utils/fs) img-filename img-data)))]
+                            (let [audio-data (as->
+                                               (.. e -target -result) x
+                                               (clojure.string/replace-first x #"data:audio/(wav|mp3);base64," "")
+                                               (js/Buffer. x "base64"))]
+                              (when-not (.existsSync (electron.utils/fs) audios-dir)
+                                (.mkdirSync (electron.utils/fs) audios-dir))
+                              (.writeFileSync (electron.utils/fs) audio-filename audio-data)))]
      (set! (.. reader -onload) cb)
      (.readAsDataURL reader file)
      new-str)))
 
-
-(defn dnd-image
+(defn dnd-audio
   [target-uid drag-target item extension]
-  (let [new-str               (save-image item extension)
+  (let [new-str               (save-audio item extension)
         {:block/keys [order]} (db/get-block [:block/uid target-uid])
         parent                (db/get-parent [:block/uid target-uid])
         block                 (db/get-block [:block/uid target-uid])

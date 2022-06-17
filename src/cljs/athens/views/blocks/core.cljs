@@ -8,6 +8,7 @@
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
+    [athens.electron.audio                   :as audio]
     [athens.electron.utils                   :as electron.utils]
     [athens.events.selection                 :as select-events]
     [athens.parse-renderer                   :as parse-renderer]
@@ -253,7 +254,7 @@
       (re-find img-regex datatype) (when electron.utils/electron?
                                      (images/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find audio-regex datatype) (when electron.utils/electron?
-                                       (images/dnd-audio target-uid drag-target item (second (re-find audio-regex datatype))))
+                                       (audio/dnd-audio target-uid drag-target item (second (re-find audio-regex datatype))))
 
       (re-find #"text/plain" datatype) (when valid-text-drop
                                          (if (empty? selected-items)
