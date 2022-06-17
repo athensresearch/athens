@@ -10,11 +10,12 @@ set -euxo pipefail
 # Install command : yarn vercel:install
 #
 # In Vercel -> Project Settings -> Git
-# Production branch: dummy-vercel-main
-# This is a dummy branch that we do not push builds to.
+# Release branch: dummy-vercel-web
+# Pre-release branch: dummy-vercel-beta
+# These are dummy branches that we do not push builds to.
 # Instead the `release-web` github actions job manually builds and deploys a prod build when needed.
 # The build settings above are still used for the prod build though, and the
-# vercel-prod/package.json file is meant to provide noop scripts for it.
+# vercel-release/package.json file is meant to provide noop scripts for it.
 
 # See https://vercel.com/docs/concepts/deployments/build-step#build-image for custom setup instructions.
 

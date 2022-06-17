@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0-beta.1](https://github.com/athensresearch/athens/compare/v2.0.0-beta.37...v2.1.0-beta.1) (2022-06-16)
+
+
+### Features
+
+* add context menu hook ([5c0b549](https://github.com/athensresearch/athens/commit/5c0b549e6ec49d7f6548f70c55a0b13b374d9a85))
+* anchor uses new context menu hook ([8c5423e](https://github.com/athensresearch/athens/commit/8c5423effb31d3708ce0bd1173c23001257f4300))
+* context menu also works on block container ([7c16441](https://github.com/athensresearch/athens/commit/7c164417b6e579936784c085bea8e58302fd0c4c))
+
+
+### Bug Fixes
+
+* defaultIsOpen state for linked refs ([59fbb60](https://github.com/athensresearch/athens/commit/59fbb6088471eda9f5915cd2729fdfd5c4c2fc03))
+
+
+### Enhancements
+
+* if a block open in right sidebar is not in main view, ([0ef8836](https://github.com/athensresearch/athens/commit/0ef8836f57e052b9e1be1c7f2292911e0b0b4290))
+
+
+### Refactors
+
+* **block:** use new contextmenu for blocks ([66a9d33](https://github.com/athensresearch/athens/commit/66a9d339b1701853885e403dde6edd0e536f46ca))
+
+
+### Documentation
+
+* add versioning ADR ([1c75e5f](https://github.com/athensresearch/athens/commit/1c75e5f53d266597baf409311092567a0710be2a))
+
+
+* bump to 2.1.0 range ([0b081e8](https://github.com/athensresearch/athens/commit/0b081e89e65c033c0332a2c9a82bb1016494876f))
+* deploy prerelease to beta domain ([f348a99](https://github.com/athensresearch/athens/commit/f348a99498411a09c70148a37885af74159fbbde))
+* docstrings ([ffca46a](https://github.com/athensresearch/athens/commit/ffca46aa42e9ec38a1f7df53b0ff2bc946a132ac))
+* docstrings ([15176d9](https://github.com/athensresearch/athens/commit/15176d93909e0c477873609b5bcf67beff8bdc66))
+* don't build macos in parallel ([6d987e4](https://github.com/athensresearch/athens/commit/6d987e4b7977da3fe81a867b67b55cb0dbc72dab))
+* fix ([492c362](https://github.com/athensresearch/athens/commit/492c362e00e226ea5ea027e5fbb96524c4e7beb3))
+* re-enable auto updates for electron ([ee29f33](https://github.com/athensresearch/athens/commit/ee29f3325f09801acd9b9cae3fb4af3cea6d5d4c))
+
 ## [2.0.0-beta.37](https://github.com/athensresearch/athens/compare/v2.0.0-beta.36...v2.0.0-beta.37) (2022-05-27)
 
 
