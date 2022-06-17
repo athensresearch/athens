@@ -177,8 +177,8 @@
       (add :one "event-id-1" "event-1")
       (add :one "event-id-2" "event-2")
       (add :two "event-id-1" "event-1")
-      print
-      )
+      print)
+
 
   ;; from readme, up to Alice's last state in "Two Offline Alices"
   (-> (create-state :alice [:in-memory :local-storage :server])
@@ -232,7 +232,7 @@
   ;;   ["a1" "a1"]]}
 
   (stage< [:one :two :three] :two 1)
-  (vals (ordered-map :a 1 :b 2))
+  (vals (ordered-map :a 1 :b 2)))
   ;
-  )
+
 

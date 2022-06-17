@@ -1,13 +1,17 @@
 (ns athens.views.comments.inline
   (:require
-    [re-frame.core               :as rf]
-    [goog.events                 :as events]
-    [athens.parse-renderer       :as parse-renderer]
+    [re-frame.core :as rf]
+    [goog.events :as events]
+    [athens.parse-renderer :as parse-renderer]
     [athens.util :as util]
-    ["/components/Block/Anchor"  :refer [Anchor]]
+    ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Comments/Comments" :refer [InlineCommentInput CommentCounter]]
-    ["@chakra-ui/react"          :refer [Button Input Box Text VStack HStack Textarea]]
-    ["/components/Icons/Icons"   :refer [ChatFilledIcon ChevronDownIcon ChevronRightIcon]])
+    ["@chakra-ui/react" :refer [Button Input Box Text VStack HStack Textarea]]
+    ["/components/Icons/Icons" :refer [ChatFilledIcon ChevronDownIcon ChevronRightIcon]]
+    [athens.views.blocks.content :as b-content]
+    [reagent.core :as r]
+    [athens.views.blocks.textarea-keydown :as txt-key-down]
+    [clojure.string :as str])
   (:import
     (goog.events
       KeyCodes)))
@@ -132,5 +136,42 @@
           (for [item data]
             ^{:key item}
             [comment-el item])
-          [:> InlineCommentInput
-           {:onSubmitComment #(re-frame.core/dispatch [:comment/write-comment uid % username])}]])])))
+
+          (let [value-atom        (r/atom "")
+                show-edit-atom?   (r/atom false)
+                block-uid         "my-random-uid"
+                block-o           {:block/uid      block-uid
+                                   ;; :block/string   @value-atom
+                                   :block/children []}
+                save-fn           #(reset! value-atom %)
+                enter-handler     (fn jetsam-enter-handler
+                                    [_uid _d-key-down]
+                                    (when (not (str/blank? @value-atom))
+                                      (re-frame.core/dispatch [:comment/write-comment uid @value-atom username])
+                                      (reset! value-atom "")))
+                tab-handler       (fn jetsam-tab-handler
+                                    [_uid _embed-id _d-key-down])
+                backspace-handler (fn jetsam-backspace-handler
+                                    [_uid _value])
+                delete-handler    (fn jetsam-delete-handler
+                                    [_uid _d-key-down]
+                                    )
+                state-hooks       {:save-fn                 #(println "save-fn" (pr-str %))
+                                   :update-fn               #(save-fn %)
+                                   :idle-fn                 #(println "idle-fn" (pr-str %))
+                                   :read-value              value-atom
+                                   :show-edit?              show-edit-atom?
+                                   :enter-handler           enter-handler
+                                   :tab-handler             tab-handler
+                                   :backspace-handler       backspace-handler
+                                   :delete-handler          delete-handler
+                                   :default-verbatim-paste? true
+                                   :keyboard-navigation?    false}]
+            (add-watch value-atom :watcher
+                       (fn [key atom old-state new-state]
+                         (prn "-- Atom Changed --")
+                         (prn "key" key)
+                         (prn "atom" atom)
+                         (prn "old-state" old-state)
+                         (prn "new-state" new-state)))
+            [b-content/block-content-el block-o state-hooks])])])))

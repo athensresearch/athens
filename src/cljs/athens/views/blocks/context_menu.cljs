@@ -39,8 +39,8 @@
   (toast (clj->js {:title "Copied content to clipboard" :status "success"})))
 
 (defn handle-click-comment
-  [e uid state]
+  [e uid]
   (re-frame.core/dispatch [:comment/show-comment-textarea uid])
-  (.. e preventDefault)
-  (swap! state assoc :context-menu/show false))
+  (.. e preventDefault))
+
 

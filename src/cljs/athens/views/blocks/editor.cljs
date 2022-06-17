@@ -17,7 +17,9 @@
     [athens.util                               :as util]
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content               :as content]
-    [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs]]
+    [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs handle-click-comment]]
+    [athens.views.comments.core              :as comments]
+    [athens.views.comments.inline            :as inline-comments]
     [re-frame.core                             :as rf]))
 
 
@@ -153,7 +155,8 @@
         uid                   (:block/uid block-o)
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
-        selected-items        (rf/subscribe [::select-subs/items])]
+        selected-items        (rf/subscribe [::select-subs/items])
+        comment-thread-uid? (comments/get-comment-thread-uid @db/dsdb uid)]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
       (let [{:block/keys [;; uid
@@ -185,7 +188,10 @@
                                                            "Copy block ref")
                                                          :onClick #(handle-copy-refs nil uid)}
                                                         {:children "Copy unformatted text"
-                                                         :onClick  #(handle-copy-unformatted uid)}])
+                                                         :onClick  #(handle-copy-unformatted uid)}
+                                                        (when (empty? @selected-items)
+                                                          {:children "Comment"
+                                                           :onClick  (fn [e] (handle-click-comment e uid))})])
                       :onClick                (fn [e]
                                                 (let [shift? (.-shiftKey e)]
                                                   (rf/dispatch [:reporting/navigation {:source :block-bullet
@@ -198,6 +204,16 @@
                       :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
 
           [content/block-content-el block-o state-hooks]
+
+          ;; Comments textarea
+          #_ (when @(rf/subscribe [:comment/show-comment-textarea? uid])
+               [inline-comments/inline-comments [] uid false])
+
+          ;; Show comments when the toggle is on
+          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
+                    (and @(rf/subscribe [:comment/show-inline-comments?])
+                         comment-thread-uid?))
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb comment-thread-uid?) uid true])
 
           [presence/inline-presence-el uid]
 
