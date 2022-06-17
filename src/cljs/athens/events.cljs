@@ -1597,8 +1597,8 @@
                                                                                                   (str "((" source-uid "))"))]))]
       {:fx [[:dispatch-n [[:resolve-transact-forward atomic-event]
                           [:reporting/block.create {:source :bullet-drop
-                                                    :count  1}] ; TODO :reporting/block.link
-                          ]]]})))
+                                                    :count  1}]]]]}))) ; TODO :reporting/block.link
+
 
 
 (reg-event-fx
@@ -1764,6 +1764,9 @@
                   (atomic-graph-ops/make-block-open-op block-uid open?))]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
+;; Works like clojure's update-in.
+;; Calls (f db uid), where uid is the existing block uid, or a uid that will be created in ks property path.
+;; (f db uid) should return a seq of operations to perform. If no operations are return, nothing is transacted.
 
 (reg-event-fx
   :properties/update-in
@@ -1777,4 +1780,3 @@
         {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
                                                             (composite-ops/make-consequence-op {:op/type :properties/update})
                                                             common-events/build-atomic-event)]]]]}))))
-
