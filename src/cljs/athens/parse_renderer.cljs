@@ -265,6 +265,12 @@
                                       :borderRadius "md"
                                       :alt   alt
                                       :src   url}])
+     :url-audio            (fn [{url :src alt :alt}]
+                             [:> Box {:class "url-audio"
+                                      :as "audio"
+                                      :borderRadius "md"
+                                      :alt   alt
+                                      :src   url}])
      :url-link             (fn [{url :url} text]
                              [:> Button
                               (merge link-props {:class  "url-link"
