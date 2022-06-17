@@ -4,6 +4,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events.graph.atomic    :as atomic]
     [athens.common-events.graph.composite :as composite]
+    [athens.common.utils                  :as common.utils]
     [athens.parser.structure              :as structure]
     [clojure.set                          :as set]))
 
@@ -291,3 +292,27 @@
         removed-links        (set/difference old-links new-links)
         added-links          (set/difference new-links old-links)]
     [removed-links added-links]))
+
+
+(defn- new-prop
+  [db uid prop-uid k]
+  (let [position (merge {:relation {:page/title k}}
+                        (if-let [title (common-db/get-page-title db uid)]
+                          {:page/title title}
+                          {:block/uid uid}))]
+    (build-block-new-op db prop-uid position)))
+
+
+(defn build-property-path
+  ([db uid ks]
+   (build-property-path db uid ks []))
+  ([db uid [k & ks] ops]
+   (if-not k
+     [uid ops]
+     (let [block      (common-db/get-block db [:block/uid uid])
+           prop-block (-> block :block/properties (get k))
+           prop-uid   (or (:block/uid prop-block)
+                          (common.utils/gen-block-uid))
+           ops'       (cond-> ops
+                        (not prop-block) (conj (new-prop db uid prop-uid k)))]
+       (recur db prop-uid ks ops')))))
