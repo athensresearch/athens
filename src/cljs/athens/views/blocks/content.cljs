@@ -1,20 +1,23 @@
 (ns athens.views.blocks.content
   (:require
-    ["/components/Block/Content" :refer [Content]]
-    [athens.config :as config]
-    [athens.db :as db]
-    [athens.events.selection :as select-events]
-    [athens.parse-renderer :refer [parse-and-render]]
-    [athens.subs.selection :as select-subs]
-    [athens.util :as util]
+    ["/components/Block/Content"                 :refer [Content]]
+    [athens.config                               :as config]
+    [athens.db                                   :as db]
+    [athens.events.selection                     :as select-events]
+    [athens.parse-renderer                       :refer [parse-and-render]]
+    [athens.subs.selection                       :as select-subs]
+    [athens.util                                 :as util]
+    [athens.views.blocks.autocomplete-search     :as autocomplete-search]
+    [athens.views.blocks.autocomplete-slash      :as autocomplete-slash]
     [athens.views.blocks.internal-representation :as internal-representation]
-    [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [clojure.edn :as edn]
-    [clojure.set :as set]
-    [clojure.string :as str]
-    [goog.events :as goog-events]
-    [komponentit.autosize :as autosize]
-    [re-frame.core :as rf])
+    [athens.views.blocks.textarea-keydown        :as textarea-keydown]
+    [clojure.edn                                 :as edn]
+    [clojure.set                                 :as set]
+    [clojure.string                              :as str]
+    [goog.events                                 :as goog-events]
+    [komponentit.autosize                        :as autosize]
+    [re-frame.core                               :as rf]
+    [reagent.core                                :as r])
   (:import
     (goog.events
       EventType)))
@@ -115,7 +118,9 @@
   - User pastes and last keydown has shift -> default
   - User pastes and clipboard data doesn't have new lines -> default
   - User pastes without shift and clipboard data has new line characters -> PREVENT default and convert to outliner blocks"
-  [e uid state]
+  [e uid {:keys [update-fn read-value default-verbatim-paste?]
+          :or   {default-verbatim-paste? false}
+          :as   _state-hooks} last-key-w-shift?]
   (let [data                    (.. e -clipboardData)
         text-data               (.getData data "text/plain")
         ;; With internal representation
@@ -130,14 +135,15 @@
         {:keys [head tail]} (athens.views.blocks.textarea-keydown/destruct-target (.-target e))
         img-regex           #"(?i)^image/(p?jpeg|gif|png)$"
         callback            (fn [new-str]
-                              (js/setTimeout #(swap! state assoc :string/local new-str)
+                              (js/setTimeout #(update-fn new-str)
                                              50))
 
         ;; External to internal representation
         text-to-inter (when-not (str/blank? text-data)
                         (internal-representation/text-to-internal-representation text-data))
         line-breaks   (re-find #"\r?\n" text-data)
-        no-shift      (-> @state :last-keydown :shift not)]
+        no-shift      (not @last-key-w-shift?)
+        local-value   @read-value]
 
 
     (cond
@@ -145,7 +151,9 @@
       internal?
       (do
         (.. e preventDefault)
-        (rf/dispatch [:paste-internal uid (:string/local @state) repr-with-new-uids]))
+        (if default-verbatim-paste?
+          (textarea-keydown/replace-selection-with text-data)
+          (rf/dispatch [:paste-internal uid local-value repr-with-new-uids])))
 
       ;; For images
       (seq (filter (fn [item]
@@ -159,7 +167,9 @@
       (and line-breaks no-shift)
       (do
         (.. e preventDefault)
-        (rf/dispatch [:paste-internal uid (:string/local @state) text-to-inter]))
+        (if default-verbatim-paste?
+          (textarea-keydown/replace-selection-with text-data)
+          (rf/dispatch [:paste-internal uid local-value text-to-inter])))
 
       (not no-shift)
       (do
@@ -171,14 +181,14 @@
 
 
 (defn textarea-change
-  [e _uid state]
-  (swap! state assoc :string/local (.. e -target -value))
-  ((:string/idle-fn @state)))
+  [e _uid {:keys [idle-fn update-fn]}]
+  (update-fn (.. e -target -value))
+  (idle-fn))
 
 
 (defn textarea-click
   "If shift key is held when user clicks across multiple blocks, select the blocks."
-  [e target-uid _state]
+  [e target-uid]
   (let [[target-uid _] (db/uid-and-embed-id target-uid)
         source-uid     @(rf/subscribe [:editing/uid])
         shift?         (.-shiftKey e)]
@@ -200,7 +210,7 @@
 (defn textarea-mouse-down
   "Attach global mouseup listener. Listener can't be local because user might let go of mousedown off of a block.
   See https://javascript.info/mouse-events-basics#events-order"
-  [e _uid _]
+  [e _uid]
   (.. e stopPropagation)
   (when (false? (.. e -shiftKey))
     (rf/dispatch [:editing/target (.. e -target)])
@@ -213,7 +223,7 @@
 (defn textarea-mouse-enter
   "When mouse-down, user is selecting multiple blocks with click+drag.
   Use same algorithm as shift-enter, only updating the source and target."
-  [e target-uid _]
+  [e target-uid]
   (let [source-uid @(rf/subscribe [:editing/uid])
         mouse-down @(rf/subscribe [:mouse-down])]
     (when mouse-down
@@ -228,32 +238,39 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [block state]
-  (let [{:block/keys [uid original-uid header]} block
-        editing? (rf/subscribe [:editing/is-editing uid])
-        selected-items (rf/subscribe [::select-subs/items])]
-    (fn [_block _state]
+  [block {:keys [save-fn read-value show-edit?] :as state-hooks}]
+  (let [{:block/keys [uid
+                      original-uid
+                      header]} block
+        editing?               (rf/subscribe [:editing/is-editing uid])
+        selected-items         (rf/subscribe [::select-subs/items])
+        caret-position         (r/atom nil)
+        last-key-w-shift?      (r/atom nil)
+        last-event             (r/atom nil)]
+    (fn [_block _state-hooks]
       (let [font-size (case header
                         1 "2.1em"
                         2 "1.7em"
                         3 "1.3em"
                         "1em")]
-        [:> Content {:fontSize font-size
-                     :on-click  (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
-         ;; NOTE: komponentit forces reflow, likely a performance bottle neck
-         ;; When block is in editing mode or the editing DOM elements are rendered
-         (when (or (:show-editable-dom @state) @editing?)
-           [autosize/textarea {:value          (:string/local @state)
-                               :class          ["block-input-textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
-                               ;; :auto-focus  true
-                               :id             (str "editable-uid-" uid)
-                               :on-change      (fn [e] (textarea-change e uid state))
-                               :on-paste       (fn [e] (textarea-paste e uid state))
-                               :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state))
-                               :on-blur        (:string/save-fn @state)
-                               :on-click       (fn [e] (textarea-click e uid state))
-                               :on-mouse-enter (fn [e] (textarea-mouse-enter e uid state))
-                               :on-mouse-down  (fn [e] (textarea-mouse-down e uid state))}])
-         ;; TODO pass `state` to parse-and-render
-         [parse-and-render (:string/local @state) (or original-uid uid)]]))))
+        [:<>
+         [:> Content {:fontSize font-size
+                      :on-click (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
+          ;; NOTE: komponentit forces reflow, likely a performance bottle neck
+          ;; When block is in editing mode or the editing DOM elements are rendered
+          (when (or @show-edit? @editing?)
+            [autosize/textarea {:value          @read-value
+                                :class          ["block-input-textarea" (when (and (empty? @selected-items) @editing?) "is-editing")]
+                                ;; :auto-focus  true
+                                :id             (str "editable-uid-" uid)
+                                :on-change      (fn [e] (textarea-change e uid state-hooks))
+                                :on-paste       (fn [e] (textarea-paste e uid state-hooks last-key-w-shift?))
+                                :on-key-down    (fn [e] (textarea-keydown/textarea-key-down e uid state-hooks caret-position last-key-w-shift? last-event))
+                                :on-blur        save-fn
+                                :on-click       (fn [e] (textarea-click e uid))
+                                :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))
+                                :on-mouse-down  (fn [e] (textarea-mouse-down e uid))}])
+          [parse-and-render @read-value (or original-uid uid)]]
+         [autocomplete-search/inline-search-el block state-hooks last-event]
+         [autocomplete-slash/slash-menu-el block last-event]]))))
 
