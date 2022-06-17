@@ -396,7 +396,8 @@
   [_]
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
-        block-uid     (r/atom nil)]
+        block-uid     (r/atom nil)
+        feature-flags (rf/subscribe [:feature-flags])]
     (fn [node]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
@@ -408,8 +409,8 @@
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
             is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
                                                                                     (= @(subscribe [:current-route/page-title]) title))
+            cover-photo-enabled?                                                (:cover-photo @feature-flags)
             header-image-url                                                    (-> properties (get ":header/url") :block/string)]
-
 
         (sync-title title state)
 
@@ -428,9 +429,8 @@
                          :onChangeHeaderImageUrl (fn [url]
                                                    (dispatch [:properties/update-in [:node/title title] [":header/url"]
                                                               (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))
-                         :headerImageUrl         (or header-image-url
-                                                     ;; TODO: remove this default image, only here for testing.
-                                                     "https://images.unsplash.com/photo-1651721675073-a992af85dfed?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2670&q=80")}
+                         :headerImageUrl         header-image-url
+                         :headerImageEnabled     cover-photo-enabled?}
 
           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
            ;; Prevent editable textarea if a node/title is a date

@@ -4,7 +4,7 @@
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]] 
+    ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common-db                          :as common-db]
     [athens.common-events.graph.ops            :as graph-ops]
     [athens.common.utils                       :as utils]
@@ -176,6 +176,7 @@
                        (sort-by first)
                        (mapv second))]))))
 
+
 (defn editor-component
   [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts]
   (let [{:keys [linked-ref
@@ -184,17 +185,22 @@
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
         selected-items        (rf/subscribe [::select-subs/items])
-        ;; TODO: user-id for presence users is their username, TDB what it is for real auth users.
-        ;; TODO: what should happen for local or in-memory db? there's no presence, atm it's hardcoded to "stuart"
-        user-id               (or (:username @(rf/subscribe [:presence/current-user]))
-                                  "stuart")
-        reactions             (props->reactions (:block/properties block-o))]
+        feature-flags         (rf/subscribe [:feature-flags])]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
       (let [{:block/keys [;; uid
                           open
                           children
-                          _refs]} (reactive/get-reactive-block-document [:block/uid uid])]
+                          properties
+                          _refs]} (reactive/get-reactive-block-document [:block/uid uid])
+            reactions-enabled?    (:reactions @feature-flags)
+            ;; TODO: user-id for presence users is their username, TDB what it is for real auth users.
+            ;; TODO: what should happen for local or in-memory db? there's no presence, atm it's hardcoded to "stuart"
+            user-id               (or (:username @(rf/subscribe [:presence/current-user]))
+                                      "stuart")
+            reactions             (and reactions-enabled?
+                                       (props->reactions properties))]
+
         [:<>
          [:div.block-body
           (when (and children?
@@ -233,10 +239,10 @@
                       :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
 
           [content/block-content-el block-o state-hooks]
-          
+
           (when reactions [:> Reactions {:reactions (clj->js reactions)
                                          :currentUser user-id
-                                         :onToggleReaction (partial toggle-reaction [:block/uid uid])}])          
+                                         :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
 
           [presence/inline-presence-el uid]
 

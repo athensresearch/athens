@@ -69,7 +69,8 @@ export const PageHeader = ({
   onChangeHeaderImageUrl,
   headerImageUrl,
   onClickOpenInSidebar,
-  onClickOpenInMainView }
+  onClickOpenInMainView,
+  headerImageEnabled}
 ) => {
   const [isPropertiesOpen, setIsPropertiesOpen] = React.useState(false)
 
@@ -92,7 +93,7 @@ export const PageHeader = ({
     {children}
 
     <ButtonGroup gridArea="extras" size="sm">
-      <Button onClick={() => setIsPropertiesOpen(!isPropertiesOpen)}>Properties</Button>
+      {headerImageEnabled && <Button onClick={() => setIsPropertiesOpen(!isPropertiesOpen)}>Properties</Button>}
       {onClickOpenInMainView && <Tooltip label="Open in main view">
         <IconButton
           aria-label='Open in main view'
