@@ -7,8 +7,7 @@
     [athens.self-hosted.event-log         :as event-log]
     [athens.self-hosted.web.persistence   :as persistence]
     [clojure.pprint                       :as pp]
-    [com.stuartsierra.component           :as component]
-    [datascript.core                      :as d])
+    [com.stuartsierra.component           :as component])
   (:import
     (clojure.lang
       ExceptionInfo)))
@@ -22,12 +21,12 @@
   (start
     [component]
     (let [in-memory? (-> config :config :in-memory?)
-          conn      (d/create-conn common-db/schema)
+          conn      (common-db/create-conn)
           persist-base-path (-> config :config :datascript :persist-base-path)
           [db id]  (when persist-base-path
                      (persistence/load persist-base-path))]
       (when (and db id)
-        (d/reset-conn! conn db)
+        (common-db/reset-conn! conn db)
         (log/info "Loaded persisted DataScript db as of event id" id))
       (log/info "Lazily replaying events into DataScript conn...")
       (let [total   (atom 0)

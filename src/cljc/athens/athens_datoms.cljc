@@ -3,8 +3,7 @@
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
     [athens.common-events.bfs :as bfs]
-    [athens.common-events.graph.atomic :as atomic-graph-ops]
-    [datascript.core :as datascript]))
+    [athens.common-events.graph.atomic :as atomic-graph-ops]))
 
 
 (def welcome-page-title "Welcome")
@@ -165,8 +164,7 @@
 
 
 (def welcome-events
-  (let [op (bfs/build-paste-op (datascript/empty-db common-db/schema)
-                               welcome-page-internal-representation)
+  (let [op (bfs/build-paste-op common-db/empty-db welcome-page-internal-representation)
         welcome-page (common-events/build-atomic-event op)
         add-sidebar  (common-events/build-atomic-event (atomic-graph-ops/make-shortcut-new-op welcome-page-title))]
     [[(:event/id welcome-page) welcome-page]

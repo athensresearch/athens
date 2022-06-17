@@ -7,10 +7,14 @@
 
 
 (def tree-with-page
-  [{:page/title     "Welcome"
-    :block/children [#:block{:uid    "block-1"
-                             :string "block with link to [[Welcome]]"
-                             :open?   false}]}])
+  [{:page/title "Welcome"
+    :block/properties
+    {"property key" #:block{:uid    "prop-1"
+                            :string "property value"}}
+    :block/children
+    [#:block{:uid    "block-1"
+             :string "block with link to [[Welcome]]"
+             :open?  false}]}])
 
 
 (def tree-without-page
@@ -31,12 +35,15 @@
   (let [db common-db/empty-db]
     (is (= [#:op{:type :page/new, :atomic? true, :args {:page/title "Welcome"}}
             #:op{:type :block/new, :atomic? true, :args {:block/uid "block-1", :block/position {:page/title "Welcome", :relation :last}}}
-            #:op{:type :page/new, :atomic? true, :args {:page/title "Welcome"}}
             #:op{:type :block/open :atomic? true :args {:block/uid "block-1" :block/open? false}}
-            #:op{:type :block/save, :atomic? true, :args {:block/uid "block-1", :block/string "block with link to [[Welcome]]"}}]
+            #:op{:type :page/new, :atomic? true, :args {:page/title "property key"}}
+            #:op{:type :block/new, :atomic? true, :args {:block/uid "prop-1", :block/position {:page/title "Welcome", :relation {:page/title "property key"}}}}
+            #:op{:type :block/save, :atomic? true, :args {:block/uid "block-1", :block/string "block with link to [[Welcome]]"}}
+            #:op{:type :block/save, :atomic? true, :args {:block/uid "prop-1", :block/string "property value"}}]
            (bfs/internal-representation->atomic-ops db tree-with-page nil)))
 
-    (is (= [#:op{:type :block/new, :atomic? true, :args {:block/uid "eaa4c9435", :block/position {:page/title "title", :relation :first}}}
+    (is (= [#:op{:type :page/new, :atomic? true, :args #:page{:title "title"}}
+            #:op{:type :block/new, :atomic? true, :args {:block/uid "eaa4c9435", :block/position {:page/title "title", :relation :first}}}
             #:op{:type :block/new, :atomic? true, :args {:block/uid "88c9ff662", :block/position {:block/uid "eaa4c9435", :relation :last}}}
             #:op{:type :block/new, :atomic? true, :args {:block/uid "7d11d532f", :block/position {:block/uid "88c9ff662", :relation :after}}}
             #:op{:type :block/open :atomic? true :args {:block/uid "7d11d532f" :block/open? false}}
@@ -50,12 +57,18 @@
 
 (deftest get-internal-representation
   (let [db (-> common-db/empty-db
-               (d/db-with [{:node/title     "Welcome"
-                            :page/sidebar   0
-                            :block/children [#:block{:uid    "block-1"
-                                                     :string "block with link to [[Welcome]]"
-                                                     :open   false
-                                                     :order  0}]}
+               (d/db-with [{:node/title "property key"}
+                           {:node/title   "Welcome"
+                            :page/sidebar 0
+                            :block/_property-of
+                            [#:block{:uid    "prop-1"
+                                     :string "property value"
+                                     :key    [:node/title "property key"]}]
+                            :block/children
+                            [#:block{:uid    "block-1"
+                                     :string "block with link to [[Welcome]]"
+                                     :open   false
+                                     :order  0}]}
                            {:block/uid    "eaa4c9435",
                             :block/string "block 1",
                             :block/open   true,
