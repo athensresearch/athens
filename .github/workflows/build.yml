@@ -88,9 +88,9 @@ jobs:
          id: restore-shadow-cljs-build-cache
          with:
            path: ./.shadow-cljs
-           key: ${{ runner.os }}-v1-shadow-cljs-build-cache-${{ hashFiles('yarn.lock') }}
+           key: ${{ runner.os }}-v2-shadow-cljs-build-cache-${{ hashFiles('yarn.lock') }}
            restore-keys: |
-             ${{ runner.os }}-v1-shadow-cljs-build-cache
+             ${{ runner.os }}-v2-shadow-cljs-build-cache
 
        - name: Compile JS assets for dev
          run: yarn client:dev-build
@@ -109,13 +109,10 @@ jobs:
        - uses: ./.github/custom-actions/node-env
 
        - name: Compile JS Assets for production
-         run: yarn prod --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\" athens.main.core/AUTO_UPDATE ${AUTO_UPDATE}}}"
+         run: yarn prod --config-merge "{:closure-defines {athens.core/SENTRY_DSN \"${SENTRY_DSN}\" athens.util/COMMIT_URL \"${COMMIT_URL}\"}}"
          env:
            SENTRY_DSN: ${{ secrets.sentry_dsn }}
            COMMIT_URL: "https://github.com/${{github.repository}}/commit/${{github.sha}}"
-           # See athens.main.core/AUTO_UPDATE for more details.
-           # TODO: set to true when publishing auto-update information for 2.0.0-beta.
-           AUTO_UPDATE: false
 
        - name: Run client e2e tests over the prod build
          run: yarn client:e2e
@@ -143,14 +140,21 @@ jobs:
            path: resources
 
        - name: Copy built app to a vercel prod deploy folder
-         run: mkdir -p vercel-prod/vercel-static/athens && cp -R resources/public/. vercel-prod/vercel-static/athens/
+         run: mkdir -p vercel-release/vercel-static/athens && cp -R resources/public/. vercel-release/vercel-static/athens/
 
        - uses: amondnet/vercel-action@v20
          with:
            vercel-token: ${{ secrets.VERCEL_TOKEN }}
            vercel-org-id: ${{ secrets.VERCEL_ORG_ID}}
            vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
-           vercel-args: './vercel-prod/ --prod'
+           scope: athens-research
+           vercel-args: './vercel-release/'
+           # Poor mans ternary operator https://github.com/actions/runner/issues/409#issuecomment-727565588
+           alias-domains: ${{ env.PRERELEASE == 'true' && env.PRERELEASE_DOMAIN || env.RELEASE_DOMAIN }}
+         env:
+           PRERELEASE: ${{ contains(github.ref, '-alpha.') || contains(github.ref, '-beta.') || contains(github.ref, '-rc.')}}
+           PRERELEASE_DOMAIN: beta.athensresearch.org
+           RELEASE_DOMAIN: web.athensresearch.org
 
 
    release-electron:
@@ -163,15 +167,7 @@ jobs:
 
      strategy:
        matrix:
-         os: [ubuntu-latest, windows-latest]
-         electron-arch-overrides: [""]
-         # Separate out the arm64 macos build, those are the longest builds.
-         # package.json still includes configuration to build both targets.
-         include:
-           - os: macos-latest
-             electron-arch-overrides: "-c.mac.target.target=dmg -c.mac.target.arch=x64"
-           - os: macos-latest
-             electron-arch-overrides: "-c.mac.target.target=dmg -c.mac.target.arch=arm64"
+         os: [ubuntu-latest, windows-latest, macos-latest]
 
      steps:
        - uses: actions/checkout@v2
@@ -208,10 +204,6 @@ jobs:
            # If the commit is tagged with a version (e.g. "v1.0.0"),
            # release the app after building
            release: ${{ startsWith(github.ref, 'refs/tags/v') }}
-
-           # TODO: remove publishAutoUpdate setting when we think enough 1.0.0-beta
-           # users have updated to 1.0.0, otherwise they will be auto-updated to 2.0.0-beta.
-           args: -c.publish.publishAutoUpdate=false ${{ matrix.electron-arch-overrides }}
 
          env:
            # macOS notarization API key

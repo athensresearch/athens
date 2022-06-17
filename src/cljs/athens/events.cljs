@@ -42,7 +42,7 @@
 (reg-event-fx
   :create-in-memory-conn
   (fn [_ _]
-    (let [conn (d/create-conn common-db/schema)]
+    (let [conn (common-db/create-conn)]
       (doseq [[_id data] athens-datoms/welcome-events]
         (atomic-resolver/resolve-transact! conn data))
       {:async-flow {:id             :db-in-mem-load
@@ -1764,3 +1764,19 @@
                   (atomic-graph-ops/make-block-open-op block-uid open?))]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
+
+;; Works like clojure's update-in.
+;; Calls (f db uid), where uid is the existing block uid, or a uid that will be created in ks property path.
+;; (f db uid) should return a seq of operations to perform. If no operations are return, nothing is transacted.
+(reg-event-fx
+  :properties/update-in
+  (fn [_ [_ id ks f]]
+    (log/debug ":properties/update-in args" id ks)
+    (let [db                  @db/dsdb
+          uid                 (common-db/get-block-uid db id)
+          [prop-uid path-ops] (graph-ops/build-property-path db uid ks)
+          f-ops               (f db prop-uid)]
+      (when (seq f-ops)
+        {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
+                                                            (composite-ops/make-consequence-op {:op/type :properties/update})
+                                                            common-events/build-atomic-event)]]]]}))))

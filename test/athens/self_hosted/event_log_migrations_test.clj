@@ -4,7 +4,6 @@
     [athens.self-hosted.event-log-migrations :as event-log-migrations]
     [athens.self-hosted.fluree.test-helpers :as fth]
     [athens.self-hosted.fluree.utils :as fu]
-    [athens.self-hosted.migrate :as migrate]
     [clojure.test :as t :refer [deftest testing is]]
     [fluree.db.api :as fdb])
   (:import
@@ -19,7 +18,7 @@
   (let [[conn ledger] (fth/conn+ledger)
         all           #(fu/query @fth/conn-atom @fth/ledger-atom {:select ["*"]
                                                                   :from   "event"})]
-    (migrate/migrate-ledger! conn ledger event-log-migrations/migrations :up-to 1)
+    (event-log-migrations/migrate! conn ledger :up-to 1)
     (run! #(fth/transact! [{:_id :event :event/id %}]) (range 4))
     (fth/wait-for-block)
     (is (= 4 (count (all))) "Should have 4 events")))
@@ -27,7 +26,7 @@
 
 (deftest ^:fluree migration-to-2
   (let [[conn ledger] (fth/conn+ledger)]
-    (migrate/migrate-ledger! conn ledger event-log-migrations/migrations :up-to 2)
+    (event-log-migrations/migrate! conn ledger :up-to 2)
     (fth/transact! [{:_id :event :event/id "1" :event/data "1"}])
     (is (thrown-with-msg? ExceptionInfo #"Predicate spec failed"
           (fth/transact! [{:_id [:event/id "1"]
@@ -50,9 +49,9 @@
                                      :where  [["?event" "event/order" (str "#(> ?order " %2 ")")]]
                                      :opts   {:orderBy [%1 "?order"]}})
         get-int-event-id #(-> % (get "event/id") parse-long)]
-    (migrate/migrate-ledger! conn ledger event-log-migrations/migrations :up-to 1)
+    (event-log-migrations/migrate! conn ledger :up-to 1)
     (run! #(fth/transact! [{:_id :event :event/id %}]) (range 4))
-    (migrate/migrate-ledger! conn ledger event-log-migrations/migrations :up-to 3)
+    (event-log-migrations/migrate! conn ledger :up-to 3)
     (run! #(fth/transact! [(new-event %)]) (range 4 8))
     (let [order-for-0 (event-log/event-id->order (fdb/db @fth/conn-atom @fth/ledger-atom) "0")
           order-for-3 (event-log/event-id->order (fdb/db @fth/conn-atom @fth/ledger-atom) "3")]

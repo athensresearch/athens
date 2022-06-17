@@ -284,3 +284,16 @@
       (t/is (= b2-to (common-db/get-block-string @@fixture/connection b2-uid)))
       (t/is (= b3-to (common-db/get-block-string @@fixture/connection b3-uid)))
       (fixture/teardown! setup-repr))))
+
+
+(t/deftest rename-prop
+  (fixture/setup! [{:page/title "title"
+                    :block/properties
+                    {"key" #:block{:uid    "uid"
+                                   :string ""}}}])
+  (fixture/op-resolve-transact! (graph-ops/build-page-rename-op @@fixture/connection "key" "another-key"))
+  (fixture/is #{{:page/title "another-key"}
+                {:page/title "title"
+                 :block/properties
+                 {"another-key" #:block{:uid    "uid"
+                                        :string ""}}}}))

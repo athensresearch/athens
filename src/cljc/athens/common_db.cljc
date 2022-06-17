@@ -2,20 +2,21 @@
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
   (:require
-    [athens.common.logging   :as log]
-    [athens.parser           :as parser]
-    [clojure.data            :as data]
-    [clojure.pprint          :as pp]
-    [clojure.set             :as set]
-    [clojure.string          :as string]
-    [clojure.walk            :as walk]
-    [datascript.core         :as d])
+    [athens.common.logging    :as log]
+    [athens.common.migrations :as migrations]
+    [athens.parser            :as parser]
+    [clojure.data             :as data]
+    [clojure.pprint           :as pp]
+    [clojure.set              :as set]
+    [clojure.string           :as string]
+    [clojure.walk             :as walk]
+    [datascript.core          :as d])
   #?(:cljs
      (:require-macros
        [athens.common.sentry :as sentry-m :refer [wrap-span wrap-span-no-new-tx]])))
 
 
-(def schema
+(def v1-schema
   {:schema/version      {}
    :block/uid           {:db/unique :db.unique/identity}
    :node/title          {:db/unique :db.unique/identity}
@@ -28,7 +29,90 @@
    :block/remote-id     {:db/unique :db.unique/identity}})
 
 
-(def empty-db (d/empty-db schema))
+(def v2-schema
+  {;; It would be nicer to have the reverse relationship here (:block/properties as a set
+   ;; of children refs, instead :block/property-of as a single parent ref), but that doesn't
+   ;; work with the tupleAttr below.
+   :block/property-of     {:db/cardinality :db.cardinality/one
+                           :db/valueType   :db.type/ref}
+   ;; key is to a property what order is to a child
+   :block/key             {:db/cardinality :db.cardinality/one
+                           :db/valueType   :db.type/ref}
+   ;; tupleAttrs are used here to ensure the relationship is unique,
+   ;; that there are no repeat keys in a block.
+   ;; https://github.com/tonsky/datascript/blob/master/docs/tuples.md
+   ;; It could later be extended to also ensure order is unique.
+   :block/property-of+key {:db/tupleAttrs [:block/property-of :block/key]
+                           :db/unique     :db.unique/identity}})
+
+
+(def v1-bootstrap-schema
+  {:migrations/version {:db/unique :db.unique/identity}})
+
+
+(defn db-versions
+  [db]
+  (->> (d/datoms db :aevt :migrations/version)
+       (mapv #(nth % 2))
+       (concat [0])
+       set))
+
+
+(defn version
+  [conn]
+  (apply max (db-versions @conn)))
+
+
+(defn set-version!
+  [conn version]
+  (d/transact! conn [{:migrations/version version}]))
+
+
+(defn transact-schema!
+  [conn schema]
+  (let [current-schema (d/schema @conn)
+        merged-schema  (merge current-schema schema)]
+    ;; NB: there is no way to update the schema of an existing conn.
+    ;; This returns a new conn, any watchers will have to be added again.
+    (reset! conn (-> (d/datoms @conn :eavt)
+                     (d/conn-from-datoms merged-schema)
+                     deref))))
+
+
+(def bootstrap-migrations
+  [[1 #(when (= (version %) 0)
+         (transact-schema! % v1-bootstrap-schema))]])
+
+
+(def migrations
+  [[1 #(transact-schema! % v1-schema)]
+   [2 #(transact-schema! % v2-schema)]])
+
+
+(defn migrate-conn!
+  [conn & {:as opts}]
+  (migrations/migrate! conn migrations bootstrap-migrations version set-version! opts)
+  conn)
+
+
+(defn create-conn
+  []
+  (migrate-conn! (d/create-conn)))
+
+
+(defn reset-conn!
+  [conn db]
+  (if (= (version conn) (version (atom db)))
+    (d/reset-conn! conn db)
+    ;; Migrate db before resetting conn to it dbs content.
+    (->> (d/conn-from-db db)
+         migrate-conn!
+         deref
+         (d/reset-conn! conn))))
+
+
+(def empty-db
+  (d/db (create-conn)))
 
 
 (defn e-by-av
@@ -152,62 +236,79 @@
        (:page/sidebar)))
 
 
-(defn get-children-uids-recursively
-  "Get list of children UIDs for given block `uid` (including the root block's UID)"
-  [db uid]
-  (when-let [eid (e-by-av db :block/uid uid)]
-    (->> eid
-         (d/pull db '[:block/order :block/uid {:block/children ...}])
-         (tree-seq :block/children :block/children)
-         (map :block/uid))))
+(defn sort-block-children
+  [block]
+  (if-let [children (seq (:block/children block))]
+    (assoc block :block/children
+           (vec (sort-by :block/order (map sort-block-children children))))
+    block))
 
 
-(defn retract-uid-recursively-tx
-  "Retract all blocks of a page, including the page."
-  [db uid]
-  (mapv (fn [uid]
-          [:db/retractEntity [:block/uid uid]])
-        (get-children-uids-recursively db uid)))
+(defn add-property-map
+  [block]
+  (if-let [properties (-> block :block/_property-of seq)]
+    (assoc block :block/properties
+           (->> properties
+                (map (fn [block]
+                       [(-> block :block/key :node/title) (add-property-map block)]))
+                (into {})))
+    block))
 
 
 (defn get-block
   "Fetches whole block based on `:db/id`."
   [db eid]
   (when (d/entity db eid)
-    (d/pull db '[:db/id
-                 :node/title
-                 :block/uid
-                 :block/order
-                 :block/string
-                 :block/open
-                 :block/refs
-                 :block/_refs
-                 {:block/children [:block/uid
-                                   :block/order]}]
-            eid)))
+    (-> (d/pull db '[:db/id
+                     :node/title
+                     :block/uid
+                     :block/order
+                     :block/string
+                     :block/open
+                     :block/refs
+                     :block/_refs
+                     {:block/key [:node/title]}
+                     {:block/_property-of [:block/uid
+                                           {:block/key [:node/title]}]}
+                     {:block/children [:block/uid
+                                       :block/order]}]
+                eid)
+        sort-block-children
+        add-property-map)))
 
 
 (defn get-page
   "Fetches whole page based on `:db/id`."
   [db eid]
   (when (d/entity db eid)
-    (d/pull db '[:db/id
-                 :node/title
-                 :block/uid
-                 :page/sidebar
-                 :block/refs
-                 :block/_refs
-                 {:block/children [:block/uid
-                                   :block/order]}]
-            eid)))
+    (-> (d/pull db '[:db/id
+                     :node/title
+                     :block/uid
+                     :page/sidebar
+                     :block/refs
+                     :block/_refs
+                     :block/_key
+                     {:block/_property-of [:block/uid
+                                           {:block/key [:node/title]}]}
+                     {:block/children [:block/uid
+                                       :block/order]}]
+                eid)
+        sort-block-children
+        add-property-map)))
+
+
+(defn child-of-or-property-of
+  [e]
+  (if-let [p (:block/_children e)]
+    (first p)
+    (:block/property-of e)))
 
 
 (defn get-parent-eid
   "Find parent's `:db/id` of given `eid`."
   [db eid]
   (-> (d/entity db eid)
-      :block/_children
-      first
+      child-of-or-property-of
       (select-keys [:block/uid])
       seq
       first))
@@ -243,28 +344,39 @@
        db rules uid prev-sib-order))
 
 
-(defn sort-block-children
-  [block]
-  (if-let [children (seq (:block/children block))]
-    (assoc block :block/children
-           (vec (sort-by :block/order (map sort-block-children children))))
-    block))
-
-
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs])
+  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs
+    {:block/key [:node/title]} {:block/_property-of ...}])
 
 
 (def node-document-pull-vector
   (-> block-document-pull-vector
-      (conj :node/title :page/sidebar)))
+      (conj :node/title :page/sidebar :block/_key)))
 
 
 (defn get-block-document
   "Fetches whole block and whole children"
   [db id]
   (->> (d/pull db block-document-pull-vector id)
-       sort-block-children))
+       sort-block-children
+       add-property-map))
+
+
+(defn get-block-property-document
+  "Fetches whole property document for block."
+  [db id]
+  (-> (d/pull db [:block/_property-of] id)
+      (update :block/_property-of #(mapv (fn [{:db/keys [id]}] (get-block-document db id)) %))
+      add-property-map
+      :block/properties))
+
+
+(defn get-block-uid
+  "Finds block `:block/uid` by eid."
+  [db eid]
+  (-> db
+      (d/entity eid)
+      :block/uid))
 
 
 (defn get-page-uid
@@ -340,7 +452,8 @@
   (when (d/entity db eid)
     (-> db
         (d/pull node-document-pull-vector eid)
-        sort-block-children)))
+        sort-block-children
+        add-property-map)))
 
 
 (defn uid-and-embed-id
@@ -439,8 +552,71 @@
     (= (count parents) 1)))
 
 
-(def block-document-pull-vector-for-copy
-  '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
+;; TODO: support removing two string refs from the same block.
+(defn retract-uid-recursively-tx
+  "Retract all blocks of a page, including the page.
+  Replaces block string refs to removed entities by their ref text."
+  [db uid]
+  (let [block                 (get-block db [:block/uid uid])
+        descendants           (concat [] (:block/children block) (:block/_property-of block))
+        has-descendants?      (seq descendants)
+        descendants-uids      (when has-descendants?
+                                (loop [acc        []
+                                       to-look-at descendants]
+                                  (if-let [look-at (first to-look-at)]
+                                    (let [c-uid   (:block/uid look-at)
+                                          c-block (get-block db [:block/uid c-uid])]
+                                      (recur (conj acc c-uid)
+                                             (concat (rest to-look-at)
+                                                     (:block/children c-block)
+                                                     (:block/_property-of c-block))))
+                                    acc)))
+        all-uids-to-remove    (conj (set descendants-uids) uid)
+        uid->refs             (->> all-uids-to-remove
+                                   (map (fn [uid]
+                                          (let [block    (get-block db [:block/uid uid])
+                                                rev-refs (set (:block/_refs block))]
+                                            (when-not (empty? rev-refs)
+                                              [uid (set rev-refs)]))))
+                                   (remove nil?)
+                                   (into {}))
+        ref-eids              (mapcat second uid->refs)
+        eids->uids            (->> ref-eids
+                                   (map (fn [{id :db/id}]
+                                          [id (v-by-ea db id :block/uid)]))
+                                   (into {}))
+        removed-uid->uid-refs (->> uid->refs
+                                   (map (fn [[k refs]]
+                                          [k (set
+                                               (for [{eid :db/id} refs
+                                                     :let         [uid (eids->uids eid)]
+                                                     :when        (not (contains? all-uids-to-remove uid))]
+                                                 uid))]))
+                                   (remove #(empty? (second %)))
+                                   (into {}))
+        asserts               (->> removed-uid->uid-refs
+                                   (mapcat (fn [[removed-uid referenced-uids]]
+                                             (let [removed-string (v-by-ea db [:block/uid removed-uid] :block/string)
+                                                   from-string    (str "((" removed-uid "))")]
+                                               (map (fn [uid]
+                                                      (if-not removed-string
+                                                        {:block/uid uid}
+                                                        (let [string (get-block-string db uid)
+                                                              title  (get-page-title db uid)]
+                                                          (cond-> {:block/uid uid}
+                                                            string (merge {:block/string (string/replace string from-string removed-string)})
+                                                            title  (merge {:node/title (string/replace title from-string removed-string)})))))
+                                                    referenced-uids)))))
+        has-asserts?          (seq asserts)
+        retract-kids          (mapv (fn [uid]
+                                      [:db/retractEntity [:block/uid uid]])
+                                    (reverse descendants-uids))
+        retract-entity        [:db/retractEntity [:block/uid uid]]
+        txs                   (cond-> []
+                                has-descendants? (into retract-kids)
+                                has-asserts?     (into asserts)
+                                true             (conj retract-entity))]
+    txs))
 
 
 (defn- dissoc-on-match
@@ -454,17 +630,22 @@
   "Returns internal representation for eid in db."
   [db eid]
   (when (d/entity db eid)
-    (let [rename-ks            {:block/open :block/open?
-                                :node/title :page/title}
-          remove-ks-on-match [[:block/order (constantly true)]
-                              [:block/open? :block/open?]
+    (let [rename-ks          {:block/open :block/open?
+                              :node/title :page/title}
+          remove-ks          [:db/id :page/sidebar :block/order
+                              :block/refs :block/_refs
+                              :block/key :block/_key
+                              :block/_property-of]
+          remove-ks-on-match [[:block/open? :block/open?]
                               [:block/uid   :page/title]]]
-      (->> (d/pull db block-document-pull-vector-for-copy eid)
-           sort-block-children
+      ;; NB: get-page-document retrieves all keys in get-block-document as well
+      (->> (get-page-document db eid)
            (walk/postwalk-replace rename-ks)
            (walk/prewalk (fn [node]
                            (if (map? node)
-                             (reduce dissoc-on-match node remove-ks-on-match)
+                             (as-> node n
+                                   (apply dissoc n remove-ks)
+                                   (reduce dissoc-on-match n remove-ks-on-match))
                              node)))))))
 
 
@@ -527,20 +708,22 @@
 (defn get-position
   "Get the position for block-uid in db.
   Position will be athens.common-events.graph.schema/child-position for the first block,
-  and athens.common-events.graph.schema/sibling-position for others."
+  and athens.common-events.graph.schema/sibling-position or /property-position for others."
   [db block-uid]
-  (let [{:block/keys [order]
+  (let [{:block/keys [order key]
          :db/keys    [id]} (get-block db [:block/uid block-uid])
         parent-uid         (->> id (get-parent db) :block/uid)
         position           (compat-position db {:block/uid parent-uid
-                                                :relation  order})]
+                                                :relation  (or order {:page/title (:node/title key)})})]
     position))
 
 
 (defn validate-position
-  [db {:keys [block/uid page/title] :as position}]
+  [db {:keys [relation block/uid page/title] :as position}]
   (let [title->uid (get-page-uid db title)
-        uid->title (get-page-title db uid)]
+        uid->title (get-page-title db uid)
+        key       (:page/title relation)
+        keys      (->> [:block/uid (or uid title->uid)] (get-block db) :block/properties keys set)]
     ;; Fail on error conditions.
     (when-some [fail-msg (cond
                            (and uid uid->title)
@@ -551,7 +734,11 @@
                            (str "Location title does not exist:" title)
 
                            (and uid (not (e-by-av db :block/uid uid)))
-                           (str "Location uid does not exist:" uid))]
+                           (str "Location uid does not exist:" uid)
+
+                           ;; TODO: this could be idempotent and instead overwrite the name.
+                           (and key (keys key))
+                           (str "Location already contains key: " key))]
       (throw (ex-info fail-msg position)))))
 
 
@@ -561,13 +748,25 @@
   (validate-position db position)
   (let [;; Pages must be referenced by title but internally we still use uids for them.
         uid                     (or uid (get-page-uid db title))
-        {parent-uid :block/uid} (if (#{:first :last} relation)
+        {parent-uid :block/uid} (if (or (#{:first :last} relation)
+                                        (:page/title relation))
                                   ;; We already know the blocks exists because of validate-position
                                   (get-block db [:block/uid uid])
                                   (if-let [parent (get-parent db [:block/uid uid])]
                                     parent
                                     (throw (ex-info "Ref block does not have parent" {:block/uid uid}))))]
     [uid parent-uid]))
+
+
+(defn orphan-block-uids
+  [db]
+  (d/q '[:find ?uid
+         :where
+         [?e :block/uid ?uid]
+         [(missing? $ ?e :node/title)]
+         [(missing? $ ?e :block/_children)]
+         [(missing? $ ?e :block/property-of)]]
+       db))
 
 
 (defn extract-tag-values

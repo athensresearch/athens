@@ -238,7 +238,7 @@
 
 ;; -- Datascript and Posh ------------------------------------------------
 
-(defonce dsdb (d/create-conn common-db/schema))
+(defonce dsdb (common-db/create-conn))
 
 
 (defn e-by-av
@@ -629,10 +629,9 @@
 
 (defn transact-state-for-uid
   "uid -> Current block
-   state -> Look at state atom in block-el
+   new-string -> new `:block/string` value
    source -> reporting source"
-  [uid state source]
-  (let [{:string/keys [local]} @state]
-    (rf/dispatch [:block/save {:uid    uid
-                               :string local
-                               :source source}])))
+  [uid new-string source]
+  (rf/dispatch [:block/save {:uid    uid
+                             :string new-string
+                             :source source}]))
