@@ -1,6 +1,7 @@
 (ns athens.views.blocks.core
   (:require
     ["/components/Block/Container"           :refer [Container]]
+    ["/components/EmojiPicker/EmojiPicker"   :refer [EmojiPickerPopover]]
     ["@chakra-ui/react"                      :refer [MenuList MenuItem]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
@@ -186,9 +187,11 @@
                                        :show-edit?     show-edit?}
          dragging?                    (rf/subscribe [::drag.subs/dragging? uid])
          drag-target                  (rf/subscribe [::drag.subs/drag-target uid])
-         selected-items               (rf/subscribe [::select-subs/items])]
+         selected-items               (rf/subscribe [::select-subs/items])
+         feature-flags                (rf/subscribe [:feature-flags])]
      (rf/dispatch [::linked-ref.events/set-open! uid (or (false? linked-ref) initial-open)])
      (rf/dispatch [::inline-refs.events/set-open! uid false])
+
 
      (r/create-class
        {:component-will-unmount
@@ -213,7 +216,8 @@
                                         block)
                 is-selected           @(rf/subscribe [::select-subs/selected? uid])
                 present-user          @(rf/subscribe [:presence/has-presence uid])
-                is-presence           (seq present-user)]
+                is-presence           (seq present-user)
+                reactions-enabled?    (:reactions @feature-flags)]
 
             ;; (prn uid is-selected)
 
@@ -230,6 +234,9 @@
                            :isOpen       open
                            :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
                            :hasPresence  is-presence
+                           :actions      (clj->js
+                                           (into [] (when reactions-enabled?
+                                                      [(r/as-element [:> EmojiPickerPopover {:onEmojiSelected (fn [e] js/console.log e)}])])))
                            :uid          uid
                            ;; need to know children for selection resolution
                            :childrenUids children-uids

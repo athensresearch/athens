@@ -1409,10 +1409,10 @@
 (defn block-save-block-move-composite-op
   [source-uid ref-uid relation string]
   (let [block-save-op             (graph-ops/build-block-save-op @db/dsdb source-uid string)
-        location                  (common-db/compat-position @db/dsdb {:block/uid ref-uid
+        position                  (common-db/compat-position @db/dsdb {:block/uid ref-uid
                                                                        :relation relation})
         block-move-op             (atomic-graph-ops/make-block-move-op source-uid
-                                                                       location)
+                                                                       position)
         block-save-block-move-op  (composite-ops/make-consequence-op {:op/type :block-save-block-move}
                                                                      [block-save-op
                                                                       block-move-op])]
