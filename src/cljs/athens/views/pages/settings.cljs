@@ -1,14 +1,14 @@
 (ns athens.views.pages.settings
   (:require
-    ["@chakra-ui/react" :refer [Text Heading Box FormControl FormLabel ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
-    [athens.db :refer [default-athens-persist]]
-    [athens.util :refer [toast]]
-    [cljs-http.client :as http]
-    [cljs.core.async :refer [<!]]
-    [re-frame.core :refer [subscribe dispatch reg-event-fx]]
-    [reagent.core :as r])
+   ["@chakra-ui/react" :refer [Text Flex Divider Heading Box FormControl FormLabel FormHelperText ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
+   [athens.db :refer [default-athens-persist]]
+   [athens.util :refer [toast]]
+   [cljs-http.client :as http]
+   [cljs.core.async :refer [<!]]
+   [re-frame.core :refer [subscribe dispatch reg-event-fx]]
+   [reagent.core :as r])
   (:require-macros
-    [cljs.core.async.macros :refer [go]]))
+   [cljs.core.async.macros :refer [go]]))
 
 
 ;; Helpers
@@ -102,6 +102,21 @@
             :gridArea "help"} children])
 
 
+(defn setting-switch
+  []
+  (fn [label checked update-fn help]
+    [:> FormControl {:cursor "pointer"
+                     :as "label"
+                     :p 2 :m -2
+                     :borderRadius "md"
+                     :_hover {:bg "interaction.surface.hover"}}
+     [:> Flex {:align "center" :gap -3}
+      [:> FormLabel {:mb 0 :flex 1 :as "div" :color "foreground.primary"} label]
+      [:> Switch {:isChecked checked
+                  :onChange update-fn}]]
+     (when help [:> FormHelperText help])]))
+
+
 (defn setting-wrapper
   ([children]
    [setting-wrapper {} children])
@@ -160,12 +175,12 @@
     [header
      [title "Usage and Diagnostics"]]
     [form
-     [:> Switch {:defaultChecked monitoring
-                 :onChange #(handle-monitoring-click monitoring update-fn)}
-      "Send usage data and diagnostics to Athens"]]
-    [help
-     [:<> [:p "Athens has never and will never look at the contents of your database."]
-      [:p "Athens will never ever sell your data."]]]]])
+     [:> Flex {:direction "column" :gap 4}
+      [setting-switch
+       "Send usage data and diagnostics to Athens" monitoring
+       #(handle-monitoring-click monitoring update-fn)
+       [:<> [:p "Athens has never and will never look at the contents of your database."]
+        [:p "Athens will never ever sell your data."]]]]]]])
 
 
 (defn backup-comp
@@ -196,21 +211,14 @@
   [setting-wrapper
    [:<>
     [header
-     [title "Experimental Feature Flags"]]
+     [title "Experimental Features"]]
     [form
-     [:<>
-      [:> FormControl
-       [:> Switch {:defaultChecked comments
-                   :onChange #(update-fn :comments %)}
-        "Comments"]]
-      [:> FormControl
-       [:> Switch {:defaultChecked reactions
-                   :onChange #(update-fn :reactions %)}
-        "Reactions"]]
-      [:> FormControl
-       [:> Switch {:defaultChecked cover-photo
-                   :onChange #(update-fn :cover-photo %)}
-        "Cover Photo"]]]]
+     [:> Flex {:direction "column" :gap 4}
+      [setting-switch "Comments" comments #(update-fn :comments %) "Add comments to blocks"]
+      [:> Divider]
+      [setting-switch "Reactions" reactions #(update-fn :reactions %) "Add reactions to blocks"]
+      [:> Divider]
+      [setting-switch "Page cover images" cover-photo #(update-fn :cover-photo %) "Add cover images to pages"]]]
     [help
      [:<>
       [:p "Optional experimental features that aren't ready for prime time, but that you can still enable to try out."]
@@ -249,22 +257,22 @@
 
 
 (reg-event-fx
-  :settings/update
-  (fn [{:keys [db]} [_ k v]]
-    {:db (assoc-in db [:athens/persist :settings k] v)}))
+ :settings/update
+ (fn [{:keys [db]} [_ k v]]
+   {:db (assoc-in db [:athens/persist :settings k] v)}))
 
 
 (reg-event-fx
-  :settings/update-in
-  (fn [{:keys [db]} [_ ks v]]
-    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
+ :settings/update-in
+ (fn [{:keys [db]} [_ ks v]]
+   {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
 
 
 (reg-event-fx
-  :settings/reset
-  (fn [{:keys [db]} _]
-    {:db (assoc db :athens/persist default-athens-persist)
-     :dispatch [:boot]}))
+ :settings/reset
+ (fn [{:keys [db]} _]
+   {:db (assoc db :athens/persist default-athens-persist)
+    :dispatch [:boot]}))
 
 
 (defn page
