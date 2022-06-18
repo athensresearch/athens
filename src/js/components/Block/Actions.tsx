@@ -41,8 +41,9 @@ export const Actions = ({ actions, setIsUsingActions }: ActionsProps): JSX.Eleme
       isAttached={true}
       position="absolute"
       right={0}
-      transform="translateY(-50%)"
-      top="1em"
+      top="0"
+      gridArea="actions"
+      transform="translateY(-100%)"
       borderRadius="md"
       onFocus={() => setIsUsingActions(true)}
       onBlur={() => setIsUsingActions(false)}

@@ -18,7 +18,7 @@ const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: 
   return (closestBlockContainer?.dataset?.uid === thisBlockUid)
 }
 
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing,...props }) => {
+const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }) => {
 
   const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
   const [isUsingActions, setIsUsingActions] = React.useState(false);
@@ -100,10 +100,10 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
           gridTemplateColumns: "1em 1em 1fr auto",
           gridTemplateRows: "0 1fr auto 0",
           gridTemplateAreas:
-            `'above above above above above'
-           'toggle bullet content refs presence'
-           '_ _ reactions reactions reactions'
-           'below below below below below'`,
+            `'above  above  above     above     actions'
+             'toggle bullet content   refs      presence '
+             '_      _      reactions reactions reactions'
+             'below  below  below     below     below'`,
           borderRadius: "0.5rem",
           minHeight: '2em',
           position: "relative",
