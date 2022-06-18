@@ -195,9 +195,9 @@
                           _refs]} (reactive/get-reactive-block-document [:block/uid uid])
             reactions-enabled?    (:reactions @feature-flags)
             ;; TODO: user-id for presence users is their username, TDB what it is for real auth users.
-            ;; TODO: what should happen for local or in-memory db? there's no presence, atm it's hardcoded to "stuart"
+            ;; TODO: what should happen for local or in-memory db? there's no presence, atm it's hardcoded to "Unknown user"
             user-id               (or (:username @(rf/subscribe [:presence/current-user]))
-                                      "stuart")
+                                      "Unknown user")
             reactions             (and reactions-enabled?
                                        (props->reactions properties))]
 
