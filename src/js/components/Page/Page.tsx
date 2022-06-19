@@ -1,9 +1,22 @@
-import React from 'react';
+import FocusLock from 'react-focus-lock';
 import {
-  Button, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
-  Tooltip, FormLabel
+  Button,
+  Divider,
+  Center,
+  Box,
+  Heading,
+  Image,
+  IconButton,
+  ButtonGroup,
+  Popover,
+  Portal,
+  PopoverContent,
+  PopoverTrigger,
+  PopoverBody,
+  Tooltip,
 } from '@chakra-ui/react';
-import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, ChevronDownIcon } from '@/Icons/Icons';
+import { PropertiesList } from './PropertiesList';
 
 const PAGE_PROPS = {
   as: "article",
@@ -70,10 +83,8 @@ export const PageHeader = ({
   headerImageUrl,
   onClickOpenInSidebar,
   onClickOpenInMainView,
-  headerImageEnabled}
+  headerImageEnabled }
 ) => {
-  const [isPropertiesOpen, setIsPropertiesOpen] = React.useState(false)
-
   return (<Box
     as="header"
     className="page-header"
@@ -93,7 +104,32 @@ export const PageHeader = ({
     {children}
 
     <ButtonGroup gridArea="extras" size="sm">
-      {headerImageEnabled && <Button onClick={() => setIsPropertiesOpen(!isPropertiesOpen)}>Properties</Button>}
+      <Popover placement="bottom-end">
+        {({ isOpen }) => (
+          <>
+            <PopoverTrigger>
+              <Button
+                isActive={isOpen}
+                variant="ghost"
+                color="foreground.secondary"
+                rightIcon={<ChevronDownIcon />}
+              >Properties</Button>
+            </PopoverTrigger>
+            <Portal>
+              <PopoverContent>
+                <FocusLock returnFocus persistentFocus={false}>
+                  <PopoverBody>
+                    <PropertiesList
+                      onChangeHeaderImageUrl={onChangeHeaderImageUrl}
+                      headerImageUrl={headerImageUrl}
+                      headerImageEnabled={headerImageEnabled}
+                    />
+                  </PopoverBody>
+                </FocusLock>
+              </PopoverContent>
+            </Portal>
+          </>)}
+      </Popover>
       {onClickOpenInMainView && <Tooltip label="Open in main view">
         <IconButton
           aria-label='Open in main view'
@@ -116,15 +152,6 @@ export const PageHeader = ({
         </IconButton></Tooltip>}
     </ButtonGroup>
 
-    {isPropertiesOpen && <Box gridArea="properties">
-      <FormControl>
-        <FormLabel>Header image url</FormLabel>
-        <Input defaultValue={headerImageUrl} onBlur={(e) => onChangeHeaderImageUrl(e.target.value)} />
-      </FormControl>
-    </Box>
-    }
-
-
     {headerImageUrl && <HeaderImage src={headerImageUrl} />}
   </Box>)
 }
@@ -136,7 +163,9 @@ export const PageBody = ({ children }) => <Box
   pl="calc(var(--page-padding) - 1em)"
   pr="var(--page-padding)"
   gridArea="content"
->{children}</Box>
+>
+  {children}
+</Box>
 
 export const PageFooter = ({ children }) => <Box
   as="footer"
