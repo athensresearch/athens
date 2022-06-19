@@ -23,8 +23,6 @@ import {
 } from '@chakra-ui/react';
 
 import { HexColorPicker } from "react-colorful";
-import { AriaDialogProps } from '@react-types/dialog';
-import { OverlayProps } from '@react-aria/overlays';
 
 const pulse = keyframes`
   from {
@@ -68,8 +66,10 @@ const Inputs = ({ children }) => {
   </Flex>)
 }
 
-interface ProfileSettingsDialogProps extends OverlayProps, AriaDialogProps {
+interface ProfileSettingsDialogProps {
   person: Person;
+  isOpen: boolean;
+  onClose: () => void;
   onUpdatePerson: (person: Person) => void;
 }
 /**
@@ -80,11 +80,10 @@ export const _ProfileSettingsDialog = ({
   onClose: handleClose,
   onUpdatePerson: handleUpdatePerson,
   isOpen,
-  ...rest
 }: ProfileSettingsDialogProps) => {
-  const [ editingUsername, setEditingUsername ] = React.useState<string>(person.username || '');
-  const [ editingColor, setEditingColor ] = React.useState<string>(person.color || '#0071DB');
-  const [ isValidUsername, setIsValidUsername ] = React.useState<boolean>(!!editingUsername);
+  const [editingUsername, setEditingUsername] = React.useState<string>(person.username || '');
+  const [editingColor, setEditingColor] = React.useState<string>(person.color || '#0071DB');
+  const [isValidUsername, setIsValidUsername] = React.useState<boolean>(!!editingUsername);
 
   const handleChangeUsername = (e: React.ChangeEvent<HTMLInputElement>) => {
     const attempt = e.target.value.trim();
@@ -96,7 +95,6 @@ export const _ProfileSettingsDialog = ({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      {...rest}
     >
       <ModalOverlay />
       <ModalContent>
