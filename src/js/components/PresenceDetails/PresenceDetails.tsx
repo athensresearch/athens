@@ -1,8 +1,7 @@
-import { withErrorBoundary } from 'react-error-boundary';
 import React from "react";
 
-import { Text, Tooltip, Avatar, AvatarGroup, Menu, MenuDivider, MenuButton, MenuList, MenuGroup, MenuItem, Button, Portal } from '@chakra-ui/react';
-
+import { withErrorBoundary } from 'react-error-boundary';
+import { Tooltip, Avatar, AvatarGroup, Menu, MenuDivider, MenuButton, MenuList, MenuGroup, MenuItem, Button, Portal } from '@chakra-ui/react';
 import { ProfileSettingsDialog } from "@/ProfileSettingsDialog";
 
 export interface PresenceDetailsProps {
