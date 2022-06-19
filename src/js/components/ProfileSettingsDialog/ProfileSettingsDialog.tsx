@@ -139,7 +139,7 @@ export const _ProfileSettingsDialog = ({
         >
           <ButtonGroup>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button isDisabled={!isValidUsername} onClick={() => handleUpdatePerson({ ...person, username: editingUsername, color: editingColor })}>Change appearance</Button>
+            <Button isDisabled={!isValidUsername} onClick={() => handleUpdatePerson({ ...person, username: editingUsername, color: editingColor })}>Apply changes</Button>
           </ButtonGroup>
         </ModalFooter>
       </ModalContent>
