@@ -168,6 +168,7 @@
                                    :backspace-handler       backspace-handler
                                    :delete-handler          delete-handler
                                    :default-verbatim-paste? true
-                                   :keyboard-navigation?    false}]
+                                   :keyboard-navigation?    false
+                                   :placeholder             "Write your comment here"}]
             (rf/dispatch [:editing/uid block-uid])
             [b-content/block-content-el block-o state-hooks])])])))
