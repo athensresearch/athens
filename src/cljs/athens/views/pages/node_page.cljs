@@ -336,24 +336,23 @@
                               (dispatch [:unlinked-references/link-all unlinked-str-ids title]))
                             (swap! state assoc unlinked? false)
                             (reset! unlinked-refs []))]
-    [:> PageReferences {:defaultIsOpen false
-                        :count (count @unlinked-refs)
-                        :showIfEmpty true
-                        :refs @unlinked-refs
-                        :title "Unlinked References"
-                        :extras (r/as-element [:> Button {:variant "link"
-                                                          :size "sm"
-                                                          :flexShrink 0
-                                                          :onClick link-all-unlinked}
-                                               "Link all"])
-                        :onOpen  #(let [un-refs (get-unlinked-references (patterns/escape-str title))]
-                                    (swap! state assoc unlinked? true)
-                                    (reset! unlinked-refs un-refs))
-                        :onClose #(swap! state assoc unlinked? false)}
+
+    [:> PageReferences {:defaultIsOpen (get @state unlinked?)
+                        :count         (count @unlinked-refs)
+                        :showIfEmpty   true
+                        :refs          @unlinked-refs
+                        :title         "Unlinked References"
+                        :extras        (r/as-element [:> Button {:variant    "link"
+                                                                 :size       "sm"
+                                                                 :flexShrink 0
+                                                                 :onClick    link-all-unlinked}
+                                                      "Link all"])
+                        :onOpen        #(swap! state assoc unlinked? true)
+                        :onClose       #(swap! state assoc unlinked? false)}
      (doall
        (for [[[group-title] group] @unlinked-refs]
          [:> ReferenceGroup
-          {:title group-title
+          {:title        group-title
            :onClickTitle (fn [e]
                            (let [shift?       (.-shiftKey e)
                                  parsed-title (parse-renderer/parse-title group-title)]
@@ -366,22 +365,22 @@
           (doall
             (for [block group]
               [:> ReferenceBlock
-               {:key (str "ref-" (:block/uid block))
+               {:key     (str "ref-" (:block/uid block))
                 :actions (when unlinked?
                            (r/as-element [:> Button {:marginTop "1.5em"
-                                                     :size "xs"
-                                                     :flex "0 0"
-                                                     :float "right"
-                                                     :variant "link"
-                                                     :onClick (fn []
-                                                                (let [hm                (into (hash-map) @unlinked-refs)
-                                                                      new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
-                                                                                                                                    (= uid (:block/uid block)))
-                                                                                                                                  %))
-                                                                                             seq)]
-                                                                  ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
-                                                                  (reset! unlinked-refs new-unlinked-refs)
-                                                                  (dispatch [:unlinked-references/link block title])))}
+                                                     :size      "xs"
+                                                     :flex      "0 0"
+                                                     :float     "right"
+                                                     :variant   "link"
+                                                     :onClick   (fn []
+                                                                  (let [hm                (into (hash-map) @unlinked-refs)
+                                                                        new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
+                                                                                                                                      (= uid (:block/uid block)))
+                                                                                                                                    %))
+                                                                                               seq)]
+                                                                    ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
+                                                                    (reset! unlinked-refs new-unlinked-refs)
+                                                                    (dispatch [:unlinked-references/link block title])))}
                                           "Link"]))}
                [ref-comp block]]))]))]))
 
@@ -401,13 +400,15 @@
         (reset! state init-state)
         (reset! unlinked-refs [])
         (reset! block-uid (:block/uid node)))
-      (let [{:block/keys [children uid] title :node/title}                      node
+      (let [{:block/keys [children uid] title :node/title} node
             {:alert/keys [message confirm-fn cancel-fn confirm-text] alert-show :alert/show} @state
-            daily-note?                                                         (dates/is-daily-note uid)
-            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
-            is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
-                                                                                    (= @(subscribe [:current-route/page-title]) title))]
+            daily-note?       (dates/is-daily-note uid)
+            on-daily-notes?   (= :home @(subscribe [:current-route/name]))
+            is-current-route? (or (= @(subscribe [:current-route/uid]) uid)
+                                  (= @(subscribe [:current-route/page-title]) title))
+            get-and-reset-unlinked-refs #(reset! unlinked-refs (get-unlinked-references (patterns/escape-str title)))]
 
+        (js/setTimeout get-and-reset-unlinked-refs 500)
         (sync-title title state)
 
         [:<>
