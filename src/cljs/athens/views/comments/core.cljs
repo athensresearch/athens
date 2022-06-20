@@ -72,7 +72,9 @@
                                                 [#:block{:uid    (common.utils/gen-block-uid)
                                                          :string comment-string
                                                          :properties
-                                                         {":comment/author" #:block{:string author
+                                                         {":block/type"     #:block{:string "comment"
+                                                                                    :uid    (common.utils/gen-block-uid)}
+                                                          ":comment/author" #:block{:string author
                                                                                     :uid    (common.utils/gen-block-uid)}
                                                           ":comment/time"   #:block{:string time
                                                                                     :uid    (common.utils/gen-block-uid)}}}]

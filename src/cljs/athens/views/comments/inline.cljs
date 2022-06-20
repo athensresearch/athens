@@ -91,10 +91,14 @@
 
 (defn inline-comments
   [data uid hide?]
-  (let [state         (reagent.core/atom {:hide? hide?})
-        num-comments  (count data)
-        first-comment (first data)
-        username @(rf/subscribe [:username])        
+  ;; TODO : Remove this state
+  (let [state           (reagent.core/atom {:hide? hide?})
+        num-comments    (count data)
+        first-comment   (first data)
+        block-uid       (athens.common.utils/gen-block-uid)
+        value-atom      (r/atom "")
+        show-edit-atom? (r/atom false)
+        username        @(rf/subscribe [:username])
         {:keys [author string time]} first-comment]
     (fn [data uid]
       [:> VStack (merge
@@ -137,10 +141,7 @@
             ^{:key item}
             [comment-el item])
 
-          (let [value-atom        (r/atom "")
-                show-edit-atom?   (r/atom false)
-                block-uid         "my-random-uid"
-                block-o           {:block/uid      block-uid
+          (let [block-o           {:block/uid      block-uid
                                    ;; :block/string   @value-atom
                                    :block/children []}
                 save-fn           #(reset! value-atom %)
@@ -148,7 +149,8 @@
                                     [_uid _d-key-down]
                                     (when (not (str/blank? @value-atom))
                                       (re-frame.core/dispatch [:comment/write-comment uid @value-atom username])
-                                      (reset! value-atom "")))
+                                      (reset! value-atom "")
+                                      (rf/dispatch [:editing/uid block-uid])))
                 tab-handler       (fn jetsam-tab-handler
                                     [_uid _embed-id _d-key-down])
                 backspace-handler (fn jetsam-backspace-handler
@@ -167,11 +169,5 @@
                                    :delete-handler          delete-handler
                                    :default-verbatim-paste? true
                                    :keyboard-navigation?    false}]
-            (add-watch value-atom :watcher
-                       (fn [key atom old-state new-state]
-                         (prn "-- Atom Changed --")
-                         (prn "key" key)
-                         (prn "atom" atom)
-                         (prn "old-state" old-state)
-                         (prn "new-state" new-state)))
+            (rf/dispatch [:editing/uid block-uid])
             [b-content/block-content-el block-o state-hooks])])])))
