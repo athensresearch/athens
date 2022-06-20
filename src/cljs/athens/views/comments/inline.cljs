@@ -170,4 +170,11 @@
                                    :default-verbatim-paste? true
                                    :keyboard-navigation?    false}]
             (rf/dispatch [:editing/uid block-uid])
-            [b-content/block-content-el block-o state-hooks])])])))
+            [:> Box {:px 2
+                     :mt 2
+                     :minHeight "2.125em"
+                     :borderRadius "sm"
+                     :bg "background.attic"
+                     :cursor "text"
+                     :_focusWithin {:shadow "focus"}}
+             [b-content/block-content-el block-o state-hooks]])])])))
