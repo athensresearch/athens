@@ -28,8 +28,9 @@
   (let [parent-children  (common-db/get-children-uids db [:block/uid parent-uid])
         parent-children' (order/remove parent-children uid)
         reorder          (order/reorder parent-children parent-children' order/block-map-fn)
-        update-parent    [[:db/retract [:block/uid parent-uid] :block/children [:block/uid uid]]]]
-    (concat reorder update-parent)))
+        update-parent    [[:db/retract [:block/uid parent-uid] :block/children [:block/uid uid]]]
+        remove-order     [[:db/retract [:block/uid uid] :block/order]]]
+    (concat reorder update-parent remove-order)))
 
 
 (defn move-child-within
