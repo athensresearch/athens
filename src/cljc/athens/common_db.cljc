@@ -672,6 +672,16 @@
        (map first)
        (d/pull-many db all-pages-pull-vector)))
 
+(def all-blocks-pull-vector
+  [:block/uid :block/string :edit/time :create/time [:block/_refs :limit nil]])
+
+
+(defn get-all-blocks
+  [db]
+  (->> (d/datoms db :aevt :block/string)
+       (map first)
+       (d/pull-many db all-blocks-pull-vector)))
+
 
 (defn compat-position
   "Build a position by coercing incompatible arguments into compatible ones.
