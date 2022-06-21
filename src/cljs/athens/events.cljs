@@ -978,6 +978,11 @@
                                (and (not-empty children) (= parent prev-block)))
                            nil
 
+                           (:block/key block)
+                           [:block/move {:source-uid uid
+                                         :target-uid (:block/uid parent)
+                                         :target-rel :first}]
+
                            (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value))
                            [:backspace/delete-only-child uid]
 
