@@ -29,7 +29,7 @@
         inline-search-results (rf/subscribe [::inline-search.subs/results block-uid])
         inline-search-query   (rf/subscribe [::inline-search.subs/query block-uid])]
     (fn [block {:as _state-hooks} _last-event _state]
-      (let [is-open (some #(= % @inline-search-type) [:page :block :hashtag :template])]
+      (let [is-open (some #(= % @inline-search-type) [:page :block :hashtag :template :property])]
         [:> Autocomplete {:event   @last-event
                           :isOpen  is-open
                           :onClose #(rf/dispatch [::inline-search.events/close! block-uid])}

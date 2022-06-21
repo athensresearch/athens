@@ -1575,12 +1575,13 @@
 (reg-event-fx
   :block/move
   (fn [_ [_ {:keys [source-uid target-uid target-rel] :as args}]]
-    (log/debug ":block/move args" (pr-str args))
-    (let [atomic-event (common-events/build-atomic-event
-                         (atomic-graph-ops/make-block-move-op source-uid
-                                                              {:block/uid target-uid
-                                                               :relation target-rel}))]
-      {:fx [[:dispatch [:resolve-transact-forward atomic-event]]]})))
+    (log/info ":block/move args" (pr-str args))
+    (let [sentry-tx (close-and-get-sentry-tx "block/move")
+          position  (common-db/compat-position @db/dsdb {:block/uid target-uid
+                                                         :relation  target-rel})
+          event     (common-events/build-atomic-event
+                      (graph-ops/build-block-move-op @db/dsdb source-uid position))]
+      {:fx [(transact-async-flow :enter-new-block event sentry-tx [(focus-on-uid source-uid nil)])]})))
 
 
 (reg-event-fx
