@@ -401,7 +401,7 @@
         (reset! state init-state)
         (reset! unlinked-refs [])
         (reset! block-uid (:block/uid node)))
-      (let [{:block/keys [children uid] title :node/title}                      node
+      (let [{:block/keys [children uid properties] title :node/title}           node
             {:alert/keys [message confirm-fn cancel-fn confirm-text] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
@@ -451,6 +451,14 @@
             [menu-dropdown node daily-note?]]]]
 
          [:> PageBody
+
+          ;; Properties
+          (when (seq properties)
+            (for [child (->> properties
+                             (sort-by (comp str first))
+                             (map second))]
+              ^{:key (:db/id child)}
+              [blocks/block-el child]))
 
           ;; Children
           (if (empty? children)

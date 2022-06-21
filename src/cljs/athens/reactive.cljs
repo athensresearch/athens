@@ -99,6 +99,7 @@
 
 (def block-document-pull-vector
   (vec (concat '[:db/id :block/uid :block/string :block/open :block/_refs
+                 {:block/key [:node/title]}
                  {:block/children [:block/uid :block/order]}]
                recursive-properties-document-pull-vector)))
 
