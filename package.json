@@ -133,6 +133,7 @@
     "react-force-graph-2d": "^1.19.0",
     "react-highlight.js": "1.0.7",
     "react-intersection-observer": "^8.32.1",
+    "react-twitter-embed": "^4.0.4",
     "react-window": "^1.8.6",
     "tslib": "^2.3.1"
   },
