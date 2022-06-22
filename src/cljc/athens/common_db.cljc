@@ -244,6 +244,13 @@
     block))
 
 
+(defn sort-block-properties
+  [properties]
+  (->> properties
+       (sort-by (comp str first))
+       (map second)))
+
+
 (defn add-property-map
   [block]
   (if-let [properties (-> block :block/_property-of seq)]

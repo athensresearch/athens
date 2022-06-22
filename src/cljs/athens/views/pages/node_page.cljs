@@ -454,9 +454,7 @@
 
           ;; Properties
           (when (seq properties)
-            (for [child (->> properties
-                             (sort-by (comp str first))
-                             (map second))]
+            (for [child (common-db/sort-block-properties properties)]
               ^{:key (:db/id child)}
               [blocks/block-el child]))
 

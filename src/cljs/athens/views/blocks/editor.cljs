@@ -5,6 +5,7 @@
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    [athens.common-db                          :as common-db]
     [athens.db                                 :as db]
     [athens.events.inline-refs                 :as inline-refs.events]
     [athens.events.linked-refs                 :as linked-ref.events]
@@ -233,9 +234,7 @@
 
          ;; Properties
          (when (seq properties)
-           (for [child (->> properties
-                            (sort-by (comp str first))
-                            (map second))
+           (for [child (common-db/sort-block-properties properties)
                  :let  [child-uid (:block/uid child)]]
              ^{:key (:db/id child)}
              [block-el child
