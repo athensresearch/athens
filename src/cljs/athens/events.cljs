@@ -966,7 +966,7 @@
          block           (common-db/get-block db [:block/uid uid])
          {:block/keys [children order] :or {children []}} block
          parent          (common-db/get-parent db [:block/uid uid])
-         prev-block-uid  (common-db/prev-block-uid db uid)
+         prev-block-uid  (db/prev-block-uid uid)
          prev-block      (common-db/get-block db [:block/uid prev-block-uid])
          prev-sib-order  (dec (:block/order block))
          prev-sib        (some->> (common-db/prev-sib db uid prev-sib-order)
@@ -1407,7 +1407,7 @@
 
 (defn get-prev-block-uid-and-target-rel
   [uid]
-  (let [prev-block-uid            (:block/uid (common-db/nth-sibling @db/dsdb uid -1))
+  (let [prev-block-uid            (:block/uid (db/nth-sibling uid -1))
         prev-block-children?      (if prev-block-uid
                                     (seq (:block/children (common-db/get-block @db/dsdb [:block/uid prev-block-uid])))
                                     nil)
