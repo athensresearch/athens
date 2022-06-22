@@ -1287,7 +1287,8 @@
 
 
 (defn enter
-  "- If block is open, has children, and caret at end, create new child
+  "- If block is a property, always open and create a new child
+  - If block is open, has children, and caret at end, create new child
   - If block is CLOSED, has children, and caret at end, add a sibling block.
   - If value is empty and a root block, add a sibling block.
   - If caret is not at start, split block in half.
@@ -1316,6 +1317,11 @@
 
         {:keys [value start]} d-key-down
         event                 (cond
+                                (:block/key block)
+                                [:enter/open-block-add-child {:block    block
+                                                              :new-uid  new-uid
+                                                              :embed-id embed-id}]
+
                                 (and (:block/open block)
                                      (not-empty (:block/children block))
                                      (= start (count value)))
