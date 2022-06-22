@@ -368,16 +368,12 @@
 
 (defntrace get-block
   [id]
-  (when (d/entity @dsdb id)
-    (d/pull @dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id)))
+  (common-db/get-block @dsdb id))
 
 
 (defntrace get-parent
   [id]
-  (-> (d/entity @dsdb id)
-      :block/_children
-      first
-      :db/id
+  (-> (common-db/get-parent-eid @dsdb id)
       get-block))
 
 
