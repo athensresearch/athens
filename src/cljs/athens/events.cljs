@@ -432,7 +432,7 @@
                            (and (zero? editing-idx) (> n 1)) (pop selected-items)
                            (:node/title prev-block) selected-items
                            ;; if prev block is parent, replace editing/uid and first item w parent; remove children
-                           (= (:block/uid parent) prev-block-o-uid) (let [parent-children (-> (map #(:block/uid %) (:block/children parent))
+                           (= (:block/uid parent) prev-block-o-uid) (let [parent-children (-> (common-db/sorted-prop+children-uids @db/dsdb [:block/uid prev-block-uid])
                                                                                               set)
                                                                           to-keep         (->> selected-items
                                                                                                (map #(-> % db/uid-and-embed-id first))
@@ -964,16 +964,17 @@
          db              @db/dsdb
          [uid embed-id]  (common-db/uid-and-embed-id uid)
          block           (common-db/get-block db [:block/uid uid])
-         {:block/keys [children order] :or {children []}} block
+         children-uids   (common-db/sorted-prop+children-uids @db/dsdb [:block/uid uid])
          parent          (common-db/get-parent db [:block/uid uid])
          prev-block-uid  (db/prev-block-uid uid)
          prev-block      (common-db/get-block db [:block/uid prev-block-uid])
          prev-sib        (db/nth-sibling uid :before)
+         prev-sib-children-uids (common-db/sorted-prop+children-uids @db/dsdb [:block/uid (:block/uid prev-sib)])
          event           (cond
                            (or (not parent)
                                root-embed?
-                               (and (not-empty children) (not-empty (:block/children prev-sib)))
-                               (and (not-empty children) (= parent prev-block)))
+                               (and (seq children-uids) (seq prev-sib-children-uids))
+                               (and (seq children-uids) (= parent prev-block)))
                            nil
 
                            (:block/key block)
@@ -981,7 +982,8 @@
                                          :target-uid (:block/uid parent)
                                          :target-rel :first}]
 
-                           (and (empty? children) (:node/title parent) (zero? order) (clojure.string/blank? value))
+                           (and (empty? children-uids) (:node/title parent)
+                                (= uid (first children-uids)) (clojure.string/blank? value))
                            [:backspace/delete-only-child uid]
 
                            maybe-local-updates
@@ -1312,6 +1314,7 @@
         root-block?           (boolean (:node/title parent))
         context-root-uid      (get-in rfdb [:current-route :path-params :id])
         new-uid               (common.utils/gen-block-uid)
+        has-children?         (seq (common-db/sorted-prop+children-uids @db/dsdb [:block/uid uid]))
 
         {:keys [value start]} d-key-down
         event                 (cond
@@ -1321,7 +1324,7 @@
                                                               :embed-id embed-id}]
 
                                 (and (:block/open block)
-                                     (not-empty (:block/children block))
+                                     has-children?
                                      (= start (count value)))
                                 [:enter/add-child {:block    block
                                                    :new-uid  new-uid
@@ -1334,7 +1337,7 @@
                                                               :embed-id embed-id}]
 
                                 (and (not (:block/open block))
-                                     (not-empty (:block/children block))
+                                     has-children?
                                      (= start (count value)))
                                 [:enter/new-block {:block    block
                                                    :parent   parent
@@ -1405,13 +1408,16 @@
 
 (defn get-prev-block-uid-and-target-rel
   [uid]
-  (let [prev-block-uid            (:block/uid (db/nth-sibling uid :before))
+  (let [db                        @db/dsdb
+        prev-block-uid            (:block/uid (db/nth-sibling uid :before))
         prev-block-children?      (if prev-block-uid
-                                    (seq (:block/children (common-db/get-block @db/dsdb [:block/uid prev-block-uid])))
+                                    (seq (common-db/sorted-prop+children-uids db [:block/uid prev-block-uid]))
                                     nil)
-        target-rel                (if prev-block-children?
-                                    :last
-                                    :first)]
+        prop-key                  (common-db/property-key db [:block/uid uid])
+        target-rel                (cond
+                                    prop-key             {:page/title prop-key}
+                                    prev-block-children? :last
+                                    :else                :first)]
     [prev-block-uid target-rel]))
 
 
@@ -1436,9 +1442,7 @@
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
     ;;                 transaction that updates the string).
     (let [sentry-tx                 (close-and-get-sentry-tx "indent")
-          block                     (wrap-span-no-new-tx "get-block"
-                                                         (common-db/get-block @db/dsdb [:block/uid uid]))
-          block-zero?               (zero? (:block/order block))
+          first-block?              (= uid (first (db/sibling-uids uid)))
           [prev-block-uid
            target-rel]              (wrap-span-no-new-tx "get-prev-block-uid-and-target-rel"
                                                          (get-prev-block-uid-and-target-rel uid))
@@ -1446,9 +1450,9 @@
                                                          (common-db/get-block @db/dsdb [:block/uid prev-block-uid]))
           ;; if sibling block is closed with children, open
           {sib-open     :block/open
-           sib-children :block/children
            sib-uid      :block/uid} sib-block
-          block-closed?             (and (not sib-open) sib-children)
+          block-closed?             (and (not sib-open)
+                                         (common-db/sorted-prop+children-uids @db/dsdb [:block/uid prev-block-uid]))
           sib-block-open-op         (when block-closed?
                                       (atomic-graph-ops/make-block-open-op sib-uid true))
           {:keys [start end]}       d-key-down
@@ -1462,12 +1466,12 @@
           new-titles                (graph-ops/ops->new-page-titles composite-ops)
           [_rm add]                 (graph-ops/structural-diff @db/dsdb composite-ops)
           event                     (common-events/build-atomic-event composite-ops)]
-      (log/debug "null-sib-uid" (and block-zero?
+      (log/debug "null-sib-uid" (and first-block?
                                      prev-block-uid)
                  ", args:" (pr-str args)
-                 ", block-zero?" block-zero?)
+                 ", first-block?" first-block?)
       (when (and prev-block-uid
-                 (not block-zero?))
+                 (not first-block?))
         {:fx [(transact-async-flow :indent event sentry-tx [])
               [:set-cursor-position [uid start end]]
               [:dispatch-n (cond-> []
@@ -1491,12 +1495,10 @@
                                                         (get-prev-block-uid-and-target-rel f-uid))
           same-parent?             (wrap-span-no-new-tx "same-parent"
                                                         (common-db/same-parent? dsdb sanitized-selected-uids))
-          first-block-order        (:block/order (wrap-span-no-new-tx "get-block"
-                                                                      (common-db/get-block dsdb [:block/uid f-uid])))
-          block-zero?              (zero? first-block-order)]
+          first-block?             (= f-uid (first (db/sibling-uids f-uid)))]
       (log/debug ":indent/multi same-parent?" same-parent?
-                 ", not block-zero?" (not  block-zero?))
-      (when (and same-parent? (not block-zero?))
+                 ", not first-block?" (not  first-block?))
+      (when (and same-parent? (not first-block?))
         {:fx [[:async-flow {:id             :indent-multi-async-flow
                             :db-path        [:async-flow :indent-multi]
                             :first-dispatch [:drop-multi/sibling {:source-uids sanitized-selected-uids
@@ -1510,9 +1512,15 @@
   (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
     (log/debug ":unindent args" (pr-str args))
     (let [sentry-tx                (close-and-get-sentry-tx "unindent")
+          db                       @db/dsdb
+          property-key             (common-db/property-key db [:block/uid uid])
           parent                   (wrap-span-no-new-tx "parent"
-                                                        (common-db/get-parent @db/dsdb
-                                                                              (common-db/e-by-av @db/dsdb :block/uid uid)))
+                                                        (common-db/get-parent db (common-db/e-by-av db :block/uid uid)))
+          is-parent-property?      (:block/key parent)
+          parent-of-parent         (->> parent
+                                        :db/id
+                                        (common-db/get-parent db)
+                                        :block/uid)
           is-parent-root-embed?    (= (some-> d-key-down
                                               :target
                                               (.. (closest ".block-embed"))
@@ -1523,14 +1531,13 @@
                                        (:node/title parent)
                                        (= context-root-uid (:block/uid parent)))
           {:keys [start end]}      d-key-down
-          block-save-block-move-op (block-save-block-move-composite-op uid
-                                                                       (:block/uid parent)
-                                                                       :after
-                                                                       local-string)
+          block-save-block-move-op (cond
+                                     property-key        (block-save-block-move-composite-op uid parent-of-parent {:page/title property-key} local-string)
+                                     is-parent-property? (block-save-block-move-composite-op uid parent-of-parent :first local-string)
+                                     :else               (block-save-block-move-composite-op uid (:block/uid parent) :after local-string))
           new-titles               (graph-ops/ops->new-page-titles block-save-block-move-op)
           [_rm add]                (graph-ops/structural-diff @db/dsdb block-save-block-move-op)
           event                    (common-events/build-atomic-event block-save-block-move-op)]
-
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
         {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid uid embed-id)])

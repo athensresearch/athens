@@ -358,6 +358,13 @@
         (get-children-uids db eid)))
 
 
+(defn property-key
+  [db eid]
+  (->> (d/entity db eid)
+       :block/key
+       :node/title))
+
+
 (def block-document-pull-vector
   '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs
     {:block/key [:node/title]} {:block/_property-of ...}])
