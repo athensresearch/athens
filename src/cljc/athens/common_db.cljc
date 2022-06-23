@@ -697,7 +697,8 @@
   (let [title->uid (get-page-uid db title)
         uid->title (get-page-title db uid)
         key       (:page/title relation)
-        keys      (->> [:block/uid (or uid title->uid)] (get-block db) :block/properties keys set)]
+        block     (get-block db [:block/uid (or uid title->uid)])
+        keys      (->> block :block/properties keys set)]
     ;; Fail on error conditions.
     (when-some [fail-msg (cond
                            (and uid uid->title)
@@ -712,7 +713,10 @@
 
                            ;; TODO: this could be idempotent and instead overwrite the name.
                            (and key (keys key))
-                           (str "Location already contains key: " key))]
+                           (str "Location already contains key: " key)
+
+                           (and (#{:before :after} relation) (:block/key block))
+                           (str "Location is a property, cannot use :after/:before relation."))]
       (throw (ex-info fail-msg position)))))
 
 
