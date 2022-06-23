@@ -129,7 +129,8 @@
 (defn search-or-create-node-title
   [query]
   (let [results (db/search-in-node-title query)
-        create  (if (seq query)
+        create  (if (and (seq query)
+                         (not (some #(= query (:node/title %)) results)))
                   [{:text (str "Create property: " query)}]
                   [])]
     (into create results)))
