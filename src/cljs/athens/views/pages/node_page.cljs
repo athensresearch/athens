@@ -480,20 +480,23 @@
 
          [:> PageBody
 
+          (when (and (empty? properties)
+                     (empty? children))
+            [placeholder-block-el uid])
+
           ;; Properties
-          (when (seq properties)
-            (for [child (common-db/sort-block-properties properties)]
-              ^{:key (:db/id child)}
-              [blocks/block-el child]))
+          [:div
+           (when (seq properties)
+             (for [child (common-db/sort-block-properties properties)]
+               ^{:key (:db/id child)}
+               [blocks/block-el child]))]
 
           ;; Children
-          (if (empty? children)
-            [placeholder-block-el uid]
-            [:div
-             (for [{:block/keys [uid] :as child} children]
-               ^{:key uid}
-               [perf-mon/hoc-perfmon {:span-name "block-el"}
-                [blocks/block-el child]])])]
+          [:div
+           (for [{:block/keys [uid] :as child} children]
+             ^{:key uid}
+             [perf-mon/hoc-perfmon {:span-name "block-el"}
+              [blocks/block-el child]])]]
 
          ;; References
          [:> PageFooter
