@@ -747,6 +747,15 @@
        db))
 
 
+(defn breadcrumb-string
+  [db uid]
+  (let [{:block/keys [key string]
+         :keys       [node/title]} (d/entity db [:block/uid uid])
+        prop                       (:node/title key)
+        prop-fragment              (when prop (str ": " prop " - "))]
+    (or title (str prop-fragment string))))
+
+
 (defn extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]

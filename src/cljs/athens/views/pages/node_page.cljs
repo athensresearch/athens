@@ -284,13 +284,13 @@
                          :variant "strict"
                          :color "foreground.secondary"}
           (doall
-            (for [{:keys [node/title block/string block/uid]} parents]
+            (for [{:keys [block/uid]} parents]
               [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
                [:> BreadcrumbLink
                 {:onClick #(let [new-B (db/get-block [:block/uid uid])
                                  new-P (drop-last parents)]
                              (swap! state assoc :block new-B :parents new-P))}
-                [parse-and-render (or title string) uid]]]))]
+                [parse-and-render (common-db/breadcrumb-string @db/dsdb uid) uid]]]))]
          [:> Box {:class "block-embed"}
           [blocks/block-el
            (recursively-modify-block-for-embed block embed-id)

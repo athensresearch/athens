@@ -64,7 +64,7 @@
 
           [:> Breadcrumb {:fontSize "xs" :color "foreground.secondary"}
            (doall
-             (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
+             (for [{:keys [block/uid] :as breadcrumb-block}
                    (if (or @inline-ref-open?
                            (not @inline-ref-focus?))
                      @inline-ref-parents
@@ -85,7 +85,7 @@
                                                    (rf/dispatch [::inline-refs.events/set-block! orig-uid new-B])
                                                    (rf/dispatch [::inline-refs.events/set-parents! orig-uid new-P])
                                                    (rf/dispatch [::inline-refs.events/set-focus! orig-uid false]))))}
-                 [parse-renderer/parse-and-render (or title string) uid]]]))]]
+                 [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb uid) uid]]]))]]
 
          (when @inline-ref-open?
            (if @inline-ref-focus?
