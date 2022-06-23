@@ -329,7 +329,7 @@
                          :block/uid)
          title (or (common-db/get-page-title @db/dsdb expansion)
                    (subs @read-value start-idx end))]
-     (if (or (nil? title)
+     (if (or (empty? title)
              (nil? parent-uid))
        (rf/dispatch [::inline-search.events/close! block-uid])
        (do
