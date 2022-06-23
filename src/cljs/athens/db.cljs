@@ -344,8 +344,9 @@
            ;; Found the page.
            (:node/title b) (conj res b)
            ;; Recur with the parent.
-           :else           (recur (first (:block/_children b))
-                                  (conj res (dissoc b :block/_children)))))
+           :else           (recur (or (first (:block/_children b))
+                                      (:block/property-of b))
+                                  (conj res (dissoc b :block/_children :block/property-of)))))
        (rest)
        (reverse)
        vec))
@@ -354,7 +355,10 @@
 (defntrace get-parents-recursively
   [id]
   (when (d/entity @dsdb id)
-    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
+    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time
+                         {:block/property-of ...}
+                         {:block/_children ...}]
+                 id)
          shape-parent-query)))
 
 

@@ -325,6 +325,34 @@
                  [ref-comp block]]))]))])))
 
 
+(defn linked-prop-el
+  [title]
+  (let [linked-props (wrap-span-no-new-tx "get-reactive-linked-properties"
+                                          (reactive/get-reactive-linked-properties [:node/title title]))]
+
+    (when (not-empty linked-props)
+      [:> PageReferences {:count (count linked-props)
+                          :title "Linked Properties"
+                          :defaultIsOpen (> 10 (count linked-props))}
+       (doall
+         (for [[group-title group] linked-props]
+           [:> ReferenceGroup {:key (str "group-" group-title)
+                               :title group-title
+                               :onClickTitle (fn [e]
+                                               (let [shift?       (.-shiftKey e)
+                                                     parsed-title (parse-renderer/parse-title group-title)]
+                                                 (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
+                                                                                      :target :page
+                                                                                      :pane   (if shift?
+                                                                                                :right-pane
+                                                                                                :main-pane)}])
+                                                 (router/navigate-page parsed-title e)))}
+            (doall
+              (for [block group]
+                [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
+                 [ref-comp block]]))]))])))
+
+
 (defn unlinked-ref-el
   [state unlinked-refs title]
   (let [unlinked? "Unlinked References"
@@ -472,6 +500,8 @@
           [:> VStack {:spacing 2 :py 4 :align "stretch"}
            [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
             [linked-ref-el title]]
+           [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-prop-el"}
+            [linked-prop-el title]]
            (when-not on-daily-notes?
              [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
               [unlinked-ref-el state unlinked-refs title]])]]]))))

@@ -163,7 +163,6 @@
                  linked-ref-uid]}     linked-ref-data
          {:block/keys [uid
                        original-uid]} block
-         block-o                      (reactive/get-reactive-block-document [:block/uid uid])
          local-value                  (r/atom nil)
          old-value                    (r/atom nil)
          show-edit?                   (r/atom false)
@@ -200,11 +199,12 @@
         (fn render-block
           [block linked-ref-data opts]
           (let [ident                 [:block/uid (or original-uid uid)]
+                block-o               (reactive/get-reactive-block-document ident)
                 {:block/keys [uid
                               string
                               open
                               children
-                              _refs]} (merge (reactive/get-reactive-block-document ident) block)
+                              _refs]} (merge block-o block)
                 children-uids         (set (map :block/uid children))
                 uid-sanitized-block   (s/transform
                                         (specter-recursive-path #(contains? % :block/uid))
