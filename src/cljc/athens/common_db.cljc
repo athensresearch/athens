@@ -339,16 +339,23 @@
          (mapv :block/uid))))
 
 
-(defn prev-sib
-  [db uid prev-sib-order]
-  (d/q '[:find ?sib .
-         :in $ % ?target-uid ?prev-sib-order
-         :where
-         (siblings ?target-uid ?sib)
-         [?sib :block/order ?prev-sib-order]
-         [?sib :block/uid ?uid]
-         [?sib :block/children ?ch]]
-       db rules uid prev-sib-order))
+(defn get-property-uids
+  "Fetches page or block sorted property uids based on eid lookup."
+  [db eid]
+  (when (d/entity db eid)
+    (->> (d/pull db '[{:block/_property-of [:block/uid
+                                            {:block/key [:node/title]}]}]
+                 eid)
+         add-property-map
+         :block/properties
+         sort-block-properties
+         (mapv :block/uid))))
+
+
+(defn sorted-prop+children-uids
+  [db eid]
+  (into (get-property-uids db eid)
+        (get-children-uids db eid)))
 
 
 (def block-document-pull-vector
