@@ -126,6 +126,15 @@
              (slash-options))))
 
 
+(defn search-or-create-node-title
+  [query]
+  (let [results (db/search-in-node-title query)
+        create  (if (seq query)
+                  [{:text (str "Create property: " query)}]
+                  [])]
+    (into create results)))
+
+
 (defn update-query
   "Used by backspace and write-char.
   write-char appends key character. Pass empty string during backspace.
@@ -137,7 +146,7 @@
                           :page db/search-in-node-title
                           :hashtag db/search-in-node-title
                           :template db/search-in-block-content
-                          :property db/search-in-node-title
+                          :property search-or-create-node-title
                           :slash filter-slash-options)
         regex           (case type
                           :block #"(?s).*\(\("
@@ -327,8 +336,8 @@
          parent-uid (->> [:block/uid block-uid]
                          (common-db/get-parent @db/dsdb)
                          :block/uid)
-         title (or (common-db/get-page-title @db/dsdb expansion)
-                   (subs @read-value start-idx end))]
+         query @(rf/subscribe [::inline-search.subs/query block-uid])
+         title (or (common-db/get-page-title @db/dsdb expansion) query)]
      (if (or (empty? title)
              (nil? parent-uid))
        (rf/dispatch [::inline-search.events/close! block-uid])
