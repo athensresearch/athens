@@ -337,7 +337,9 @@
          (replace-selection-with "")
          (dispatch [:block/move {:source-uid block-uid
                                  :target-uid parent-uid
-                                 :target-rel {:page/title title}}])
+                                 :target-rel {:page/title title}
+                                 :local-string (str (subs @read-value 0 start-idx)
+                                                    (subs @read-value end))}])
          (rf/dispatch [::inline-search.events/close! block-uid]))))))
 
 

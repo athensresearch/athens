@@ -980,7 +980,8 @@
                            (:block/key block)
                            [:block/move {:source-uid uid
                                          :target-uid (:block/uid parent)
-                                         :target-rel :first}]
+                                         :target-rel :first
+                                         :local-string value}]
 
                            (and (empty? children-uids) (:node/title parent)
                                 (= uid (first children-uids)) (clojure.string/blank? value))
@@ -1423,11 +1424,11 @@
 
 (defn block-save-block-move-composite-op
   [source-uid ref-uid relation string]
-  (let [block-save-op             (graph-ops/build-block-save-op @db/dsdb source-uid string)
-        location                  (common-db/compat-position @db/dsdb {:block/uid ref-uid
-                                                                       :relation relation})
-        block-move-op             (atomic-graph-ops/make-block-move-op source-uid
-                                                                       location)
+  (let [db                        @db/dsdb
+        block-save-op             (graph-ops/build-block-save-op db source-uid string)
+        location                  (common-db/compat-position db {:block/uid ref-uid
+                                                                 :relation relation})
+        block-move-op             (graph-ops/build-block-move-op db source-uid location)
         block-save-block-move-op  (composite-ops/make-consequence-op {:op/type :block-save-block-move}
                                                                      [block-save-op
                                                                       block-move-op])]
@@ -1590,14 +1591,12 @@
 
 (reg-event-fx
   :block/move
-  (fn [_ [_ {:keys [source-uid target-uid target-rel] :as args}]]
+  (fn [_ [_ {:keys [source-uid target-uid target-rel local-string] :as args}]]
     (log/info ":block/move args" (pr-str args))
     (let [sentry-tx (close-and-get-sentry-tx "block/move")
-          position  (common-db/compat-position @db/dsdb {:block/uid target-uid
-                                                         :relation  target-rel})
-          event     (common-events/build-atomic-event
-                      (graph-ops/build-block-move-op @db/dsdb source-uid position))]
-      {:fx [(transact-async-flow :enter-new-block event sentry-tx [(focus-on-uid source-uid nil)])]})))
+          event     (-> (block-save-block-move-composite-op source-uid target-uid target-rel local-string)
+                        common-events/build-atomic-event)]
+      {:fx [(transact-async-flow :block-move event sentry-tx [(focus-on-uid source-uid nil)])]})))
 
 
 (reg-event-fx
