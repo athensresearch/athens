@@ -87,23 +87,33 @@
     ;;  outliner
 ;;  Options
 
+(defn map-types
+  [t coll]
+  (map #(assoc % :entity-type t) coll))
+
 
 (def entity-map
   {:pages {:title "Pages"
            :query-fn (fn []
                        (->>
                         (common-db/get-all-pages @db/dsdb)
-                        (filter #(not (athens.dates.is-daily-note (:block/uid %))))))}
+                        (filter #(not (athens.dates.is-daily-note (:block/uid %))))
+                        (map-types :page)))}
    :daily-notes {:title "Daily Notes"
                  :query-fn (fn []
                              (->> (common-db/get-all-pages  @db/dsdb)
-                                  (filter #(athens.dates.is-daily-note (:block/uid %)))))}
+                                  (filter #(athens.dates.is-daily-note (:block/uid %)))
+                                  (map-types :daily-note)))}
    :blocks {:title "Blocks"
-            :query-fn  #(common-db/get-all-blocks @db/dsdb)}
+            :query-fn  (fn []
+                         (->> (common-db/get-all-blocks @db/dsdb)
+                              (map-types :block)))}
    :tweets {:title "Tweets"
             :query-fn #(->> (common-db/get-all-blocks @db/dsdb)
                             (filter (fn [{:keys [block/string]} x]
-                                      (re-find #"https://twitter.com/\w+/status/\d+" string))))}
+                                      (re-find #"https://twitter.com/\w+/status/\d+" string)))
+                            (map-types :tweet))}
+   :templates {:title "Templates"}
    :urls {:title "URLs"
           :query-fn #() #_(->> (common-db/get-all-blocks @db/dsdb)
                           (filter (fn [{:keys [block/string]} x]
@@ -125,7 +135,7 @@
   []
   (let [checked-types     (-> (keys entity-map)
                               (zipmap (repeat false))
-                              (merge {:tweets true})
+                              (merge {:tweets false :pages true})
                               (r/atom))
         query-view (r/atom "gallery")]
     (fn []
@@ -179,11 +189,20 @@
          (case @query-view
            "gallery"
            [:> SimpleGrid {:columns 4 :spacing 10}
-            (for [{:keys [:block/string]} entities
-                  :let [tweet-id (->> string
-                                      (re-find #"https://twitter.com/\w+/status/(\d+)")
-                                      second)]]
-              [:> TwitterTweetEmbed {:tweetId tweet-id}])]
+            (doall
+             (for [{:keys [:block/string :entity-type :node/title :block/uid :block/children]} entities
+                   :let []]
+               (case entity-type
+                 ;; add cover image
+                 ;; add preview of block children
+                 :page  [(r/adapt-react-class Box) {:borderWidth "1px" :borderRadius "lg"}
+                         [:> Heading {:color "blue"} title]
+                         [:> Text (str children)]]
+                 :block [(r/adapt-react-class Box) {:borderWidth "1px" :borderRadius "lg"}
+                         [:> Text {} string]]
+                 :tweet [:> TwitterTweetEmbed {:tweetId (->> string
+                                                             (re-find #"https://twitter.com/\w+/status/(\d+)")
+                                                             second)}])))]
 
            "table"
            [:> TableContainer {:margin-top "30px"}
