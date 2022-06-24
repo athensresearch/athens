@@ -166,8 +166,8 @@
                           _refs]} (reactive/get-reactive-block-document [:block/uid uid])]
         [:<>
          [:div.block-body
-          (when (and children?
-                     (seq children))
+          (when (or (seq children)
+                    (seq properties))
             [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
                                          (and (false? linked-ref) open))
                                    true
@@ -233,7 +233,9 @@
            [inline-linked-refs-el block-el uid])
 
          ;; Properties
-         (when (seq properties)
+         (when (and (seq properties)
+                    (or (and (true? linked-ref) @linked-ref-open?)
+                        (and (false? linked-ref) open)))
            (for [child (common-db/sort-block-properties properties)
                  :let  [child-uid (:block/uid child)]]
              ^{:key (:db/id child)}
