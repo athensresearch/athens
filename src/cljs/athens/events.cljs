@@ -27,6 +27,7 @@
     [athens.util                          :as util]
     [athens.utils.sentry                  :as sentry]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [clojure.pprint                       :as pp]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
     [day8.re-frame.async-flow-fx]
@@ -748,8 +749,8 @@
         (let [explanation (-> schema/event
                               (m/explain event)
                               (me/humanize))]
-          (log/warn "Not sending invalid event. Error:" (pr-str explanation)
-                    "\nInvalid event was:" (pr-str event))
+          (log/warn "Not sending invalid event. Error:" (with-out-str (pp/pprint explanation))
+                    "\nInvalid event was:" (with-out-str (pp/pprint event)))
           {:fx [[:dispatch [:fail-resolve-forward-transact event]]]})
 
 
