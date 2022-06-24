@@ -225,13 +225,17 @@
 
 (defn add-property-map
   [block]
-  (if-let [properties (-> block :block/_property-of seq)]
-    (assoc block :block/properties
-           (->> properties
-                (map (fn [block]
-                       [(-> block :block/key :node/title) (add-property-map block)]))
-                (into {})))
-    block))
+  (let [block'     (if (:block/children block)
+                     (update block :block/children (partial mapv add-property-map))
+                     block)
+        properties (-> block' :block/_property-of seq)]
+    (if properties
+      (assoc block' :block/properties
+             (->> properties
+                  (map (fn [block]
+                         [(-> block :block/key :node/title) (add-property-map block)]))
+                  (into {})))
+      block')))
 
 
 (defn get-block
