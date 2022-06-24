@@ -1,6 +1,9 @@
 (ns athens.views.pages.all-pages
   (:require
     ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
+    ["/components/Board/Board" :refer [Example]]
+    ["@asseinfo/react-kanban" :default Board]
+    ;; ["@asseinfo/react-kanban/dist/style.css"]
     ["@chakra-ui/react" :refer [Table Thead Tbody Tfoot Tr Th Td TableContainer
                                 Box
                                 Button
@@ -18,6 +21,7 @@
     [clojure.string            :refer [lower-case]]
     [re-frame.core             :as rf]
     [reagent.core :as r]))
+
 
 
 ;; Sort state and logic
@@ -109,35 +113,25 @@
                          (->> (common-db/get-all-blocks @db/dsdb)
                               (map-types :block)))}
    :tweets {:title "Tweets"
-            :query-fn #(->> (common-db/get-all-blocks @db/dsdb)
-                            (filter (fn [{:keys [block/string]} x]
-                                      (re-find #"https://twitter.com/\w+/status/\d+" string)))
-                            (map-types :tweet))}
-   :templates {:title "Templates"}
+                :query-fn #(->> (common-db/get-all-blocks @db/dsdb)
+                                (filter (fn [{:keys [block/string]} x]
+                                          (re-find #"https://twitter.com/\w+/status/\d+" string)))
+                                (map-types :tweet))}
+   :tasks {:title "Tasks"
+           :query-fn #(->> (common-db/get-all-blocks @db/dsdb))}
+   #_#_:templates {:title "Templates"}
    :urls {:title "URLs"
           :query-fn #() #_(->> (common-db/get-all-blocks @db/dsdb)
-                          (filter (fn [{:keys [block/string]} x]
-                                    (when (re-find #"" string)))))}})
-
-
-
-
-;; (re-find #"\p{Emoji_Presentation}" "123")
-;; (re-find #"\p{Emoji}" "👍123")
-;; (re-pattern "\p{Emoji}")
-;; (re-find (js/RegExp "\p{Emoji}") "👍")
-;; (re-find #"foo" "FOO")
-
-
-
+                               (filter (fn [{:keys [block/string]} x]
+                                         (when (re-find #"" string)))))}})
 
 (defn page
   []
   (let [checked-types     (-> (keys entity-map)
                               (zipmap (repeat false))
-                              (merge {:tweets false :pages true})
+                              (merge {:tasks true})
                               (r/atom))
-        query-view (r/atom "gallery")]
+        query-view (r/atom "board")]
     (fn []
       (let [count-checked (-> @checked-types vals frequencies (get true))
             all-checked             (and (pos? count-checked)
@@ -159,7 +153,7 @@
 
          [:> Box
 
-          [:> Stack {:spacing 10 :direction "column" :padding-left 5}
+          [:> Stack {:spacing 10 :direction "column" :padding-left 5 :padding-bottom 10}
            [:> Stack {:spacing 10 :direction "row" :colorScheme "blue"}
             [:> Text {:as "u" :width 100} "Entities"]
             [:> Checkbox {:is-checked all-checked :on-change handle-click-everything} "All entities"]
@@ -179,14 +173,54 @@
              [:> Text {:as "u" :width 100} "Views"]
              [:> Radio {:value "table"} "Table"]
              [:> Radio {:value "gallery" :on-click #()} "Gallery"]
-             ;; [:> Radio {:value "table"} "Board"]
-             ;; [:> Radio {:value "table"} "Calendar"]
-             ;; [:> Radio {:value "table"} "Outline"]
-             ;; [:> Radio {:value "table"} "Graph"]
-             ]]]]
+             [:> Radio {:value "board" :on-click #()} "Board"]]]]]
 
          ;; how do we dynamically show propertis
          (case @query-view
+           "board"
+           #_[:> Example {:children
+                        [(r/as-element
+                          [:> Box {:bg "tomato" :boxSize "sm"}
+                           [:> Text "HI"]])]}]
+           [(r/adapt-react-class Board)
+
+            {:renderColumnHeader
+             (fn [x]
+               (let [{:keys [id title] :as x} (js->clj x :keywordize-keys true)]
+                 (r/as-element
+                  [:> Stack {:spacing 4 :borderWidth "1px" :padding 5 :margin 5 :borderRadius "lg"
+                             :backgroundColor "gray.200"}
+                   [:> Heading {:as "h4" :size "md"} title]])))
+
+             :renderCard
+             (fn [x]
+               (let [{:keys [id title description] :as x} (js->clj x :keywordize-keys true)]
+                 (r/as-element
+                  [:> Stack {:spacing 4 :borderWidth "1px" :padding 3 :margin 5 :borderRadius "sm"
+                             :backgroundColor "gray.400"}
+                   [:> Heading {:size "sm" } title]
+                   [:> Text description]])))
+
+             :initialBoard
+             {:columns [{:id 1
+                         :title "Todo"
+                         :cards [{:id 1
+                                  :title "Try react-kanban library"
+                                  :description ""}
+                                 {:id 4
+                                  :title "Try making in-house kanban board"
+                                  :description ""}]}
+                        {:id 2
+                         :title "Doing"
+                         :cards [{:id 2
+                                  :title "Add filter functionality"
+                                  :description "Filter by priority, person, status"}]}
+                        {:id 3
+                         :title "Done"
+                         :cards [{:id 3
+                                  :title "Add easy actions"
+                                  :description "Archive, snooze, priortize"}]}]}}]
+
            "gallery"
            [:> SimpleGrid {:columns 4 :spacing 10}
             (doall
@@ -202,7 +236,9 @@
                          [:> Text {} string]]
                  :tweet [:> TwitterTweetEmbed {:tweetId (->> string
                                                              (re-find #"https://twitter.com/\w+/status/(\d+)")
-                                                             second)}])))]
+                                                             second)}]
+                 [(r/adapt-react-class Box) {:borderWidth "1px" :borderRadius "lg"}
+                  [:> Text {} string]])))]
 
            "table"
            [:> TableContainer {:margin-top "30px"}
