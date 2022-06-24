@@ -76,10 +76,10 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         },
         ".block-body": {
           display: "grid",
-          gridTemplateColumns: "1em 1em 1fr auto",
+          gridTemplateColumns: "1em auto 1em 1fr auto",
           gridTemplateRows: "0 1fr 0",
           gridTemplateAreas:
-            "'above above above above above' 'toggle bullet content refs presence' 'below below below below below'",
+            "'above above above above above above' 'toggle name bullet content refs presence' 'below below below below below below'",
           borderRadius: "0.5rem",
           minHeight: '2em',
           position: "relative",

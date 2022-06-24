@@ -127,34 +127,6 @@
   (get (d/entity db e) a))
 
 
-(def rules
-  '[[(after ?p ?at ?ch ?o)
-     [?p :block/children ?ch]
-     [?ch :block/order ?o]
-     [(> ?o ?at)]]
-    [(between ?p ?lower-bound ?upper-bound ?ch ?o)
-     [?p :block/children ?ch]
-     [?ch :block/order ?o]
-     [(> ?o ?lower-bound)]
-     [(< ?o ?upper-bound)]]
-    [(inc-after ?p ?at ?ch ?new-o)
-     (after ?p ?at ?ch ?o)
-     [(inc ?o) ?new-o]]
-    [(dec-after ?p ?at ?ch ?new-o)
-     (after ?p ?at ?ch ?o)
-     [(dec ?o) ?new-o]]
-    [(plus-after ?p ?at ?ch ?new-o ?x)
-     (after ?p ?at ?ch ?o)
-     [(+ ?o ?x) ?new-o]]
-    [(minus-after ?p ?at ?ch ?new-o ?x)
-     (after ?p ?at ?ch ?o)
-     [(- ?o ?x) ?new-o]]
-    [(siblings ?uid ?sib-e)
-     [?e :block/uid ?uid]
-     [?p :block/children ?e]
-     [?p :block/children ?sib-e]]])
-
-
 (defn get-sidebar-elements
   [db]
   (->> (d/q '[:find [(pull ?e [*]) ...]
@@ -244,15 +216,26 @@
     block))
 
 
+(defn sort-block-properties
+  [properties]
+  (->> properties
+       (sort-by (comp str first))
+       (map second)))
+
+
 (defn add-property-map
   [block]
-  (if-let [properties (-> block :block/_property-of seq)]
-    (assoc block :block/properties
-           (->> properties
-                (map (fn [block]
-                       [(-> block :block/key :node/title) (add-property-map block)]))
-                (into {})))
-    block))
+  (let [block'     (if (:block/children block)
+                     (update block :block/children (partial mapv add-property-map))
+                     block)
+        properties (-> block' :block/_property-of seq)]
+    (if properties
+      (assoc block' :block/properties
+             (->> properties
+                  (map (fn [block]
+                         [(-> block :block/key :node/title) (add-property-map block)]))
+                  (into {})))
+      block')))
 
 
 (defn get-block
@@ -332,16 +315,30 @@
          (mapv :block/uid))))
 
 
-(defn prev-sib
-  [db uid prev-sib-order]
-  (d/q '[:find ?sib .
-         :in $ % ?target-uid ?prev-sib-order
-         :where
-         (siblings ?target-uid ?sib)
-         [?sib :block/order ?prev-sib-order]
-         [?sib :block/uid ?uid]
-         [?sib :block/children ?ch]]
-       db rules uid prev-sib-order))
+(defn get-property-uids
+  "Fetches page or block sorted property uids based on eid lookup."
+  [db eid]
+  (when (d/entity db eid)
+    (->> (d/pull db '[{:block/_property-of [:block/uid
+                                            {:block/key [:node/title]}]}]
+                 eid)
+         add-property-map
+         :block/properties
+         sort-block-properties
+         (mapv :block/uid))))
+
+
+(defn sorted-prop+children-uids
+  [db eid]
+  (into (get-property-uids db eid)
+        (get-children-uids db eid)))
+
+
+(defn property-key
+  [db eid]
+  (->> (d/entity db eid)
+       :block/key
+       :node/title))
 
 
 (def block-document-pull-vector
@@ -464,22 +461,6 @@
       [uid nil]))
 
 
-(defn nth-sibling
-  "Find sibling that has order+n of current block.
-  Negative n means previous sibling.
-  Positive n means next sibling."
-  [db uid n]
-  (let [block      (get-block db [:block/uid uid])
-        {:block/keys [order]} block
-        find-order (+ n order)]
-    (d/q '[:find (pull ?sibs [*]) .
-           :in $ % ?curr-uid ?find-order
-           :where
-           (siblings ?curr-uid ?sibs)
-           [?sibs :block/order ?find-order]]
-         db rules uid find-order)))
-
-
 (defn nth-child
   "Find child that has order n in parent."
   [db parent-uid order]
@@ -504,37 +485,6 @@
   (-> db
       (d/entity [:block/uid uid])
       :block/string))
-
-
-(defn deepest-child-block
-  [db id]
-  (when (d/entity db id)
-    (let [document (->> (d/pull db '[:block/order :block/uid {:block/children ...}] id)
-                        sort-block-children)]
-      (loop [block document]
-        (let [{:block/keys [children]} block
-              n (count children)]
-          (if (zero? n)
-            block
-            (recur (get children (dec n)))))))))
-
-
-(defn prev-block-uid
-  "If order 0, go to parent.
-   If order n but block is closed, go to prev sibling.
-   If order n and block is OPEN, go to prev sibling's deepest child."
-  [db uid]
-  (let [[uid embed-id]  (uid-and-embed-id uid)
-        block           (get-block db [:block/uid uid])
-        parent          (get-parent db [:block/uid uid])
-        prev-sibling    (nth-sibling db uid -1)
-        {:block/keys    [open uid]} prev-sibling
-        prev-block      (cond
-                          (zero? (:block/order block)) parent
-                          (false? open) prev-sibling
-                          (true? open) (deepest-child-block db [:block/uid uid]))]
-    (cond-> (:block/uid prev-block)
-      embed-id (str "-embed-" embed-id))))
 
 
 (defn same-parent?
@@ -723,7 +673,8 @@
   (let [title->uid (get-page-uid db title)
         uid->title (get-page-title db uid)
         key       (:page/title relation)
-        keys      (->> [:block/uid (or uid title->uid)] (get-block db) :block/properties keys set)]
+        block     (get-block db [:block/uid (or uid title->uid)])
+        keys      (->> block :block/properties keys set)]
     ;; Fail on error conditions.
     (when-some [fail-msg (cond
                            (and uid uid->title)
@@ -738,7 +689,10 @@
 
                            ;; TODO: this could be idempotent and instead overwrite the name.
                            (and key (keys key))
-                           (str "Location already contains key: " key))]
+                           (str "Location already contains key: " key)
+
+                           (and (#{:before :after} relation) (:block/key block))
+                           (str "Location is a property, cannot use :after/:before relation."))]
       (throw (ex-info fail-msg position)))))
 
 
@@ -767,6 +721,15 @@
          [(missing? $ ?e :block/_children)]
          [(missing? $ ?e :block/property-of)]]
        db))
+
+
+(defn breadcrumb-string
+  [db uid]
+  (let [{:block/keys [key string]
+         :keys       [node/title]} (d/entity db [:block/uid uid])
+        prop                       (:node/title key)
+        prop-fragment              (when prop (str ": " prop " - "))]
+    (or title (str prop-fragment string))))
 
 
 (defn extract-tag-values

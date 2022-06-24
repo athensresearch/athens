@@ -104,7 +104,8 @@
      ["YouTube Embed" YoutubeIcon "{{[[youtube]]: }}" nil 2]
      ["iframe Embed"  HTMLEmbedIcon "{{iframe: }}" nil 2]
      ["Block Embed"   BlockEmbedIcon "{{[[embed]]: (())}}" nil 4]
-     ["Template"      TemplateIcon ";;" nil nil]]
+     ["Template"      TemplateIcon ";;" nil nil]
+     ["Property"      TemplateIcon "::" nil nil]]
     @(subscribe [:db-picker/remote-db?])
     (conj (let [username (:username @(rf/subscribe [:presence/current-user]))]
             [(str "Me (" username ")") PersonIcon (fn [] (str "[[" username "]]")) nil nil]))))
@@ -125,6 +126,16 @@
              (slash-options))))
 
 
+(defn search-or-create-node-title
+  [query]
+  (let [results (db/search-in-node-title query)
+        create  (if (and (seq query)
+                         (not (some #(= query (:node/title %)) results)))
+                  [{:text (str "Create property: " query)}]
+                  [])]
+    (into create results)))
+
+
 (defn update-query
   "Used by backspace and write-char.
   write-char appends key character. Pass empty string during backspace.
@@ -136,12 +147,14 @@
                           :page db/search-in-node-title
                           :hashtag db/search-in-node-title
                           :template db/search-in-block-content
+                          :property search-or-create-node-title
                           :slash filter-slash-options)
         regex           (case type
                           :block #"(?s).*\(\("
                           :page #"(?s).*\[\["
                           :hashtag #"(?s).*#"
                           :template #"(?s).*;;"
+                          :property #"(?s).*::"
                           :slash #"(?s).*/")
         find            (re-find regex head)
         query-start-idx (count find)
@@ -209,6 +222,10 @@
            (rf/dispatch [::inline-search.events/clear-query! block-uid]))))
      (when (= caption "Template")
        (rf/dispatch [::inline-search.events/set-type! block-uid :template])
+       (rf/dispatch [::inline-search.events/clear-results! block-uid])
+       (rf/dispatch [::inline-search.events/clear-query! block-uid]))
+     (when (= caption "Property")
+       (rf/dispatch [::inline-search.events/set-type! block-uid :property])
        (rf/dispatch [::inline-search.events/clear-results! block-uid])
        (rf/dispatch [::inline-search.events/clear-query! block-uid])))))
 
@@ -299,6 +316,40 @@
          (set-selection target (- start-idx 2) start)
          (replace-selection-with "")
          (dispatch [:paste-internal block-uid @read-value target-ir])
+         (rf/dispatch [::inline-search.events/close! block-uid]))))))
+
+
+;; see `auto-complete-slash` for how this arity-overloaded
+;; function is used.
+(defn auto-complete-property
+  ([block-uid {:as state-hooks} e]
+   (let [inline-search-index (rf/subscribe [::inline-search.subs/index block-uid])
+         inline-search-results (rf/subscribe [::inline-search.subs/results block-uid])
+         target (.. e -target)
+         {:keys [block/uid]} (nth @inline-search-results @inline-search-index nil)
+         expansion uid]
+     (auto-complete-property block-uid state-hooks target expansion)))
+
+  ([block-uid {:keys [read-value] :as _state-hooks} target expansion]
+   (let [{:keys [start head]} (destruct-target target)
+         start-idx (count (re-find #"(?s).*::" head))
+         {:keys [end]} (destruct-target target)
+         parent-uid (->> [:block/uid block-uid]
+                         (common-db/get-parent @db/dsdb)
+                         :block/uid)
+         query @(rf/subscribe [::inline-search.subs/query block-uid])
+         title (or (common-db/get-page-title @db/dsdb expansion) query)]
+     (if (or (empty? title)
+             (nil? parent-uid))
+       (rf/dispatch [::inline-search.events/close! block-uid])
+       (do
+         (set-selection target (- start-idx 2) start)
+         (replace-selection-with "")
+         (dispatch [:block/move {:source-uid block-uid
+                                 :target-uid parent-uid
+                                 :target-rel {:page/title title}
+                                 :local-string (str (subs @read-value 0 start-idx)
+                                                    (subs @read-value end))}])
          (rf/dispatch [::inline-search.events/close! block-uid]))))))
 
 
@@ -506,7 +557,8 @@
                                   :page     (auto-complete-inline uid state-hooks e)
                                   :block    (auto-complete-inline uid state-hooks e)
                                   :hashtag  (auto-complete-hashtag uid state-hooks e)
-                                  :template (auto-complete-template uid state-hooks e))
+                                  :template (auto-complete-template uid state-hooks e)
+                                  :property (auto-complete-property uid state-hooks e))
       ;; shift-enter: add line break to textarea and move cursor to the next line.
       shift                     (replace-selection-with "\n")
       ;; cmd-enter: cycle todo states, then move cursor to the end of the line.
@@ -776,6 +828,8 @@
       (and (= "#" look-behind-char) (= type :hashtag)) (rf/dispatch [::inline-search.events/close! uid])
       ;; semicolon: close dropdown
       (and (= ";" look-behind-char) (= type :template)) (rf/dispatch [::inline-search.events/close! uid])
+      ;; colon: close dropdown
+      (and (= ":" look-behind-char) (= type :property)) (rf/dispatch [::inline-search.events/close! uid])
       ;; dropdown is open: update query
       type (update-query uid head "" type))))
 
@@ -817,6 +871,13 @@
                                       (rf/dispatch [::inline-search.events/set-index! uid 0])
                                       (rf/dispatch [::inline-search.events/clear-results! uid])
                                       (rf/dispatch [::inline-search.events/clear-query! uid]))
+      (and (= key ":" look-behind-char)
+           (nil? type))             (do
+                                      (rf/dispatch [::inline-search.events/set-type! uid :property])
+                                      (rf/dispatch [::inline-search.events/set-index! uid 0])
+                                      (rf/dispatch [::inline-search.events/clear-results! uid])
+                                      (rf/dispatch [::inline-search.events/clear-query! uid]))
+
       type (update-query uid head key type))))
 
 
