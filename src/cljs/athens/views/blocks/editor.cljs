@@ -166,8 +166,9 @@
                           _refs]} (reactive/get-reactive-block-document [:block/uid uid])]
         [:<>
          [:div.block-body
-          (when (or (seq children)
-                    (seq properties))
+          (when (and children?
+                     (or (seq children)
+                         (seq properties)))
             [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
                                          (and (false? linked-ref) open))
                                    true
