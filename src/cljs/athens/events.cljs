@@ -1593,7 +1593,7 @@
 (reg-event-fx
   :block/move
   (fn [_ [_ {:keys [source-uid target-uid target-rel local-string] :as args}]]
-    (log/info ":block/move args" (pr-str args))
+    (log/debug ":block/move args" (pr-str args))
     (let [sentry-tx (close-and-get-sentry-tx "block/move")
           event     (-> (block-save-block-move-composite-op source-uid target-uid target-rel local-string)
                         common-events/build-atomic-event)]

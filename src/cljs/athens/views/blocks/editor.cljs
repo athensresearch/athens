@@ -237,11 +237,10 @@
          (when (and (seq properties)
                     (or (and (true? linked-ref) @linked-ref-open?)
                         (and (false? linked-ref) open)))
-           (for [child (common-db/sort-block-properties properties)
-                 :let  [child-uid (:block/uid child)]]
-             ^{:key (:db/id child)}
-             [block-el child
-              (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))
+           (for [prop (common-db/sort-block-properties properties)]
+             ^{:key (:db/id prop)}
+             [block-el prop
+              (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid prop)))
               opts]))
 
          ;; Children

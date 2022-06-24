@@ -487,9 +487,9 @@
           ;; Properties
           [:div
            (when (seq properties)
-             (for [child (common-db/sort-block-properties properties)]
-               ^{:key (:db/id child)}
-               [blocks/block-el child]))]
+             (for [prop (common-db/sort-block-properties properties)]
+               ^{:key (:db/id prop)}
+               [blocks/block-el prop]))]
 
           ;; Children
           [:div
