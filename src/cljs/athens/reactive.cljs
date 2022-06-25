@@ -77,6 +77,20 @@
        rseq))
 
 
+(defn get-reactive-linked-properties
+  "For node page properties references UI."
+  [eid]
+  (->> @(p/pull db/dsdb '[:block/_key] eid)
+       :block/_key
+       (mapv :db/id)
+       db/merge-parents-and-block
+       db/group-by-parent
+       (sort-by #(-> % first second))
+       (map #(vector (ffirst %) (second %)))
+       vec
+       rseq))
+
+
 (def recursive-properties-document-pull-vector
   '[{:block/_property-of [:block/uid :block/string :block/order :block/refs
                           {:block/key [:node/title]}
@@ -99,6 +113,7 @@
 
 (def block-document-pull-vector
   (vec (concat '[:db/id :block/uid :block/string :block/open :block/_refs
+                 {:block/key [:node/title]}
                  {:block/children [:block/uid :block/order]}]
                recursive-properties-document-pull-vector)))
 
@@ -112,7 +127,10 @@
 
 (defntrace get-reactive-parents-recursively
   [id]
-  (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string {:block/_children ...}] id)
+  (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string :edit/time
+                          {:block/property-of ...}
+                          {:block/_children ...}]
+                id)
        db/shape-parent-query))
 
 

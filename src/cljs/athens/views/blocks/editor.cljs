@@ -1,9 +1,11 @@
 (ns athens.views.blocks.editor
   (:require
     ["/components/Block/Anchor"                :refer [Anchor]]
+    ["/components/Block/PropertyName"          :refer [PropertyName]]
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    [athens.common-db                          :as common-db]
     [athens.db                                 :as db]
     [athens.events.inline-refs                 :as inline-refs.events]
     [athens.events.linked-refs                 :as linked-ref.events]
@@ -62,7 +64,7 @@
 
           [:> Breadcrumb {:fontSize "xs" :color "foreground.secondary"}
            (doall
-             (for [{:keys [node/title block/string block/uid] :as breadcrumb-block}
+             (for [{:keys [block/uid] :as breadcrumb-block}
                    (if (or @inline-ref-open?
                            (not @inline-ref-focus?))
                      @inline-ref-parents
@@ -83,7 +85,7 @@
                                                    (rf/dispatch [::inline-refs.events/set-block! orig-uid new-B])
                                                    (rf/dispatch [::inline-refs.events/set-parents! orig-uid new-P])
                                                    (rf/dispatch [::inline-refs.events/set-focus! orig-uid false]))))}
-                 [parse-renderer/parse-and-render (or title string) uid]]]))]]
+                 [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb uid) uid]]]))]]
 
          (when @inline-ref-open?
            (if @inline-ref-focus?
@@ -159,11 +161,14 @@
       (let [{:block/keys [;; uid
                           open
                           children
+                          key
+                          properties
                           _refs]} (reactive/get-reactive-block-document [:block/uid uid])]
         [:<>
          [:div.block-body
           (when (and children?
-                     (seq children))
+                     (or (seq children)
+                         (seq properties)))
             [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
                                          (and (false? linked-ref) open))
                                    true
@@ -173,6 +178,18 @@
                                    (if (true? linked-ref)
                                      (rf/dispatch [::linked-ref.events/toggle-open! uid])
                                      (toggle uid (not open))))}])
+
+          (when key
+            [:> PropertyName {:name    (:node/title key)
+                              :onClick (fn [e]
+                                         (let [shift? (.-shiftKey e)]
+                                           (rf/dispatch [:reporting/navigation {:source :block-property
+                                                                                :target :page
+                                                                                :pane   (if shift?
+                                                                                          :right-pane
+                                                                                          :main-pane)}])
+                                           (router/navigate-page (:node/title key) e)))}])
+
           [:> Anchor {:isClosedWithChildren   (when (and (seq children)
                                                          (or (and (true? linked-ref) (not @linked-ref-open?))
                                                              (and (false? linked-ref) (not open))))
@@ -215,6 +232,16 @@
                     (not= :block-embed? opts)
                     @inline-refs-open?)
            [inline-linked-refs-el block-el uid])
+
+         ;; Properties
+         (when (and (seq properties)
+                    (or (and (true? linked-ref) @linked-ref-open?)
+                        (and (false? linked-ref) open)))
+           (for [prop (common-db/sort-block-properties properties)]
+             ^{:key (:db/id prop)}
+             [block-el prop
+              (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid prop)))
+              opts]))
 
          ;; Children
          (when (and (seq children)
