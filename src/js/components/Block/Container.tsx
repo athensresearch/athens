@@ -101,8 +101,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         },
         ".block-embed": {
           borderRadius: "sm",
-          "--block-surface-color": "background.basement",
-          bg: "background.basement",
+          borderLeftRadius: 0,
           // Blocks nested in an embed get normal indentation...
           ".block-container": { marginLeft: 8 },
           // ...except for the first one, where that would be excessive

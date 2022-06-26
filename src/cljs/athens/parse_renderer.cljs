@@ -147,15 +147,15 @@
                   :fontSize "inherit"
                   :fontWeight "inherit"
                   :lineHeight "inherit"
-                  :marginInline "-2px"
-                  :paddingInline "2px"
+                  :marginInline "-0.125ch"
+                  :paddingInline "0.125ch"
                   :borderBottomWidth "1px"
-                  :borderBottomStyle "solid"
+                  :borderBottomStyle "dotted"
                   :borderBottomColor "ref.foreground"
                   :cursor "alias"
                   :sx {"WebkitBoxDecorationBreak" "clone"}
                   :_hover {:textDecoration "none"
-                           :borderBottomColor "transparent"
+                          ;;  :borderBottomColor "transparent"
                            :bg "ref.background"}
                   :onClick (fn [e]
                              (.. e stopPropagation)

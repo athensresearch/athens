@@ -85,7 +85,8 @@
     (if (db/e-by-av :block/uid block-uid)
       (r/with-let [embed-id (random-uuid)]
                   [:> Box {:class "block-embed"
-                           :bg "background.basement"
+                           :borderLeft "1px dotted"
+                           :borderLeftColor "ref.foreground"
                            :flex 1
                            :pr 1
                            :position "relative"

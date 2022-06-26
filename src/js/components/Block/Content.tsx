@@ -47,6 +47,9 @@ const _Content = ({ children, fontSize, ...props }) => {
         opacity: 0,
         fontFamily: "inherit"
       },
+      ".block-embed textarea ": {
+        caretColor: "var(--chakra-colors-ref-foreground)",
+      },
       "& > span": {
         gridArea: "main",
       },

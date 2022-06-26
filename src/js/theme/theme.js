@@ -164,7 +164,8 @@ const semanticTokens = {
     // block content colors
     "ref.foreground": {
       default: "#fbbe63bb",
-      _dark: "#fbbe6366",
+      // _dark: "#fbbe6366",
+      _dark: "#fbbe63bb",
     },
     "ref.background": {
       default: "#fbbe63bb",
