@@ -1,9 +1,7 @@
 (ns athens.views.pages.all-pages
   (:require
     ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
-    ["/components/Board/Board" :refer [Example]]
-    ["@asseinfo/react-kanban" :default Board]
-    ;; ["@asseinfo/react-kanban/dist/style.css"]
+    ["/components/Board/Board" :refer [KanbanBoard]]
     ["@chakra-ui/react" :refer [Table Thead Tbody Tfoot Tr Th Td TableContainer
                                 Box
                                 Button
@@ -91,6 +89,24 @@
     ;;  outliner
 ;;  Options
 
+(defn reshape-block-into-task
+  [block]
+  (let [{:keys [block/uid block/string block/properties]} block
+        {:strs [status assignee]} properties
+        assignee-str (:block/string assignee)
+        status-str (:block/string status)]
+    {:id uid :title string :status status-str :assignee assignee-str}))
+
+(defn organize-into-columns
+  [tasks]
+  (group-by :status tasks))
+
+(defn blocks-to-columns
+  [blocks]
+  (->> (map reshape-block-into-task blocks)
+       organize-into-columns))
+
+
 (defn map-types
   [t coll]
   (map #(assoc % :entity-type t) coll))
@@ -118,7 +134,7 @@
                                           (re-find #"https://twitter.com/\w+/status/\d+" string)))
                                 (map-types :tweet))}
    :tasks {:title "Tasks"
-           :query-fn #(->> (common-db/get-all-blocks @db/dsdb))}
+           :query-fn #(->> (common-db/get-all-blocks-of-type @db/dsdb "[[athens/task]]"))}
    #_#_:templates {:title "Templates"}
    :urls {:title "URLs"
           :query-fn #() #_(->> (common-db/get-all-blocks @db/dsdb)
@@ -155,7 +171,7 @@
 
           [:> Stack {:spacing 10 :direction "column" :padding-left 5 :padding-bottom 10}
            [:> Stack {:spacing 10 :direction "row" :colorScheme "blue"}
-            [:> Text {:as "u" :width 100} "Entities"]
+            [:> Text {:as "u" :width 300} "Entities"]
             [:> Checkbox {:is-checked all-checked :on-change handle-click-everything} "All entities"]
             (doall
              (for [[k v] entity-map]
@@ -165,12 +181,12 @@
                 ( :title v )]))]
 
            [:> Stack {:spacing 10 :direction "row" :colorScheme "blue"}
-            [:> Text {:as "u" :width 100} "Properties"]
+            [:> Text {:as "u" :width 300} "Properties"]
             [:> Checkbox {} ""]]
 
            [:> RadioGroup {:defaultValue @query-view :on-change #(reset! query-view %)}
             [:> Stack {:spacing 10 :direction "row" :colorScheme "blue"}
-             [:> Text {:as "u" :width 100} "Views"]
+             [:> Text {:as "u" :width 300} "Views"]
              [:> Radio {:value "table"} "Table"]
              [:> Radio {:value "gallery" :on-click #()} "Gallery"]
              [:> Radio {:value "board" :on-click #()} "Board"]]]]]
@@ -178,48 +194,7 @@
          ;; how do we dynamically show propertis
          (case @query-view
            "board"
-           #_[:> Example {:children
-                        [(r/as-element
-                          [:> Box {:bg "tomato" :boxSize "sm"}
-                           [:> Text "HI"]])]}]
-           [(r/adapt-react-class Board)
-
-            {:renderColumnHeader
-             (fn [x]
-               (let [{:keys [id title] :as x} (js->clj x :keywordize-keys true)]
-                 (r/as-element
-                  [:> Stack {:spacing 4 :borderWidth "1px" :padding 5 :margin 5 :borderRadius "lg"
-                             :backgroundColor "gray.200"}
-                   [:> Heading {:as "h4" :size "md"} title]])))
-
-             :renderCard
-             (fn [x]
-               (let [{:keys [id title description] :as x} (js->clj x :keywordize-keys true)]
-                 (r/as-element
-                  [:> Stack {:spacing 4 :borderWidth "1px" :padding 3 :margin 5 :borderRadius "sm"
-                             :backgroundColor "gray.400"}
-                   [:> Heading {:size "sm" } title]
-                   [:> Text description]])))
-
-             :initialBoard
-             {:columns [{:id 1
-                         :title "Todo"
-                         :cards [{:id 1
-                                  :title "Try react-kanban library"
-                                  :description ""}
-                                 {:id 4
-                                  :title "Try making in-house kanban board"
-                                  :description ""}]}
-                        {:id 2
-                         :title "Doing"
-                         :cards [{:id 2
-                                  :title "Add filter functionality"
-                                  :description "Filter by priority, person, status"}]}
-                        {:id 3
-                         :title "Done"
-                         :cards [{:id 3
-                                  :title "Add easy actions"
-                                  :description "Archive, snooze, priortize"}]}]}}]
+           [:> KanbanBoard {:tasks (blocks-to-columns entities)}]
 
            "gallery"
            [:> SimpleGrid {:columns 4 :spacing 10}

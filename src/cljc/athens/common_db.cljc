@@ -623,7 +623,7 @@
        (d/pull-many db all-pages-pull-vector)))
 
 (def all-blocks-pull-vector
-  [:block/uid :block/string :edit/time :create/time [:block/_refs :limit nil]])
+  [:block/uid :block/string :edit/time :create/time [:block/_refs :limit nil] :block/_property-of])
 
 
 (defn get-all-blocks
@@ -631,6 +631,25 @@
   (->> (d/datoms db :aevt :block/string)
        (map first)
        (d/pull-many db all-blocks-pull-vector)))
+
+
+(defn get-all-blocks-that-have-properties
+  [db]
+  (->> (get-all-blocks db)
+       (filter :block/_property-of)
+       (map #(get-block-document db [:block/uid (:block/uid %)]))))
+
+
+(defn get-all-blocks-of-type
+  [db block-type]
+  (->> (get-all-blocks db)
+       (filter :block/_property-of)
+       (map #(get-block-document db [:block/uid (:block/uid %)]))
+       (filter (fn [x] (= (get-in x [:block/properties "type" :block/string])
+                         block-type)))))
+
+
+;; (get-all-blocks-of-type @athens.db/dsdb "[[athens/task]]")
 
 
 (defn compat-position

@@ -1,28 +1,60 @@
-import { useSpring, animated } from '@react-spring/web'
-import { useDrag } from '@use-gesture/react'
+import React from 'react';
+import { Box, Button, Stack, Text, Heading } from '@chakra-ui/react';
+import Board from "@asseinfo/react-kanban"
 
-// export function Example() {
-//   const [{ x, y }, api] = useSpring(() => ({ x: 0, y: 0 }))
-
-//   // Set the drag hook and define component movement based on gesture data.
-//   const bind = useDrag(({ down, movement: [mx, my] }) => {
-//     api.start({ x: down ? mx : 0, y: down ? my : 0 })
-//   })
-
-//   // Bind it to a component.
-//   return <animated.div {...bind()} style={{ x, y, touchAction: 'none' }} />
-// }
-
-export function Example({ children }) {
-  const [{ x, y }, api] = useSpring(() => ({ x: 0, y: 0 }))
-      console.log(children)
-
-  // Set the drag hook and define component movement based on gesture data
-  const bind = useDrag(({ down, movement: [mx, my] }) => {
-    api.start({ x: down ? mx : 0, y: down ? my : 0, immediate: down })
-  })
-
-      // Bind it to a component
-      return <animated.div {...bind()} style={{ x, y,  height: "30px", width: "40px"}} children={children}>
-            </animated.div>
+const board = {
+  columns: [
+    {
+      id: 1,
+      title: 'Backlog',
+      cards: [
+        {
+          id: 1,
+          title: 'Add card',
+          description: 'Add capability to add a card in a column'
+        },
+      ]
+    },
+    {
+      id: 2,
+      title: 'Doing',
+      cards: [
+        {
+          id: 2,
+          title: 'Drag-n-drop support',
+          description: 'Move a card between the columns'
+        },
+      ]
+    }
+  ]
 }
+
+
+const ColumnHeader = ({ id, title, description }) => {
+  return (
+    <Box spacing={4} borderWidth={1} padding={5} margin={5} borderRadius={"lg"} backgroundColor={"gray.200"}>
+      <Heading size={"lg"}>{title}</Heading>
+  </Box>);
+};
+
+
+
+const Card = ({ id, title, description }) => {
+  return (
+    <Box spacing={4} borderWidth={1} padding={3} margin={5} borderRadius={"sm"} backgroundColor={"gray.400"}>
+      <Heading size={"md"}>{title}</Heading>
+      <Text fontSize={"md"}>{description}</Text>
+  </Box>);
+};
+
+
+export const KanbanBoard = ({tasks}) => {
+  console.log(tasks)
+  return (
+    <Board
+      initialBoard={board}
+      renderCard={Card}
+      renderColumnHeader={ColumnHeader}
+      />
+  );
+};
