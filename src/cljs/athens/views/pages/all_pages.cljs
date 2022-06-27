@@ -228,7 +228,12 @@
          (case @query-view
            "board"
            [:> ExampleKanban2 {:boardData tmp-data
-                              :columns ["todo" "doing" "done"]} ]
+                               :columns ["todo" "doing" "done"]
+                               :onAddNewCardClick (fn [column project]
+                                                    ;; dispatch adding a new block with task + status + project
+                                                    ())
+                               :onAddNewColumnClick (fn [])
+                               :onAddNewProjectClick (fn [])} ]
            #_[:> KanbanBoard {:tasks (blocks-to-columns entities)}]
 
            "gallery"

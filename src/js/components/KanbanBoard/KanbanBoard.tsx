@@ -1,5 +1,5 @@
 import React from 'react';
-import { VStack, Grid, HStack, Box, Text, Heading } from '@chakra-ui/react';
+import { VStack, Grid, HStack, Box, Text, Heading, Button } from '@chakra-ui/react';
 import { Reorder } from 'framer-motion';
 
 export const KanbanCard = (props) => {
@@ -27,7 +27,6 @@ export const KanbanCard = (props) => {
 
 export const KanbanColumn = (props) => {
   const { name, children } = props;
-  console.log("column", props)
   // const [items, setItems] = React.useState(["Card 1", "Card 2", "Card 3"]);
 
   return (
@@ -95,20 +94,25 @@ export const ExampleKanban = () => {
   </KanbanBoard>
 }
 
+export const AddCardButton = (props) => {
+  const { children, column, project } = props
+  return <Button size={"sm"} variant={"ghost"} fontWeight={"light"}
+    onClick={() => console.log("Yeet", column, project)}>
+    + New
+  </Button>
+};
+
 export const ExampleKanban2 = (props) => {
-  const { boardData, columns } = props
-  console.log(boardData, columns)
-  // return (
-  //   <h1>hi</h1>
-  // )
+  const { boardData, columns } = props;
   return <KanbanBoard name="Task Board">
-    {Object.entries(boardData).map(([x, y]) =>
-      <KanbanSwimlane name={x}>
-        {columns.map(x =>
-          <KanbanColumn name={x}>
-          {y[x] &&  y[x].map(({id, title, status, assignee, project}) =>
+    {Object.entries(boardData).map(([project, y]) =>
+      <KanbanSwimlane name={project}>
+        {columns.map(column =>
+          <KanbanColumn name={column}>
+          {y[column] &&  y[column].map(({id, title, status, assignee, project}) =>
             <KanbanCard key={id} card={title} />
             )}
+          <AddCardButton column={column} project={project} />
           </KanbanColumn>
           )}
 
