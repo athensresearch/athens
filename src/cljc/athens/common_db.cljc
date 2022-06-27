@@ -46,6 +46,14 @@
                            :db/unique     :db.unique/identity}})
 
 
+(def v3-schema
+  {:time/ts     {:db/unique :db.unique/identity}
+   :time/create {:db/cardinality :db.cardinality/one
+                 :db/valueType   :db.type/ref}
+   :time/edit   {:db/cardinality :db.cardinality/one
+                 :db/valueType   :db.type/ref}})
+
+
 (def v1-bootstrap-schema
   {:migrations/version {:db/unique :db.unique/identity}})
 
@@ -86,7 +94,8 @@
 
 (def migrations
   [[1 #(transact-schema! % v1-schema)]
-   [2 #(transact-schema! % v2-schema)]])
+   [2 #(transact-schema! % v2-schema)]
+   [3 #(transact-schema! % v3-schema)]])
 
 
 (defn migrate-conn!
