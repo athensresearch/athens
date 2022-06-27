@@ -19,15 +19,15 @@
 (defmethod resolve-atomic-op-to-tx :block/new
   [db {:op/keys [args]}]
   (let [{:block/keys [uid position]} args
-        now                          (utils/now-ts)
+        now-ref                      {:time/ts (utils/now-ts)}
         new-block                    {:block/uid    uid
                                       :block/string ""
                                       :block/open   true
-                                      :create/time  now
-                                      :edit/time    now}
+                                      :time/create  now-ref
+                                      :time/edit    now-ref}
         position-tx                  (condp = (position/position-type position)
-                                       :child    (position/add-child db uid position now)
-                                       :property (position/add-property db uid position now))
+                                       :child    (position/add-child db uid position now-ref)
+                                       :property (position/add-property db uid position now-ref))
         tx-data                      (into [new-block] position-tx)]
     tx-data))
 
@@ -35,10 +35,11 @@
 ;; This is Atomic Graph Op, there is also composite version of it
 (defmethod resolve-atomic-op-to-tx :block/save
   [_db {:op/keys [args]}]
-  (let [{:block/keys [uid string]} args]
+  (let [{:block/keys [uid string]} args
+        now-ref {:time/ts (utils/now-ts)}]
     [{:block/uid    uid
       :block/string string
-      :edit/time    (utils/now-ts)}]))
+      :time/edit    now-ref}]))
 
 
 (defmethod resolve-atomic-op-to-tx :block/open
@@ -52,10 +53,10 @@
       (do
         (log/info ":block/open already at desired state, :block/open" open?)
         [])
-      (let [now           (utils/now-ts)
+      (let [now-ref       {:time/ts (utils/now-ts)}
             updated-block {:block/uid  uid
                            :block/open open?
-                           :edit/time  now}]
+                           :time/edit  now-ref}]
         [updated-block]))))
 
 
@@ -71,37 +72,38 @@
         old-position-type            (-> (common-db/get-position db uid)
                                          position/position-type)
         new-position-type            (position/position-type position)
-        now                          (utils/now-ts)
+        now-ref                      {:time/ts (utils/now-ts)}
         updated-block'               {:block/uid uid
-                                      :edit/time now}
+                                      :time/edit now-ref}
         position-tx                  (condp = [old-position-type new-position-type]
                                        [:child :child]
                                        (if same-parent?
                                          (position/move-child-within
-                                           db old-parent-uid uid position)
+                                           db old-parent-uid uid position now-ref)
                                          (position/move-child-between
-                                           db old-parent-uid new-parent-uid uid position now))
+                                           db old-parent-uid new-parent-uid uid position now-ref))
 
                                        [:child :property]
                                        (concat
-                                         (position/remove-child db uid old-parent-uid)
-                                         (position/add-property db uid position now))
+                                         (position/remove-child db uid old-parent-uid now-ref)
+                                         (position/add-property db uid position now-ref))
 
                                        [:property :child]
                                        (concat
-                                         (position/remove-property db uid old-parent-uid now)
-                                         (position/add-child db uid position now))
+                                         (position/remove-property db uid old-parent-uid now-ref)
+                                         (position/add-child db uid position now-ref))
 
                                        [:property :property]
                                        ;; No need to remove previous name, schema ensures
                                        ;; a block has a single name.
-                                       (position/add-property db uid position now))]
+                                       (position/add-property db uid position now-ref))]
     (into [updated-block'] position-tx)))
 
 
 (defmethod resolve-atomic-op-to-tx :block/remove
   [db {:op/keys [args]}]
   (let [{:block/keys [uid]}   args
+        now-ref               {:time/ts (utils/now-ts)}
         block-exists?         (common-db/e-by-av db :block/uid uid)
         block                 (when block-exists?
                                 (common-db/get-block db [:block/uid uid]))
@@ -110,11 +112,11 @@
         parent-uid            (when parent-eid
                                 (common-db/v-by-ea db parent-eid :block/uid))
         ;; Reorder parent children if needed.
-        children-tx           (position/remove-child db uid parent-uid)
+        children-tx           (position/remove-child db uid parent-uid now-ref)
         retract-parents-child (when parent-uid
                                 [:db/retract [:block/uid parent-uid] :block/children [:block/uid uid]])
         retract-uid           (when block-exists?
-                                (common-db/retract-uid-recursively-tx db uid))
+                                (common-db/retract-uid-recursively-tx db uid now-ref))
         txs                   (when block-exists?
                                 (cond-> []
                                   parent-uid  (conj retract-parents-child)
@@ -137,12 +139,12 @@
         page-exists?         (common-db/e-by-av db :node/title title)
         page-uid             (or (-> title dates/title-to-date dates/date-to-day :uid)
                                  (utils/gen-block-uid))
-        now                  (utils/now-ts)
+        now-ref              {:time/ts (utils/now-ts)}
         page                 {:node/title     title
                               :block/uid      page-uid
                               :block/children []
-                              :create/time    now
-                              :edit/time      now}
+                              :time/create    now-ref
+                              :time/edit      now-ref}
         txs                  (if page-exists?
                                []
                                [page])]
@@ -155,7 +157,7 @@
         new-name           (-> args :target :page/title)
         page-eid           (common-db/e-by-av db :node/title old-name)
         page-exists?       (int? page-eid)
-        now                (utils/now-ts)
+        now-ref            {:time/ts (utils/now-ts)}
         page               (when page-exists?
                              (common-db/get-block db [:node/title old-name]))
         linked-refs        (common-db/get-linked-refs-by-page-title db old-name)
@@ -163,7 +165,7 @@
         updated-page       (when page-exists?
                              {:db/id      [:block/uid (:block/uid page)]
                               :node/title new-name
-                              :edit/time  now})
+                              :time/edit  now-ref})
         txs                (concat [updated-page] new-linked-refs)]
     (if page-exists?
       txs
@@ -185,15 +187,15 @@
                            :block/_children [:node/title to-name]})
         reorder         (order/reorder to-children to-children' reorder-map-fn)
         ;; Move paged properties, or delete if key is already there.
-        now             (utils/now-ts)
+        now-ref         {:time/ts (utils/now-ts)}
         from-properties (->> [:node/title from-name] (common-db/get-page db) :block/properties)
         to-property-ks  (->> [:node/title to-name] (common-db/get-page db) :block/properties keys set)
         properties      (->> from-properties
                              (mapcat (fn [[k {:block/keys [uid]}]]
                                        (if (to-property-ks k)
-                                         (common-db/retract-uid-recursively-tx db uid)
+                                         (common-db/retract-uid-recursively-tx db uid now-ref)
                                          (position/add-property db uid {:page/title to-name
-                                                                        :relation   {:page/title k}} now)))))
+                                                                        :relation   {:page/title k}} now-ref)))))
         ;; Delete linked props that would end up duplicated on parent.
         linked-props    (->> [:node/title from-name]
                              (common-db/get-page db)
@@ -201,11 +203,10 @@
                              (map :db/id)
                              (map (partial common-db/get-parent db))
                              (mapcat (fn [{:block/keys [properties]}]
-                                       (println properties)
                                        (if (get properties to-name)
                                          (->> (get properties from-name)
                                               :block/uid
-                                              (common-db/retract-uid-recursively-tx db))
+                                              (common-db/retract-uid-recursively-tx db now-ref))
                                          []))))
         delete-page     [:db/retractEntity [:node/title from-name]]
         new-datoms      (concat [delete-page]
@@ -221,9 +222,10 @@
   [db {:op/keys [args]}]
   (log/debug "atomic-resolver: :page/remove: " (pr-str args))
   (let [{:page/keys [title]} args
+        now-ref              {:time/ts (utils/now-ts)}
         page-uid             (common-db/get-page-uid db title)
         retract-blocks       (when page-uid
-                               (common-db/retract-uid-recursively-tx db page-uid))
+                               (common-db/retract-uid-recursively-tx db page-uid now-ref))
         delete-linked-refs   (when page-uid
                                (->> page-uid
                                     (vector :block/uid)
@@ -236,7 +238,7 @@
                                     :block/_key
                                     (map :db/id)
                                     (map (partial common-db/get-block-uid db))
-                                    (mapcat (partial common-db/retract-uid-recursively-tx db))))
+                                    (mapcat (partial common-db/retract-uid-recursively-tx db now-ref))))
         tx-data              (if page-uid
                                (concat retract-blocks
                                        delete-linked-refs
