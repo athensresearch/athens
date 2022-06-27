@@ -6,7 +6,7 @@ export const KanbanCard = (props) => {
   const { card, isSelected } = props;
 
   return <Box
-    as={Reorder.Item}
+    // as={Reorder.Item}
     key={card.toString()}
     value={card}
     borderRadius="sm"
@@ -26,13 +26,14 @@ export const KanbanCard = (props) => {
 }
 
 export const KanbanColumn = (props) => {
-  const { name } = props;
-  const [items, setItems] = React.useState(["Card 1", "Card 2", "Card 3"]);
+  const { name, children } = props;
+  console.log("column", props)
+  // const [items, setItems] = React.useState(["Card 1", "Card 2", "Card 3"]);
 
   return (
     <Box>
       <VStack
-        as={Reorder.Group}
+        // as={Reorder.Group}
         align="stretch"
         listStyleType={"none"}
         spacing={2}
@@ -40,17 +41,19 @@ export const KanbanColumn = (props) => {
         borderRadius="md"
         bg="background.upper"
         axis="y"
-        values={items}
-        onReorder={setItems}
+        // values={items}
+        // onReorder={setItems}
       >
         <Heading color="foreground.secondary" size="sm">{name}</Heading>
-        {items.map((card) => (
-          <KanbanCard key={card.toString()} card={card} isSelected={false} />
-        ))}
+      {children}
       </VStack>
     </Box>
   );
 }
+
+        // {<!--items.map((card) => (
+        //   <KanbanCard key={card.toString()} card={card} isSelected={false} />
+        // ))-->}
 
 export const KanbanSwimlane = (props) => {
   const { name, children } = props;
@@ -84,13 +87,31 @@ export const ExampleKanban = () => {
       <KanbanSwimlane name={swimlane}>
         {columns.map((column) =>
           <KanbanColumn name={column}>
-            {cards.map((card) =>
-              <KanbanCard>
-                {card}
-              </KanbanCard>
-            )}
+            {}
           </KanbanColumn>
         )}
+      </KanbanSwimlane>
+    )}
+  </KanbanBoard>
+}
+
+export const ExampleKanban2 = (props) => {
+  const { boardData, columns } = props
+  console.log(boardData, columns)
+  // return (
+  //   <h1>hi</h1>
+  // )
+  return <KanbanBoard name="Task Board">
+    {Object.entries(boardData).map(([x, y]) =>
+      <KanbanSwimlane name={x}>
+        {columns.map(x =>
+          <KanbanColumn name={x}>
+          {y[x] &&  y[x].map(({id, title, status, assignee, project}) =>
+            <KanbanCard key={id} card={title} />
+            )}
+          </KanbanColumn>
+          )}
+
       </KanbanSwimlane>
     )}
   </KanbanBoard>

@@ -2,6 +2,7 @@
   (:require
     ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
     ["/components/Board/Board" :refer [KanbanBoard]]
+    ["/components/KanbanBoard/KanbanBoard" :refer [ExampleKanban ExampleKanban2 #_KanbanBoard]]
     ["@chakra-ui/react" :refer [Table Thead Tbody Tfoot Tr Th Td TableContainer
                                 Box
                                 Button
@@ -124,19 +125,20 @@
 
 (defn group-by-swimlane
   [kw columns]
-  (map (fn [[k v]]
-         [k (group-by kw v)])
-       columns))
+  (into (hash-map)
+        (map (fn [[k v]]
+               [k (group-by kw v)])
+             columns)))
 
 
-(let [entity-type "[[athens/task]]"
-      columns :project
-      swimlanes :status]
-  (->> (common-db/get-all-blocks-of-type @athens.db/dsdb entity-type)
-       blocks-to-tasks
-       (group-by :project)
-       (group-by-swimlane :status)))
-
+(def tmp-data
+  (let [entity-type "[[athens/task]]"
+        columns :project
+        swimlanes :status]
+    (->> (common-db/get-all-blocks-of-type @athens.db/dsdb entity-type)
+         blocks-to-tasks
+         (group-by :project)
+         (group-by-swimlane :status))))
 
 (defn map-types
   [t coll]
@@ -225,7 +227,9 @@
          ;; how do we dynamically show propertis
          (case @query-view
            "board"
-           [:> KanbanBoard {:tasks (blocks-to-columns entities)}]
+           [:> ExampleKanban2 {:boardData tmp-data
+                              :columns ["todo" "doing" "done"]} ]
+           #_[:> KanbanBoard {:tasks (blocks-to-columns entities)}]
 
            "gallery"
            [:> SimpleGrid {:columns 4 :spacing 10}
