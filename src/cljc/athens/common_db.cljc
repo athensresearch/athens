@@ -515,7 +515,7 @@
 (defn retract-uid-recursively-tx
   "Retract all blocks of a page, including the page.
   Replaces block string refs to removed entities by their ref text."
-  [db uid now-ref]
+  [db uid time-ref]
   (let [block                 (get-block db [:block/uid uid])
         parent-uid            (->> [:block/uid uid] (get-parent db) :block/uid)
         descendants           (concat [] (:block/children block) (:block/_property-of block))
@@ -576,7 +576,7 @@
                                 has-descendants? (into retract-kids)
                                 has-asserts?     (into asserts)
                                 parent-uid       (conj {:block/uid parent-uid
-                                                        :time/edit now-ref})
+                                                        :time/edit time-ref})
                                 true             (conj retract-entity))]
     txs))
 
