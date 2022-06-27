@@ -92,10 +92,11 @@
 (defn reshape-block-into-task
   [block]
   (let [{:keys [block/uid block/string block/properties]} block
-        {:strs [status assignee]} properties
+        {:strs [status assignee project]} properties
         assignee-str (:block/string assignee)
-        status-str (:block/string status)]
-    {:id uid :title string :status status-str :assignee assignee-str}))
+        status-str (:block/string status)
+        project-str (:block/string project)]
+    {:id uid :title string :status status-str :assignee assignee-str :project project-str}))
 
 (defn organize-into-columns
   [tasks]
@@ -105,6 +106,36 @@
   [blocks]
   (->> (map reshape-block-into-task blocks)
        organize-into-columns))
+
+(defn blocks-to-tasks
+  [blocks]
+  (map reshape-block-into-task blocks))
+
+
+;; (defn group)
+(def a [["A" 2011 "Dan"]
+        ["A" 2011 "Jon"]
+        ["A" 2010 "Tim"]
+        ["B" 2009 "Tom"] ])
+
+(into {} (for [[k v] (group-by first a)]
+                  [k (group-by second v)]))
+
+
+(defn group-by-swimlane
+  [kw columns]
+  (map (fn [[k v]]
+         [k (group-by kw v)])
+       columns))
+
+
+(let [entity-type "[[athens/task]]"
+      columns :project
+      swimlanes :status]
+  (->> (common-db/get-all-blocks-of-type @athens.db/dsdb entity-type)
+       blocks-to-tasks
+       (group-by :project)
+       (group-by-swimlane :status)))
 
 
 (defn map-types
