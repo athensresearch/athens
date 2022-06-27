@@ -1,7 +1,10 @@
 (ns athens.views.task.core
   (:require [athens.common-events.bfs :as bfs]
             [athens.common.utils :as common.utils]
-            [athens.common-events.graph.composite :as composite]))
+            [athens.common-events.graph.composite :as composite]
+            [athens.common-db :as common-db]
+            [athens.db :as db]
+            [athens.common-events :as common-events]))
 
 
 ;; Create a new task
@@ -36,3 +39,16 @@
 
 
 ;; Update the task properties
+;; Need to update the block string for updating the property value
+;; For creation we can use block/new and to add a new property we use block/move
+(defn update-task-properties
+  [db task-block-uid new-properties-map]
+  ;; TODO Update the block string for updating the value of a property.
+  (let [task-properties       (common-db/get-block-property-document @db/dsdb [:block/uid task-block-uid])
+        updated-properties    (merge task-properties new-properties-map)
+
+        updated-properties-op (composite/make-consequence-op {:op/type :update-task-properties}
+                                                             updated-properties)
+        event                 (common-events/build-atomic-event updated-properties-op)]
+    {:fx [[:dispatch [:resolve-transact-forward event]]]}))
+
