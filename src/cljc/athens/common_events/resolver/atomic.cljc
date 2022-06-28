@@ -304,12 +304,12 @@
   Returns :tx-data from datascript/transact!."
   ([conn event]
    (resolve-transact! conn event true))
-  ([conn {:event/keys [id time] :as event} middleware?]
+  ([conn {:event/keys [id create-time log-time] :as event} middleware?]
    (log/debug "resolve-transact! event-id:" (pr-str id))
    (let [transact! (if middleware?
                      common-db/transact-with-middleware!
                      d/transact!)
-         time (or time (utils/now-ts))]
+         time (or log-time create-time (utils/now-ts))]
      (utils/log-time
        (str "resolve-transact! event-id: " (pr-str id) " took")
        (if (graph-ops/atomic-composite? event)
