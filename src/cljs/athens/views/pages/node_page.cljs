@@ -419,10 +419,10 @@
 
 (defn query-el
   [title]
-  (let [linked-props (wrap-span-no-new-tx "query-el"
+  (let [instances (wrap-span-no-new-tx "query-el"
                                           (reactive/get-reactive-instances-of-key-value "type" title))]
-    [:div
-     [query/query linked-props]]))
+    (when (pos? (count instances))
+      [query/query instances])))
 
 
 ;; TODO: where to put page-level link filters?
