@@ -14,6 +14,7 @@
                                 Checkbox CheckboxGroup]]
     ["react-twitter-embed" :refer [TwitterTweetEmbed]]
     [athens.common-db          :as common-db]
+    [athens.common-events.graph.ops            :as graph-ops]
     [athens.dates              :as dates]
     [athens.db                 :as db]
     [athens.router             :as router]
@@ -140,6 +141,58 @@
          (group-by :project)
          (group-by-swimlane :status))))
 
+(defn new-task
+  "Column might be a progress state like #{todo, doing done}
+  Swimlane might be a project."
+  [column swimlane]
+  ())
+
+
+(defn new-card
+  [project column]
+  (let [evt (->> (athens.common-events.bfs/internal-representation->atomic-ops
+                  @athens.db/dsdb
+                  [#:block{:uid    (athens.common.utils/gen-block-uid)
+                           :string "Untitled"
+                           :properties
+                           {"type" #:block{:string "[[athens/task]]"
+                                           :uid    (athens.common.utils/gen-block-uid)}
+                            "status" #:block{:string column
+                                           :uid    (athens.common.utils/gen-block-uid)}
+                            "project" #:block{:string project
+
+                                           :uid    (athens.common.utils/gen-block-uid)} }
+                           }]
+                  {#_#_:block/uid "49bdef200"
+                   :page/title "June 25, 2022"
+                   :relation  :last})
+                 (athens.common-events.graph.composite/make-consequence-op {:op/type :new-type})
+                 athens.common-events/build-atomic-event)]
+    (re-frame.core/dispatch [:resolve-transact-forward evt])))
+
+                            ;; ":task/title"               #:block{:string title
+                            ;;                                     :uid    (common.utils/gen-block-uid)}
+                            ;; ":task/description"         #:block{:string description
+                            ;;                                     :uid  (common.utils/gen-block-uid)}
+                            ;; ":task/priority"            #:block{:string priority
+                            ;;                                     :uid (common.utils/gen-block-uid)}
+                            ;; ":task/creator"             #:block{:string creator
+                            ;;                                     :uid (common.utils/gen-block-uid)}
+                            ;; ":task/assignee"            #:block{:string assignee
+                            ;;                                     :uid (common.utils/gen-block-uid)}
+                            ;; ":task/due-date"            #:block{:string due-date
+                            ;;                                     :uid (common.utils/gen-block-uid)}
+                            ;; ":task/status"              #:block{:string status
+                            ;;                                     :uid (common.utils/gen-block-uid)}
+
+(defn update-status
+  ""
+  [id new-status]
+  (rf/dispatch [:properties/update-in [:block/uid id] ["status"]
+                (fn [db prop-uid]
+                 [(graph-ops/build-block-save-op db prop-uid new-status)])]))
+
+
 (defn map-types
   [t coll]
   (map #(assoc % :entity-type t) coll))
@@ -228,10 +281,10 @@
          (case @query-view
            "board"
            [:> ExampleKanban2 {:boardData tmp-data
-                               :columns ["todo" "doing" "done"]
-                               :onAddNewCardClick (fn [column project]
-                                                    ;; dispatch adding a new block with task + status + project
-                                                    ())
+                               ;; store column order here
+                               :columns [ "done" "todo" "doing"]
+                               :onUpdateStatusClick update-status
+                               :onAddNewCardClick new-card
                                :onAddNewColumnClick (fn [])
                                :onAddNewProjectClick (fn [])} ]
            #_[:> KanbanBoard {:tasks (blocks-to-columns entities)}]

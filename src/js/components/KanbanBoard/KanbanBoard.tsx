@@ -3,12 +3,15 @@ import { VStack, Grid, HStack, Box, Text, Heading, Button } from '@chakra-ui/rea
 import { Reorder } from 'framer-motion';
 
 export const KanbanCard = (props) => {
-  const { card, isSelected } = props;
+  const { id, title, project, status, assignee, isSelected, columns, onUpdateStatusClick } = props;
+  const columnIndex = columns.indexOf(status);
+  const columnCount = columns.length;
+
 
   return <Box
     // as={Reorder.Item}
-    key={card.toString()}
-    value={card}
+    key={title.toString()}
+    value={title}
     borderRadius="sm"
     minHeight="4rem"
     listStyleType={"none"}
@@ -21,9 +24,19 @@ export const KanbanCard = (props) => {
       borderColor: "background.floor"
     }}
   >
-    <Text>{card}</Text>
+
+    <Text>{title}</Text>
+  {(columnIndex > 0) &&
+    <Button value="left" onClick={(e) => {
+      onUpdateStatusClick(id, columns[columnIndex-1])
+    }}>←</Button>}
+  {(columnIndex < (columnCount - 1)) &&
+    <Button value="right" onClick={(e) =>
+      onUpdateStatusClick(id, columns[columnIndex+1])
+    }>→</Button>}
   </Box>;
 }
+
 
 export const KanbanColumn = (props) => {
   const { name, children } = props;
@@ -49,10 +62,6 @@ export const KanbanColumn = (props) => {
     </Box>
   );
 }
-
-        // {<!--items.map((card) => (
-        //   <KanbanCard key={card.toString()} card={card} isSelected={false} />
-        // ))-->}
 
 export const KanbanSwimlane = (props) => {
   const { name, children } = props;
@@ -95,28 +104,44 @@ export const ExampleKanban = () => {
 }
 
 export const AddCardButton = (props) => {
-  const { children, column, project } = props
-  return <Button size={"sm"} variant={"ghost"} fontWeight={"light"}
-    onClick={() => console.log("Yeet", column, project)}>
+  const { children, column, project, onAddNewCardClick } = props
+  return <Button size={"sm"} variant={"ghost"} fontWeight={"light"} onClick={() =>
+    onAddNewCardClick(project, column)
+    }>
     + New
   </Button>
 };
 
+export const AddColumnButton = (props) => {
+  const { children, } = props
+  return <Button size={"sm"} variant={"ghost"} fontWeight={"light"} onClick={() => console.log("TODO: new column")}>
+    + New Column
+  </Button>
+};
+
+export const AddSwimlaneButton = (props) => {
+  const { children, } = props
+  return <Button size={"sm"} variant={"ghost"} fontWeight={"light"} onClick={() => console.log("TODO: new swimlane")}>
+    + New Swimlane
+  </Button>
+};
+
 export const ExampleKanban2 = (props) => {
-  const { boardData, columns } = props;
+  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick  } = props;
   return <KanbanBoard name="Task Board">
     {Object.entries(boardData).map(([project, y]) =>
       <KanbanSwimlane name={project}>
-        {columns.map(column =>
-          <KanbanColumn name={column}>
-          {y[column] &&  y[column].map(({id, title, status, assignee, project}) =>
-            <KanbanCard key={id} card={title} />
-            )}
-          <AddCardButton column={column} project={project} />
-          </KanbanColumn>
+      {columns.map(column =>
+        <KanbanColumn name={column}>
+        {y[column] &&  y[column].map(({ ...props}) =>
+          <KanbanCard columns={columns} {...props} onUpdateStatusClick={onUpdateStatusClick} />
           )}
-
+        <AddCardButton column={column} project={project} onAddNewCardClick={onAddNewCardClick} />
+        </KanbanColumn>
+        )}
+        <AddColumnButton />
       </KanbanSwimlane>
     )}
+      <AddSwimlaneButton/>
   </KanbanBoard>
 }
