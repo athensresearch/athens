@@ -51,7 +51,8 @@
 
 (defn new-card
   [project column]
-  (let [evt (->> (athens.common-events.bfs/internal-representation->atomic-ops
+  (let [parent-of-new-block (:title (dates/get-day)) ;; for now, just create a new block on today's daily notes
+        evt (->> (athens.common-events.bfs/internal-representation->atomic-ops
                   @athens.db/dsdb
                   [#:block{:uid    (athens.common.utils/gen-block-uid)
                            :string "Untitled"
@@ -61,10 +62,8 @@
                             "status" #:block{:string column
                                              :uid    (athens.common.utils/gen-block-uid)}
                             "project" #:block{:string project
-                                              :uid    (athens.common.utils/gen-block-uid)} }
-                           }]
-                  {#_#_:block/uid "49bdef200"
-                   :page/title "June 25, 2022"
+                                              :uid    (athens.common.utils/gen-block-uid)}}}]
+                  {:page/title parent-of-new-block
                    :relation  :last})
                  (athens.common-events.graph.composite/make-consequence-op {:op/type :new-type})
                  athens.common-events/build-atomic-event)]
