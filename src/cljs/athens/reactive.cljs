@@ -90,21 +90,6 @@
        vec
        rseq))
 
-(get-reactive-linked-properties 104) ;; type
-(get-reactive-linked-properties 108) ;; athens/task
-
-(defn get-reactive-refs
-  []
-  @(p/q '[:find ?eid
-         :where
-         [?eid :block/key ?k]
-         [?eid :block/refs ?p]
-         [?k :node/title "type"]
-         [?p :node/title "athens/task"]]
-       athens.db/dsdb))
-
-;; (get-reactive-refs [:node/title "type"] [:node/title "athens/task"]) ;; athens/task
-
 
 (def recursive-properties-document-pull-vector
   '[{:block/_property-of [:block/uid :block/string :block/order :block/refs
@@ -159,9 +144,41 @@
        (sort-by first)))
 
 
+
 (defntrace get-reactive-block-or-page-by-uid
   [uid]
   @(p/pull db/dsdb '[:node/title :block/string :db/id] [:block/uid uid]))
+
+
+(defn get-reactive-instances-of-key-value
+  "Find all blocks that have key-value matching where
+  key is a string and value is a string, then find that property block's parent."
+  [k v]
+  (->> @(p/q '[:find [?parent ...]
+               :in $ ?key ?value
+               :where
+               [?eid :block/key ?k]
+               [?eid :block/refs ?p]
+               [?k :node/title ?key]
+               [?p :node/title ?value]
+               [?eid :block/property-of ?parent]]
+             athens.db/dsdb k v)
+       (mapv get-reactive-block-document)))
+
+
+;; (get-reactive-instances-of-key-value "type" "athens/task") ;; athens/task
+
+
+;; (d/q '[:find [ (pull ?parent [*]  ) ...]
+;;        :in $  ?key ?value
+;;        :where
+;;        [?eid :block/key ?k]
+;;        [?eid :block/refs ?p]
+;;        [?k :node/title ?key]
+;;        [?p :node/title ?value]
+;;        [?eid :block/property-of ?parent]]
+;;      @athens.db/dsdb "type" "athens/task")
+
 
 
 (comment

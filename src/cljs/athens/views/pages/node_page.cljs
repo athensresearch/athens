@@ -20,6 +20,7 @@
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.hoc.perf-mon :as perf-mon]
+    [athens.views.query :as query]
     [clojure.string :as str]
     [datascript.core :as d]
     [komponentit.autosize :as autosize]
@@ -413,31 +414,15 @@
                                           "Link"]))}
                [ref-comp block]]))]))]))
 
+;; (reactive/get-reactive-refs "type" "athens/task")
+;; [103 107 115 144 162]
+
 (defn query-el
   [title]
   (let [linked-props (wrap-span-no-new-tx "query-el"
-                                          (reactive/get-reactive-refs))]
-    (when (not-empty linked-props)
-      [:> PageReferences {:count (count linked-props)
-                          :title "Instantiations"
-                          :defaultIsOpen (> 10 (count linked-props))}
-       (doall
-         (for [[group-title group] linked-props]
-           [:> ReferenceGroup {:key (str "group-" group-title)
-                               :title group-title
-                               :onClickTitle (fn [e]
-                                               (let [shift?       (.-shiftKey e)
-                                                     parsed-title (parse-renderer/parse-title group-title)]
-                                                 (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
-                                                                                      :target :page
-                                                                                      :pane   (if shift?
-                                                                                                :right-pane
-                                                                                                :main-pane)}])
-                                                 (router/navigate-page parsed-title e)))}
-            (doall
-              (for [block group]
-                [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
-                 [ref-comp block]]))]))])))
+                                          (reactive/get-reactive-instances-of-key-value "type" title))]
+    [:div
+     [query/query linked-props]]))
 
 
 ;; TODO: where to put page-level link filters?
@@ -527,12 +512,13 @@
          ;; References
          [:> PageFooter
           [:> VStack {:spacing 2 :py 4 :align "stretch"}
+           [perf-mon/hoc-perfmon-no-new-tx {:span-name "query"}
+            [query-el title]]
            [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
             [linked-ref-el title]]
            [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-prop-el"}
             [linked-prop-el title]]
-           [perf-mon/hoc-perfmon-no-new-tx {:span-name "query"}
-            [query-el title]]
+
            (when-not on-daily-notes?
              [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
               [unlinked-ref-el state unlinked-refs title]])]]]))))
