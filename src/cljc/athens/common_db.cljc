@@ -633,13 +633,6 @@
        (d/pull-many db all-blocks-pull-vector)))
 
 
-(defn get-all-blocks-that-have-properties
-  [db]
-  (->> (get-all-blocks db)
-       (filter :block/_property-of)
-       (map #(get-block-document db [:block/uid (:block/uid %)]))))
-
-
 (defn get-all-blocks-of-type
   [db block-type]
   (->> (get-all-blocks db)
@@ -648,8 +641,6 @@
        (filter (fn [x] (= (get-in x [:block/properties "type" :block/string])
                          block-type)))))
 
-
-;; (get-all-blocks-of-type @athens.db/dsdb "[[athens/task]]")
 
 
 (defn compat-position

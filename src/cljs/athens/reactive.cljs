@@ -90,6 +90,21 @@
        vec
        rseq))
 
+(get-reactive-linked-properties 104) ;; type
+(get-reactive-linked-properties 108) ;; athens/task
+
+(defn get-reactive-refs
+  []
+  @(p/q '[:find ?eid
+         :where
+         [?eid :block/key ?k]
+         [?eid :block/refs ?p]
+         [?k :node/title "type"]
+         [?p :node/title "athens/task"]]
+       athens.db/dsdb))
+
+;; (get-reactive-refs [:node/title "type"] [:node/title "athens/task"]) ;; athens/task
+
 
 (def recursive-properties-document-pull-vector
   '[{:block/_property-of [:block/uid :block/string :block/order :block/refs

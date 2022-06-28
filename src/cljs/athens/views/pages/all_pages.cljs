@@ -73,24 +73,6 @@
        :dispatch [:posthog/report-feature :all-pages]})))
 
 
-;; types
-    ;; everything
-    ;; pages
-    ;; blocks
-    ;; daily notes
-    ;; URLs
-    ;; emojis
-    ;; tweets
-;; properties
-    ;; title
-    ;; string
-    ;; creation time
-;; view
-    ;;  table
-    ;;  gallery
-    ;;  outliner
-;;  Options
-
 (defn reshape-block-into-task
   [block]
   (let [{:keys [block/uid block/string block/properties]} block
@@ -114,38 +96,12 @@
   (map reshape-block-into-task blocks))
 
 
-;; (defn group)
-(def a [["A" 2011 "Dan"]
-        ["A" 2011 "Jon"]
-        ["A" 2010 "Tim"]
-        ["B" 2009 "Tom"] ])
-
-(into {} (for [[k v] (group-by first a)]
-                  [k (group-by second v)]))
-
-
 (defn group-by-swimlane
   [kw columns]
   (into (hash-map)
         (map (fn [[k v]]
                [k (group-by kw v)])
              columns)))
-
-
-(def tmp-data
-  (let [entity-type "[[athens/task]]"
-        columns :project
-        swimlanes :status]
-    (->> (common-db/get-all-blocks-of-type @athens.db/dsdb entity-type)
-         blocks-to-tasks
-         (group-by :project)
-         (group-by-swimlane :status))))
-
-(defn new-task
-  "Column might be a progress state like #{todo, doing done}
-  Swimlane might be a project."
-  [column swimlane]
-  ())
 
 
 (defn new-card
@@ -158,10 +114,9 @@
                            {"type" #:block{:string "[[athens/task]]"
                                            :uid    (athens.common.utils/gen-block-uid)}
                             "status" #:block{:string column
-                                           :uid    (athens.common.utils/gen-block-uid)}
+                                             :uid    (athens.common.utils/gen-block-uid)}
                             "project" #:block{:string project
-
-                                           :uid    (athens.common.utils/gen-block-uid)} }
+                                              :uid    (athens.common.utils/gen-block-uid)} }
                            }]
                   {#_#_:block/uid "49bdef200"
                    :page/title "June 25, 2022"
@@ -170,20 +125,6 @@
                  athens.common-events/build-atomic-event)]
     (re-frame.core/dispatch [:resolve-transact-forward evt])))
 
-                            ;; ":task/title"               #:block{:string title
-                            ;;                                     :uid    (common.utils/gen-block-uid)}
-                            ;; ":task/description"         #:block{:string description
-                            ;;                                     :uid  (common.utils/gen-block-uid)}
-                            ;; ":task/priority"            #:block{:string priority
-                            ;;                                     :uid (common.utils/gen-block-uid)}
-                            ;; ":task/creator"             #:block{:string creator
-                            ;;                                     :uid (common.utils/gen-block-uid)}
-                            ;; ":task/assignee"            #:block{:string assignee
-                            ;;                                     :uid (common.utils/gen-block-uid)}
-                            ;; ":task/due-date"            #:block{:string due-date
-                            ;;                                     :uid (common.utils/gen-block-uid)}
-                            ;; ":task/status"              #:block{:string status
-                            ;;                                     :uid (common.utils/gen-block-uid)}
 
 (defn update-status
   ""
@@ -192,161 +133,58 @@
                 (fn [db prop-uid]
                  [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
+;; {:tasks {:title "Tasks"
+;;          :query-fn #(->> (common-db/get-all-blocks-of-type @db/dsdb "[[athens/task]]"))}}
 
-(defn map-types
-  [t coll]
-  (map #(assoc % :entity-type t) coll))
+;; needs to react when query updates
+;; needs to update when children update
 
+(def tmp-data
+  (let [entity-type "[[athens/task]]"
+        columns :project
+        swimlanes :status]
+    (->> (common-db/get-all-blocks-of-type @athens.db/dsdb entity-type)
+         blocks-to-tasks
+         (group-by :project)
+         (group-by-swimlane :status))))
 
-(def entity-map
-  {:pages {:title "Pages"
-           :query-fn (fn []
-                       (->>
-                        (common-db/get-all-pages @db/dsdb)
-                        (filter #(not (athens.dates.is-daily-note (:block/uid %))))
-                        (map-types :page)))}
-   :daily-notes {:title "Daily Notes"
-                 :query-fn (fn []
-                             (->> (common-db/get-all-pages  @db/dsdb)
-                                  (filter #(athens.dates.is-daily-note (:block/uid %)))
-                                  (map-types :daily-note)))}
-   :blocks {:title "Blocks"
-            :query-fn  (fn []
-                         (->> (common-db/get-all-blocks @db/dsdb)
-                              (map-types :block)))}
-   :tweets {:title "Tweets"
-                :query-fn #(->> (common-db/get-all-blocks @db/dsdb)
-                                (filter (fn [{:keys [block/string]} x]
-                                          (re-find #"https://twitter.com/\w+/status/\d+" string)))
-                                (map-types :tweet))}
-   :tasks {:title "Tasks"
-           :query-fn #(->> (common-db/get-all-blocks-of-type @db/dsdb "[[athens/task]]"))}
-   #_#_:templates {:title "Templates"}
-   :urls {:title "URLs"
-          :query-fn #() #_(->> (common-db/get-all-blocks @db/dsdb)
-                               (filter (fn [{:keys [block/string]} x]
-                                         (when (re-find #"" string)))))}})
+(common-db/get-all-blocks-of-type @db/dsdb "[[athens-task]]")
+
 
 (defn page
   []
-  (let [checked-types     (-> (keys entity-map)
-                              (zipmap (repeat false))
-                              (merge {:tasks true})
-                              (r/atom))
-        query-view (r/atom "board")]
+  (let []
     (fn []
-      (let [count-checked (-> @checked-types vals frequencies (get true))
-            all-checked             (and (pos? count-checked)
-                                         (= (count @checked-types) count-checked))
-            handle-click-everything (fn []
-                                      (if all-checked
-                                        (reset! checked-types {:pages false :blocks false :daily-notes false})
-                                        (reset! checked-types {:pages true :blocks true :daily-notes true})))
-            properties ["UID" "Title" "String" "Links Count" "Modified" "Created"]
-            entities          (->> @checked-types
-                                   (map (fn [[k v]]
-                                          (if v
-                                            ((get-in entity-map [k :query-fn]))
-                                            [])))
-                                   flatten)]
-
-        [:> Box {:margin-top "40px"}
-         #_[:h1 (str @entities)]
-
-         [:> Box
-
-          [:> Stack {:spacing 10 :direction "column" :padding-left 5 :padding-bottom 10}
-           [:> Stack {:spacing 10 :direction "row" :colorScheme "blue"}
-            [:> Text {:as "u" :width 300} "Entities"]
-            [:> Checkbox {:is-checked all-checked :on-change handle-click-everything} "All entities"]
-            (doall
-             (for [[k v] entity-map]
-               [:> Checkbox {:key k
-                             :is-checked (k @checked-types)
-                             :on-change  (fn [e] (swap! checked-types assoc k (.. e -target -checked)))}
-                ( :title v )]))]
-
-           [:> Stack {:spacing 10 :direction "row" :colorScheme "blue"}
-            [:> Text {:as "u" :width 300} "Properties"]
-            [:> Checkbox {} ""]]
-
-           [:> RadioGroup {:defaultValue @query-view :on-change #(reset! query-view %)}
-            [:> Stack {:spacing 10 :direction "row" :colorScheme "blue"}
-             [:> Text {:as "u" :width 300} "Views"]
-             [:> Radio {:value "table"} "Table"]
-             [:> Radio {:value "gallery" :on-click #()} "Gallery"]
-             [:> Radio {:value "board" :on-click #()} "Board"]]]]]
-
-         ;; how do we dynamically show propertis
-         (case @query-view
-           "board"
-           [:> ExampleKanban2 {:boardData tmp-data
-                               ;; store column order here
-                               :columns [ "done" "todo" "doing"]
-                               :onUpdateStatusClick update-status
-                               :onAddNewCardClick new-card
-                               :onAddNewColumnClick (fn [])
-                               :onAddNewProjectClick (fn [])} ]
-           #_[:> KanbanBoard {:tasks (blocks-to-columns entities)}]
-
-           "gallery"
-           [:> SimpleGrid {:columns 4 :spacing 10}
-            (doall
-             (for [{:keys [:block/string :entity-type :node/title :block/uid :block/children]} entities
-                   :let []]
-               (case entity-type
-                 ;; add cover image
-                 ;; add preview of block children
-                 :page  [(r/adapt-react-class Box) {:borderWidth "1px" :borderRadius "lg"}
-                         [:> Heading {:color "blue"} title]
-                         [:> Text (str children)]]
-                 :block [(r/adapt-react-class Box) {:borderWidth "1px" :borderRadius "lg"}
-                         [:> Text {} string]]
-                 :tweet [:> TwitterTweetEmbed {:tweetId (->> string
-                                                             (re-find #"https://twitter.com/\w+/status/(\d+)")
-                                                             second)}]
-                 [(r/adapt-react-class Box) {:borderWidth "1px" :borderRadius "lg"}
-                  [:> Text {} string]])))]
-
-           "table"
-           [:> TableContainer {:margin-top "30px"}
-            [:> Table {:variant "striped"}
-             [:> Thead
-              [:> Tr
-               (for [p properties]
-                 [:> Th {:key p} p])]]
-             [:> Tbody
-              (for [{:keys [:node/title :block/_refs :block/string :block/uid]
-                     create-time :create/time edit-time :edit/time} entities]
-                [:> Tr {:key uid}
-                 [:> Td uid]
-                 [:> Td [:> Text {:max-width "600px" :noOfLines 1} title]]
-                 [:> Td [:> Text {:max-width "600px" :noOfLines 1} string]]
-                 [:> Td (count _refs)]
-                 [:> Td create-time]
-                 [:> Td edit-time]]
-                )]]])])))
+      (let []
+        [:> Box {:margin-top "40px" :width "100%"}
+         [:> ExampleKanban2 {:boardData tmp-data
+                             ;; store column order here
+                             :columns [ "done" "todo" "doing"]
+                             :onUpdateStatusClick update-status
+                             :onAddNewCardClick new-card
+                             :onAddNewColumnClick (fn [])
+                             :onAddNewProjectClick (fn [])} ]]))))
 
 
-  #_(defn page
-      []
-      (let [all-pages (common-db/get-all-pages @db/dsdb)]
-        (fn []
-          (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
-            [:> AllPagesTable {:sortedPages (clj->js sorted-pages :keyword-fn str)
-                               :sortedBy @(rf/subscribe [:all-pages/sorted-by])
-                               :dateFormatFn #(dates/date-string %)
-                               :sortDirection (if @(rf/subscribe [:all-pages/sort-order-ascending?]) "asc" "desc")
-                               :onClickSort #(rf/dispatch [:all-pages/sort-by (cond
-                                                                                (= % "title") :title
-                                                                                (= % "links-count") :links-count
-                                                                                (= % "modified") :modified
-                                                                                (= % "created") :created)])
-                               :onClickItem (fn [e title]
-                                              (let [shift? (.-shiftKey e)]
-                                                (rf/dispatch [:reporting/navigation {:source :all-pages
-                                                                                     :target :page
-                                                                                     :pane   (if shift?
-                                                                                               :right-pane
-                                                                                               :main-pane)}])
-                                                (router/navigate-page title e)))}])))))
+;; (defn page
+;;   []
+;;   (let [all-pages (common-db/get-all-pages @db/dsdb)]
+;;     (fn []
+;;       (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
+;;         [:> AllPagesTable {:sortedPages (clj->js sorted-pages :keyword-fn str)
+;;                            :sortedBy @(rf/subscribe [:all-pages/sorted-by])
+;;                            :dateFormatFn #(dates/date-string %)
+;;                            :sortDirection (if @(rf/subscribe [:all-pages/sort-order-ascending?]) "asc" "desc")
+;;                            :onClickSort #(rf/dispatch [:all-pages/sort-by (cond
+;;                                                                             (= % "title") :title
+;;                                                                             (= % "links-count") :links-count
+;;                                                                             (= % "modified") :modified
+;;                                                                             (= % "created") :created)])
+;;                            :onClickItem (fn [e title]
+;;                                           (let [shift? (.-shiftKey e)]
+;;                                             (rf/dispatch [:reporting/navigation {:source :all-pages
+;;                                                                                  :target :page
+;;                                                                                  :pane   (if shift?
+;;                                                                                            :right-pane
+;;                                                                                            :main-pane)}])
+;;                                             (router/navigate-page title e)))}]))))
