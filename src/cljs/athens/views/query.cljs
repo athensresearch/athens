@@ -135,7 +135,7 @@
   [{:keys [query-layout uid]}]
   (let []
     [:> Box
-     [:> Heading {:size "sm"} "Layout"]
+     ;; [:> Heading {:size "sm"} "Layout"]
      [:> ButtonGroup
       (for [x ["table" "list" "board"]]
         [:> Button {:value x
@@ -153,8 +153,8 @@
         query-layout (get-query-layout properties)
         property-keys (keys (first query-data))]
 
-    [:> Box {:width "100%" :border "1px" :borderColor "gray"
-             :padding-left 38}
+    [:> Box {:width "100%" #_#_:border "1px" :borderColor "gray"
+             :padding-left 38 :padding-top 15}
      [options {:query-data query-data
                :query-layout query-layout
                :property-keys property-keys

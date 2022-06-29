@@ -127,8 +127,8 @@ export const AddSwimlaneButton = (props) => {
 };
 
 export const ExampleKanban2 = (props) => {
-  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick  } = props;
-  return <KanbanBoard name="Task Board">
+  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick, name  } = props;
+  return <KanbanBoard name={name}>
     {Object.entries(boardData).map(([project, y]) =>
       <KanbanSwimlane name={project}>
       {columns.map(column =>
