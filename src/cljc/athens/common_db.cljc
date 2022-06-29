@@ -50,7 +50,7 @@
   {:time/ts     {:db/unique :db.unique/identity}
    :time/create {:db/cardinality :db.cardinality/one
                  :db/valueType   :db.type/ref}
-   :time/edit   {:db/cardinality :db.cardinality/one
+   :time/edits  {:db/cardinality :db.cardinality/many
                  :db/valueType   :db.type/ref}})
 
 
@@ -576,7 +576,7 @@
                                 has-descendants? (into retract-kids)
                                 has-asserts?     (into asserts)
                                 parent-uid       (conj {:block/uid parent-uid
-                                                        :time/edit time-ref})
+                                                        :time/edits time-ref})
                                 true             (conj retract-entity))]
     txs))
 

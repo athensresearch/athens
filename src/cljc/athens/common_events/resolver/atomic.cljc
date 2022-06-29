@@ -24,7 +24,7 @@
                                       :block/string ""
                                       :block/open   true
                                       :time/create  time-ref
-                                      :time/edit    time-ref}
+                                      :time/edits   time-ref}
         position-tx                  (condp = (position/position-type position)
                                        :child    (position/add-child db uid position time-ref)
                                        :property (position/add-property db uid position time-ref))
@@ -39,7 +39,7 @@
         time-ref {:time/ts time}]
     [{:block/uid    uid
       :block/string string
-      :time/edit    time-ref}]))
+      :time/edits   time-ref}]))
 
 
 (defmethod resolve-atomic-op-to-tx :block/open
@@ -56,7 +56,7 @@
       (let [time-ref      {:time/ts time}
             updated-block {:block/uid  uid
                            :block/open open?
-                           :time/edit  time-ref}]
+                           :time/edits time-ref}]
         [updated-block]))))
 
 
@@ -74,7 +74,7 @@
         new-position-type            (position/position-type position)
         time-ref                     {:time/ts time}
         updated-block'               {:block/uid uid
-                                      :time/edit time-ref}
+                                      :time/edits time-ref}
         position-tx                  (condp = [old-position-type new-position-type]
                                        [:child :child]
                                        (if same-parent?
@@ -144,7 +144,7 @@
                               :block/uid      page-uid
                               :block/children []
                               :time/create    time-ref
-                              :time/edit      time-ref}
+                              :time/edits     time-ref}
         txs                  (if page-exists?
                                []
                                [page])]
@@ -165,7 +165,7 @@
         updated-page       (when page-exists?
                              {:db/id      [:block/uid (:block/uid page)]
                               :node/title new-name
-                              :time/edit  time-ref})
+                              :time/edits time-ref})
         txs                (concat [updated-page] new-linked-refs)]
     (if page-exists?
       txs
