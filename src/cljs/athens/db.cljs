@@ -623,6 +623,17 @@
             blocks))
 
 
+(defn eids->groups
+  [eids]
+  (->> eids
+       merge-parents-and-block
+       group-by-parent
+       (sort-by #(-> % first second))
+       (map #(vector (ffirst %) (second %)))
+       vec
+       rseq))
+
+
 (defntrace get-unlinked-references
   "For node-page references UI."
   [title]
