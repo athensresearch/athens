@@ -355,7 +355,8 @@
 (defntrace get-parents-recursively
   [id]
   (when (d/entity @dsdb id)
-    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time
+    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string
+                         {:time/edits [:time/ts]}
                          {:block/property-of ...}
                          {:block/_children ...}]
                  id)
@@ -618,7 +619,7 @@
               (let [parent (-> x
                                :block/parents
                                first)]
-                [(:node/title parent) (:edit/time parent 0)]))
+                [(:node/title parent) (->> parent :time/edits (map :time/ts) sort last (or 0))]))
             blocks))
 
 

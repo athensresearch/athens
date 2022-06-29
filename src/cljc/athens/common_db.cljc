@@ -621,7 +621,9 @@
 
 
 (def all-pages-pull-vector
-  [:block/uid :node/title :edit/time :create/time
+  [:block/uid :node/title
+   {:time/edits [:time/ts]}
+   {:time/create [:time/ts]}
    ;; Get all block refs, we need them to count totals.
    ;; Without specifying a limit pull will only return first 1000.
    ;; https://docs.datomic.com/on-prem/query/pull.html#limit-option

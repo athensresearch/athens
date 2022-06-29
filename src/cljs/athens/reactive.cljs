@@ -127,7 +127,8 @@
 
 (defntrace get-reactive-parents-recursively
   [id]
-  (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string :edit/time
+  (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string
+                          {:time/edits [:time/ts]}
                           {:block/property-of ...}
                           {:block/_children ...}]
                 id)
