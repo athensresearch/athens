@@ -422,7 +422,7 @@
   (let [instances (wrap-span-no-new-tx "query-el"
                                           (reactive/get-reactive-instances-of-key-value "type" title))]
     (when (pos? (count instances))
-      [query/query instances])))
+      [query/query {:query-data instances}])))
 
 
 ;; TODO: where to put page-level link filters?

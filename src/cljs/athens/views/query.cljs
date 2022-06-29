@@ -2,6 +2,7 @@
   (:require
    ["/components/Board/Board" :refer [KanbanBoard]]
    ["/components/KanbanBoard/KanbanBoard" :refer [ExampleKanban ExampleKanban2 #_KanbanBoard]]
+   ["/components/Table/Table" :refer [QueryTable]]
    ["@chakra-ui/react" :refer [Box
                                Button
                                Stack
@@ -18,28 +19,19 @@
 
 
 
-(defn reshape-block-into-task
+(defn block-to-flat-map
   [block]
   (let [{:keys [block/uid block/string block/properties]} block
-        {:strs [status assignee project]} properties
-        assignee-str (:block/string assignee)
-        status-str (:block/string status)
-        project-str (:block/string project)]
-    {:id uid :title string :status status-str :assignee assignee-str :project project-str}))
+        property-keys (keys properties)
+        props-map (reduce (fn [acc prop-key]
+                            (assoc acc (keyword prop-key) (get-in properties [prop-key :block/string])))
+                          {}
+                          property-keys)]
+    (merge {:id uid :title string} props-map)))
 
 (defn organize-into-columns
   [tasks]
   (group-by :status tasks))
-
-(defn blocks-to-columns
-  [blocks]
-  (->> (map reshape-block-into-task blocks)
-       organize-into-columns))
-
-(defn blocks-to-tasks
-  [blocks]
-  (map reshape-block-into-task blocks))
-
 
 (defn group-by-swimlane
   [kw columns]
@@ -78,32 +70,60 @@
                  [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
 
-;; (def tmp-data
-;;   (let [entity-type "[[athens/task]]"
-;;         columns :project
-;;         swimlanes :status]
-;;     (->> (common-db/get-all-blocks-of-type @athens.db/dsdb entity-type)
-;;          blocks-to-tasks
-;;          (group-by :project)
-;;          (group-by-swimlane :status))))
-
-;; (athens.reactive/get-reactive-instances-of-key-value "type" "athens/task")
-
 (defn query
-  [query-data]
-  (let [organized-data (->> query-data
-                            blocks-to-tasks
-                            (group-by :project)
-                            (group-by-swimlane :status))]
+  [{:keys [query-data query-layout]}]
+  (let []
+    (prn query-data)
     [:> Box {:margin-top "40px" :width "100%"}
-     [:> ExampleKanban2 {:boardData organized-data
-                         ;; store column order here
-                         :columns ["todo" "doing" "done"]
-                         :onUpdateStatusClick update-status
-                         :onAddNewCardClick new-card
-                         :onRenameCard (fn [])
-                         :onRenameColumn (fn [])
-                         :onClickCard (fn [])
-                         :onShiftClickCard (fn [])
-                         :onAddNewColumnClick (fn [])
-                         :onAddNewProjectClick (fn [])} ]]))
+     (case query-layout
+       "board"
+       [:> ExampleKanban2 {:boardData (->> query-data
+                                           ;; TODO: parameterize group-by's
+                                           (group-by :project)
+                                           (group-by-swimlane :status))
+                           ;; store column order here
+                           :columns ["todo" "doing" "done"]
+                           :onUpdateStatusClick update-status
+                           :onAddNewCardClick new-card
+                           :onRenameCard (fn [])
+                           :onRenameColumn (fn [])
+                           :onClickCard (fn [])
+                           :onShiftClickCard (fn [])
+                           :onAddNewColumnClick (fn [])
+                           :onAddNewProjectClick (fn [])} ]
+
+       [:> QueryTable {:data query-data
+                       :columns (keys (first query-data))}])]))
+
+
+(defn get-query-types
+  "Could either be 1-arity (just block/string) or multi-arity (multiple children).
+
+  XXX: to make multi-arity, look at block/children of \"query/types\"
+  TODO: what happens if a user enters in multiple refs in a block/string? Should have some sort of schema enforcement, such as 1 ref per block to avoid confusion
+
+  "
+  [properties]
+  ;; not using :block/string, because i want the node/title without having to do some reg-ex
+  ;; (get-in props ["query/types" :block/string])
+  (->> (get-in properties ["query/types" :block/refs 0 :db/id])
+       (datascript.core/entity @athens.db/dsdb)
+       :node/title))
+
+(defn get-query-layout
+  [properties]
+  (->> (get-in properties ["query/layout" :block/string])))
+
+
+(defn query-block
+  [block-data properties]
+  (let [query-types (get-query-types properties)
+        ;; TODO: how to handle querying for multiple types?
+        query-data (->> (athens.reactive/get-reactive-instances-of-key-value "type" query-types)
+                        (map block-to-flat-map))
+        query-layout (get-query-layout properties)]
+
+    [:> Box {:width "100%" :border "1px" :borderColor "gray"
+             :padding-left 38}
+     [query {:query-data query-data
+             :query-layout query-layout}]]))
