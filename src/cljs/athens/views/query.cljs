@@ -3,8 +3,12 @@
    ["/components/Board/Board" :refer [KanbanBoard]]
    ["/components/KanbanBoard/KanbanBoard" :refer [ExampleKanban ExampleKanban2 #_KanbanBoard]]
    ["/components/Table/Table" :refer [QueryTable]]
+   ;; ["/components/List/List" :refer [QueryList]]
    ["@chakra-ui/react" :refer [Box
                                Button
+                               ButtonGroup
+                               ListItem
+                               UnorderedList
                                Stack
                                Text
                                Heading]]
@@ -69,13 +73,26 @@
                 (fn [db prop-uid]
                  [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
+(defn update-layout
+  [id new-layout]
+  (rf/dispatch [:properties/update-in [:block/uid id] ["query/layout"]
+                (fn [db prop-uid]
+                  [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
+
 
 (defn query
-  [{:keys [query-data query-layout]}]
+  [{:keys [query-data query-layout property-keys]}]
   (let []
     (prn query-data)
     [:> Box {:margin-top "40px" :width "100%"}
      (case query-layout
+       "list"
+       [:> UnorderedList
+        (for [x query-data]
+          [:> ListItem {:display "flex" :justify-content "space-between"}
+           [:> Text (:title x)]
+           [:> Text (:status x)]])]
+
        "board"
        [:> ExampleKanban2 {:boardData (->> query-data
                                            ;; TODO: parameterize group-by's
@@ -93,7 +110,7 @@
                            :onAddNewProjectClick (fn [])} ]
 
        [:> QueryTable {:data query-data
-                       :columns (keys (first query-data))}])]))
+                       :columns property-keys}])]))
 
 
 (defn get-query-types
@@ -114,6 +131,18 @@
   [properties]
   (->> (get-in properties ["query/layout" :block/string])))
 
+(defn options
+  [{:keys [query-layout uid]}]
+  (let []
+    [:> Box
+     [:> Heading {:size "sm"} "Layout"]
+     [:> ButtonGroup
+      (for [x ["table" "list" "board"]]
+        [:> Button {:value x
+                    :onClick (fn [e]
+                               (update-layout uid x))
+                    :isActive (or (= query-layout x))}
+         (clojure.string/capitalize x)])]]))
 
 (defn query-block
   [block-data properties]
@@ -121,9 +150,15 @@
         ;; TODO: how to handle querying for multiple types?
         query-data (->> (athens.reactive/get-reactive-instances-of-key-value "type" query-types)
                         (map block-to-flat-map))
-        query-layout (get-query-layout properties)]
+        query-layout (get-query-layout properties)
+        property-keys (keys (first query-data))]
 
     [:> Box {:width "100%" :border "1px" :borderColor "gray"
              :padding-left 38}
+     [options {:query-data query-data
+               :query-layout query-layout
+               :property-keys property-keys
+               :uid (:block/uid block-data)}]
      [query {:query-data query-data
-             :query-layout query-layout}]]))
+             :query-layout query-layout
+             :property-keys property-keys}]]))
