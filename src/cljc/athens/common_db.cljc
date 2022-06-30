@@ -757,6 +757,19 @@
   (concat children properties))
 
 
+(defn time-range
+  [db eid]
+  (let [all-times (->> (d/pull db '[{:time/edits [:time/ts]}
+                                    {:block/children ...}
+                                    {:block/_property-of ...}]
+                               eid)
+                       (tree-seq has-descendants? descendants)
+                       (mapcat :time/edits)
+                       (map :time/ts)
+                       sort)]
+    [(first all-times) (last all-times)]))
+
+
 (defn extract-tag-values
   "Extracts `tag` values from `children-fn` children with `extractor-fn` from parser AST."
   [ast tag-selector children-fn extractor-fn]

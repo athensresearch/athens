@@ -3,7 +3,7 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Block/Container" :refer [Container]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon]]
+    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
@@ -16,6 +16,7 @@
     [athens.patterns :as patterns]
     [athens.reactive :as reactive]
     [athens.router :as router]
+    [athens.time-controls :as time-controls]
     [athens.util :refer [get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
@@ -212,7 +213,7 @@
 
 
 (defn menu-dropdown
-  [node daily-note?]
+  [node daily-note? on-daily-notes?]
   (let [{:block/keys [uid] sidebar
          :page/sidebar title
          :node/title} node]
@@ -246,6 +247,19 @@
                       :isDisabled (contains? @(subscribe [:right-sidebar/items]) uid)
                       :icon (r/as-element [:> ArrowRightOnBoxIcon])}
          "Open in Sidebar"]]
+       (when (and (not on-daily-notes?)
+                  (time-controls/enabled?))
+         [:<>
+          [:> MenuItem {:onClick (fn []
+                                   (dispatch [:time/set-page-range title])
+                                   (dispatch [:time/toggle-slider]))
+                        :icon (r/as-element [:> TimeNowIcon])}
+           "Toggle Time Slider"]
+          [:> MenuItem {:onClick (fn []
+                                   (dispatch [:time/set-page-range title])
+                                   (dispatch [:time/toggle-heatmap]))
+                        :icon (r/as-element [:> TimeNowIcon])}
+           "Toggle Time Heatmap"]])
        [:> MenuDivider]
        [:> MenuItem {:icon (r/as-element [:> TrashIcon])
                      :onClick (fn []
@@ -469,9 +483,12 @@
                [parse-renderer/parse-and-render (:title/local @state) uid]])
 
             ;; Dropdown
-            [menu-dropdown node daily-note?]]]]
+            [menu-dropdown node daily-note? on-daily-notes?]]]]
 
          [:> PageBody
+
+          (when-not on-daily-notes?
+            [time-controls/slider title])
 
           (when (and (empty? properties)
                      (empty? children))
