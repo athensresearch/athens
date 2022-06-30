@@ -1,11 +1,12 @@
 (ns athens.views.task.core
   (:require
-    [athens.common-db :as common-db]
-    [athens.common-events :as common-events]
-    [athens.common-events.bfs :as bfs]
+    [athens.common-db                     :as common-db]
+    [athens.common-events                 :as common-events]
+    [athens.common-events.bfs             :as bfs]
     [athens.common-events.graph.composite :as composite]
-    [athens.common.utils :as common.utils]
-    [athens.db :as db]))
+    [athens.common-events.graph.ops       :as graph-ops]
+    [athens.common.utils                  :as common.utils]
+    [athens.db                            :as db]))
 
 
 ;; Create a new task
