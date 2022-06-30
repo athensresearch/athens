@@ -1,6 +1,7 @@
 (ns athens.common-db
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
+  (:refer-clojure :exclude [descendants])
   (:require
     [athens.common.logging    :as log]
     [athens.common.migrations :as migrations]
@@ -744,6 +745,16 @@
         prop                       (:node/title key)
         prop-fragment              (when prop (str ": " prop " - "))]
     (or title (str prop-fragment string))))
+
+
+(defn has-descendants?
+  [{:block/keys [children properties]}]
+  (or children properties))
+
+
+(defn descendants
+  [{:block/keys [children properties]}]
+  (concat children properties))
 
 
 (defn extract-tag-values

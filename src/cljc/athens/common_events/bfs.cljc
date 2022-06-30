@@ -105,23 +105,13 @@
     (concat [] not-save save)))
 
 
-(defn has-descendants?
-  [{:block/keys [children properties]}]
-  (or children properties))
-
-
-(defn descendants
-  [{:block/keys [children properties]}]
-  (concat children properties))
-
-
 (defn internal-representation->atomic-ops
   "Convert internal representation to the vector of atomic operations that would create it.
   :block/save operations are grouped at the end so that any ref'd entities are already created."
   [db internal-representation default-position]
   (->> internal-representation
        enhance-internal-representation
-       (mapcat (partial tree-seq has-descendants? descendants))
+       (mapcat (partial tree-seq common-db/has-descendants? common-db/descendants))
        (map (partial enhanced-internal-representation->atomic-ops db default-position))
        flatten
        distinct
