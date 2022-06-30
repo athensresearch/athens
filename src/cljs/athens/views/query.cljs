@@ -37,12 +37,20 @@
   [tasks]
   (group-by :status tasks))
 
-(defn group-by-swimlane
+(defn nested-group-by
+  "You have to pass the first group"
   [kw columns]
   (into (hash-map)
         (map (fn [[k v]]
                [k (group-by kw v)])
              columns)))
+
+
+(defn group-stuff
+  [g sg items]
+  (->> items
+       (group-by sg)
+       (nested-group-by g)))
 
 
 (defn new-card
@@ -79,12 +87,19 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
 
+;; (let [query-group-by-kw :status
+;;       query-subgroup-by-kw :project
+;;       query-data (->> (athens.reactive/get-reactive-instances-of-key-value "type" "athens/task")
+;;                       (map block-to-flat-map))]
+;;   (if (and query-subgroup-by-kw query-group-by-kw)
+;;     (group-stuff query-group-by-kw query-subgroup-by-kw query-data)
+;;     (group-stuff query-group-by-kw query-data)))
+
 
 (defn query
-  [{:keys [query-data query-layout property-keys]}]
+  [{:keys [query-data query-layout property-keys query-group-by query-subgroup-by]}]
   (let []
-    (prn query-data)
-    [:> Box {:margin-top "40px" :width "100%"}
+    [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case query-layout
        "list"
        [:> UnorderedList
@@ -92,22 +107,30 @@
           [:> ListItem {:display "flex" :justify-content "space-between"}
            [:> Text (:title x)]
            [:> Text (:status x)]])]
-
        "board"
-       [:> ExampleKanban2 {:boardData (->> query-data
-                                           ;; TODO: parameterize group-by's
-                                           (group-by :project)
-                                           (group-by-swimlane :status))
-                           ;; store column order here
-                           :columns ["todo" "doing" "done"]
-                           :onUpdateStatusClick update-status
-                           :onAddNewCardClick new-card
-                           :onRenameCard (fn [])
-                           :onRenameColumn (fn [])
-                           :onClickCard (fn [])
-                           :onShiftClickCard (fn [])
-                           :onAddNewColumnClick (fn [])
-                           :onAddNewProjectClick (fn [])} ]
+       (let [query-group-by-kw (keyword query-group-by)
+             query-subgroup-by-kw (keyword query-subgroup-by)
+             columns (->> (map query-group-by-kw query-data)
+                          set)
+             rows (->> (map query-subgroup-by-kw query-data)
+                            set)
+             boardData (if (and query-subgroup-by-kw query-group-by-kw)
+                         (group-stuff query-group-by-kw query-subgroup-by-kw query-data)
+                         (group-by query-group-by-kw query-data))]
+         (prn "HEY" boardData)
+         [:> ExampleKanban2 {:boardData boardData
+                             ;; store column order here
+                             :columns columns
+                             :hasSubGroup (boolean query-subgroup-by-kw)
+                             :rows rows
+                             :onUpdateStatusClick update-status
+                             :onAddNewCardClick new-card
+                             :onRenameCard (fn [])
+                             :onRenameColumn (fn [])
+                             :onClickCard (fn [])
+                             :onShiftClickCard (fn [])
+                             :onAddNewColumnClick (fn [])
+                             :onAddNewProjectClick (fn [])} ])
 
        [:> QueryTable {:data query-data
                        :columns property-keys}])]))
@@ -144,14 +167,25 @@
                     :isActive (or (= query-layout x))}
          (clojure.string/capitalize x)])]]))
 
+(defn get-query-group-by
+  [properties]
+  (->> (get-in properties ["query/group-by" :block/string])))
+
+(defn get-query-subgroup-by
+  [properties]
+  (->> (get-in properties ["query/subgroup-by" :block/string])))
+
 (defn query-block
+  "TODO: make query component more abstract, so that it can support both pages and blocks."
   [block-data properties]
   (let [query-types (get-query-types properties)
         ;; TODO: how to handle querying for multiple types?
         query-data (->> (athens.reactive/get-reactive-instances-of-key-value "type" query-types)
                         (map block-to-flat-map))
         query-layout (get-query-layout properties)
-        property-keys (keys (first query-data))]
+        property-keys (keys (first query-data))
+        query-group-by (get-query-group-by properties)
+        query-subgroup-by (get-query-subgroup-by properties)]
 
     [:> Box {:width "100%" #_#_:border "1px" :borderColor "gray"
              :padding-left 38 :padding-top 15}
@@ -161,4 +195,6 @@
                :uid (:block/uid block-data)}]
      [query {:query-data query-data
              :query-layout query-layout
-             :property-keys property-keys}]]))
+             :property-keys property-keys
+             :query-group-by query-group-by
+             :query-subgroup-by query-subgroup-by }]]))

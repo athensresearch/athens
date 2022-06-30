@@ -4,8 +4,7 @@ import { Button, Box, Table, Thead, Tbody, Th, Td, Tr } from '@chakra-ui/react';
 
 export const QueryTable = (props) => {
     const { data, columns } = props;
-    console.log(columns)
-    return <Table>
+    return (columns && columns.length > 0 && <Table>
         <Thead>
         <Tr>{columns.map((column) =>
             <Th key={column}>{column}</Th>)}</Tr>
@@ -21,6 +20,7 @@ export const QueryTable = (props) => {
             <Td>{assignee}</Td>
             </Tr>
             )}
-    </Tbody>
+            </Tbody>
         </Table>
+        )
 }

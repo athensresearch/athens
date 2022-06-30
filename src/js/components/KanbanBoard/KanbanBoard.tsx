@@ -7,7 +7,6 @@ export const KanbanCard = (props) => {
   const columnIndex = columns.indexOf(status);
   const columnCount = columns.length;
 
-
   return <Box
     // as={Reorder.Item}
     key={title.toString()}
@@ -36,7 +35,6 @@ export const KanbanCard = (props) => {
     }>→</Button>}
   </Box>;
 }
-
 
 export const KanbanColumn = (props) => {
   const { name, children } = props;
@@ -127,21 +125,37 @@ export const AddSwimlaneButton = (props) => {
 };
 
 export const ExampleKanban2 = (props) => {
-  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick, name  } = props;
-  return <KanbanBoard name={name}>
-    {Object.entries(boardData).map(([project, y]) =>
-      <KanbanSwimlane name={project}>
-      {columns.map(column =>
+  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup } = props;
+  console.log(boardData)
+
+  if (hasSubGroup) {
+    return <KanbanBoard name={name}>
+      {Object.entries(boardData).map(([project, y]) =>
+        <KanbanSwimlane name={project}>
+        {columns.map(column =>
+          <KanbanColumn name={column}>
+          {y[column] &&  y[column].map(({ ...props}) =>
+            <KanbanCard columns={columns} {...props} onUpdateStatusClick={onUpdateStatusClick} />
+            )}
+          <AddCardButton column={column} project={project} onAddNewCardClick={onAddNewCardClick} />
+          </KanbanColumn>
+          )}
+        <AddColumnButton />
+        </KanbanSwimlane>
+        )}
+    {/* <AddSwimlaneButton/> */}
+    </KanbanBoard>
+  } else {
+    return <KanbanBoard name={name}>
+      {Object.entries(boardData).map(([column, y]) =>
         <KanbanColumn name={column}>
-        {y[column] &&  y[column].map(({ ...props}) =>
+        {y && y.map(({ ...props}) =>
           <KanbanCard columns={columns} {...props} onUpdateStatusClick={onUpdateStatusClick} />
           )}
-        <AddCardButton column={column} project={project} onAddNewCardClick={onAddNewCardClick} />
+        <AddCardButton column={column} onAddNewCardClick={onAddNewCardClick} />
         </KanbanColumn>
         )}
-        <AddColumnButton />
-      </KanbanSwimlane>
-    )}
-      <AddSwimlaneButton/>
-  </KanbanBoard>
+    </KanbanBoard>
+  }
+
 }
