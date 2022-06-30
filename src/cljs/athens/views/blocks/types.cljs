@@ -6,32 +6,32 @@
   "Block/Entity Type Protocol for rendering aspects"
 
   (inline-ref-view
-    "Render Block/Entity Type as inline reference"
-    [block-data callbacks with-breadcrumb?])
+    [this block-data callbacks with-breadcrumb?]
+    "Render Block/Entity Type as inline reference")
 
   (outline-view
-    "Render Block/Entity Type as outline representation"
-    [block-data callbacks])
+    [this block-data callbacks]
+    "Render Block/Entity Type as outline representation")
 
   (supported-transclusion-scopes
-    "Returns a set of supported `transclusion-scopes`"
-    [])
+    [this]
+    "Returns a set of supported `transclusion-scopes`")
 
   (transclusion-view
-    "Render Block/Entity Type as transclusion"
-    [block-data callback transclusion-scope])
+    [this block-data callback transclusion-scope]
+    "Render Block/Entity Type as transclusion")
 
   (zoomed-in-view
-    "Render Block/Entity Type as zoomed in"
-    [block-data callbacks])
+    [this block-data callbacks]
+    "Render Block/Entity Type as zoomed in")
 
   (supported-breadcrumb-styles
-    "Returns a set of supported `breadcrumb-styles`"
-    [])
+    [this]
+    "Returns a set of supported `breadcrumb-styles`")
 
   (breadcrumbs-view
-    "Render Block/Entity Type as breadcrumbs"
-    [block-data callbacks breadcrumb-style]))
+    [this block-data callbacks breadcrumb-style]
+    "Render Block/Entity Type as breadcrumbs"))
 
 
 (defmulti block-type->protocol

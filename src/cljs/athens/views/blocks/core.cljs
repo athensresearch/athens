@@ -17,6 +17,7 @@
     [athens.views.blocks.context-menu        :as ctx-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
     [athens.views.blocks.editor              :as editor]
+    [athens.views.blocks.types               :as types]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
     [re-frame.core                           :as rf]
@@ -151,6 +152,149 @@
       (rf/dispatch [::drag.events/cleanup! target-uid]))))
 
 
+(declare block-el)
+
+
+(defrecord DefaultBlockRenderer
+  [linked-ref-data]
+
+  types/BlockTypeProtocol
+
+  (inline-ref-view
+    [_this block-data callback with-breadcrumb?])
+
+
+  (outline-view
+    [_this block-data callbacks]
+    (let [{:keys [linked-ref
+                  initial-open
+                  linked-ref-uid]}     linked-ref-data
+          {:block/keys [uid
+                        original-uid]} block-data
+          local-value                  (r/atom nil)
+          old-value                    (r/atom nil)
+          show-edit?                   (r/atom false)
+          hide-edit-fn                 #(reset! show-edit? false)
+          show-edit-fn                 #(reset! show-edit? true)
+          savep-fn                     (partial db/transact-state-for-uid (or original-uid uid))
+          save-fn                      #(savep-fn @local-value :block-save)
+          idle-fn                      (gfns/debounce #(savep-fn @local-value :autosave)
+                                                      2000)
+          update-fn                    #(reset! local-value %)
+          update-old-fn                #(reset! old-value %)
+          read-value                   (ratom/reaction @local-value)
+          read-old-value               (ratom/reaction @old-value)
+          state-hooks                  {:save-fn        save-fn
+                                        :idle-fn        idle-fn
+                                        :update-fn      update-fn
+                                        :update-old-fn  update-old-fn
+                                        :read-value     read-value
+                                        :read-old-value read-old-value
+                                        :show-edit?     show-edit?}
+          dragging?                    (rf/subscribe [::drag.subs/dragging? uid])
+          drag-target                  (rf/subscribe [::drag.subs/drag-target uid])
+          selected-items               (rf/subscribe [::select-subs/items])]
+      (rf/dispatch [::linked-ref.events/set-open! uid (or (false? linked-ref) initial-open)])
+      (rf/dispatch [::inline-refs.events/set-open! uid false])
+
+      (r/create-class
+        {:component-will-unmount
+         (fn will-unmount-block
+           [_]
+           (rf/dispatch [::linked-ref.events/cleanup! uid])
+           (rf/dispatch [::inline-refs.events/cleanup! uid]))
+         :reagent-render
+         (fn render-block
+           [block linked-ref-data opts]
+           (let [ident                 [:block/uid (or original-uid uid)]
+                 block-o               (reactive/get-reactive-block-document ident)
+                 {:block/keys [uid
+                               string
+                               open
+                               children
+                               _refs]} (merge block-o block)
+                 children-uids         (set (map :block/uid children))
+                 uid-sanitized-block   (s/transform
+                                         (specter-recursive-path #(contains? % :block/uid))
+                                         (fn [{:block/keys [original-uid uid] :as block}]
+                                           (assoc block :block/uid (or original-uid uid)))
+                                         block)
+                 is-selected           @(rf/subscribe [::select-subs/selected? uid])
+                 present-user          @(rf/subscribe [:presence/has-presence uid])
+                 is-presence           (seq present-user)]
+
+             ;; (prn uid is-selected)
+
+             ;; If datascript string value does not equal local value, overwrite local value.
+             ;; Write on initialization
+             ;; Write also from backspace, which can join bottom block's contents to top the block.
+             (when (not= string @old-value)
+               (update-fn string)
+               (update-old-fn string))
+
+             [:> Container {:isDragging   (and @dragging? (not is-selected))
+                            :isSelected   is-selected
+                            :hasChildren  (seq children)
+                            :isOpen       open
+                            :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
+                            :hasPresence  is-presence
+                            :uid          uid
+                            ;; need to know children for selection resolution
+                            :childrenUids children-uids
+                            ;; show-edit? allows us to render the editing elements (like the textarea)
+                            ;; even when not editing this block. When true, clicking the block content will pass
+                            ;; the clicks down to the underlying textarea. The textarea is expensive to render,
+                            ;; so we avoid rendering it when it's not needed.
+                            :onMouseEnter show-edit-fn
+                            :onMouseLeave hide-edit-fn
+                            :onDragOver   (fn [e] (block-drag-over e block))
+                            :onDragLeave  (fn [e] (block-drag-leave e block))
+                            :onDrop       (fn [e] (block-drop e block))
+                            :menu         (r/as-element [:> MenuList
+                                                         [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                                   "Copy selected block refs"
+                                                                                   "Copy block ref")
+                                                                       :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                                         [:> MenuItem {:children "Copy unformatted text"
+                                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])}
+
+              (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
+
+              [editor/editor-component
+               block-el
+               block-o
+               true
+               linked-ref-data
+               uid-sanitized-block
+               state-hooks
+               opts]
+
+              (when (= @drag-target :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
+              (when (= @drag-target :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])]))})))
+
+
+  (supported-transclusion-scopes
+    [this]
+    #{:embed})
+
+
+  (transclusion-view
+    [this block-data callback transclusion-scope])
+
+
+  (zoomed-in-view
+    [this bloc-data callbacks])
+
+
+  (supported-breadcrumb-styles
+    [this]
+    #{:string})
+
+
+  (breadcrumbs-view
+    [this block-data callbacks breadcrumb-style]))
+
+
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([block]
@@ -158,108 +302,8 @@
   ([block linked-ref-data]
    [block-el block linked-ref-data {}])
   ([block linked-ref-data _opts]
-   (let [{:keys [linked-ref
-                 initial-open
-                 linked-ref-uid]}     linked-ref-data
-         {:block/keys [uid
-                       original-uid]} block
-         local-value                  (r/atom nil)
-         old-value                    (r/atom nil)
-         show-edit?                   (r/atom false)
-         hide-edit-fn                 #(reset! show-edit? false)
-         show-edit-fn                 #(reset! show-edit? true)
-         savep-fn                     (partial db/transact-state-for-uid (or original-uid uid))
-         save-fn                      #(savep-fn @local-value :block-save)
-         idle-fn                      (gfns/debounce #(savep-fn @local-value :autosave)
-                                                     2000)
-         update-fn                    #(reset! local-value %)
-         update-old-fn                #(reset! old-value %)
-         read-value                   (ratom/reaction @local-value)
-         read-old-value               (ratom/reaction @old-value)
-         state-hooks                  {:save-fn        save-fn
-                                       :idle-fn        idle-fn
-                                       :update-fn      update-fn
-                                       :update-old-fn  update-old-fn
-                                       :read-value     read-value
-                                       :read-old-value read-old-value
-                                       :show-edit?     show-edit?}
-         dragging?                    (rf/subscribe [::drag.subs/dragging? uid])
-         drag-target                  (rf/subscribe [::drag.subs/drag-target uid])
-         selected-items               (rf/subscribe [::select-subs/items])]
-     (rf/dispatch [::linked-ref.events/set-open! uid (or (false? linked-ref) initial-open)])
-     (rf/dispatch [::inline-refs.events/set-open! uid false])
-
-     (r/create-class
-       {:component-will-unmount
-        (fn will-unmount-block
-          [_]
-          (rf/dispatch [::linked-ref.events/cleanup! uid])
-          (rf/dispatch [::inline-refs.events/cleanup! uid]))
-        :reagent-render
-        (fn render-block
-          [block linked-ref-data opts]
-          (let [ident                 [:block/uid (or original-uid uid)]
-                block-o               (reactive/get-reactive-block-document ident)
-                {:block/keys [uid
-                              string
-                              open
-                              children
-                              _refs]} (merge block-o block)
-                children-uids         (set (map :block/uid children))
-                uid-sanitized-block   (s/transform
-                                        (specter-recursive-path #(contains? % :block/uid))
-                                        (fn [{:block/keys [original-uid uid] :as block}]
-                                          (assoc block :block/uid (or original-uid uid)))
-                                        block)
-                is-selected           @(rf/subscribe [::select-subs/selected? uid])
-                present-user          @(rf/subscribe [:presence/has-presence uid])
-                is-presence           (seq present-user)]
-
-            ;; (prn uid is-selected)
-
-            ;; If datascript string value does not equal local value, overwrite local value.
-            ;; Write on initialization
-            ;; Write also from backspace, which can join bottom block's contents to top the block.
-            (when (not= string @old-value)
-              (update-fn string)
-              (update-old-fn string))
-
-            [:> Container {:isDragging   (and @dragging? (not is-selected))
-                           :isSelected   is-selected
-                           :hasChildren  (seq children)
-                           :isOpen       open
-                           :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
-                           :hasPresence  is-presence
-                           :uid          uid
-                           ;; need to know children for selection resolution
-                           :childrenUids children-uids
-                           ;; show-edit? allows us to render the editing elements (like the textarea)
-                           ;; even when not editing this block. When true, clicking the block content will pass
-                           ;; the clicks down to the underlying textarea. The textarea is expensive to render,
-                           ;; so we avoid rendering it when it's not needed.
-                           :onMouseEnter show-edit-fn
-                           :onMouseLeave hide-edit-fn
-                           :onDragOver   (fn [e] (block-drag-over e block))
-                           :onDragLeave  (fn [e] (block-drag-leave e block))
-                           :onDrop       (fn [e] (block-drop e block))
-                           :menu         (r/as-element [:> MenuList
-                                                        [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                                  "Copy selected block refs"
-                                                                                  "Copy block ref")
-                                                                      :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                                        [:> MenuItem {:children "Copy unformatted text"
-                                                                      :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])}
-
-             (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
-
-             [editor/editor-component
-              block-el
-              block-o
-              true
-              linked-ref-data
-              uid-sanitized-block
-              state-hooks
-              opts]
-
-             (when (= @drag-target :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
-             (when (= @drag-target :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])]))}))))
+   (let [block-type      nil ; TODO make real block type discovery
+         render-protocol (case block-type
+                           "athens/task" (throw (ex-info "athens/task renderer protocol not implemented yet" {}))
+                           (DefaultBlockRenderer. linked-ref-data))]
+     (types/outline-view render-protocol block {}))))
