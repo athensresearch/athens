@@ -7,11 +7,15 @@
 
   (inline-ref-view
     "Render Block/Entity Type as inline reference"
-    [block-data callbacks])
+    [block-data callbacks with-breadcrumb?])
 
   (outline-view
     "Render Block/Entity Type as outline representation"
     [block-data callbacks])
+
+  (supported-transclusion-scopes
+    "Returns a set of supported `transclusion-scopes`"
+    [])
 
   (transclusion-view
     "Render Block/Entity Type as transclusion"
@@ -20,6 +24,10 @@
   (zoomed-in-view
     "Render Block/Entity Type as zoomed in"
     [block-data callbacks])
+
+  (supported-breadcrumb-styles
+    "Returns a set of supported `breadcrumb-styles`"
+    [])
 
   (breadcrumbs-view
     "Render Block/Entity Type as breadcrumbs"
