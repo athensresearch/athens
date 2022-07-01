@@ -35,13 +35,13 @@ const Item = ({ children }) => {
     justifyContent={'space-between'}
     sx={{
       "span": {
-        color: "foreground.secondary",
+        color: "red",
         flex: "1 1 50%",
         fontWeight: "medium"
       },
       "span + span": {
         marginLeft: "1ch",
-        color: "foreground.primary",
+        color: "red",
         fontWeight: "normal"
       }
     }}
@@ -72,7 +72,7 @@ export interface AnchorProps {
   menuActions: any;
 }
 
-const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
+const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotification : boolean) => {
   return ({
     bg: "transparent",
     "aria-label": "Block anchor",
@@ -84,6 +84,7 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
     appearance: "none",
     border: "0",
     color: "foreground.secondary",
+    ...unreadNotification && ({color: "green"}),
     display: "flex",
     placeItems: "center",
     placeContent: "center",
@@ -137,6 +138,7 @@ export const Anchor = (props: AnchorProps) => {
     onClick,
     uidSanitizedBlock,
     menuActions,
+    unreadNotification,
   } = props;
   const ref = React.useRef(null);
 
@@ -153,7 +155,7 @@ export const Anchor = (props: AnchorProps) => {
     <IconButton
       ref={ref}
       aria-label="Block anchor"
-      {...anchorButtonStyleProps(isClosedWithChildren)}
+      {...anchorButtonStyleProps(isClosedWithChildren, unreadNotification)}
       {...menuSourceProps}
       onDragStart={onDragStart}
       onClick={onClick}

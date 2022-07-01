@@ -16,6 +16,7 @@
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.context-menu        :as ctx-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+    [athens.views.notifications.actions      :as actions]
     [athens.views.blocks.editor              :as editor]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
@@ -213,7 +214,9 @@
                                         block)
                 is-selected           @(rf/subscribe [::select-subs/selected? uid])
                 present-user          @(rf/subscribe [:presence/has-presence uid])
-                is-presence           (seq present-user)]
+                is-presence           (seq present-user)
+                properties            (:block/properties block-o)]
+
 
             ;; (prn uid is-selected)
 
@@ -224,7 +227,8 @@
               (update-fn string)
               (update-old-fn string))
 
-            [:> Container {:isDragging   (and @dragging? (not is-selected))
+            [:> Container {:isHidden     (actions/hide-notification? properties)
+                           :isDragging   (and @dragging? (not is-selected))
                            :isSelected   is-selected
                            :hasChildren  (seq children)
                            :isOpen       open

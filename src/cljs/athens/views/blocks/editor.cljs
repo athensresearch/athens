@@ -1,26 +1,28 @@
 (ns athens.views.blocks.editor
   (:require
-    ["/components/Block/Anchor"                :refer [Anchor]]
-    ["/components/Block/PropertyName"          :refer [PropertyName]]
-    ["/components/Block/Toggle"                :refer [Toggle]]
+    ["/components/Block/Anchor" :refer [Anchor]]
+    ["/components/Block/PropertyName" :refer [PropertyName]]
+    ["/components/Block/Toggle" :refer [Toggle]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
-    [athens.common-db                          :as common-db]
-    [athens.db                                 :as db]
-    [athens.events.inline-refs                 :as inline-refs.events]
-    [athens.events.linked-refs                 :as linked-ref.events]
-    [athens.parse-renderer                     :as parse-renderer]
-    [athens.reactive                           :as reactive]
-    [athens.router                             :as router]
-    [athens.self-hosted.presence.views         :as presence]
-    [athens.subs.inline-refs                   :as inline-refs.subs]
-    [athens.subs.linked-refs                   :as linked-ref.subs]
-    [athens.subs.selection                     :as select-subs]
-    [athens.util                               :as util]
-    [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
-    [athens.views.blocks.content               :as content]
-    [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs]]
-    [re-frame.core                             :as rf]))
+    ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    ["/components/inbox/Notifications" :refer [KanbanBoard KanbanColumn KanbanCard]]
+    [athens.common-db :as common-db]
+    [athens.db :as db]
+    [athens.events.inline-refs :as inline-refs.events]
+    [athens.events.linked-refs :as linked-ref.events]
+    [athens.parse-renderer :as parse-renderer]
+    [athens.reactive :as reactive]
+    [athens.router :as router]
+    [athens.self-hosted.presence.views :as presence]
+    [athens.subs.inline-refs :as inline-refs.subs]
+    [athens.subs.linked-refs :as linked-ref.subs]
+    [athens.subs.selection :as select-subs]
+    [athens.util :as util]
+    [athens.views.blocks.bullet :refer [bullet-drag-start bullet-drag-end]]
+    [athens.views.blocks.content :as content]
+    [athens.views.blocks.context-menu :refer [handle-copy-unformatted handle-copy-refs]]
+    [re-frame.core :as rf]
+    [athens.views.notifications.actions :as actions]))
 
 
 (defn toggle
@@ -155,7 +157,8 @@
         uid                   (:block/uid block-o)
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
-        selected-items        (rf/subscribe [::select-subs/items])]
+        selected-items        (rf/subscribe [::select-subs/items])
+        block-str             (:block/string (common-db/get-block @db/dsdb [:block/uid uid]))]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
       (let [{:block/keys [;; uid
@@ -202,7 +205,23 @@
                                                            "Copy block ref")
                                                          :onClick #(handle-copy-refs nil uid)}
                                                         {:children "Copy unformatted text"
-                                                         :onClick  #(handle-copy-unformatted uid)}])
+                                                         :onClick  #(handle-copy-unformatted uid)}
+                                                        (when (actions/is-block-inbox? properties)
+                                                          {:children "Show hidden notifications"
+                                                           :onClick #(actions/show-hidden-notifications uid)})
+                                                        (when (actions/is-block-inbox? properties)
+                                                          {:children "Hide read notifications"
+                                                           :onClick #(actions/hide-read-notifications uid)})
+                                                        ;; Don't know how to join the following 2 conditions in 1
+                                                        (when (actions/is-block-notification? properties)
+                                                          {:children "Mark as read and hide"
+                                                           :onClick #(rf/dispatch (actions/update-state-prop uid "read hidden"))})
+                                                        (when (actions/is-block-notification? properties)
+                                                          (if (actions/unread-notification? properties)
+                                                            {:children "Mark as read and don't hide"
+                                                             :onClick #(rf/dispatch (actions/update-state-prop uid "read"))}
+                                                            {:children "Mark as unread"
+                                                             :onClick #(rf/dispatch (actions/update-state-prop uid "unread"))}))])
                       :onClick                (fn [e]
                                                 (let [shift? (.-shiftKey e)]
                                                   (rf/dispatch [:reporting/navigation {:source :block-bullet
@@ -212,11 +231,14 @@
                                                                                                  :main-pane)}])
                                                   (router/navigate-uid uid e)))
                       :on-drag-start          (fn [e] (bullet-drag-start e uid))
-                      :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
+                      :on-drag-end            (fn [e] (bullet-drag-end e uid))
+                      :unreadNotification     (actions/unread-notification? properties)}]
 
           [content/block-content-el block-o state-hooks]
 
           [presence/inline-presence-el uid]
+
+
 
           (when (and (> (count _refs) 0) (not= :block-embed? opts))
             [block-refs-count-el
@@ -233,6 +255,11 @@
                     @inline-refs-open?)
            [inline-linked-refs-el block-el uid])
 
+         (when (= "Show inbox here" block-str)
+            [:> KanbanColumn {:name  "Inbox"
+                              :cards ["1" "2"]
+                              :messages ["@Jeff commented: Use the main branch for this instance" "@Jeff assigned a new task to you"]
+                              :titles ["T-13 Create a docker Instance for `123.345.45.54" "T-13 Create a docker Instance for `123.345.45.54"]}])
          ;; Properties
          (when (and (seq properties)
                     (or (and (true? linked-ref) @linked-ref-open?)

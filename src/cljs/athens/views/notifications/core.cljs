@@ -14,7 +14,7 @@
   (->> (bfs/internal-representation->atomic-ops
          db
          [#:block{:uid        (common.utils/gen-block-uid)
-                  :string     ""
+                  :string     "" ;; Should the string be message or the breadcrumb or something else?
                   :properties {":block/type"
                                #:block{:string "notification"
                                        :uid    (common.utils/gen-block-uid)}

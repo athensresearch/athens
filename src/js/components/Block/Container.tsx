@@ -8,7 +8,7 @@ const ERROR_MESSAGE = "An error occurred while rendering this block.";
 // Don't open the context menu on these elements
 const CONTAINER_CONTEXT_MENU_FILTERED_TAGS = ["A", "BUTTON", "INPUT", "TEXTAREA", "LABEL", "VIDEO", "EMBED", "IFRAME", "IMG"];
 
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, ...props }) => {
+const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, isHidden, ...props }) => {
   const ref = React.useRef(null);
 
   const {
@@ -39,6 +39,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       borderRadius="0.125rem"
       justifyContent="flex-start"
       flexDirection="column"
+      display={isHidden ? "none" : "block"}
       background="var(--block-surface-color)"
       opacity={isDragging ? 0.5 : 1}
       data-uid={uid}
