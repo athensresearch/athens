@@ -57,36 +57,37 @@
                           :is-current true
                           :key (:id active-db)}]
            [current-db-tools {:db active-db} all-dbs merge-open?]]
-          ;; Show all inactive DBs and a separator
-          [:> Heading {:fontSize "xs"
-                       :py 4
-                       :pb 3
-                       :borderTop "1px solid"
-                       :borderTopColor "separator.divider"
-                       ;;  :bg "background.floor"
-                       :px 10
-                       :letterSpacing "wide"
-                       :textTransform "uppercase"
-                       :fontWeight "bold"
-                       :color "foreground.secondary"}
-           "Other databases"]
-          [:> VStack {:align "stretch"
-                      :position "relative"
-                      :spacing 0
-                      :overflow-y "auto"}
-           (doall
-             (for [[key db] inactive-dbs]
-               [db-list-item {:db db
-                              :is-disabled (= sync-status :synchronising)
-                              :is-current false
-                              :key key}]))
-           (when (= :synchronising sync-status)
-             [:> VStack {:align "center"
-                         :background "background.vibrancy"
-                         :backdropFilter "blur(0.25ch)"
-                         :justify "center" :position "absolute" :inset 0}
-              [:> Spinner]
-              [:> Text "Syncing..."]])]
+          ;; Show all inactive DBs and a separator, if inactive DBs exist
+          (when (seq inactive-dbs)
+            [:<>
+             [:> Heading {:fontSize "xs"
+                          :py 4
+                          :pb 3
+                          :borderTop "1px solid"
+                          :borderTopColor "separator.divider"
+                          :px 10
+                          :letterSpacing "wide"
+                          :textTransform "uppercase"
+                          :fontWeight "bold"
+                          :color "foreground.secondary"}
+              "Other databases"]
+             [:> VStack {:align "stretch"
+                         :position "relative"
+                         :spacing 0
+                         :overflow-y "auto"}
+              (doall
+               (for [[key db] inactive-dbs]
+                 [db-list-item {:db db
+                                :is-disabled (= sync-status :synchronising)
+                                :is-current false
+                                :key key}]))
+              (when (= :synchronising sync-status)
+                [:> VStack {:align "center"
+                            :background "background.vibrancy"
+                            :backdropFilter "blur(0.25ch)"
+                            :justify "center" :position "absolute" :inset 0}
+                 [:> Spinner]
+                 [:> Text "Syncing..."]])]])
           ;; Add DB control
           [:> ButtonGroup {:borderTop "1px solid" :borderTopColor "separator.divider" :p 2 :pt 0 :pl 10 :size "sm" :width "100%" :ml 10 :justifyContent "flex-start"}
            [:> Button {:onClick #(dispatch [:modal/toggle])}
