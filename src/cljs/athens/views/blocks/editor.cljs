@@ -4,7 +4,6 @@
     ["/components/Block/PropertyName"          :refer [PropertyName]]
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["/components/Task/Task" :refer [Task]]
     ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common-db                          :as common-db]
     [athens.db                                 :as db]
@@ -221,10 +220,6 @@
                                                     (router/navigate-uid uid e)))
                         :on-drag-start          (fn [e] (bullet-drag-start e uid))
                         :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
-
-            ;; (case entity-type
-            ;;   "[[athens/query]]"
-            ;;   [query/query-block])
 
             [content/block-content-el block-o state-hooks]
 

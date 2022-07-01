@@ -125,8 +125,8 @@ export const AddSwimlaneButton = (props) => {
 };
 
 export const ExampleKanban2 = (props) => {
-  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup } = props;
-  console.log(boardData)
+  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup } = props;
+  console.log(columns, rows)
 
   if (hasSubGroup) {
     return <KanbanBoard name={name}>
