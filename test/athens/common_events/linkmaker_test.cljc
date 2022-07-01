@@ -382,7 +382,7 @@
 
           ;; apply split-block
           (doseq [atomic-op block-split-atomics
-                  :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+                  :let      [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic-op)]]
             (transact-with-linkmaker atomic-txs))
 
           (let [{testing-block-2-eid :db/id}      (get-block testing-block-2-uid)

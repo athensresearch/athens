@@ -92,14 +92,15 @@
         next-day (dates/get-day date -1)
         start    (-> day :inst inst-ms)
         end      (-> next-day :inst inst-ms)]
-    (->> @(p/q '[:find ?e
+    (->> @(p/q '[:find ?b
                  :in $ ?start ?end
                  :where
                  [?t :time/ts ?ts]
                  [(>= ?ts ?start)]
                  [(< ?ts ?end)]
-                 [?e :time/edits ?t]
-                 [?e :block/string _]]
+                 [?e :event/time ?t]
+                 [?b :block/edits ?e]
+                 [?b :block/string _]]
                db/dsdb start end)
          (mapv first)
          db/eids->groups)))
@@ -129,7 +130,7 @@
   (vec (concat '[:db/id :block/uid :block/string :block/open :block/_refs
                  {:block/key [:node/title]}
                  {:block/children [:block/uid :block/order]}
-                 {:time/edits [:time/ts]}]
+                 {:block/edits [{:event/time [:time/ts]}]}]
                recursive-properties-document-pull-vector)))
 
 
@@ -143,7 +144,7 @@
 (defntrace get-reactive-parents-recursively
   [id]
   (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string
-                          {:time/edits [:time/ts]}
+                          {:block/edits [{:event/time [:time/ts]}]}
                           {:block/property-of ...}
                           {:block/_children ...}]
                 id)

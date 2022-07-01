@@ -12,17 +12,20 @@
 
 (t/deftest version
   (let [conn (common-db/create-conn)]
-    (t/is (= (common-db/db-versions @conn) #{0 1 2}))
-    (t/is (= (common-db/version conn) 2))))
+    (t/is (= (common-db/db-versions @conn) #{0 1 2 3}))
+    (t/is (= (common-db/version conn) 3))))
 
 
 (t/deftest migrate-conn
   (let [conn (-> (common-db/create-conn)
                  (common-db/migrate-conn!))]
     (t/is (= (d/schema @conn)
-             (merge common-db/v1-bootstrap-schema common-db/v1-schema common-db/v2-schema)))
+             (merge common-db/v1-bootstrap-schema
+                    common-db/v1-schema
+                    common-db/v2-schema
+                    common-db/v3-schema)))
     (t/is (= (common-db/db-versions @conn)
-             #{0 1 2}))))
+             #{0 1 2 3}))))
 
 
 (t/deftest reset-conn
@@ -38,9 +41,12 @@
     (t/is (= (d/pull @old-conn '[:block/uid :block/string] [:block/uid "uid"]) block))
     (common-db/reset-conn! new-conn @old-conn)
     (t/is (= (d/schema @new-conn)
-             (merge common-db/v1-bootstrap-schema common-db/v1-schema common-db/v2-schema)))
+             (merge common-db/v1-bootstrap-schema
+                    common-db/v1-schema
+                    common-db/v2-schema
+                    common-db/v3-schema)))
     (t/is (= (common-db/db-versions @new-conn)
-             #{0 1 2}))
+             #{0 1 2 3}))
     (t/is (= (d/pull @old-conn '[:block/uid :block/string] [:block/uid "uid"]) block))))
 
 
@@ -280,22 +286,22 @@
                  :block/order  0,
                  :block/string "two",
                  :block/uid    "uid2",
-                 :db/id        6}],
+                 :db/id        9}],
                :block/key    #:node{:title "key"},
                :block/open   true,
                :block/string "one",
                :block/uid    "uid1",
-               :db/id        5,
+               :db/id        8,
                :block/_property-of
                [{:block/key    #:node{:title "another-key"},
                  :block/open   true,
                  :block/string "three",
                  :block/uid    "uid3",
-                 :db/id        8}],
+                 :db/id        11}],
                :block/properties
                {"another-key"
                 {:block/key    #:node{:title "another-key"},
                  :block/open   true,
                  :block/string "three",
                  :block/uid    "uid3",
-                 :db/id        8}}}}))))
+                 :db/id        11}}}}))))

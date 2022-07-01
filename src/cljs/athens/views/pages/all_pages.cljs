@@ -31,15 +31,17 @@
 (def sort-fn
   {:title       (fn [x] (-> x :node/title lower-case))
    :links-count (fn [x] (count (:block/_refs x)))
-   :modified    (comp :time/ts :time/modified)
-   :created     (comp :time/ts :time/create)})
+   :modified    :time/modified
+   :created     :time/created})
 
 
 (defn add-modified
-  [{:time/keys [edits] :as page}]
-  (assoc page :time/modified (->> edits
-                                  (sort-by :time/ts)
-                                  last)))
+  [{:block/keys [create edits] :as page}]
+  (assoc page
+         :time/modified (->> edits
+                             (map (comp :time/ts :event/time))
+                             last)
+         :time/created (-> create :event/time :time/ts)))
 
 
 (rf/reg-sub

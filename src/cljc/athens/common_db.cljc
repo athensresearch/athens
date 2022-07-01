@@ -48,11 +48,28 @@
 
 
 (def v3-schema
-  {:time/ts     {:db/unique :db.unique/identity}
-   :time/create {:db/cardinality :db.cardinality/one
-                 :db/valueType   :db.type/ref}
-   :time/edits  {:db/cardinality :db.cardinality/many
-                 :db/valueType   :db.type/ref}})
+  {;; Time is a unique number timestamp.
+   :time/ts      {:db/unique :db.unique/identity}
+   ;; Events have uid, and reference time and auth.
+   :event/uid    {:db/unique :db.unique/identity}
+   :event/time   {:db/cardinality :db.cardinality/one
+                  :db/valueType   :db.type/ref}
+   ;; Blocks reference events for creation and edits.
+   :block/create {:db/cardinality :db.cardinality/one
+                  :db/valueType   :db.type/ref}
+   :block/edits  {:db/cardinality :db.cardinality/many
+                  :db/valueType   :db.type/ref}})
+
+
+;; Tentative auth schema
+#_(def v4-schema
+  {;; Auth is a unique combination of id and provider.
+   ;; A user would be able to ref multiple auths.
+   :auth/id+provider {:db/tupleAttrs [:auth/id :auth/provider]
+                      :db/unique     :db.unique/identity}
+   ;; Events can also have auth.
+   :event/auth       {:db/cardinality :db.cardinality/one
+                      :db/valueType   :db.type/ref}})
 
 
 (def v1-bootstrap-schema
@@ -516,9 +533,9 @@
 (defn retract-uid-recursively-tx
   "Retract all blocks of a page, including the page.
   Replaces block string refs to removed entities by their ref text."
-  [db uid time-ref]
+  [db event-ref uid]
   (let [block                 (get-block db [:block/uid uid])
-        parent-uid            (->> [:block/uid uid] (get-parent db) :block/uid)
+        parent                (->> [:block/uid uid] (get-parent db))
         descendants           (concat [] (:block/children block) (:block/_property-of block))
         has-descendants?      (seq descendants)
         descendants-uids      (when has-descendants?
@@ -572,12 +589,16 @@
         retract-kids          (mapv (fn [uid]
                                       [:db/retractEntity [:block/uid uid]])
                                     (reverse descendants-uids))
+        edit-parent           (when parent
+                                (merge {:block/edits event-ref}
+                                       (if-let [title (:node/title parent)]
+                                         {:node/title title}
+                                         {:block/uid (:block/uid parent)})))
         retract-entity        [:db/retractEntity [:block/uid uid]]
         txs                   (cond-> []
                                 has-descendants? (into retract-kids)
                                 has-asserts?     (into asserts)
-                                parent-uid       (conj {:block/uid parent-uid
-                                                        :time/edits time-ref})
+                                edit-parent      (conj edit-parent)
                                 true             (conj retract-entity))]
     txs))
 
@@ -623,8 +644,8 @@
 
 (def all-pages-pull-vector
   [:block/uid :node/title
-   {:time/edits [:time/ts]}
-   {:time/create [:time/ts]}
+   {:block/edits [{:event/time [:time/ts]}]}
+   {:block/create [{:event/time [:time/ts]}]}
    ;; Get all block refs, we need them to count totals.
    ;; Without specifying a limit pull will only return first 1000.
    ;; https://docs.datomic.com/on-prem/query/pull.html#limit-option
@@ -759,13 +780,13 @@
 
 (defn time-range
   [db eid]
-  (let [all-times (->> (d/pull db '[{:time/edits [:time/ts]}
+  (let [all-times (->> (d/pull db '[{:block/edits [{:event/time [:time/ts]}]}
                                     {:block/children ...}
                                     {:block/_property-of ...}]
                                eid)
                        (tree-seq has-descendants? descendants)
-                       (mapcat :time/edits)
-                       (map :time/ts)
+                       (mapcat :block/edits)
+                       (map (comp :time/ts :event/time))
                        sort)]
     [(first all-times) (last all-times)]))
 

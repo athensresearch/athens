@@ -83,7 +83,7 @@
 (defn block-styles
   [block]
   (when (enabled?)
-    (let [block-time (->> block :time/edits (mapv :time/ts) (apply max))]
+    (let [block-time (->> block :block/edits (mapv (comp :time/ts :event/time)) (apply max))]
       (when block-time
         (cond-> {}
           @(subscribe [:time/slider?])

@@ -13,37 +13,35 @@
 
 (defmulti resolve-atomic-op-to-tx
   "Resolves ⚛️ Atomic Graph Ops to TXs."
-  #(:op/type %2))
+  (fn [_db event _event-ref] (:op/type event)))
 
 
 (defmethod resolve-atomic-op-to-tx :block/new
-  [db {:op/keys [args]} time]
+  [db {:op/keys [args]} event-ref]
   (let [{:block/keys [uid position]} args
-        time-ref                     {:time/ts time}
         new-block                    {:block/uid    uid
                                       :block/string ""
                                       :block/open   true
-                                      :time/create  time-ref
-                                      :time/edits   time-ref}
+                                      :block/create event-ref
+                                      :block/edits  event-ref}
         position-tx                  (condp = (position/position-type position)
-                                       :child    (position/add-child db uid position time-ref)
-                                       :property (position/add-property db uid position time-ref))
+                                       :child    (position/add-child db uid position event-ref)
+                                       :property (position/add-property db uid position event-ref))
         tx-data                      (into [new-block] position-tx)]
     tx-data))
 
 
 ;; This is Atomic Graph Op, there is also composite version of it
 (defmethod resolve-atomic-op-to-tx :block/save
-  [_db {:op/keys [args]} time]
-  (let [{:block/keys [uid string]} args
-        time-ref {:time/ts time}]
+  [_db {:op/keys [args]} event-ref]
+  (let [{:block/keys [uid string]} args]
     [{:block/uid    uid
       :block/string string
-      :time/edits   time-ref}]))
+      :block/edits  event-ref}]))
 
 
 (defmethod resolve-atomic-op-to-tx :block/open
-  [db {:op/keys [args]} time]
+  [db {:op/keys [args]} event-ref]
   (log/debug "atomic-resolver :block/open args:" (pr-str args))
   (let [{:block/keys [uid open?]} args
         block-eid                 (common-db/e-by-av db :block/uid uid)
@@ -53,15 +51,13 @@
       (do
         (log/info ":block/open already at desired state, :block/open" open?)
         [])
-      (let [time-ref      {:time/ts time}
-            updated-block {:block/uid  uid
-                           :block/open open?
-                           :time/edits time-ref}]
-        [updated-block]))))
+      [{:block/uid   uid
+        :block/open  open?
+        :block/edits event-ref}])))
 
 
 (defmethod resolve-atomic-op-to-tx :block/move
-  [db {:op/keys [args]} time]
+  [db {:op/keys [args]} event-ref]
   (log/debug "atomic-resolver :block/move args:" (pr-str args))
   (let [{:block/keys [uid position]} args
         _valid-block-uid             (when (common-db/get-page-title db uid)
@@ -72,38 +68,36 @@
         old-position-type            (-> (common-db/get-position db uid)
                                          position/position-type)
         new-position-type            (position/position-type position)
-        time-ref                     {:time/ts time}
         updated-block'               {:block/uid uid
-                                      :time/edits time-ref}
+                                      :block/edits event-ref}
         position-tx                  (condp = [old-position-type new-position-type]
                                        [:child :child]
                                        (if same-parent?
                                          (position/move-child-within
-                                           db old-parent-uid uid position time-ref)
+                                           db old-parent-uid uid position event-ref)
                                          (position/move-child-between
-                                           db old-parent-uid new-parent-uid uid position time-ref))
+                                           db old-parent-uid new-parent-uid uid position event-ref))
 
                                        [:child :property]
                                        (concat
-                                         (position/remove-child db uid old-parent-uid time-ref)
-                                         (position/add-property db uid position time-ref))
+                                         (position/remove-child db uid old-parent-uid event-ref)
+                                         (position/add-property db uid position event-ref))
 
                                        [:property :child]
                                        (concat
-                                         (position/remove-property db uid old-parent-uid time-ref)
-                                         (position/add-child db uid position time-ref))
+                                         (position/remove-property db uid old-parent-uid event-ref)
+                                         (position/add-child db uid position event-ref))
 
                                        [:property :property]
                                        ;; No need to remove previous name, schema ensures
                                        ;; a block has a single name.
-                                       (position/add-property db uid position time-ref))]
+                                       (position/add-property db uid position event-ref))]
     (into [updated-block'] position-tx)))
 
 
 (defmethod resolve-atomic-op-to-tx :block/remove
-  [db {:op/keys [args]} time]
+  [db {:op/keys [args]} event-ref]
   (let [{:block/keys [uid]}   args
-        time-ref              {:time/ts time}
         block-exists?         (common-db/e-by-av db :block/uid uid)
         block                 (when block-exists?
                                 (common-db/get-block db [:block/uid uid]))
@@ -112,11 +106,11 @@
         parent-uid            (when parent-eid
                                 (common-db/v-by-ea db parent-eid :block/uid))
         ;; Reorder parent children if needed.
-        children-tx           (position/remove-child db uid parent-uid time-ref)
+        children-tx           (position/remove-child db uid parent-uid event-ref)
         retract-parents-child (when parent-uid
                                 [:db/retract [:block/uid parent-uid] :block/children [:block/uid uid]])
         retract-uid           (when block-exists?
-                                (common-db/retract-uid-recursively-tx db uid time-ref))
+                                (common-db/retract-uid-recursively-tx db event-ref uid))
         txs                   (when block-exists?
                                 (cond-> []
                                   parent-uid  (conj retract-parents-child)
@@ -134,17 +128,16 @@
 
 
 (defmethod resolve-atomic-op-to-tx :page/new
-  [db {:op/keys [args]} time]
+  [db {:op/keys [args]} event-ref]
   (let [{:page/keys [title]} args
         page-exists?         (common-db/e-by-av db :node/title title)
         page-uid             (or (-> title dates/title-to-date dates/date-to-day :uid)
                                  (utils/gen-block-uid))
-        time-ref             {:time/ts time}
         page                 {:node/title     title
                               :block/uid      page-uid
                               :block/children []
-                              :time/create    time-ref
-                              :time/edits     time-ref}
+                              :block/create   event-ref
+                              :block/edits    event-ref}
         txs                  (if page-exists?
                                []
                                [page])]
@@ -152,12 +145,11 @@
 
 
 (defmethod resolve-atomic-op-to-tx :page/rename
-  [db {:op/keys [args]} time]
+  [db {:op/keys [args]} event-ref]
   (let [old-name           (-> args :page/title)
         new-name           (-> args :target :page/title)
         page-eid           (common-db/e-by-av db :node/title old-name)
         page-exists?       (int? page-eid)
-        time-ref           {:time/ts time}
         page               (when page-exists?
                              (common-db/get-block db [:node/title old-name]))
         linked-refs        (common-db/get-linked-refs-by-page-title db old-name)
@@ -165,7 +157,7 @@
         updated-page       (when page-exists?
                              {:db/id      [:block/uid (:block/uid page)]
                               :node/title new-name
-                              :time/edits time-ref})
+                              :block/edits event-ref})
         txs                (concat [updated-page] new-linked-refs)]
     (if page-exists?
       txs
@@ -173,7 +165,7 @@
 
 
 (defmethod resolve-atomic-op-to-tx :page/merge
-  [db {:op/keys [args]} time]
+  [db {:op/keys [args]} event-ref]
   (let [from-name       (-> args :page/title)
         to-name         (-> args :target :page/title)
         linked-refs     (common-db/get-linked-refs-by-page-title db from-name)
@@ -187,15 +179,14 @@
                            :block/_children [:node/title to-name]})
         reorder         (order/reorder to-children to-children' reorder-map-fn)
         ;; Move paged properties, or delete if key is already there.
-        time-ref        {:time/ts time}
         from-properties (->> [:node/title from-name] (common-db/get-page db) :block/properties)
         to-property-ks  (->> [:node/title to-name] (common-db/get-page db) :block/properties keys set)
         properties      (->> from-properties
                              (mapcat (fn [[k {:block/keys [uid]}]]
                                        (if (to-property-ks k)
-                                         (common-db/retract-uid-recursively-tx db uid time-ref)
+                                         (common-db/retract-uid-recursively-tx db event-ref uid)
                                          (position/add-property db uid {:page/title to-name
-                                                                        :relation   {:page/title k}} time-ref)))))
+                                                                        :relation   {:page/title k}} event-ref)))))
         ;; Delete linked props that would end up duplicated on parent.
         linked-props    (->> [:node/title from-name]
                              (common-db/get-page db)
@@ -206,26 +197,27 @@
                                        (if (get properties to-name)
                                          (->> (get properties from-name)
                                               :block/uid
-                                              (common-db/retract-uid-recursively-tx db time-ref))
+                                              (common-db/retract-uid-recursively-tx db event-ref))
                                          []))))
         delete-page     [:db/retractEntity [:node/title from-name]]
-        new-datoms      (concat [delete-page]
+        new-datoms      (concat []
                                 new-linked-refs
                                 reorder
                                 properties
-                                linked-props)]
+                                linked-props
+                                [delete-page])]
+
     (log/debug ":page/merge args:" (pr-str args) ", resolved-tx:" (pr-str new-datoms))
     new-datoms))
 
 
 (defmethod resolve-atomic-op-to-tx :page/remove
-  [db {:op/keys [args]} time]
+  [db {:op/keys [args]} event-ref]
   (log/debug "atomic-resolver: :page/remove: " (pr-str args))
   (let [{:page/keys [title]} args
-        time-ref             {:time/ts time}
         page-uid             (common-db/get-page-uid db title)
         retract-blocks       (when page-uid
-                               (common-db/retract-uid-recursively-tx db page-uid time-ref))
+                               (common-db/retract-uid-recursively-tx db event-ref page-uid))
         delete-linked-refs   (when page-uid
                                (->> page-uid
                                     (vector :block/uid)
@@ -238,7 +230,7 @@
                                     :block/_key
                                     (map :db/id)
                                     (map (partial common-db/get-block-uid db))
-                                    (mapcat (partial common-db/retract-uid-recursively-tx db time-ref))))
+                                    (mapcat (partial common-db/retract-uid-recursively-tx db event-ref))))
         tx-data              (if page-uid
                                (concat retract-blocks
                                        delete-linked-refs
@@ -248,7 +240,7 @@
 
 
 (defmethod resolve-atomic-op-to-tx :shortcut/new
-  [db {:op/keys [args]} _time]
+  [db {:op/keys [args]} _event-ref]
   (let [{:page/keys [title]} args
         titles               (common-db/get-sidebar-titles db)
         titles'              (order/insert titles title :last nil)
@@ -258,7 +250,7 @@
 
 
 (defmethod resolve-atomic-op-to-tx :shortcut/remove
-  [db {:op/keys [args]} _time]
+  [db {:op/keys [args]} _event-ref]
   (let [{:page/keys [title]} args
         titles               (common-db/get-sidebar-titles db)
         titles'              (order/remove titles title)
@@ -270,7 +262,7 @@
 
 
 (defmethod resolve-atomic-op-to-tx :shortcut/move
-  [db {:op/keys [args]} _time]
+  [db {:op/keys [args]} _event-ref]
   (let [{title        :page/title
          ref-position :shortcut/position} args
         {relation  :relation
@@ -283,7 +275,7 @@
 
 
 (defmethod resolve-atomic-op-to-tx :composite/consequence
-  [_db composite]
+  [_db composite _event-ref]
   (throw (ex-info "Can't resolve Composite Graph Operation, only Atomic Graph Ops are allowed."
                   (select-keys composite [:op/type :op/trigger]))))
 
@@ -292,11 +284,14 @@
   "This expects either Semantic Events or Atomic Graph Ops, but not Composite Graph Ops.
   Call location should break up composites into atomic ops and call this multiple times,
   once per atomic operation."
-  [db {:event/keys [type op] :as event} time]
-  (if (or (contains? #{:op/atomic} type)
-          (:op/atomic? event))
-    (resolve-atomic-op-to-tx db (if (:op/atomic? event) event op) time)
-    (throw (ex-info "Can't resolve event, only Atomic Graph Ops are allowed." event))))
+  ([db event]
+   ;; If there's no event-ref, use just time. This should only happen in tests though.
+   (resolve-to-tx db event {:event/time {:time/ts (utils/now-ts)}}))
+  ([db {:event/keys [type op] :as event} event-ref]
+   (if (or (contains? #{:op/atomic} type)
+           (:op/atomic? event))
+     (resolve-atomic-op-to-tx db (if (:op/atomic? event) event op) event-ref)
+     (throw (ex-info "Can't resolve event, only Atomic Graph Ops are allowed." event)))))
 
 
 (defn resolve-transact!
@@ -309,18 +304,28 @@
    (let [transact! (if middleware?
                      common-db/transact-with-middleware!
                      d/transact!)
-         time (or log-time create-time (utils/now-ts))]
+         ;; Using an atom as an accumulator here isn't very kosher, but it is
+         ;; the right way of observing the doseq semantics while using transact!
+         tx-data (atom [])
+         transact-and-store! (fn [txs]
+                               (->> (transact! conn txs)
+                                    :tx-data
+                                    (swap! tx-data concat)))
+         timestamp (or log-time create-time (utils/now-ts))
+         event-uid (str id)
+         event-ref [:event/uid event-uid]
+         event-tx [{:event/uid event-uid
+                    :event/time {:time/ts timestamp}}]]
      (utils/log-time
        (str "resolve-transact! event-id: " (pr-str id) " took")
-       (if (graph-ops/atomic-composite? event)
-         (let [;; Using an atom as an accumulator here isn't very kosher, but it is
-               ;; the right way of observing the doseq semantics while using transact!
-               tx-data (atom nil)]
-           (doseq [atomic (graph-ops/extract-atomics event)
-                   :let   [atomic-txs (resolve-to-tx @conn atomic time)]]
-             (->> (transact! conn atomic-txs)
-                  :tx-data
-                  (swap! tx-data concat)))
-           (vec @tx-data))
-         (let [txs (resolve-to-tx @conn event time)]
-           (:tx-data (transact! conn txs))))))))
+       (do
+         ;; Transact the event entity first.
+         (transact-and-store! event-tx)
+         ;; Transact each atomic op, storing the tx-report.
+         (doseq [atomic (if (graph-ops/atomic-composite? event)
+                          (graph-ops/extract-atomics event)
+                          [event])
+                 :let   [atomic-txs (resolve-to-tx @conn atomic event-ref)]]
+           (transact-and-store! atomic-txs))
+         ;; Return the concatenated tx-reports.
+         @tx-data)))))
