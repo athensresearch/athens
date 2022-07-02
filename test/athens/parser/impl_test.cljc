@@ -2,7 +2,7 @@
   (:require
     [athens.common.utils :as utils]
     [athens.parser.impl  :as sut]
-    [clojure.test        :as t :refer [deftest is testing]]))
+    [clojure.test        :as t]))
 
 
 (t/deftest block-structure
@@ -189,14 +189,59 @@
 
 (t/deftest inline-structure
 
+  (t/testing "boundaries"
+    (utils/parses-to sut/inline-parser->ast
+
+                     "*em*"
+                     [:paragraph
+                      [:emphasis
+                       [:text-run "em"]]]
+
+                     "* not em *"
+                     [:paragraph
+                      [:text-run "* not em *"]]
+
+                     ;; TODO: lookbehinds don't work
+                     ;; fails, is parsed to [:paragraph [:emphasis [:text-run "not em "]]]
+                     #_#_
+                     "*not em *"
+                     [:paragraph
+                      [:text-run "*not em *"]]
+
+                     "* not em*"
+                     [:paragraph
+                      [:text-run "* not em*"]]
+
+                     "not*em*not"
+                     [:paragraph
+                      [:text-run "not*em*not"]]
+
+                     ;; TODO: lookbehinds don't work
+                     ;; fails, is parsed to [:paragraph [:text-run "not"] [:emphasis [:text-run "em"]]]
+                     #_#_
+                     "not*em*"
+                     [:paragraph
+                      [:text-run "not*em*"]]
+
+                     "*em*not"
+                     [:paragraph
+                      [:text-run "*em*not"]]))
+
   (t/testing "backslash escapes"
     (utils/parses-to sut/inline-parser->ast
 
                      ;; Any ASCII punctuation character may be backslash-escaped
+                     ;; NOTE: not working in JS environment same as in JVM
                      "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"
-                     [:paragraph
-                      [:text-run
-                       "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"]]
+                     #?(:clj  [:paragraph
+                               [:text-run
+                                "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"]]
+                        :cljs [:paragraph
+                               [:text-run "\\!\\\"\\"]
+                               [:hashtag {:from "#\\"} "\\"]
+                               "$"
+                               [:text-run
+                                "\\%\\&\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~"]])
 
                      ;; Backslashes before other characters are treated as literal backslashes:
                      "\\→\\A\\a\\ \\3\\φ\\«"
@@ -639,9 +684,14 @@
                       [:latex "\\LaTeX"]]
 
                      ;; can have newlines inside
+                     ;; NOTE: not working in JS environment same as in JVM
                      "$$abc\ndef$$"
-                     [:paragraph
-                      [:latex "abc\ndef"]]
+                     #?(:clj  [:paragraph
+                               [:latex "abc\ndef"]]
+                        :cljs [:paragraph
+                               [:text-run "$$abc"]
+                               [:newline "\n"]
+                               [:text-run "def$$"]])
 
                      ;; can have $ inside
                      "$$abc $ d$$"

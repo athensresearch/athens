@@ -13,9 +13,10 @@
     [athens.dates :as dates]
     [athens.db :as db :refer [get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+    [athens.patterns :as patterns]
     [athens.reactive :as reactive]
     [athens.router :as router]
-    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
+    [athens.util :refer [get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.hoc.perf-mon :as perf-mon]
@@ -283,13 +284,13 @@
                          :variant "strict"
                          :color "foreground.secondary"}
           (doall
-            (for [{:keys [node/title block/string block/uid]} parents]
+            (for [{:keys [block/uid]} parents]
               [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
                [:> BreadcrumbLink
                 {:onClick #(let [new-B (db/get-block [:block/uid uid])
                                  new-P (drop-last parents)]
                              (swap! state assoc :block new-B :parents new-P))}
-                [parse-and-render (or title string) uid]]]))]
+                [parse-and-render (common-db/breadcrumb-string @db/dsdb uid) uid]]]))]
          [:> Box {:class "block-embed"}
           [blocks/block-el
            (recursively-modify-block-for-embed block embed-id)
@@ -307,6 +308,34 @@
                           :defaultIsOpen (> 10 (count linked-refs))}
        (doall
          (for [[group-title group] linked-refs]
+           [:> ReferenceGroup {:key (str "group-" group-title)
+                               :title group-title
+                               :onClickTitle (fn [e]
+                                               (let [shift?       (.-shiftKey e)
+                                                     parsed-title (parse-renderer/parse-title group-title)]
+                                                 (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
+                                                                                      :target :page
+                                                                                      :pane   (if shift?
+                                                                                                :right-pane
+                                                                                                :main-pane)}])
+                                                 (router/navigate-page parsed-title e)))}
+            (doall
+              (for [block group]
+                [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
+                 [ref-comp block]]))]))])))
+
+
+(defn linked-prop-el
+  [title]
+  (let [linked-props (wrap-span-no-new-tx "get-reactive-linked-properties"
+                                          (reactive/get-reactive-linked-properties [:node/title title]))]
+
+    (when (not-empty linked-props)
+      [:> PageReferences {:count (count linked-props)
+                          :title "Linked Properties"
+                          :defaultIsOpen (> 10 (count linked-props))}
+       (doall
+         (for [[group-title group] linked-props]
            [:> ReferenceGroup {:key (str "group-" group-title)
                                :title group-title
                                :onClickTitle (fn [e]
@@ -345,7 +374,7 @@
                                                           :flexShrink 0
                                                           :onClick link-all-unlinked}
                                                "Link all"])
-                        :onOpen  #(let [un-refs (get-unlinked-references (escape-str title))]
+                        :onOpen  #(let [un-refs (get-unlinked-references (patterns/escape-str title))]
                                     (swap! state assoc unlinked? true)
                                     (reset! unlinked-refs un-refs))
                         :onClose #(swap! state assoc unlinked? false)}
@@ -400,7 +429,7 @@
         (reset! state init-state)
         (reset! unlinked-refs [])
         (reset! block-uid (:block/uid node)))
-      (let [{:block/keys [children uid] title :node/title}                      node
+      (let [{:block/keys [children uid properties] title :node/title}           node
             {:alert/keys [message confirm-fn cancel-fn confirm-text] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
@@ -451,20 +480,31 @@
 
          [:> PageBody
 
+          (when (and (empty? properties)
+                     (empty? children))
+            [placeholder-block-el uid])
+
+          ;; Properties
+          [:div
+           (when (seq properties)
+             (for [prop (common-db/sort-block-properties properties)]
+               ^{:key (:db/id prop)}
+               [blocks/block-el prop]))]
+
           ;; Children
-          (if (empty? children)
-            [placeholder-block-el uid]
-            [:div
-             (for [{:block/keys [uid] :as child} children]
-               ^{:key uid}
-               [perf-mon/hoc-perfmon {:span-name "block-el"}
-                [blocks/block-el child]])])]
+          [:div
+           (for [{:block/keys [uid] :as child} children]
+             ^{:key uid}
+             [perf-mon/hoc-perfmon {:span-name "block-el"}
+              [blocks/block-el child]])]]
 
          ;; References
          [:> PageFooter
           [:> VStack {:spacing 2 :py 4 :align "stretch"}
            [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
             [linked-ref-el title]]
+           [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-prop-el"}
+            [linked-prop-el title]]
            (when-not on-daily-notes?
              [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
               [unlinked-ref-el state unlinked-refs title]])]]]))))

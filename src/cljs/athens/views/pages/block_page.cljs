@@ -3,6 +3,8 @@
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink]]
+    [athens.common-db :as common-db]
+    [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
@@ -78,12 +80,12 @@
   (let [parents (reactive/get-reactive-parents-recursively id)]
     [:> Breadcrumb {:gridArea "breadcrumb" :opacity 0.75}
      (doall
-       (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
+       (for [{breadcrumb-uid :block/uid} parents]
          ^{:key breadcrumb-uid}
          [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
           [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid)}
            [:span {:style {:pointer-events "none"}}
-            [parse-renderer/parse-and-render (or title string)]]]]))]))
+            [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb breadcrumb-uid)]]]]))]))
 
 
 (defn block-page-el
@@ -91,14 +93,17 @@
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})]
     (fn [block]
-      (let [{:block/keys [string children uid] :db/keys [id]} block]
+      (let [{:block/keys [string children uid] :db/keys [id]} block
+            is-current-route? (= @(subscribe [:current-route/uid]) uid)]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
         [:<>
 
          ;; Header
-         [:> PageHeader {:onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+         [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
+                                                  (fn [e] (router/navigate-uid uid e)))
+                         :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
                                                  #(dispatch [:right-sidebar/open-item uid]))}
 
           ;; Parent Context
