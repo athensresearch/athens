@@ -4,7 +4,7 @@ import { saveLastBlockAndEnter, waitForBoot, createPage, deleteCurrentPage } fro
 
 
 const rightClickFirstBullet = async (page: Page) => {
-  await page.click('.block-body >> nth=0 >> [aria-label="Block anchor"]', {
+  await page.click('.block-container >> nth=0 >> [aria-label="Block anchor"]', {
     button: 'right'
   });
 };

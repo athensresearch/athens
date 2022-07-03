@@ -171,7 +171,6 @@
 (defn placeholder-block-el
   [parent-uid]
   [:> Container
-   [:div.block-body
     [:> Anchor]
     [:> Button {:flex "1 1 100%"
                 :py 0
@@ -184,7 +183,7 @@
                 :cursor "text"
                 :fontWeight "normal"
                 :onClick #(handle-new-first-child-block-click parent-uid)}
-     "Type to begin..."]]])
+     "Type to begin..."]])
 
 
 (defn sync-title
