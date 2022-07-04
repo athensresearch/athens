@@ -6,6 +6,10 @@ const ANCHORS = {
   CIRCLE: <svg viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="4" />
   </svg>,
+  PROPERTY: <svg viewBox="0 0 24 24">
+    <circle cy="17" cx="12" r="3" />
+    <circle cy="7" cx="12" r="3" />
+  </svg>,
   DASH: <svg viewBox="0 0 1 1">
     <line x1="-1" y1="0" x2="1" y2="0" />
   </svg>
@@ -68,8 +72,9 @@ export interface AnchorProps {
   onCopyUnformatted: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
-  onClick: () => void;
-  menuActions: any;
+  onOpenBlock: () => void;
+  onOpenBlockInSidebar: () => void;
+  menu: any;
 }
 
 const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
@@ -82,8 +87,11 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
     flexShrink: 0,
     position: 'relative',
     appearance: "none",
+    _dragging: {
+      cursor: "drag"
+    },
     border: "0",
-    color: "foreground.secondary",
+    color: "foreground.tertiary",
     display: "flex",
     placeItems: "center",
     placeContent: "center",
@@ -128,24 +136,39 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
  * A handle and indicator of a block's position in the document
 */
 export const Anchor = (props: AnchorProps) => {
-
   const { isClosedWithChildren,
     anchorElement,
     shouldShowDebugDetails,
     onDragStart,
     onDragEnd,
-    onClick,
+    onOpenBlock,
+    onOpenBlockInSidebar,
     uidSanitizedBlock,
-    menuActions,
+    menu,
   } = props;
   const ref = React.useRef(null);
+
+  const menuList = menu ? <MenuList>
+    {menu.map((action) => <MenuItem {...action} />)}
+    {shouldShowDebugDetails && (
+      <>
+        {menu && <MenuDivider />}
+        <MenuGroup title="Debug details">
+          <Box px={4} pb={3}>
+            {propertiesList(uidSanitizedBlock)}
+          </Box>
+        </MenuGroup>
+      </>)}
+  </MenuList> : null;
 
   const {
     menuSourceProps,
     ContextMenu,
-    isOpen: isContextMenuOpen
+    isOpen: isContextMenuOpen,
+    onToggle: onContextMenuToggle,
   } = useContextMenu({
     ref,
+    menuProps: { size: "sm" },
     source: "box"
   });
 
@@ -153,31 +176,30 @@ export const Anchor = (props: AnchorProps) => {
     <IconButton
       ref={ref}
       aria-label="Block anchor"
-      {...anchorButtonStyleProps(isClosedWithChildren)}
-      {...menuSourceProps}
+      onClick={(e) => {
+        if (isContextMenuOpen || !e.shiftKey) {
+          onContextMenuToggle(e);
+        }
+      }}
+      onContextMenu={(e) => onContextMenuToggle(e)}
+      onDoubleClick={(e) => {
+        console.log(e)
+        if (e.shiftKey) {
+          onOpenBlockInSidebar(e)
+        } else {
+          onOpenBlock(e)
+        }
+      }}
       onDragStart={onDragStart}
-      onClick={onClick}
       onDragEnd={onDragEnd}
       isActive={isContextMenuOpen}
+      {...anchorButtonStyleProps(isClosedWithChildren)}
     >
       {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
     </IconButton>
-    {(menuActions) && <ContextMenu>
-      <MenuList>
-        {menuActions.map((action) => {
-          return <MenuItem {...action} />
-        })}
-        {shouldShowDebugDetails && (
-          <>
-            {menuActions && <MenuDivider />}
-            <MenuGroup title="Debug details">
-              <Box px={4} pb={3}>
-                {propertiesList(uidSanitizedBlock)}
-              </Box>
-            </MenuGroup>
-          </>)}
-      </MenuList>
-    </ContextMenu>}
+    <ContextMenu>
+      {menuList}
+    </ContextMenu>
   </>
 
 };
