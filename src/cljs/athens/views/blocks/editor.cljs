@@ -250,10 +250,10 @@
              [block-el prop
               (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid prop)))
               opts]))
-         
+
          [:div.block-children
 
-         ;; Children
+          ;; Children
           (when (and (seq children)
                      (or (and (true? linked-ref) @linked-ref-open?)
                          (and (false? linked-ref) open)))
