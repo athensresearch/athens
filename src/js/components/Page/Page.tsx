@@ -116,7 +116,10 @@ export const PageBody = ({ children }) => <Box
   pl="calc(var(--page-padding) - 1em)"
   pr="var(--page-padding)"
   gridArea="content"
->{children}</Box>
+>
+  <Inbox />
+  <Box border="4px solid white">test</Box>
+  {children}</Box>
 
 export const PageFooter = ({ children }) => <Box
   as="footer"

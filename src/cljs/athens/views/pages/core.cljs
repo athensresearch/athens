@@ -3,6 +3,7 @@
     ["@chakra-ui/react" :refer [Box]]
     [athens.util :refer [toast]]
     [athens.views.hoc.perf-mon :as perf-mon]
+    [athens.views.notifications :as notifications]
     [athens.views.pages.all-pages :as all-pages]
     [athens.views.pages.daily-notes :as daily-notes]
     [athens.views.pages.graph :as graph]
@@ -78,5 +79,7 @@
                        [daily-notes/page]]
        :graph         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/graph"}
                        [graph/page]]
+       :notifications         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/notifications"}
+                       [notifications/inbox]]
        [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/default"}
         [daily-notes/page]])]))
