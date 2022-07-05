@@ -61,6 +61,20 @@
                   :db/valueType   :db.type/ref}})
 
 
+(defn migrate-v2-time-to-v3-time
+  [conn]
+  (->> (d/datoms @conn :eavt)
+       (filter (comp #{:create/time :edit/time} second))
+       (mapcat (fn [[e a v]]
+                 [[:db/retract e a]
+                  {:db/id e
+                   (if (= a :create/time)
+                     :block/create
+                     :block/edits)
+                   {:event/time {:time/ts v}}}]))
+       (d/transact! conn)))
+
+
 ;; Tentative auth schema
 #_(def v4-schema
   {;; Auth is a unique combination of id and provider.
@@ -113,7 +127,9 @@
 (def migrations
   [[1 #(transact-schema! % v1-schema)]
    [2 #(transact-schema! % v2-schema)]
-   [3 #(transact-schema! % v3-schema)]])
+   [3 (fn [conn]
+        (transact-schema! conn v3-schema)
+        (migrate-v2-time-to-v3-time conn))]])
 
 
 (defn migrate-conn!

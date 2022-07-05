@@ -50,6 +50,67 @@
     (t/is (= (d/pull @old-conn '[:block/uid :block/string] [:block/uid "uid"]) block))))
 
 
+(t/deftest migrate-v2-time-to-v3-time
+  (let [conn       (common-db/migrate-conn! (d/create-conn) :up-to 2)
+        ;; Datoms from part of the welcome page.
+        v2-datoms  [[:db/add 3 :block/children 4]
+                    [:db/add 3 :block/children 5]
+                    [:db/add 3 :block/uid "bde244379"]
+                    [:db/add 3 :create/time 1656950111341]
+                    [:db/add 3 :edit/time 1656950111350]
+                    [:db/add 3 :node/title "Welcome"]
+                    [:db/add 3 :page/sidebar 0]
+                    [:db/add 4 :block/open true]
+                    [:db/add 4 :block/order 0]
+                    [:db/add 4 :block/string "Welcome to Athens, Open-Source Networked Thought!"]
+                    [:db/add 4 :block/uid "ee770c334"]
+                    [:db/add 4 :create/time 1656950111345]
+                    [:db/add 4 :edit/time 1656950111356]
+                    [:db/add 5 :block/children 6]
+                    [:db/add 5 :block/open true]
+                    [:db/add 5 :block/order 1]
+                    [:db/add 5 :block/string "You can open and close blocks that have children."]
+                    [:db/add 5 :block/uid "6aecd4172"]
+                    [:db/add 5 :create/time 1656950111350]
+                    [:db/add 5 :edit/time 1656950111358]
+                    [:db/add 6 :block/open true]
+                    [:db/add 6 :block/order 0]
+                    [:db/add 6 :block/string "![](https://athens-assets-1.s3.us-east-2.amazonaws.com/welcome.gif)"]
+                    [:db/add 6 :block/uid "5f82a48ef"]
+                    [:db/add 6 :create/time 1656950111353]
+                    [:db/add 6 :edit/time 1656950111360]]
+        pull-id    [:node/title "Welcome"]
+        v2-pattern '[:create/time :edit/time {:block/children ...}]
+        v3-pattern '[:time/ts {:block/children ...} {:block/create ...} {:block/edits ...} {:event/time ...}]]
+    (d/transact! conn v2-datoms)
+    ;; Starts with v2 times.
+    (t/is (= {:block/children
+              [{:create/time 1656950111345
+                :edit/time   1656950111356}
+               {:block/children
+                [{:create/time 1656950111353
+                  :edit/time   1656950111360}]
+                :create/time 1656950111350
+                :edit/time   1656950111358}]
+              :create/time 1656950111341
+              :edit/time   1656950111350}
+             (d/pull @conn v2-pattern pull-id)))
+    ;; After migration, v2 times are migrated to v3.
+    (common-db/migrate-conn! conn :up-to 3)
+    (t/is (= nil (d/pull @conn v2-pattern pull-id)))
+    (t/is (= {:block/children
+              [{:block/create {:event/time {:time/ts 1656950111345}}
+                :block/edits  [{:event/time {:time/ts 1656950111356}}]}
+               {:block/children
+                [{:block/create {:event/time {:time/ts 1656950111353}}
+                  :block/edits  [{:event/time {:time/ts 1656950111360}}]}]
+                :block/create {:event/time {:time/ts 1656950111350}}
+                :block/edits  [{:event/time {:time/ts 1656950111358}}]}]
+              :block/create {:event/time {:time/ts 1656950111341}}
+              :block/edits  [{:event/time {:time/ts 1656950111350}}]}
+             (d/pull @conn v3-pattern pull-id)))))
+
+
 (t/deftest get-internal-representation
   (let [gir (fn [tx-data eid]
               (-> common-db/empty-db
