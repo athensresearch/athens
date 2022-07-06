@@ -156,7 +156,6 @@
 (def routes
   ["/"
    ["" {:name :home}]
-   ["notifications" {:name :notifications}]
    ["settings" {:name :settings}]
    ["pages" {:name :pages}]
    ["page-t/:title" {:name :page-by-title}]

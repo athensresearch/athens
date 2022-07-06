@@ -152,7 +152,5 @@
 (comment
   ;; Print what ratoms are active.
   (-> (ratoms) utils/spy))
-
-
-;;
+  ;;
 

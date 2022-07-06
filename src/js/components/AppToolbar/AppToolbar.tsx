@@ -34,8 +34,6 @@ import {
   useMediaQuery
 } from '@chakra-ui/react';
 
-import { NotificationsPopover } from '@/Inbox/Inbox'
-
 import { WindowButtons } from './components/WindowButtons';
 
 interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
@@ -76,7 +74,7 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
   gridArea="app-header"
   borderBottom="1px solid transparent"
   justifyContent="space-between"
-  // overflow="hidden"
+  overflow="hidden"
   py={1}
   px={1}
   h={6}
@@ -383,7 +381,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               <GraphIcon />
             </ToolbarIconButton>
           </Tooltip>
-          <NotificationsPopover />
           <ToolbarButton
             aria-label="Search"
             variant="outline"

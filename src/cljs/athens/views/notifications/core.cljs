@@ -1,12 +1,11 @@
 (ns athens.views.notifications.core
-  (:require
-    [athens.common-db :as common-db]
-    [athens.common-events.bfs :as bfs]
-    [athens.common-events.graph.composite :as composite]
-    [athens.common-events.graph.ops :as graph-ops]
-    [athens.common.utils :as common.utils]
-    [athens.db :as db]
-    [re-frame.core :as rf]))
+  (:require [athens.common-events.bfs :as bfs]
+            [athens.common.utils :as common.utils]
+            [athens.common-events.graph.composite :as composite]
+            [athens.common-db :as common-db]
+            [athens.db :as db]
+            [athens.common-events.graph.ops :as graph-ops]
+            [re-frame.core :as rf]))
 
 
 (defn new-notification
@@ -15,7 +14,7 @@
   (->> (bfs/internal-representation->atomic-ops
          db
          [#:block{:uid        (common.utils/gen-block-uid)
-                  :string     "" ; Should the string be message or the breadcrumb or something else?
+                  :string     "" ;; Should the string be message or the breadcrumb or something else?
                   :properties {":block/type"
                                #:block{:string "notification"
                                        :uid    (common.utils/gen-block-uid)}
@@ -39,7 +38,8 @@
 (defn update-notification-state
   [notification-block-uid to-state]
   (rf/dispatch [:properties/update-in [:block/uid notification-block-uid] [":notification/state"]
-                (fn [db prop-uid]
-                  [(graph-ops/build-block-save-op db prop-uid to-state)])]))
+                       (fn [db prop-uid]
+                         [(graph-ops/build-block-save-op db prop-uid to-state)])]))
+
 
 
