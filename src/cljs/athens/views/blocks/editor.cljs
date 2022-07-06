@@ -4,8 +4,8 @@
     ["/components/Block/PropertyName" :refer [PropertyName]]
     ["/components/Block/Toggle" :refer [Toggle]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     ["/components/inbox/Notifications" :refer [KanbanBoard KanbanColumn KanbanCard]]
+    ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common-db :as common-db]
     [athens.db :as db]
     [athens.events.inline-refs :as inline-refs.events]
@@ -21,8 +21,8 @@
     [athens.views.blocks.bullet :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content :as content]
     [athens.views.blocks.context-menu :refer [handle-copy-unformatted handle-copy-refs]]
-    [re-frame.core :as rf]
-    [athens.views.notifications.actions :as actions]))
+    [athens.views.notifications.actions :as actions]
+    [re-frame.core :as rf]))
 
 
 (defn toggle
@@ -256,10 +256,10 @@
            [inline-linked-refs-el block-el uid])
 
          (when (= "Show inbox here" block-str)
-            [:> KanbanColumn {:name  "Inbox"
-                              :cards ["1" "2"]
-                              :messages ["@Jeff commented: Use the main branch for this instance" "@Jeff assigned a new task to you"]
-                              :titles ["T-13 Create a docker Instance for `123.345.45.54" "T-13 Create a docker Instance for `123.345.45.54"]}])
+           [:> KanbanColumn {:name  "Inbox"
+                             :cards ["1" "2"]
+                             :messages ["@Jeff commented: Use the main branch for this instance" "@Jeff assigned a new task to you"]
+                             :titles ["T-13 Create a docker Instance for `123.345.45.54" "T-13 Create a docker Instance for `123.345.45.54"]}])
          ;; Properties
          (when (and (seq properties)
                     (or (and (true? linked-ref) @linked-ref-open?)

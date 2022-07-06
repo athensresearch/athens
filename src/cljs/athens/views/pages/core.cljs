@@ -80,6 +80,6 @@
        :graph         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/graph"}
                        [graph/page]]
        :notifications         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/notifications"}
-                       [notifications/inbox]]
+                               [notifications/inbox]]
        [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/default"}
         [daily-notes/page]])]))
