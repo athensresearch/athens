@@ -49,7 +49,7 @@ const InboxViewListItemBody = ({ isRead, isArchived, message }) => {
   >
     <InboxItemStatusIndicator isRead={isRead} isArchived={isArchived} />
     <VStack flexShrink={1} spacing={0} align="stretch">
-      <Text fontSize="sm">{message}</Text>
+      <Text color={isRead ? "foreground.secondary" : "foreground.primary"} fontSize="sm">{message}</Text>
     </VStack>
   </HStack>
 }
@@ -61,7 +61,7 @@ export const InboxViewListItemActions = ({ children }) => {
 export const InboxViewListItem = (props): JSX.Element => {
   const {
     isSelected, onOpen, onMarkAsRead, onMarkAsUnread, onMarkAsArchived, onMarkAsUnarchived, onIncSelection, onDecSelection, onSelect, onDeselect, ...notificationProps } = props;
-  const { id, isRead, isArchived, object, message, actions } = notificationProps;
+  const { id, isRead, isArchived, message, actions } = notificationProps;
   const ref = React.useRef();
 
   const { isOpen: isContextMenuOpen, ContextMenu, menuSourceProps } = useContextMenu({

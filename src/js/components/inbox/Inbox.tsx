@@ -65,19 +65,19 @@ const messageForNotification = (notification: NOTIFICATION): React.ReactNode => 
   const objectName = object.string || object.name;
 
   if (type === "Created") {
-    return <Text as="span" color="foreground.secondary"><Text color="foreground.primary" as="span" fontWeight="medium">{subjectName}</Text> created <Text as="span" color="foreground.primary" fontWeight="medium">{objectName}</Text></Text>;
+    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> created <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
   } else if (type === "Edited") {
-    return <Text as="span" color="foreground.secondary"><Text color="foreground.primary" as="span" fontWeight="medium">{subjectName}</Text> edited <Text as="span" color="foreground.primary" fontWeight="medium">{objectName}</Text></Text>;
+    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> edited <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
   } else if (type === "Deleted") {
-    return <Text as="span" color="foreground.secondary"><Text color="foreground.primary" as="span" fontWeight="medium">{subjectName}</Text> deleted <Text as="span" color="foreground.primary" fontWeight="medium">{objectName}</Text></Text>;
+    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> deleted <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
   } else if (type === "Comments") {
-    return <Text as="span" color="foreground.secondary"><Text color="foreground.primary" as="span" fontWeight="medium">{subjectName}</Text> commented on <Text as="span" color="foreground.primary" fontWeight="medium">{objectName}</Text></Text>;
+    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> commented on <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
   } else if (type === "Mentions") {
-    return <Text as="span" color="foreground.secondary"><Text color="foreground.primary" as="span" fontWeight="medium">{subjectName}</Text> mentioned you in  <Text as="span" color="foreground.primary" fontWeight="medium">{objectName}</Text></Text>;
+    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> mentioned you in  <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
   } else if (type === "Assignments") {
-    return <Text as="span" color="foreground.secondary"><Text color="foreground.primary" as="span" fontWeight="medium">{subjectName}</Text> assigned you to <Text as="span" color="foreground.primary" fontWeight="medium">{objectName}</Text></Text>;
+    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> assigned you to <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
   } else if (type === "Completed") {
-    return <Text as="span" color="foreground.secondary"><Text color="foreground.primary" as="span" fontWeight="medium">{subjectName}</Text> completed <Text as="span" color="foreground.primary" fontWeight="medium">{objectName}</Text></Text>;
+    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> completed <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
   }
 }
 
@@ -115,7 +115,6 @@ const makeNotification = (): NOTIFICATION => ({
   isArchived: false
 })
 
-
 const MessageAllDone = () => <Text fontSize="sm">All done!</Text>
 const MessageNoNotificationsHere = ({ onClearFilters }) => <VStack>
   <Text color="foreground.secondary" fontSize="sm">No notifications here</Text>
@@ -126,29 +125,29 @@ const ITEMS = new Array(12).fill(true).map(() => makeNotification());
 
 export const READ_FILTER = { id: "read", label: "Read", fn: (n) => !n.isRead }
 const ARCHIVED_FILTER = { id: "archived", label: "Archived", fn: (n) => n.isArchived }
-export const availableFilters = [
-  READ_FILTER, ARCHIVED_FILTER
-]
 export const DEFAULT_FILTERS = [READ_FILTER.id]
 
 const availableGroupings = ["type", "isRead", "isArchived"]
+export const availableFilters = [
+  READ_FILTER, ARCHIVED_FILTER
+]
 
 export const Inbox = () => {
   const [items, setItems] = React.useState(ITEMS);
 
   const {
+    // hasMeaningfulFilters,
+    // filterIds,
+    // setFilterIds,
+    // filteredItems,
+    // setGrouping,
+    // grouping,
+    // groupedFilteredSortedItems,
+    // resetFilters,
     selectedItemId,
     selectedItemRef,
     selectedItem,
-    hasMeaningfulFilters,
-    filterIds,
-    setFilterIds,
-    filteredItems,
-    setGrouping,
-    grouping,
-    groupedFilteredSortedItems,
     getActionsForNotification,
-    resetFilters,
     selectItem,
     deselectItem,
     markAsRead,
@@ -164,91 +163,107 @@ export const Inbox = () => {
     }
   }, [selectedItemId])
 
-  const actions = <ButtonGroup isAttached size="xs">
-    <Menu>
-      <Button as={MenuButton}>Group <Text display="inline" color="foreground.secondary" textTransform="capitalize">{grouping}</Text></Button>
-      <MenuList>
-        <MenuOptionGroup
-          type="radio"
-          value={grouping}
-          onChange={(value) => setGrouping(value as string)}
-        >
-          {availableGroupings.map((grouping) => {
-            return (<MenuItemOption
-              textTransform="capitalize"
-              key={grouping}
-              value={grouping}
-            >
-              {grouping}
-            </MenuItemOption>)
-          })}
-        </MenuOptionGroup>
-      </MenuList>
-    </Menu>
-    <Menu closeOnSelect={false}>
-      <Button as={MenuButton}>Filter</Button>
-      <MenuList>
-        <MenuOptionGroup
-          type="checkbox"
-          value={filterIds}
-          onChange={(value) => setFilterIds(value)}
-        >
-          {availableFilters.map((filter) => {
-            return (<MenuItemOption
-              key={filter.id}
-              value={filter.id}
-            >
-              {filter.label}
-            </MenuItemOption>)
-          })}
-        </MenuOptionGroup>
-      </MenuList>
-    </Menu>
-  </ButtonGroup>;
+  // const actions = <ButtonGroup isAttached size="xs">
+  //   <Menu>
+  //     <Button as={MenuButton}>Group <Text display="inline" color="foreground.secondary" textTransform="capitalize">{grouping}</Text></Button>
+  //     <MenuList>
+  //       <MenuOptionGroup
+  //         type="radio"
+  //         value={grouping}
+  //         onChange={(value) => setGrouping(value as string)}
+  //       >
+  //         {availableGroupings.map((grouping) => {
+  //           return (<MenuItemOption
+  //             textTransform="capitalize"
+  //             key={grouping}
+  //             value={grouping}
+  //           >
+  //             {grouping}
+  //           </MenuItemOption>)
+  //         })}
+  //       </MenuOptionGroup>
+  //     </MenuList>
+  //   </Menu>
+  //   <Menu closeOnSelect={false}>
+  //     <Button as={MenuButton}>Filter</Button>
+  //     <MenuList>
+  //       <MenuOptionGroup
+  //         type="checkbox"
+  //         value={filterIds}
+  //         onChange={(value) => setFilterIds(value)}
+  //       >
+  //         {availableFilters.map((filter) => {
+  //           return (<MenuItemOption
+  //             key={filter.id}
+  //             value={filter.id}
+  //           >
+  //             {filter.label}
+  //           </MenuItemOption>)
+  //         })}
+  //       </MenuOptionGroup>
+  //     </MenuList>
+  //   </Menu>
+  // </ButtonGroup>;
 
-  const itemsAsList = filteredItems.map((i) => (
-    <InboxViewListItem
-      message={messageForNotification(i)}
-      isSelected={i.id === selectedItemId}
-      actions={getActionsForNotification(i)}
-      onOpen={openItem}
-      onSelect={selectItem}
-      onDeselect={deselectItem}
-      onMarkAsRead={markAsRead}
-      onMarkAsUnread={markAsUnread}
-      onMarkAsArchived={markAsArchived}
-      onMarkAsUnarchived={markAsUnarchived}
-      key={i.id}
-      {...i}
-    />));
 
-  const flattenedGroupedItems: any[] =
-    Object.keys(groupedFilteredSortedItems)
-      .flatMap(key => ([{ type: "listHeading", heading: key, count: groupedFilteredSortedItems[key].length }, ...groupedFilteredSortedItems[key]]));
+  // const itemsAsList = filteredItems.map((i) => (
+  //   <InboxViewListItem
+  //     message={messageForNotification(i)}
+  //     isSelected={i.id === selectedItemId}
+  //     actions={getActionsForNotification(i)}
+  //     onOpen={openItem}
+  //     onSelect={selectItem}
+  //     onDeselect={deselectItem}
+  //     onMarkAsRead={markAsRead}
+  //     onMarkAsUnread={markAsUnread}
+  //     onMarkAsArchived={markAsArchived}
+  //     onMarkAsUnarchived={markAsUnarchived}
+  //     key={i.id}
+  //     {...i}
+  //   />));
 
-  const itemsList = flattenedGroupedItems.map((i) => {
-    if (i.type === 'listHeading') {
-      const { heading, count } = i;
-      return <InboxViewListGroupHeader key={heading.toString()} title={heading.toString()} count={count} />
-    }
-    else {
-      return (
-        <InboxViewListItem
-          message={messageForNotification(i)}
-          actions={getActionsForNotification(i)}
-          isSelected={i.id === selectedItemId}
-          onOpen={openItem}
-          onSelect={selectItem}
-          onDeselect={deselectItem}
-          onMarkAsRead={markAsRead}
-          onMarkAsUnread={markAsUnread}
-          onMarkAsArchived={markAsArchived}
-          onMarkAsUnarchived={markAsUnarchived}
-          key={i.id}
-          {...i}
-        />)
-    }
-  });
+
+  // const groupedItemsList = Object.keys(groupedFilteredSortedItems)
+  //   .flatMap(key => ([{ type: "listHeading", heading: key, count: groupedFilteredSortedItems[key].length }, ...groupedFilteredSortedItems[key]])).map((i) => {
+  //     if (i.type === 'listHeading') {
+  //       const { heading, count } = i;
+  //       return <InboxViewListGroupHeader key={heading.toString()} title={heading.toString()} count={count} />
+  //     }
+  //     else {
+  //       return (
+  //         <InboxViewListItem
+  //           message={messageForNotification(i)}
+  //           actions={getActionsForNotification(i)}
+  //           isSelected={i.id === selectedItemId}
+  //           onOpen={openItem}
+  //           onSelect={selectItem}
+  //           onDeselect={deselectItem}
+  //           onMarkAsRead={markAsRead}
+  //           onMarkAsUnread={markAsUnread}
+  //           onMarkAsArchived={markAsArchived}
+  //           onMarkAsUnarchived={markAsUnarchived}
+  //           key={i.id}
+  //           {...i}
+  //         />)
+  //     }
+  //   });
+
+  const itemsList = items.map((i) => <InboxViewListItem
+    message={messageForNotification(i)}
+    actions={getActionsForNotification(i)}
+    isSelected={i.id === selectedItemId}
+    onOpen={openItem}
+    onSelect={selectItem}
+    onDeselect={deselectItem}
+    onMarkAsRead={markAsRead}
+    onMarkAsUnread={markAsUnread}
+    onMarkAsArchived={markAsArchived}
+    onMarkAsUnarchived={markAsUnarchived}
+    key={i.id}
+    {...i}
+  />);
+
+  const hasMeaningfulFilters = false;
 
   return (
     <>
@@ -256,11 +271,11 @@ export const Inbox = () => {
         <InboxViewList>
           <InboxViewListHeader
             title="Inbox"
-            subtitle={`${filteredItems.length} items`}
-            actions={actions}
+            subtitle={`${items.length} items`}
+          // actions={actions}
           />
           <InboxViewListBody>
-            {!!filteredItems.length ?
+            {!!itemsList.length ?
               itemsList
               : <Center
                 as={motion.div}
@@ -274,9 +289,9 @@ export const Inbox = () => {
                   opacity: 0,
                 }}
               >
-                <Box py={4}>
+                {/* <Box py={4}>
                   {hasMeaningfulFilters ? <MessageNoNotificationsHere onClearFilters={resetFilters} /> : <MessageAllDone />}
-                </Box>
+                </Box> */}
               </Center>}
           </InboxViewListBody>
         </InboxViewList>

@@ -7,7 +7,7 @@ import {
   Text,
   Heading
 } from "@chakra-ui/react";
-import { LayoutGroup, AnimatePresence, motion } from "framer-motion";
+import { LayoutGroup, AnimatePresence } from "framer-motion";
 
 export const InboxView = ({ children }) => {
   return <HStack
@@ -24,7 +24,7 @@ export const InboxView = ({ children }) => {
 }
 
 
-export const InboxViewListGroupHeader = ({ title, count }) => {
+export const InboxViewListGroupHeader = ({ title, count?}) => {
   return <Box
     layout
     as={motion.div}
@@ -65,7 +65,7 @@ export const InboxViewListHeader = ({ title, subtitle, actions }): JSX.Element =
   >
     <Box>
       <Heading>{title}</Heading>
-      <Text color="foreground.secondary">{subtitle}</Text>
+      {subtitle && <Text color="foreground.secondary">{subtitle}</Text>}
     </Box>
     {actions}
   </HStack>

@@ -64,19 +64,19 @@ export const useNotifications = (items: any[], setItems, availableFilters: any[]
     deselectItem,
   } = useList(items);
 
-  const {
-    hasMeaningfulFilters,
-    filterIds,
-    setFilterIds,
-    filteredItems,
-    resetFilters,
-  } = useFilters(items, defaultFilters, availableFilters);
+  // const {
+  //   hasMeaningfulFilters,
+  //   filterIds,
+  //   setFilterIds,
+  //   filteredItems,
+  //   resetFilters,
+  // } = useFilters(items, defaultFilters, availableFilters);
 
-  const {
-    grouping,
-    setGrouping,
-    groupedItems: groupedFilteredSortedItems,
-  } = useGrouping(filteredItems, "type");
+  // const {
+  //   grouping,
+  //   setGrouping,
+  //   groupedItems: groupedFilteredSortedItems,
+  // } = useGrouping(filteredItems, "type");
 
   const updateItemProperty = (id, property, value) => {
     const editedIndex = items.findIndex(item => item.id === id);
@@ -134,19 +134,19 @@ export const useNotifications = (items: any[], setItems, availableFilters: any[]
     markAsArchived,
     markAsUnread,
     markAsUnarchived,
-    grouping,
-    setGrouping,
     openItem,
     selectedItemId,
     selectedItemRef,
     selectedItem,
-    hasMeaningfulFilters,
-    filterIds,
-    setFilterIds,
-    filteredItems,
-    groupedFilteredSortedItems,
-    resetFilters,
     selectItem,
     deselectItem,
+    // grouping,
+    // setGrouping,
+    // hasMeaningfulFilters,
+    // filterIds,
+    // setFilterIds,
+    // filteredItems,
+    // groupedFilteredSortedItems,
+    // resetFilters,
   };
 };
