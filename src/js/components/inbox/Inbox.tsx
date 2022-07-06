@@ -15,13 +15,13 @@ import {
 } from "@chakra-ui/react";
 import {
   InboxView,
-  InboxViewListItem,
   InboxViewListHeader,
   InboxViewListGroupHeader,
   InboxViewListBody,
   InboxViewContent,
   InboxViewList
 } from '../Layout/InboxView';
+import { InboxViewListItem } from "../Layout/InboxViewListItem";
 import * as React from "react";
 import { faker } from "@faker-js/faker";
 import { motion } from "framer-motion";
@@ -30,18 +30,18 @@ import { useNotifications } from "../utils/useNotifications";
 type PAGE = {
   name: string
   url: string
-  breadcrumb: any
+  breadcrumb: string[]
 }
 
 type BLOCK = {
   string: string
   url: string
-  breadcrumb: any
+  breadcrumb: string[]
 }
 
 type PROPERTY = {
   name: string
-  breadcrumb: any
+  breadcrumb: string[]
 }
 
 type OBJECT = PAGE | PROPERTY | BLOCK;
@@ -90,16 +90,16 @@ const makeNotificationSubject = () => ({
 const makeNotificationPageObject = () => ({
   name: faker.lorem.words(),
   url: faker.internet.url(),
-  breadcrumb: faker.lorem.words(),
+  breadcrumb: new Array(4).fill(true).map(() => (faker.lorem.words())),
 })
 const makeNotificationBlockObject = () => ({
   string: faker.lorem.sentence(),
   url: faker.internet.url(),
-  breadcrumb: faker.lorem.words(),
+  breadcrumb: new Array(4).fill(true).map(() => (faker.lorem.words())),
 })
 const makeNotificationPropertyObject = () => ({
   name: faker.lorem.sentence(),
-  breadcrumb: faker.lorem.words(),
+  breadcrumb: new Array(4).fill(true).map(() => (faker.lorem.words())),
 })
 const makeNotificationObject = () => faker.helpers.arrayElement([makeNotificationPageObject,
   makeNotificationBlockObject,
@@ -131,6 +131,8 @@ export const availableFilters = [
 ]
 export const DEFAULT_FILTERS = [READ_FILTER.id]
 
+const availableGroupings = ["type", "isRead", "isArchived"]
+
 export const Inbox = () => {
   const [items, setItems] = React.useState(ITEMS);
 
@@ -142,7 +144,9 @@ export const Inbox = () => {
     filterIds,
     setFilterIds,
     filteredItems,
-    groupedFilteredItems,
+    setGrouping,
+    grouping,
+    groupedFilteredSortedItems,
     getActionsForNotification,
     resetFilters,
     selectItem,
@@ -161,6 +165,26 @@ export const Inbox = () => {
   }, [selectedItemId])
 
   const actions = <ButtonGroup isAttached size="xs">
+    <Menu>
+      <Button as={MenuButton}>Group <Text display="inline" color="foreground.secondary" textTransform="capitalize">{grouping}</Text></Button>
+      <MenuList>
+        <MenuOptionGroup
+          type="radio"
+          value={grouping}
+          onChange={(value) => setGrouping(value as string)}
+        >
+          {availableGroupings.map((grouping) => {
+            return (<MenuItemOption
+              textTransform="capitalize"
+              key={grouping}
+              value={grouping}
+            >
+              {grouping}
+            </MenuItemOption>)
+          })}
+        </MenuOptionGroup>
+      </MenuList>
+    </Menu>
     <Menu closeOnSelect={false}>
       <Button as={MenuButton}>Filter</Button>
       <MenuList>
@@ -199,10 +223,10 @@ export const Inbox = () => {
     />));
 
   const flattenedGroupedItems: any[] =
-    Object.keys(groupedFilteredItems)
-      .flatMap(key => ([{ type: "listHeading", heading: key, count: groupedFilteredItems[key].length }, ...groupedFilteredItems[key]]));
+    Object.keys(groupedFilteredSortedItems)
+      .flatMap(key => ([{ type: "listHeading", heading: key, count: groupedFilteredSortedItems[key].length }, ...groupedFilteredSortedItems[key]]));
 
-  const groupedItems = flattenedGroupedItems.map((i) => {
+  const itemsList = flattenedGroupedItems.map((i) => {
     if (i.type === 'listHeading') {
       const { heading, count } = i;
       return <InboxViewListGroupHeader key={heading.toString()} title={heading.toString()} count={count} />
@@ -237,7 +261,7 @@ export const Inbox = () => {
           />
           <InboxViewListBody>
             {!!filteredItems.length ?
-              groupedItems
+              itemsList
               : <Center
                 as={motion.div}
                 key="empty"
