@@ -4,22 +4,15 @@ import {
   Divider,
   Center,
   Flex,
-  MenuList,
-  Menu,
-  MenuButton,
-  ButtonGroup,
   Button,
   VStack,
   Text,
   Avatar,
-  MenuOptionGroup,
-  MenuItemOption,
   PopoverContent,
   Popover,
   IconButton,
   PopoverTrigger,
   PopoverBody,
-  Portal,
   PopoverHeader,
   PopoverCloseButton
 } from "@chakra-ui/react";
@@ -28,7 +21,6 @@ import {
   InboxViewListHeader,
   InboxViewListGroupHeader,
   InboxViewListBody,
-  InboxViewContent,
   InboxViewList
 } from '../Layout/InboxView';
 import { InboxViewListItem } from "../Layout/InboxViewListItem";
