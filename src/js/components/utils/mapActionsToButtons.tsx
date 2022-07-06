@@ -2,7 +2,8 @@ import {
   Menu,
   IconButton,
   MenuButton,
-  Button
+  Button,
+  Portal
 } from "@chakra-ui/react";
 import { EllipsisHorizontalIcon } from "@/Icons/Icons";
 import { mapActionsToMenuList } from './mapActionsToMenuList';
@@ -27,7 +28,9 @@ export const mapActionsToButtons = (actions, limitShown: number) => {
     {!!overflowActions.length &&
       <Menu size="sm" isLazy>
         <IconButton variant="ghost" aria-label="Menu" as={MenuButton} icon={<EllipsisHorizontalIcon />} />
-        {mapActionsToMenuList(overflowActions)}
+        <Portal>
+          {mapActionsToMenuList(overflowActions)}
+        </Portal>
       </Menu>}
   </>;
 };

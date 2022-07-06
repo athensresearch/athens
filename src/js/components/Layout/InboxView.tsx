@@ -71,13 +71,13 @@ export const InboxViewListHeader = ({ title, subtitle, actions }): JSX.Element =
   </HStack>
 }
 
-
-
 export const InboxViewListBody = ({ children }): JSX.Element => {
   return <Flex
+    as="ol"
     flexDirection="column"
+    bg="inherit"
     alignItems="stretch"
-    height="100%"
+    flex="1 1 100%"
     overflowY="auto"
     position="relative"
     zIndex={0}

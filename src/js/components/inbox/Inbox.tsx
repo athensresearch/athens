@@ -1,7 +1,9 @@
 import {
+  Tooltip,
   Box,
   Divider,
   Center,
+  Flex,
   MenuList,
   Menu,
   MenuButton,
@@ -11,7 +13,15 @@ import {
   Text,
   Avatar,
   MenuOptionGroup,
-  MenuItemOption
+  MenuItemOption,
+  PopoverContent,
+  Popover,
+  IconButton,
+  PopoverTrigger,
+  PopoverBody,
+  Portal,
+  PopoverHeader,
+  PopoverCloseButton
 } from "@chakra-ui/react";
 import {
   InboxView,
@@ -26,6 +36,7 @@ import * as React from "react";
 import { faker } from "@faker-js/faker";
 import { motion } from "framer-motion";
 import { useNotifications } from "../utils/useNotifications";
+import { CheckmarkIcon } from "@/Icons/Icons";
 
 type PAGE = {
   name: string
@@ -132,7 +143,69 @@ export const availableFilters = [
   READ_FILTER, ARCHIVED_FILTER
 ]
 
-export const Inbox = () => {
+export const InboxItemsList = () => {
+  const [items, setItems] = React.useState(ITEMS);
+
+  const {
+    // hasMeaningfulFilters,
+    // filterIds,
+    // setFilterIds,
+    // filteredItems,
+    // setGrouping,
+    // grouping,
+    // groupedFilteredSortedItems,
+    // resetFilters,
+    selectedItemId,
+    selectedItemRef,
+    selectedItem,
+    getActionsForNotification,
+    selectItem,
+    deselectItem,
+    markAsRead,
+    markAsArchived,
+    markAsUnread,
+    markAsUnarchived,
+    openItem,
+  } = useNotifications(items, setItems, availableFilters, DEFAULT_FILTERS);
+
+  const itemsList = items.map((i) => <InboxViewListItem
+    message={messageForNotification(i)}
+    actions={getActionsForNotification(i)}
+    isSelected={i.id === selectedItemId}
+    onOpen={openItem}
+    onSelect={selectItem}
+    onDeselect={deselectItem}
+    onMarkAsRead={markAsRead}
+    onMarkAsUnread={markAsUnread}
+    onMarkAsArchived={markAsArchived}
+    onMarkAsUnarchived={markAsUnarchived}
+    key={i.id}
+    {...i}
+  />);
+
+  return <InboxViewListBody>
+    {!!itemsList.length ?
+      itemsList
+      : <Center
+        as={motion.div}
+        key="empty"
+        animate={{
+          height: "auto",
+          opacity: 1,
+        }}
+        exit={{
+          height: 0,
+          opacity: 0,
+        }}
+      >
+        {/* <Box py={4}>
+        {hasMeaningfulFilters ? <MessageNoNotificationsHere onClearFilters={resetFilters} /> : <MessageAllDone />}
+      </Box> */}
+      </Center>}
+  </InboxViewListBody>
+}
+
+export const Inbox = ({ showContent = true }) => {
   const [items, setItems] = React.useState(ITEMS);
 
   const {
@@ -295,7 +368,7 @@ export const Inbox = () => {
               </Center>}
           </InboxViewListBody>
         </InboxViewList>
-        <InboxViewContent>
+        {showContent && <InboxViewContent>
           <Center flex={1} maxHeight="100%">
             {selectedItem
               ? <Text flex={1} textAlign="center">
@@ -315,8 +388,25 @@ export const Inbox = () => {
               </Text>
               : <Text flex={1} textAlign="center" color="foreground.secondary">No item selected</Text>}
           </Center>
-        </InboxViewContent>
+        </InboxViewContent>}
       </InboxView>
     </>
   );
+}
+
+export const NotificationsPopover = () => {
+  return <Popover closeOnBlur={false}>
+    <Tooltip shouldWrapChildren label="Notifications">
+      <PopoverTrigger>
+        <IconButton aria-label="Notifications" icon={<CheckmarkIcon />} />
+      </PopoverTrigger>
+    </Tooltip>
+    <PopoverContent maxWidth="max-content" maxHeight="calc(100vh - 4rem)">
+      <PopoverCloseButton />
+      <PopoverHeader>Notifications</PopoverHeader>
+      <Flex p={0} as={PopoverBody} flexDirection="column" overflow="hidden">
+        <InboxItemsList />
+      </Flex>
+    </PopoverContent>
+  </Popover>
 }

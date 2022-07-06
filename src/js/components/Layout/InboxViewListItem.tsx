@@ -43,6 +43,7 @@ const InboxItemStatusIndicator = ({ isRead, isArchived }) => {
 
 const InboxViewListItemBody = ({ isRead, isArchived, message }) => {
   return <HStack
+    as="li"
     align="baseline"
     textAlign="left"
     spacing={1.5}
@@ -77,7 +78,7 @@ export const InboxViewListItem = (props): JSX.Element => {
         layout
         as={motion.div}
         key={id}
-        bg="background.floor"
+        bg="inherit"
         animate={{
           height: "auto",
           opacity: 1,
