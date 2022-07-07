@@ -50,9 +50,13 @@
 (def v3-schema
   {;; Time is a unique number timestamp.
    :time/ts      {:db/unique :db.unique/identity}
-   ;; Events have uid, and reference time and auth.
+   ;; Presence ids are unique strings, matching the presence name.
+   :presence/id  {:db/unique :db.unique/identity}
+   ;; Events have uid, and reference time, and auth.
    :event/uid    {:db/unique :db.unique/identity}
    :event/time   {:db/cardinality :db.cardinality/one
+                  :db/valueType   :db.type/ref}
+   :event/auth   {:db/cardinality :db.cardinality/one
                   :db/valueType   :db.type/ref}
    ;; Blocks reference events for creation and edits.
    :block/create {:db/cardinality :db.cardinality/one
@@ -73,17 +77,6 @@
                      :block/edits)
                    {:event/time {:time/ts v}}}]))
        (d/transact! conn)))
-
-
-;; Tentative auth schema
-#_(def v4-schema
-  {;; Auth is a unique combination of id and provider.
-   ;; A user would be able to ref multiple auths.
-   :auth/id+provider {:db/tupleAttrs [:auth/id :auth/provider]
-                      :db/unique     :db.unique/identity}
-   ;; Events can also have auth.
-   :event/auth       {:db/cardinality :db.cardinality/one
-                      :db/valueType   :db.type/ref}})
 
 
 (def v1-bootstrap-schema

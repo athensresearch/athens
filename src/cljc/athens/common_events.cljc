@@ -180,6 +180,11 @@
      :event/create-time (utils/now-ts)}))
 
 
+(defn add-presence
+  [event presence-id]
+  (merge event {:event/presence-id presence-id}))
+
+
 (defn find-event-or-atomic-op-type
   "Finds `:event/type` or type of atomic op"
   [event-or-op]
