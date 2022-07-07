@@ -285,8 +285,8 @@
   Call location should break up composites into atomic ops and call this multiple times,
   once per atomic operation."
   ([db event]
-   ;; If there's no event-ref, use just time. This should only happen in tests though.
-   (resolve-to-tx db event {:event/time {:time/ts (utils/now-ts)}}))
+   ;; If there's no event-ref, use just use empty entity. This should only happen in tests though.
+   (resolve-to-tx db event {}))
   ([db {:event/keys [type op] :as event} event-ref]
    (if (or (contains? #{:op/atomic} type)
            (:op/atomic? event))
@@ -299,7 +299,7 @@
   Returns :tx-data from datascript/transact!."
   ([conn event]
    (resolve-transact! conn event true))
-  ([conn {:event/keys [id create-time log-time] :as event} middleware?]
+  ([conn {:event/keys [id create-time] :as event} middleware?]
    (log/debug "resolve-transact! event-id:" (pr-str id))
    (let [transact! (if middleware?
                      common-db/transact-with-middleware!
@@ -311,11 +311,10 @@
                                (->> (transact! conn txs)
                                     :tx-data
                                     (swap! tx-data concat)))
-         timestamp (or log-time create-time (utils/now-ts))
          event-uid (str id)
          event-ref [:event/uid event-uid]
-         event-tx [{:event/uid event-uid
-                    :event/time {:time/ts timestamp}}]]
+         event-tx [(merge {:event/uid event-uid}
+                          (when create-time {:event/time {:time/ts create-time}}))]]
      (utils/log-time
        (str "resolve-transact! event-id: " (pr-str id) " took")
        (do
