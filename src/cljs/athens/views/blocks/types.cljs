@@ -6,11 +6,11 @@
   "Block/Entity Type Protocol for rendering aspects"
 
   (inline-ref-view
-    [this block-data callbacks with-breadcrumb?]
+    [this block-data attr ref-uid uid callbacks with-breadcrumb?]
     "Render Block/Entity Type as inline reference")
 
   (outline-view
-    [this block-data callbacks]
+    [this block-data block-el callbacks]
     "Render Block/Entity Type as outline representation")
 
   (supported-transclusion-scopes
@@ -32,13 +32,3 @@
   (breadcrumbs-view
     [this block-data callbacks breadcrumb-style]
     "Render Block/Entity Type as breadcrumbs"))
-
-
-(defmulti block-type->protocol
-  "Takes `:block/type` value and converts it to `BlockTypeProtocol` to be used for rendering"
-  (fn [block-type]
-    block-type))
-
-
-(defmethod block-type->protocol :default [block-type]
-  (throw (ex-info "Illegal argument, `block-type` not specified." {:block/type block-type})))
