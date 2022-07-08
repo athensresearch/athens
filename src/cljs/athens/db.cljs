@@ -427,25 +427,79 @@
       ;; protect against orphaned nodes
       :else                 nil)))
 
+(defn get-block-type
+  [block-ir]
+  (-> block-ir
+      :block/properties
+      (get ":block/type")
+      :block/string))
+
+(defn get-comment-parent-block
+  [comment-eid]
+  (let [thread-eid (:db/id (common-db/get-parent @dsdb comment-eid))
+        thread-parent (common-db/get-parent @dsdb thread-eid)]
+    thread-parent))
+
+(defn remove-properties-add-type
+  [block-ir]
+  (let [removed  (dissoc block-ir :block/_property-of :block/properties)
+        add-type (assoc removed :block/type (get-block-type block-ir))]
+    add-type))
+
+
+(defn group-search-results-by-block-type
+  ([query] (group-search-results-by-block-type query 20))
+  ([query n]
+   (if (string/blank? query)
+     (vector)
+     (let [case-insensitive-query         (patterns/re-case-insensitive query)
+           filtered-datoms                (d/filter @dsdb
+                                                    (fn [db datom]
+                                                      (let [entity (d/entity db (:e datom))
+                                                            block-has-property?  (:block/_property-of entity)]
+                                                        (when block-has-property?
+                                                          (re-find case-insensitive-query (:block/string (d/entity db (:e datom))))))))
+           match-strings                  (take n (d/datoms filtered-datoms :aevt :block/string))
+           eid-of-blocks-with-properties  (map #(:e %) match-strings)
+           result                         (map
+                                            #(let [enhanced-block     (-> (common-db/get-block-document @dsdb [:block/uid (common-db/get-block-uid @dsdb %)])
+                                                                          remove-properties-add-type)
+                                                   add-parent         (cond
+                                                                        ;; For comments
+                                                                        (= "comment" (:block/type enhanced-block))
+                                                                        (assoc enhanced-block :block/parent (get-comment-parent-block (:db/id enhanced-block)))
+
+                                                                        :else
+                                                                        enhanced-block)]
+                                               add-parent)
+
+                                            eid-of-blocks-with-properties)
+           grouped                        (group-by :block/type result)]
+      grouped))))
 
 (defn search-in-block-content
   ([query] (search-in-block-content query 20))
   ([query n]
    (if (string/blank? query)
      (vector)
-     (let [case-insensitive-query (patterns/re-case-insensitive query)]
-       (->>
-         (d/datoms @dsdb :aevt :block/string)
-         (sequence
-           (comp
-             (filter #(re-find case-insensitive-query (:v %)))
-             (take n)
-             (map #(:e %))))
-         (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
-         (sequence
-           (comp
-             (keep get-root-parent-node-from-block)
-             (map #(dissoc % :block/_children)))))))))
+     (let [case-insensitive-query   (patterns/re-case-insensitive query)
+           block-search-result      (->>
+                                      (d/datoms @dsdb :aevt :block/string)
+                                      (sequence
+                                        (comp
+                                          (filter #(re-find case-insensitive-query (:v %)))
+                                          (take n)
+                                          (map #(:e %))))
+                                      (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
+                                      (sequence
+                                        (comp
+                                          (keep get-root-parent-node-from-block)
+                                          (map #(dissoc % :block/_children)))))
+           block-type-search-result (group-search-results-by-block-type query n)
+           search-comments          (get block-type-search-result "comment")
+           result                   (concat search-comments block-search-result)]
+       (cljs.pprint/pprint result)
+       result))))
 
 
 (defn nth-sibling

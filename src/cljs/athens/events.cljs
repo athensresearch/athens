@@ -1145,6 +1145,7 @@
   :page/new-followup
   (fn [_ [_ title shift?]]
     (log/debug ":page/new-followup title" title "shift?" shift?)
+    (println "new followup")
     (let [page-uid (common-db/get-page-uid @db/dsdb title)]
       {:fx [[:dispatch-n [(cond
                             shift?
@@ -1597,8 +1598,8 @@
                                                                                                   (str "((" source-uid "))"))]))]
       {:fx [[:dispatch-n [[:resolve-transact-forward atomic-event]
                           [:reporting/block.create {:source :bullet-drop
-                                                    :count  1}] ; TODO :reporting/block.link
-                          ]]]})))
+                                                    :count  1}]]]]}))) ; TODO :reporting/block.link
+
 
 
 (reg-event-fx

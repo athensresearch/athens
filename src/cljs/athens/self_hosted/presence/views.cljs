@@ -47,6 +47,7 @@
         (->> (js->clj js-person :keywordize-keys true)
              :personId
              (get all-users))]
+    (println "go to user block")
     (if page-uid
       ;; TODO: if we support navigating to a block, it should be added here.
       (rf/dispatch [:navigate :page {:id page-uid}])

@@ -134,6 +134,7 @@
   :restore-navigation
   [(interceptors/sentry-span-no-new-tx "restore-navigation")]
   (fn [{:keys [db]} _]
+    (println "restore navigation")
     (let [prev-title (-> db db-picker/selected-db :current-route/title)
           prev-uid   (-> db db-picker/selected-db :current-route/uid)]
       (cond
@@ -217,6 +218,7 @@
 (defn navigate-uid
   "Don't navigate if already on the page."
   ([uid]
+   (println "navigate uid")
    (let [[uid _embed-id]   (db/uid-and-embed-id uid)
          current-route-uid @(rf/subscribe [:current-route/uid])]
      (when-not (sentry/tx-running?)
