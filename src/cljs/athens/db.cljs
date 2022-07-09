@@ -429,6 +429,7 @@
 
 (defn get-block-type
   [block-ir]
+  "Here making assumption that we represent `type` by key `:block/type`"
   (-> block-ir
       :block/properties
       (get ":block/type")
@@ -436,7 +437,7 @@
 
 (defn get-comment-parent-block
   [comment-eid]
-  (let [thread-eid (:db/id (common-db/get-parent @dsdb comment-eid))
+  (let [thread-eid    (:db/id (common-db/get-parent @dsdb comment-eid))
         thread-parent (common-db/get-parent @dsdb thread-eid)]
     thread-parent))
 
@@ -448,10 +449,14 @@
 
 
 (defn group-search-results-by-block-type
+  "- Find all the blocks for which the query matches and have properties.
+   - Get the eids of all the matched blocks.
+   - Massage the ir of block.
+   - Add the parent(where you want to navigate to when clicked on the search result)"
   ([query] (group-search-results-by-block-type query 20))
   ([query n]
    (if (string/blank? query)
-     (vector)
+     []
      (let [case-insensitive-query         (patterns/re-case-insensitive query)
            filtered-datoms                (d/filter @dsdb
                                                     (fn [db datom]
@@ -464,15 +469,14 @@
            result                         (map
                                             #(let [enhanced-block     (-> (common-db/get-block-document @dsdb [:block/uid (common-db/get-block-uid @dsdb %)])
                                                                           remove-properties-add-type)
-                                                   add-parent         (cond
-                                                                        ;; For comments
-                                                                        (= "comment" (:block/type enhanced-block))
-                                                                        (assoc enhanced-block :block/parent (get-comment-parent-block (:db/id enhanced-block)))
+                                                   with-parent         (cond
+                                                                         ;; For comments
+                                                                         (= "comment" (:block/type enhanced-block))
+                                                                         (assoc enhanced-block :block/parent (get-comment-parent-block (:db/id enhanced-block)))
 
-                                                                        :else
-                                                                        enhanced-block)]
-                                               add-parent)
-
+                                                                         :else
+                                                                         enhanced-block)]
+                                               with-parent)
                                             eid-of-blocks-with-properties)
            grouped                        (group-by :block/type result)]
       grouped))))
@@ -498,7 +502,6 @@
            block-type-search-result (group-search-results-by-block-type query n)
            search-comments          (get block-type-search-result "comment")
            result                   (concat search-comments block-search-result)]
-       (cljs.pprint/pprint result)
        result))))
 
 

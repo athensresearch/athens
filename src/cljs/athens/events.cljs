@@ -1145,7 +1145,6 @@
   :page/new-followup
   (fn [_ [_ title shift?]]
     (log/debug ":page/new-followup title" title "shift?" shift?)
-    (println "new followup")
     (let [page-uid (common-db/get-page-uid @db/dsdb title)]
       {:fx [[:dispatch-n [(cond
                             shift?
