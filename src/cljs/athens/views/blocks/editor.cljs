@@ -22,7 +22,10 @@
     [athens.views.blocks.content :as content]
     [athens.views.blocks.context-menu :refer [handle-copy-unformatted handle-copy-refs]]
     [re-frame.core :as rf]
-    [athens.views.notifications.actions :as actions]))
+    [athens.views.blocks.context-menu  :refer [handle-copy-unformatted handle-copy-refs handle-click-comment]]
+    [athens.views.notifications.actions :as actions]
+    [athens.views.comments.core :as comments]
+    [athens.views.comments.inline :as inline-comments]))
 
 
 (defn toggle
@@ -206,7 +209,7 @@
                                                          :onClick #(handle-copy-refs nil uid)}
                                                         {:children "Copy unformatted text"
                                                          :onClick  #(handle-copy-unformatted uid)}
-							 (when (empty? @selected-items)
+                                                        (when (empty? @selected-items)
                                                           {:children "Comment"
                                                            :onClick  (fn [e] (handle-click-comment e uid))})
                                                         (when (actions/is-block-inbox? properties)
@@ -261,8 +264,8 @@
                     (not= :block-embed? opts)
                     @inline-refs-open?)
            [inline-linked-refs-el block-el uid])
-	
-	 ;; TODO Inbox
+
+   ;; TODO Inbox
          (when (= "Show inbox here" block-str)
             [:> KanbanColumn {:name  "Inbox"
                               :cards ["1" "2"]
