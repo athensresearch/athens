@@ -155,16 +155,6 @@
         uid                   (:block/uid block-o)
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
-        on-open-block             (fn [e]
-                                    (router/navigate-uid uid e)
-                                    (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                         :target :block
-                                                                         :pane   :main-pane}]))
-        on-open-block-in-sidebar (fn [e]
-                                   (router/navigate-uid uid e)
-                                   (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                        :target :block
-                                                                        :pane   :right-pane}]))
         selected-items        (rf/subscribe [::select-subs/items])]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
@@ -175,65 +165,67 @@
                           properties
                           _refs]} (reactive/get-reactive-block-document [:block/uid uid])]
         [:<>
-         (when (and children?
-                    (or (seq children)
-                        (seq properties)))
-           [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
-                                        (and (false? linked-ref) open))
-                                  true
-                                  false)
-                       :onClick (fn [e]
-                                  (.. e stopPropagation)
-                                  (if (true? linked-ref)
-                                    (rf/dispatch [::linked-ref.events/toggle-open! uid])
-                                    (toggle uid (not open))))}])
+         [:div.block-body
+          (when (and children?
+                     (or (seq children)
+                         (seq properties)))
+            [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
+                                         (and (false? linked-ref) open))
+                                   true
+                                   false)
+                        :onClick (fn [e]
+                                   (.. e stopPropagation)
+                                   (if (true? linked-ref)
+                                     (rf/dispatch [::linked-ref.events/toggle-open! uid])
+                                     (toggle uid (not open))))}])
 
-         (when key
-           [:> PropertyName {:name    (:node/title key)
-                             :onClick (fn [e]
-                                        (let [shift? (.-shiftKey e)]
-                                          (rf/dispatch [:reporting/navigation {:source :block-property
-                                                                               :target :page
-                                                                               :pane   (if shift?
-                                                                                         :right-pane
-                                                                                         :main-pane)}])
-                                          (router/navigate-page (:node/title key) e)))}])
-         [:> Anchor {:isClosedWithChildren   (when (and (seq children)
-                                                        (or (and (true? linked-ref) (not @linked-ref-open?))
-                                                            (and (false? linked-ref) (not open))))
-                                               "closed-with-children")
-                     :uidSanitizedBlock      uid-sanitized-block
-                     :shouldShowDebugDetails (util/re-frame-10x-open?)
-                     :menu            (clj->js [{:children
-                                                 "Open block"
-                                                 :onClick on-open-block}
-                                                {:children
-                                                 "Open block in sidebar"
-                                                 :onClick on-open-block-in-sidebar}
-                                                {:children
-                                                 (if (> (count @selected-items) 1)
-                                                   "Copy selected block refs"
-                                                   "Copy block ref")
-                                                 :onClick #(handle-copy-refs nil uid)}
-                                                {:children "Copy unformatted text"
-                                                 :onClick  #(handle-copy-unformatted uid)}])
-                     :onOpenBlock          on-open-block
-                     :onOpenBlockInSidebar on-open-block-in-sidebar
-                     :on-drag-start          (fn [e] (bullet-drag-start e uid))
-                     :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
+          (when key
+            [:> PropertyName {:name    (:node/title key)
+                              :onClick (fn [e]
+                                         (let [shift? (.-shiftKey e)]
+                                           (rf/dispatch [:reporting/navigation {:source :block-property
+                                                                                :target :page
+                                                                                :pane   (if shift?
+                                                                                          :right-pane
+                                                                                          :main-pane)}])
+                                           (router/navigate-page (:node/title key) e)))}])
 
-         [content/block-content-el block-o state-hooks]
+          [:> Anchor {:isClosedWithChildren   (when (and (seq children)
+                                                         (or (and (true? linked-ref) (not @linked-ref-open?))
+                                                             (and (false? linked-ref) (not open))))
+                                                "closed-with-children")
+                      :uidSanitizedBlock      uid-sanitized-block
+                      :shouldShowDebugDetails (util/re-frame-10x-open?)
+                      :menuActions            (clj->js [{:children
+                                                         (if (> (count @selected-items) 1)
+                                                           "Copy selected block refs"
+                                                           "Copy block ref")
+                                                         :onClick #(handle-copy-refs nil uid)}
+                                                        {:children "Copy unformatted text"
+                                                         :onClick  #(handle-copy-unformatted uid)}])
+                      :onClick                (fn [e]
+                                                (let [shift? (.-shiftKey e)]
+                                                  (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                       :target :block
+                                                                                       :pane   (if shift?
+                                                                                                 :right-pane
+                                                                                                 :main-pane)}])
+                                                  (router/navigate-uid uid e)))
+                      :on-drag-start          (fn [e] (bullet-drag-start e uid))
+                      :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
 
-         [presence/inline-presence-el uid]
+          [content/block-content-el block-o state-hooks]
 
-         (when (and (> (count _refs) 0) (not= :block-embed? opts))
-           [block-refs-count-el
-            (count _refs)
-            (fn [e]
-              (if (.. e -shiftKey)
-                (rf/dispatch [:right-sidebar/open-item uid])
-                (rf/dispatch [::inline-refs.events/toggle-open! uid])))
-            @inline-refs-open?])
+          [presence/inline-presence-el uid]
+
+          (when (and (> (count _refs) 0) (not= :block-embed? opts))
+            [block-refs-count-el
+             (count _refs)
+             (fn [e]
+               (if (.. e -shiftKey)
+                 (rf/dispatch [:right-sidebar/open-item uid])
+                 (rf/dispatch [::inline-refs.events/toggle-open! uid])))
+             @inline-refs-open?])]
 
          ;; Inline refs
          (when (and (> (count _refs) 0)
@@ -251,16 +243,14 @@
               (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid prop)))
               opts]))
 
-         [:div.block-children
-
-          ;; Children
-          (when (and (seq children)
-                     (or (and (true? linked-ref) @linked-ref-open?)
-                         (and (false? linked-ref) open)))
-            (for [child children
-                  :let  [child-uid (:block/uid child)]]
-              ^{:key (:db/id child)}
-              [block-el child
-               (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))
-               opts]))]]))))
+         ;; Children
+         (when (and (seq children)
+                    (or (and (true? linked-ref) @linked-ref-open?)
+                        (and (false? linked-ref) open)))
+           (for [child children
+                 :let  [child-uid (:block/uid child)]]
+             ^{:key (:db/id child)}
+             [block-el child
+              (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))
+              opts]))]))))
 

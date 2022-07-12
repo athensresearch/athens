@@ -1,8 +1,7 @@
 import React from 'react';
-import { MenuButton, Box, IconButton, Menu } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
 import { useContextMenu } from '@/utils/useContextMenu';
-import { EllipsisHorizontalCircleIcon } from '@/Icons/Icons';
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
@@ -11,6 +10,7 @@ const CONTAINER_CONTEXT_MENU_FILTERED_TAGS = ["A", "BUTTON", "INPUT", "TEXTAREA"
 
 const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, ...props }) => {
   const ref = React.useRef(null);
+
   const {
     menuSourceProps,
     ContextMenu,
@@ -39,25 +39,11 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       borderRadius="0.125rem"
       justifyContent="flex-start"
       flexDirection="column"
-      // border="1px solid black"
       background="var(--block-surface-color)"
       opacity={isDragging ? 0.5 : 1}
       data-uid={uid}
       data-childrenuids={childrenUids}
       sx={{
-        "&": {
-          display: "grid",
-          gridTemplateColumns: "1em auto 1em 1fr auto auto",
-          gridTemplateRows: "0 1fr auto 0",
-          gridTemplateAreas:
-            `'above above above above above above above'
-             'toggle name bullet content refs presence actions'
-             'x children children children children y y'
-             'below below below below below below below'`,
-          borderRadius: "0.5rem",
-          minHeight: '2em',
-          position: "relative",
-        },
         "&.show-tree-indicator:before": {
           content: "''",
           position: "absolute",
@@ -88,8 +74,17 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
           left: "4px",
           top: "4px"
         },
-        ".toggle": { opacity: "0" },
-        "&:hover > .toggle, &:focus-within > .toggle": { opacity: "1" },
+        ".block-body": {
+          display: "grid",
+          gridTemplateColumns: "1em auto 1em 1fr auto",
+          gridTemplateRows: "0 1fr 0",
+          gridTemplateAreas:
+            "'above above above above above above' 'toggle name bullet content refs presence' 'below below below below below below'",
+          borderRadius: "0.5rem",
+          minHeight: '2em',
+          position: "relative",
+        },
+        "&:hover > .block-toggle, &:focus-within > .block-toggle": { opacity: "1" },
         "button.block-edit-toggle": {
           position: "absolute",
           appearance: "none",
@@ -109,10 +104,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
           "--block-surface-color": "background.basement",
           bg: "background.basement",
           // Blocks nested in an embed get normal indentation...
-          ".block-container": {
-            marginLeft: 8,
-            gridArea: "children"
-          },
+          ".block-container": { marginLeft: 8 },
           // ...except for the first one, where that would be excessive
           "& > .block-container": { marginLeft: 0.5 },
         },
@@ -122,9 +114,9 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         },
         "&.is-linked-ref": { bg: "background-attic" },
         "&.isContextMenuOpen": { bg: "background.attic" },
-        ".block-children": {
-          gridArea: "children",
-          marginLeft: "1.5em",
+        ".block-container": {
+          marginLeft: "2rem",
+          gridArea: "body"
         }
       }}
       {...menuSourceProps}
