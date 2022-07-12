@@ -26,14 +26,25 @@
 
 (defn- valid-event-handler
   "Processes valid event received from the client."
-  [datascript fluree config channel username {:event/keys [id type] :as data}]
-  (if (and (false? username)
-           (not= :presence/hello type))
+  [datascript fluree config channel username {:event/keys [id type presence-id] :as data}]
+  (cond
+    (and (false? username)
+         (not= :presence/hello type))
     (do
       (log/warn "Message out of order, didn't say :presence/hello.")
-      (clients/send! channel (common-events/build-event-rejected id
-                                                                 :introduce-yourself
-                                                                 {:protocol-error :client-not-introduced})))
+      (common-events/build-event-rejected id
+                                          :introduce-yourself
+                                          {:protocol-error :client-not-introduced}))
+
+    (and presence-id (not= presence-id username))
+    (do
+      (log/warn "Message presence-id didn't match username")
+      (common-events/build-event-rejected id
+                                          :presence-id-mismatch
+                                          {:presence-id presence-id
+                                           :username    username}))
+
+    :else
     (if-let [result (cond
                       (contains? presence/supported-event-types type)
                       (presence/presence-handler (:conn datascript) (-> config :config :password) channel data)

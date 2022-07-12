@@ -98,7 +98,7 @@
   (let [page      [{:db/id 101 :block/uid "page" :node/title "the page"}]
         block     [{:db/id 102 :block/uid "block" :block/string "the block"}]
         pageblock [{:db/id 103 :block/uid "pageblock" :node/title "the pageblock" :block/string "the pageblock"}]
-        neither   [{:db/id 104 :create/time 1}]
+        neither   [{:db/id 104 :foo/bar 1}]
         _         (d/transact! @fixture/connection (concat page block pageblock neither))
         db        @@fixture/connection]
     (t/testing "Returns nil if the entity doesn't exist"
@@ -382,7 +382,7 @@
 
           ;; apply split-block
           (doseq [atomic-op block-split-atomics
-                  :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+                  :let      [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic-op)]]
             (transact-with-linkmaker atomic-txs))
 
           (let [{testing-block-2-eid :db/id}      (get-block testing-block-2-uid)
