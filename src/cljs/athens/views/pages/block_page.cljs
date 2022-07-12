@@ -2,17 +2,20 @@
   (:require
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
-    ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink]]
+    ["@chakra-ui/react" :refer [Breadcrumb Box BreadcrumbItem BreadcrumbLink]]
     [athens.common-db :as common-db]
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
+    [athens.db :as db]
     [athens.views.blocks.core :as blocks]
     [athens.views.pages.node-page :as node-page]
     [komponentit.autosize :as autosize]
     [re-frame.core :as rf :refer [dispatch subscribe]]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [athens.views.comments.inline :as inline-comments]
+    [athens.views.comments.core :as comments]))
 
 
 ;; Helpers
@@ -98,7 +101,7 @@
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:<>
+        [:> Box
 
          ;; Header
          [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
@@ -133,6 +136,15 @@
            (if (clojure.string/blank? (:string/local @state))
              [:span [:wbr]]
              [parse-renderer/parse-and-render (:string/local @state) uid])]]
+
+         ;; Show comments when the toggle is on
+         [:> Box {:ml "4%"
+                  :w "100%"}
+          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
+                    (and @(rf/subscribe [:comment/show-inline-comments?])
+                         (comments/get-comment-thread-uid @db/dsdb uid)))
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])]
+
 
          ;; Children
          [:> PageBody

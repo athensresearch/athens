@@ -206,6 +206,9 @@
                                                          :onClick #(handle-copy-refs nil uid)}
                                                         {:children "Copy unformatted text"
                                                          :onClick  #(handle-copy-unformatted uid)}
+							 (when (empty? @selected-items)
+                                                          {:children "Comment"
+                                                           :onClick  (fn [e] (handle-click-comment e uid))})
                                                         (when (actions/is-block-inbox? properties)
                                                           {:children "Show hidden notifications"
                                                            :onClick #(actions/show-hidden-notifications uid)})
@@ -236,9 +239,13 @@
 
           [content/block-content-el block-o state-hooks]
 
+          ;; Show comments when the toggle is on
+          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
+                    (and @(rf/subscribe [:comment/show-inline-comments?])
+                         (comments/get-comment-thread-uid @db/dsdb uid)))
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
+
           [presence/inline-presence-el uid]
-
-
 
           (when (and (> (count _refs) 0) (not= :block-embed? opts))
             [block-refs-count-el
@@ -254,7 +261,8 @@
                     (not= :block-embed? opts)
                     @inline-refs-open?)
            [inline-linked-refs-el block-el uid])
-
+	
+	 ;; TODO Inbox
          (when (= "Show inbox here" block-str)
             [:> KanbanColumn {:name  "Inbox"
                               :cards ["1" "2"]

@@ -7,6 +7,7 @@
     [athens.self-hosted.presence.views   :refer [toolbar-presence-el]]
     [athens.style                        :refer [unzoom]]
     [athens.subs]
+    [athens.views.comments.core]
     [athens.util                         :as util]
     [re-frame.core                       :as rf]
     [reagent.core                        :as r]))
@@ -18,6 +19,7 @@
         right-open?            (rf/subscribe [:right-sidebar/open])
         help-open?             (rf/subscribe [:help/open?])
         athena-open?           (rf/subscribe [:athena/open])
+        inline-comments        (rf/subscribe [:comment/show-inline-comments?])
         route-name             (rf/subscribe [:current-route/name])
         theme-dark             (rf/subscribe [:theme/dark])
         selected-db            (rf/subscribe [:db-picker/selected-db])
@@ -81,7 +83,9 @@
                     :isThemeDark               @theme-dark
                     :isLeftSidebarOpen         @left-open?
                     :isRightSidebarOpen        @right-open?
+                    :isShowInlineComments      @inline-comments
                     :isCommandBarOpen          @athena-open?
+                    :onClickInlineComments     #(rf/dispatch [:comment/toggle-inline-comments])
                     :onPressLeftSidebarToggle  on-left-sidebar-toggle
                     :onPressHistoryBack        on-back
                     :onPressHistoryForward     on-forward
