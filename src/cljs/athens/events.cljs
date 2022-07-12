@@ -1618,8 +1618,8 @@
                                                                                                   (str "((" source-uid "))"))]))]
       {:fx [[:dispatch-n [[:resolve-transact-forward atomic-event]
                           [:reporting/block.create {:source :bullet-drop
-                                                    :count  1}]]]]}))) ; TODO :reporting/block.link
-
+                                                    :count  1}] ; TODO :reporting/block.link
+                          ]]]})))
 
 
 (reg-event-fx
