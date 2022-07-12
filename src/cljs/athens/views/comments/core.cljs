@@ -46,12 +46,11 @@
 
 (defn thread-child->comment
   [comment-block]
-  (let [comment-uid (:block/uid comment-block)
-        properties  (common-db/get-block-property-document @db/dsdb [:block/uid comment-uid])]
+  (let [comment-uid (:block/uid comment-block)]
     {:block/uid comment-uid
      :string (:block/string comment-block)
-     :author (:block/string (get properties ":comment/author"))
-     :time   (:block/string (get properties ":comment/time"))}))
+     :author (-> comment-block :block/create :event/auth :presence/id)
+     :time   (-> comment-block :block/create :event/time :time/ts)}))
 
 
 (defn get-comments-in-thread
@@ -72,17 +71,13 @@
 
 
 (defn new-comment
-  [db thread-uid comment-string author time]
+  [db thread-uid comment-string]
   (->> (bfs/internal-representation->atomic-ops db
                                                 [#:block{:uid    (common.utils/gen-block-uid)
                                                          :string comment-string
                                                          :properties
-                                                         {":block/type"     #:block{:string "comment"
-                                                                                    :uid    (common.utils/gen-block-uid)}
-                                                          ":comment/author" #:block{:string author
-                                                                                    :uid    (common.utils/gen-block-uid)}
-                                                          ":comment/time"   #:block{:string time
-                                                                                    :uid    (common.utils/gen-block-uid)}}}]
+                                                         {":block/type" #:block{:string "comment"
+                                                                                :uid    (common.utils/gen-block-uid)}}}]
                                                 {:block/uid thread-uid
                                                  :relation  :last})
        (composite/make-consequence-op {:op/type :new-comment})))
@@ -107,7 +102,7 @@
 
 (rf/reg-event-fx
   :comment/write-comment
-  (fn [{db :db} [_ uid comment-string author]]
+  (fn [{db :db} [_ uid comment-string]]
     (let [thread-exists?            (get-comment-thread-uid @db/dsdb uid)
           thread-uid                (or thread-exists?
                                         (common.utils/gen-block-uid))
@@ -117,6 +112,6 @@
                                                                              [(new-thread @db/dsdb thread-uid "" uid)
                                                                               (graph-ops/build-block-move-op @db/dsdb thread-uid {:block/uid uid
                                                                                                                                   :relation  {:page/title ":comment/threads"}})])
-                                                                           [(new-comment @db/dsdb  thread-uid comment-string author "12:09 pm")]))
+                                                                           [(new-comment @db/dsdb  thread-uid comment-string)]))
           event                     (common-events/build-atomic-event active-comment-ops)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))

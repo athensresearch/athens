@@ -378,8 +378,13 @@
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs
-    {:block/key [:node/title]} {:block/_property-of ...}])
+  '[:db/id :block/uid :block/string :block/open :block/order
+    {:block/children ...} :block/refs :block/_refs
+    {:block/key [:node/title]} {:block/_property-of ...}
+    {:block/create [{:event/time [:time/ts]}
+                    {:event/auth [:presence/id]}]}
+    {:block/edits [{:event/time [:time/ts]}
+                   {:event/auth [:presence/id]}]}])
 
 
 (def node-document-pull-vector
