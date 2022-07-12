@@ -78,7 +78,7 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotificatio
     "aria-label": "Block anchor",
     className: ['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' '),
     draggable: true,
-    gridArea: "anchor",
+    gridArea: "bullet",
     flexShrink: 0,
     position: 'relative',
     appearance: "none",
