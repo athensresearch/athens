@@ -3,7 +3,8 @@
   A.k.a standard `:block/string` blocks"
   (:require
     ["/components/Block/Container"           :refer [Container]]
-    ["@chakra-ui/react"                      :refer [Button MenuList MenuItem]]
+    ["/components/Icons/Icons"               :refer [PencilIcon]]
+    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton  MenuList MenuItem]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -336,7 +337,35 @@
 
 
   (transclusion-view
-    [_this _block-data _callback _transclusion-scope])
+    [this block-el block-uid embed-id _callback transclusion-scope]
+    (let [supported-trans (types/supported-transclusion-scopes this)]
+      (if-not (contains? supported-trans transclusion-scope)
+        (throw (ex-info (str "Invalid transclusion scope: " (pr-str transclusion-scope)
+                             ". Supported transclusion types: " (pr-str supported-trans))
+                        {:supported-transclusion-scopes supported-trans
+                         :provided-transclusion-scope   transclusion-scope}))
+        (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
+          [:> Box {:class    "block-embed"
+                   :bg       "background.basement"
+                   :flex     1
+                   :pr       1
+                   :position "relative"
+                   :display  "flex"
+                   :sx       {"> .block-container" {:ml        0
+                                                    :flex      1
+                                                    :pr        "1.3rem"
+                                                    "textarea" {:background "transparent"}}}}
+           [:<>
+            [block-el
+             (util/recursively-modify-block-for-embed block embed-id)
+             {:linked-ref false}
+             {:block-embed? true}]
+            (when-not @(rf/subscribe [:editing/is-editing block-uid])
+              [:> ButtonGroup {:height "2em" :size "xs" :flex "0 0 auto" :zIndex "5" :alignItems "center"}
+               [:> IconButton {:on-click (fn [e]
+                                           (.. e stopPropagation)
+                                           (rf/dispatch [:editing/uid block-uid]))}
+                [:> PencilIcon]]])]]))))
 
 
   (zoomed-in-view

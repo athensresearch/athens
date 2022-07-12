@@ -177,7 +177,8 @@
      ;; for more information regarding how custom components are parsed, see
      ;; https://athensresearch.gitbook.io/handbook/athens/athens-components-documentation/
      :component            (fn [& contents]
-                             (component (first contents) uid))
+                             (let [content (first contents)]
+                               ^{:key content} [component (first contents) uid]))
      :page-link            (fn [{_from :from :as attr} & title-coll]
                              (render-page-link attr title-coll))
      :hashtag              (fn [{_from :from} & title-coll]
