@@ -4,15 +4,21 @@
     [clojure.test :as t]))
 
 
+;; varies depending on timezone
+(defn strip-inst
+  [x]
+  (dissoc x :inst))
+
+
 (t/deftest uid-to-date
-  (t/is (= (-> "10-22-2021" dates/uid-to-date (dates/get-day 0))
-           {:uid "10-22-2021", :title "October 22, 2021"}))
+  (t/is (= (-> "10-22-2021" dates/uid-to-date (dates/get-day 0) strip-inst)
+           {:uid "10-22-2021" :title "October 22, 2021"}))
   (t/is (nil? (dates/uid-to-date "bork"))))
 
 
 (t/deftest title-to-date
-  (t/is (= (-> "October 22, 2021" dates/title-to-date (dates/get-day 0))
-           {:uid "10-22-2021", :title "October 22, 2021"}))
+  (t/is (= (-> "October 22, 2021" dates/title-to-date (dates/get-day 0) strip-inst)
+           {:uid "10-22-2021" :title "October 22, 2021"}))
   (t/is (nil? (dates/title-to-date "bork"))))
 
 

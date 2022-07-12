@@ -355,7 +355,8 @@
 (defntrace get-parents-recursively
   [id]
   (when (d/entity @dsdb id)
-    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time
+    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string
+                         {:block/edits [{:event/time [:time/ts]}]}
                          {:block/property-of ...}
                          {:block/_children ...}]
                  id)
@@ -618,8 +619,19 @@
               (let [parent (-> x
                                :block/parents
                                first)]
-                [(:node/title parent) (:edit/time parent 0)]))
+                [(:node/title parent) (->> parent :block/edits (map (comp :time/ts :event/time)) sort last (or 0))]))
             blocks))
+
+
+(defn eids->groups
+  [eids]
+  (->> eids
+       merge-parents-and-block
+       group-by-parent
+       (sort-by #(-> % first second))
+       (map #(vector (ffirst %) (second %)))
+       vec
+       rseq))
 
 
 (defntrace get-unlinked-references

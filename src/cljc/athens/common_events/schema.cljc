@@ -36,7 +36,9 @@
    [:event/id uuid?]
    [:event/type [:or
                  event-type-presence-client
-                 event-type-atomic]]])
+                 event-type-atomic]]
+   [:event/create-time {:optional true} int?]
+   [:event/presence-id {:optional true} string?]])
 
 
 (def event-common-server
