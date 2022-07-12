@@ -3,10 +3,11 @@
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react" :refer [Breadcrumb Box BreadcrumbItem BreadcrumbLink]]
+    [athens.common-db :as common-db]
+    [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
-    [athens.db :as db]
     [athens.views.blocks.core :as blocks]
     [athens.views.pages.node-page :as node-page]
     [komponentit.autosize :as autosize]
@@ -81,12 +82,12 @@
   (let [parents (reactive/get-reactive-parents-recursively id)]
     [:> Breadcrumb {:gridArea "breadcrumb" :opacity 0.75}
      (doall
-       (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
+       (for [{breadcrumb-uid :block/uid} parents]
          ^{:key breadcrumb-uid}
          [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
           [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid)}
            [:span {:style {:pointer-events "none"}}
-            [parse-renderer/parse-and-render (or title string)]]]]))]))
+            [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb breadcrumb-uid)]]]]))]))
 
 
 (defn block-page-el

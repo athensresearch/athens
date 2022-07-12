@@ -13,6 +13,7 @@
     [athens.reactive                         :as reactive]
     [athens.subs.dragging                    :as drag.subs]
     [athens.subs.selection                   :as select-subs]
+    [athens.time-controls                    :as time-controls]
     [athens.util                             :as util :refer [mouse-offset vertical-center specter-recursive-path]]
     [athens.views.blocks.context-menu        :as ctx-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
@@ -163,7 +164,6 @@
                  linked-ref-uid]}     linked-ref-data
          {:block/keys [uid
                        original-uid]} block
-         block-o                      (reactive/get-reactive-block-document [:block/uid uid])
          local-value                  (r/atom nil)
          old-value                    (r/atom nil)
          show-edit?                   (r/atom false)
@@ -200,11 +200,12 @@
         (fn render-block
           [block linked-ref-data opts]
           (let [ident                 [:block/uid (or original-uid uid)]
+                block-o               (reactive/get-reactive-block-document ident)
                 {:block/keys [uid
                               string
                               open
                               children
-                              _refs]} (merge (reactive/get-reactive-block-document ident) block)
+                              _refs]} (merge block-o block)
                 children-uids         (set (map :block/uid children))
                 uid-sanitized-block   (s/transform
                                         (specter-recursive-path #(contains? % :block/uid))
@@ -248,7 +249,8 @@
                                                                                   "Copy block ref")
                                                                       :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
                                                         [:> MenuItem {:children "Copy unformatted text"
-                                                                      :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])}
+                                                                      :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])
+                           :style (merge {} (time-controls/block-styles block-o))}
 
              (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 

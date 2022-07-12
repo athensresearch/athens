@@ -1,6 +1,7 @@
 (ns athens.db
   (:require
     [athens.common-db :as common-db]
+    [athens.common-events.resolver.order :as order]
     [athens.common.logging :as log]
     [athens.common.sentry :refer-macros [defntrace]]
     [athens.electron.utils :as electron.utils]
@@ -344,8 +345,9 @@
            ;; Found the page.
            (:node/title b) (conj res b)
            ;; Recur with the parent.
-           :else           (recur (first (:block/_children b))
-                                  (conj res (dissoc b :block/_children)))))
+           :else           (recur (or (first (:block/_children b))
+                                      (:block/property-of b))
+                                  (conj res (dissoc b :block/_children :block/property-of)))))
        (rest)
        (reverse)
        vec))
@@ -354,7 +356,11 @@
 (defntrace get-parents-recursively
   [id]
   (when (d/entity @dsdb id)
-    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
+    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string
+                         {:block/edits [{:event/time [:time/ts]}]}
+                         {:block/property-of ...}
+                         {:block/_children ...}]
+                 id)
          shape-parent-query)))
 
 
@@ -369,30 +375,26 @@
 
 (defntrace get-block
   [id]
-  (when (d/entity @dsdb id)
-    (d/pull @dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id)))
+  (common-db/get-block @dsdb id))
 
 
 (defntrace get-parent
   [id]
-  (-> (d/entity @dsdb id)
-      :block/_children
-      first
-      :db/id
+  (-> (common-db/get-parent-eid @dsdb id)
       get-block))
 
 
 (defntrace deepest-child-block
   [id]
-  (let [document (->> (d/pull @dsdb '[:block/order :block/uid :block/open {:block/children ...}] id)
-                      sort-block-children)]
-    (loop [block document]
-      (let [{:block/keys [children open]} block
-            n (count children)]
-        (if (or (zero? n)
+  (let [db @dsdb]
+    (loop [uid (common-db/get-block-uid db id)]
+      (let [eid [:block/uid uid]
+            open (-> db (d/entity eid) :block/open)
+            children (common-db/sorted-prop+children-uids db eid)]
+        (if (or (zero? (count children))
                 (not open))
-          block
-          (recur (get children (dec n))))))))
+          (common-db/get-block db eid)
+          (recur (last children)))))))
 
 
 (defntrace search-exact-node-title
@@ -505,37 +507,39 @@
        result))))
 
 
+(defn sibling-uids
+  [uid]
+  (->> [:block/uid uid]
+       get-parent
+       :block/uid
+       (vector :block/uid)
+       (common-db/sorted-prop+children-uids @dsdb)))
+
+
 (defn nth-sibling
-  "Find sibling that has order+n of current block.
-  Negative n means previous sibling.
-  Positive n means next sibling."
-  [uid n]
-  (let [block      (get-block [:block/uid uid])
-        {:block/keys [order]} block
-        find-order (+ n order)]
-    (d/q '[:find (pull ?sibs [*]) .
-           :in $ % ?curr-uid ?find-order
-           :where
-           (siblings ?curr-uid ?sibs)
-           [?sibs :block/order ?find-order]]
-         @dsdb rules uid find-order)))
+  "Find sibling that has relation to current block.
+  Relation can be :before or :after."
+  [uid relation]
+  (-> (sibling-uids uid)
+      (order/get relation uid)
+      (->> (vector :block/uid))
+      get-block))
 
 
 (defntrace prev-block-uid
-  "If order 0, go to parent (if not a page).
-   If order n but block is closed, go to prev sibling.
-   If order n and block is OPEN, go to prev sibling's deepest child."
+  "If first sibling, go to parent (if not a page).
+   If block is closed, go to prev sibling.
+   If block is OPEN, go to prev sibling's deepest child."
   [uid]
   (let [[uid embed-id]                (uid-and-embed-id uid)
-        block                         (get-block [:block/uid uid])
-        parent                        (get-parent [:block/uid uid])
-        prev-sibling                  (nth-sibling uid -1)
+        siblings                      (sibling-uids uid)
+        prev-sibling                  (nth-sibling uid :before)
         {:block/keys      [open]
          prev-sibling-uid :block/uid} prev-sibling
         prev-block                    (cond
-                                        (zero? (:block/order block)) parent
-                                        (false? open)                prev-sibling
-                                        (true? open)                 (deepest-child-block [:block/uid prev-sibling-uid]))
+                                        (= uid (first siblings)) (get-parent [:block/uid uid])
+                                        (false? open)            prev-sibling
+                                        (true? open)             (deepest-child-block [:block/uid prev-sibling-uid]))
         prev-block-uid                (:block/uid prev-block)]
     (when (and prev-block-uid
                (not (:node/title prev-block)))
@@ -548,7 +552,7 @@
   If parent is root, go to next sibling."
   [uid]
   (loop [uid uid]
-    (let [sib    (nth-sibling uid +1)
+    (let [sib    (nth-sibling uid :after)
           parent (get-parent [:block/uid uid])
           {node :node/title}   (get-block [:block/uid uid])]
       (if (or sib (:node/title parent) node)
@@ -558,19 +562,20 @@
 
 (defn next-block-uid
   "1-arity:
-    if open and children, go to child 0
+    if open and children, go to first sibling
     else recursively find next sibling of parent
   2-arity:
     used for multi-block-selection; ignores child blocks"
   ([uid]
    (let [[uid embed-id]       (uid-and-embed-id uid)
-         block                (->> (get-block [:block/uid uid])
-                                   sort-block-children)
-         {:block/keys [children open] node :node/title} block
+         props+children       (common-db/sorted-prop+children-uids @dsdb [:block/uid uid])
+         {:block/keys [open]
+          node :node/title}   (get-block [:block/uid uid])
          next-block-recursive (next-sibling-recursively uid)
          next-block           (cond
-                                (and (or open node) children) (first children)
-                                next-block-recursive          next-block-recursive)]
+                                (and (or open node)
+                                     (seq props+children)) (get-block [:block/uid (first props+children)])
+                                next-block-recursive       next-block-recursive)]
      (cond-> (:block/uid next-block)
 
        ;; only go to next block if it's part of current embed scheme
@@ -672,8 +677,19 @@
               (let [parent (-> x
                                :block/parents
                                first)]
-                [(:node/title parent) (:edit/time parent 0)]))
+                [(:node/title parent) (->> parent :block/edits (map (comp :time/ts :event/time)) sort last (or 0))]))
             blocks))
+
+
+(defn eids->groups
+  [eids]
+  (->> eids
+       merge-parents-and-block
+       group-by-parent
+       (sort-by #(-> % first second))
+       (map #(vector (ffirst %) (second %)))
+       vec
+       rseq))
 
 
 (defntrace get-unlinked-references

@@ -191,6 +191,36 @@
       [:> Text (str "Athens will save a new backup " backup-time " seconds after your last edit.")]]]]])
 
 
+(defn feature-flags-comp
+  [{:keys [#_comments #_reactions #_cover-photo time-controls]} update-fn]
+  [setting-wrapper
+   [:<>
+    [header
+     [title "Experimental Feature Flags"]]
+    [form
+     [:<>
+      #_[:> FormControl
+       [:> Switch {:defaultChecked comments
+                   :onChange #(update-fn :comments %)}
+        "Comments"]]
+      #_[:> FormControl
+       [:> Switch {:defaultChecked reactions
+                   :onChange #(update-fn :reactions %)}
+        "Reactions"]]
+      #_[:> FormControl
+       [:> Switch {:defaultChecked cover-photo
+                   :onChange #(update-fn :cover-photo %)}
+        "Cover Photo"]]
+      [:> FormControl
+       [:> Switch {:defaultChecked time-controls
+                   :onChange #(update-fn :time-controls %)}
+        "Time Controls"]]]]
+    [help
+     [:<>
+      [:p "Optional experimental features that aren't ready for prime time, but that you can still enable to try out."]
+      [:p "We can't guarantee these will continue working or be supported in the future."]]]]])
+
+
 (defn remote-backups-comp
   []
   [setting-wrapper
@@ -229,6 +259,12 @@
 
 
 (reg-event-fx
+  :settings/update-in
+  (fn [{:keys [db]} [_ ks v]]
+    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
+
+
+(reg-event-fx
   :settings/reset
   (fn [{:keys [db]} _]
     {:db (assoc db :athens/persist default-athens-persist)
@@ -237,7 +273,7 @@
 
 (defn page
   []
-  (let [{:keys [email monitoring backup-time]} @(subscribe [:settings])]
+  (let [{:keys [email monitoring backup-time feature-flags]} @(subscribe [:settings])]
     [:> Modal {:isOpen true
                :scrollBehavior "inside"
                :onClose #(.back js/window.history)
@@ -257,5 +293,6 @@
         [backup-comp backup-time (fn [x]
                                    (dispatch [:settings/update :backup-time x])
                                    (dispatch [:fs/update-write-db]))]
+        [feature-flags-comp feature-flags (fn [k e] (dispatch [:settings/update-in [:feature-flags k] (.. e -target -checked)]))]
         [remote-backups-comp]
         [reset-settings-comp #(dispatch [:settings/reset])]]]]]))

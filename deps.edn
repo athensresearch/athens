@@ -2,7 +2,7 @@
 
  :deps
  {org.clojure/clojure                   #:mvn{:version "1.11.1"}
-  org.clojure/clojurescript             #:mvn{:version "1.11.51"}
+  org.clojure/clojurescript             #:mvn{:version "1.11.57"}
   org.clojure/tools.cli                 #:mvn{:version "1.0.206"}
   thheller/shadow-cljs                  #:mvn{:version "2.19.0"}
   reagent/reagent                       #:mvn{:version "1.0.0"}
