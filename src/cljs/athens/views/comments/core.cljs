@@ -1,13 +1,14 @@
 (ns athens.views.comments.core
-  (:require [athens.db :as db]
-            [re-frame.core :as rf]
-            [athens.common-db :as common-db]
-            [athens.common.utils :as common.utils]
-            [athens.common-events.graph.composite :as composite]
-            [athens.common-events.graph.atomic :as atomic-graph-ops]
-            [athens.common-events.graph.ops :as graph-ops]
-            [athens.common-events.bfs :as bfs]
-            [athens.common-events :as common-events]))
+  (:require
+    [athens.common-db :as common-db]
+    [athens.common-events :as common-events]
+    [athens.common-events.bfs :as bfs]
+    [athens.common-events.graph.atomic :as atomic-graph-ops]
+    [athens.common-events.graph.composite :as composite]
+    [athens.common-events.graph.ops :as graph-ops]
+    [athens.common.utils :as common.utils]
+    [athens.db :as db]
+    [re-frame.core :as rf]))
 
 
 (rf/reg-sub
@@ -15,21 +16,25 @@
   (fn [db [_ uid]]
     (= uid (:comment/show-comment-textarea db))))
 
+
 (rf/reg-event-fx
   :comment/show-comment-textarea
   (fn [{:keys [db]} [_ uid]]
     {:db (assoc db :comment/show-comment-textarea uid)}))
+
 
 (rf/reg-event-fx
   :comment/hide-comment-textarea
   (fn [{:keys [db]} [_ uid]]
     {:db (assoc db :comment/show-comment-textarea nil)}))
 
+
 (rf/reg-sub
   :comment/show-inline-comments?
   (fn [db [_]]
-    (println "sub toggle inline comments"(= true (:comment/show-inline-comments db)))
+    (println "sub toggle inline comments" (= true (:comment/show-inline-comments db)))
     (= true (:comment/show-inline-comments db))))
+
 
 (rf/reg-event-fx
   :comment/toggle-inline-comments
@@ -82,6 +87,7 @@
                                                  :relation  :last})
        (composite/make-consequence-op {:op/type :new-comment})))
 
+
 (defn new-thread
   [db thread-uid thread-name block-uid]
   (->> (bfs/internal-representation->atomic-ops db
@@ -104,13 +110,13 @@
   (fn [{db :db} [_ uid comment-string author]]
     (let [thread-exists?            (get-comment-thread-uid @db/dsdb uid)
           thread-uid                (or thread-exists?
-                                       (common.utils/gen-block-uid))
+                                        (common.utils/gen-block-uid))
           active-comment-ops        (composite/make-consequence-op {:op/type :active-comments-op}
-                                                                  (concat (if thread-exists?
-                                                                            []
-                                                                            [(new-thread @db/dsdb thread-uid "" uid)
-                                                                             (graph-ops/build-block-move-op @db/dsdb thread-uid {:block/uid uid
-                                                                                                                                 :relation  {:page/title ":comment/threads"}})])
-                                                                          [(new-comment @db/dsdb  thread-uid comment-string author "12:09 pm")]))
+                                                                   (concat (if thread-exists?
+                                                                             []
+                                                                             [(new-thread @db/dsdb thread-uid "" uid)
+                                                                              (graph-ops/build-block-move-op @db/dsdb thread-uid {:block/uid uid
+                                                                                                                                  :relation  {:page/title ":comment/threads"}})])
+                                                                           [(new-comment @db/dsdb  thread-uid comment-string author "12:09 pm")]))
           event                     (common-events/build-atomic-event active-comment-ops)]
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+      {:fx [[:dispatch [:resolve-transact-forward event]]]})))

@@ -1,17 +1,17 @@
 (ns athens.views.comments.inline
   (:require
-    [re-frame.core :as rf]
-    [goog.events :as events]
+    ["/components/Block/Anchor" :refer [Anchor]]
+    ["/components/Comments/Comments" :refer [CommentCounter]]
+    ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon]]
+    ["@chakra-ui/react" :refer [Button Box Text VStack HStack]]
     [athens.parse-renderer :as parse-renderer]
     [athens.util :as util]
-    ["/components/Block/Anchor" :refer [Anchor]]
-    ["/components/Comments/Comments" :refer [InlineCommentInput CommentCounter]]
-    ["@chakra-ui/react" :refer [Button Input Box Text VStack HStack Textarea]]
-    ["/components/Icons/Icons" :refer [ChatFilledIcon ChevronDownIcon ChevronRightIcon]]
     [athens.views.blocks.content :as b-content]
-    [reagent.core :as r]
     [athens.views.blocks.textarea-keydown :as txt-key-down]
-    [clojure.string :as str])
+    [clojure.string :as str]
+    [goog.events :as events]
+    [re-frame.core :as rf]
+    [reagent.core :as r])
   (:import
     (goog.events
       KeyCodes)))
@@ -86,9 +86,6 @@
          [:> Text linked-refs-count])])))
 
 
-
-
-
 (defn inline-comments
   [data uid hide?]
   ;; TODO : Remove this state
@@ -102,27 +99,27 @@
         {:keys [author string time]} first-comment]
     (fn [data uid]
       [:> VStack (merge
-                  (when-not (:hide? @state)
-                    {:bg "background.upper"})
-                  {:gridArea "comments"
-                   :color "foreground.secondary"
-                   :flex "1 0 auto"
-                   :spacing 0
-                   :borderRadius "md"
-                   :align "stretch"})
+                   (when-not (:hide? @state)
+                     {:bg "background.upper"})
+                   {:gridArea "comments"
+                    :color "foreground.secondary"
+                    :flex "1 0 auto"
+                    :spacing 0
+                    :borderRadius "md"
+                    :align "stretch"})
        ;; add time, author, and preview
        [:> Button (merge
-                   (when-not (:hide? @state)
-                     {:bg "background.upper"
-                      :borderColor "transparent"
-                      :borderBottomRadius 0})
-                   {:justifyContent "flex-start"
-                    :color "foreground.secondary"
-                    :variant "outline"
-                    :size "sm"
-                    :gap 2
-                    :flex "1 0 auto"
-                    :onClick #(swap! state update :hide? not)})
+                    (when-not (:hide? @state)
+                      {:bg "background.upper"
+                       :borderColor "transparent"
+                       :borderBottomRadius 0})
+                    {:justifyContent "flex-start"
+                     :color "foreground.secondary"
+                     :variant "outline"
+                     :size "sm"
+                     :gap 2
+                     :flex "1 0 auto"
+                     :onClick #(swap! state update :hide? not)})
         (if (:hide? @state)
           [:<>
            [:> ChevronRightIcon]
@@ -156,8 +153,7 @@
                 backspace-handler (fn jetsam-backspace-handler
                                     [_uid _value])
                 delete-handler    (fn jetsam-delete-handler
-                                    [_uid _d-key-down]
-                                    )
+                                    [_uid _d-key-down])
                 state-hooks       {:save-fn                 #(println "save-fn" (pr-str %))
                                    :update-fn               #(save-fn %)
                                    :idle-fn                 #(println "idle-fn" (pr-str %))

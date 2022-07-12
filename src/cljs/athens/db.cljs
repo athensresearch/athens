@@ -429,6 +429,7 @@
       ;; protect against orphaned nodes
       :else                 nil)))
 
+
 (defn get-block-type
   [block-ir]
   "Here making assumption that we represent `type` by key `:block/type`"
@@ -437,11 +438,13 @@
       (get ":block/type")
       :block/string))
 
+
 (defn get-comment-parent-block
   [comment-eid]
   (let [thread-eid    (:db/id (common-db/get-parent @dsdb comment-eid))
         thread-parent (common-db/get-parent @dsdb thread-eid)]
     thread-parent))
+
 
 (defn remove-properties-add-type
   [block-ir]
@@ -481,7 +484,8 @@
                                                with-parent)
                                             eid-of-blocks-with-properties)
            grouped                        (group-by :block/type result)]
-      grouped))))
+       grouped))))
+
 
 (defn search-in-block-content
   ([query] (search-in-block-content query 20))

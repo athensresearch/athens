@@ -7,8 +7,8 @@
     [athens.self-hosted.presence.views   :refer [toolbar-presence-el]]
     [athens.style                        :refer [unzoom]]
     [athens.subs]
-    [athens.views.comments.core]
     [athens.util                         :as util]
+    [athens.views.comments.core]
     [re-frame.core                       :as rf]
     [reagent.core                        :as r]))
 
