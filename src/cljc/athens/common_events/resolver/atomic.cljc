@@ -294,12 +294,22 @@
      (throw (ex-info "Can't resolve event, only Atomic Graph Ops are allowed." event)))))
 
 
+(defn resolve-event-tx
+  [{:event/keys [id create-time presence-id]}]
+  (let [uid (str id)
+        ref [:event/uid uid]
+        tx [(merge {:event/uid uid}
+                   (when create-time {:event/time {:time/ts create-time}})
+                   (when presence-id {:event/auth {:presence/id presence-id}}))]]
+    [tx ref]))
+
+
 (defn resolve-transact!
   "Iteratively resolve and transact event optionally with middleware (defaults to true).
   Returns :tx-data from datascript/transact!."
   ([conn event]
    (resolve-transact! conn event true))
-  ([conn {:event/keys [id create-time presence-id] :as event} middleware?]
+  ([conn {:event/keys [id] :as event} middleware?]
    (log/debug "resolve-transact! event-id:" (pr-str id))
    (let [transact! (if middleware?
                      common-db/transact-with-middleware!
@@ -311,11 +321,7 @@
                                (->> (transact! conn txs)
                                     :tx-data
                                     (swap! tx-data concat)))
-         event-uid (str id)
-         event-ref [:event/uid event-uid]
-         event-tx [(merge {:event/uid event-uid}
-                          (when create-time {:event/time {:time/ts create-time}})
-                          (when presence-id {:event/auth {:presence/id presence-id}}))]]
+         [event-tx event-ref] (resolve-event-tx event)]
      (utils/log-time
        (str "resolve-transact! event-id: " (pr-str id) " took")
        (do
