@@ -172,19 +172,20 @@
 (defn placeholder-block-el
   [parent-uid]
   [:> Container
-   [:> Anchor]
-   [:> Button {:flex "1 1 100%"
-               :py 0
-               :height "100%"
-               :px 2
-               :textAlign "left"
-               :gridArea "content"
-               :color "foreground.secondary"
-               :justifyContent "flex-start"
-               :cursor "text"
-               :fontWeight "normal"
-               :onClick #(handle-new-first-child-block-click parent-uid)}
-    "Type to begin..."]])
+   [:div.block-body
+    [:> Anchor]
+    [:> Button {:flex "1 1 100%"
+                :py 0
+                :height "100%"
+                :px 2
+                :textAlign "left"
+                :gridArea "content"
+                :color "foreground.secondary"
+                :justifyContent "flex-start"
+                :cursor "text"
+                :fontWeight "normal"
+                :onClick #(handle-new-first-child-block-click parent-uid)}
+     "Type to begin..."]]])
 
 
 (defn sync-title
