@@ -19,9 +19,10 @@
     [athens.util                               :as util]
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.query                        :as query]
-
     [athens.views.blocks.content               :as content]
-    [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs]]
+    [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs handle-click-comment]]
+    [athens.views.comments.core              :as comments]
+    [athens.views.comments.inline            :as inline-comments]
     [re-frame.core                             :as rf]))
 
 
@@ -149,8 +150,6 @@
                 [:> ReferenceBlock {:key (str "ref-" (:block/uid block'))}
                  [ref-comp block-el block']]))]))])))
 
-;; (get-in {"type" {:block/key {:db/id 104, :node/title "type"}, :block/refs [{:db/id 108}], :block/string "[[athens/task]]", :block/uid "203a39638", :db/id 213}, "status" {:block/key {:db/id 106, :node/title "status"}, :block/string "doing", :block/uid "8e993a41a", :db/id 214}, "project" {:block/key {:db/id 133, :node/title "project"}, :block/refs [{:db/id 136}], :block/string "[[Project: Queries]]", :block/uid "a858078cc", :db/id 215}}
-;;         ["type" :block/string])
 
 (defn editor-component
   [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts]
@@ -172,96 +171,106 @@
             entity-type (get-in properties ["type" :block/string])]
 
         [:<>
-           [:div.block-body
-            (when (and children?
-                       (or (seq children)
-                           (seq properties)))
-              [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
-                                           (and (false? linked-ref) open))
-                                     true
-                                     false)
-                          :onClick (fn [e]
-                                     (.. e stopPropagation)
-                                     (if (true? linked-ref)
-                                       (rf/dispatch [::linked-ref.events/toggle-open! uid])
-                                       (toggle uid (not open))))}])
+         [:div.block-body
+          (when (and children?
+                     (or (seq children)
+                         (seq properties)))
+            [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
+                                         (and (false? linked-ref) open))
+                                   true
+                                   false)
+                        :onClick (fn [e]
+                                   (.. e stopPropagation)
+                                   (if (true? linked-ref)
+                                     (rf/dispatch [::linked-ref.events/toggle-open! uid])
+                                     (toggle uid (not open))))}])
 
-            (when key
-              [:> PropertyName {:name    (:node/title key)
-                                :onClick (fn [e]
-                                           (let [shift? (.-shiftKey e)]
-                                             (rf/dispatch [:reporting/navigation {:source :block-property
-                                                                                  :target :page
-                                                                                  :pane   (if shift?
-                                                                                            :right-pane
-                                                                                            :main-pane)}])
-                                             (router/navigate-page (:node/title key) e)))}])
+          (when key
+            [:> PropertyName {:name    (:node/title key)
+                              :onClick (fn [e]
+                                         (let [shift? (.-shiftKey e)]
+                                           (rf/dispatch [:reporting/navigation {:source :block-property
+                                                                                :target :page
+                                                                                :pane   (if shift?
+                                                                                          :right-pane
+                                                                                          :main-pane)}])
+                                           (router/navigate-page (:node/title key) e)))}])
 
-            [:> Anchor {:isClosedWithChildren   (when (and (seq children)
-                                                           (or (and (true? linked-ref) (not @linked-ref-open?))
-                                                               (and (false? linked-ref) (not open))))
-                                                  "closed-with-children")
-                        :uidSanitizedBlock      uid-sanitized-block
-                        :shouldShowDebugDetails (util/re-frame-10x-open?)
-                        :menuActions            (clj->js [{:children
-                                                           (if (> (count @selected-items) 1)
-                                                             "Copy selected block refs"
-                                                             "Copy block ref")
-                                                           :onClick #(handle-copy-refs nil uid)}
-                                                          {:children "Copy unformatted text"
-                                                           :onClick  #(handle-copy-unformatted uid)}])
-                        :onClick                (fn [e]
-                                                  (let [shift? (.-shiftKey e)]
-                                                    (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                         :target :block
-                                                                                         :pane   (if shift?
-                                                                                                   :right-pane
-                                                                                                   :main-pane)}])
-                                                    (router/navigate-uid uid e)))
-                        :on-drag-start          (fn [e] (bullet-drag-start e uid))
-                        :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
+          [:> Anchor {:isClosedWithChildren   (when (and (seq children)
+                                                         (or (and (true? linked-ref) (not @linked-ref-open?))
+                                                             (and (false? linked-ref) (not open))))
+                                                "closed-with-children")
+                      :uidSanitizedBlock      uid-sanitized-block
+                      :shouldShowDebugDetails (util/re-frame-10x-open?)
+                      :menuActions            (clj->js (remove nil?
+                                                               [{:children
+                                                                 (if (> (count @selected-items) 1)
+                                                                   "Copy selected block refs"
+                                                                   "Copy block ref")
+                                                                 :onClick #(handle-copy-refs nil uid)}
+                                                                {:children "Copy unformatted text"
+                                                                 :onClick  #(handle-copy-unformatted uid)}
+                                                                (when (and (comments/enabled?)
+                                                                           (empty? @selected-items))
+                                                                  {:children "Comment"
+                                                                   :onClick  (fn [e] (handle-click-comment e uid))})]))
+                      :onClick                (fn [e]
+                                                (let [shift? (.-shiftKey e)]
+                                                  (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                       :target :block
+                                                                                       :pane   (if shift?
+                                                                                                 :right-pane
+                                                                                                 :main-pane)}])
+                                                  (router/navigate-uid uid e)))
+                      :on-drag-start          (fn [e] (bullet-drag-start e uid))
+                      :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
 
-            [content/block-content-el block-o state-hooks]
+          [content/block-content-el block-o state-hooks]
 
-            [presence/inline-presence-el uid]
+          ;; Show comments when the toggle is on
+          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
+                    (and @(rf/subscribe [:comment/show-inline-comments?])
+                         (comments/get-comment-thread-uid @db/dsdb uid)))
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
 
-            (when (and (> (count _refs) 0) (not= :block-embed? opts))
-              [block-refs-count-el
-               (count _refs)
-               (fn [e]
-                 (if (.. e -shiftKey)
-                   (rf/dispatch [:right-sidebar/open-item uid])
-                   (rf/dispatch [::inline-refs.events/toggle-open! uid])))
-               @inline-refs-open?])]
+          [presence/inline-presence-el uid]
 
-           ;; Inline refs
-           (when (and (> (count _refs) 0)
-                      (not= :block-embed? opts)
-                      @inline-refs-open?)
-             [inline-linked-refs-el block-el uid])
+          (when (and (> (count _refs) 0) (not= :block-embed? opts))
+            [block-refs-count-el
+             (count _refs)
+             (fn [e]
+               (if (.. e -shiftKey)
+                 (rf/dispatch [:right-sidebar/open-item uid])
+                 (rf/dispatch [::inline-refs.events/toggle-open! uid])))
+             @inline-refs-open?])]
 
-           ;; Properties
-           (when (and (seq properties)
-                      (or (and (true? linked-ref) @linked-ref-open?)
-                          (and (false? linked-ref) open)))
-             (for [prop (common-db/sort-block-properties properties)]
-               ^{:key (:db/id prop)}
-               [block-el prop
-                (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid prop)))
-                opts]))
+         ;; Inline refs
+         (when (and (> (count _refs) 0)
+                    (not= :block-embed? opts)
+                    @inline-refs-open?)
+           [inline-linked-refs-el block-el uid])
+
+         ;; Properties
+         (when (and (seq properties)
+                    (or (and (true? linked-ref) @linked-ref-open?)
+                        (and (false? linked-ref) open)))
+           (for [prop (common-db/sort-block-properties properties)]
+             ^{:key (:db/id prop)}
+             [block-el prop
+              (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid prop)))
+              opts]))
 
          (when (= entity-type "[[athens/query]]")
            [query/query-block block-data properties])
 
            ;; Children
-           (when (and (seq children)
-                      (or (and (true? linked-ref) @linked-ref-open?)
-                          (and (false? linked-ref) open)))
-             (for [child children
-                   :let  [child-uid (:block/uid child)]]
-               ^{:key (:db/id child)}
-               [block-el child
-                (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))
-                opts]))]
+         (when (and (seq children)
+                    (or (and (true? linked-ref) @linked-ref-open?)
+                        (and (false? linked-ref) open)))
+           (for [child children
+                 :let  [child-uid (:block/uid child)]]
+             ^{:key (:db/id child)}
+             [block-el child
+              (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))
+              opts]))]))))
 
-          ))))

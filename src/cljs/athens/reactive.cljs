@@ -7,6 +7,7 @@
     [athens.common-db :as common-db]
     [athens.common.sentry :refer-macros [defntrace]]
     [athens.common.utils :as utils]
+    [athens.dates :as dates]
     [athens.db :as db]
     [datascript.core :as d]
     [posh.reagent :as p]))
@@ -63,18 +64,15 @@
 ;; Ratoms
 ;; NB: p/pull will not throw on missing ident, and will update the ratom when it exists.
 
+
+
 (defn get-reactive-linked-references
   "For node and block page references UI."
   [eid]
   (->> @(p/pull db/dsdb '[:block/_refs] eid)
        :block/_refs
        (mapv :db/id)
-       db/merge-parents-and-block
-       db/group-by-parent
-       (sort-by #(-> % first second))
-       (map #(vector (ffirst %) (second %)))
-       vec
-       rseq))
+       db/eids->groups))
 
 
 (defn get-reactive-linked-properties
@@ -83,12 +81,29 @@
   (->> @(p/pull db/dsdb '[:block/_key] eid)
        :block/_key
        (mapv :db/id)
-       db/merge-parents-and-block
-       db/group-by-parent
-       (sort-by #(-> % first second))
-       (map #(vector (ffirst %) (second %)))
-       vec
-       rseq))
+       db/eids->groups))
+
+
+(defn get-reactive-edited-on-day-blocks
+  "For node page edited on references UI."
+  [title]
+  (let [date     (dates/title-to-date title)
+        day      (dates/date-to-day date)
+        next-day (dates/get-day date -1)
+        start    (-> day :inst inst-ms)
+        end      (-> next-day :inst inst-ms)]
+    (->> @(p/q '[:find ?b
+                 :in $ ?start ?end
+                 :where
+                 [?t :time/ts ?ts]
+                 [(>= ?ts ?start)]
+                 [(< ?ts ?end)]
+                 [?e :event/time ?t]
+                 [?b :block/edits ?e]
+                 [?b :block/string _]]
+               db/dsdb start end)
+         (mapv first)
+         db/eids->groups)))
 
 
 (def recursive-properties-document-pull-vector
@@ -114,7 +129,8 @@
 (def block-document-pull-vector
   (vec (concat '[:db/id :block/uid :block/string :block/open :block/_refs
                  {:block/key [:node/title]}
-                 {:block/children [:block/uid :block/order]}]
+                 {:block/children [:block/uid :block/order]}
+                 {:block/edits [{:event/time [:time/ts]}]}]
                recursive-properties-document-pull-vector)))
 
 
@@ -127,7 +143,8 @@
 
 (defntrace get-reactive-parents-recursively
   [id]
-  (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string :edit/time
+  (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string
+                          {:block/edits [{:event/time [:time/ts]}]}
                           {:block/property-of ...}
                           {:block/_children ...}]
                 id)

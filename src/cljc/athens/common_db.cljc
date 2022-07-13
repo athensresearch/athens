@@ -1,6 +1,7 @@
 (ns athens.common-db
   "Common DB (Datalog) access layer.
   So we execute same code in CLJ & CLJS."
+  (:refer-clojure :exclude [descendants])
   (:require
     [athens.common.logging    :as log]
     [athens.common.migrations :as migrations]
@@ -46,6 +47,38 @@
                            :db/unique     :db.unique/identity}})
 
 
+(def v3-schema
+  {;; Time is a unique number timestamp.
+   :time/ts      {:db/unique :db.unique/identity}
+   ;; Presence ids are unique strings, matching the presence name.
+   :presence/id  {:db/unique :db.unique/identity}
+   ;; Events have uid, and reference time, and auth.
+   :event/uid    {:db/unique :db.unique/identity}
+   :event/time   {:db/cardinality :db.cardinality/one
+                  :db/valueType   :db.type/ref}
+   :event/auth   {:db/cardinality :db.cardinality/one
+                  :db/valueType   :db.type/ref}
+   ;; Blocks reference events for creation and edits.
+   :block/create {:db/cardinality :db.cardinality/one
+                  :db/valueType   :db.type/ref}
+   :block/edits  {:db/cardinality :db.cardinality/many
+                  :db/valueType   :db.type/ref}})
+
+
+(defn migrate-v2-time-to-v3-time
+  [conn]
+  (->> (d/datoms @conn :eavt)
+       (filter (comp #{:create/time :edit/time} second))
+       (mapcat (fn [[e a v]]
+                 [[:db/retract e a]
+                  {:db/id e
+                   (if (= a :create/time)
+                     :block/create
+                     :block/edits)
+                   {:event/time {:time/ts v}}}]))
+       (d/transact! conn)))
+
+
 (def v1-bootstrap-schema
   {:migrations/version {:db/unique :db.unique/identity}})
 
@@ -86,7 +119,10 @@
 
 (def migrations
   [[1 #(transact-schema! % v1-schema)]
-   [2 #(transact-schema! % v2-schema)]])
+   [2 #(transact-schema! % v2-schema)]
+   [3 (fn [conn]
+        (transact-schema! conn v3-schema)
+        (migrate-v2-time-to-v3-time conn))]])
 
 
 (defn migrate-conn!
@@ -342,8 +378,13 @@
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs
-    {:block/key [:node/title]} {:block/_property-of ...}])
+  '[:db/id :block/uid :block/string :block/open :block/order
+    {:block/children ...} :block/refs :block/_refs
+    {:block/key [:node/title]} {:block/_property-of ...}
+    {:block/create [{:event/time [:time/ts]}
+                    {:event/auth [:presence/id]}]}
+    {:block/edits [{:event/time [:time/ts]}
+                   {:event/auth [:presence/id]}]}])
 
 
 (def node-document-pull-vector
@@ -506,8 +547,9 @@
 (defn retract-uid-recursively-tx
   "Retract all blocks of a page, including the page.
   Replaces block string refs to removed entities by their ref text."
-  [db uid]
+  [db event-ref uid]
   (let [block                 (get-block db [:block/uid uid])
+        parent                (->> [:block/uid uid] (get-parent db))
         descendants           (concat [] (:block/children block) (:block/_property-of block))
         has-descendants?      (seq descendants)
         descendants-uids      (when has-descendants?
@@ -561,10 +603,16 @@
         retract-kids          (mapv (fn [uid]
                                       [:db/retractEntity [:block/uid uid]])
                                     (reverse descendants-uids))
+        edit-parent           (when parent
+                                (merge {:block/edits event-ref}
+                                       (if-let [title (:node/title parent)]
+                                         {:node/title title}
+                                         {:block/uid (:block/uid parent)})))
         retract-entity        [:db/retractEntity [:block/uid uid]]
         txs                   (cond-> []
                                 has-descendants? (into retract-kids)
                                 has-asserts?     (into asserts)
+                                edit-parent      (conj edit-parent)
                                 true             (conj retract-entity))]
     txs))
 
@@ -585,7 +633,8 @@
           remove-ks          [:db/id :page/sidebar :block/order
                               :block/refs :block/_refs
                               :block/key :block/_key
-                              :block/_property-of]
+                              :block/_property-of
+                              :block/create :block/edits]
           remove-ks-on-match [[:block/open? :block/open?]
                               [:block/uid   :page/title]]]
       ;; NB: get-page-document retrieves all keys in get-block-document as well
@@ -609,7 +658,9 @@
 
 
 (def all-pages-pull-vector
-  [:block/uid :node/title :edit/time :create/time
+  [:block/uid :node/title
+   {:block/edits [{:event/time [:time/ts]}]}
+   {:block/create [{:event/time [:time/ts]}]}
    ;; Get all block refs, we need them to count totals.
    ;; Without specifying a limit pull will only return first 1000.
    ;; https://docs.datomic.com/on-prem/query/pull.html#limit-option
@@ -750,6 +801,29 @@
         prop                       (:node/title key)
         prop-fragment              (when prop (str ": " prop " - "))]
     (or title (str prop-fragment string))))
+
+
+(defn has-descendants?
+  [{:block/keys [children properties]}]
+  (or children properties))
+
+
+(defn descendants
+  [{:block/keys [children properties]}]
+  (concat children properties))
+
+
+(defn time-range
+  [db eid]
+  (let [all-times (->> (d/pull db '[{:block/edits [{:event/time [:time/ts]}]}
+                                    {:block/children ...}
+                                    {:block/_property-of ...}]
+                               eid)
+                       (tree-seq has-descendants? descendants)
+                       (mapcat :block/edits)
+                       (map (comp :time/ts :event/time))
+                       sort)]
+    [(first all-times) (last all-times)]))
 
 
 (defn extract-tag-values

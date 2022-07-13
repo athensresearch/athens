@@ -2,7 +2,6 @@
   (:refer-clojure :exclude [descendants])
   (:require
     [athens.common-db :as common-db]
-    [athens.common-events.bfs :as bfs]
     [athens.common.utils :as utils]
     [athens.parser  :as parser]
     [clojure.set  :as set]
@@ -20,7 +19,7 @@
   "From Athens representation, extract the uids and create a mapping to new uids."
   [tree]
   (let [all-old-uids (mapcat #(->> %
-                                   (tree-seq bfs/has-descendants? descendants)
+                                   (tree-seq common-db/has-descendants? descendants)
                                    (mapv :block/uid))
                              tree)
         mapped-uids (reduce #(assoc %1 %2 (utils/gen-block-uid)) {} all-old-uids)] ; Replace with zipmap

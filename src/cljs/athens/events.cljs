@@ -736,10 +736,14 @@
   :resolve-transact-forward
   [(interceptors/sentry-span "resolve-transact-forward")]
   (fn [{:keys [db]} [_ event]]
-    (let [remote? (db-picker/remote-db? db)
-          valid?  (schema/valid-event? event)
-          dsdb    @db/dsdb
-          undo?   (undo-resolver/undo? event)]
+    (let [remote?     (db-picker/remote-db? db)
+          valid?      (schema/valid-event? event)
+          dsdb        @db/dsdb
+          undo?       (undo-resolver/undo? event)
+          presence-id (-> (subscribe [:presence/current-user]) deref :username)
+          event       (if (and remote? presence-id)
+                        (common-events/add-presence event presence-id)
+                        event)]
       (log/debug ":resolve-transact-forward event:" (pr-str event)
                  "remote?" (pr-str remote?)
                  "valid?" (pr-str valid?)

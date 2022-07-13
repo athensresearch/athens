@@ -78,7 +78,7 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
     "aria-label": "Block anchor",
     className: ['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' '),
     draggable: true,
-    gridArea: "bullet",
+    gridArea: "anchor",
     flexShrink: 0,
     position: 'relative',
     appearance: "none",
@@ -165,7 +165,7 @@ export const Anchor = (props: AnchorProps) => {
     {(menuActions) && <ContextMenu>
       <MenuList>
         {menuActions.map((action) => {
-          return <MenuItem {...action} />
+          return <MenuItem key={action.children} {...action} />
         })}
         {shouldShowDebugDetails && (
           <>

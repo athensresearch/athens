@@ -8,6 +8,7 @@
     [athens.style                        :refer [unzoom]]
     [athens.subs]
     [athens.util                         :as util]
+    [athens.views.comments.core          :as comments]
     [re-frame.core                       :as rf]
     [reagent.core                        :as r]))
 
@@ -18,6 +19,7 @@
         right-open?            (rf/subscribe [:right-sidebar/open])
         help-open?             (rf/subscribe [:help/open?])
         athena-open?           (rf/subscribe [:athena/open])
+        inline-comments        (rf/subscribe [:comment/show-inline-comments?])
         route-name             (rf/subscribe [:current-route/name])
         theme-dark             (rf/subscribe [:theme/dark])
         selected-db            (rf/subscribe [:db-picker/selected-db])
@@ -70,32 +72,36 @@
         on-maximize            #(rf/dispatch [:toggle-max-min-win])
         on-minimize            #(rf/dispatch [:minimize-win])
         on-close               #(rf/dispatch [:close-win])]
-    [:> AppToolbar {:style                     (unzoom)
-                    :os                        os
-                    :isElectron                electron?
-                    :route                     @route-name
-                    :isWinFullscreen           @win-fullscreen?
-                    :isWinMaximized            @win-maximized?
-                    :isWinFocused              @win-focused?
-                    :isHelpOpen                @help-open?
-                    :isThemeDark               @theme-dark
-                    :isLeftSidebarOpen         @left-open?
-                    :isRightSidebarOpen        @right-open?
-                    :isCommandBarOpen          @athena-open?
-                    :onPressLeftSidebarToggle  on-left-sidebar-toggle
-                    :onPressHistoryBack        on-back
-                    :onPressHistoryForward     on-forward
-                    :onPressDailyNotes         on-daily-pages
-                    :onPressAllPages           on-all-pages
-                    :onPressGraph              on-graph
-                    :onPressCommandBar         on-athena
-                    :onPressHelp               on-help
-                    :onPressThemeToggle        on-theme
-                    :onPressSettings           on-settings
-                    :onPressRightSidebarToggle on-right-sidebar
-                    :onPressMaximizeRestore    on-maximize
-                    :onPressMinimize           on-minimize
-                    :onPressClose              on-close
-                    :databaseMenu              (r/as-element [db-menu])
-                    :presenceDetails           (when (electron.utils/remote-db? @selected-db)
-                                                 (r/as-element [toolbar-presence-el]))}]))
+    [:> AppToolbar (merge
+                     {:style                     (unzoom)
+                      :os                        os
+                      :isElectron                electron?
+                      :route                     @route-name
+                      :isWinFullscreen           @win-fullscreen?
+                      :isWinMaximized            @win-maximized?
+                      :isWinFocused              @win-focused?
+                      :isHelpOpen                @help-open?
+                      :isThemeDark               @theme-dark
+                      :isLeftSidebarOpen         @left-open?
+                      :isRightSidebarOpen        @right-open?
+                      :isCommandBarOpen          @athena-open?
+                      :onPressLeftSidebarToggle  on-left-sidebar-toggle
+                      :onPressHistoryBack        on-back
+                      :onPressHistoryForward     on-forward
+                      :onPressDailyNotes         on-daily-pages
+                      :onPressAllPages           on-all-pages
+                      :onPressGraph              on-graph
+                      :onPressCommandBar         on-athena
+                      :onPressHelp               on-help
+                      :onPressThemeToggle        on-theme
+                      :onPressSettings           on-settings
+                      :onPressRightSidebarToggle on-right-sidebar
+                      :onPressMaximizeRestore    on-maximize
+                      :onPressMinimize           on-minimize
+                      :onPressClose              on-close
+                      :databaseMenu              (r/as-element [db-menu])
+                      :presenceDetails           (when (electron.utils/remote-db? @selected-db)
+                                                   (r/as-element [toolbar-presence-el]))}
+                     (when (comments/enabled?)
+                       {:isShowInlineComments @inline-comments
+                        :onClickInlineComments #(rf/dispatch [:comment/toggle-inline-comments])}))]))
