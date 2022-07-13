@@ -58,7 +58,11 @@
   (let [key                           (.. e -keyCode)
         shift?                        (.. e -shiftKey)
         {:keys [index query results]} @state
-        item                          (get results index)]
+        item                          (get results index)
+        block-type                    (:block/type item)
+        navigate-uid                  (cond
+                                        (= "comment" block-type)  (:block/uid (:block/parent item))
+                                        :else                     (:block/uid item))]
     (cond
       (= KeyCodes.ENTER key) (cond
                                ;; if page doesn't exist, create and open
@@ -79,14 +83,13 @@
                                ;; if shift: open in right-sidebar
                                shift?
                                (do (dispatch [:athena/toggle])
-                                   (dispatch [:right-sidebar/open-page (:node/title item)])
+                                   (dispatch [:right-sidebar/open-item navigate-uid])
                                    (dispatch [:reporting/navigation {:source :athena
                                                                      :target :page
                                                                      :pane   :right-pane}]))
                                ;; else open in main view
                                :else
-                               (let [title (:node/title item)
-                                     uid   (:block/uid item)]
+                               (let [title (:node/title item)]
                                  (dispatch [:athena/toggle])
                                  (dispatch [:reporting/navigation {:source :athena
                                                                    :target (if title
@@ -95,8 +98,8 @@
                                                                    :pane   :main-pane}])
                                  (if title
                                    (router/navigate-page title)
-                                   (router/navigate-uid uid))
-                                 (dispatch [:editing/uid uid])))
+                                   (router/navigate-uid navigate-uid))
+                                 (dispatch [:editing/uid navigate-uid])))
 
       (= key KeyCodes.UP)
       (do
@@ -223,12 +226,18 @@
               :_empty {:display "none"}}
    (doall
      (for [[i x] (map-indexed list results)
-           :let  [block-uid (:block/uid x)
-                  parent    (:block/parent x)
-                  type      (if parent :block :node)
-                  title     (or (:node/title parent) (:node/title x))
-                  uid       (or (:block/uid parent) (:block/uid x))
-                  string    (:block/string x)]]
+           :let  [block-uid       (:block/uid x)
+                  block-type      (:block/type x)
+                  parent          (:block/parent x)
+                  type            (if parent :block :node)
+                  title           (cond
+                                    (= "comment" block-type)  (:block/string parent)
+                                    :else                     (or (:node/title parent) (:node/title x)))
+                  uid             (or (:block/uid parent) (:block/uid x))
+                  navigate-to-uid (cond
+                                    (= "comment" block-type) (:block/uid parent)
+                                    :else                    block-uid)
+                  string          (:block/string x)]]
        (if (nil? x)
          ^{:key i}
          [result-el {:key      i
@@ -276,7 +285,7 @@
                                                                                :right-pane
                                                                                :main-pane)}])
                                    (if parent
-                                     (router/navigate-uid block-uid)
+                                     (router/navigate-uid navigate-to-uid)
                                      (router/navigate-page title e))))}])))])
 
 
