@@ -192,7 +192,7 @@
 
 
 (defn feature-flags-comp
-  [{:keys [comments reactions cover-photo]} update-fn]
+  [{:keys [comments #_reactions #_cover-photo time-controls]} update-fn]
   [setting-wrapper
    [:<>
     [header
@@ -203,14 +203,18 @@
        [:> Switch {:defaultChecked comments
                    :onChange #(update-fn :comments %)}
         "Comments"]]
-      [:> FormControl
+      #_[:> FormControl
        [:> Switch {:defaultChecked reactions
                    :onChange #(update-fn :reactions %)}
         "Reactions"]]
-      [:> FormControl
+      #_[:> FormControl
        [:> Switch {:defaultChecked cover-photo
                    :onChange #(update-fn :cover-photo %)}
-        "Cover Photo"]]]]
+        "Cover Photo"]]
+      [:> FormControl
+       [:> Switch {:defaultChecked time-controls
+                   :onChange #(update-fn :time-controls %)}
+        "Time Controls"]]]]
     [help
      [:<>
       [:p "Optional experimental features that aren't ready for prime time, but that you can still enable to try out."]

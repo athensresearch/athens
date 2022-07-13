@@ -2,11 +2,15 @@
   (:require
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
-    ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink]]
+    ["@chakra-ui/react" :refer [Breadcrumb Box BreadcrumbItem BreadcrumbLink]]
+    [athens.common-db :as common-db]
+    [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.views.blocks.core :as blocks]
+    [athens.views.comments.core :as comments]
+    [athens.views.comments.inline :as inline-comments]
     [athens.views.pages.node-page :as node-page]
     [komponentit.autosize :as autosize]
     [re-frame.core :as rf :refer [dispatch subscribe]]
@@ -78,12 +82,12 @@
   (let [parents (reactive/get-reactive-parents-recursively id)]
     [:> Breadcrumb {:gridArea "breadcrumb" :opacity 0.75}
      (doall
-       (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
+       (for [{breadcrumb-uid :block/uid} parents]
          ^{:key breadcrumb-uid}
          [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
           [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid)}
            [:span {:style {:pointer-events "none"}}
-            [parse-renderer/parse-and-render (or title string)]]]]))]))
+            [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb breadcrumb-uid)]]]]))]))
 
 
 (defn block-page-el
@@ -96,7 +100,7 @@
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:<>
+        [:> Box
 
          ;; Header
          [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
@@ -132,11 +136,21 @@
              [:span [:wbr]]
              [parse-renderer/parse-and-render (:string/local @state) uid])]]
 
+         ;; Show comments when the toggle is on
+         [:> Box {:ml "4%"
+                  :w "100%"}
+          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
+                    (and @(rf/subscribe [:comment/show-inline-comments?])
+                         (comments/get-comment-thread-uid @db/dsdb uid)))
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])]
+
+
          ;; Children
          [:> PageBody
           (for [child children]
             (let [{:keys [db/id]} child]
               ^{:key id} [blocks/block-el child]))]
+
 
          ;; Refs
          [:> PageFooter

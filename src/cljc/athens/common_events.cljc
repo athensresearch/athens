@@ -176,7 +176,13 @@
   (let [event-id (utils/gen-event-id)]
     {:event/id   event-id
      :event/type :op/atomic
-     :event/op   atomic-op}))
+     :event/op   atomic-op
+     :event/create-time (utils/now-ts)}))
+
+
+(defn add-presence
+  [event presence-id]
+  (merge event {:event/presence-id presence-id}))
 
 
 (defn find-event-or-atomic-op-type
