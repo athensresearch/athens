@@ -178,7 +178,8 @@
      ;; https://athensresearch.gitbook.io/handbook/athens/athens-components-documentation/
      :component            (fn [& contents]
                              (let [content (first contents)]
-                               ^{:key content} [component (first contents) uid]))
+                               ^{:key content}
+                               [component (first contents) uid]))
      :page-link            (fn [{_from :from :as attr} & title-coll]
                              (render-page-link attr title-coll))
      :hashtag              (fn [{_from :from} & title-coll]

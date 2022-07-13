@@ -337,14 +337,15 @@
 
 
   (transclusion-view
-    [this block-el block-uid embed-id _callback transclusion-scope]
+    [this block-el block-uid _callback transclusion-scope]
     (let [supported-trans (types/supported-transclusion-scopes this)]
       (if-not (contains? supported-trans transclusion-scope)
         (throw (ex-info (str "Invalid transclusion scope: " (pr-str transclusion-scope)
                              ". Supported transclusion types: " (pr-str supported-trans))
                         {:supported-transclusion-scopes supported-trans
                          :provided-transclusion-scope   transclusion-scope}))
-        (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
+        (let [embed-id (random-uuid)
+              block    (reactive/get-reactive-block-document [:block/uid block-uid])]
           [:> Box {:class    "block-embed"
                    :bg       "background.basement"
                    :flex     1

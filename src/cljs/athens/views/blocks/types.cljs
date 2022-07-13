@@ -18,7 +18,7 @@
     "Returns a set of supported `transclusion-scopes`")
 
   (transclusion-view
-    [this block-el block-uid embed-id callback transclusion-scope]
+    [this block-el block-uid callback transclusion-scope]
     "Render Block/Entity Type as transclusion")
 
   (zoomed-in-view

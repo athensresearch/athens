@@ -7,8 +7,7 @@
     [athens.views.blocks.types            :as types]
     [athens.views.blocks.types.dispatcher :as block-type-dispatcher]
     [clojure.string                       :as str]
-    [re-frame.core                        :as rf]
-    [reagent.core                         :as r]))
+    [re-frame.core                        :as rf]))
 
 
 (defn todo-on-click
@@ -82,11 +81,10 @@
   (let [block-uid (last (re-find #"\(\((.+)\)\)" content))
         block-eid (db/e-by-av :block/uid block-uid)]
     (if block-eid
-      (r/with-let [embed-id   (random-uuid)
-                   ;; TODO: make real block type discovery
-                   block-type nil
-                   renderer   (block-type-dispatcher/block-type->protocol block-type {})]
-                  [types/transclusion-view renderer blocks/block-el block-uid embed-id {} :embed])
+      (let [;; TODO: make real block type discovery
+            block-type nil
+            renderer   (block-type-dispatcher/block-type->protocol block-type {})]
+        [types/transclusion-view renderer blocks/block-el block-uid  {} :embed])
       ;; roam actually hides the brackets around [[embed]]
       [:span "{{" content "}}"])))
 
