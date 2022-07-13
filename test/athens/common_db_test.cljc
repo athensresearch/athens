@@ -2,8 +2,9 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common-events.bfs :as bfs]
-    [clojure.test     :as t]
-    [datascript.core  :as d])
+    [clojure.test :as t]
+    [clojure.walk :as walk]
+    [datascript.core :as d])
   #?(:clj
      (:import
        (clojure.lang
@@ -338,9 +339,14 @@
                                               :properties
                                               {"another-key"
                                                #:block{:uid    "uid3"
-                                                       :string "three"}}}}}])]
+                                                       :string "three"}}}}}])
+        remove-create-edits (fn [x]
+                              (walk/prewalk (fn [node]
+                                              (if (map? node)
+                                                (dissoc node :block/create :block/edits)
+                                                node)) x))]
 
-    (t/is (= (common-db/get-block-property-document db [:node/title "title"])
+    (t/is (= (remove-create-edits (common-db/get-block-property-document db [:node/title "title"]))
              {"key"
               {:block/children
                [{:block/open   true,
