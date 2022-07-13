@@ -192,14 +192,14 @@
 
 
 (defn feature-flags-comp
-  [{:keys [#_comments #_reactions #_cover-photo time-controls]} update-fn]
+  [{:keys [comments #_reactions #_cover-photo time-controls]} update-fn]
   [setting-wrapper
    [:<>
     [header
      [title "Experimental Feature Flags"]]
     [form
      [:<>
-      #_[:> FormControl
+      [:> FormControl
        [:> Switch {:defaultChecked comments
                    :onChange #(update-fn :comments %)}
         "Comments"]]

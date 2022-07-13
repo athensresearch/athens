@@ -11,6 +11,11 @@
     [re-frame.core :as rf]))
 
 
+(defn enabled?
+  []
+  (:comments @(rf/subscribe [:feature-flags])))
+
+
 (rf/reg-sub
   :comment/show-comment-textarea?
   (fn [db [_ uid]]

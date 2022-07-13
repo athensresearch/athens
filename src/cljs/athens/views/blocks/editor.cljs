@@ -198,16 +198,18 @@
                                                 "closed-with-children")
                       :uidSanitizedBlock      uid-sanitized-block
                       :shouldShowDebugDetails (util/re-frame-10x-open?)
-                      :menuActions            (clj->js [{:children
-                                                         (if (> (count @selected-items) 1)
-                                                           "Copy selected block refs"
-                                                           "Copy block ref")
-                                                         :onClick #(handle-copy-refs nil uid)}
-                                                        {:children "Copy unformatted text"
-                                                         :onClick  #(handle-copy-unformatted uid)}
-                                                        (when (empty? @selected-items)
-                                                          {:children "Comment"
-                                                           :onClick  (fn [e] (handle-click-comment e uid))})])
+                      :menuActions            (clj->js (remove nil?
+                                                               [{:children
+                                                                 (if (> (count @selected-items) 1)
+                                                                   "Copy selected block refs"
+                                                                   "Copy block ref")
+                                                                 :onClick #(handle-copy-refs nil uid)}
+                                                                {:children "Copy unformatted text"
+                                                                 :onClick  #(handle-copy-unformatted uid)}
+                                                                (when (and (comments/enabled?)
+                                                                           (empty? @selected-items))
+                                                                  {:children "Comment"
+                                                                   :onClick  (fn [e] (handle-click-comment e uid))})]))
                       :onClick                (fn [e]
                                                 (let [shift? (.-shiftKey e)]
                                                   (rf/dispatch [:reporting/navigation {:source :block-bullet

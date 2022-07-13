@@ -299,18 +299,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
   const secondaryTools = [
     {
-     label: "Show comments",
-     isActive: isShowInlineComments,
-     onClick: handleClickInlineComments,
-     icon: <ViewIcon/>
-    },
-    {
-     label: "Hide comments",
-     isActive: !isShowInlineComments,
-     onClick: handleClickInlineComments,
-     icon: <ViewOffIcon/>
-    },
-    {
       label: "Help",
       isActive: isHelpOpen,
       onClick: handlePressHelp,
@@ -333,6 +321,21 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       icon: <RightSidebarIcon />
     }
   ];
+
+  if (handleClickInlineComments) {
+    secondaryTools.unshift({
+     label: "Hide comments",
+     isActive: !isShowInlineComments,
+     onClick: handleClickInlineComments,
+     icon: <ViewOffIcon/>
+    });
+    secondaryTools.unshift({
+     label: "Show comments",
+     isActive: isShowInlineComments,
+     onClick: handleClickInlineComments,
+     icon: <ViewIcon/>
+    });
+  }
 
   return (
     <AppToolbarWrapper
