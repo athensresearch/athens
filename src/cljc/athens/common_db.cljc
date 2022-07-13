@@ -633,7 +633,8 @@
           remove-ks          [:db/id :page/sidebar :block/order
                               :block/refs :block/_refs
                               :block/key :block/_key
-                              :block/_property-of]
+                              :block/_property-of
+                              :block/create :block/edits]
           remove-ks-on-match [[:block/open? :block/open?]
                               [:block/uid   :page/title]]]
       ;; NB: get-page-document retrieves all keys in get-block-document as well
