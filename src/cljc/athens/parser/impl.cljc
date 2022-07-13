@@ -57,6 +57,7 @@ inline = recur
            page-link /
            link /
            image /
+           audio /
            autolink /
            hashtag-braced /
            hashtag-naked /
@@ -98,6 +99,7 @@ strikethrough = <#'~~(?!\\s)'>
 
 link = md-link
 image = <'!'> md-link
+audio = <'^'> md-link
 
 <md-link> = <#'\\[(?!\\s)'>
             link-text
@@ -365,6 +367,12 @@ newline = #'\\n'
                          :src link-target}
                   link-title (assoc :title link-title))]))
 
+(defn- audio-transform
+  [& link-parts]
+  (let [{:keys [link-text link-target link-title]} (link-parts->map link-parts)]
+    [:url-audio (cond-> {:alt link-text
+                         :src link-target}
+                  link-title (assoc :title link-title))]))
 
 (defn- autolink-transform
   [url]
@@ -399,6 +407,7 @@ newline = #'\\n'
    :inline         inline-transform
    :link           link-transform
    :image          image-transform
+   :audio          audio-transform
    :autolink       autolink-transform
    :component      component-transform})
 

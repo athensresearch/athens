@@ -5,6 +5,7 @@
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
+    [athens.electron.audio                   :as audio]
     [athens.electron.utils                   :as electron.utils]
     [athens.events.dragging                  :as drag.events]
     [athens.events.inline-refs               :as inline-refs.events]
@@ -121,6 +122,7 @@
         item                    (first items)
         datatype                (.. item -type)
         img-regex               #"(?i)^image/(p?jpeg|gif|png)$"
+        audio-regex             #"(?i)^audio/(p?wav|mp3)$"
         valid-text-drop         (and (not (nil? drag-target))
                                      (not= source-uid target-uid)
                                      (or (= effect-allowed "link")
@@ -128,6 +130,8 @@
         selected-items          @(rf/subscribe [::select-subs/items])]
 
     (cond
+      (re-find audio-regex datatype) (when electron.utils/electron?
+                                       (audio/dnd-audio target-uid drag-target item (second (re-find audio-regex datatype))))
       (re-find img-regex datatype)     (when electron.utils/electron?
                                          (images/dnd-image target-uid drag-target item (second (re-find img-regex datatype))))
       (re-find #"text/plain" datatype) (when valid-text-drop

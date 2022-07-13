@@ -47,6 +47,7 @@
 
 (def DB-INDEX "index.transit")
 (def IMAGES-DIR-NAME "images")
+(def AUDIOS-DIR-NAME "audios")
 
 
 (defn default-dbs-dir
@@ -70,6 +71,7 @@
    :id         base-dir
    :base-dir   base-dir
    :images-dir (.resolve (path) base-dir IMAGES-DIR-NAME)
+   :audios-dir (.resolve (path) base-dir AUDIOS-DIR-NAME)
    :db-path    (.resolve (path) base-dir DB-INDEX)})
 
 
