@@ -1,6 +1,7 @@
 (ns athens.components
   (:require
     ["@chakra-ui/react"                   :refer [Checkbox Button]]
+    [athens.common-db                     :as common-db]
     [athens.db                            :as db]
     [athens.parse-renderer                :refer [component]]
     [athens.views.blocks.core             :as blocks]
@@ -81,8 +82,7 @@
   (let [block-uid (last (re-find #"\(\((.+)\)\)" content))
         block-eid (db/e-by-av :block/uid block-uid)]
     (if block-eid
-      (let [;; TODO: make real block type discovery
-            block-type nil
+      (let [block-type (common-db/get-block-type @db/dsdb [:block/uid block-uid])
             renderer   (block-type-dispatcher/block-type->protocol block-type {})]
         [types/transclusion-view renderer blocks/block-el block-uid  {} :embed])
       ;; roam actually hides the brackets around [[embed]]

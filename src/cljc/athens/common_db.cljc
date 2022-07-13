@@ -409,6 +409,16 @@
       :block/properties))
 
 
+(defn get-block-type
+  [db eid]
+  (->> (d/entity db eid)
+       :block/_property-of
+       (some (fn [e]
+               (when (= ":block/type"
+                        (-> e :block/key :node/title))
+                 (:block/string e))))))
+
+
 (defn get-block-uid
   "Finds block `:block/uid` by eid."
   [db eid]

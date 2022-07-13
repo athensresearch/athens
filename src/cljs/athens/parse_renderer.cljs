@@ -4,7 +4,9 @@
    ["@chakra-ui/react"                   :refer [Link Button Text Box]]
    ["katex"                              :as katex]
    ["katex/dist/contrib/mhchem"]
+   [athens.common-db                     :as common-db]
    [athens.config                        :as config]
+   [athens.db                            :as db]
    [athens.parser.impl                   :as parser-impl]
    [athens.reactive                      :as reactive]
    [athens.router                        :as router]
@@ -202,7 +204,7 @@
                               [:span {:class "contents"} title-coll]])
      :block-ref            (fn [{_from :from :as attr} ref-uid]
                              (let [block      (reactive/get-reactive-block-or-page-by-uid ref-uid)
-                                   block-type nil ; TODO: make real block type discovery
+                                   block-type (common-db/get-block-type @db/dsdb [:block/uid ref-uid])
                                    renderer   (block-type-dispatcher/block-type->protocol block-type {})]
                                (types/inline-ref-view renderer block attr ref-uid uid {} true)))
      :url-image            (fn [{url :src alt :alt}]
@@ -338,4 +340,3 @@
           (js/console.log "view creation:" vt-total)
           (js/console.groupEnd))
         view))))
-
