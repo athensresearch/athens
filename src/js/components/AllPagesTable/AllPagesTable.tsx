@@ -116,20 +116,20 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
     <Table variant="striped"
       height="100vh"
       sx={{
-        "tr > *:nth-child(1)": {
+        "tr > *:nth-of-type(1)": {
           flex: "0 0 calc(100% - 39rem)"
         },
-        "tr > *:nth-child(2)": {
+        "tr > *:nth-of-type(2)": {
           flex: "0 0 7rem",
           color: "foreground.secondary",
           fontSize: "sm"
         },
-        "tr > *:nth-child(3)": {
+        "tr > *:nth-of-type(3)": {
           flex: "0 0 16rem",
           color: "foreground.secondary",
           fontSize: "sm"
         },
-        "tr > *:nth-child(4)": {
+        "tr > *:nth-of-type(4)": {
           flex: "0 0 16rem",
           color: "foreground.secondary",
           fontSize: "sm"

@@ -165,7 +165,7 @@ export const Anchor = (props: AnchorProps) => {
     {(menuActions) && <ContextMenu>
       <MenuList>
         {menuActions.map((action) => {
-          return <MenuItem {...action} />
+          return <MenuItem key={action.children} {...action} />
         })}
         {shouldShowDebugDetails && (
           <>
