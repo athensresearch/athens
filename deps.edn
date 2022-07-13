@@ -2,9 +2,9 @@
 
  :deps
  {org.clojure/clojure                   #:mvn{:version "1.11.1"}
-  org.clojure/clojurescript             #:mvn{:version "1.11.57"}
+  org.clojure/clojurescript             #:mvn{:version "1.11.60"}
   org.clojure/tools.cli                 #:mvn{:version "1.0.206"}
-  thheller/shadow-cljs                  #:mvn{:version "2.19.0"}
+  thheller/shadow-cljs                  #:mvn{:version "2.19.5"}
   reagent/reagent                       #:mvn{:version "1.0.0"}
   re-frame/re-frame                     #:mvn{:version "1.2.0"}
   day8.re-frame/async-flow-fx           #:mvn{:version "0.3.0"}

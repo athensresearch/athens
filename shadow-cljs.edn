@@ -19,7 +19,10 @@
                                    :closure-defines    {re-frame.trace.trace-enabled? true}
                                    :output-feature-set :es-next}
                 :dev              {:compiler-options {:closure-defines {re-frame.trace.trace-enabled?        true
-                                                                        day8.re-frame.tracing.trace-enabled? true}}}
+                                                                        day8.re-frame.tracing.trace-enabled? true}
+                                                      ;; Hide redef warnings, we started having around 5 that show up
+                                                      ;; on every rebuild due to clojure 1.11 adding new fns.
+                                                      :warnings {:redef false}}}
                 :release          {:build-options {:ns-aliases {day8.re-frame.tracing day8.re-frame.tracing-stubs}}}
                 :devtools         {:preloads  [devtools.preload
                                                day8.re-frame-10x.preload]
@@ -39,7 +42,8 @@
                                         ;; see https://shadow-cljs.github.io/docs/UsersGuide.html#_conditional_reading
                                         :reader-features  #{:electron}}
                      :dev              {:compiler-options {:closure-defines {re-frame.trace.trace-enabled?        true
-                                                                             day8.re-frame.tracing.trace-enabled? true}}}
+                                                                             day8.re-frame.tracing.trace-enabled? true}
+                                                           :warnings {:redef false}}}
                      :release          {:build-options {:ns-aliases {day8.re-frame.tracing day8.re-frame.tracing-stubs}}
                                         :compiler-options {:source-map true
                                                            :pseudo-names true}}
