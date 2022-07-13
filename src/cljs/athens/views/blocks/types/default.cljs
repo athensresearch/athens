@@ -18,6 +18,7 @@
     [athens.router                           :as router]
     [athens.subs.dragging                    :as drag.subs]
     [athens.subs.selection                   :as select-subs]
+    [athens.time-controls                    :as time-controls]
     [athens.util                             :as util]
     [athens.views.blocks.context-menu        :as ctx-menu]
     [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
@@ -314,7 +315,8 @@
                                                                                    "Copy block ref")
                                                                        :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
                                                          [:> MenuItem {:children "Copy unformatted text"
-                                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])}
+                                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])
+                            :style        (merge {} (time-controls/block-styles block-o))}
 
               (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 

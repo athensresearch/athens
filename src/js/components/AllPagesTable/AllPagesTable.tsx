@@ -66,8 +66,8 @@ const Row = ({ index, data, style }) => {
         </Button>
       </Td>
       <Td>{item[":block/_refs"]?.length || 0}</Td>
-      <Td>{renderDate(item[":edit/time"])}</Td>
-      <Td>{renderDate(item[":create/time"])}</Td>
+      <Td>{renderDate(item[":time/modified"])}</Td>
+      <Td>{renderDate(item[":time/created"])}</Td>
     </Tr>
   )
 };
@@ -88,8 +88,8 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
     return {
       ...row,
       onClick: (e) => onClickItem(e, row[":node/title"]),
-      ":edit/time": dateFormatFn(row[":edit/time"]),
-      ":create/time": dateFormatFn(row[":create/time"]),
+      ":time/modified": dateFormatFn(row[":time/modified"]),
+      ":time/created": dateFormatFn(row[":time/created"]),
     }
   }), [sortedPages]);
 

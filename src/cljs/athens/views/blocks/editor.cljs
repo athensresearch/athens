@@ -19,7 +19,9 @@
     [athens.util                               :as util]
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content               :as content]
-    [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs]]
+    [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs handle-click-comment]]
+    [athens.views.comments.core              :as comments]
+    [athens.views.comments.inline            :as inline-comments]
     [re-frame.core                             :as rf]))
 
 
@@ -196,13 +198,18 @@
                                                 "closed-with-children")
                       :uidSanitizedBlock      uid-sanitized-block
                       :shouldShowDebugDetails (util/re-frame-10x-open?)
-                      :menuActions            (clj->js [{:children
-                                                         (if (> (count @selected-items) 1)
-                                                           "Copy selected block refs"
-                                                           "Copy block ref")
-                                                         :onClick #(handle-copy-refs nil uid)}
-                                                        {:children "Copy unformatted text"
-                                                         :onClick  #(handle-copy-unformatted uid)}])
+                      :menuActions            (clj->js (remove nil?
+                                                               [{:children
+                                                                 (if (> (count @selected-items) 1)
+                                                                   "Copy selected block refs"
+                                                                   "Copy block ref")
+                                                                 :onClick #(handle-copy-refs nil uid)}
+                                                                {:children "Copy unformatted text"
+                                                                 :onClick  #(handle-copy-unformatted uid)}
+                                                                (when (and (comments/enabled?)
+                                                                           (empty? @selected-items))
+                                                                  {:children "Comment"
+                                                                   :onClick  (fn [e] (handle-click-comment e uid))})]))
                       :onClick                (fn [e]
                                                 (let [shift? (.-shiftKey e)]
                                                   (rf/dispatch [:reporting/navigation {:source :block-bullet
@@ -215,6 +222,12 @@
                       :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
 
           [content/block-content-el block-o state-hooks]
+
+          ;; Show comments when the toggle is on
+          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
+                    (and @(rf/subscribe [:comment/show-inline-comments?])
+                         (comments/get-comment-thread-uid @db/dsdb uid)))
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
 
           [presence/inline-presence-el uid]
 
