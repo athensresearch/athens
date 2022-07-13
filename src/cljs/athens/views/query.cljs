@@ -112,10 +112,10 @@
              query-subgroup-by-kw (keyword query-subgroup-by)
              columns (->> (map query-group-by-kw query-data) set)
              rows (->> (map query-subgroup-by-kw query-data) set)
+
              boardData (if (and query-subgroup-by-kw query-group-by-kw)
                          (group-stuff query-group-by-kw query-subgroup-by-kw query-data)
                          (group-by query-group-by-kw query-data))]
-         (prn "HEY" boardData)
          [:> ExampleKanban2 {:boardData boardData
                              ;; store column order here
                              :columns columns
@@ -128,7 +128,7 @@
                              :onClickCard (fn [])
                              :onShiftClickCard (fn [])
                              :onAddNewColumnClick (fn [])
-                             :onAddNewProjectClick (fn [])} ])
+                             :onAddNewProjectClick (fn [])}])
 
        [:> QueryTable {:data query-data
                        :columns property-keys}])]))
@@ -185,14 +185,18 @@
         query-group-by (get-query-group-by properties)
         query-subgroup-by (get-query-subgroup-by properties)]
 
-    [:> Box {:width "100%" #_#_:border "1px" :borderColor "gray"
-             :padding-left 38 :padding-top 15}
-     [options {:query-data query-data
-               :query-layout query-layout
-               :property-keys property-keys
-               :uid (:block/uid block-data)}]
-     [query {:query-data query-data
-             :query-layout query-layout
-             :property-keys property-keys
-             :query-group-by query-group-by
-             :query-subgroup-by query-subgroup-by }]]))
+    (cond
+      (nil? query-group-by) [:> Box {:color "red"} "Please add property query/group-by"]
+      (nil? query-subgroup-by) [:> Box {:color "red"} "Please add property query/subgroup-by"]
+
+      :else [:> Box {:width        "100%" #_#_:border "1px" :borderColor "gray"
+                     :padding-left 38 :padding-top 15}
+             [options {:query-data    query-data
+                       :query-layout  query-layout
+                       :property-keys property-keys
+                       :uid           (:block/uid block-data)}]
+             [query {:query-data        query-data
+                     :query-layout      query-layout
+                     :property-keys     property-keys
+                     :query-group-by    query-group-by
+                     :query-subgroup-by query-subgroup-by}]])))
