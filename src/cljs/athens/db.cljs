@@ -431,8 +431,8 @@
 
 
 (defn get-block-type
-  [block-ir]
   "Here making assumption that we represent `type` by key `:block/type`"
+  [block-ir]
   (-> block-ir
       :block/properties
       (get ":block/type")

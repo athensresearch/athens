@@ -4,18 +4,16 @@
     ["/components/Comments/Comments" :refer [CommentCounter]]
     ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon]]
     ["@chakra-ui/react" :refer [Button Box Text VStack HStack]]
+    [athens.common.utils :as common.utils]
     [athens.parse-renderer :as parse-renderer]
+    [athens.reactive :as reactive]
     [athens.util :as util]
     [athens.views.blocks.content :as b-content]
-    [athens.views.blocks.textarea-keydown :as txt-key-down]
     [athens.views.comments.core :as comments.core]
     [clojure.string :as str]
     [goog.events :as events]
     [re-frame.core :as rf]
-    [reagent.core :as r])
-  (:import
-    (goog.events
-      KeyCodes)))
+    [reagent.core :as r]))
 
 
 (defn copy-comment-uid
@@ -30,9 +28,8 @@
 
 
 (defn show-comment-context-menu
-  [comment-data state]
-  (let [{:comment/keys [x y]} @state
-        handle-click-outside  #(when (:comment/show? @state)
+  [_comment-data state]
+  (let [handle-click-outside  #(when (:comment/show? @state)
                                  (swap! state assoc :comment/show? false))]
     (reagent.core/create-class
       {:component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
@@ -51,8 +48,8 @@
 
 (defn comment-el
   [item]
-  (let [{:keys [string time author block/uid]} item
-        linked-refs (athens.reactive/get-reactive-linked-references [:block/uid uid])
+  (let [{:keys [string _time author block/uid]} item
+        linked-refs (reactive/get-reactive-linked-references [:block/uid uid])
         linked-refs-count (count linked-refs)
         state (reagent.core/atom {:comment/show? false
                                   :comment/x     nil
@@ -88,16 +85,14 @@
 
 
 (defn inline-comments
-  [data uid hide?]
+  [data _uid hide?]
   ;; TODO : Remove this state
   (when (comments.core/enabled?)
     (let [state           (reagent.core/atom {:hide? hide?})
           num-comments    (count data)
-          first-comment   (first data)
-          block-uid       (athens.common.utils/gen-block-uid)
+          block-uid       (common.utils/gen-block-uid)
           value-atom      (r/atom "")
-          show-edit-atom? (r/atom false)
-          {:keys [author string time]} first-comment]
+          show-edit-atom? (r/atom false)]
       (fn [data uid]
         [:> VStack (merge
                      (when-not (:hide? @state)

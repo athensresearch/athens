@@ -3,7 +3,6 @@
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
     [athens.common-events.bfs :as bfs]
-    [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops :as graph-ops]
     [athens.common.utils :as common.utils]
@@ -30,7 +29,7 @@
 
 (rf/reg-event-fx
   :comment/hide-comment-textarea
-  (fn [{:keys [db]} [_ uid]]
+  (fn [{:keys [db]} [_]]
     {:db (assoc db :comment/show-comment-textarea nil)}))
 
 
@@ -66,7 +65,7 @@
 
 
 (defn get-comment-thread-uid
-  [db parent-block-uid]
+  [_db parent-block-uid]
   (-> (common-db/get-block-property-document @db/dsdb [:block/uid parent-block-uid])
       ;; TODO Multiple threads
       ;; I think for multiple we would have a top level property for all threads
@@ -107,7 +106,7 @@
 
 (rf/reg-event-fx
   :comment/write-comment
-  (fn [{db :db} [_ uid comment-string]]
+  (fn [_ [_ uid comment-string]]
     (let [thread-exists?            (get-comment-thread-uid @db/dsdb uid)
           thread-uid                (or thread-exists?
                                         (common.utils/gen-block-uid))
