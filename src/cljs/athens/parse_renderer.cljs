@@ -339,36 +339,3 @@
           (js/console.groupEnd))
         view))))
 
-
-(defn string->ast
-  "Parses provided `string` and returns AST of it, or error"
-  [string]
-  (when config/measure-parser?
-    (js/console.group string))
-  (let [pt-n-1     (js/performance.now)
-        result     (parser-impl/staged-parser->ast string)
-        pt-n-2     (js/performance.now)
-        pt-n-total (- pt-n-2 pt-n-1)]
-    (when config/measure-parser?
-      (js/console.log "parsing time:" pt-n-total))
-    result))
-
-
-(defn ast->markup
-  "Converts AST to Hiccup markup"
-  [uid string ast]
-  (if (insta/failure? ast)
-    (do
-      (when config/measure-parser?
-        (js/console.groupEnd))
-      [:abbr {:title (pr-str (insta/get-failure ast))
-              :style {:color "red"}}
-       string])
-    (let [vt-1     (js/performance.now)
-          view     (transform ast uid)
-          vt-2     (js/performance.now)
-          vt-total (- vt-2 vt-1)]
-      (when config/measure-parser?
-        (js/console.log "view creation:" vt-total)
-        (js/console.groupEnd))
-      view)))

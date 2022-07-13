@@ -41,7 +41,5 @@ athens.common-events.graph.schema/explain-atomic-op
 athens.style/unzoom
 athens.self-hosted.fluree.test-helpers/query
 athens.views.jetsam/jetsam-component
-athens.parse-renderer/string->ast
-athens.parse-renderer/ast->markup
 athens.views.task.core/new-task
 athens.views.task.core/update-task-properties
