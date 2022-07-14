@@ -1,30 +1,30 @@
 (ns athens.views.blocks.editor
   (:require
-   ["/components/Block/Anchor"                :refer [Anchor]]
-   ["/components/Block/PropertyName"          :refer [PropertyName]]
-   ["/components/Block/Toggle"                :refer [Toggle]]
-   ["/components/Icons/Icons"                 :refer [ChatIcon BlockEmbedIcon TextIcon]]
-   ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-   ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
-   [athens.common-db                          :as common-db]
-   [athens.db                                 :as db]
-   [athens.events.inline-refs                 :as inline-refs.events]
-   [athens.events.linked-refs                 :as linked-ref.events]
-   [athens.parse-renderer                     :as parse-renderer]
-   [athens.reactive                           :as reactive]
-   [athens.router                             :as router]
-   [athens.self-hosted.presence.views         :as presence]
-   [athens.subs.inline-refs                   :as inline-refs.subs]
-   [athens.subs.linked-refs                   :as linked-ref.subs]
-   [athens.subs.selection                     :as select-subs]
-   [athens.util                               :as util]
-   [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
-   [athens.views.blocks.content               :as content]
-   [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs handle-click-comment]]
-   [athens.views.comments.core              :as comments]
-   [athens.views.comments.inline            :as inline-comments]
-   [reagent.core :as r]
-   [re-frame.core                             :as rf]))
+    ["/components/Block/Anchor"                :refer [Anchor]]
+    ["/components/Block/PropertyName"          :refer [PropertyName]]
+    ["/components/Block/Toggle"                :refer [Toggle]]
+    ["/components/Icons/Icons"                 :refer [ChatIcon BlockEmbedIcon TextIcon]]
+    ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
+    ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    [athens.common-db                          :as common-db]
+    [athens.db                                 :as db]
+    [athens.events.inline-refs                 :as inline-refs.events]
+    [athens.events.linked-refs                 :as linked-ref.events]
+    [athens.parse-renderer                     :as parse-renderer]
+    [athens.reactive                           :as reactive]
+    [athens.router                             :as router]
+    [athens.self-hosted.presence.views         :as presence]
+    [athens.subs.inline-refs                   :as inline-refs.subs]
+    [athens.subs.linked-refs                   :as linked-ref.subs]
+    [athens.subs.selection                     :as select-subs]
+    [athens.util                               :as util]
+    [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
+    [athens.views.blocks.content               :as content]
+    [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs handle-click-comment]]
+    [athens.views.comments.core              :as comments]
+    [athens.views.comments.inline            :as inline-comments]
+    [re-frame.core                             :as rf]
+    [reagent.core :as r]))
 
 
 (defn toggle
@@ -205,7 +205,7 @@
                                                                  (if (> (count @selected-items) 1)
                                                                    "Copy selected block refs"
                                                                    "Copy block ref")
-                                                                   :icon (r/as-element [:> BlockEmbedIcon])
+                                                                 :icon (r/as-element [:> BlockEmbedIcon])
                                                                  :onClick #(handle-copy-refs nil uid)}
                                                                 {:children "Copy unformatted text"
                                                                  :icon (r/as-element [:> TextIcon])
