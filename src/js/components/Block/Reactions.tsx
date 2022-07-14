@@ -42,7 +42,7 @@ const ReactionItem = ({ reaction, onToggleReaction, currentUser }: ReactionItemP
 }
 
 export const Reactions = ({ reactions, onToggleReaction, currentUser }: ReactionsProps): JSX.Element | null => {
-  if (!reactions) return null;
+  if (!reactions.length) return null;
 
   return (
     <ButtonGroup

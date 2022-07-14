@@ -2,7 +2,6 @@ import React from 'react';
 import { Box } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
 import { useContextMenu } from '@/utils/useContextMenu';
-import { Actions } from './Actions';
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
@@ -18,10 +17,9 @@ const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: 
   return (closestBlockContainer?.dataset?.uid === thisBlockUid)
 }
 
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing,...props }) => {
+const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }) => {
 
   const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
-  const [isUsingActions, setIsUsingActions] = React.useState(false);
 
   const handleMouseOver = (e) => {
     setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
@@ -37,6 +35,9 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
     isOpen: isContextMenuOpen
   } = useContextMenu({
     ref,
+    menuProps: {
+      size: "sm"
+    },
     source: "cursor",
   });
 
@@ -162,11 +163,11 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       }}
     >
       {children}
-      {(!isEditing && (isHoveredNotChild || isUsingActions)) && (
+      {/* {(!isEditing && (isHoveredNotChild || isUsingActions)) && (
         <Actions
           actions={actions}
           setIsUsingActions={setIsUsingActions}
-        />)}
+        />)} */}
     </Box>
     <ContextMenu>
       {menu}

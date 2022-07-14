@@ -4,8 +4,8 @@
   (:require
     ["/components/Block/Container"           :refer [Container]]
     ["/components/EmojiPicker/EmojiPicker"   :refer [EmojiPickerPopover]]
-    ["/components/Icons/Icons"               :refer [PencilIcon]]
-    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton  MenuList MenuItem]]
+    ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpIcon]]
+    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -276,14 +276,15 @@
                                _refs]} (merge block-o block)
                  children-uids         (set (map :block/uid children))
                  uid-sanitized-block   (s/transform
-                                         (util/specter-recursive-path #(contains? % :block/uid))
-                                         (fn [{:block/keys [original-uid uid] :as block}]
-                                           (assoc block :block/uid (or original-uid uid)))
-                                         block)
+                                        (util/specter-recursive-path #(contains? % :block/uid))
+                                        (fn [{:block/keys [original-uid uid] :as block}]
+                                          (assoc block :block/uid (or original-uid uid)))
+                                        block)
                  is-selected           @(rf/subscribe [::select-subs/selected? uid])
                  present-user          @(rf/subscribe [:presence/has-presence uid])
                  is-presence           (seq present-user)
-                 reactions-enabled?    (:reactions @feature-flags)]
+                 reactions-enabled?    (:reactions @feature-flags)
+                 comments-enabled?     (:comments @feature-flags)]
 
              ;; (prn uid is-selected)
 
@@ -300,7 +301,7 @@
                             :isOpen       open
                             :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
                             :hasPresence  is-presence
-                            :actions      (clj->js
+                            #_ :actions #_      (clj->js
                                             (into [] (when reactions-enabled?
                                                        [(r/as-element ^{:key "emoji-picker"} [:> EmojiPickerPopover {:onEmojiSelected (fn [e] js/console.log e)}])])))
                             :uid          uid
@@ -319,9 +320,19 @@
                                                          [:> MenuItem {:children (if (> (count @selected-items) 1)
                                                                                    "Copy selected block refs"
                                                                                    "Copy block ref")
+                                                                       :icon (r/as-element [:> BlockEmbedIcon])
                                                                        :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
                                                          [:> MenuItem {:children "Copy unformatted text"
-                                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])
+                                                                       :icon (r/as-element [:> TextIcon])
+                                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                                         (when comments-enabled?
+                                                           [:> MenuItem {:children "Add comment"
+                                                                         :isDisabled true
+                                                                         :icon (r/as-element [:> TextIcon])}])
+                                                         (when reactions-enabled?
+                                                           [:> MenuItem {:children "Add reaction"
+                                                                         :icon (r/as-element [:> ThumbUpIcon])
+                                                                         :onClick  #(ctx-menu/handle-copy-unformatted uid)}])])
                             :style        (merge {} (time-controls/block-styles block-o))}
 
               (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
