@@ -77,7 +77,6 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
     bg: "transparent",
     "aria-label": "Block anchor",
     className: ['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' '),
-    draggable: true,
     gridArea: "anchor",
     flexShrink: 0,
     position: 'relative',
@@ -137,6 +136,7 @@ export const Anchor = (props: AnchorProps) => {
     onClick,
     uidSanitizedBlock,
     menuActions,
+    ...rest
   } = props;
   const ref = React.useRef(null);
 
@@ -155,10 +155,12 @@ export const Anchor = (props: AnchorProps) => {
       aria-label="Block anchor"
       {...anchorButtonStyleProps(isClosedWithChildren)}
       {...menuSourceProps}
+      draggable={onDragStart ? true : undefined}
       onDragStart={onDragStart}
       onClick={onClick}
       onDragEnd={onDragEnd}
       isActive={isContextMenuOpen}
+      {...rest}
     >
       {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
     </IconButton>

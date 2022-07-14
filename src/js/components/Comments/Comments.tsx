@@ -58,7 +58,7 @@ export const CommentCounter = ({ count }) => {
   </Box>
 }
 
-const CommentErrorMessage = <Text color="foreground.secondary" display="block" p={2} borderRadius="sm">Couldn't show this comment</Text>
+const CommentErrorMessage = () => <Text color="foreground.secondary" display="block" p={2} borderRadius="sm">Couldn't show this comment</Text>;
 
 export const CommentContainer = withErrorBoundary(({ children, menu }) => {
   const commentRef = React.useRef();
@@ -76,34 +76,36 @@ export const CommentContainer = withErrorBoundary(({ children, menu }) => {
     return <MenuList>{menu.map((action) => <MenuItem key={action.children} {...action} />)}</MenuList>
   }, [menu])
 
-  return <HStack
+  return <Box
     ref={commentRef}
     {...menuSourceProps}
     bg={isContextMenuOpen ? "interaction.surface.active" : 'transparent'}
     mb="-1px"
     borderTop="1px solid"
-    display="grid"
+    borderTopColor="separator.divider"
     borderRadius="sm"
     py={1}
-    alignItems="baseline"
-    gridTemplateColumns="5em auto 1fr"
-    gridTemplateRows="2em auto"
-    gridTemplateAreas="'author anchor comment' '_ _ comment'"
-    borderTopColor="separator.divider"
+    alignItems="stretch"
+    justifyContent="stretch"
+    rowGap={0}
+    columnGap={2}
+    display="grid"
+    gridTemplateColumns="auto 1fr"
+    gridTemplateRows="auto auto"
+    gridTemplateAreas={`
+    'byline byline'
+    'anchor comment'`}
     sx={{
-      "> button.anchor": {
-        height: "100%"
-      },
       "> button.anchor:not([data-active])": {
-        opacity: 0
+        color: "foreground.tertiary"
       },
       ":hover > button.anchor": {
-        opacity: 1
+        color: "foreground.secondary"
       }
     }}
   >{children}
     <ContextMenu>
       {menuList}
     </ContextMenu>
-  </HStack>
-}, { CommentErrorMessage });
+  </Box>
+}, { fallback: <CommentErrorMessage /> });

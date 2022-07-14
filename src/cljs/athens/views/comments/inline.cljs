@@ -3,7 +3,7 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
     ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon]]
-    ["@chakra-ui/react" :refer [Button Box Text VStack]]
+    ["@chakra-ui/react" :refer [Button Box Text VStack Avatar HStack]]
     [athens.common.utils :as common.utils]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
@@ -27,7 +27,7 @@
 
 
 (defn comment-el
-  [item]
+  [item is-followup?]
   (let [{:keys [string _time author block/uid]} item
         linked-refs (reactive/get-reactive-linked-references [:block/uid uid])
         linked-refs-count (count linked-refs)
@@ -36,18 +36,30 @@
                         :onClick on-copy-comment-ref}])]
     (fn []
       [:> CommentContainer {:menu menu}
-       [:> Text {:fontWeight "bold"
-                 :gridArea "author"
-                 :fontSize "sm"
-                 :flex "0 0 4em"
-                 :color (if author nil "foreground.tertiary")
-                 :noOfLines 0}
-        (or author "—")]
-       [:> Anchor {:menuActions menu}]
+       [:> HStack {:gridArea "byline"
+                   :alignItems "center"
+                   :lineHeight 1.25}
+        (when (and
+               (not is-followup?)
+               author)
+          [:> Avatar {:name author :color "#fff"}]
+          [:> Text {:fontWeight "bold"
+                    :fontSize "sm"
+                    :noOfLines 0}
+           author])
+        (when _time
+          [:> Text {:fontSize "xs"
+                    :_hover {:color "foreground.secondary"}
+                    :color "foreground.tertiary"}
+           _time])]
+       [:> Anchor {:menuActions menu
+                   :ml "0.25em"
+                   :height "2em"}]
        [:> Box {:flex "1 1 100%"
                 :gridArea "comment"
                 :overflow "hidden"
                 :fontSize "sm"
+                :ml 1
                 :sx {"> *" {:lineHeight 1.5}}}
         ;; In future this should be rendered differently for reply type and ref-type
         [athens.parse-renderer/parse-and-render string uid]]
@@ -91,11 +103,11 @@
             [:<>
              [:> ChevronRightIcon]
              [:> CommentCounter {:count num-comments}]
-             [:> Text "Comments"]]
+             [:> Text {:pl 1.5} "Comments"]]
             [:<>
              [:> ChevronDownIcon]
              [:> CommentCounter {:count num-comments}]
-             [:> Text "Comments"]])]
+             [:> Text {:pl 1.5} "Comments"]])]
 
          (when-not (:hide? @state)
            [:> Box {:pl 8
