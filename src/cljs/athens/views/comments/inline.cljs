@@ -40,8 +40,8 @@
                    :alignItems "center"
                    :lineHeight 1.25}
         (when (and
-               (not is-followup?)
-               author)
+                (not is-followup?)
+                author)
           [:> Avatar {:name author :color "#fff"}]
           [:> Text {:fontWeight "bold"
                     :fontSize "sm"
