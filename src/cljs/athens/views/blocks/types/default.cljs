@@ -302,7 +302,7 @@
                             :hasPresence  is-presence
                             :actions      (clj->js
                                             (into [] (when reactions-enabled?
-                                                       [(r/as-element [:> EmojiPickerPopover {:onEmojiSelected (fn [e] js/console.log e)}])])))
+                                                       [(r/as-element ^{:key "emoji-picker"} [:> EmojiPickerPopover {:onEmojiSelected (fn [e] js/console.log e)}])])))
                             :uid          uid
                             ;; need to know children for selection resolution
                             :childrenUids children-uids
