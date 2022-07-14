@@ -2,7 +2,7 @@
   (:require
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
-    ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon]]
+    ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon]]
     ["@chakra-ui/react" :refer [Button Box Text VStack Avatar HStack Badge]]
     [athens.common.utils :as common.utils]
     [athens.parse-renderer :as parse-renderer]
@@ -32,7 +32,8 @@
         linked-refs (reactive/get-reactive-linked-references [:block/uid uid])
         linked-refs-count (count linked-refs)
         on-copy-comment-ref #(copy-comment-uid item)
-        menu (clj->js [{:children "Copy comment Ref"
+        menu (clj->js [{:children "Copy comment ref"
+                        :icon (r/as-element [:> BlockEmbedIcon])
                         :onClick on-copy-comment-ref}])]
     (fn []
       [:> CommentContainer {:menu menu}
