@@ -8,7 +8,6 @@
     ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common-db                          :as common-db]
     [athens.common-events.graph.ops            :as graph-ops]
-    [athens.common.utils                       :as utils]
     [athens.db                                 :as db]
     [athens.events.inline-refs                 :as inline-refs.events]
     [athens.events.linked-refs                 :as linked-ref.events]
@@ -153,31 +152,56 @@
                  [ref-comp block-el block']]))]))])))
 
 
-;; TODO: removing last user on an emoji should remove the emoji
-;; TODO: removing the last emoji reaction should remove the :reactions/emojis prop
-;; TODO: when we have time as first class, there's no need to save the timestamp as block string
-;; TODO: store time prop for both reaction and user-id, use for sorting (doesn't sort reaction yet)
 (defn toggle-reaction
-  "Toggle reaction on block uid. Does nothing if there's no user.
-  Stores emojis in the [:reactions/emojis reaction user-id] property path. "
+  "Toggle reaction on block uid. Cleans up when toggling the last one off.
+  Stores emojis in the [:reactions/emojis reaction user-id] property path."
   [id reaction user-id]
   (rf/dispatch [:properties/update-in id [":reactions" reaction user-id]
-                (fn [db prop-uid]
-                  [(if (common-db/get-block db [:block/uid prop-uid])
-                     (graph-ops/build-block-remove-op @db/dsdb prop-uid)
-                     (graph-ops/build-block-save-op db prop-uid (str (utils/now-ts))))])]))
+                (fn [db user-reaction-uid]
+                  (let [user-reacted?       (common-db/block-exists? db [:block/uid user-reaction-uid])
+                        reaction            (when user-reacted?
+                                              (->> [:block/uid user-reaction-uid]
+                                                   (common-db/get-parent-eid db)
+                                                   (common-db/get-block db)))
+                        reactions           (when reaction
+                                              (->> (:db/id reaction)
+                                                   (common-db/get-parent-eid db)
+                                                   (common-db/get-block db)))
+                        last-user-reaction? (= 1 (count (-> reaction :block/properties)))
+                        last-reaction?      (= 1 (count (-> reactions :block/properties)))]
+                    [(cond
+                       ;; This reaction doesn't exist yet, so we add it.
+                       (not user-reacted?)
+                       (graph-ops/build-block-save-op db user-reaction-uid "")
+
+                       ;; This was the last of all reactions, remove the reactions property
+                       ;; on the parent.
+                       (and last-user-reaction? last-reaction?)
+                       (graph-ops/build-block-remove-op @db/dsdb (:block/uid reactions))
+
+                       ;; This was the last user reaction of this type, but not the last
+                       ;; of all reactions. Remove reaction block.
+                       last-user-reaction?
+                       (graph-ops/build-block-remove-op @db/dsdb (:block/uid reaction))
+
+                       ;; Just remove this particular user reaction.
+                       :else
+                       (graph-ops/build-block-remove-op @db/dsdb user-reaction-uid))]))]))
 
 
 (defn props->reactions
   [props]
   (->> (get props ":reactions")
        :block/properties
-       (mapv (fn [[k {props :block/properties}]]
-               [k (->> props
-                       (map (fn [[user-id {timestamp :block/string}]]
-                              [timestamp user-id]))
-                       (sort-by first)
-                       (mapv second))]))))
+       (map (fn [[k {props :block/properties}]]
+              [k (->> props
+                      (map (fn [[user-id block]]
+                             [(-> block :block/edits last :event/time :time/ts)
+                              user-id]))
+                      (sort-by first)
+                      (mapv second))]))
+       (sort-by first)
+       (into [])))
 
 
 (defn editor-component
@@ -200,10 +224,9 @@
                           properties
                           _refs]} (reactive/get-reactive-block-document [:block/uid uid])
             reactions-enabled?    (:reactions @feature-flags)
-            ;; TODO: user-id for presence users is their username, TDB what it is for real auth users.
-            ;; TODO: what should happen for local or in-memory db? there's no presence, atm it's hardcoded to "stuart"
             user-id               (or (:username @(rf/subscribe [:presence/current-user]))
-                                      "stuart")
+                                      ;; We use empty string for when there is no user information, like in PKM.
+                                      "")
             reactions             (and reactions-enabled?
                                        (props->reactions properties))]
 
