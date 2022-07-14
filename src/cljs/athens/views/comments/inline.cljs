@@ -31,22 +31,24 @@
   (let [{:keys [string _time author block/uid]} item
         linked-refs (reactive/get-reactive-linked-references [:block/uid uid])
         linked-refs-count (count linked-refs)
-        on-copy-comment-uid #(copy-comment-uid item)
-        menu (clj->js [{:children "Copy comment uid"
-                        :onClick on-copy-comment-uid}])]
+        on-copy-comment-ref #(copy-comment-uid item)
+        menu (clj->js [{:children "Copy comment Ref"
+                        :onClick on-copy-comment-ref}])]
     (fn []
       [:> CommentContainer {:menu menu}
        [:> Text {:fontWeight "bold"
                  :gridArea "author"
                  :fontSize "sm"
                  :flex "0 0 4em"
+                 :color (if author nil "foreground.tertiary")
                  :noOfLines 0}
-        author]
+        (or author "—")]
        [:> Anchor {:menuActions menu}]
-       [:> Box {:flex 1
+       [:> Box {:flex "1 1 100%"
                 :gridArea "comment"
-                :lineHeight 1.5
-                :fontSize "sm"}
+                :overflow "hidden"
+                :fontSize "sm"
+                :sx {"> *" {:lineHeight 1.5}}}
         ;; In future this should be rendered differently for reply type and ref-type
         [athens.parse-renderer/parse-and-render string uid]]
        (when (pos? linked-refs-count)
