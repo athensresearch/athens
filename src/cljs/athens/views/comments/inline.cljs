@@ -1,9 +1,9 @@
 (ns athens.views.comments.inline
   (:require
     ["/components/Block/Anchor" :refer [Anchor]]
-    ["/components/Comments/Comments" :refer [CommentCounter]]
+    ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
     ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon]]
-    ["@chakra-ui/react" :refer [Button Box Text VStack HStack]]
+    ["@chakra-ui/react" :refer [Button Box Text VStack]]
     [athens.common.utils :as common.utils]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
@@ -17,33 +17,13 @@
 
 
 (defn copy-comment-uid
-  [comment-data state]
+  [comment-data]
   (let [uid (:block/uid comment-data)
         ref (str "((" uid "))")]
     (.. js/navigator -clipboard (writeText ref))
     (util/toast (clj->js {:status "info"
                           :position "top-right"
-                          :title "Copied uid to clipboard"}))
-    (swap! state update :comment/show? not)))
-
-
-(defn show-comment-context-menu
-  [_comment-data state]
-  (let [handle-click-outside  #(when (:comment/show? @state)
-                                 (swap! state assoc :comment/show? false))]
-    (reagent.core/create-class
-      {:component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
-       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn [comment-data state]
-                                 [:> Anchor {:menuActions (clj->js [{:children "Copy comment uid"
-                                                                     :onClick  #(copy-comment-uid comment-data state)}])}]
-                                 #_[:div (merge (stylefy/use-style dropdown-style)
-                                              {:style {:position "fixed"
-                                                       :left x
-                                                       :top  y}})
-                                  [:div (stylefy/use-style menu-style)
-                                   [:> Button {:on-mouse-down #(copy-comment-uid comment-data state)}
-                                    "Copy comment uid"]]])})))
+                          :title "Copied uid to clipboard"}))))
 
 
 (defn comment-el
@@ -51,29 +31,18 @@
   (let [{:keys [string _time author block/uid]} item
         linked-refs (reactive/get-reactive-linked-references [:block/uid uid])
         linked-refs-count (count linked-refs)
-        state (reagent.core/atom {:comment/show? false
-                                  :comment/x     nil
-                                  :comment/y     nil})]
-    (fn [item]
-      [:> HStack {:mb "-1px"
-                  :borderTop "1px solid"
-                  :display "grid"
-                  :py 1
-                  :alignItems "baseline"
-                  :gridTemplateColumns "5em auto 1fr"
-                  :gridTemplateRows "2em auto"
-                  :gridTemplateAreas "'author anchor comment' '_ _ comment'"
-                  :borderTopColor "separator.divider"
-                  :sx {"> button.anchor" {:height "100%"}
-                       "> button.anchor:not([data-active])" {:opacity 0}
-                       ":hover > button.anchor" {:opacity 1}}}
+        on-copy-comment-uid #(copy-comment-uid item)
+        menu (clj->js [{:children "Copy comment uid"
+                        :onClick on-copy-comment-uid}])]
+    (fn []
+      [:> CommentContainer {:menu menu}
        [:> Text {:fontWeight "bold"
                  :gridArea "author"
                  :fontSize "sm"
                  :flex "0 0 4em"
                  :noOfLines 0}
         author]
-       [show-comment-context-menu item state]
+       [:> Anchor {:menuActions menu}]
        [:> Box {:flex 1
                 :gridArea "comment"
                 :lineHeight 1.5
@@ -132,7 +101,8 @@
                     :pb 4}
             (for [item data]
               ^{:key item}
-              [comment-el item])
+              [:<>
+               [comment-el item]])
 
             (let [block-o           {:block/uid      block-uid
                                      ;; :block/string   @value-atom

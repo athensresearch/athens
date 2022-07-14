@@ -1,6 +1,8 @@
 import React from 'react';
-import { Box, Text, HStack, Textarea, Button } from '@chakra-ui/react'
+import { Box, Text, HStack, Textarea, Button, MenuList, MenuItem } from '@chakra-ui/react'
 import { ChatFilledIcon } from '@/Icons/Icons'
+import { useContextMenu } from '@/utils/useContextMenu';
+import { withErrorBoundary } from "react-error-boundary";
 
 interface InlineCommentInputProps {
   onSubmitComment: (comment: string) => void
@@ -55,3 +57,50 @@ export const CommentCounter = ({ count }) => {
     <Text zIndex={1} gridArea="main" color="background.basement" fontSize="xs">{formatCount(count)}</Text>
   </Box>
 }
+
+export const CommentContainer = withErrorBoundary(({ children, menu }) => {
+  const commentRef = React.useRef();
+
+  const {
+    menuSourceProps,
+    ContextMenu,
+    isOpen: isContextMenuOpen
+  } = useContextMenu({
+    ref: commentRef,
+    source: "cursor",
+  });
+
+  const menuList = React.useMemo(() => {
+    return <MenuList>{menu.map((action) => <MenuItem key={action.children} {...action} />)}</MenuList>
+  }, [menu])
+
+  return <HStack
+    ref={commentRef}
+    {...menuSourceProps}
+    bg={isContextMenuOpen ? "interaction.surface.active" : 'transparent'}
+    mb="-1px"
+    borderTop="1px solid"
+    display="grid"
+    py={1}
+    alignItems="baseline"
+    gridTemplateColumns="5em auto 1fr"
+    gridTemplateRows="2em auto"
+    gridTemplateAreas="'author anchor comment' '_ _ comment'"
+    borderTopColor="separator.divider"
+    sx={{
+      "> button.anchor": {
+        height: "100%"
+      },
+      "> button.anchor:not([data-active])": {
+        opacity: 0
+      },
+      ":hover > button.anchor": {
+        opacity: 1
+      }
+    }}
+  >{children}
+    <ContextMenu>
+      {menuList}
+    </ContextMenu>
+  </HStack>
+}, null);
