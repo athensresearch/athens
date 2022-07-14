@@ -142,6 +142,7 @@ export const QueryKanban = (props) => {
           {y[column] &&  y[column].map(({ ...props}) =>
             <KanbanCard columns={columns} {...props} onUpdateStatusClick={onUpdateStatusClick} />
             )}
+            /* AddCard needs to take a context object that accepts filters, row context, column context, etc. */
           <AddCardButton column={column} project={project} onAddNewCardClick={onAddNewCardClick} />
           </KanbanColumn>
           )}

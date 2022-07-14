@@ -1,8 +1,6 @@
 (ns athens.views.pages.all-pages
   (:require
     ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
-    ["/components/Board/Board" :refer [KanbanBoard]]
-    ["/components/KanbanBoard/KanbanBoard" :refer [ExampleKanban ExampleKanban2 #_KanbanBoard]]
     ["@chakra-ui/react" :refer [Table Thead Tbody Tfoot Tr Th Td TableContainer
                                 Box
                                 Button
