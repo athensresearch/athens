@@ -444,8 +444,7 @@
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
             is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
                                                                                     (= @(subscribe [:current-route/page-title]) title))
-            cover-photo-enabled?                                                (:cover-photo @feature-flags)
-            header-image-url                                                    (-> properties (get ":header/url") :block/string)]
+            cover-photo-enabled?                                                (:cover-photo @feature-flags)]
 
         (sync-title title state)
 
@@ -457,15 +456,17 @@
                            :onConfirm   confirm-fn
                            :onClose     cancel-fn}]
          ;; Header
-         [:> PageHeader {:onClickOpenInMainView  (when-not is-current-route?
-                                                   (fn [e] (router/navigate-page title e)))
-                         :onClickOpenInSidebar   (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
-                                                   #(dispatch [:right-sidebar/open-item uid]))
-                         :onChangeHeaderImageUrl (fn [url]
-                                                   (dispatch [:properties/update-in [:node/title title] [":header/url"]
-                                                              (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))
-                         :headerImageUrl         header-image-url
-                         :headerImageEnabled     cover-photo-enabled?}
+         [:> PageHeader (merge
+                          {:onClickOpenInMainView  (when-not is-current-route?
+                                                     (fn [e] (router/navigate-page title e)))
+                           :onClickOpenInSidebar   (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                                                     #(dispatch [:right-sidebar/open-item uid]))}
+                          (when cover-photo-enabled?
+                            {:headerImageEnabled     cover-photo-enabled?
+                             :headerImageUrl         (-> properties (get ":header/url") :block/string)
+                             :onChangeHeaderImageUrl (fn [url]
+                                                       (dispatch [:properties/update-in [:node/title title] [":header/url"]
+                                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))}))
 
           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
            ;; Prevent editable textarea if a node/title is a date
