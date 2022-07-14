@@ -85,14 +85,14 @@
 
 
 (defn inline-comments
-  [data _uid hide?]
+  [_data _uid hide?]
   ;; TODO : Remove this state
   (when (comments.core/enabled?)
     (let [state           (reagent.core/atom {:hide? hide?})
           block-uid       (common.utils/gen-block-uid)
           value-atom      (r/atom "")
           show-edit-atom? (r/atom false)]
-      (fn [data uid]
+      (fn [data uid _hide?]
         (let [num-comments (count data)]
           [:> VStack (merge
                        (when-not (:hide? @state)

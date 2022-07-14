@@ -228,8 +228,8 @@
           ;; Show comments when the toggle is on
           (when (and open
                      (or @show-textarea
-                        (and @show-inline-comments
-                             (comments/get-comment-thread-uid @db/dsdb uid))))
+                         (and @show-inline-comments
+                              (comments/get-comment-thread-uid @db/dsdb uid))))
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
 
           [presence/inline-presence-el uid]
