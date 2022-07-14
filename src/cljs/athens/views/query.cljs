@@ -1,9 +1,7 @@
 (ns athens.views.query
   (:require
-   ["/components/Board/Board" :refer [KanbanBoard]]
-   ["/components/KanbanBoard/KanbanBoard" :refer [ExampleKanban ExampleKanban2 #_KanbanBoard]]
+   ["/components/KanbanBoard/KanbanBoard" :refer [QueryKanban]]
    ["/components/Table/Table" :refer [QueryTable]]
-   ;; ["/components/List/List" :refer [QueryList]]
    ["@chakra-ui/react" :refer [Box
                                Button
                                ButtonGroup
@@ -27,11 +25,13 @@
   [block]
   (let [{:keys [block/uid block/string block/properties]} block
         property-keys (keys properties)
-        props-map (reduce (fn [acc prop-key]
-                            (assoc acc (keyword prop-key) (get-in properties [prop-key :block/string])))
-                          {}
-                          property-keys)]
-    (merge {:id uid :title string} props-map)))
+        props-map     (reduce (fn [acc prop-key]
+                                (assoc acc (symbol prop-key) (get-in properties [prop-key :block/string])))
+                              {}
+                              property-keys)
+        merged-map     (merge {":block/uid" uid} props-map)]
+    merged-map))
+
 
 (defn organize-into-columns
   [tasks]
@@ -101,37 +101,44 @@
   (let []
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case query-layout
-       "list"
+       #_#_"list"
        [:> UnorderedList
         (for [x query-data]
           [:> ListItem {:display "flex" :justify-content "space-between"}
            [:> Text (:title x)]
            [:> Text (:status x)]])]
        "board"
-       (let [query-group-by-kw (keyword query-group-by)
+       (let [query-group-by-kw    (keyword query-group-by)
              query-subgroup-by-kw (keyword query-subgroup-by)
-             columns (->> (map query-group-by-kw query-data) set)
-             rows (->> (map query-subgroup-by-kw query-data) set)
+             ;; column headers are not ordered correctly with record fields
+             columns              (->> (map query-group-by-kw query-data) set)
+             rows                 (->> (map query-subgroup-by-kw query-data) set)
 
-             boardData (if (and query-subgroup-by-kw query-group-by-kw)
-                         (group-stuff query-group-by-kw query-subgroup-by-kw query-data)
-                         (group-by query-group-by-kw query-data))]
-         [:> ExampleKanban2 {:boardData boardData
-                             ;; store column order here
-                             :columns columns
-                             :hasSubGroup (boolean query-subgroup-by-kw)
-                             :rows rows
-                             :onUpdateStatusClick update-status
-                             :onAddNewCardClick new-card
-                             :onRenameCard (fn [])
-                             :onRenameColumn (fn [])
-                             :onClickCard (fn [])
-                             :onShiftClickCard (fn [])
-                             :onAddNewColumnClick (fn [])
-                             :onAddNewProjectClick (fn [])}])
+             boardData            (if (and query-subgroup-by-kw query-group-by-kw)
+                                    (group-stuff query-group-by-kw query-subgroup-by-kw query-data)
+                                    (group-by query-group-by-kw query-data))]
+         [:> QueryKanban {:boardData            boardData
+                          ;; store column order here
+                          :columns              columns
+                          :hasSubGroup          (boolean query-subgroup-by-kw)
+                          :rows                 rows
+                          :onUpdateStatusClick  update-status
+                          :onAddNewCardClick    new-card
+                          :onRenameCard         (fn [])
+                          :onRenameColumn       (fn [])
+                          :onClickCard          (fn [])
+                          :onShiftClickCard     (fn [])
+                          :onAddNewColumnClick  (fn [])
+                          :onAddNewProjectClick (fn [])}])
 
        [:> QueryTable {:data query-data
-                       :columns property-keys}])]))
+                       :columns [":block/uid",
+                                 ":task/title",
+                                 ":task/assignee",
+                                 ":task/due-date",
+                                 ":task/status",
+                                 ":task/priority",
+                                 ":task/project"]}])]))
 
 
 (defn get-query-types
@@ -158,7 +165,7 @@
     [:> Box
      ;; [:> Heading {:size "sm"} "Layout"]
      [:> ButtonGroup
-      (for [x ["table" "list" "board"]]
+      (for [x ["table" #_"list" "board"]]
         [:> Button {:value x
                     :onClick (fn [e]
                                (update-layout uid x))
@@ -174,11 +181,9 @@
   (->> (get-in properties ["query/subgroup-by" :block/string])))
 
 (defn query-block
-  "TODO: make query component more abstract, so that it can support both pages and blocks."
   [block-data properties]
   (let [query-types (get-query-types properties)
-        ;; TODO: how to handle querying for multiple types?
-        query-data (->> (athens.reactive/get-reactive-instances-of-key-value "type" query-types)
+        query-data (->> (athens.reactive/get-reactive-instances-of-key-value ":block/type" query-types)
                         (map block-to-flat-map))
         query-layout (get-query-layout properties)
         property-keys (keys (first query-data))

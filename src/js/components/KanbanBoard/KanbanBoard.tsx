@@ -3,9 +3,16 @@ import { VStack, Grid, HStack, Box, Text, Heading, Button } from '@chakra-ui/rea
 import { Reorder } from 'framer-motion';
 
 export const KanbanCard = (props) => {
-  const { id, title, project, status, assignee, isSelected, columns, onUpdateStatusClick } = props;
+  const { id, isSelected, columns, onUpdateStatusClick } = props;
   const columnIndex = columns.indexOf(status);
   const columnCount = columns.length;
+
+  const title = props[":task/title"]
+  const assignee = props[":task/assignee"]
+  const dueDate = props[":task/due-date"]
+  const status = props[":task/status"]
+  const priority = props[":task/priority"]
+  const project = props[":task/project"]
 
   return <Box
     // as={Reorder.Item}
@@ -124,10 +131,8 @@ export const AddSwimlaneButton = (props) => {
   </Button>
 };
 
-export const ExampleKanban2 = (props) => {
+export const QueryKanban = (props) => {
   const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup } = props;
-  console.log(columns, rows)
-
   if (hasSubGroup) {
     return <KanbanBoard name={name}>
       {Object.entries(boardData).map(([project, y]) =>

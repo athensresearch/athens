@@ -168,7 +168,7 @@
                           properties
                           _refs]
              :as block-data} (reactive/get-reactive-block-document [:block/uid uid])
-            entity-type (get-in properties ["type" :block/string])]
+            entity-type (get-in properties [":block/type" :block/string])]
 
         [:<>
          [:div.block-body

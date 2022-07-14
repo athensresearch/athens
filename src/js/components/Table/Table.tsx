@@ -10,17 +10,13 @@ export const QueryTable = (props) => {
             <Th key={column}>{column}</Th>)}</Tr>
         </Thead>
         <Tbody>
-        {data.map(({id, title, type, status, project, assignee}) =>
-            <Tr>
-            <Td>{id}</Td>
-            <Td>{title}</Td>
-            <Td>{type}</Td>
-            <Td>{status}</Td>
-            <Td>{project}</Td>
-            <Td>{assignee}</Td>
-            </Tr>
+        {data.map((props) => {
+            return <Tr>
+            {columns.map((column) =>
+                <Td>{props[column]}</Td>
             )}
-            </Tbody>
+            </Tr>})}
+        </Tbody>
         </Table>
         )
 }
