@@ -31,7 +31,12 @@ export const KanbanCard = (props) => {
     }}
   >
 
-    <Text>{title}</Text>
+    <Text fontWeight="bold">{title}</Text>
+    <Text>Assignee: {assignee}</Text>
+    <Text>Due Date: {dueDate}</Text>
+    <Text>Status: {status}</Text>
+    <Text>Priority: {priority}</Text>
+    <Text>Project: {project}</Text>
   {(columnIndex > 0) &&
     <Button value="left" onClick={(e) => {
       onUpdateStatusClick(id, columns[columnIndex-1])

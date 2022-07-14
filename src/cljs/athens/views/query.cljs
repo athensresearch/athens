@@ -80,37 +80,37 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
 
-(defn get-query-types
-  "Could either be 1-arity (just block/string) or multi-arity (multiple children).
+#_(defn get-query-types
+    "Could either be 1-arity (just block/string) or multi-arity (multiple children).
 
   XXX: to make multi-arity, look at block/children of \"query/types\"
   TODO: what happens if a user enters in multiple refs in a block/string? Should have some sort of schema enforcement, such as 1 ref per block to avoid confusion
-
   "
-  [properties]
-  ;; not using :block/string, because i want the node/title without having to do some reg-ex
-  ;; (get-in props ["query/types" :block/string])
-  (->> (get-in properties ["query/types" :block/refs 0 :db/id])
-       (datascript.core/entity @athens.db/dsdb)
-       :node/title))
+    [properties]
+    ;; not using :block/string, because i want the node/title without having to do some reg-ex
+    ;; (get-in props ["query/types" :block/string])
+    (->> (get-in properties ["query/types" :block/refs 0 :db/id])
+         (datascript.core/entity @athens.db/dsdb)
+         :node/title))
 
-(defn get-query-layout
+(defn get-query-props
   [properties]
-  (->> (get-in properties ["query/layout" :block/string])))
-
-(defn get-query-group-by
-  [properties]
-  (->> (get-in properties ["query/group-by" :block/string])))
-
-(defn get-query-subgroup-by
-  [properties]
-  (->> (get-in properties ["query/subgroup-by" :block/string])))
+  (->> properties
+       (map (fn [[k {:block/keys [children string] :as v}]]
+              [k (cond
+                   (= "query/types" k) (->> (get-in v [:block/refs 0 :db/id])
+                                            (datascript.core/entity @athens.db/dsdb)
+                                            :node/title)
+                   children (->> (sort-by :block/order children)
+                                 (mapv :block/string))
+                   :else string)]))
+       (into (hash-map))))
 
 ;; Views
 
 (defn options-el
-  [{:keys [query-layout uid]}]
-  (let []
+  [{:keys [parsed-properties uid]}]
+  (let [query-layout (get parsed-properties "query/layout")]
     [:> Box
      ;; [:> Heading {:size "sm"} "Layout"]
      [:> ButtonGroup
@@ -122,23 +122,19 @@
          (clojure.string/capitalize x)])]]))
 
 (defn query-el
-  [{:keys [query-data query-layout property-keys query-group-by query-subgroup-by]}]
-  (let []
+  [{:keys [query-data parsed-properties]}]
+  (let [query-layout (get parsed-properties "query/layout")
+        query-group-by (get parsed-properties "query/group-by")
+        query-subgroup-by (get parsed-properties "query/subgroup-by")
+        query-properties-order (get parsed-properties "query/properties-order")]
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case query-layout
-       #_#_"list"
-               [:> UnorderedList
-                (for [x query-data]
-                  [:> ListItem {:display "flex" :justify-content "space-between"}
-                   [:> Text (:title x)]
-                   [:> Text (:status x)]])]
        "board"
        (let [query-group-by-kw    (symbol query-group-by)
              query-subgroup-by-kw (symbol query-subgroup-by)
              ;; column headers are not ordered correctly with record fields
              columns              (->> (map query-group-by-kw query-data) set)
              rows                 (->> (map query-subgroup-by-kw query-data) set)
-
              boardData            (if (and query-subgroup-by-kw query-group-by-kw)
                                     (group-stuff query-group-by-kw query-subgroup-by-kw query-data)
                                     (group-by query-group-by-kw query-data))]
@@ -155,25 +151,21 @@
                           :onShiftClickCard     (fn [])
                           :onAddNewColumnClick  (fn [])
                           :onAddNewProjectClick (fn [])}])
-
        [:> QueryTable {:data query-data
-                       :columns [":block/uid",
-                                 ":task/title",
-                                 ":task/assignee",
-                                 ":task/due-date",
-                                 ":task/status",
-                                 ":task/priority",
-                                 ":task/project"]}])]))
+                       :columns query-properties-order}])]))
+
 
 (defn query-block
   [block-data properties]
-  (let [query-types (get-query-types properties)
+  (let [parsed-properties (get-query-props properties)
+        query-types (get parsed-properties "query/types")
+        query-group-by (get properties "query/group-by")
+        query-subgroup-by (get properties "query/subgroup-by")
+
         query-data (->> (athens.reactive/get-reactive-instances-of-key-value ":block/type" query-types)
-                        (map block-to-flat-map))
-        query-layout (get-query-layout properties)
-        property-keys (keys (first query-data))
-        query-group-by (get-query-group-by properties)
-        query-subgroup-by (get-query-subgroup-by properties)]
+                        (map block-to-flat-map))]
+
+
 
     (cond
       (nil? query-group-by) [:> Box {:color "red"} "Please add property query/group-by"]
@@ -181,12 +173,8 @@
 
       :else [:> Box {:width        "100%" #_#_:border "1px" :borderColor "gray"
                      :padding-left 38 :padding-top 15}
-             [options-el {:query-data    query-data
-                          :query-layout  query-layout
-                          :property-keys property-keys
+             [options-el {:parsed-properties parsed-properties
                           :uid           (:block/uid block-data)}]
              [query-el {:query-data        query-data
-                        :query-layout      query-layout
-                        :property-keys     property-keys
-                        :query-group-by    query-group-by
-                        :query-subgroup-by query-subgroup-by}]])))
+                        :parsed-properties parsed-properties}]])))
+
