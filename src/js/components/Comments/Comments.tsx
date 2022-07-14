@@ -79,11 +79,11 @@ export const CommentContainer = withErrorBoundary(({ children, menu }) => {
   return <Box
     ref={commentRef}
     {...menuSourceProps}
-    bg={isContextMenuOpen ? "interaction.surface.active" : 'transparent'}
+    bg={isContextMenuOpen ? "interaction.surface.hover" : undefined}
+    borderRadius={isContextMenuOpen ? "sm" : undefined}
     mb="-1px"
     borderTop="1px solid"
     borderTopColor="separator.divider"
-    borderRadius="sm"
     py={1}
     alignItems="stretch"
     justifyContent="stretch"
@@ -93,8 +93,8 @@ export const CommentContainer = withErrorBoundary(({ children, menu }) => {
     gridTemplateColumns="auto 1fr"
     gridTemplateRows="auto auto"
     gridTemplateAreas={`
-    'byline byline'
-    'anchor comment'`}
+    'byline byline byline'
+    'anchor comment refs'`}
     sx={{
       "> button.anchor:not([data-active])": {
         color: "foreground.tertiary"

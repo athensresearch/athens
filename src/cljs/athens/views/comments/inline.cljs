@@ -3,7 +3,7 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
     ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon]]
-    ["@chakra-ui/react" :refer [Button Box Text VStack Avatar HStack]]
+    ["@chakra-ui/react" :refer [Button Box Text VStack Avatar HStack Badge]]
     [athens.common.utils :as common.utils]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
@@ -64,7 +64,12 @@
         ;; In future this should be rendered differently for reply type and ref-type
         [athens.parse-renderer/parse-and-render string uid]]
        (when (pos? linked-refs-count)
-         [:> Text linked-refs-count])])))
+         [:> Badge {:size "xs"
+                    :m 1.5
+                    :mr 0
+                    :alignSelf "baseline"
+                    :lineHeight "1.5"
+                    :gridArea "refs"} linked-refs-count])])))
 
 
 (defn inline-comments
