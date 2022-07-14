@@ -1,12 +1,21 @@
 (ns athens.views.task.core
   (:require
+    ["@chakra-ui/react"                   :refer [FormControl,
+                                                  FormLabel,
+                                                  FormErrorMessage,
+                                                  FormHelperText
+                                                  Input
+                                                  Box Button ButtonGroup IconButton  MenuList MenuItem]]
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs             :as bfs]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common.utils                  :as common.utils]
-    [athens.db                            :as db]))
+    [athens.db                            :as db]
+    [athens.views.blocks.types            :as types]
+    [athens.views.blocks.types.dispatcher :as dispatcher]
+    [clojure.string                       :as str]))
 
 
 ;; Create a new task
@@ -18,6 +27,9 @@
                   :string     ""
                   :properties {":block/type"
                                #:block{:string "athens/task"
+                                       :uid    (common.utils/gen-block-uid)}
+                               ":task/id"
+                               #:block{:string "TASK-1"
                                        :uid    (common.utils/gen-block-uid)}
                                ":task/title"
                                #:block{:string title
@@ -64,3 +76,60 @@
         event                 (common-events/build-atomic-event updated-properties-op)]
     {:fx [[:dispatch [:resolve-transact-forward event]]]}))
 
+
+;; View
+
+(defrecord TaskView
+  []
+
+  types/BlockTypeProtocol
+
+  (inline-ref-view
+    [this block-data attr ref-uid uid callbacks with-breadcrumb?])
+
+
+  (outline-view
+    [this block-data block-el callbacks]
+    (let [task-properties (common-db/get-block-property-document @db/dsdb [:block/uid (:block/uid block-data)])
+          title           (get task-properties ":task/title")
+          invalid-title?  (and (str/blank? title)
+                               (not (nil? title)))
+          title-id        (str (random-uuid))]
+      (fn [this block-data block-el callbacks]
+        [:div {:class "task_container"}
+         [:> FormControl {:is-required true
+                          :is-invalid  invalid-title?}
+          [:> FormLabel {:html-for title-id}
+           "Task Title"]
+          [:> Input {:value     (or title "")
+                     :id        title-id
+                     :on-change (fn [e]
+                                  (let [value (-> e .-target .-value)]
+                                    (println "TODO: new title value: " (pr-str value))))}]
+          (if invalid-title?
+            [:> FormErrorMessage "Task title is required"]
+            [:> FormHelperText "Please provide Task title"])]])))
+
+
+  (supported-transclusion-scopes
+    [this])
+
+
+  (transclusion-view
+    [this block-el block-uid callback transclusion-scope])
+
+
+  (zoomed-in-view
+    [this block-data callbacks])
+
+
+  (supported-breadcrumb-styles
+    [this])
+
+
+  (breadcrumbs-view
+    [this block-data callbacks breadcrumb-style]))
+
+
+(defmethod dispatcher/block-type->protocol "athens/task" [_block-type args-map]
+  (TaskView.))

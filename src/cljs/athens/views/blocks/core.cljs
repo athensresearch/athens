@@ -5,7 +5,9 @@
     [athens.views.blocks.types            :as types]
     ;; need to require it for multimethod participation
     [athens.views.blocks.types.default]
-    [athens.views.blocks.types.dispatcher :as block-type-dispatcher]))
+    [athens.views.blocks.types.dispatcher :as block-type-dispatcher]
+    ;; need to require it for multimethod participation
+    [athens.views.task.core]))
 
 
 ;; Components
