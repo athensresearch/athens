@@ -17,6 +17,9 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
     isOpen: isContextMenuOpen
   } = useContextMenu({
     ref,
+    menuProps: {
+      size: "sm"
+    },
     source: "cursor",
   });
 

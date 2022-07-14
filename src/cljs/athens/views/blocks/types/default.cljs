@@ -3,7 +3,7 @@
   A.k.a standard `:block/string` blocks"
   (:require
     ["/components/Block/Container"           :refer [Container]]
-    ["/components/Icons/Icons"               :refer [PencilIcon]]
+    ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon]]
     ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton  MenuList MenuItem]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
@@ -313,8 +313,10 @@
                                                          [:> MenuItem {:children (if (> (count @selected-items) 1)
                                                                                    "Copy selected block refs"
                                                                                    "Copy block ref")
+                                                                       :icon (r/as-element [:> BlockEmbedIcon])
                                                                        :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
                                                          [:> MenuItem {:children "Copy unformatted text"
+                                                                       :icon (r/as-element [:> TextIcon])
                                                                        :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])
                             :style        (merge {} (time-controls/block-styles block-o))}
 

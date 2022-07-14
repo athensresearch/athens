@@ -146,6 +146,9 @@ export const Anchor = (props: AnchorProps) => {
     isOpen: isContextMenuOpen
   } = useContextMenu({
     ref,
+    menuProps: {
+      size: "sm"
+    },
     source: "box"
   });
 
@@ -166,9 +169,7 @@ export const Anchor = (props: AnchorProps) => {
     </IconButton>
     {(menuActions) && <ContextMenu>
       <MenuList>
-        {menuActions.map((action) => {
-          return <MenuItem key={action.children} {...action} />
-        })}
+        {menuActions.map((action) => <MenuItem key={action.children} {...action} />)}
         {shouldShowDebugDetails && (
           <>
             {menuActions && <MenuDivider />}

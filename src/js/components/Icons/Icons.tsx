@@ -72,6 +72,14 @@ export const BlockIcon = createIcon({
   ),
 });
 
+export const TextIcon = createIcon({
+  displayName: 'TextIcon',
+  viewBox: '0 0 24 24',
+  path: (
+    <path fillRule="evenodd" clipRule="evenodd" d="M3 5C3 4.44772 3.44772 4 4 4H10H16C16.5523 4 17 4.44772 17 5C17 5.55228 16.5523 6 16 6H11V19C11 19.5523 10.5523 20 10 20C9.44772 20 9 19.5523 9 19V6H4C3.44772 6 3 5.55228 3 5ZM16 10C15.4477 10 15 10.4477 15 11C15 11.5523 15.4477 12 16 12H17V17C17 18.6569 18.3431 20 20 20C20.5523 20 21 19.5523 21 19C21 18.4477 20.5523 18 20 18C19.4477 18 19 17.5523 19 17V12H20C20.5523 12 21 11.5523 21 11C21 10.4477 20.5523 10 20 10H19V9C19 8.44772 18.5523 8 18 8C17.4477 8 17 8.44772 17 9V10H16Z" fill="currentColor" />
+  ),
+});
+
 export const BlockAddIcon = createIcon({
   displayName: 'BlockAddIcon',
   viewBox: '0 0 24 24',
