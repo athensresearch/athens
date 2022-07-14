@@ -8,8 +8,8 @@
 
 
 (defn is-block-inbox?
-  [properties]
-  (= "inbox" (:block/string (get properties ":block/type"))))
+  [properties inbox-type]
+  (= inbox-type (:block/string (get properties ":block/type"))))
 
 (defn is-block-notification?
   [properties]

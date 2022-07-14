@@ -212,10 +212,10 @@
                                                         (when (empty? @selected-items)
                                                           {:children "Comment"
                                                            :onClick  (fn [e] (handle-click-comment e uid))})
-                                                        (when (actions/is-block-inbox? properties)
+                                                        (when (actions/is-block-inbox? properties "task-inbox")
                                                           {:children "Show hidden notifications"
                                                            :onClick #(actions/show-hidden-notifications uid)})
-                                                        (when (actions/is-block-inbox? properties)
+                                                        (when (actions/is-block-inbox? properties "task-inbox")
                                                           {:children "Hide read notifications"
                                                            :onClick #(actions/hide-read-notifications uid)})
                                                         ;; Don't know how to join the following 2 conditions in 1
