@@ -157,7 +157,9 @@
         uid                   (:block/uid block-o)
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
-        selected-items        (rf/subscribe [::select-subs/items])]
+        selected-items        (rf/subscribe [::select-subs/items])
+        show-inline-comments  (rf/subscribe [:comment/show-inline-comments?])
+        show-textarea         (rf/subscribe [:comment/show-comment-textarea? uid])]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
       (let [{:block/keys [;; uid
@@ -224,9 +226,10 @@
           [content/block-content-el block-o state-hooks]
 
           ;; Show comments when the toggle is on
-          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
-                    (and @(rf/subscribe [:comment/show-inline-comments?])
-                         (comments/get-comment-thread-uid @db/dsdb uid)))
+          (when (and open
+                     (or @show-textarea
+                         (and @show-inline-comments
+                              (comments/get-comment-thread-uid @db/dsdb uid))))
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
 
           [presence/inline-presence-el uid]
