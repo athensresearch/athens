@@ -9,11 +9,12 @@
                                UnorderedList
                                Stack
                                Text
-                               Heading]]
+                               Heading
+                               Checkbox
+                               CheckboxGroup]]
    [athens.common-db          :as common-db]
    [athens.common-events.graph.ops            :as graph-ops]
    [athens.dates              :as dates]
-   [athens.db                 :as db]
    [athens.router             :as router]
    [clojure.string            :refer [lower-case]]
    [re-frame.core             :as rf]
@@ -97,6 +98,51 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
 
+#_(defn toggle-reaction
+    "Toggle reaction on block uid. Cleans up when toggling the last one off.
+  Stores emojis in the [:reactions/emojis reaction user-id] property path."
+    [id reaction user-id]
+    (rf/dispatch [:properties/update-in id [":reactions" reaction user-id]
+                  (fn [db user-reaction-uid]
+                    (let [user-reacted?       (common-db/block-exists? db [:block/uid user-reaction-uid])
+                          reaction            (when user-reacted?
+                                                (->> [:block/uid user-reaction-uid]
+                                                     (common-db/get-parent-eid db)
+                                                     (common-db/get-block db)))
+                          reactions           (when reaction
+                                                (->> (:db/id reaction)
+                                                     (common-db/get-parent-eid db)
+                                                     (common-db/get-block db)))
+                          last-user-reaction? (= 1 (count (-> reaction :block/properties)))
+                          last-reaction?      (= 1 (count (-> reactions :block/properties)))]
+                      [(cond
+                         ;; This reaction doesn't exist yet, so we add it.
+                         (not user-reacted?)
+                         (graph-ops/build-block-save-op db user-reaction-uid "")
+
+                         ;; This was the last of all reactions, remove the reactions property
+                         ;; on the parent.
+                         (and last-user-reaction? last-reaction?)
+                         (graph-ops/build-block-remove-op @db/dsdb (:block/uid reactions))
+
+                         ;; This was the last user reaction of this type, but not the last
+                         ;; of all reactions. Remove reaction block.
+                         last-user-reaction?
+                         (graph-ops/build-block-remove-op @db/dsdb (:block/uid reaction))
+
+                         ;; Just remove this particular user reaction.
+                         :else
+                         (graph-ops/build-block-remove-op @db/dsdb user-reaction-uid))]))]))
+
+(defn update-hidden-properties
+  "If property is already hidden, remove from block/children. Otherwise, add property to block/children."
+  [id property]
+  ;;(prn "UPDATE" id property)
+  #_(rf/dispatch [:properties/update-in [:block/uid id] ["query/properties-hide" hidden-property-id]
+                  (fn [db hidden-prop-uid]
+                    [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
+
+
 (defn flip-sort-dir
   [sort-dir]
   (if (= sort-dir "asc")
@@ -128,14 +174,16 @@
        (datascript.core/entity @athens.db/dsdb)
        :node/title))
 
+
 (defn get-query-props
   [properties]
   (->> properties
-       (map (fn [[k {:block/keys [children string] :as v}]]
+       (map (fn [[k {:block/keys [children string] nested-properties :block/properties :as v}]]
               [k (cond
                    (= "query/types" k) (get-prop-node-title v)
                    children (->> (sort-by :block/order children)
                                  (mapv :block/string))
+                   nested-properties  (zipmap (keys nested-properties) (repeat true))
                    :else string)]))
        (into (hash-map))))
 
@@ -153,9 +201,14 @@
 
 ;; Views
 
+
+
 (defn options-el
-  [{:keys [parsed-properties uid]}]
-  (let [query-layout (get parsed-properties "query/layout")]
+  [{:keys [parsed-properties uid query-data]}]
+  (let [query-layout          (get parsed-properties "query/layout")
+        query-properties-order          (get parsed-properties "query/properties-order")
+        query-properties-hide (get parsed-properties "query/properties-hide")]
+    (prn query-properties-hide query-data)
     [:> Box
      ;; [:> Heading {:size "sm"} "Layout"]
      [:> ButtonGroup
@@ -164,7 +217,13 @@
                     :onClick (fn [e]
                                (update-layout uid x))
                     :isActive (or (= query-layout x))}
-         (clojure.string/capitalize x)])]]))
+         (clojure.string/capitalize x)])]
+     [:> Stack {:direction "row"}
+      [:> CheckboxGroup
+       (for [property query-properties-order]
+         [:> Checkbox {:isChecked (get query-properties-hide property)
+                       :onChange (fn [] (update-hidden-properties uid property))}
+          property])]]]))
 
 #_(js/console.log (apply hash-map [:a 1 :b 2 :c 3]))
 
@@ -176,8 +235,7 @@
         query-properties-order (get parsed-properties "query/properties-order")
         query-sort-by (get parsed-properties "query/sort-by")
         query-sort-direction (get parsed-properties "query/sort-direction")
-        query-properties-hide (zipmap (get parsed-properties "query/properties-hide")
-                                      (repeat true))]
+        query-properties-hide (get parsed-properties "query/properties-hide")]
 
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case query-layout
@@ -217,6 +275,7 @@
 ;; XXX: last edit only concerns itself with the last edit of the block itself, not one of the block's property's
 ;; is this similar to the last edit of a page? does editing a block count as editing a page? or does it have to editing the page/title?
 
+
 (defn query-block
   [block-data properties]
   (let [block-uid (:block/uid block-data)
@@ -224,10 +283,10 @@
         query-types (get parsed-properties "query/types")
         query-group-by (get properties "query/group-by")
         query-subgroup-by (get properties "query/subgroup-by")
-
         query-data (->> (athens.reactive/get-reactive-instances-of-key-value ":block/type" query-types)
                         (map block-to-flat-map))]
 
+    (prn properties)
 
 
     (cond
@@ -237,8 +296,9 @@
       :else [:> Box {:width        "100%" #_#_:border "1px" :borderColor "gray"
                      :padding-left 38 :padding-top 15}
              [options-el {:parsed-properties parsed-properties
-                          :uid           block-uid}]
+                          :query-data        query-data
+                          :uid               block-uid}]
              [query-el {:query-data        query-data
-                        :uid block-uid
+                        :uid               block-uid
                         :parsed-properties parsed-properties}]])))
 

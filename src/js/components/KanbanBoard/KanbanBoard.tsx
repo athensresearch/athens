@@ -3,20 +3,15 @@ import { VStack, Grid, HStack, Box, Text, Heading, Button } from '@chakra-ui/rea
 import { Reorder } from 'framer-motion';
 
 export const KanbanCard = (props) => {
-  const { id, isSelected, columns, onUpdateStatusClick } = props;
+  const { id, isSelected, columns, onUpdateStatusClick, cardData, hideProperties } = props;
   const columnIndex = columns.indexOf(status);
   const columnCount = columns.length;
 
-  const title = props[":task/title"]
-  const assignee = props[":task/assignee"]
-  const dueDate = props[":task/due-date"]
-  const status = props[":task/status"]
-  const priority = props[":task/priority"]
-  const project = props[":task/project"]
+  const title = cardData[":task/title"]
 
   return <Box
-    // as={Reorder.Item}
-    key={title.toString()}
+//     as={Reorder.Item}
+    key={title}
     value={title}
     borderRadius="sm"
     minHeight="4rem"
@@ -24,19 +19,22 @@ export const KanbanCard = (props) => {
     border="1px solid transparent"
     p={2}
     bg="background.floor"
+    width="300px"
     _hover={{
       bg: 'background.upper',
       border: "1px solid",
       borderColor: "background.floor"
     }}
   >
-
-    <Text fontWeight="bold">{title}</Text>
-    <Text>Assignee: {assignee}</Text>
-    <Text>Due Date: {dueDate}</Text>
-    <Text>Status: {status}</Text>
-    <Text>Priority: {priority}</Text>
-    <Text>Project: {project}</Text>
+    <Text fontWeight={"bold"}>{title}</Text>
+    {Object.entries(cardData).map(([key, val]) =>
+        (!hideProperties[key]
+            && key != ":task/title"
+            && <Box display="flex">
+                <Text color="gray" width="200px">{key}</Text>
+                <Text width="200px">{val}</Text>
+            </Box>)
+    )}
   {(columnIndex > 0) &&
     <Button value="left" onClick={(e) => {
       onUpdateStatusClick(id, columns[columnIndex-1])
@@ -137,15 +135,15 @@ export const AddSwimlaneButton = (props) => {
 };
 
 export const QueryKanban = (props) => {
-  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup } = props;
+  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties } = props;
   if (hasSubGroup) {
     return <KanbanBoard name={name}>
       {Object.entries(boardData).map(([project, y]) =>
         <KanbanSwimlane name={project}>
         {columns.map(column =>
           <KanbanColumn name={column}>
-          {y[column] &&  y[column].map(({ ...props}) =>
-            <KanbanCard columns={columns} {...props} onUpdateStatusClick={onUpdateStatusClick} />
+          {y[column] &&  y[column].map((cardData) =>
+            <KanbanCard columns={columns} cardData={cardData} onUpdateStatusClick={onUpdateStatusClick} hideProperties={hideProperties}/>
             )}
             /* AddCard needs to take a context object that accepts filters, row context, column context, etc. */
           <AddCardButton column={column} project={project} onAddNewCardClick={onAddNewCardClick} />
@@ -160,8 +158,8 @@ export const QueryKanban = (props) => {
     return <KanbanBoard name={name}>
       {Object.entries(boardData).map(([column, y]) =>
         <KanbanColumn name={column}>
-        {y && y.map(({ ...props}) =>
-          <KanbanCard columns={columns} {...props} onUpdateStatusClick={onUpdateStatusClick} />
+        {y && y.map((cardData) =>
+          <KanbanCard columns={columns} cardData={cardData} onUpdateStatusClick={onUpdateStatusClick} hideProperties={hideProperties} />
           )}
         <AddCardButton column={column} onAddNewCardClick={onAddNewCardClick} />
         </KanbanColumn>
