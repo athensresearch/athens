@@ -100,8 +100,8 @@
                   [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
 
 
-(defn update-hidden-properties
-  "If property is already hidden, remove from block/children. Otherwise, add property to block/children."
+(defn toggle-hidden-property
+  "If property is hidden, remove key. Otherwise, add property key."
   [id hidden-property-id]
   (rf/dispatch [:properties/update-in [:block/uid id] ["query/properties-hide" hidden-property-id]
                 (fn [db hidden-prop-uid]
@@ -191,7 +191,7 @@
       [:> CheckboxGroup
        (for [property query-properties-order]
          [:> Checkbox {:isChecked (get query-properties-hide property)
-                       :onChange (fn [] (update-hidden-properties uid property))}
+                       :onChange (fn [] (toggle-hidden-property uid property))}
           property])]]]))
 
 #_(js/console.log (apply hash-map [:a 1 :b 2 :c 3]))
