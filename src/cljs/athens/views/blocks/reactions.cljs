@@ -1,9 +1,10 @@
 (ns athens.views.blocks.reactions
-(:require
- [athens.common-db                          :as common-db]
- [athens.common-events.graph.ops            :as graph-ops]
- [athens.db                                 :as db]
- [re-frame.core                             :as rf]))
+  (:require
+    [athens.common-db                          :as common-db]
+    [athens.common-events.graph.ops            :as graph-ops]
+    [athens.db                                 :as db]
+    [re-frame.core                             :as rf]))
+
 
 (defn toggle-reaction
   "Toggle reaction on block uid. Cleans up when toggling the last one off.

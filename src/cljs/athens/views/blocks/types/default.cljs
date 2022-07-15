@@ -3,9 +3,8 @@
   A.k.a standard `:block/string` blocks"
   (:require
     ["/components/Block/Container"           :refer [Container]]
-    ["/components/EmojiPicker/EmojiPicker"   :refer [EmojiPickerPopoverContent]]
     ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon]]
-    ["@chakra-ui/react"                      :refer [Box Button Popover PopoverTrigger ButtonGroup IconButton MenuList MenuItem]]
+    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem]]
     [athens.common-db                        :as common-db]
     [athens.common-events.graph.ops          :as graph-ops]
     [athens.common.logging                   :as log]
@@ -112,7 +111,6 @@
                        ;; Just remove this particular user reaction.
                        :else
                        (graph-ops/build-block-remove-op @db/dsdb user-reaction-uid))]))]))
-
 
 
 (defn block-drag-leave
@@ -276,9 +274,6 @@
           show-edit?                   (r/atom false)
           hide-edit-fn                 #(reset! show-edit? false)
           show-edit-fn                 #(reset! show-edit? true)
-          show-emoji-picker?           (r/atom false)
-          hide-emoji-picker-fn         #(reset! show-emoji-picker? false)
-          show-emoji-picker-fn         #(reset! show-emoji-picker? true)
           savep-fn                     (partial db/transact-state-for-uid (or original-uid uid))
           save-fn                      #(savep-fn @local-value :block-save)
           idle-fn                      (gfns/debounce #(savep-fn @local-value :autosave)
@@ -319,34 +314,36 @@
                                _refs]} (merge block-o block)
                  children-uids         (set (map :block/uid children))
                  uid-sanitized-block   (s/transform
-                                        (util/specter-recursive-path #(contains? % :block/uid))
-                                        (fn [{:block/keys [original-uid uid] :as block}]
-                                          (assoc block :block/uid (or original-uid uid)))
-                                        block)
+                                         (util/specter-recursive-path #(contains? % :block/uid))
+                                         (fn [{:block/keys [original-uid uid] :as block}]
+                                           (assoc block :block/uid (or original-uid uid)))
+                                         block)
                  is-selected           @(rf/subscribe [::select-subs/selected? uid])
                  present-user          @(rf/subscribe [:presence/has-presence uid])
                  is-presence           (seq present-user)
                  reactions-enabled?    (:reactions @feature-flags)
                  comments-enabled?     (:comments @feature-flags)
-                ;;  block-ref             (react/useRef nil)
+                 show-emoji-picker?    (r/atom false)
+                 hide-emoji-picker-fn  #(reset! show-emoji-picker? false)
+                 show-emoji-picker-fn  #(reset! show-emoji-picker? true)
                  menu                  (r/as-element
-                                        [:> MenuList
-                                         [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                   "Copy selected block refs"
-                                                                   "Copy block ref")
-                                                       :icon (r/as-element [:> BlockEmbedIcon])
-                                                       :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                         [:> MenuItem {:children "Copy unformatted text"
-                                                       :icon (r/as-element [:> TextIcon])
-                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
-                                         (when comments-enabled?
-                                           [:> MenuItem {:children "Add comment"
-                                                         :onClick #(ctx-menu/handle-click-comment % uid)
-                                                         :icon (r/as-element [:> ChatIcon])}])
-                                         (when reactions-enabled?
-                                           [:> MenuItem {:children "Add reaction"
-                                                         :onClick #(show-emoji-picker-fn)
-                                                         :icon (r/as-element [:> ThumbUpFillIcon])}])])]
+                                         [:> MenuList
+                                          [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                    "Copy selected block refs"
+                                                                    "Copy block ref")
+                                                        :icon (r/as-element [:> BlockEmbedIcon])
+                                                        :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                          [:> MenuItem {:children "Copy unformatted text"
+                                                        :icon (r/as-element [:> TextIcon])
+                                                        :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                          (when comments-enabled?
+                                            [:> MenuItem {:children "Add comment"
+                                                          :onClick #(ctx-menu/handle-click-comment % uid)
+                                                          :icon (r/as-element [:> ChatIcon])}])
+                                          (when reactions-enabled?
+                                            [:> MenuItem {:children "Add reaction"
+                                                          :onClick #(js/console.log "whoops")
+                                                          :icon (r/as-element [:> ThumbUpFillIcon])}])])]
 
              ;; (prn uid is-selected)
 
@@ -378,15 +375,6 @@
                             :menu         menu
                             :style        (merge {} (time-controls/block-styles block-o))}
 
-              [:> Popover {:isOpen @show-emoji-picker?
-                           :onClose hide-emoji-picker-fn}
-               [:> PopoverTrigger
-                [:> Button {:onClick show-emoji-picker-fn}
-                 "test"]]
-               [:> EmojiPickerPopoverContent
-                {:onClose hide-emoji-picker-fn
-                 :onEmojiSelected (partial toggle-reaction [:block/uid uid])}]]
-
               (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
               [editor/editor-component
@@ -397,7 +385,9 @@
                uid-sanitized-block
                state-hooks
                opts
-               menu]
+               menu
+               show-emoji-picker?
+               hide-emoji-picker-fn]
 
               (when (= @drag-target :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
               (when (= @drag-target :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])]))})))

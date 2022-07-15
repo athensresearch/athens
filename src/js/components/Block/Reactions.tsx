@@ -26,18 +26,26 @@ const ReactionItem = ({ reaction, onToggleReaction, currentUser }: ReactionItemP
   const isFromCurrentUser: boolean = users.includes(currentUser);
 
   return <Button
+    key={reactionItem}
+    as={isFromCurrentUser ? "button" : "div"}
     display="flex"
     gap={1}
-    key={reactionItem}
     position="relative"
     isActive={isFromCurrentUser}
-    onClick={() => onToggleReaction(reactionItem, currentUser)}
+    onClick={isFromCurrentUser ? () => onToggleReaction(reactionItem, currentUser) : undefined}
+    {...isFromCurrentUser && {
+      sx: {
+        "&[data-active]:hover": {
+          bg: "interaction.surface.hover",
+        }
+      }
+    }}
   >
     <Tooltip label={users.join(', ')}>
       <Box position="absolute" inset={0} />
     </Tooltip>
-    <Text fontSize="md">{reactionItem}</Text>
-    <Text fontSize="xs" color="foreground.secondary">{usersCount}</Text>
+    <Text transform="scale(1.35)" fontSize="md">{reactionItem}</Text>
+    <Text fontSize="xs" color="foreground.secondary">{usersCount < 10 ? usersCount : "9+"}</Text>
   </Button>
 }
 

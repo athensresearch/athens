@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { IconButton, Text } from '@chakra-ui/react';
+import { IconButton, Text, MenuList, MenuDivider, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
 import { useContextMenu } from '@/utils/useContextMenu';
 
 const ANCHORS = {
@@ -127,7 +127,7 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
 /**
  * A handle and indicator of a block's position in the document
 */
-export const Anchor = (props: AnchorProps) => {
+export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
 
   const { isClosedWithChildren,
     anchorElement,
@@ -138,14 +138,15 @@ export const Anchor = (props: AnchorProps) => {
     uidSanitizedBlock,
     menu,
   } = props;
-  const ref = React.useRef(null);
+  const innerRef = React.useRef(null);
+  const refs = useMergeRefs(innerRef, ref);
 
   const {
     menuSourceProps,
     ContextMenu,
     isOpen: isContextMenuOpen
   } = useContextMenu({
-    ref,
+    ref: innerRef,
     menuProps: {
       size: "sm"
     },
@@ -154,7 +155,7 @@ export const Anchor = (props: AnchorProps) => {
 
   return <>
     <IconButton
-      ref={ref}
+      ref={refs}
       aria-label="Block anchor"
       {...anchorButtonStyleProps(isClosedWithChildren)}
       {...menuSourceProps}
@@ -165,9 +166,17 @@ export const Anchor = (props: AnchorProps) => {
     >
       {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
     </IconButton>
-    {(menu) && <ContextMenu>
-      {menu}
+    {(menu || shouldShowDebugDetails) && <ContextMenu>
+      {shouldShowDebugDetails ? (
+        <MenuList>
+          {menu}
+          <MenuGroup title="Debug details">
+            <Box px={4} pb={3}>
+              {propertiesList(uidSanitizedBlock)}
+            </Box>
+          </MenuGroup>
+        </MenuList>) : menu}
     </ContextMenu>}
   </>
 
-};
+});
