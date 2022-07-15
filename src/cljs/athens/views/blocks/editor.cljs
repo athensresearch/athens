@@ -17,7 +17,6 @@
     [athens.self-hosted.presence.views         :as presence]
     [athens.subs.inline-refs                   :as inline-refs.subs]
     [athens.subs.linked-refs                   :as linked-ref.subs]
-    [athens.subs.selection                     :as select-subs]
     [athens.util                               :as util]
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content               :as content]
