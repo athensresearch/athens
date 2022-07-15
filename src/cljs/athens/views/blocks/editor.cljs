@@ -159,7 +159,6 @@
         uid                   (:block/uid block-o)
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
-        selected-items        (rf/subscribe [::select-subs/items])
         feature-flags         (rf/subscribe [:feature-flags])
         show-inline-comments  (rf/subscribe [:comment/show-inline-comments?])
         show-textarea         (rf/subscribe [:comment/show-comment-textarea? uid])]
