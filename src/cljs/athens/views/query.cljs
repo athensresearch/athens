@@ -166,6 +166,8 @@
                     :isActive (or (= query-layout x))}
          (clojure.string/capitalize x)])]]))
 
+#_(js/console.log (apply hash-map [:a 1 :b 2 :c 3]))
+
 (defn query-el
   [{:keys [query-data parsed-properties uid]}]
   (let [query-layout (get parsed-properties "query/layout")
@@ -173,7 +175,10 @@
         query-subgroup-by (get parsed-properties "query/subgroup-by")
         query-properties-order (get parsed-properties "query/properties-order")
         query-sort-by (get parsed-properties "query/sort-by")
-        query-sort-direction (get parsed-properties "query/sort-direction")]
+        query-sort-direction (get parsed-properties "query/sort-direction")
+        query-properties-hide (zipmap (get parsed-properties "query/properties-hide")
+                                      (repeat true))]
+
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case query-layout
        "board"
@@ -191,6 +196,7 @@
                           :hasSubGroup          (boolean query-subgroup-by-kw)
                           :rows                 rows
                           :onUpdateStatusClick  update-status
+                          :hideProperties query-properties-hide
                           :onAddNewCardClick    new-card
                           :onRenameCard         (fn [])
                           :onRenameColumn       (fn [])
@@ -204,6 +210,7 @@
                          :onClickSort #(update-sort-by uid query-sort-by query-sort-direction %)
                          :sortBy query-sort-by
                          :sortDirection query-sort-direction
+                         :hideProperties query-properties-hide
                          :dateFormatFn #(dates/date-string %)}]))]))
 
 

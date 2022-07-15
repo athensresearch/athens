@@ -10,29 +10,28 @@ const isDateFn = (value) => {
 
 
 export const QueryTable = (props) => {
-    const { data, columns, dateFormatFn, onClickSort, sortBy, sortDirection } = props;
+    const { data, columns, dateFormatFn, onClickSort, sortBy, sortDirection, hideProperties } = props;
     return (columns && columns.length > 0 && <Box>
         <Table>
             <Thead>
                 <Tr>{columns.map((column) =>
-                    <Th key={column} onClick={()=>onClickSort(column)}>
-                        <Button>
-                            {column}
-                            {(sortBy == column &&
-                                (sortDirection == "asc" ? <ChevronUpIcon/> : <ChevronDownIcon/>))}
-                        </Button>
-                        </Th>
-                    )}
+                    (!hideProperties[column] &&
+                        <Th key={column} onClick={()=>onClickSort(column)}>
+                            <Button>
+                                {column}
+                                {(sortBy == column &&
+                                    (sortDirection == "asc" ? <ChevronUpIcon/> : <ChevronDownIcon/>))}
+                            </Button>
+                        </Th>))}
                 </Tr>
             </Thead>
             <Tbody>
             {data.map((record) => {
-            console.log(record)
                 return <Tr>
                 {columns.map((column) => {
                     const value = record[column];
                     const isDate = isDateFn(value)
-                    return <Td>{isDate ? dateFormatFn(value) : value}</Td>
+                    return (!hideProperties[column] && <Td>{isDate ? dateFormatFn(value) : value}</Td>)
                 })}
                 </Tr>})}
             </Tbody>
