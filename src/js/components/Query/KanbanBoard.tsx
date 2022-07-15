@@ -3,7 +3,7 @@ import { VStack, Grid, HStack, Box, Text, Heading, Button } from '@chakra-ui/rea
 import { Reorder } from 'framer-motion';
 
 export const KanbanCard = (props) => {
-  const { id, isSelected, columns, onUpdateStatusClick, cardData, hideProperties } = props;
+  const { id, isSelected, columns, onUpdateStatusClick, cardData, hideProperties, onClickCard } = props;
   const columnIndex = columns.indexOf(status);
   const columnCount = columns.length;
 
@@ -25,6 +25,7 @@ export const KanbanCard = (props) => {
       border: "1px solid",
       borderColor: "background.floor"
     }}
+    onClick={() => onClickCard(id)}
   >
     <Text fontWeight={"bold"}>{title}</Text>
     {Object.entries(cardData).map(([key, val]) =>
@@ -135,7 +136,8 @@ export const AddSwimlaneButton = (props) => {
 };
 
 export const QueryKanban = (props) => {
-  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties } = props;
+  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties, onClickCard } = props;
+
   if (hasSubGroup) {
     return <KanbanBoard name={name}>
       {Object.entries(boardData).map(([project, y]) =>
@@ -143,7 +145,13 @@ export const QueryKanban = (props) => {
         {columns.map(column =>
           <KanbanColumn name={column}>
           {y[column] &&  y[column].map((cardData) =>
-            <KanbanCard columns={columns} cardData={cardData} onUpdateStatusClick={onUpdateStatusClick} hideProperties={hideProperties}/>
+            <KanbanCard
+                columns={columns}
+                cardData={cardData}
+                onUpdateStatusClick={onUpdateStatusClick}
+                hideProperties={hideProperties}
+                onClickCard={onClickCard}
+            />
             )}
             /* AddCard needs to take a context object that accepts filters, row context, column context, etc. */
           <AddCardButton column={column} project={project} onAddNewCardClick={onAddNewCardClick} />

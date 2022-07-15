@@ -59,13 +59,13 @@
   [kw columns]
   (into (hash-map)
         (map (fn [[k v]]
-               [k (group-by kw v)])
+               [k (group-by #(get % kw) v)])
              columns)))
 
 (defn group-stuff
   [g sg items]
   (->> items
-       (group-by sg)
+       (group-by #(get % sg))
        (nested-group-by g)))
 
 (defn new-card
@@ -179,7 +179,6 @@
   (let [query-layout           (get parsed-properties "query/layout")
         query-properties-order (get parsed-properties "query/properties-order")
         query-properties-hide  (get parsed-properties "query/properties-hide")]
-    (prn "HIDE", query-properties-hide query-data)
     [:> Box
      [:> Heading {:size "md"} "Layout"]
      [:> ButtonGroup
@@ -212,26 +211,20 @@
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case query-layout
        "board"
-       (let [query-group-by-kw    (symbol query-group-by)
-             query-subgroup-by-kw (symbol query-subgroup-by)
-             ;; column headers are not ordered correctly with record fields
-             columns              (->> (map query-group-by-kw query-data) set)
-             rows                 (->> (map query-subgroup-by-kw query-data) set)
-             boardData            (if (and query-subgroup-by-kw query-group-by-kw)
-                                    (group-stuff query-group-by-kw query-subgroup-by-kw query-data)
-                                    (group-by query-group-by-kw query-data))]
+       (let [columns              (->> (map #(get % query-group-by) query-data) set)
+             rows                 (->> (map #(get % query-subgroup-by) query-data) set)
+             boardData            (if (and query-subgroup-by query-group-by)
+                                    (group-stuff query-group-by query-subgroup-by query-data)
+                                    (group-by query-group-by query-data))]
          [:> QueryKanban {:boardData            boardData
                           ;; store column order here
                           :columns              columns
-                          :hasSubGroup          (boolean query-subgroup-by-kw)
+                          :hasSubGroup          (boolean query-subgroup-by)
                           :rows                 rows
                           :onUpdateStatusClick  update-status
                           :hideProperties query-properties-hide
                           :onAddNewCardClick    new-card
-                          :onRenameCard         (fn [])
-                          :onRenameColumn       (fn [])
-                          :onClickCard          (fn [])
-                          :onShiftClickCard     (fn [])
+                          :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
                           :onAddNewColumnClick  (fn [])
                           :onAddNewProjectClick (fn [])}])
        (let [sorted-data (sort-table query-data query-sort-by query-sort-direction)]
@@ -257,9 +250,6 @@
         query-subgroup-by (get properties "query/subgroup-by")
         query-data (->> (athens.reactive/get-reactive-instances-of-key-value ":block/type" query-types)
                         (map block-to-flat-map))]
-
-    (prn properties)
-
 
     (cond
       (nil? query-group-by) [:> Box {:color "red"} "Please add property query/group-by"]
