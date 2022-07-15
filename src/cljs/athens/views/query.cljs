@@ -40,7 +40,7 @@
         last-edit-auth-and-time (get-last-edit-auth-and-time edits)
         property-keys           (keys properties)
         props-map               (reduce (fn [acc prop-key]
-                                          (assoc acc (symbol prop-key) (get-in properties [prop-key :block/string])))
+                                          (assoc acc prop-key (get-in properties [prop-key :block/string])))
                                         {}
                                         property-keys)
         merged-map              (merge {":block/uid" uid}
@@ -97,6 +97,26 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
 
+(defn flip-sort-dir
+  [sort-dir]
+  (if (= sort-dir "asc")
+    "desc"
+    "asc"))
+
+(defn update-sort-by
+  [id curr-sort-by curr-sort-dir new-sort-by]
+  (if (= curr-sort-by new-sort-by)
+    (rf/dispatch [:properties/update-in [:block/uid id] ["query/sort-direction"]
+                  (fn [db prop-uid]
+                    [(graph-ops/build-block-save-op db prop-uid (flip-sort-dir curr-sort-dir))])])
+    (do
+      (rf/dispatch [:properties/update-in [:block/uid id] ["query/sort-direction"]
+                     (fn [db prop-uid] [(graph-ops/build-block-save-op db prop-uid "desc")])])
+      (rf/dispatch [:properties/update-in [:block/uid id] ["query/sort-by"]
+                    (fn [db prop-uid]
+                      [(graph-ops/build-block-save-op db prop-uid new-sort-by)])]))))
+
+
 (defn get-prop-node-title
   "Could either be 1-arity (just block/string) or multi-arity (multiple children).
 
@@ -119,6 +139,18 @@
                    :else string)]))
        (into (hash-map))))
 
+(defn sort-dir-fn
+  [query-sort-direction]
+  (if (= query-sort-direction "asc")
+    compare
+    (comp - compare)))
+
+(defn sort-table
+  [query-data query-sort-by query-sort-direction]
+  (->> query-data
+       (sort-by #(get % query-sort-by)
+                (sort-dir-fn query-sort-direction))))
+
 ;; Views
 
 (defn options-el
@@ -135,11 +167,13 @@
          (clojure.string/capitalize x)])]]))
 
 (defn query-el
-  [{:keys [query-data parsed-properties]}]
+  [{:keys [query-data parsed-properties uid]}]
   (let [query-layout (get parsed-properties "query/layout")
         query-group-by (get parsed-properties "query/group-by")
         query-subgroup-by (get parsed-properties "query/subgroup-by")
-        query-properties-order (get parsed-properties "query/properties-order")]
+        query-properties-order (get parsed-properties "query/properties-order")
+        query-sort-by (get parsed-properties "query/sort-by")
+        query-sort-direction (get parsed-properties "query/sort-direction")]
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case query-layout
        "board"
@@ -164,8 +198,13 @@
                           :onShiftClickCard     (fn [])
                           :onAddNewColumnClick  (fn [])
                           :onAddNewProjectClick (fn [])}])
-       [:> QueryTable {:data query-data
-                       :columns query-properties-order}])]))
+       (let [sorted-data (sort-table query-data query-sort-by query-sort-direction)]
+         [:> QueryTable {:data sorted-data
+                         :columns query-properties-order
+                         :onClickSort #(update-sort-by uid query-sort-by query-sort-direction %)
+                         :sortBy query-sort-by
+                         :sortDirection query-sort-direction
+                         :dateFormatFn #(dates/date-string %)}]))]))
 
 
 ;; XXX: last edit only concerns itself with the last edit of the block itself, not one of the block's property's
@@ -173,7 +212,8 @@
 
 (defn query-block
   [block-data properties]
-  (let [parsed-properties (get-query-props properties)
+  (let [block-uid (:block/uid block-data)
+        parsed-properties (get-query-props properties)
         query-types (get parsed-properties "query/types")
         query-group-by (get properties "query/group-by")
         query-subgroup-by (get properties "query/subgroup-by")
@@ -190,7 +230,8 @@
       :else [:> Box {:width        "100%" #_#_:border "1px" :borderColor "gray"
                      :padding-left 38 :padding-top 15}
              [options-el {:parsed-properties parsed-properties
-                          :uid           (:block/uid block-data)}]
+                          :uid           block-uid}]
              [query-el {:query-data        query-data
+                        :uid block-uid
                         :parsed-properties parsed-properties}]])))
 
