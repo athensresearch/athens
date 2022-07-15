@@ -14,12 +14,16 @@ export const QueryTable = (props) => {
     return (columns && columns.length > 0 && <Box>
         <Table>
             <Thead>
-            <Tr>{columns.map((column) =>
-                <Th key={column} onClick={()=>onClickSort(column)}>
-                    {column}
-                    {(sortBy == column &&
-                        (sortDirection == "asc" ? <ChevronUpIcon/> : <ChevronDownIcon/>))}
-                </Th>)}</Tr>
+                <Tr>{columns.map((column) =>
+                    <Th key={column} onClick={()=>onClickSort(column)}>
+                        <Button>
+                            {column}
+                            {(sortBy == column &&
+                                (sortDirection == "asc" ? <ChevronUpIcon/> : <ChevronDownIcon/>))}
+                        </Button>
+                        </Th>
+                    )}
+                </Tr>
             </Thead>
             <Tbody>
             {data.map((record) => {
