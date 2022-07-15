@@ -6,7 +6,7 @@
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/EmojiPicker/EmojiPicker"     :refer [EmojiPickerPopoverContent]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [Box VStack PopoverAnchor Popover Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    ["@chakra-ui/react"                        :refer [VStack PopoverAnchor Popover Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common-db                          :as common-db]
     [athens.db                                 :as db]
     [athens.events.inline-refs                 :as inline-refs.events]
@@ -206,33 +206,33 @@
 
 
           [:> Popover {:isOpen @show-emoji-picker?
-                       :placement "bottom-start"
+                       :placement "bottom-end"
                        :onOpen #(js/console.log "tried to open")
                        :onClose hide-emoji-picker-fn}
 
            [:> PopoverAnchor
-            [:> Box]]
+            [:> Anchor {:isClosedWithChildren   (when (and (seq children)
+                                                           (or (and (true? linked-ref) (not @linked-ref-open?))
+                                                               (and (false? linked-ref) (not open))))
+                                                  "closed-with-children")
+                        :uidSanitizedBlock      uid-sanitized-block
+                        :shouldShowDebugDetails (util/re-frame-10x-open?)
+                        :menu                   menu
+                        :onClick                (fn [e]
+                                                  (let [shift? (.-shiftKey e)]
+                                                    (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                         :target :block
+                                                                                         :pane   (if shift?
+                                                                                                   :right-pane
+                                                                                                   :main-pane)}])
+                                                    (router/navigate-uid uid e)))
+                        :on-drag-start          (fn [e] (bullet-drag-start e uid))
+                        :on-drag-end            (fn [e] (bullet-drag-end e uid))}]]
            [:> EmojiPickerPopoverContent
             {:onClose hide-emoji-picker-fn
              :onEmojiSelected (fn [e] (toggle-reaction [:block/uid uid] (.. e -detail -unicode) user-id))}]]
-          
-          [:> Anchor {:isClosedWithChildren   (when (and (seq children)
-                                                         (or (and (true? linked-ref) (not @linked-ref-open?))
-                                                             (and (false? linked-ref) (not open))))
-                                                "closed-with-children")
-                      :uidSanitizedBlock      uid-sanitized-block
-                      :shouldShowDebugDetails (util/re-frame-10x-open?)
-                      :menu                   menu
-                      :onClick                (fn [e]
-                                                (let [shift? (.-shiftKey e)]
-                                                  (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                       :target :block
-                                                                                       :pane   (if shift?
-                                                                                                 :right-pane
-                                                                                                 :main-pane)}])
-                                                  (router/navigate-uid uid e)))
-                      :on-drag-start          (fn [e] (bullet-drag-start e uid))
-                      :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
+
+
 
 
           [content/block-content-el block-o state-hooks]

@@ -342,7 +342,7 @@
                                                           :icon (r/as-element [:> ChatIcon])}])
                                           (when reactions-enabled?
                                             [:> MenuItem {:children "Add reaction"
-                                                          :onClick #(js/console.log "whoops")
+                                                          :onClick show-emoji-picker-fn
                                                           :icon (r/as-element [:> ThumbUpFillIcon])}])])]
 
              ;; (prn uid is-selected)
