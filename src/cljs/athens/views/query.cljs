@@ -68,24 +68,41 @@
        (group-by #(get % sg))
        (nested-group-by g)))
 
+(defn context-to-block-properties
+  [context]
+  (apply hash-map
+         (->> context
+              (map (fn [[k v]]
+                     [k #:block{:string v
+                                :uid    (athens.common.utils/gen-block-uid)}]))
+
+              flatten)))
+
+
 (defn new-card
-  [project column]
-  (let [parent-of-new-block (:title (dates/get-day)) ;; for now, just create a new block on today's daily notes
-        evt (->> (athens.common-events.bfs/internal-representation->atomic-ops
-                   @athens.db/dsdb
-                   [#:block{:uid    (athens.common.utils/gen-block-uid)
-                            :string "Untitled"
-                            :properties
-                            {":block/type" #:block{:string "[[athens/task]]"
-                                                   :uid    (athens.common.utils/gen-block-uid)}
-                             ":task/status" #:block{:string column
-                                                    :uid    (athens.common.utils/gen-block-uid)}
-                             ":task/project" #:block{:string project
-                                                     :uid    (athens.common.utils/gen-block-uid)}}}]
-                   {:page/title parent-of-new-block
-                    :relation  :last})
-                 (athens.common-events.graph.composite/make-consequence-op {:op/type :new-type})
-                 athens.common-events/build-atomic-event)]
+  "new-card needs to know the context of where it was pressed. For example, pressing it in a given column and swimlane
+  would pass along those properties to the new card. Filter conditions would also be passed along. It doesn't matter if
+  inherited properties are passed throughu group, subgroup, or filters. It just matters that they are true, and the view should be derived properly.
+
+  context == {:task/status 'todo'
+              :task/project '[[Project: ASD]]'"
+  [context]
+  (let [context             (js->clj context)
+        new-block-props     (context-to-block-properties context)
+        parent-of-new-block (:title (dates/get-day))        ;; for now, just create a new block on today's daily notes
+        evt                 (->> (athens.common-events.bfs/internal-representation->atomic-ops
+                                   @athens.db/dsdb
+                                   [#:block{:uid        (athens.common.utils/gen-block-uid)
+                                            :string     ""
+                                            :properties (merge {":block/type" #:block{:string "[[athens/task]]"
+                                                                                      :uid    (athens.common.utils/gen-block-uid)}
+                                                                ":task/title" #:block{:string "Untitled task"
+                                                                                      :uid    (athens.common.utils/gen-block-uid)}}
+                                                               new-block-props)}]
+                                   {:page/title parent-of-new-block
+                                    :relation   :last})
+                                 (athens.common-events.graph.composite/make-consequence-op {:op/type :new-type})
+                                 athens.common-events/build-atomic-event)]
     (re-frame.core/dispatch [:resolve-transact-forward evt])))
 
 (defn update-status
@@ -172,8 +189,6 @@
 
 ;; Views
 
-
-
 (defn options-el
   [{:keys [parsed-properties uid query-data]}]
   (let [query-layout           (get parsed-properties "query/layout")
@@ -195,8 +210,6 @@
                      :menuOptionGroupValue (keys query-properties-hide)
                      :onChange         #(toggle-hidden-property uid %)}]]]))
 
-
-#_(js/console.log (apply hash-map [:a 1 :b 2 :c 3]))
 
 (defn query-el
   [{:keys [query-data parsed-properties uid]}]
@@ -222,8 +235,11 @@
                           :hasSubGroup          (boolean query-subgroup-by)
                           :rows                 rows
                           :onUpdateStatusClick  update-status
-                          :hideProperties query-properties-hide
+                          :hideProperties       query-properties-hide
                           :onAddNewCardClick    new-card
+                          :groupBy              query-group-by
+                          :subgroupBy           query-subgroup-by
+                          :filter               nil
                           :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
                           :onAddNewColumnClick  (fn [])
                           :onAddNewProjectClick (fn [])}])
