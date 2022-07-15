@@ -4,11 +4,9 @@
    ["/components/Block/PropertyName"          :refer [PropertyName]]
    ["/components/Block/Reactions"             :refer [Reactions]]
    ["/components/Block/Toggle"                :refer [Toggle]]
-   ["/components/Icons/Icons"                 :refer [ChatIcon BlockEmbedIcon TextIcon ThumbUpIcon]]
    ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
    ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
    [athens.common-db                          :as common-db] 
-   [athens.common-events.graph.ops            :as graph-ops]
    [athens.db                                 :as db]
    [athens.events.inline-refs                 :as inline-refs.events]
    [athens.events.linked-refs                 :as linked-ref.events]
@@ -22,7 +20,7 @@
    [athens.util                               :as util]
    [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
    [athens.views.blocks.content               :as content]
-   [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs handle-click-comment]]
+   [athens.views.blocks.reactions             :refer [toggle-reaction props->reactions]]
    [athens.views.comments.core              :as comments]
    [athens.views.comments.inline            :as inline-comments]
    [reagent.core :as r]
@@ -154,60 +152,8 @@
                  [ref-comp block-el block']]))]))])))
 
 
-(defn toggle-reaction
-  "Toggle reaction on block uid. Cleans up when toggling the last one off.
-  Stores emojis in the [:reactions/emojis reaction user-id] property path."
-  [id reaction user-id]
-  (rf/dispatch [:properties/update-in id [":reactions" reaction user-id]
-                (fn [db user-reaction-uid]
-                  (let [user-reacted?       (common-db/block-exists? db [:block/uid user-reaction-uid])
-                        reaction            (when user-reacted?
-                                              (->> [:block/uid user-reaction-uid]
-                                                   (common-db/get-parent-eid db)
-                                                   (common-db/get-block db)))
-                        reactions           (when reaction
-                                              (->> (:db/id reaction)
-                                                   (common-db/get-parent-eid db)
-                                                   (common-db/get-block db)))
-                        last-user-reaction? (= 1 (count (-> reaction :block/properties)))
-                        last-reaction?      (= 1 (count (-> reactions :block/properties)))]
-                    [(cond
-                       ;; This reaction doesn't exist yet, so we add it.
-                       (not user-reacted?)
-                       (graph-ops/build-block-save-op db user-reaction-uid "")
-
-                       ;; This was the last of all reactions, remove the reactions property
-                       ;; on the parent.
-                       (and last-user-reaction? last-reaction?)
-                       (graph-ops/build-block-remove-op @db/dsdb (:block/uid reactions))
-
-                       ;; This was the last user reaction of this type, but not the last
-                       ;; of all reactions. Remove reaction block.
-                       last-user-reaction?
-                       (graph-ops/build-block-remove-op @db/dsdb (:block/uid reaction))
-
-                       ;; Just remove this particular user reaction.
-                       :else
-                       (graph-ops/build-block-remove-op @db/dsdb user-reaction-uid))]))]))
-
-
-(defn props->reactions
-  [props]
-  (->> (get props ":reactions")
-       :block/properties
-       (map (fn [[k {props :block/properties}]]
-              [k (->> props
-                      (map (fn [[user-id block]]
-                             [(-> block :block/edits last :event/time :time/ts)
-                              user-id]))
-                      (sort-by first)
-                      (mapv second))]))
-       (sort-by first)
-       (into [])))
-
-
 (defn editor-component
-  [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts]
+  [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts menu]
   (let [{:keys [linked-ref
                 parent-uids]} linked-ref-data
         uid                   (:block/uid block-o)
@@ -264,25 +210,7 @@
                                                 "closed-with-children")
                       :uidSanitizedBlock      uid-sanitized-block
                       :shouldShowDebugDetails (util/re-frame-10x-open?)
-                      :menuActions            (clj->js (remove nil?
-                                                               [{:children
-                                                                 (if (> (count @selected-items) 1)
-                                                                   "Copy selected block refs"
-                                                                   "Copy block ref")
-                                                                 :icon (r/as-element [:> BlockEmbedIcon])
-                                                                 :onClick #(handle-copy-refs nil uid)}
-                                                                {:children "Copy unformatted text"
-                                                                 :icon (r/as-element [:> TextIcon])
-                                                                 :onClick  #(handle-copy-unformatted uid)}
-                                                                (when (and (comments/enabled?)
-                                                                           (empty? @selected-items))
-                                                                  {:children "Add comment"
-                                                                   :icon (r/as-element [:> ChatIcon])
-                                                                   :onClick  (fn [e] (handle-click-comment e uid))})
-                                                                (when reactions-enabled?
-                                                                  {:children "Add reaction"
-                                                                   :icon (r/as-element [:> ThumbUpIcon])
-                                                                   :onClick  (fn [e] (handle-click-comment e uid))})]))
+                      :menu                   menu
                       :onClick                (fn [e]
                                                 (let [shift? (.-shiftKey e)]
                                                   (rf/dispatch [:reporting/navigation {:source :block-bullet

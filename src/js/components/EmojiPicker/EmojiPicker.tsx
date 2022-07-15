@@ -97,6 +97,19 @@ interface EmojiPickerPopoverProps extends EmojiPickerProps {
   buttonLabel?: React.ReactElement;
 }
 
+export const EmojiPickerPopoverContent = ({ onEmojiSelected, onClose }) => {
+  return <Portal>
+    <PopoverContent minWidth="max-content">
+      <PopoverBody p={0} >
+        <EmojiPicker onEmojiSelected={(event) => {
+          onEmojiSelected(event);
+          onClose && onClose();
+        }} />
+      </PopoverBody>
+    </PopoverContent>
+  </Portal>
+}
+
 export const EmojiPickerPopover = ({ onEmojiSelected, buttonLabel = <PlusIcon /> }: EmojiPickerPopoverProps) => {
   const { isOpen, onToggle, onClose } = useDisclosure()
 
@@ -109,15 +122,6 @@ export const EmojiPickerPopover = ({ onEmojiSelected, buttonLabel = <PlusIcon />
     <PopoverTrigger>
       <Button onClick={onToggle}>{buttonLabel}</Button>
     </PopoverTrigger>
-    <Portal>
-      <PopoverContent minWidth="max-content">
-        <PopoverBody p={0} >
-          <EmojiPicker onEmojiSelected={(event) => {
-            onEmojiSelected(event);
-            onClose();
-          }} />
-        </PopoverBody>
-      </PopoverContent>
-    </Portal>
+    <EmojiPickerPopoverContent onEmojiSelected={onEmojiSelected} onClose={onClose} />
   </Popover>
 }

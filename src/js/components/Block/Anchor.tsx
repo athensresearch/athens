@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { MenuList, MenuItem, MenuGroup, MenuDivider, IconButton, Box, Text } from '@chakra-ui/react';
+import { IconButton, Text } from '@chakra-ui/react';
 import { useContextMenu } from '@/utils/useContextMenu';
 
 const ANCHORS = {
@@ -69,7 +69,7 @@ export interface AnchorProps {
   onDragStart: () => void;
   onDragEnd: () => void;
   onClick: () => void;
-  menuActions: any;
+  menu?: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
 const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
@@ -136,7 +136,7 @@ export const Anchor = (props: AnchorProps) => {
     onDragEnd,
     onClick,
     uidSanitizedBlock,
-    menuActions,
+    menu,
   } = props;
   const ref = React.useRef(null);
 
@@ -165,19 +165,8 @@ export const Anchor = (props: AnchorProps) => {
     >
       {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
     </IconButton>
-    {(menuActions) && <ContextMenu>
-      <MenuList>
-        {menuActions.map((action) => <MenuItem key={action.children} {...action} />)}
-        {shouldShowDebugDetails && (
-          <>
-            {menuActions && <MenuDivider />}
-            <MenuGroup title="Debug details">
-              <Box px={4} pb={3}>
-                {propertiesList(uidSanitizedBlock)}
-              </Box>
-            </MenuGroup>
-          </>)}
-      </MenuList>
+    {(menu) && <ContextMenu>
+      {menu}
     </ContextMenu>}
   </>
 

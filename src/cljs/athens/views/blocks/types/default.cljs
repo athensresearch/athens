@@ -3,9 +3,11 @@
   A.k.a standard `:block/string` blocks"
   (:require
     ["/components/Block/Container"           :refer [Container]]
-    ["/components/EmojiPicker/EmojiPicker"   :refer [EmojiPickerPopover]]
-    ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpIcon]]
-    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem]]
+    ["/components/EmojiPicker/EmojiPicker"   :refer [EmojiPickerPopoverContent]]
+    ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon]]
+    ["@chakra-ui/react"                      :refer [Box Button Popover PopoverTrigger ButtonGroup IconButton MenuList MenuItem]]
+    [athens.common-db                        :as common-db]
+    [athens.common-events.graph.ops          :as graph-ops]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -73,6 +75,44 @@
     (when (and target
                (not= prev-target target))
       (rf/dispatch [::drag.events/set-drag-target! uid target]))))
+
+
+(defn toggle-reaction
+  "Toggle reaction on block uid. Cleans up when toggling the last one off.
+  Stores emojis in the [:reactions/emojis reaction user-id] property path."
+  [id reaction user-id]
+  (rf/dispatch [:properties/update-in id [":reactions" reaction user-id]
+                (fn [db user-reaction-uid]
+                  (let [user-reacted?       (common-db/block-exists? db [:block/uid user-reaction-uid])
+                        reaction            (when user-reacted?
+                                              (->> [:block/uid user-reaction-uid]
+                                                   (common-db/get-parent-eid db)
+                                                   (common-db/get-block db)))
+                        reactions           (when reaction
+                                              (->> (:db/id reaction)
+                                                   (common-db/get-parent-eid db)
+                                                   (common-db/get-block db)))
+                        last-user-reaction? (= 1 (count (-> reaction :block/properties)))
+                        last-reaction?      (= 1 (count (-> reactions :block/properties)))]
+                    [(cond
+                       ;; This reaction doesn't exist yet, so we add it.
+                       (not user-reacted?)
+                       (graph-ops/build-block-save-op db user-reaction-uid "")
+
+                       ;; This was the last of all reactions, remove the reactions property
+                       ;; on the parent.
+                       (and last-user-reaction? last-reaction?)
+                       (graph-ops/build-block-remove-op @db/dsdb (:block/uid reactions))
+
+                       ;; This was the last user reaction of this type, but not the last
+                       ;; of all reactions. Remove reaction block.
+                       last-user-reaction?
+                       (graph-ops/build-block-remove-op @db/dsdb (:block/uid reaction))
+
+                       ;; Just remove this particular user reaction.
+                       :else
+                       (graph-ops/build-block-remove-op @db/dsdb user-reaction-uid))]))]))
+
 
 
 (defn block-drag-leave
@@ -236,6 +276,9 @@
           show-edit?                   (r/atom false)
           hide-edit-fn                 #(reset! show-edit? false)
           show-edit-fn                 #(reset! show-edit? true)
+          show-emoji-picker?           (r/atom false)
+          hide-emoji-picker-fn         #(reset! show-emoji-picker? false)
+          show-emoji-picker-fn         #(reset! show-emoji-picker? true)
           savep-fn                     (partial db/transact-state-for-uid (or original-uid uid))
           save-fn                      #(savep-fn @local-value :block-save)
           idle-fn                      (gfns/debounce #(savep-fn @local-value :autosave)
@@ -284,7 +327,26 @@
                  present-user          @(rf/subscribe [:presence/has-presence uid])
                  is-presence           (seq present-user)
                  reactions-enabled?    (:reactions @feature-flags)
-                 comments-enabled?     (:comments @feature-flags)]
+                 comments-enabled?     (:comments @feature-flags)
+                ;;  block-ref             (react/useRef nil)
+                 menu                  (r/as-element
+                                        [:> MenuList
+                                         [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                   "Copy selected block refs"
+                                                                   "Copy block ref")
+                                                       :icon (r/as-element [:> BlockEmbedIcon])
+                                                       :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                         [:> MenuItem {:children "Copy unformatted text"
+                                                       :icon (r/as-element [:> TextIcon])
+                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                         (when comments-enabled?
+                                           [:> MenuItem {:children "Add comment"
+                                                         :onClick #(ctx-menu/handle-click-comment % uid)
+                                                         :icon (r/as-element [:> ChatIcon])}])
+                                         (when reactions-enabled?
+                                           [:> MenuItem {:children "Add reaction"
+                                                         :onClick #(show-emoji-picker-fn)
+                                                         :icon (r/as-element [:> ThumbUpFillIcon])}])])]
 
              ;; (prn uid is-selected)
 
@@ -301,9 +363,6 @@
                             :isOpen       open
                             :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
                             :hasPresence  is-presence
-                            #_ :actions #_      (clj->js
-                                            (into [] (when reactions-enabled?
-                                                       [(r/as-element ^{:key "emoji-picker"} [:> EmojiPickerPopover {:onEmojiSelected (fn [e] js/console.log e)}])])))
                             :uid          uid
                             ;; need to know children for selection resolution
                             :childrenUids children-uids
@@ -316,24 +375,17 @@
                             :onDragOver   (fn [e] (block-drag-over e block))
                             :onDragLeave  (fn [e] (block-drag-leave e block))
                             :onDrop       (fn [e] (block-drop e block))
-                            :menu         (r/as-element [:> MenuList
-                                                         [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                                   "Copy selected block refs"
-                                                                                   "Copy block ref")
-                                                                       :icon (r/as-element [:> BlockEmbedIcon])
-                                                                       :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                                         [:> MenuItem {:children "Copy unformatted text"
-                                                                       :icon (r/as-element [:> TextIcon])
-                                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
-                                                         (when comments-enabled?
-                                                           [:> MenuItem {:children "Add comment"
-                                                                         :isDisabled true
-                                                                         :icon (r/as-element [:> TextIcon])}])
-                                                         (when reactions-enabled?
-                                                           [:> MenuItem {:children "Add reaction"
-                                                                         :icon (r/as-element [:> ThumbUpIcon])
-                                                                         :onClick  #(ctx-menu/handle-copy-unformatted uid)}])])
+                            :menu         menu
                             :style        (merge {} (time-controls/block-styles block-o))}
+
+              [:> Popover {:isOpen @show-emoji-picker?
+                           :onClose hide-emoji-picker-fn}
+               [:> PopoverTrigger
+                [:> Button {:onClick show-emoji-picker-fn}
+                 "test"]]
+               [:> EmojiPickerPopoverContent
+                {:onClose hide-emoji-picker-fn
+                 :onEmojiSelected (partial toggle-reaction [:block/uid uid])}]]
 
               (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
@@ -344,7 +396,8 @@
                linked-ref-data
                uid-sanitized-block
                state-hooks
-               opts]
+               opts
+               menu]
 
               (when (= @drag-target :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
               (when (= @drag-target :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])]))})))
