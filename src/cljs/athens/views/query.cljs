@@ -1,7 +1,8 @@
 (ns athens.views.query
   (:require
-   ["/components/KanbanBoard/KanbanBoard" :refer [QueryKanban]]
-   ["/components/Table/Table" :refer [QueryTable]]
+   ["/components/Query/KanbanBoard" :refer [QueryKanban]]
+   ["/components/Query/Table" :refer [QueryTable]]
+   ["/components/Query/Query" :refer [Controls]]
    ["@chakra-ui/react" :refer [Box
                                Button
                                ButtonGroup
@@ -11,7 +12,8 @@
                                Text
                                Heading
                                Checkbox
-                               CheckboxGroup]]
+                               CheckboxGroup
+                               Menu]]
    [athens.db          :as db]
    [athens.common-db          :as common-db]
    [athens.common-events.graph.ops            :as graph-ops]
@@ -174,25 +176,26 @@
 
 (defn options-el
   [{:keys [parsed-properties uid query-data]}]
-  (let [query-layout          (get parsed-properties "query/layout")
-        query-properties-order          (get parsed-properties "query/properties-order")
-        query-properties-hide (get parsed-properties "query/properties-hide")]
-    (prn query-properties-hide query-data)
+  (let [query-layout           (get parsed-properties "query/layout")
+        query-properties-order (get parsed-properties "query/properties-order")
+        query-properties-hide  (get parsed-properties "query/properties-hide")]
+    (prn "HIDE", query-properties-hide query-data)
     [:> Box
-     ;; [:> Heading {:size "sm"} "Layout"]
+     [:> Heading {:size "md"} "Layout"]
      [:> ButtonGroup
-      (for [x ["table" #_"list" "board"]]
-        [:> Button {:value x
-                    :onClick (fn [e]
-                               (update-layout uid x))
+      (for [x ["table" "board"]]
+        [:> Button {:value    x
+                    :onClick  (fn [e]
+                                (update-layout uid x))
                     :isActive (or (= query-layout x))}
          (clojure.string/capitalize x)])]
-     [:> Stack {:direction "row"}
-      [:> CheckboxGroup
-       (for [property query-properties-order]
-         [:> Checkbox {:isChecked (get query-properties-hide property)
-                       :onChange (fn [] (toggle-hidden-property uid property))}
-          property])]]]))
+     [:> Box
+      [:> Controls {:isCheckedFn      #(get query-properties-hide %)
+                     :properties       query-properties-order
+                     :hiddenProperties query-properties-hide
+                     :menuOptionGroupValue (keys query-properties-hide)
+                     :onChange         #(toggle-hidden-property uid %)}]]]))
+
 
 #_(js/console.log (apply hash-map [:a 1 :b 2 :c 3]))
 
