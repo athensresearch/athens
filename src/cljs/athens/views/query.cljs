@@ -22,16 +22,33 @@
 
 ;; Helpers
 
+(defn get-create-auth-and-time
+  [create-event]
+  {":create/auth" (get-in create-event [:event/auth :presence/id])
+   ":create/time" (get-in create-event [:event/time :time/ts])})
+
+(defn get-last-edit-auth-and-time
+  [edit-events]
+  (let [last-edit (last edit-events)]
+    {":last-edit/auth" (get-in last-edit [:event/auth :presence/id])
+     ":last-edit/time" (get-in last-edit [:event/time :time/ts])}))
+
 (defn block-to-flat-map
   [block]
-  (let [{:keys [block/uid block/string block/properties]} block
-        property-keys (keys properties)
-        props-map     (reduce (fn [acc prop-key]
-                                (assoc acc (symbol prop-key) (get-in properties [prop-key :block/string])))
-                              {}
-                              property-keys)
-        merged-map     (merge {":block/uid" uid} props-map)]
+  (let [{:block/keys [uid #_string properties create edits]} block
+        create-auth-and-time    (get-create-auth-and-time create)
+        last-edit-auth-and-time (get-last-edit-auth-and-time edits)
+        property-keys           (keys properties)
+        props-map               (reduce (fn [acc prop-key]
+                                          (assoc acc (symbol prop-key) (get-in properties [prop-key :block/string])))
+                                        {}
+                                        property-keys)
+        merged-map              (merge {":block/uid" uid}
+                                       props-map
+                                       create-auth-and-time
+                                       last-edit-auth-and-time)]
     merged-map))
+
 
 (defn nested-group-by
   "You have to pass the first group"
@@ -80,27 +97,23 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
 
-#_(defn get-query-types
-    "Could either be 1-arity (just block/string) or multi-arity (multiple children).
+(defn get-prop-node-title
+  "Could either be 1-arity (just block/string) or multi-arity (multiple children).
 
-  XXX: to make multi-arity, look at block/children of \"query/types\"
-  TODO: what happens if a user enters in multiple refs in a block/string? Should have some sort of schema enforcement, such as 1 ref per block to avoid confusion
-  "
-    [properties]
-    ;; not using :block/string, because i want the node/title without having to do some reg-ex
-    ;; (get-in props ["query/types" :block/string])
-    (->> (get-in properties ["query/types" :block/refs 0 :db/id])
-         (datascript.core/entity @athens.db/dsdb)
-         :node/title))
+   XXX: to make multi-arity, look at block/children of \"query/types\"
+   TODO: what happens if a user enters in multiple refs in a block/string? Should have some sort of schema enforcement, such as 1 ref per block to avoid confusion
+   not using :block/string, because i want the node/title without having to do some reg-ex"
+  [prop]
+  (->> (get-in prop [#_"query/types" :block/refs 0 :db/id])
+       (datascript.core/entity @athens.db/dsdb)
+       :node/title))
 
 (defn get-query-props
   [properties]
   (->> properties
        (map (fn [[k {:block/keys [children string] :as v}]]
               [k (cond
-                   (= "query/types" k) (->> (get-in v [:block/refs 0 :db/id])
-                                            (datascript.core/entity @athens.db/dsdb)
-                                            :node/title)
+                   (= "query/types" k) (get-prop-node-title v)
                    children (->> (sort-by :block/order children)
                                  (mapv :block/string))
                    :else string)]))
@@ -154,6 +167,9 @@
        [:> QueryTable {:data query-data
                        :columns query-properties-order}])]))
 
+
+;; XXX: last edit only concerns itself with the last edit of the block itself, not one of the block's property's
+;; is this similar to the last edit of a page? does editing a block count as editing a page? or does it have to editing the page/title?
 
 (defn query-block
   [block-data properties]
