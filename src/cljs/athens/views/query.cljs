@@ -12,6 +12,7 @@
                                Heading
                                Checkbox
                                CheckboxGroup]]
+   [athens.db          :as db]
    [athens.common-db          :as common-db]
    [athens.common-events.graph.ops            :as graph-ops]
    [athens.dates              :as dates]
@@ -98,49 +99,17 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
 
-#_(defn toggle-reaction
-    "Toggle reaction on block uid. Cleans up when toggling the last one off.
-  Stores emojis in the [:reactions/emojis reaction user-id] property path."
-    [id reaction user-id]
-    (rf/dispatch [:properties/update-in id [":reactions" reaction user-id]
-                  (fn [db user-reaction-uid]
-                    (let [user-reacted?       (common-db/block-exists? db [:block/uid user-reaction-uid])
-                          reaction            (when user-reacted?
-                                                (->> [:block/uid user-reaction-uid]
-                                                     (common-db/get-parent-eid db)
-                                                     (common-db/get-block db)))
-                          reactions           (when reaction
-                                                (->> (:db/id reaction)
-                                                     (common-db/get-parent-eid db)
-                                                     (common-db/get-block db)))
-                          last-user-reaction? (= 1 (count (-> reaction :block/properties)))
-                          last-reaction?      (= 1 (count (-> reactions :block/properties)))]
-                      [(cond
-                         ;; This reaction doesn't exist yet, so we add it.
-                         (not user-reacted?)
-                         (graph-ops/build-block-save-op db user-reaction-uid "")
-
-                         ;; This was the last of all reactions, remove the reactions property
-                         ;; on the parent.
-                         (and last-user-reaction? last-reaction?)
-                         (graph-ops/build-block-remove-op @db/dsdb (:block/uid reactions))
-
-                         ;; This was the last user reaction of this type, but not the last
-                         ;; of all reactions. Remove reaction block.
-                         last-user-reaction?
-                         (graph-ops/build-block-remove-op @db/dsdb (:block/uid reaction))
-
-                         ;; Just remove this particular user reaction.
-                         :else
-                         (graph-ops/build-block-remove-op @db/dsdb user-reaction-uid))]))]))
 
 (defn update-hidden-properties
   "If property is already hidden, remove from block/children. Otherwise, add property to block/children."
-  [id property]
-  ;;(prn "UPDATE" id property)
-  #_(rf/dispatch [:properties/update-in [:block/uid id] ["query/properties-hide" hidden-property-id]
-                  (fn [db hidden-prop-uid]
-                    [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
+  [id hidden-property-id]
+  (rf/dispatch [:properties/update-in [:block/uid id] ["query/properties-hide" hidden-property-id]
+                (fn [db hidden-prop-uid]
+                  (let [property-hidden? (common-db/block-exists? db [:block/uid hidden-prop-uid])]
+                    [(if property-hidden?
+                       (graph-ops/build-block-remove-op @db/dsdb hidden-prop-uid)
+                       (graph-ops/build-block-save-op db hidden-prop-uid ""))]))]))
+
 
 
 (defn flip-sort-dir

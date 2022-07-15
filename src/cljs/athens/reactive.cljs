@@ -109,6 +109,8 @@
 (def recursive-properties-document-pull-vector
   '[{:block/_property-of [:block/uid :block/string :block/order :block/refs
                           {:block/key [:node/title]}
+                          {:block/edits [{:event/time [:time/ts]
+                                          :event/auth [:presence/id]}]}
                           {:block/children ...}
                           {:block/_property-of ...}]}])
 

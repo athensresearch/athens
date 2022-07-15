@@ -8,6 +8,7 @@
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
+    [athens.common-events.graph.ops :as graph-ops]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
     [athens.common.utils :as utils]
     [athens.dates :as dates]
@@ -437,7 +438,8 @@
   [_]
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
-        block-uid     (r/atom nil)]
+        block-uid     (r/atom nil)
+        feature-flags (rf/subscribe [:feature-flags])]
     (fn [node]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
@@ -448,7 +450,8 @@
             daily-note?                                                         (dates/is-daily-note uid)
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
             is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
-                                                                                    (= @(subscribe [:current-route/page-title]) title))]
+                                                                                    (= @(subscribe [:current-route/page-title]) title))
+            cover-photo-enabled?                                                (:cover-photo @feature-flags)]
 
         (sync-title title state)
 
@@ -460,10 +463,17 @@
                            :onConfirm   confirm-fn
                            :onClose     cancel-fn}]
          ;; Header
-         [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
-                                                  (fn [e] (router/navigate-page title e)))
-                         :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
-                                                 #(dispatch [:right-sidebar/open-item uid]))}
+         [:> PageHeader (merge
+                          {:onClickOpenInMainView  (when-not is-current-route?
+                                                     (fn [e] (router/navigate-page title e)))
+                           :onClickOpenInSidebar   (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                                                     #(dispatch [:right-sidebar/open-item uid]))}
+                          (when cover-photo-enabled?
+                            {:headerImageEnabled     cover-photo-enabled?
+                             :headerImageUrl         (-> properties (get ":header/url") :block/string)
+                             :onChangeHeaderImageUrl (fn [url]
+                                                       (dispatch [:properties/update-in [:node/title title] [":header/url"]
+                                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))}))
 
           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
            ;; Prevent editable textarea if a node/title is a date

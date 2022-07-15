@@ -316,6 +316,11 @@
         add-property-map)))
 
 
+(defn block-exists?
+  [db eid]
+  (d/entity db eid))
+
+
 (defn child-of-or-property-of
   [e]
   (if-let [p (:block/_children e)]
