@@ -2,7 +2,7 @@
   (:require
     ["/components/SidebarShortcuts/Item" :refer [Item]]
     ["/components/SidebarShortcuts/List" :refer [List]]
-    ["@chakra-ui/react" :refer [VStack Flex Heading Button Link Flex]]
+    ["@chakra-ui/react" :refer [VStack Flex Heading Link Flex]]
     ["framer-motion" :refer [AnimatePresence motion]]
     [athens.reactive :as reactive]
     [athens.router   :as router]
@@ -60,16 +60,16 @@
          [:> List {:items (clj->js shortcuts)
                    :pl "1.25rem"}
           (doall
-           (for [sh shortcuts]
-             [:> Item {:item (clj->js sh)
-                       :onClick (fn [e]
-                                  (let [shift? (.-shiftKey e)]
-                                    (rf/dispatch [:reporting/navigation {:source :left-sidebar
-                                                                         :target :page
-                                                                         :pane   (if shift?
-                                                                                   :right-pane
-                                                                                   :main-pane)}])
-                                    (router/navigate-page (second sh) e)))}]))]]
+            (for [sh shortcuts]
+              [:> Item {:item (clj->js sh)
+                        :onClick (fn [e]
+                                   (let [shift? (.-shiftKey e)]
+                                     (rf/dispatch [:reporting/navigation {:source :left-sidebar
+                                                                          :target :page
+                                                                          :pane   (if shift?
+                                                                                    :right-pane
+                                                                                    :main-pane)}])
+                                     (router/navigate-page (second sh) e)))}]))]]
 
         ;; LOGO + BOTTOM BUTTONS
         [:> Flex {:as "footer"
