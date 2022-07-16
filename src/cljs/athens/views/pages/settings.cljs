@@ -1,14 +1,14 @@
 (ns athens.views.pages.settings
   (:require
-   ["@chakra-ui/react" :refer [Text Flex Divider Heading Box FormControl FormLabel FormHelperText ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
-   [athens.db :refer [default-athens-persist]]
-   [athens.util :refer [toast]]
-   [cljs-http.client :as http]
-   [cljs.core.async :refer [<!]]
-   [re-frame.core :refer [subscribe dispatch reg-event-fx]]
-   [reagent.core :as r])
+    ["@chakra-ui/react" :refer [Text Flex Divider Heading Box FormControl FormLabel FormHelperText ButtonGroup Grid Input Button Switch Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
+    [athens.db :refer [default-athens-persist]]
+    [athens.util :refer [toast]]
+    [cljs-http.client :as http]
+    [cljs.core.async :refer [<!]]
+    [re-frame.core :refer [subscribe dispatch reg-event-fx]]
+    [reagent.core :as r])
   (:require-macros
-   [cljs.core.async.macros :refer [go]]))
+    [cljs.core.async.macros :refer [go]]))
 
 
 ;; Helpers
@@ -265,22 +265,22 @@
 
 
 (reg-event-fx
- :settings/update
- (fn [{:keys [db]} [_ k v]]
-   {:db (assoc-in db [:athens/persist :settings k] v)}))
+  :settings/update
+  (fn [{:keys [db]} [_ k v]]
+    {:db (assoc-in db [:athens/persist :settings k] v)}))
 
 
 (reg-event-fx
- :settings/update-in
- (fn [{:keys [db]} [_ ks v]]
-   {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
+  :settings/update-in
+  (fn [{:keys [db]} [_ ks v]]
+    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
 
 
 (reg-event-fx
- :settings/reset
- (fn [{:keys [db]} _]
-   {:db (assoc db :athens/persist default-athens-persist)
-    :dispatch [:boot]}))
+  :settings/reset
+  (fn [{:keys [db]} _]
+    {:db (assoc db :athens/persist default-athens-persist)
+     :dispatch [:boot]}))
 
 
 (defn page
