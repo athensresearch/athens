@@ -194,8 +194,7 @@
   (let [query-layout           (get parsed-properties "query/layout")
         query-properties-order (get parsed-properties "query/properties-order")
         query-properties-hide  (get parsed-properties "query/properties-hide")]
-    [:> Box
-     [:> Heading {:size "md"} "Layout"]
+    [:> Stack {:direction "row" :spacing 5}
      [:> ButtonGroup
       (for [x ["table" "board"]]
         [:> Button {:value    x
@@ -203,12 +202,12 @@
                                 (update-layout uid x))
                     :isActive (or (= query-layout x))}
          (clojure.string/capitalize x)])]
-     [:> Box
-      [:> Controls {:isCheckedFn      #(get query-properties-hide %)
-                     :properties       query-properties-order
-                     :hiddenProperties query-properties-hide
-                     :menuOptionGroupValue (keys query-properties-hide)
-                     :onChange         #(toggle-hidden-property uid %)}]]]))
+
+     [:> Controls {:isCheckedFn          #(get query-properties-hide %)
+                   :properties           query-properties-order
+                   :hiddenProperties     query-properties-hide
+                   :menuOptionGroupValue (keys query-properties-hide)
+                   :onChange             #(toggle-hidden-property uid %)}]]))
 
 
 (defn query-el
@@ -229,6 +228,9 @@
              boardData            (if (and query-subgroup-by query-group-by)
                                     (group-stuff query-group-by query-subgroup-by query-data)
                                     (group-by query-group-by query-data))]
+         ;; Kanban column order is owned by the local query component.
+         ;; Order is initialized by the property page of whatever property is first selected as the groupBy
+         ;; e.g. :task/status page will have some way to configure an order such as ["todo", "doing", "done"]
          [:> QueryKanban {:boardData            boardData
                           ;; store column order here
                           :columns              columns
