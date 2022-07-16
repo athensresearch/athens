@@ -39,10 +39,13 @@ export const KanbanCard = (props) => {
   {(columnIndex > 0) &&
     <Button value="left" onClick={(e) => {
       onUpdateStatusClick(id, columns[columnIndex-1])
+      e.stopPropagation()
     }}>←</Button>}
   {(columnIndex < (columnCount - 1)) &&
-    <Button value="right" onClick={(e) =>
+    <Button value="right" onClick={(e) => {
+      e.stopPropagation()
       onUpdateStatusClick(id, columns[columnIndex+1])
+    }
     }>→</Button>}
   </Box>;
 }

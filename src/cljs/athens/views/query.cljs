@@ -162,6 +162,10 @@
        (datascript.core/entity @athens.db/dsdb)
        :node/title))
 
+(defn order-children
+  [children]
+  (->> (sort-by :block/order children)
+       (mapv :block/string)))
 
 (defn get-query-props
   [properties]
@@ -169,11 +173,12 @@
        (map (fn [[k {:block/keys [children string] nested-properties :block/properties :as v}]]
               [k (cond
                    (= "query/types" k) (get-prop-node-title v)
-                   children (->> (sort-by :block/order children)
-                                 (mapv :block/string))
+                   (and (seq children) (not (clojure.string/blank? string))) {:key string :values (order-children children)}
+                   (seq children) (order-children children)
                    nested-properties  (zipmap (keys nested-properties) (repeat true))
                    :else string)]))
        (into (hash-map))))
+
 
 (defn sort-dir-fn
   [query-sort-direction]
@@ -209,28 +214,32 @@
                    :menuOptionGroupValue (keys query-properties-hide)
                    :onChange             #(toggle-hidden-property uid %)}]]))
 
+(defn get-prop-values
+  [db eid]
+  (let [property-page (common-db/get-block-document db eid)]
+    (->> (get-in property-page [:block/properties ":property/values"])
+         :block/children
+         (sort-by :block/order)
+         (mapv :block/string))))
 
 (defn query-el
   [{:keys [query-data parsed-properties uid]}]
-  (let [query-layout (get parsed-properties "query/layout")
-        query-group-by (get parsed-properties "query/group-by")
-        query-subgroup-by (get parsed-properties "query/subgroup-by")
+  (let [query-layout           (get parsed-properties "query/layout")
         query-properties-order (get parsed-properties "query/properties-order")
-        query-sort-by (get parsed-properties "query/sort-by")
-        query-sort-direction (get parsed-properties "query/sort-direction")
-        query-properties-hide (get parsed-properties "query/properties-hide")]
+        query-sort-by          (get parsed-properties "query/sort-by")
+        query-sort-direction   (get parsed-properties "query/sort-direction")
+        query-properties-hide  (get parsed-properties "query/properties-hide")]
 
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case query-layout
        "board"
-       (let [columns              (->> (map #(get % query-group-by) query-data) set)
-             rows                 (->> (map #(get % query-subgroup-by) query-data) set)
-             boardData            (if (and query-subgroup-by query-group-by)
-                                    (group-stuff query-group-by query-subgroup-by query-data)
-                                    (group-by query-group-by query-data))]
-         ;; Kanban column order is owned by the local query component.
-         ;; Order is initialized by the property page of whatever property is first selected as the groupBy
-         ;; e.g. :task/status page will have some way to configure an order such as ["todo", "doing", "done"]
+       (let [query-group-by    (get parsed-properties "query/group-by")
+             query-subgroup-by (get parsed-properties "query/subgroup-by")
+             columns           (get-prop-values @db/dsdb [:node/title ":task/status"])
+             rows              (->> (map #(get % query-subgroup-by) query-data) set)
+             boardData         (if (and query-subgroup-by query-group-by)
+                                 (group-stuff query-group-by query-subgroup-by query-data)
+                                 (group-by query-group-by query-data))]
          [:> QueryKanban {:boardData            boardData
                           ;; store column order here
                           :columns              columns
@@ -246,13 +255,13 @@
                           :onAddNewColumnClick  (fn [])
                           :onAddNewProjectClick (fn [])}])
        (let [sorted-data (sort-table query-data query-sort-by query-sort-direction)]
-         [:> QueryTable {:data sorted-data
-                         :columns query-properties-order
-                         :onClickSort #(update-sort-by uid query-sort-by query-sort-direction %)
-                         :sortBy query-sort-by
-                         :sortDirection query-sort-direction
+         [:> QueryTable {:data           sorted-data
+                         :columns        query-properties-order
+                         :onClickSort    #(update-sort-by uid query-sort-by query-sort-direction %)
+                         :sortBy         query-sort-by
+                         :sortDirection  query-sort-direction
                          :hideProperties query-properties-hide
-                         :dateFormatFn #(dates/date-string %)}]))]))
+                         :dateFormatFn   #(dates/date-string %)}]))]))
 
 
 ;; XXX: last edit only concerns itself with the last edit of the block itself, not one of the block's property's
