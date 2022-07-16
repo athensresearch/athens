@@ -11,7 +11,6 @@
     [athens.views.blocks.content :as b-content]
     [athens.views.comments.core :as comments.core]
     [clojure.string :as str]
-    [goog.events :as events]
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
