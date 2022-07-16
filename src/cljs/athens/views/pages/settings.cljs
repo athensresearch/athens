@@ -107,14 +107,19 @@
   (fn [label checked update-fn help]
     [:> FormControl {:cursor "pointer"
                      :as "label"
-                     :p 2 :m -2
+                     :p 2
+                     :m -2
                      :borderRadius "md"
                      :_hover {:bg "interaction.surface.hover"}}
-     [:> Flex {:align "center" :gap -3}
-      [:> FormLabel {:mb 0 :flex 1 :as "div" :color "foreground.primary"} label]
+     [:> Flex {:align "center"}
+      [:> FormLabel {:mb 0
+                     :flex 1
+                     :as "div"
+                     :color "foreground.primary"}
+       label]
       [:> Switch {:isChecked checked
                   :onChange update-fn}]]
-     (when help [:> FormHelperText help])]))
+     (when help [:> FormHelperText {:mt 0.5} help])]))
 
 
 (defn setting-wrapper
@@ -220,7 +225,8 @@
       [:> Divider]
       [setting-switch "Time Controls" time-controls #(update-fn :time-controls %) "Enable time-related functions"]
       [:> Divider]
-      [setting-switch "Page cover images" cover-photo #(update-fn :cover-photo %) "Add cover images to pages"]]]
+      [setting-switch "Page cover images" cover-photo #(update-fn :cover-photo %) "Add cover images to pages"]
+      [:> Divider]]]
     [help
      [:<>
       [:p "Optional experimental features that aren't ready for prime time, but that you can still enable to try out."]
