@@ -301,7 +301,7 @@
            :gap "1rem"
            :gridTemplateColumns "12rem 1fr"
            :padding "0.25rem 0.5rem"
-           :sx {"&:nth-child(odd)"
+           :sx {"&:nth-of-type(odd)"
                 {:bg "background.floor"}}}
    [:> Text {:display "flex"
              :justify-content "space-between"}

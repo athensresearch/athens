@@ -154,7 +154,7 @@
                           :page #"(?s).*\[\["
                           :hashtag #"(?s).*#"
                           :template #"(?s).*;;"
-                          :property #"(?s).*::"
+                          :property #"(?s)[^:]*::"
                           :slash #"(?s).*/")
         find            (re-find regex head)
         query-start-idx (count find)
@@ -332,7 +332,7 @@
 
   ([block-uid {:keys [read-value] :as _state-hooks} target expansion]
    (let [{:keys [start head]} (destruct-target target)
-         start-idx (count (re-find #"(?s).*::" head))
+         start-idx (count (re-find #"(?s)[^:]*::" head))
          {:keys [end]} (destruct-target target)
          parent-uid (->> [:block/uid block-uid]
                          (common-db/get-parent @db/dsdb)

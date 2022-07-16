@@ -3,11 +3,12 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Block/Container" :refer [Container]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon]]
+    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
+    [athens.common-events.graph.ops :as graph-ops]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
     [athens.common.utils :as utils]
     [athens.dates :as dates]
@@ -16,6 +17,7 @@
     [athens.patterns :as patterns]
     [athens.reactive :as reactive]
     [athens.router :as router]
+    [athens.time-controls :as time-controls]
     [athens.util :refer [get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
@@ -212,7 +214,7 @@
 
 
 (defn menu-dropdown
-  [node daily-note?]
+  [node daily-note? on-daily-notes?]
   (let [{:block/keys [uid] sidebar
          :page/sidebar title
          :node/title} node]
@@ -246,6 +248,19 @@
                       :isDisabled (contains? @(subscribe [:right-sidebar/items]) uid)
                       :icon (r/as-element [:> ArrowRightOnBoxIcon])}
          "Open in Sidebar"]]
+       (when (and (not on-daily-notes?)
+                  (time-controls/enabled?))
+         [:<>
+          [:> MenuItem {:onClick (fn []
+                                   (dispatch [:time/set-page-range title])
+                                   (dispatch [:time/toggle-slider]))
+                        :icon (r/as-element [:> TimeNowIcon])}
+           "Toggle Time Slider"]
+          [:> MenuItem {:onClick (fn []
+                                   (dispatch [:time/set-page-range title])
+                                   (dispatch [:time/toggle-heatmap]))
+                        :icon (r/as-element [:> TimeNowIcon])}
+           "Toggle Time Heatmap"]])
        [:> MenuDivider]
        [:> MenuItem {:icon (r/as-element [:> TrashIcon])
                      :onClick (fn []
@@ -298,59 +313,52 @@
            {:block-embed? true}]]]))))
 
 
+(defn linked-blocks
+  [header groups start-closed?]
+  (when (not-empty groups)
+    [:> PageReferences {:count (count groups)
+                        :title header
+                        :defaultIsOpen (and (> 10 (count groups))
+                                            (not start-closed?))}
+     (doall
+       (for [[group-title group] groups]
+         [:> ReferenceGroup {:key (str "group-" group-title)
+                             :title group-title
+                             :onClickTitle (fn [e]
+                                             (let [shift?       (.-shiftKey e)
+                                                   parsed-title (parse-renderer/parse-title group-title)]
+                                               (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
+                                                                                    :target :page
+                                                                                    :pane   (if shift?
+                                                                                              :right-pane
+                                                                                              :main-pane)}])
+                                               (router/navigate-page parsed-title e)))}
+          (doall
+            (for [block group]
+              [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
+               [ref-comp block]]))]))]))
+
+
 (defn linked-ref-el
   [title]
   (let [linked-refs (wrap-span-no-new-tx "get-reactive-linked-references"
                                          (reactive/get-reactive-linked-references [:node/title title]))]
-    (when (not-empty linked-refs)
-      [:> PageReferences {:count (count linked-refs)
-                          :title "Linked References"
-                          :defaultIsOpen (> 10 (count linked-refs))}
-       (doall
-         (for [[group-title group] linked-refs]
-           [:> ReferenceGroup {:key (str "group-" group-title)
-                               :title group-title
-                               :onClickTitle (fn [e]
-                                               (let [shift?       (.-shiftKey e)
-                                                     parsed-title (parse-renderer/parse-title group-title)]
-                                                 (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
-                                                                                      :target :page
-                                                                                      :pane   (if shift?
-                                                                                                :right-pane
-                                                                                                :main-pane)}])
-                                                 (router/navigate-page parsed-title e)))}
-            (doall
-              (for [block group]
-                [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
-                 [ref-comp block]]))]))])))
+
+    (linked-blocks "Linked References" linked-refs false)))
 
 
 (defn linked-prop-el
   [title]
   (let [linked-props (wrap-span-no-new-tx "get-reactive-linked-properties"
                                           (reactive/get-reactive-linked-properties [:node/title title]))]
+    (linked-blocks "Linked Properties" linked-props false)))
 
-    (when (not-empty linked-props)
-      [:> PageReferences {:count (count linked-props)
-                          :title "Linked Properties"
-                          :defaultIsOpen (> 10 (count linked-props))}
-       (doall
-         (for [[group-title group] linked-props]
-           [:> ReferenceGroup {:key (str "group-" group-title)
-                               :title group-title
-                               :onClickTitle (fn [e]
-                                               (let [shift?       (.-shiftKey e)
-                                                     parsed-title (parse-renderer/parse-title group-title)]
-                                                 (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
-                                                                                      :target :page
-                                                                                      :pane   (if shift?
-                                                                                                :right-pane
-                                                                                                :main-pane)}])
-                                                 (router/navigate-page parsed-title e)))}
-            (doall
-              (for [block group]
-                [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
-                 [ref-comp block]]))]))])))
+
+(defn edited-on-el
+  [title]
+  (let [edited-blocks (wrap-span-no-new-tx "get-reactive-linked-properties"
+                                           (reactive/get-reactive-edited-on-day-blocks title))]
+    (linked-blocks "Edited on this day" edited-blocks true)))
 
 
 (defn unlinked-ref-el
@@ -423,7 +431,8 @@
   [_]
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
-        block-uid     (r/atom nil)]
+        block-uid     (r/atom nil)
+        feature-flags (rf/subscribe [:feature-flags])]
     (fn [node]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
@@ -434,7 +443,8 @@
             daily-note?                                                         (dates/is-daily-note uid)
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
             is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
-                                                                                    (= @(subscribe [:current-route/page-title]) title))]
+                                                                                    (= @(subscribe [:current-route/page-title]) title))
+            cover-photo-enabled?                                                (:cover-photo @feature-flags)]
 
         (sync-title title state)
 
@@ -446,10 +456,17 @@
                            :onConfirm   confirm-fn
                            :onClose     cancel-fn}]
          ;; Header
-         [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
-                                                  (fn [e] (router/navigate-page title e)))
-                         :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
-                                                 #(dispatch [:right-sidebar/open-item uid]))}
+         [:> PageHeader (merge
+                          {:onClickOpenInMainView  (when-not is-current-route?
+                                                     (fn [e] (router/navigate-page title e)))
+                           :onClickOpenInSidebar   (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                                                     #(dispatch [:right-sidebar/open-item uid]))}
+                          (when cover-photo-enabled?
+                            {:headerImageEnabled     cover-photo-enabled?
+                             :headerImageUrl         (-> properties (get ":header/url") :block/string)
+                             :onChangeHeaderImageUrl (fn [url]
+                                                       (dispatch [:properties/update-in [:node/title title] [":header/url"]
+                                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))}))
 
           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
            ;; Prevent editable textarea if a node/title is a date
@@ -476,9 +493,12 @@
                [parse-renderer/parse-and-render (:title/local @state) uid]])
 
             ;; Dropdown
-            [menu-dropdown node daily-note?]]]]
+            [menu-dropdown node daily-note? on-daily-notes?]]]]
 
          [:> PageBody
+
+          (when-not on-daily-notes?
+            [time-controls/slider title])
 
           (when (and (empty? properties)
                      (empty? children))
@@ -505,6 +525,10 @@
             [linked-ref-el title]]
            [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-prop-el"}
             [linked-prop-el title]]
+           (when (and daily-note?
+                      (not on-daily-notes?))
+             [perf-mon/hoc-perfmon-no-new-tx {:span-name "edited-on-el"}
+              [edited-on-el title]])
            (when-not on-daily-notes?
              [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
               [unlinked-ref-el state unlinked-refs title]])]]]))))
