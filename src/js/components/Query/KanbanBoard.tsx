@@ -12,6 +12,14 @@ export const KanbanCard = (props) => {
 
   const [isEditing, setIsEditing] = React.useState(false);
   const [titleValue, setTitleValue] = React.useState(title);
+  const textareaRef = React.useRef();
+  React.useEffect(() => {
+    if (textareaRef.current) {
+        textareaRef.current.focus()
+        const length = textareaRef.current.value.length
+        textareaRef.current.selectionStart = length
+    }
+  }, [isEditing])
 
   const handleInputChange = (e) => {
      const inputValue = e.target.value
@@ -40,7 +48,7 @@ export const KanbanCard = (props) => {
   >
     <HStack justifyContent="space-between">
         {isEditing
-            ? <Textarea value={titleValue} onChange={handleInputChange}
+            ? <Textarea ref={textareaRef} value={titleValue} onChange={handleInputChange}
                 onBlur={() => {
                     setIsEditing(!isEditing)
                     onUpdateTaskTitle(uid, titleValue)

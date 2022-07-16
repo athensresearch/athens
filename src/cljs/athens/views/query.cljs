@@ -120,7 +120,6 @@
 
 (defn update-task-title
   [id new-title]
-  (prn id new-title)
   (rf/dispatch [:properties/update-in [:block/uid id] [":task/title"]
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-title)])]))
