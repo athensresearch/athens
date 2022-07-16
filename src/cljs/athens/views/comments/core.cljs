@@ -36,7 +36,7 @@
 (rf/reg-sub
   :comment/show-inline-comments?
   (fn [db [_]]
-    (println "sub toggle inline comments" (= true (:comment/show-inline-comments db)))
+    #_(println "sub toggle inline comments" (= true (:comment/show-inline-comments db)))
     (= true (:comment/show-inline-comments db))))
 
 

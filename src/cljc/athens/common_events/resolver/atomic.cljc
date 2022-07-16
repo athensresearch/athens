@@ -91,6 +91,14 @@
                                        [:property :property]
                                        ;; No need to remove previous name, schema ensures
                                        ;; a block has a single name.
+                                       (position/add-property db uid position event-ref)
+
+                                       ;; Couldn't determine the previous position type.
+                                       ;; Maybe it's an orphan block? Anyway, just add it as the new type.
+                                       [nil :child]
+                                       (position/add-child db uid position event-ref)
+
+                                       [nil :property]
                                        (position/add-property db uid position event-ref))]
     (into [updated-block'] position-tx)))
 
