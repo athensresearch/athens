@@ -76,11 +76,11 @@
                          :spacing 0
                          :overflow-y "auto"}
               (doall
-               (for [[key db] inactive-dbs]
-                 [db-list-item {:db db
-                                :is-disabled (= sync-status :synchronising)
-                                :is-current false
-                                :key key}]))
+                (for [[key db] inactive-dbs]
+                  [db-list-item {:db db
+                                 :is-disabled (= sync-status :synchronising)
+                                 :is-current false
+                                 :key key}]))
               (when (= :synchronising sync-status)
                 [:> VStack {:align "center"
                             :background "background.vibrancy"
