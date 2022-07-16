@@ -86,7 +86,7 @@
           [:> VStack (merge
                        (when-not (:hide? @state)
                          {:bg "background.upper"
-                         :mb 4})
+                          :mb 4})
                        {:gridArea "comments"
                         :color "foreground.secondary"
                         :flex "1 0 auto"

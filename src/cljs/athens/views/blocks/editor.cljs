@@ -5,7 +5,6 @@
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/EmojiPicker/EmojiPicker"     :refer [EmojiPickerPopoverContent]]
-    ["/components/Icons/Icons"                 :refer [ChatIcon BlockEmbedIcon TextIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react"                        :refer [VStack PopoverAnchor Popover Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common-db                          :as common-db]
