@@ -55,7 +55,7 @@ export const useContextMenu = ({
    * then open the menu
    * @param e Event
    */
-  const handleOpenMenu = (e: MouseEvent) => {
+  const handleContextMenu = (e: MouseEvent) => {
     if (e.target === ref.current || ref.current.contains(e.target as Node)) {
       e.preventDefault();
       e.stopPropagation();
@@ -81,10 +81,6 @@ export const useContextMenu = ({
       setIsOpen(true);
     }
   };
-
-  const handleCloseMenu = () => {
-    setIsOpen(false);
-  }
 
   /**
    * A wrapper around Chakra's Menu with adjustments
@@ -116,16 +112,13 @@ export const useContextMenu = ({
   };
 
   const menuSourceProps = {
-    onContextMenu: handleOpenMenu
+    onContextMenu: handleContextMenu
   };
 
   return {
     menuSourceProps,
     ContextMenu,
-    isOpen,
-    onOpen: (e) => handleOpenMenu(e),
-    onClose: () => handleCloseMenu(),
-    onToggle: (e) => isOpen ? handleCloseMenu() : handleOpenMenu(e),
+    isOpen
   };
 };
 

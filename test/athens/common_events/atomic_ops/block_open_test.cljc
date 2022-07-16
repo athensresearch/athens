@@ -1,18 +1,18 @@
 (ns athens.common-events.atomic-ops.block-open-test
   (:require
     [athens.common-db                     :as common-db]
-    [athens.common-events                 :as common-events]
-    [athens.common-events.bfs             :as bfs]
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
-    [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common-events.resolver.atomic :as atomic-resolver]
-    [athens.common-events.resolver.undo   :as undo]
-    [clojure.test                         :as t]
-    [datascript.core                      :as d]))
+    [clojure.test                         :as t]))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
+
+
+(defn transact!
+  [uid closed?]
+  (-> (atomic-graph-ops/make-block-open-op uid closed?)
+      fixture/op-resolve-transact!))
 
 
 (t/deftest close-opened-block
@@ -31,10 +31,8 @@
                                                           :block/open     false
                                                           :block/children []}]}]}]]
     (fixture/transact-with-middleware setup-txs)
-    (let [atomic-close (atomic-graph-ops/make-block-open-op block-1-uid false)
-          atomic-txs   (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-close)]
-      (d/transact! @fixture/connection atomic-txs)
-      (t/is (false? (common-db/v-by-ea @@fixture/connection [:block/uid block-1-uid] :block/open))))))
+    (transact! block-1-uid false)
+    (t/is (false? (common-db/v-by-ea @@fixture/connection [:block/uid block-1-uid] :block/open)))))
 
 
 (t/deftest open-closed-block
@@ -53,10 +51,8 @@
                                                           :block/open     false
                                                           :block/children []}]}]}]]
     (fixture/transact-with-middleware setup-txs)
-    (let [atomic-close (atomic-graph-ops/make-block-open-op block-1-uid true)
-          atomic-txs   (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-close)]
-      (d/transact! @fixture/connection atomic-txs)
-      (t/is (true? (common-db/v-by-ea @@fixture/connection [:block/uid block-1-uid] :block/open))))))
+    (transact! block-1-uid true)
+    (t/is (true? (common-db/v-by-ea @@fixture/connection [:block/uid block-1-uid] :block/open)))))
 
 
 (t/deftest open-opened-block
@@ -75,11 +71,8 @@
                                                           :block/open     false
                                                           :block/children []}]}]}]]
     (fixture/transact-with-middleware setup-txs)
-    (let [atomic-close (atomic-graph-ops/make-block-open-op block-1-uid true)
-          atomic-txs   (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-close)]
-      (d/transact! @fixture/connection atomic-txs)
-      (t/is (empty? atomic-txs))
-      (t/is (true? (common-db/v-by-ea @@fixture/connection [:block/uid block-1-uid] :block/open))))))
+    (transact! block-1-uid true)
+    (t/is (true? (common-db/v-by-ea @@fixture/connection [:block/uid block-1-uid] :block/open)))))
 
 
 (t/deftest close-closed-block
@@ -98,11 +91,8 @@
                                                           :block/open     false
                                                           :block/children []}]}]}]]
     (fixture/transact-with-middleware setup-txs)
-    (let [atomic-close (atomic-graph-ops/make-block-open-op block-1-uid false)
-          atomic-txs   (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-close)]
-      (d/transact! @fixture/connection atomic-txs)
-      (t/is (empty? atomic-txs))
-      (t/is (false? (common-db/v-by-ea @@fixture/connection [:block/uid block-1-uid] :block/open))))))
+    (transact! block-1-uid false)
+    (t/is (false? (common-db/v-by-ea @@fixture/connection [:block/uid block-1-uid] :block/open)))))
 
 
 (t/deftest undo
@@ -120,8 +110,7 @@
         get-open #(->> [:block/uid test-uid]
                        (common-db/get-internal-representation @@fixture/connection)
                        :block/open?)
-        save! #(-> (atomic-graph-ops/make-block-open-op test-uid %)
-                   fixture/op-resolve-transact!)]
+        save! (partial transact! test-uid)]
 
 
     (t/testing "undo initializing block to open"

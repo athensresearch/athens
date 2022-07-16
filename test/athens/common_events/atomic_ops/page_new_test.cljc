@@ -4,9 +4,7 @@
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common-events.resolver.atomic :as atomic-resolver]
-    [clojure.test                         :as t]
-    [datascript.core                      :as d]))
+    [clojure.test                         :as t]))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
@@ -16,8 +14,7 @@
   (t/testing "page/new when page didn't exist yet"
     (let [test-title "test page title"
           save!      #(->> (atomic-graph-ops/make-page-new-op test-title)
-                           (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
-                           (d/transact! @fixture/connection))]
+                           fixture/op-resolve-transact!)]
       (t/is (nil? (common-db/get-page-document @@fixture/connection [:node/title test-title])))
       (save!)
       (t/is (common-db/get-page-document @@fixture/connection [:node/title test-title]))))
@@ -26,8 +23,7 @@
     (let [title "October 22, 2021"
           uid   "10-22-2021"]
       (->> (atomic-graph-ops/make-page-new-op title)
-           (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
-           (d/transact! @fixture/connection))
+           fixture/op-resolve-transact!)
       (t/is (= uid (common-db/get-page-uid @@fixture/connection title))))))
 
 

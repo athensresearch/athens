@@ -24,7 +24,6 @@ interface PageReferences {
 export const ReferenceHeader = ({ onClick, title }) => {
   return <Button
     variant="link"
-    aria-role="heading"
     aria-level={4}
     onClick={onClick}
     textAlign="left"
@@ -86,8 +85,7 @@ export const PageReferences = withErrorBoundary(({ children, count, title, defau
       spacing={0}
     >
       <HStack>
-        <Button
-          onClick={onToggle}
+        <Button onClick={onToggle}
           flex="1 1 100%"
           borderRadius="sm"
           isActive={isShowingContent}

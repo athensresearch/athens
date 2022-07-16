@@ -736,10 +736,14 @@
   :resolve-transact-forward
   [(interceptors/sentry-span "resolve-transact-forward")]
   (fn [{:keys [db]} [_ event]]
-    (let [remote? (db-picker/remote-db? db)
-          valid?  (schema/valid-event? event)
-          dsdb    @db/dsdb
-          undo?   (undo-resolver/undo? event)]
+    (let [remote?     (db-picker/remote-db? db)
+          valid?      (schema/valid-event? event)
+          dsdb        @db/dsdb
+          undo?       (undo-resolver/undo? event)
+          presence-id (-> (subscribe [:presence/current-user]) deref :username)
+          event       (if (and remote? presence-id)
+                        (common-events/add-presence event presence-id)
+                        event)]
       (log/debug ":resolve-transact-forward event:" (pr-str event)
                  "remote?" (pr-str remote?)
                  "valid?" (pr-str valid?)
@@ -1427,9 +1431,9 @@
   [source-uid ref-uid relation string]
   (let [db                        @db/dsdb
         block-save-op             (graph-ops/build-block-save-op db source-uid string)
-        location                  (common-db/compat-position db {:block/uid ref-uid
+        position                  (common-db/compat-position db {:block/uid ref-uid
                                                                  :relation relation})
-        block-move-op             (graph-ops/build-block-move-op db source-uid location)
+        block-move-op             (graph-ops/build-block-move-op db source-uid position)
         block-save-block-move-op  (composite-ops/make-consequence-op {:op/type :block-save-block-move}
                                                                      [block-save-op
                                                                       block-move-op])]
