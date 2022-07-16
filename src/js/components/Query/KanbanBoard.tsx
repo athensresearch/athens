@@ -1,5 +1,5 @@
 import React from 'react';
-import { VStack, Grid, HStack, Box, Text, Heading, Button } from '@chakra-ui/react';
+import { VStack, HStack, Grid, Box, Text, Heading, Button } from '@chakra-ui/react';
 import { Reorder } from 'framer-motion';
 
 export const KanbanCard = (props) => {
@@ -62,6 +62,7 @@ export const KanbanColumn = (props) => {
         borderRadius="md"
         bg="background.upper"
         axis="y"
+        width="300px"
         // values={items}
         // onReorder={setItems}
       >
@@ -77,9 +78,11 @@ export const KanbanSwimlane = (props) => {
   return (
     <VStack align="stretch" borderRadius="md" py={2}>
       <Heading color="foreground.secondary" size="md">{name}</Heading>
-      <Grid gap={2} p={0} templateRows="1" templateColumns="repeat(auto-fill, 15rem)" borderRadius="sm">
+      <HStack spacing={5} alignItems="flex-start" overflowX="scroll" maxWidth="80vw">{children}</HStack>
+
+      {/*<Grid gap={2} p={0} templateRows="1" templateColumns="repeat(auto-fill, 15rem)" borderRadius="sm">
         {children}
-      </Grid>
+      </Grid>*/}
     </VStack>
   );
 }
@@ -123,7 +126,7 @@ export const AddCardButton = (props) => {
 
 export const AddColumnButton = (props) => {
   const { children, } = props
-  return <Button size={"sm"} variant={"ghost"} fontWeight={"light"} onClick={() => console.log("TODO: new column")}>
+  return <Button size={"md"} variant={"ghost"} fontWeight={"light"} minWidth={"110"} onClick={() => console.log("TODO: new column")}>
     + New Column
   </Button>
 };
