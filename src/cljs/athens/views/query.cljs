@@ -118,6 +118,27 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
 
+(defn update-kanban-column
+  "Update the property page that is the source of values for a property.
+  Also update all the blocks that are using that property."
+  [property-key property-value new-value]
+  (rf/dispatch [:properties/update-in [:node/title property-key] [":property/values"]
+                (fn [db prop-uid]
+                  (let [{:block/keys [children]} (common-db/get-block-document db [:block/uid prop-uid])
+                        update-uid (->> children
+                                        (map (fn [{:block/keys [string uid]}] [string uid]))
+                                        (filter #(= (first %) property-value))
+                                        (first)
+                                        second)
+                        ;; update all blocks that match key:value to key:new-value
+                        update-ops (->> (common-db/get-instances-of-key-value db property-key property-value)
+                                        (map #(get-in % [property-key :block/uid]))
+                                        (map (fn [uid]
+                                               (graph-ops/build-block-save-op db uid new-value))))]
+
+                    (vec (concat [(graph-ops/build-block-save-op db update-uid new-value)]
+                                 update-ops))))]))
+
 (defn update-task-title
   [id new-title]
   (rf/dispatch [:properties/update-in [:block/uid id] [":task/title"]
@@ -259,6 +280,7 @@
                           :filter               nil
                           :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
                           :onUpdateTaskTitle   update-task-title
+                          :onUpdateKanbanColumn update-kanban-column
                           :onAddNewColumnClick  (fn [])
                           :onAddNewProjectClick (fn [])}])
        (let [sorted-data (sort-table query-data query-sort-by query-sort-direction)]

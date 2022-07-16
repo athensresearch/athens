@@ -10,6 +10,10 @@ export const KanbanCard = (props) => {
   const title = cardData[":task/title"]
   const uid = cardData[":block/uid"]
 
+  const handleInputChange = (e) => {
+     const inputValue = e.target.value
+     setTitleValue(inputValue)
+   }
   const [isEditing, setIsEditing] = React.useState(false);
   const [titleValue, setTitleValue] = React.useState(title);
   const textareaRef = React.useRef();
@@ -20,11 +24,6 @@ export const KanbanCard = (props) => {
         textareaRef.current.selectionStart = length
     }
   }, [isEditing])
-
-  const handleInputChange = (e) => {
-     const inputValue = e.target.value
-     setTitleValue(inputValue)
-   }
 
 
 
@@ -84,8 +83,24 @@ export const KanbanCard = (props) => {
 }
 
 export const KanbanColumn = (props) => {
-  const { name, children } = props;
+  const { name, children, onUpdateKanbanColumn, groupBy } = props;
   // const [items, setItems] = React.useState(["Card 1", "Card 2", "Card 3"]);
+
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [titleValue, setTitleValue] = React.useState(name);
+  const textareaRef = React.useRef();
+  React.useEffect(() => {
+    if (textareaRef.current) {
+        textareaRef.current.focus()
+        const length = textareaRef.current.value.length
+        textareaRef.current.selectionStart = length
+    }
+  }, [isEditing])
+
+  const handleInputChange = (e) => {
+     const inputValue = e.target.value
+     setTitleValue(inputValue)
+   }
 
   return (
     <Box>
@@ -102,7 +117,21 @@ export const KanbanColumn = (props) => {
         // values={items}
         // onReorder={setItems}
       >
-        <Heading color="foreground.secondary" size="sm">{name}</Heading>
+        <HStack justifyContent="space-between">
+            {isEditing
+                ? <Textarea ref={textareaRef} value={titleValue} onChange={handleInputChange}
+                    onBlur={() => {
+                        onUpdateKanbanColumn(groupBy, name, titleValue)
+                        setIsEditing(!isEditing)
+                    }}/>
+                : <Heading color="foreground.secondary" size="sm">{name}</Heading>
+                }
+            <IconButton icon={<EditIcon/>}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    setIsEditing(!isEditing)
+                }} />
+    </HStack>
       {children}
       </VStack>
     </Box>
@@ -175,14 +204,14 @@ export const AddSwimlaneButton = (props) => {
 };
 
 export const QueryKanban = (props) => {
-  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties, onClickCard, groupBy, subgroupBy, onUpdateTaskTitle } = props;
+  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties, onClickCard, groupBy, subgroupBy, onUpdateTaskTitle, onUpdateKanbanColumn } = props;
 
   if (hasSubGroup) {
     return <KanbanBoard name={name}>
       {Object.entries(boardData).map(([swimlane, y]) =>
         <KanbanSwimlane name={swimlane}>
         {columns.map(column =>
-          <KanbanColumn name={column}>
+          <KanbanColumn name={column} onUpdateKanbanColumn={onUpdateKanbanColumn} groupBy={groupBy} >
           {y[column] &&  y[column].map((cardData) =>
             <KanbanCard
                 columns={columns}

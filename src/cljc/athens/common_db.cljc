@@ -421,6 +421,21 @@
       (d/entity eid)
       :block/uid))
 
+(defn get-instances-of-key-value
+  "Find all blocks that have key-value matching where
+  key is a string and value is a string, then find that property block's parent."
+  [db k v]
+  (->> (d/q '[:find [?parent ...]
+              :in $ ?key ?value
+              :where
+              [?eid :block/key ?k]
+              [?k :node/title ?key]
+              [?eid :block/string ?value]
+              [?eid :block/property-of ?parent]]
+            db k v)
+       (mapv #(get-block-property-document db %))))
+
+
 
 (defn get-page-uid
   "Finds page `:block/uid` by `page-title`."
