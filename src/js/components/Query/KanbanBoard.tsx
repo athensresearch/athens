@@ -1,13 +1,24 @@
 import React from 'react';
-import { VStack, HStack, Grid, Box, Text, Heading, Button } from '@chakra-ui/react';
+import { Textarea, VStack, HStack, Grid, Box, Text, Heading, Button, IconButton } from '@chakra-ui/react';
 import { Reorder } from 'framer-motion';
+import { EditIcon } from '@/Icons/Icons';
 
 export const KanbanCard = (props) => {
-  const { id, isSelected, columns, onUpdateStatusClick, cardData, hideProperties, onClickCard } = props;
+  const { isSelected, columns, onUpdateStatusClick, cardData, hideProperties, onClickCard, onUpdateTaskTitle } = props;
   const columnIndex = columns.indexOf(status);
   const columnCount = columns.length;
-
   const title = cardData[":task/title"]
+  const uid = cardData[":block/uid"]
+
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [titleValue, setTitleValue] = React.useState(title);
+
+  const handleInputChange = (e) => {
+     const inputValue = e.target.value
+     setTitleValue(inputValue)
+   }
+
+
 
   return <Box
 //     as={Reorder.Item}
@@ -25,9 +36,23 @@ export const KanbanCard = (props) => {
       border: "1px solid",
       borderColor: "background.floor"
     }}
-    onClick={() => onClickCard(id)}
+    /*onClick={() => onClickCard(id)}*/
   >
-    <Text fontWeight={"bold"}>{title}</Text>
+    <HStack justifyContent="space-between">
+        {isEditing
+            ? <Textarea value={titleValue} onChange={handleInputChange}
+                onBlur={() => {
+                    setIsEditing(!isEditing)
+                    onUpdateTaskTitle(uid, titleValue)
+                }}/>
+            : <Text fontWeight={"bold"}>{title}</Text>
+            }
+        <IconButton icon={<EditIcon/>}
+            onClick={(e) => {
+                e.stopPropagation()
+                setIsEditing(!isEditing)
+            }} />
+    </HStack>
     {Object.entries(cardData).map(([key, val]) =>
         (!hideProperties[key]
             && key != ":task/title"
@@ -142,7 +167,7 @@ export const AddSwimlaneButton = (props) => {
 };
 
 export const QueryKanban = (props) => {
-  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties, onClickCard, groupBy, subgroupBy } = props;
+  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties, onClickCard, groupBy, subgroupBy, onUpdateTaskTitle } = props;
 
   if (hasSubGroup) {
     return <KanbanBoard name={name}>
@@ -157,6 +182,7 @@ export const QueryKanban = (props) => {
                 onUpdateStatusClick={onUpdateStatusClick}
                 hideProperties={hideProperties}
                 onClickCard={onClickCard}
+                onUpdateTaskTitle={onUpdateTaskTitle}
             />
             )}
           <AddCardButton context={{[groupBy]: column, [subgroupBy]: swimlane}} onAddNewCardClick={onAddNewCardClick} />

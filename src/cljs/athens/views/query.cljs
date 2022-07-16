@@ -118,6 +118,13 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
 
+(defn update-task-title
+  [id new-title]
+  (prn id new-title)
+  (rf/dispatch [:properties/update-in [:block/uid id] [":task/title"]
+                (fn [db prop-uid]
+                  [(graph-ops/build-block-save-op db prop-uid new-title)])]))
+
 
 (defn toggle-hidden-property
   "If property is hidden, remove key. Otherwise, add property key."
@@ -252,6 +259,7 @@
                           :subgroupBy           query-subgroup-by
                           :filter               nil
                           :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
+                          :onUpdateTaskTitle   update-task-title
                           :onAddNewColumnClick  (fn [])
                           :onAddNewProjectClick (fn [])}])
        (let [sorted-data (sort-table query-data query-sort-by query-sort-direction)]
