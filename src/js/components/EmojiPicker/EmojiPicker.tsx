@@ -14,6 +14,19 @@ import {
 } from "@chakra-ui/react";
 import { PlusIcon } from '@/Icons/Icons'
 
+// Workaround for https://github.com/nolanlawson/emoji-picker-element/issues/220
+// Without this, the console gets spammed with uncaught errors when editing blocks.
+// I can reproduce it by creating several blocks, then clicking on the dev console, then
+// clicking on a block.
+// This is a bad workaround because it might cause it to ignore other IDB errors, but
+// we don't use IDB anywhere else for now.
+window.addEventListener("unhandledrejection", event => {
+  if (event.reason.message == "Failed to execute 'transaction' on 'IDBDatabase': The database connection is closing.") {
+    event.preventDefault();
+  }
+});
+
+
 interface EmojiPickerProps {
   onEmojiSelected: (event) => void;
 }
@@ -84,6 +97,19 @@ interface EmojiPickerPopoverProps extends EmojiPickerProps {
   buttonLabel?: React.ReactElement;
 }
 
+export const EmojiPickerPopoverContent = ({ onEmojiSelected, onClose }) => {
+  return <Portal>
+    <PopoverContent minWidth="max-content">
+      <PopoverBody p={0} >
+        <EmojiPicker onEmojiSelected={(event) => {
+          onEmojiSelected(event);
+          onClose && onClose();
+        }} />
+      </PopoverBody>
+    </PopoverContent>
+  </Portal>
+}
+
 export const EmojiPickerPopover = ({ onEmojiSelected, buttonLabel = <PlusIcon /> }: EmojiPickerPopoverProps) => {
   const { isOpen, onToggle, onClose } = useDisclosure()
 
@@ -96,15 +122,6 @@ export const EmojiPickerPopover = ({ onEmojiSelected, buttonLabel = <PlusIcon />
     <PopoverTrigger>
       <Button onClick={onToggle}>{buttonLabel}</Button>
     </PopoverTrigger>
-    <Portal>
-      <PopoverContent minWidth="max-content">
-        <PopoverBody p={0} >
-          <EmojiPicker onEmojiSelected={(event) => {
-            onEmojiSelected(event);
-            onClose();
-          }} />
-        </PopoverBody>
-      </PopoverContent>
-    </Portal>
+    <EmojiPickerPopoverContent onEmojiSelected={onEmojiSelected} onClose={onClose} />
   </Popover>
 }

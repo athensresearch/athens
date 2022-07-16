@@ -17,6 +17,7 @@
         f      (case @type
                  :hashtag  textarea-keydown/auto-complete-hashtag
                  :template textarea-keydown/auto-complete-template
+                 :property textarea-keydown/auto-complete-property
                  textarea-keydown/auto-complete-inline)]
     (f uid state-hooks target expansion)))
 
@@ -29,7 +30,7 @@
         inline-search-results (rf/subscribe [::inline-search.subs/results block-uid])
         inline-search-query   (rf/subscribe [::inline-search.subs/query block-uid])]
     (fn [block {:as _state-hooks} _last-event _state]
-      (let [is-open (some #(= % @inline-search-type) [:page :block :hashtag :template])]
+      (let [is-open (some #(= % @inline-search-type) [:page :block :hashtag :template :property])]
         [:> Autocomplete {:event   @last-event
                           :isOpen  is-open
                           :onClose #(rf/dispatch [::inline-search.events/close! block-uid])}
@@ -41,9 +42,9 @@
                        :fontStyle "italics"}
               (str "Search for a " (symbol @inline-search-type))]
              (doall
-               (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list @inline-search-results)]
+               (for [[i {:keys [node/title block/string block/uid text]}] (map-indexed list @inline-search-results)]
                  [:> AutocompleteButton {:key      (str "inline-search-item" uid)
                                          :isActive (= i @inline-search-index)
                                          :onClick  (fn [_] (inline-item-click state-hooks (:block/uid block) (or title uid)))
                                          :id       (str "inline-search-item" uid)}
-                  (or title string)]))))]))))
+                  (or text title string)]))))]))))

@@ -207,7 +207,7 @@
 
 
 (defn feature-flags-comp
-  [{:keys [comments reactions cover-photo]} update-fn]
+  [{:keys [comments reactions cover-photo time-controls]} update-fn]
   [setting-wrapper
    [:<>
     [header
@@ -217,6 +217,8 @@
       [setting-switch "Comments" comments #(update-fn :comments %) "Add comments to blocks"]
       [:> Divider]
       [setting-switch "Reactions" reactions #(update-fn :reactions %) "Add reactions to blocks"]
+      [:> Divider]
+      [setting-switch "Time Controls" time-controls #(update-fn :time-controls %) "Enable time-related functions"]
       [:> Divider]
       [setting-switch "Page cover images" cover-photo #(update-fn :cover-photo %) "Add cover images to pages"]]]
     [help

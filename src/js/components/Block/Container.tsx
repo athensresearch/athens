@@ -1,8 +1,7 @@
 import React from 'react';
-import { Box } from "@chakra-ui/react";
+import { Box, useMergeRefs } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
 import { useContextMenu } from '@/utils/useContextMenu';
-import { Actions } from './Actions';
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
@@ -18,31 +17,30 @@ const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: 
   return (closestBlockContainer?.dataset?.uid === thisBlockUid)
 }
 
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }) => {
-
+const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
   const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
-  const [isUsingActions, setIsUsingActions] = React.useState(false);
 
-  const handleMouseOver = (e) => {
-    setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
-  }
+  const internalRef = React.useRef(null)
+  const refs = useMergeRefs(internalRef, ref)
 
+  const handleMouseOver = (e) => setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
   const handleMouseLeave = () => isHoveredNotChild && setIsHoveredNotChild(false);
-
-  const ref = React.useRef(null);
 
   const {
     menuSourceProps,
     ContextMenu,
     isOpen: isContextMenuOpen
   } = useContextMenu({
-    ref,
+    ref: internalRef,
+    menuProps: {
+      size: "sm"
+    },
     source: "cursor",
   });
 
   return <>
     <Box
-      ref={ref}
+      ref={refs}
       className={[
         "block-container",
         isDragging ? "is-dragging" : "",
@@ -97,13 +95,14 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         },
         ".block-body": {
           display: "grid",
-          gridTemplateColumns: "1em 1em 1fr auto",
-          gridTemplateRows: "0 1fr auto 0",
+          gridTemplateColumns: "1em auto 1em 1fr auto",
+          gridTemplateRows: "0 1fr auto auto 0",
           gridTemplateAreas:
-            `'above  above  above     above     actions'
-             'toggle bullet content   refs      presence '
-             '_      _      reactions reactions reactions'
-             'below  below  below     below     below'`,
+            `'above above above above above above' 
+            'toggle name anchor content refs presence' 
+            '_ _ _ reactions reactions reactions'
+            '_ _ _ comments comments comments'
+            'below below below below below below'`,
           borderRadius: "0.5rem",
           minHeight: '2em',
           position: "relative",
@@ -161,16 +160,11 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       }}
     >
       {children}
-      {(!isEditing && (isHoveredNotChild || isUsingActions)) && (
-        <Actions
-          actions={actions}
-          setIsUsingActions={setIsUsingActions}
-        />)}
     </Box>
     <ContextMenu>
       {menu}
     </ContextMenu>
   </>;
-}
+})
 
 export const Container = withErrorBoundary(_Container, { fallback: <p>{ERROR_MESSAGE}</p> });
