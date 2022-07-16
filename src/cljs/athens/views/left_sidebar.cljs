@@ -1,5 +1,7 @@
 (ns athens.views.left-sidebar
   (:require
+    ["/components/SidebarShortcuts/Item" :refer [Item]]
+    ["/components/SidebarShortcuts/List" :refer [List]]
     ["@chakra-ui/react" :refer [VStack Flex Heading Button Link Flex]]
     ["framer-motion" :refer [AnimatePresence motion]]
     [athens.reactive :as reactive]
@@ -12,69 +14,6 @@
 ;; Components
 
 (def expanded-sidebar-width "clamp(12rem, 25vw, 18rem)")
-
-
-(defn shortcut-component
-  [_]
-  (let [drag (r/atom nil)]
-    (fn [[order title]]
-      [:> Flex {:as "li"
-                :align "stretch"
-                :border "1px solid transparent"
-                :borderTopColor (when (:above @drag) "brand")
-                :borderBottomColor (when (:below @drag) "brand")}
-       [:> Button {:variant "ghost"
-                   :mx "1.25rem"
-                   :size "sm"
-                   :display "inline-block"
-                   :textAlign "left"
-                   :justifyContent "flex-start"
-                   :overflow "hidden"
-                   :fontWeight "normal"
-                   :whiteSpace "nowrap"
-                   :textOverflow "ellipsis"
-                   :flex "1"
-                   :boxShadow "0 0 0 0.25rem transparent"
-                   :_focus {:outline "none"}
-                   :_active {:transitionDuration "0s"}
-                   :on-click (fn [e]
-                               (let [shift? (.-shiftKey e)]
-                                 (rf/dispatch [:reporting/navigation {:source :left-sidebar
-                                                                      :target :page
-                                                                      :pane   (if shift?
-                                                                                :right-pane
-                                                                                :main-pane)}])
-                                 (router/navigate-page title e)))
-                   :draggable     true
-                   :on-drag-over  (fn [e]
-                                    (.. e preventDefault)
-                                    (let [offset       (util/mouse-offset e)
-                                          middle-y     (util/vertical-center (.. e -target))
-                                          ;; find closest li because sometimes event.target is anchor tag
-                                          ;; if nextSibling is null, then target is last li and therefore end of list
-                                          closest-li   (.. e -target (closest "li"))
-                                          next-sibling (.. closest-li -nextElementSibling)
-                                          last-child?  (nil? next-sibling)]
-                                      (cond
-                                        (> middle-y (:y offset))                   (reset! drag :above)
-                                        (and (< middle-y (:y offset)) last-child?) (reset! drag :below))))
-                   :on-drag-start (fn [e]
-                                    (set! (.. e -dataTransfer -dropEffect) "move")
-                                    (.. e -dataTransfer (setData "text/plain" order)))
-                   :on-drag-end   (fn [_])
-                   :on-drag-leave (fn [_] (reset! drag nil))
-                   :on-drop       (fn [e]
-                                    (let [source-order (js/parseInt (.. e -dataTransfer (getData "text/plain")))]
-                                      (prn source-order order)
-                                      (cond
-                                        (= source-order order) nil
-                                        (and (= source-order
-                                                (dec order))
-                                             (= @drag :above)) nil
-                                        (= @drag :below)       (rf/dispatch [:left-sidebar/drop source-order order :after])
-                                        :else                  (rf/dispatch [:left-sidebar/drop source-order order :before])))
-                                    (reset! drag nil))}
-        title]])))
 
 
 (defn left-sidebar
@@ -118,10 +57,19 @@
                       :size "sm"
                       :color "foreground.secondary"}
           "Shortcuts"]
-         (doall
+         [:> List {:items (clj->js shortcuts)
+                   :pl "1.25rem"}
+          (doall
            (for [sh shortcuts]
-             ^{:key (str "left-sidebar-" (second sh))}
-             [shortcut-component sh]))]
+             [:> Item {:item (clj->js sh)
+                       :onClick (fn [e]
+                                  (let [shift? (.-shiftKey e)]
+                                    (rf/dispatch [:reporting/navigation {:source :left-sidebar
+                                                                         :target :page
+                                                                         :pane   (if shift?
+                                                                                   :right-pane
+                                                                                   :main-pane)}])
+                                    (router/navigate-page (second sh) e)))}]))]]
 
         ;; LOGO + BOTTOM BUTTONS
         [:> Flex {:as "footer"
