@@ -33,16 +33,19 @@ export const List = (props) => {
 
   const handleDragEnd = (e) => {
     const { active, over } = e;
-
+    
     setActiveId(null);
+    console.log(1, active, over)
 
     if (active.id !== over.id) {
-      onUpdateItemsOrder((items) => {
-        const oldIndex = items.indexOf(active.id);
-        const newIndex = items.indexOf(over.id);
-
-        return arrayMove(items, oldIndex, newIndex);
-      });
+      console.log(2)
+      const oldIndex = active.id[0]
+      const newIndex = over.id[0]
+      // console.log(3, oldIndex, newIndex, arrayMove(items, oldIndex, newIndex))
+        // const oldIndex = items.indexOf(active.id);
+        // const newIndex = items.indexOf(over.id);
+        // console.log(3, items, oldIndex, newIndex)
+      onUpdateItemsOrder([active.id, over.id, arrayMove]);
     }
   };
 

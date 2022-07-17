@@ -57,7 +57,16 @@
                       :color "foreground.secondary"}
           "Shortcuts"]
          [:> List {:items (clj->js shortcuts)
-                   :pl "1.25rem"}
+                   :pl "1.25rem"
+                   :onUpdateItemsOrder (fn [x]
+                                         (let [[activeId, overId, arrayMove] (js->clj x)
+                                               oldIndex (first activeId)
+                                               newIndex (first overId)]
+                                           (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])
+                                           #_(prn (arrayMove shortcuts oldIndex newIndex))
+                                           
+                                           #_(prn activeId overId oldIndex newIndex)))}
+                                              
           (doall
             (for [sh shortcuts]
               [:> Item {:item (clj->js sh)
@@ -88,3 +97,15 @@
                    :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
                    :target "_blank"}
           (athens.util/athens-version)]]])]))
+
+
+(let [shortcuts '([0 "TODO"] [1 "Welcome"] [2 "Reading List"])
+      activeid [0 "TODO"]
+      overid [2 "Reading List"]]
+  (first
+   (keep-indexed (fn [idx v]
+                   (if (= v overid)
+                     idx))
+                 shortcuts)))
+  
+  
