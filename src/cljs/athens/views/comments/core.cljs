@@ -4,7 +4,7 @@
             [athens.common-db :as common-db]
             [athens.common.utils :as common.utils]
             [athens.common-events.graph.composite :as composite]
-            [athens.views.notifications.core :as notification :refer [get-subscriber-data new-notification]]
+            [athens.views.notifications.core  :refer [get-subscriber-data new-notification]]
             [athens.common-events.graph.ops :as graph-ops]
             [athens.common-events.bfs :as bfs]
             [athens.common-events :as common-events]))
@@ -153,6 +153,33 @@
        (filter #(not= (:block/string %) (str "@" author)))
        (map #(:block/string %))))
 
+(defn create-notification-op-for-users
+  ;; Find all the subscribed members to the thread
+  ;; Find the uid of the inbox for these notifications for all the subscribers
+  ;; Create a notification for all the subscribers, apart from the subscriber who wrote the comment.
+  [db parent-block-uid users author notification-message]
+  (let [subscriber-data (map
+                          #(get-subscriber-data db %)
+                          users)
+        notifications    (into [] (map
+                                    #(let [{:keys [inbox-uid username userpage-inbox-op]}  %
+                                           author                                          (str "@" author)]
+                                       (when (not= username author)
+                                         (composite/make-consequence-op {:op/type :userpage-notification-op}
+                                                                        (concat userpage-inbox-op
+                                                                                [(new-notification db
+                                                                                                   inbox-uid
+                                                                                                   :first
+                                                                                                   "comment-notification"
+                                                                                                   notification-message
+                                                                                                   "unread"
+                                                                                                   parent-block-uid)]))))
+
+                                    subscriber-data))
+        ops              notifications]
+    ops))
+
+
 (defn create-notification-op-for-comment
   ;; Find all the subscribed members to the thread
   ;; Find the uid of the inbox for these notifications for all the subscribers
@@ -160,26 +187,24 @@
   [db parent-block-uid thread-uid author notification-message]
   (let [subscribers (get-subscribers-for-notifying db thread-uid author)]
     (when subscribers
-      (let [subscriber-data (map
-                              #(get-subscriber-data db %)
-                              subscribers)
-            notifications    (into [] (map
-                                        #(let [{:keys [inbox-uid username userpage-inbox-op]}  %
-                                               author                                          (str "@" author)]
-                                           (when (not= username author)
-                                             (composite/make-consequence-op {:op/type :userpage-notification-op}
-                                                                            (concat userpage-inbox-op
-                                                                                    [(new-notification db
-                                                                                                        inbox-uid
-                                                                                                        :first
-                                                                                                        "comment-notification"
-                                                                                                        notification-message
-                                                                                                        "unread"
-                                                                                                        parent-block-uid)]))))
+      (create-notification-op-for-users db parent-block-uid subscribers author notification-message))))
 
-                                        subscriber-data))
-            ops              notifications]
-        ops))))
+
+(def athens-users
+  ["@Stuart" "@Alex" "@Jeff" "@Filipe" "@Sid"])
+
+(defn get-all-mentions
+  [block-string]
+  (filter
+    #(when (clojure.string/includes? block-string %)
+       %)
+    athens-users))
+
+(defn create-mention-notifications
+  [db block-uid mentioned-users author block-string]
+  (let [notification-message  (str  "A new mention bitch: " block-string)
+        notification-ops      (create-notification-op-for-users db block-uid mentioned-users author notification-message)]
+    notification-ops))
 
 
 (rf/reg-event-fx

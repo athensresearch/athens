@@ -35,7 +35,8 @@
     [goog.dom                             :refer [getElement]]
     [malli.core                           :as m]
     [malli.error                          :as me]
-    [re-frame.core                        :as rf :refer [reg-event-db reg-event-fx subscribe]]))
+    [re-frame.core                        :as rf :refer [reg-event-db reg-event-fx subscribe]]
+    [athens.views.comments.core :as comments]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -1084,6 +1085,15 @@
             [:dispatch [:reporting/block.create {:source :enter-new-block
                                                  :count  1}]]]})))
 
+(reg-event-fx
+  :check-for-mentions
+  (fn [_ [_ uid string]]
+    (let [mentions    (comments/get-all-mentions string)
+          username    (rf/subscribe [:username])
+          mention-op  (when (not-empty mentions)
+                        (comments/create-mention-notifications @db/dsdb uid mentions @username string))
+          event       (common-events/build-atomic-event (first mention-op))]
+     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 (reg-event-fx
   :block/save
@@ -1103,7 +1113,8 @@
       (log/debug ":block/save local?" local?
                  ", do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
+        {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]
+                                    [:check-for-mentions uid string]]
                              (seq new-titles)
                              (conj [:reporting/page.create {:source (or source :unknown-block-save)
                                                             :count  (count new-titles)}])
@@ -1243,7 +1254,8 @@
           event      (common-events/build-atomic-event op)]
       {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])
             [:dispatch-n (cond-> [[:reporting/block.create {:source :enter-split
-                                                            :count  1}]]
+                                                            :count  1}]
+                                  [:check-for-mentions uid value]]
                            (seq new-titles)
                            (conj [:reporting/page.create {:source :enter-split
                                                           :count  (count new-titles)}])
