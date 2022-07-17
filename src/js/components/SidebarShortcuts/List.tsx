@@ -22,28 +22,23 @@ const activationConstraint = {
   distance: 15,
 }
 
-export const List = (props) => {
-  const { items, onUpdateItemsOrder, ...rest } = props;
 
+export const List = (props) => {
+  const {
+    items: outerItems,
+    children,
+    onUpdateItemsOrder,
+    onOpenItem,
+    ...rest
+  } = props;
+
+  // Maintain an internal list of items for proper animation
+  const [items, setItems] = React.useState(outerItems);
   const [activeId, setActiveId] = React.useState(null);
 
-  const handleDragStart = (e) => {
-    setActiveId(e.active.id);
-  };
-
-  const handleDragEnd = (e) => {
-    const { active, over } = e;
-    
-    setActiveId(null);
-    console.log(1, active, over)
-
-    if (active.id !== over.id) {
-      console.log(2)
-      const oldIndex = active.id[0]
-      const newIndex = over.id[0]
-      onUpdateItemsOrder([active.id, over.id, arrayMove]);
-    }
-  };
+  React.useEffect(() => {
+    setItems(outerItems)
+  }, [outerItems])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint }),
@@ -51,6 +46,24 @@ export const List = (props) => {
       coordinateGetter: sortableKeyboardCoordinates
     })
   );
+
+  const handleDragStart = (e) => {
+    setActiveId(e.active.id);
+  };
+
+  const handleDragEnd = (e) => {
+    const { active, over } = e;
+    setActiveId(null);
+
+    if (active.id !== over.id) {
+      setItems((items) => {
+        const oldIndex = items.indexOf(active.id);
+        const newIndex = items.indexOf(over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+      onUpdateItemsOrder([active.id, over.id, arrayMove]);
+    }
+  };
 
   return (
     <DndContext
@@ -61,15 +74,17 @@ export const List = (props) => {
     >
       <VStack align="stretch" {...rest}>
         <SortableContext strategy={verticalListSortingStrategy} items={items}>
-          {items.map((item) => (
-            <Item key={item} id={item} />
-          ))}
+          {items.map(item => <Item
+            onClick={(e) => onOpenItem(e, item)}
+            key={item}
+            id={item} />)}
         </SortableContext>
       </VStack>
 
-      <Portal><DragOverlay>
-        {activeId ? <ItemDragOverlay key={activeId} id={activeId} /> : null}
-      </DragOverlay>
+      <Portal>
+        <DragOverlay>
+          {activeId ? <ItemDragOverlay key={activeId} id={activeId} /> : null}
+        </DragOverlay>
       </Portal>
     </DndContext>
   );

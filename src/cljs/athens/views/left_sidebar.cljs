@@ -58,24 +58,21 @@
           "Shortcuts"]
          [:> List {:items (clj->js shortcuts)
                    :pl "1.25rem"
+                   :onOpenItem (fn [e sh]
+                                 (let [shift? (.-shiftKey e)]
+                                   (rf/dispatch [:reporting/navigation {:source :left-sidebar
+                                                                        :target :page
+                                                                        :pane   (if shift?
+                                                                                  :right-pane
+                                                                                  :main-pane)}])
+                                   (router/navigate-page (second sh) e)))
                    :onUpdateItemsOrder (fn [x]
-                                         (let [[activeId, overId, arrayMove] (js->clj x)
+                                         (let [[activeId, overId] (js->clj x)
                                                oldIndex (first activeId)
                                                newIndex (first overId)]
                                            (cond
                                              (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
-                                             (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before]))))}   
-          (doall
-            (for [sh shortcuts]
-              [:> Item {:item (clj->js sh)
-                        :onClick (fn [e]
-                                   (let [shift? (.-shiftKey e)]
-                                     (rf/dispatch [:reporting/navigation {:source :left-sidebar
-                                                                          :target :page
-                                                                          :pane   (if shift?
-                                                                                    :right-pane
-                                                                                    :main-pane)}])
-                                     (router/navigate-page (second sh) e)))}]))]]
+                                             (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before]))))}]]
 
         ;; LOGO + BOTTOM BUTTONS
         [:> Flex {:as "footer"
