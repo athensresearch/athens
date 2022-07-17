@@ -145,7 +145,7 @@ export const KanbanSwimlane = (props) => {
   return (
     <VStack align="stretch" borderRadius="md" py={2}>
       <Heading color="foreground.secondary" size="md">{name}</Heading>
-      <HStack spacing={5} alignItems="flex-start" overflowX="scroll" maxWidth="80vw">{children}</HStack>
+      <HStack spacing={5} alignItems="flex-start" overflowX="auto" maxWidth="80vw">{children}</HStack>
 
       {/*<Grid gap={2} p={0} templateRows="1" templateColumns="repeat(auto-fill, 15rem)" borderRadius="sm">
         {children}
