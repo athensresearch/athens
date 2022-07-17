@@ -1,6 +1,5 @@
 (ns athens.views.left-sidebar
   (:require
-    ["/components/SidebarShortcuts/Item" :refer [Item]]
     ["/components/SidebarShortcuts/List" :refer [List]]
     ["@chakra-ui/react" :refer [VStack Flex Heading Link Flex]]
     ["framer-motion" :refer [AnimatePresence motion]]
