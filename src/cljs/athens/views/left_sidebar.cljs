@@ -62,9 +62,10 @@
                                          (let [[activeId, overId, arrayMove] (js->clj x)
                                                oldIndex (first activeId)
                                                newIndex (first overId)]
-                                           (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])
+                                           (cond
+                                             (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
+                                             (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before]))
                                            #_(prn (arrayMove shortcuts oldIndex newIndex))
-                                           
                                            #_(prn activeId overId oldIndex newIndex)))}
                                               
           (doall
