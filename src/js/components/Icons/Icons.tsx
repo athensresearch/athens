@@ -16,6 +16,30 @@ export const ArrowAngleUpLeftIcon = createIcon({
   ),
 });
 
+export const BulletIcon = createIcon({
+  displayName: 'BulletIcon',
+  viewBox: '0 0 24 24',
+  path: (
+    <path fill="currentColor" d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+  ),
+});
+
+export const ColonIcon = createIcon({
+  displayName: 'ColonIcon',
+  viewBox: '0 0 24 24',
+  path: (
+    <path fill="currentColor" fillRule="evenodd" d="M14.5 7a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Zm0 10a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z" clipRule="evenodd" />
+  ),
+});
+
+export const DashIcon = createIcon({
+  displayName: 'DashIcon',
+  viewBox: '0 0 24 24',
+  path: (
+    <rect fill="currentColor" width="12" height="3.5" x="6" y="10.25" rx="1.75" />
+  ),
+});
+
 export const ArrowLeftIcon = createIcon({
   displayName: 'ArrowLeftIcon',
   viewBox: '0 0 24 24',
