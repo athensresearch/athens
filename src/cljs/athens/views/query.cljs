@@ -118,6 +118,14 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
 
+(defn update-properties
+  [db key value new-value]
+  (->> (common-db/get-instances-of-key-value db key value)
+       (map #(get-in % [key :block/uid]))
+       (map (fn [uid]
+              (graph-ops/build-block-save-op db uid new-value)))))
+
+
 (defn update-kanban-column
   "Update the property page that is the source of values for a property.
   Also update all the blocks that are using that property."
@@ -131,10 +139,7 @@
                                         (first)
                                         second)
                         ;; update all blocks that match key:value to key:new-value
-                        update-ops (->> (common-db/get-instances-of-key-value db property-key property-value)
-                                        (map #(get-in % [property-key :block/uid]))
-                                        (map (fn [uid]
-                                               (graph-ops/build-block-save-op db uid new-value))))]
+                        update-ops (update-properties db property-key property-value new-value)]
 
                     (vec (concat [(graph-ops/build-block-save-op db update-uid new-value)]
                                  update-ops))))]))
