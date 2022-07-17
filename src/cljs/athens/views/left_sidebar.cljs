@@ -64,10 +64,7 @@
                                                newIndex (first overId)]
                                            (cond
                                              (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
-                                             (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before]))
-                                           #_(prn (arrayMove shortcuts oldIndex newIndex))
-                                           #_(prn activeId overId oldIndex newIndex)))}
-                                              
+                                             (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before]))))}   
           (doall
             (for [sh shortcuts]
               [:> Item {:item (clj->js sh)
@@ -98,15 +95,3 @@
                    :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
                    :target "_blank"}
           (athens.util/athens-version)]]])]))
-
-
-(let [shortcuts '([0 "TODO"] [1 "Welcome"] [2 "Reading List"])
-      activeid [0 "TODO"]
-      overid [2 "Reading List"]]
-  (first
-   (keep-indexed (fn [idx v]
-                   (if (= v overid)
-                     idx))
-                 shortcuts)))
-  
-  
