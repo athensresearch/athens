@@ -190,8 +190,8 @@ export const AddCardButton = (props) => {
 };
 
 export const AddColumnButton = (props) => {
-  const { children, } = props
-  return <Button size={"md"} variant={"ghost"} fontWeight={"light"} minWidth={"110"} onClick={() => console.log("TODO: new column")}>
+  const { children, onAddNewColumn } = props
+  return <Button size={"md"} variant={"ghost"} fontWeight={"light"} minWidth={"110"} onClick={onAddNewColumn}>
     + New Column
   </Button>
 };
@@ -204,7 +204,7 @@ export const AddSwimlaneButton = (props) => {
 };
 
 export const QueryKanban = (props) => {
-  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties, onClickCard, groupBy, subgroupBy, onUpdateTaskTitle, onUpdateKanbanColumn } = props;
+  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties, onClickCard, groupBy, subgroupBy, onUpdateTaskTitle, onAddNewColumn, onUpdateKanbanColumn } = props;
 
   if (hasSubGroup) {
     return <KanbanBoard name={name}>
@@ -225,7 +225,7 @@ export const QueryKanban = (props) => {
           <AddCardButton context={{[groupBy]: column, [subgroupBy]: swimlane}} onAddNewCardClick={onAddNewCardClick} />
           </KanbanColumn>
           )}
-        <AddColumnButton />
+        <AddColumnButton onAddNewColumn={onAddNewColumn} />
         </KanbanSwimlane>
         )}
     {/* <AddSwimlaneButton/> */}

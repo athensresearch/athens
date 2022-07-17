@@ -78,6 +78,13 @@
 
               flatten)))
 
+(defn new-kanban-column
+  "This creates a new block/child at the property/values key, but the kanban board doesn't trigger a re-render because it isn't aware of property/values yet."
+  [group-by-id]
+  (rf/dispatch [:properties/update-in [:node/title group-by-id] [":property/values"]
+                 (fn [db prop-uid]
+                   [(graph-ops/build-block-new-op db (athens.common.utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
+
 
 (defn new-card
   "new-card needs to know the context of where it was pressed. For example, pressing it in a given column and swimlane
@@ -284,9 +291,9 @@
                           :subgroupBy           query-subgroup-by
                           :filter               nil
                           :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
-                          :onUpdateTaskTitle   update-task-title
+                          :onUpdateTaskTitle    update-task-title
                           :onUpdateKanbanColumn update-kanban-column
-                          :onAddNewColumnClick  (fn [])
+                          :onAddNewColumn  #(new-kanban-column query-group-by)
                           :onAddNewProjectClick (fn [])}])
        (let [sorted-data (sort-table query-data query-sort-by query-sort-direction)]
          [:> QueryTable {:data           sorted-data
