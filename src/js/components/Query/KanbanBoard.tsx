@@ -5,10 +5,12 @@ import { EditIcon } from '@/Icons/Icons';
 
 export const KanbanCard = (props) => {
   const { isSelected, columns, onUpdateStatusClick, cardData, hideProperties, onClickCard, onUpdateTaskTitle } = props;
+  const title = cardData[":task/title"]
+  const status = cardData[":task/status"]
+  const uid = cardData[":block/uid"]
+
   const columnIndex = columns.indexOf(status);
   const columnCount = columns.length;
-  const title = cardData[":task/title"]
-  const uid = cardData[":block/uid"]
 
   const handleInputChange = (e) => {
      const inputValue = e.target.value
@@ -70,13 +72,13 @@ export const KanbanCard = (props) => {
     )}
   {(columnIndex > 0) &&
     <Button value="left" onClick={(e) => {
-      onUpdateStatusClick(id, columns[columnIndex-1])
+      onUpdateStatusClick(uid, columns[columnIndex-1])
       e.stopPropagation()
     }}>←</Button>}
   {(columnIndex < (columnCount - 1)) &&
     <Button value="right" onClick={(e) => {
       e.stopPropagation()
-      onUpdateStatusClick(id, columns[columnIndex+1])
+      onUpdateStatusClick(uid, columns[columnIndex+1])
     }
     }>→</Button>}
   </Box>;
