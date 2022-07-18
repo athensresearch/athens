@@ -65,13 +65,10 @@
                                                                                   :right-pane
                                                                                   :main-pane)}])
                                    (router/navigate-page (second sh) e)))
-                   :onUpdateItemsOrder (fn [x]
-                                         (let [[activeId, overId] (js->clj x)
-                                               oldIndex (first activeId)
-                                               newIndex (first overId)]
-                                           (cond
-                                             (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
-                                             (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before]))))}]]
+                   :onUpdateItemsOrder (fn [oldIndex newIndex]
+                                         (cond
+                                            (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
+                                            (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])))}]]
 
         ;; LOGO + BOTTOM BUTTONS
         [:> Flex {:as "footer"

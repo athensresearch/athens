@@ -59,9 +59,9 @@ export const List = (props) => {
       setItems((items) => {
         const oldIndex = items.indexOf(active.id);
         const newIndex = items.indexOf(over.id);
+        onUpdateItemsOrder(oldIndex, newIndex);
         return arrayMove(items, oldIndex, newIndex);
       });
-      onUpdateItemsOrder([active.id, over.id, arrayMove]);
     }
   };
 
