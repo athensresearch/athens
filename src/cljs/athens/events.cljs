@@ -1599,6 +1599,8 @@
   (fn [_ [_ {:keys [source-uid target-uid target-rel local-string] :as args}]]
     (log/debug ":block/move args" (pr-str args))
     (let [sentry-tx (close-and-get-sentry-tx "block/move")
+          local-string (or local-string
+                           (:block/string (common-db/get-block-document @db/dsdb [:block/uid source-uid])))
           event     (-> (block-save-block-move-composite-op source-uid target-uid target-rel local-string)
                         common-events/build-atomic-event)]
       {:fx [(transact-async-flow :block-move event sentry-tx [(focus-on-uid source-uid nil)])]})))
@@ -1618,8 +1620,7 @@
                                                                                                   (str "((" source-uid "))"))]))]
       {:fx [[:dispatch-n [[:resolve-transact-forward atomic-event]
                           [:reporting/block.create {:source :bullet-drop
-                                                    :count  1}] ; TODO :reporting/block.link
-                          ]]]})))
+                                                    :count  1}]]]]}))) ; TODO :reporting/block.link
 
 
 (reg-event-fx
