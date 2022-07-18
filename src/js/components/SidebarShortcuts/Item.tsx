@@ -5,7 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 export const Item = (props) => {
   const { id, children, ...rest } = props;
 
-  const name = id[1];
+  const [_order, name] = id;
 
   const {
     attributes,

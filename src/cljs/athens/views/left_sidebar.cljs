@@ -57,14 +57,14 @@
           "Shortcuts"]
          [:> List {:items (clj->js shortcuts)
                    :pl "1.25rem"
-                   :onOpenItem (fn [e sh]
+                   :onOpenItem (fn [e [_order page]]
                                  (let [shift? (.-shiftKey e)]
                                    (rf/dispatch [:reporting/navigation {:source :left-sidebar
                                                                         :target :page
                                                                         :pane   (if shift?
                                                                                   :right-pane
                                                                                   :main-pane)}])
-                                   (router/navigate-page (second sh) e)))
+                                   (router/navigate-page page e)))
                    :onUpdateItemsOrder (fn [oldIndex newIndex]
                                          (cond
                                            (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
