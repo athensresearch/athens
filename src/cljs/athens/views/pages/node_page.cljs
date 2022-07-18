@@ -425,7 +425,9 @@
 #_(defn query-el
     [title]
     (let [instances (wrap-span-no-new-tx "query-el"
-                                            (reactive/get-reactive-instances-of-key-value "type" title))]
+                                            (reactive/get-reactive-instances-of-key-value ":entity/type"
+                                                                                          (str "[[" title "]]")
+                                                                                          #_title))]
       (when (pos? (count instances))
         [query/query {:query-data instances}])))
 

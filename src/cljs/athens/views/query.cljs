@@ -18,6 +18,7 @@
    [athens.common-db          :as common-db]
    [athens.common-events.graph.ops            :as graph-ops]
    [athens.dates              :as dates]
+   [athens.reactive :as reactive]
    [athens.router             :as router]
    [clojure.string            :refer [lower-case]]
    [re-frame.core             :as rf]
@@ -190,16 +191,16 @@
                       [(graph-ops/build-block-save-op db prop-uid new-sort-by)])]))))
 
 
-(defn get-prop-node-title
-  "Could either be 1-arity (just block/string) or multi-arity (multiple children).
+#_(defn get-prop-node-title
+   "Could either be 1-arity (just block/string) or multi-arity (multiple children).
 
    XXX: to make multi-arity, look at block/children of \"query/types\"
    TODO: what happens if a user enters in multiple refs in a block/string? Should have some sort of schema enforcement, such as 1 ref per block to avoid confusion
    not using :block/string, because i want the node/title without having to do some reg-ex"
-  [prop]
-  (->> (get-in prop [#_"query/types" :block/refs 0 :db/id])
-       (datascript.core/entity @athens.db/dsdb)
-       :node/title))
+   [prop]
+   (->> (get-in prop [#_"query/types" :block/refs 0 :db/id])
+        (datascript.core/entity @athens.db/dsdb)
+        :node/title))
 
 (defn order-children
   [children]
@@ -211,7 +212,6 @@
   (->> properties
        (map (fn [[k {:block/keys [children string] nested-properties :block/properties :as v}]]
               [k (cond
-                   (= "query/types" k) (get-prop-node-title v)
                    (and (seq children) (not (clojure.string/blank? string))) {:key string :values (order-children children)}
                    (seq children) (order-children children)
                    nested-properties  (zipmap (keys nested-properties) (repeat true))
@@ -255,7 +255,7 @@
 
 (defn get-prop-values
   [db eid]
-  (let [property-page (common-db/get-block-document db eid)]
+  (let [property-page (reactive/get-reactive-block-document eid)]
     (->> (get-in property-page [:block/properties ":property/values"])
          :block/children
          (sort-by :block/order)
@@ -281,20 +281,20 @@
                                  (group-by query-group-by query-data))]
          [:> QueryKanban {:boardData            boardData
                           ;; store column order here
-                          :columns              columns
-                          :hasSubGroup          (boolean query-subgroup-by)
-                          :rows                 rows
-                          :onUpdateStatusClick  update-status
-                          :hideProperties       query-properties-hide
-                          :onAddNewCardClick    new-card
-                          :groupBy              query-group-by
-                          :subgroupBy           query-subgroup-by
-                          :filter               nil
-                          :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
-                          :onUpdateTaskTitle    update-task-title
-                          :onUpdateKanbanColumn update-kanban-column
-                          :onAddNewColumn  #(new-kanban-column query-group-by)
-                          :onAddNewProjectClick (fn [])}])
+                            :columns              columns
+                            :hasSubGroup          (boolean query-subgroup-by)
+                            :rows                 rows
+                            :onUpdateStatusClick  update-status
+                            :hideProperties       query-properties-hide
+                            :onAddNewCardClick    new-card
+                            :groupBy              query-group-by
+                            :subgroupBy           query-subgroup-by
+                            :filter               nil
+                            :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
+                            :onUpdateTaskTitle    update-task-title
+                            :onUpdateKanbanColumn update-kanban-column
+                            :onAddNewColumn  #(new-kanban-column query-group-by)
+                            :onAddNewProjectClick (fn [])}])
        (let [sorted-data (sort-table query-data query-sort-by query-sort-direction)]
          [:> QueryTable {:data           sorted-data
                          :columns        query-properties-order
@@ -316,7 +316,7 @@
         query-types (get parsed-properties "query/types")
         query-group-by (get properties "query/group-by")
         query-subgroup-by (get properties "query/subgroup-by")
-        query-data (->> (athens.reactive/get-reactive-instances-of-key-value ":block/type" query-types)
+        query-data (->> (reactive/get-reactive-instances-of-key-value ":block/type" query-types)
                         (map block-to-flat-map))]
 
     (cond

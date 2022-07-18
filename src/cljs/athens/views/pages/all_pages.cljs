@@ -10,7 +10,6 @@
                                 Radio RadioGroup
                                 SimpleGrid
                                 Checkbox CheckboxGroup]]
-    ["react-twitter-embed" :refer [TwitterTweetEmbed]]
     [athens.common-db          :as common-db]
     [athens.common-events.graph.ops            :as graph-ops]
     [athens.dates              :as dates]
