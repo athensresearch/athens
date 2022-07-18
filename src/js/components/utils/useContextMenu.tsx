@@ -65,6 +65,8 @@ export const useContextMenu = ({
           position: "fixed",
           left: e.pageX,
           top: e.pageY,
+          width: 0,
+          height: 0,
         };
       } else {
         const box = ref.current.getBoundingClientRect();
