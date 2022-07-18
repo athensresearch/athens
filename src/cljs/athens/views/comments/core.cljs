@@ -179,17 +179,6 @@
     ops))
 
 
-(defn create-notification-op-for-comment
-  ;; Find all the subscribed members to the thread
-  ;; Find the uid of the inbox for these notifications for all the subscribers
-  ;; Create a notification for all the subscribers, apart from the subscriber who wrote the comment.
-  [db parent-block-uid thread-uid author comment-string notification-message]
-  (let [subscribers (when (not-empty (get-all-mentions comment-string))
-                      (concat (get-subscribers-for-notifying db thread-uid author)
-                              (get-all-mentions comment-string)))]
-    (when subscribers
-      (create-notification-op-for-users db parent-block-uid subscribers author notification-message))))
-
 
 (def athens-users
   ["@Stuart" "@Alex" "@Jeff" "@Filipe" "@Sid"])
@@ -203,7 +192,7 @@
 
 (defn create-mention-notifications
   [db block-uid mentioned-users author block-string]
-  (let [notification-message  (str  "A new mention bitch: " block-string)
+  (let [notification-message  (str "**[[@" author "]] mentioned you: **" "*"  block-string "*")
         notification-ops      (create-notification-op-for-users db block-uid mentioned-users author notification-message)]
     notification-ops))
 
@@ -212,6 +201,19 @@
   (mapcat
     #(add-user-as-member-or-subscriber? db thread-uid %)
     (get-all-mentions comment-string)))
+
+
+(defn create-notification-op-for-comment
+  ;; Find all the subscribed members to the thread
+  ;; Find the uid of the inbox for these notifications for all the subscribers
+  ;; Create a notification for all the subscribers, apart from the subscriber who wrote the comment.
+  [db parent-block-uid thread-uid author comment-string notification-message]
+  (let [subscribers (if (empty? (get-all-mentions comment-string))
+                      (get-subscribers-for-notifying db thread-uid author)
+                      (concat (get-subscribers-for-notifying db thread-uid author)
+                              (get-all-mentions comment-string)))]
+    (when subscribers
+      (create-notification-op-for-users db parent-block-uid subscribers author notification-message))))
 
 
 (rf/reg-event-fx
@@ -230,7 +232,8 @@
 
           add-as-mem-or-subs        (when thread-exists?
                                       (add-user-as-member-or-subscriber? @db/dsdb thread-uid (str "@" author)))
-          notification-message      (str  "New notification: " comment-string)
+          notification-message      (str "**((" uid "))**" "\n"
+                                         "*[[@" author "]] commented: "  comment-string "*")
           notification-op           (create-notification-op-for-comment @db/dsdb uid thread-uid author comment-string notification-message)
           comment-notif-op          (composite/make-consequence-op {:op/type :comment-notif-op}
                                                                    (concat add-as-mem-or-subs notification-op active-comment-ops))

@@ -1092,8 +1092,10 @@
           username    (rf/subscribe [:username])
           mention-op  (when (not-empty mentions)
                         (comments/create-mention-notifications @db/dsdb uid mentions @username string))
-          event       (common-events/build-atomic-event (first mention-op))]
-     {:fx [[:dispatch [:resolve-transact-forward event]]]})))
+          event       (common-events/build-atomic-event  (composite-ops/make-consequence-op {:op/type :mention-notifications}
+                                                                                            mention-op))]
+      (when mention-op
+        {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
 
 (reg-event-fx
   :block/save
