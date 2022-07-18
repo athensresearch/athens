@@ -57,12 +57,12 @@
 
 
 (defn create-comments-inbox
-  [db username]
+  [db userpage]
   (let [inbox-uid    (common.utils/gen-block-uid)
         block-new-op (graph-ops/build-block-new-op db
                                                    inbox-uid
                                                    {:relation   :first
-                                                    :page/title username})
+                                                    :page/title userpage})
         block-save-op (graph-ops/build-block-save-op db inbox-uid "Comments inbox")
         new-save-op   [block-new-op
                        block-save-op]]
@@ -70,10 +70,10 @@
 
 
 (defn create-userpage
-  [db username]
-  (let [new-page-op        [(graph-ops/build-page-new-op db username)]
+  [db userpage-name]
+  (let [new-page-op        [(graph-ops/build-page-new-op db userpage-name)]
         [comments-inbox-op
-         inbox-uid]        (create-comments-inbox db username)
+         inbox-uid]        (create-comments-inbox db userpage-name)
         userpage-inbox-op  (concat new-page-op
                                    comments-inbox-op)]
     [userpage-inbox-op inbox-uid]))
@@ -84,28 +84,28 @@
 
 
 (defn get-subscriber-data
-  ;; Someone can subscribe to a thread without having the userpage, inbox or both.
-  ;; So in that case we need to create these depending on the situation.
   ;; Returns a list of all the subscriber maps
   ;; {:inbox-uid "some-uid"
   ;;  :name      "subscriber-name"}
-  [db username]
-  (let [user-exists?         (common-db/get-page-uid db username)
+  ;; Someone can subscribe to a thread without having the userpage, inbox or both.
+  ;; So in that case we need to create these depending on the situation.
+  [db userpage]
+  (let [user-exists?         (common-db/get-page-uid db userpage)
         [new-userpage-op
          comments-inbox-uid] (when (not user-exists?)
-                               (create-userpage db username))
+                               (create-userpage db userpage))
         ;; inbox-uid being nil means user page exists but inbox does not
-        inbox-uid            (or (get-inbox-uid-for-user db username)
+        inbox-uid            (or (get-inbox-uid-for-user db userpage)
                                  comments-inbox-uid)
         [new-inbox-op
          inbox-uid]          (if (not inbox-uid)
-                               (create-comments-inbox db username)
+                               (create-comments-inbox db userpage)
                                [[] inbox-uid])
         userpage-inbox-op    (concat []
                                      new-userpage-op
                                      new-inbox-op)]
     {:inbox-uid         inbox-uid
-     :username          username
+     :userpage          userpage
      :userpage-inbox-op userpage-inbox-op}))
 
 

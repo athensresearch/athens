@@ -28,7 +28,6 @@
 (rf/reg-sub
   :comment/show-inline-comments?
   (fn [db [_]]
-    (println "sub toggle inline comments"(= true (:comment/show-inline-comments db)))
     (= true (:comment/show-inline-comments db))))
 
 (rf/reg-event-fx
@@ -92,11 +91,11 @@
                                                                                          :uid    (common.utils/gen-block-uid)}
                                                           ":thread/members"      #:block{:string   "comment/thread"
                                                                                          :uid      (common.utils/gen-block-uid)
-                                                                                         :children [#:block{:string author
+                                                                                         :children [#:block{:string (str "@" author)
                                                                                                             :uid    (common.utils/gen-block-uid)}]}
                                                           ":thread/subscribers"  #:block{:string   "comment/thread"
                                                                                          :uid      (common.utils/gen-block-uid)
-                                                                                         :children [#:block{:string author
+                                                                                         :children [#:block{:string (str "@" author)
                                                                                                             :uid    (common.utils/gen-block-uid)}]}}}]
                                                 {:block/uid block-uid
                                                  :relation  :last})
@@ -109,41 +108,41 @@
 
 
 (defn user-in-thread-as?
-  [db member-or-subscriber thread-uid username]
+  [db member-or-subscriber thread-uid userpage]
   (filter
-    #(= (str "@" username) (:block/string %))
+    #(= userpage (:block/string %))
     (:block/children (get-thread-property db thread-uid member-or-subscriber))))
 
 
 
 (defn add-new-member-or-subscriber-to-thread
-  [db thread-uid property-name username]
+  [db thread-uid property-name userpage]
   (let [thread-prop-uid   (:block/uid (get-thread-property db thread-uid property-name))]
     (bfs/internal-representation->atomic-ops db
                                              [#:block{:uid    (common.utils/gen-block-uid)
-                                                      :string (str "@" username)}]
+                                                      :string  userpage}]
                                              {:block/uid thread-prop-uid
                                               :relation  :last})))
 
 
 
 (defn unsubscribe-from-thread
-  [db thread-uid username]
+  [db thread-uid userpage]
   (-> (:block/children (get-thread-property db thread-uid ":thread/subscribers"))
       (filter
-        #((= username (:block/string %))))
+        #((= userpage (:block/string %))))
       (:block/uid)
       [:block/uid]
       [:db/retractEntity]))
 
 
 (defn add-user-as-member-or-subscriber?
-  [db thread-uid username]
-  (let [user-member?       (user-in-thread-as? db ":thread/members" thread-uid username)
-        user-subscriber?   (user-in-thread-as? db ":thread/subscribers" thread-uid username)]
+  [db thread-uid userpage]
+  (let [user-member?       (user-in-thread-as? db ":thread/members" thread-uid userpage)
+        user-subscriber?   (user-in-thread-as? db ":thread/subscribers" thread-uid userpage)]
     (cond-> []
-            (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid ":thread/members" username))
-            (empty? user-subscriber?) (concat (add-new-member-or-subscriber-to-thread db thread-uid ":thread/subscribers" username)))))
+            (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid ":thread/members" userpage))
+            (empty? user-subscriber?) (concat (add-new-member-or-subscriber-to-thread db thread-uid ":thread/subscribers" userpage)))))
 
 ;; Notifications
 
@@ -155,6 +154,7 @@
 
 (defn create-notification-op-for-users
   ;; Find all the subscribed members to the thread
+  ;; If the user does not have a userpage or inbox we create it
   ;; Find the uid of the inbox for these notifications for all the subscribers
   ;; Create a notification for all the subscribers, apart from the subscriber who wrote the comment.
   [db parent-block-uid users author notification-message]
@@ -162,9 +162,8 @@
                           #(get-subscriber-data db %)
                           users)
         notifications    (into [] (map
-                                    #(let [{:keys [inbox-uid username userpage-inbox-op]}  %
-                                           author                                          (str "@" author)]
-                                       (when (not= username author)
+                                    #(let [{:keys [inbox-uid userpage userpage-inbox-op]}  %]
+                                       (when (not= userpage (str "@" author))
                                          (composite/make-consequence-op {:op/type :userpage-notification-op}
                                                                         (concat userpage-inbox-op
                                                                                 [(new-notification db
@@ -184,8 +183,10 @@
   ;; Find all the subscribed members to the thread
   ;; Find the uid of the inbox for these notifications for all the subscribers
   ;; Create a notification for all the subscribers, apart from the subscriber who wrote the comment.
-  [db parent-block-uid thread-uid author notification-message]
-  (let [subscribers (get-subscribers-for-notifying db thread-uid author)]
+  [db parent-block-uid thread-uid author comment-string notification-message]
+  (let [subscribers (when (not-empty (get-all-mentions comment-string))
+                      (concat (get-subscribers-for-notifying db thread-uid author)
+                              (get-all-mentions comment-string)))]
     (when subscribers
       (create-notification-op-for-users db parent-block-uid subscribers author notification-message))))
 
@@ -206,6 +207,12 @@
         notification-ops      (create-notification-op-for-users db block-uid mentioned-users author notification-message)]
     notification-ops))
 
+(defn add-mentioned-users-as-member-and-subscriber
+  [db thread-uid comment-string]
+  (mapcat
+    #(add-user-as-member-or-subscriber? db thread-uid %)
+    (get-all-mentions comment-string)))
+
 
 (rf/reg-event-fx
   :comment/write-comment
@@ -218,11 +225,13 @@
                                               [(new-thread @db/dsdb thread-uid "" uid author)
                                                (graph-ops/build-block-move-op @db/dsdb thread-uid {:block/uid uid
                                                                                                    :relation  {:page/title ":comment/threads"}})])
-                                            [(new-comment @db/dsdb  thread-uid comment-string author "12:09 pm")])
+                                            (concat [(new-comment @db/dsdb thread-uid comment-string author "12:09 pm")]
+                                                    (add-mentioned-users-as-member-and-subscriber @db/dsdb thread-uid comment-string)))
+
           add-as-mem-or-subs        (when thread-exists?
-                                      (add-user-as-member-or-subscriber? @db/dsdb thread-uid author))
-          notification-message      (str  "New notification bitch" comment-string)
-          notification-op           (create-notification-op-for-comment @db/dsdb uid thread-uid author notification-message)
+                                      (add-user-as-member-or-subscriber? @db/dsdb thread-uid (str "@" author)))
+          notification-message      (str  "New notification: " comment-string)
+          notification-op           (create-notification-op-for-comment @db/dsdb uid thread-uid author comment-string notification-message)
           comment-notif-op          (composite/make-consequence-op {:op/type :comment-notif-op}
                                                                    (concat add-as-mem-or-subs notification-op active-comment-ops))
           event                     (common-events/build-atomic-event comment-notif-op)]
