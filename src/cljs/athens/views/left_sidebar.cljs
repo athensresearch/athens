@@ -55,7 +55,7 @@
                       :size "sm"
                       :color "foreground.secondary"}
           "Shortcuts"]
-         [:> List {:items (clj->js shortcuts)
+         [:> List {:items shortcuts
                    :pl "1.25rem"
                    :onOpenItem (fn [e [_order page]]
                                  (let [shift? (.-shiftKey e)]
