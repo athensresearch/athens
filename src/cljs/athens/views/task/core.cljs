@@ -4,8 +4,7 @@
                                                   FormLabel,
                                                   FormErrorMessage,
                                                   FormHelperText
-                                                  Input
-                                                  Box Button ButtonGroup IconButton  MenuList MenuItem]]
+                                                  Input]]
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs             :as bfs]
@@ -13,9 +12,12 @@
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common.utils                  :as common.utils]
     [athens.db                            :as db]
+    [athens.reactive                      :as reactive]
+    [athens.types.tasks.events            :as task-events]
     [athens.views.blocks.types            :as types]
     [athens.views.blocks.types.dispatcher :as dispatcher]
-    [clojure.string                       :as str]))
+    [clojure.string                       :as str]
+    [re-frame.core                        :as rf]))
 
 
 ;; Create a new task
@@ -26,10 +28,7 @@
          [#:block{:uid        (common.utils/gen-block-uid)
                   :string     ""
                   :properties {":block/type"
-                               #:block{:string "athens/task"
-                                       :uid    (common.utils/gen-block-uid)}
-                               ":task/id"
-                               #:block{:string "TASK-1"
+                               #:block{:string "[[athens/task]]"
                                        :uid    (common.utils/gen-block-uid)}
                                ":task/title"
                                #:block{:string title
@@ -52,7 +51,7 @@
                                ":task/status"
                                #:block{:string status
                                        :uid    (common.utils/gen-block-uid)}
-                               ":comment/project-relation"
+                               ":task/project"
                                #:block{:string project-relation
                                        :uid    (common.utils/gen-block-uid)}}}]
          {:block/uid block-uid
@@ -79,6 +78,31 @@
 
 ;; View
 
+(defn task-title-view
+  [_parent-block-uid _title-block-uid]
+  (let [title-id (str (random-uuid))]
+    (fn [parent-block-uid title-block-uid]
+      (let [title-block    (reactive/get-reactive-block-document [:block/uid title-block-uid])
+            title          (:block/string title-block)
+            invalid-title? (and (str/blank? title)
+                                (not (nil? title)))]
+        [:> FormControl {:is-required true
+                         :is-invalid  invalid-title?}
+         [:> FormLabel {:html-for title-id}
+          "Task Title"]
+         ;; TODO: Use actual editor
+         [:> Input {:value     (or title "")
+                    :id        title-id
+                    :on-change (fn [e]
+                                 (let [value (-> e .-target .-value)]
+                                   (when-not (= title value)
+                                     (rf/dispatch [::task-events/save-title {:parent-block-uid parent-block-uid
+                                                                             :title            value}]))))}]
+         (if invalid-title?
+           [:> FormErrorMessage "Task title is required"]
+           [:> FormHelperText "Please provide Task title"])]))))
+
+
 (defrecord TaskView
   []
 
@@ -90,25 +114,16 @@
 
   (outline-view
     [this block-data block-el callbacks]
-    (let [task-properties (common-db/get-block-property-document @db/dsdb [:block/uid (:block/uid block-data)])
-          title           (get task-properties ":task/title")
-          invalid-title?  (and (str/blank? title)
-                               (not (nil? title)))
-          title-id        (str (random-uuid))]
+    (let [block-uid      (:block/uid block-data)
+          reactive-block (reactive/get-reactive-block-document [:block/uid block-uid])]
       (fn [this block-data block-el callbacks]
-        [:div {:class "task_container"}
-         [:> FormControl {:is-required true
-                          :is-invalid  invalid-title?}
-          [:> FormLabel {:html-for title-id}
-           "Task Title"]
-          [:> Input {:value     (or title "")
-                     :id        title-id
-                     :on-change (fn [e]
-                                  (let [value (-> e .-target .-value)]
-                                    (println "TODO: new title value: " (pr-str value))))}]
-          (if invalid-title?
-            [:> FormErrorMessage "Task title is required"]
-            [:> FormHelperText "Please provide Task title"])]])))
+        (let [{title-uid :block/uid} (->> reactive-block
+                                          :block/properties
+                                          (filter (fn [[k _v]] (= ":task/title" k)))
+                                          (map second)
+                                          first)]
+          [:div {:class "task_container"}
+           [task-title-view block-uid title-uid]]))))
 
 
   (supported-transclusion-scopes
