@@ -1,14 +1,12 @@
 import React, { ReactNode } from 'react';
-import { IconButton, Text, MenuList, MenuDivider, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
+import { IconButton, Text, MenuList, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
+import { ColonIcon, BulletIcon, DashIcon, ArrowRightIcon } from '@/Icons/Icons';
 import { useContextMenu } from '@/utils/useContextMenu';
 
 const ANCHORS = {
-  CIRCLE: <svg viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="4" />
-  </svg>,
-  DASH: <svg viewBox="0 0 1 1">
-    <line x1="-1" y1="0" x2="1" y2="0" />
-  </svg>
+  "bullet": <BulletIcon />,
+  "colon": <ColonIcon />,
+  "dash": <DashIcon />
 }
 
 const showValue = (value) => {
@@ -57,8 +55,11 @@ const propertiesList = (block) => {
   })
 }
 
+type Anchors = typeof ANCHORS;
+type AnchorImage = keyof Anchors;
+
 export interface AnchorProps {
-  anchorElement?: 'circle' | 'dash' | number;
+  anchorElement?: AnchorImage | React.ReactNode | number;
   isClosedWithChildren: boolean;
   block: any;
   uidSanitizedBlock: any;
@@ -106,7 +107,7 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
           vectorEffect: "non-scaling-stroke"
         }
       },
-      "circle": {
+      "svg path": {
         transformOrigin: 'center',
         transition: 'all 0.15s ease-in-out',
         stroke: "transparent",
@@ -166,7 +167,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
       isActive={isContextMenuOpen}
       {...rest}
     >
-      {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
+      {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}
     </IconButton>
     {(menu || shouldShowDebugDetails) && <ContextMenu>
       {shouldShowDebugDetails ? (
@@ -182,3 +183,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
   </>
 
 });
+
+Anchor.defaultProps = {
+  anchorElement: "bullet"
+}
