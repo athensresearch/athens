@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { MenuList, MenuItem, MenuGroup, MenuDivider, IconButton, Box, Text } from '@chakra-ui/react';
+import { IconButton, Text, MenuList, MenuDivider, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
 import { useContextMenu } from '@/utils/useContextMenu';
 
 const ANCHORS = {
@@ -69,7 +69,7 @@ export interface AnchorProps {
   onDragStart: () => void;
   onDragEnd: () => void;
   onClick: () => void;
-  menuActions: any;
+  menu?: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
 const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
@@ -127,7 +127,7 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
 /**
  * A handle and indicator of a block's position in the document
 */
-export const Anchor = (props: AnchorProps) => {
+export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
 
   const { isClosedWithChildren,
     anchorElement,
@@ -136,22 +136,26 @@ export const Anchor = (props: AnchorProps) => {
     onDragEnd,
     onClick,
     uidSanitizedBlock,
-    menuActions,
+    menu,
   } = props;
-  const ref = React.useRef(null);
+  const innerRef = React.useRef(null);
+  const refs = useMergeRefs(innerRef, ref);
 
   const {
     menuSourceProps,
     ContextMenu,
     isOpen: isContextMenuOpen
   } = useContextMenu({
-    ref,
+    ref: innerRef,
+    menuProps: {
+      size: "sm"
+    },
     source: "box"
   });
 
   return <>
     <IconButton
-      ref={ref}
+      ref={refs}
       aria-label="Block anchor"
       {...anchorButtonStyleProps(isClosedWithChildren)}
       {...menuSourceProps}
@@ -162,22 +166,17 @@ export const Anchor = (props: AnchorProps) => {
     >
       {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
     </IconButton>
-    {(menuActions) && <ContextMenu>
-      <MenuList>
-        {menuActions.map((action) => {
-          return <MenuItem key={action.children} {...action} />
-        })}
-        {shouldShowDebugDetails && (
-          <>
-            {menuActions && <MenuDivider />}
-            <MenuGroup title="Debug details">
-              <Box px={4} pb={3}>
-                {propertiesList(uidSanitizedBlock)}
-              </Box>
-            </MenuGroup>
-          </>)}
-      </MenuList>
+    {(menu || shouldShowDebugDetails) && <ContextMenu>
+      {shouldShowDebugDetails ? (
+        <MenuList>
+          {menu}
+          <MenuGroup title="Debug details">
+            <Box px={4} pb={3}>
+              {propertiesList(uidSanitizedBlock)}
+            </Box>
+          </MenuGroup>
+        </MenuList>) : menu}
     </ContextMenu>}
   </>
 
-};
+});

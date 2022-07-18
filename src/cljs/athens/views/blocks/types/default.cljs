@@ -3,8 +3,8 @@
   A.k.a standard `:block/string` blocks"
   (:require
     ["/components/Block/Container"           :refer [Container]]
-    ["/components/Icons/Icons"               :refer [PencilIcon]]
-    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton  MenuList MenuItem]]
+    ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon]]
+    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -252,7 +252,8 @@
                                         :show-edit?     show-edit?}
           dragging?                    (rf/subscribe [::drag.subs/dragging? uid])
           drag-target                  (rf/subscribe [::drag.subs/drag-target uid])
-          selected-items               (rf/subscribe [::select-subs/items])]
+          selected-items               (rf/subscribe [::select-subs/items])
+          feature-flags                (rf/subscribe [:feature-flags])]
       (rf/dispatch [::linked-ref.events/set-open! uid (or (false? linked-ref) initial-open)])
       (rf/dispatch [::inline-refs.events/set-open! uid false])
 
@@ -280,7 +281,30 @@
                                          block)
                  is-selected           @(rf/subscribe [::select-subs/selected? uid])
                  present-user          @(rf/subscribe [:presence/has-presence uid])
-                 is-presence           (seq present-user)]
+                 is-presence           (seq present-user)
+                 reactions-enabled?    (:reactions @feature-flags)
+                 comments-enabled?     (:comments @feature-flags)
+                 show-emoji-picker?    (r/atom false)
+                 hide-emoji-picker-fn  #(reset! show-emoji-picker? false)
+                 show-emoji-picker-fn  #(reset! show-emoji-picker? true)
+                 menu                  (r/as-element
+                                         [:> MenuList
+                                          [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                    "Copy selected block refs"
+                                                                    "Copy block ref")
+                                                        :icon (r/as-element [:> BlockEmbedIcon])
+                                                        :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                          [:> MenuItem {:children "Copy unformatted text"
+                                                        :icon (r/as-element [:> TextIcon])
+                                                        :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                          (when comments-enabled?
+                                            [:> MenuItem {:children "Add comment"
+                                                          :onClick #(ctx-menu/handle-click-comment % uid)
+                                                          :icon (r/as-element [:> ChatIcon])}])
+                                          (when reactions-enabled?
+                                            [:> MenuItem {:children "Add reaction"
+                                                          :onClick show-emoji-picker-fn
+                                                          :icon (r/as-element [:> ThumbUpFillIcon])}])])]
 
              ;; (prn uid is-selected)
 
@@ -309,13 +333,7 @@
                             :onDragOver   (fn [e] (block-drag-over e block))
                             :onDragLeave  (fn [e] (block-drag-leave e block))
                             :onDrop       (fn [e] (block-drop e block))
-                            :menu         (r/as-element [:> MenuList
-                                                         [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                                   "Copy selected block refs"
-                                                                                   "Copy block ref")
-                                                                       :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                                         [:> MenuItem {:children "Copy unformatted text"
-                                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]])
+                            :menu         menu
                             :style        (merge {} (time-controls/block-styles block-o))}
 
               (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
@@ -327,7 +345,10 @@
                linked-ref-data
                uid-sanitized-block
                state-hooks
-               opts]
+               opts
+               menu
+               show-emoji-picker?
+               hide-emoji-picker-fn]
 
               (when (= @drag-target :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
               (when (= @drag-target :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])]))})))
