@@ -22,7 +22,10 @@
    [athens.router             :as router]
    [clojure.string            :refer [lower-case]]
    [re-frame.core             :as rf]
+   [athens.common-events.bfs :as bfs]
+   [athens.common.utils :as utils]
    [reagent.core :as r]))
+
 
 
 ;; Helpers
@@ -75,7 +78,7 @@
          (->> context
               (map (fn [[k v]]
                      [k #:block{:string v
-                                :uid    (athens.common.utils/gen-block-uid)}]))
+                                :uid    (utils/gen-block-uid)}]))
 
               flatten)))
 
@@ -84,7 +87,7 @@
   [group-by-id]
   (rf/dispatch [:properties/update-in [:node/title group-by-id] [":property/values"]
                  (fn [db prop-uid]
-                   [(graph-ops/build-block-new-op db (athens.common.utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
+                   [(graph-ops/build-block-new-op db (utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
 
 
 (defn new-card
@@ -100,12 +103,12 @@
         parent-of-new-block (:title (dates/get-day))        ;; for now, just create a new block on today's daily notes
         evt                 (->> (athens.common-events.bfs/internal-representation->atomic-ops
                                    @athens.db/dsdb
-                                   [#:block{:uid        (athens.common.utils/gen-block-uid)
+                                   [#:block{:uid        (utils/gen-block-uid)
                                             :string     ""
                                             :properties (merge {":block/type" #:block{:string "[[athens/task]]"
-                                                                                      :uid    (athens.common.utils/gen-block-uid)}
+                                                                                      :uid    (utils/gen-block-uid)}
                                                                 ":task/title" #:block{:string "Untitled task"
-                                                                                      :uid    (athens.common.utils/gen-block-uid)}}
+                                                                                      :uid    (utils/gen-block-uid)}}
                                                                new-block-props)}]
                                    {:page/title parent-of-new-block
                                     :relation   :last})
@@ -231,10 +234,88 @@
        (sort-by #(get % query-sort-by)
                 (sort-dir-fn query-sort-direction))))
 
+;; (def data (atom nil))
+
+#_(defn save-view
+   [properties]
+   (reset! data properties)
+   (prn properties))
+
+
+#_(let [data @data]
+   (for [[k v] data]
+     [k (:block/string v) (:block/children v)]))
+
+
+(defn save-query
+  [db block-uid position title description priority creator assignee due-date status project-relation]
+  (->> (bfs/internal-representation->atomic-ops
+        db
+        [#:block{:uid        (utils/gen-block-uid)
+                 :string     ""
+                 :properties {":block/type"
+                              #:block{:string "athens/task"
+                                      :uid    (utils/gen-block-uid)}
+                              ":task/title"
+                              #:block{:string title
+                                      :uid    (utils/gen-block-uid)}
+                              ":task/description"
+                              #:block{:string description
+                                      :uid    (utils/gen-block-uid)}
+                              ":task/priority"
+                              #:block{:string priority
+                                      :uid    (utils/gen-block-uid)}
+                              ":task/creator"
+                              #:block{:string creator
+                                      :uid    (utils/gen-block-uid)}
+                              ":task/assignee"
+                              #:block{:string assignee
+                                      :uid    (utils/gen-block-uid)}
+                              ":task/due-date"
+                              #:block{:string due-date
+                                      :uid    (utils/gen-block-uid)}
+                              ":task/status"
+                              #:block{:string status
+                                      :uid    (utils/gen-block-uid)}
+                              ":comment/project-relation"
+                              #:block{:string project-relation
+                                      :uid    (utils/gen-block-uid)}}}]
+        {:block/uid block-uid
+         :relation  position})
+       (athens.common-events.graph.composite/make-consequence-op {:op/type :new-type})))
+
+
+;; one difference between Notion and Athens queries is that we could have different inputs to the query
+;; but i don't think we should have different views over different types for one query. that could get confusing
+;; views should only deal with the middle and output, not inputs. because we want different views over the same DATA
+;; and different types lead to different queries
+
+;; i could either use the block/properties and re-add new block/uids (but would i have to strip the other meta-datas like edit/time)
+;; or map the parsed-properties back to the block/strings and such
+
+;; TODO: now save all these properties on another property
+;; is there an analog for `merge` such as we have with `:properties/update-in`?
+(let [d {"query/properties-order" [":task/title" ":task/status" ":task/assignee" ":task/due-date" ":block/uid" ":task/project" ":task/priority" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time"], "query/types" "[[athens/task]]", "query/layout" "board", "query/subgroup-by" ":task/project", "query/group-by" ":task/status", ":block/type" "[[athens/query]]", "query/group-by-columns" ["todo" "doing" "done"], "query/sort-by" ":create/time", "query/properties-hide" {":create/auth" true, ":last-edit/auth" true, ":last-edit/time" true, ":task/priority" true, ":block/uid" true, ":task/due-date" true, ":task/assignee" true}, "query/sort-direction" "asc"}]
+  (->> (map (fn [[k v]]
+              [k
+               (merge
+                {:block/uid (utils/gen-block-uid)}
+                (cond
+                  (vector? v) {:block/children (mapv (fn [x] {:block/uid (utils/gen-block-uid)
+                                                              :block/string x}) v)}
+                  (map? v) {:block/properties (zipmap (map (fn [[k v]] k) v)
+                                                      (repeatedly (fn [] {:block/uid (utils/gen-block-uid)
+                                                                          :block/string ""})))}
+                  :else
+                  {:block/string v}))])
+            d)
+       flatten
+       (apply hash-map)))
+
 ;; Views
 
 (defn options-el
-  [{:keys [parsed-properties uid query-data]}]
+  [{:keys [properties parsed-properties uid]}]
   (let [query-layout           (get parsed-properties "query/layout")
         query-properties-order (get parsed-properties "query/properties-order")
         query-properties-hide  (get parsed-properties "query/properties-hide")]
@@ -251,7 +332,9 @@
                    :properties           query-properties-order
                    :hiddenProperties     query-properties-hide
                    :menuOptionGroupValue (keys query-properties-hide)
-                   :onChange             #(toggle-hidden-property uid %)}]]))
+                   :onChange             #(toggle-hidden-property uid %)}]
+     [:> Button {:onClick #(prn parsed-properties)}
+      [:> Heading {:size "sm"} "Save View"]]]))
 
 (defn get-prop-values
   [db eid]
@@ -326,6 +409,7 @@
       :else [:> Box {:width        "100%" #_#_:border "1px" :borderColor "gray"
                      :padding-left 38 :padding-top 15}
              [options-el {:parsed-properties parsed-properties
+                          :properties properties
                           :query-data        query-data
                           :uid               block-uid}]
              [query-el {:query-data        query-data
