@@ -29,7 +29,7 @@
                                #:block{:string state
                                        :uid    (common.utils/gen-block-uid)}
                                ":notification/from-block"
-                               #:block{:string (str "((" notification-from-block "))")
+                               #:block{:string  notification-from-block
                                        :uid    (common.utils/gen-block-uid)}}}]
          {:block/uid inbox-block-uid
           :relation  notification-position})
