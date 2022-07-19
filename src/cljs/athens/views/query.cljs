@@ -302,7 +302,16 @@
 (defn update-schema
   "TODO: probably need a better helper function than update-in for updating multiple properties at once. This event fails if key already exists."
   [uid schema]
-  (let [schema-key "athens/schema"
+  (let [schema-key "athens/schema"]
+    (rf/dispatch [:properties/update-in [:block/uid uid] [schema-key]
+                  (fn [db prop-uid]
+                    (mapv #(graph-ops/build-block-new-op db
+                                                         (utils/gen-block-uid)
+                                                         {:block/uid prop-uid
+                                                          :relation {:page/title %}})
+                          schema))])))
+
+#_(let [schema-key "athens/schema"
         schema-properties (schema-to-block-properties schema)
         evt (->> (bfs/internal-representation->atomic-ops
                   @athens.db/dsdb
@@ -313,15 +322,42 @@
                    :relation   {:page/title schema-key}})
                  (composite/make-consequence-op {:op/type :new-type})
                  athens.common-events/build-atomic-event)]
-    (rf/dispatch [:resolve-transact-forward evt])))
+    (rf/dispatch [:resolve-transact-forward evt]))
 
+
+
+;; create a bunch of block news 
+
+#_(let [parent-uid "e68edef87"
+        schema '(":block/uid"
+                 ":create/auth"
+                 ":create/time"
+                 ":last-edit/auth"
+                 ":last-edit/time"
+                 ":task/title"
+                 ":task/status"
+                 ":task/due-date"
+                 ":task/project"
+                 ":task/priority"
+                 ":task/assignee")]
+   (rf/dispatch [:properties/update-in [:block/uid parent-uid] ["athens/schema"]
+                 (fn [db prop-uid]
+                   (mapv #(graph-ops/build-block-new-op db
+                                                        (utils/gen-block-uid)
+                                                        {:block/uid prop-uid
+                                                         :relation {:page/title %}})
+                         schema)
+                   
+                   #_(graph-ops/build-block-move-op db "d51dabd91" {:block/uid parent-uid
+                                                                            :relation {:page/title "hey"}})
+                   #_[(graph-ops/build-block-save-op db prop-uid "desc")])]))
 
 (defn update-query-types-hook!
   "TODO: When query component that new types have been detected,
    update schema, order, and hidden properties."
   [prev curr ratom schema uid]
   (when (not= prev curr)
-    ;; (update-schema uid schema)
+    #_(update-schema uid schema)
     (reset! ratom curr)))
 
 (defn save-query
