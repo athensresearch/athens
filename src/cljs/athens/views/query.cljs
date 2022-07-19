@@ -291,30 +291,38 @@
 (parse-for-title "[[athens/task]]")
 
 
-(defn update-query-types-hook
-  "When query component that new types have been detected,
+(defn schema-to-block-properties
+  [schema]
+  (zipmap schema
+          (repeatedly (fn [] {:block/string ""
+                              :block/uid (utils/gen-block-uid)}))))
+
+
+
+(defn update-schema
+  "TODO: probably need a better helper function than update-in for updating multiple properties at once. This event fails if key already exists."
+  [uid schema]
+  (let [schema-key "athens/schema"
+        schema-properties (schema-to-block-properties schema)
+        evt (->> (bfs/internal-representation->atomic-ops
+                  @athens.db/dsdb
+                  [#:block{:uid        (utils/gen-block-uid)
+                           :string     "a"
+                           :properties schema-properties}]
+                  {:block/uid uid
+                   :relation   {:page/title schema-key}})
+                 (composite/make-consequence-op {:op/type :new-type})
+                 athens.common-events/build-atomic-event)]
+    (rf/dispatch [:resolve-transact-forward evt])))
+
+
+(defn update-query-types-hook!
+  "TODO: When query component that new types have been detected,
    update schema, order, and hidden properties."
   [prev curr ratom schema uid]
-  (prn prev curr)
   (when (not= prev curr)
-    (prn "UPDATE")
-    ;; (rf/dispatch [:properties/update-in uid ])
+    ;; (update-schema uid schema)
     (reset! ratom curr)))
-
-;; (let [schema])
-;; (->> (athens.common-events.bfs/internal-representation->atomic-ops
-;;       @athens.db/dsdb
-;;       [#:block{:uid        (utils/gen-block-uid)
-;;                :string     ""
-;;                :properties (merge {":block/type" #:block{:string "[[athens/task]]"
-;;                                                          :uid    (utils/gen-block-uid)}
-;;                                    ":task/title" #:block{:string "Untitled task"
-;;                                                          :uid    (utils/gen-block-uid)}}
-;;                                   new-block-props)}]
-;;       {:page/title parent-of-new-block
-;;        :relation   :last})
-;;      (composite/make-consequence-op {:op/type :new-type})
-;;      athens.common-events/build-atomic-event)
 
 (defn save-query
   [db block-uid position title description priority creator assignee due-date status project-relation]
@@ -474,7 +482,7 @@
             query-data (->> (reactive/get-reactive-instances-of-key-value ":block/type" query-types)
                             (map block-to-flat-map))]
         
-        (update-query-types-hook @last-query-types query-types last-query-types schema block-uid)
+        (update-query-types-hook! @last-query-types query-types last-query-types schema block-uid)
         
         (cond
           (nil? query-group-by) [:> Box {:color "red"} "Please add property query/group-by"]
