@@ -295,6 +295,9 @@
 
 ;; TODO: now save all these properties on another property
 ;; is there an analog for `merge` such as we have with `:properties/update-in`?
+
+;; TODO: on clicking a different saved view, update all the current values
+
 (let [d {"query/properties-order" [":task/title" ":task/status" ":task/assignee" ":task/due-date" ":block/uid" ":task/project" ":task/priority" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time"], "query/types" "[[athens/task]]", "query/layout" "board", "query/subgroup-by" ":task/project", "query/group-by" ":task/status", ":block/type" "[[athens/query]]", "query/group-by-columns" ["todo" "doing" "done"], "query/sort-by" ":create/time", "query/properties-hide" {":create/auth" true, ":last-edit/auth" true, ":last-edit/time" true, ":task/priority" true, ":block/uid" true, ":task/due-date" true, ":task/assignee" true}, "query/sort-direction" "asc"}]
   (->> (map (fn [[k v]]
               [k
@@ -311,6 +314,7 @@
             d)
        flatten
        (apply hash-map)))
+
 
 ;; Views
 
