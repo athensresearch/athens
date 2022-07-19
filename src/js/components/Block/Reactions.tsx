@@ -30,7 +30,6 @@ const ReactionItem = ({ reaction, onToggleReaction, currentUser }: ReactionItemP
   return <Tooltip label={tooltipText}>
     <Button
       key={reactionItem}
-      as={isFromCurrentUser ? "button" : "div"}
       display="flex"
       gap={1}
       position="relative"
