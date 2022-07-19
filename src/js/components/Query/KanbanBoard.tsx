@@ -206,7 +206,7 @@ export const AddSwimlaneButton = (props) => {
 };
 
 export const QueryKanban = (props) => {
-  const { boardData, columns, rows, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties, onClickCard, groupBy, subgroupBy, onUpdateTaskTitle, onAddNewColumn, onUpdateKanbanColumn } = props;
+  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties, onClickCard, groupBy, subgroupBy, onUpdateTaskTitle, onAddNewColumn, onUpdateKanbanColumn } = props;
 
   if (hasSubGroup) {
     return <KanbanBoard name={name}>
