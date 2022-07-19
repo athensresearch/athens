@@ -35,13 +35,6 @@ const ReactionItem = ({ reaction, onToggleReaction, currentUser }: ReactionItemP
       position="relative"
       isActive={isFromCurrentUser}
       onClick={() => onToggleReaction(reactionItem, currentUser)}
-      {...isFromCurrentUser && {
-        sx: {
-          "&[data-active]:hover": {
-            bg: "interaction.surface.hover",
-          }
-        }
-      }}
     >
       <Box position="absolute" inset={0} />
       <Text transform="scale(1.35)" fontSize="md">{reactionItem}</Text>
