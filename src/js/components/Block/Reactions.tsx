@@ -30,19 +30,11 @@ const ReactionItem = ({ reaction, onToggleReaction, currentUser }: ReactionItemP
   return <Tooltip label={tooltipText}>
     <Button
       key={reactionItem}
-      as={isFromCurrentUser ? "button" : "div"}
       display="flex"
       gap={1}
       position="relative"
       isActive={isFromCurrentUser}
-      onClick={isFromCurrentUser ? () => onToggleReaction(reactionItem, currentUser) : undefined}
-      {...isFromCurrentUser && {
-        sx: {
-          "&[data-active]:hover": {
-            bg: "interaction.surface.hover",
-          }
-        }
-      }}
+      onClick={() => onToggleReaction(reactionItem, currentUser)}
     >
       <Box position="absolute" inset={0} />
       <Text transform="scale(1.35)" fontSize="md">{reactionItem}</Text>
