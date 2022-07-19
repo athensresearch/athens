@@ -311,17 +311,27 @@
         b {":REMOVEME" 1 ":task/project" "", ":create/time" "", ":create/auth" "", ":last-edit/time" "", ":last-edit/auth" "", ":task/priority" "1", ":block/uid" "", ":task/title" "", ":task/due-date" "", ":task/assignee" "", ":task/status" ""}]
    (remove (set a) (keys b)))
 
+(def d (atom nil))
+
+
 (defn build-remove-ops
   [uid remove-keys]
   (let [block (common-db/get-block-document @athens.db/dsdb [:block/uid uid])
-        props (:block/properties block)
-        ops (->> (map #(get props %) remove-keys)
+        ops (->> (map #(get-in block [:block/properties "athens/schema" :block/properties %]) remove-keys)
                  (map :block/uid)
                  (map #(graph-ops/build-block-remove-op @athens.db/dsdb %))
                  vec)]
+    ;; (reset! d block)
+    ;; (prn "OPSS" ops)
     (athens.common-events/build-atomic-event
      (composite/make-consequence-op {:op/type :remove-extra-schema-keys} ops))))
 
+
+
+(->> (map #(get-in @d [:block/properties "athens/schema" %]) [":bad boy"]))
+
+
+;; (get-in @d [:block/properties "athens/schema" :block/properties ":bad boy"])
 
 (defn update-schema
   "Remove extraneous keys and adds proper keys to schema.
@@ -330,7 +340,8 @@
    Adding keys consistently fails if trying to add key that already exists."
   [uid schema prev-schema]
   (let [schema-key "athens/schema"
-        remove-keys (remove-keys-from-schema prev-schema schema)]
+        remove-keys (remove-keys-from-schema prev-schema schema)
+        remove-ops (build-remove-ops uid remove-keys)]
     (rf/dispatch [:properties/update-in [:block/uid uid] [schema-key]
                   (fn [db prop-uid]
                     (mapv #(graph-ops/build-block-new-op db
@@ -338,7 +349,7 @@
                                                          {:block/uid prop-uid
                                                           :relation {:page/title %}})
                           schema))])
-    (rf/dispatch [:resolve-transact-forward (build-remove-ops uid remove-keys)])))
+    (rf/dispatch [:resolve-transact-forward remove-ops])))
 
 #_(let [schema-key "athens/schema"
         schema-properties (schema-to-block-properties schema)
