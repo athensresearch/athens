@@ -215,13 +215,18 @@
 (defn get-query-props
   [properties]
   (->> properties
-       (map (fn [[k {:block/keys [children string] nested-properties :block/properties :as v}]]
-              [k (cond
-                   (and (seq children) (not (clojure.string/blank? string))) {:key string :values (order-children children)}
-                   (seq children) (order-children children)
-                   nested-properties  (zipmap (keys nested-properties) (repeat true))
-                   :else string)]))
-       (into (hash-map))))
+       (reduce-kv
+        (fn [acc k {:block/keys [children string] nested-properties :block/properties :as v}]
+          (assoc acc k (cond
+                        (and (seq children) (not (clojure.string/blank? string))) {:key string :values (order-children children)}
+                        (seq children) (order-children children)
+                        nested-properties  (reduce-kv (fn [acc k v]
+                                                        (assoc acc k (:block/string v)))
+                                                      {}
+                                                      nested-properties)
+                        :else string)))
+        {})))
+    
 
 (defn get-reactive-property
   [eid property-key]
@@ -298,18 +303,42 @@
                               :block/uid (utils/gen-block-uid)}))))
 
 
+(defn remove-keys-from-schema
+  [prev-schema curr-schema]
+  (remove (set curr-schema) (keys prev-schema)))
+
+#_(let [a '(":block/uid" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time" ":task/title" ":task/status" ":task/due-date" ":task/project" ":task/priority" ":task/assignee")
+        b {":REMOVEME" 1 ":task/project" "", ":create/time" "", ":create/auth" "", ":last-edit/time" "", ":last-edit/auth" "", ":task/priority" "1", ":block/uid" "", ":task/title" "", ":task/due-date" "", ":task/assignee" "", ":task/status" ""}]
+   (remove (set a) (keys b)))
+
+(defn build-remove-ops
+  [uid remove-keys]
+  (let [block (common-db/get-block-document @athens.db/dsdb [:block/uid uid])
+        props (:block/properties block)
+        ops (->> (map #(get props %) remove-keys)
+                 (map :block/uid)
+                 (map #(graph-ops/build-block-remove-op @athens.db/dsdb %))
+                 vec)]
+    (athens.common-events/build-atomic-event
+     (composite/make-consequence-op {:op/type :remove-extra-schema-keys} ops))))
+
 
 (defn update-schema
-  "TODO: probably need a better helper function than update-in for updating multiple properties at once. This event fails if key already exists."
-  [uid schema]
-  (let [schema-key "athens/schema"]
+  "Remove extraneous keys and adds proper keys to schema.
+   
+   Removing keys will typically just have an empty consequence events.
+   Adding keys consistently fails if trying to add key that already exists."
+  [uid schema prev-schema]
+  (let [schema-key "athens/schema"
+        remove-keys (remove-keys-from-schema prev-schema schema)]
     (rf/dispatch [:properties/update-in [:block/uid uid] [schema-key]
                   (fn [db prop-uid]
                     (mapv #(graph-ops/build-block-new-op db
                                                          (utils/gen-block-uid)
                                                          {:block/uid prop-uid
                                                           :relation {:page/title %}})
-                          schema))])))
+                          schema))])
+    (rf/dispatch [:resolve-transact-forward (build-remove-ops uid remove-keys)])))
 
 #_(let [schema-key "athens/schema"
         schema-properties (schema-to-block-properties schema)
@@ -355,10 +384,11 @@
 (defn update-query-types-hook!
   "TODO: When query component that new types have been detected,
    update schema, order, and hidden properties."
-  [prev curr ratom schema uid]
+  [prev curr ratom schema uid prev-schema]
   (when (not= prev curr)
-    #_(update-schema uid schema)
+    (update-schema uid schema prev-schema)
     (reset! ratom curr)))
+
 
 (defn save-query
   [db block-uid position title description priority creator assignee due-date status project-relation]
@@ -513,12 +543,13 @@
             parsed-properties (get-query-props properties)
             query-types (get parsed-properties "query/types")
             schema (get-schema query-types)
+            prev-schema (get parsed-properties "athens/schema")
             query-group-by (get properties "query/group-by")
             query-subgroup-by (get properties "query/subgroup-by")
             query-data (->> (reactive/get-reactive-instances-of-key-value ":block/type" query-types)
                             (map block-to-flat-map))]
         
-        (update-query-types-hook! @last-query-types query-types last-query-types schema block-uid)
+        (update-query-types-hook! @last-query-types query-types last-query-types schema block-uid prev-schema)
         
         (cond
           (nil? query-group-by) [:> Box {:color "red"} "Please add property query/group-by"]
