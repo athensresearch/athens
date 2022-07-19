@@ -221,6 +221,14 @@
                    :else string)]))
        (into (hash-map))))
 
+(defn get-reactive-property
+  [eid property-key]
+  (let [property-page (reactive/get-reactive-block-document eid)
+        property (get-in property-page [:block/properties property-key])
+        {:block/keys [children properties sting]} property]
+    (cond
+      (seq children) (order-children children)
+      (seq properties) (keys properties))))
 
 (defn sort-dir-fn
   [query-sort-direction]
@@ -298,22 +306,22 @@
 
 ;; TODO: on clicking a different saved view, update all the current values
 
-(let [d {"query/properties-order" [":task/title" ":task/status" ":task/assignee" ":task/due-date" ":block/uid" ":task/project" ":task/priority" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time"], "query/types" "[[athens/task]]", "query/layout" "board", "query/subgroup-by" ":task/project", "query/group-by" ":task/status", ":block/type" "[[athens/query]]", "query/group-by-columns" ["todo" "doing" "done"], "query/sort-by" ":create/time", "query/properties-hide" {":create/auth" true, ":last-edit/auth" true, ":last-edit/time" true, ":task/priority" true, ":block/uid" true, ":task/due-date" true, ":task/assignee" true}, "query/sort-direction" "asc"}]
-  (->> (map (fn [[k v]]
-              [k
-               (merge
-                {:block/uid (utils/gen-block-uid)}
-                (cond
-                  (vector? v) {:block/children (mapv (fn [x] {:block/uid (utils/gen-block-uid)
-                                                              :block/string x}) v)}
-                  (map? v) {:block/properties (zipmap (map (fn [[k v]] k) v)
-                                                      (repeatedly (fn [] {:block/uid (utils/gen-block-uid)
-                                                                          :block/string ""})))}
-                  :else
-                  {:block/string v}))])
-            d)
-       flatten
-       (apply hash-map)))
+#_(let [d {"query/properties-order" [":task/title" ":task/status" ":task/assignee" ":task/due-date" ":block/uid" ":task/project" ":task/priority" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time"], "query/types" "[[athens/task]]", "query/layout" "board", "query/subgroup-by" ":task/project", "query/group-by" ":task/status", ":block/type" "[[athens/query]]", "query/group-by-columns" ["todo" "doing" "done"], "query/sort-by" ":create/time", "query/properties-hide" {":create/auth" true, ":last-edit/auth" true, ":last-edit/time" true, ":task/priority" true, ":block/uid" true, ":task/due-date" true, ":task/assignee" true}, "query/sort-direction" "asc"}]
+   (->> (map (fn [[k v]]
+               [k
+                (merge
+                 {:block/uid (utils/gen-block-uid)}
+                 (cond
+                   (vector? v) {:block/children (mapv (fn [x] {:block/uid (utils/gen-block-uid)
+                                                               :block/string x}) v)}
+                   (map? v) {:block/properties (zipmap (map (fn [[k v]] k) v)
+                                                       (repeatedly (fn [] {:block/uid (utils/gen-block-uid)
+                                                                           :block/string ""})))}
+                   :else
+                   {:block/string v}))])
+             d)
+        flatten
+        (apply hash-map)))
 
 
 ;; Views
@@ -340,14 +348,6 @@
      [:> Button {:onClick #(prn parsed-properties)}
       [:> Heading {:size "sm"} "Save View"]]]))
 
-(defn get-prop-values
-  [db eid]
-  (let [property-page (reactive/get-reactive-block-document eid)]
-    (->> (get-in property-page [:block/properties ":property/values"])
-         :block/children
-         (sort-by :block/order)
-         (mapv :block/string))))
-
 (defn query-el
   [{:keys [query-data parsed-properties uid]}]
   (let [query-layout           (get parsed-properties "query/layout")
@@ -361,7 +361,7 @@
        "board"
        (let [query-group-by    (get parsed-properties "query/group-by")
              query-subgroup-by (get parsed-properties "query/subgroup-by")
-             columns           (get-prop-values @db/dsdb [:node/title ":task/status"])
+             columns           (get-reactive-property [:node/title ":task/status"] ":property/values")
              rows              (->> (map #(get % query-subgroup-by) query-data) set)
              boardData         (if (and query-subgroup-by query-group-by)
                                  (group-stuff query-group-by query-subgroup-by query-data)
@@ -391,32 +391,69 @@
                          :hideProperties query-properties-hide
                          :dateFormatFn   #(dates/date-string %)}]))]))
 
+(defn parse-for-title
+  "should be able to pass in a plain string, a wikilink, or both?"
+  [s]
+  (let [re #"\[\[(.*)\]\]"]
+    (cond
+      (re-find re s) (second (re-find re s))
+      (clojure.string/blank? s) (throw "parse-for-title got an empty string")
+      :else s)))
 
-;; XXX: last edit only concerns itself with the last edit of the block itself, not one of the block's property's
-;; is this similar to the last edit of a page? does editing a block count as editing a page? or does it have to editing the page/title?
+(defn get-schema
+  [query-types]
+  (let [base-schema [":block/uid" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time"]]
+    (if (string? query-types)
+      (get-schema [query-types])
+      (->> query-types
+           (map (fn [title]
+                  (get-reactive-property [:node/title (parse-for-title title)] ":entity.type/schema")))
+           flatten
+           (concat base-schema)))))
+
+#_(concat [1 2] [3 4])
+
+(get-schema ["athens/task"])
+(get-schema ["[[athens/task]]"])
+
+;; (re-find #"\[\[(.+)\]\]" "a")
+
+(parse-for-title "[[athens/task]]")
+
+(defn update-query-types-hook
+  [prev curr state]
+  (prn prev curr)
+  (when (not= prev curr)
+    (prn "UPDATE")
+    (reset! state curr)))
 
 
 (defn query-block
   [block-data properties]
-  (let [block-uid (:block/uid block-data)
-        parsed-properties (get-query-props properties)
-        query-types (get parsed-properties "query/types")
-        query-group-by (get properties "query/group-by")
-        query-subgroup-by (get properties "query/subgroup-by")
-        query-data (->> (reactive/get-reactive-instances-of-key-value ":block/type" query-types)
-                        (map block-to-flat-map))]
+  (let [last-query-types (r/atom nil)]
+    (fn [block-data properties]
+      (let [block-uid (:block/uid block-data)
+            parsed-properties (get-query-props properties)
+            query-types (get parsed-properties "query/types")
+            schema (get-schema query-types)
+            query-group-by (get properties "query/group-by")
+            query-subgroup-by (get properties "query/subgroup-by")
+            query-data (->> (reactive/get-reactive-instances-of-key-value ":block/type" query-types)
+                            (map block-to-flat-map))]
+        
+        (update-query-types-hook @last-query-types query-types last-query-types)
+        
+        (cond
+          (nil? query-group-by) [:> Box {:color "red"} "Please add property query/group-by"]
+          (nil? query-subgroup-by) [:> Box {:color "red"} "Please add property query/subgroup-by"]
 
-    (cond
-      (nil? query-group-by) [:> Box {:color "red"} "Please add property query/group-by"]
-      (nil? query-subgroup-by) [:> Box {:color "red"} "Please add property query/subgroup-by"]
-
-      :else [:> Box {:width        "100%" #_#_:border "1px" :borderColor "gray"
-                     :padding-left 38 :padding-top 15}
-             [options-el {:parsed-properties parsed-properties
-                          :properties properties
-                          :query-data        query-data
-                          :uid               block-uid}]
-             [query-el {:query-data        query-data
-                        :uid               block-uid
-                        :parsed-properties parsed-properties}]])))
+          :else [:> Box {:width        "100%" #_#_:border "1px" :borderColor "gray"
+                         :padding-left 38 :padding-top 15}
+                 [options-el {:parsed-properties parsed-properties
+                              :properties properties
+                              :query-data        query-data
+                              :uid               block-uid}]
+                 [query-el {:query-data        query-data
+                            :uid               block-uid
+                            :parsed-properties parsed-properties}]])))))
 
