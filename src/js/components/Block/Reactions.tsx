@@ -35,7 +35,7 @@ const ReactionItem = ({ reaction, onToggleReaction, currentUser }: ReactionItemP
       gap={1}
       position="relative"
       isActive={isFromCurrentUser}
-      onClick={isFromCurrentUser ? () => onToggleReaction(reactionItem, currentUser) : undefined}
+      onClick={() => onToggleReaction(reactionItem, currentUser)}
       {...isFromCurrentUser && {
         sx: {
           "&[data-active]:hover": {
