@@ -1,23 +1,28 @@
 (ns athens.views.task.core
   (:require
-    ["@chakra-ui/react"                   :refer [FormControl,
+    ["@chakra-ui/react"                   :refer [Box,
+                                                  FormControl,
                                                   FormLabel,
                                                   FormErrorMessage,
-                                                  FormHelperText
-                                                  Input]]
+                                                  FormHelperText]]
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs             :as bfs]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops       :as graph-ops]
+    [athens.common.logging                :as log]
     [athens.common.utils                  :as common.utils]
     [athens.db                            :as db]
     [athens.reactive                      :as reactive]
     [athens.types.tasks.events            :as task-events]
+    [athens.views.blocks.content          :as content-editor]
     [athens.views.blocks.types            :as types]
     [athens.views.blocks.types.dispatcher :as dispatcher]
     [clojure.string                       :as str]
-    [re-frame.core                        :as rf]))
+    [goog.functions                       :as gfns]
+    [re-frame.core                        :as rf]
+    [reagent.core                         :as r]
+    [reagent.ratom                        :as ratom]))
 
 
 ;; Create a new task
@@ -79,25 +84,62 @@
 ;; View
 
 (defn task-title-view
-  [_parent-block-uid _title-block-uid]
+  [_parent-block-uid title-block-uid]
   (let [title-id (str (random-uuid))]
+    ;; TODO discover it title prop is missing, if so, create it
+    ;; NOTE this really should not be the case, unless user messed block structure
+    ;; nevertheless this should be general patter for all property editors
+    (when-not title-block-uid
+      (let []))    
+    
     (fn [parent-block-uid title-block-uid]
       (let [title-block    (reactive/get-reactive-block-document [:block/uid title-block-uid])
-            title          (:block/string title-block)
+            title          (or (:block/string title-block) "")
+            local-value    (r/atom title)
             invalid-title? (and (str/blank? title)
-                                (not (nil? title)))]
+                                (not (nil? title)))
+            save-fn        (fn [e]
+                             (let [new-value (-> e .-target .-value)]
+                               (log/debug "title-save-fn" (pr-str new-value))
+                               (reset! local-value new-value)))
+            update-fn     #(do
+                             (log/debug "update-fn:" (pr-str %))
+                             (when-not (= title %)
+                               (reset! local-value %)
+                               (rf/dispatch [::task-events/save-title
+                                             {:parent-block-uid parent-block-uid
+                                              :title            %}])))
+            idle-fn        (gfns/debounce #(do
+                                             (log/debug "title-idle-fn" (pr-str @local-value))
+                                             (update-fn @local-value))
+                                          2000)
+            read-value    local-value
+            show-edit?    (r/atom true)
+            state-hooks   {:save-fn       save-fn
+                           :idle-fn       idle-fn
+                           :update-fn     update-fn
+                           :read-value    read-value
+                           :show-edit?    show-edit?}]
         [:> FormControl {:is-required true
                          :is-invalid  invalid-title?}
          [:> FormLabel {:html-for title-id}
           "Task Title"]
          ;; TODO: Use actual editor
-         [:> Input {:value     (or title "")
-                    :id        title-id
-                    :on-change (fn [e]
-                                 (let [value (-> e .-target .-value)]
-                                   (when-not (= title value)
-                                     (rf/dispatch [::task-events/save-title {:parent-block-uid parent-block-uid
-                                                                             :title            value}]))))}]
+         [:> Box {:px 2
+                  :mt 2
+                  :minHeight "2.125em"
+                  :borderRadius "sm"
+                  :bg "background.attic"
+                  :cursor "text"
+                  :_focusWithin {:shadow "focus"}}
+          [content-editor/block-content-el {:block/uid    title-block-uid
+                                            }
+           state-hooks]]
+         #_[:> Input {:value     (or title "")
+                      :id        title-id
+                      :on-change (fn [e]
+                                   (let [value (-> e .-target .-value)]
+                                     ))}]
          (if invalid-title?
            [:> FormErrorMessage "Task title is required"]
            [:> FormHelperText "Please provide Task title"])]))))

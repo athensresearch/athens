@@ -21,6 +21,7 @@
    [block-el block linked-ref-data {}])
   ([block linked-ref-data _opts]
    (let [block-uid  (:block/uid block)
+         ;; TODO: this is not reactive, so when we change block/type we don't see the change until reload
          block-type (common-db/get-block-type @db/dsdb [:block/uid block-uid])
          renderer   (block-type-dispatcher/block-type->protocol block-type {:linked-ref-data linked-ref-data})]
      (println "XXX: :block/type prop:" (pr-str block-type))
