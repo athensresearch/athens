@@ -138,6 +138,13 @@
 
 
 (rf/reg-sub
+  :feature-flags
+  :<- [:settings]
+  (fn [settings _]
+    (:feature-flags settings)))
+
+
+(rf/reg-sub
   :connection-status
   (fn [db _]
     (:connection-status db)))

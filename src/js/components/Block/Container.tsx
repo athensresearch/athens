@@ -1,28 +1,46 @@
 import React from 'react';
-import { MenuButton, Box, IconButton, Menu } from "@chakra-ui/react";
+import { Box, useMergeRefs } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
 import { useContextMenu } from '@/utils/useContextMenu';
-import { EllipsisHorizontalCircleIcon } from '@/Icons/Icons';
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
 // Don't open the context menu on these elements
 const CONTAINER_CONTEXT_MENU_FILTERED_TAGS = ["A", "BUTTON", "INPUT", "TEXTAREA", "LABEL", "VIDEO", "EMBED", "IFRAME", "IMG"];
 
-const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, ...props }) => {
-  const ref = React.useRef(null);
+const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: string): boolean => {
+  if (!target) return false;
+
+  // if hovered element's closest block container has the current UID,
+  // we're hovering the current block. Otherwise return false
+  const closestBlockContainer = target.closest('.block-container') as HTMLElement;
+  return (closestBlockContainer?.dataset?.uid === thisBlockUid)
+}
+
+const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
+  const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
+
+  const internalRef = React.useRef(null)
+  const refs = useMergeRefs(internalRef, ref)
+
+  const handleMouseOver = (e) => setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
+  const handleMouseLeave = () => isHoveredNotChild && setIsHoveredNotChild(false);
+
   const {
     menuSourceProps,
     ContextMenu,
     isOpen: isContextMenuOpen
   } = useContextMenu({
-    ref,
+    ref: internalRef,
+    menuProps: {
+      size: "sm"
+    },
     source: "cursor",
   });
 
   return <>
     <Box
-      ref={ref}
+      ref={refs}
       className={[
         "block-container",
         isDragging ? "is-dragging" : "",
@@ -31,6 +49,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         isContextMenuOpen && 'isContextMenuOpen',
         (hasChildren && isOpen) ? "show-tree-indicator" : "",
         isLinkedRef ? "is-linked-ref" : "",
+        isHoveredNotChild && "is-hovered-not-child",
         hasPresence ? "is-presence" : "",
       ].filter(Boolean).join(' ')}
       display="flex"
@@ -39,25 +58,11 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       borderRadius="0.125rem"
       justifyContent="flex-start"
       flexDirection="column"
-      // border="1px solid black"
       background="var(--block-surface-color)"
       opacity={isDragging ? 0.5 : 1}
       data-uid={uid}
       data-childrenuids={childrenUids}
       sx={{
-        "&": {
-          display: "grid",
-          gridTemplateColumns: "1em auto 1em 1fr auto auto",
-          gridTemplateRows: "0 1fr auto 0",
-          gridTemplateAreas:
-            `'above above above above above above above'
-             'toggle name bullet content refs presence actions'
-             'x children children children children y y'
-             'below below below below below below below'`,
-          borderRadius: "0.5rem",
-          minHeight: '2em',
-          position: "relative",
-        },
         "&.show-tree-indicator:before": {
           content: "''",
           position: "absolute",
@@ -88,8 +93,21 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
           left: "4px",
           top: "4px"
         },
-        ".toggle": { opacity: "0" },
-        "&:hover > .toggle, &:focus-within > .toggle": { opacity: "1" },
+        ".block-body": {
+          display: "grid",
+          gridTemplateColumns: "1em auto 1em 1fr auto",
+          gridTemplateRows: "0 1fr auto auto 0",
+          gridTemplateAreas:
+            `'above above above above above above' 
+            'toggle name anchor content refs presence' 
+            '_ _ _ reactions reactions reactions'
+            '_ _ _ comments comments comments'
+            'below below below below below below'`,
+          borderRadius: "0.5rem",
+          minHeight: '2em',
+          position: "relative",
+        },
+        "&:hover > .block-toggle, &:focus-within > .block-toggle": { opacity: "1" },
         "button.block-edit-toggle": {
           position: "absolute",
           appearance: "none",
@@ -109,10 +127,7 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
           "--block-surface-color": "background.basement",
           bg: "background.basement",
           // Blocks nested in an embed get normal indentation...
-          ".block-container": {
-            marginLeft: 8,
-            gridArea: "children"
-          },
+          ".block-container": { marginLeft: 8 },
           // ...except for the first one, where that would be excessive
           "& > .block-container": { marginLeft: 0.5 },
         },
@@ -122,9 +137,9 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         },
         "&.is-linked-ref": { bg: "background-attic" },
         "&.isContextMenuOpen": { bg: "background.attic" },
-        ".block-children": {
-          gridArea: "children",
-          marginLeft: "1.5em",
+        ".block-container": {
+          marginLeft: "2em",
+          gridArea: "body"
         }
       }}
       {...menuSourceProps}
@@ -138,6 +153,11 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
         }
       }
       {...props}
+      onMouseOver={handleMouseOver}
+      onMouseLeave={(e) => {
+        if (props?.onMouseLeave) props.onMouseLeave(e);
+        handleMouseLeave();
+      }}
     >
       {children}
     </Box>
@@ -145,6 +165,6 @@ const _Container = ({ children, isDragging, isSelected, isOpen, hasChildren, has
       {menu}
     </ContextMenu>
   </>;
-}
+})
 
 export const Container = withErrorBoundary(_Container, { fallback: <p>{ERROR_MESSAGE}</p> });

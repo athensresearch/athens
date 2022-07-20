@@ -736,10 +736,14 @@
   :resolve-transact-forward
   [(interceptors/sentry-span "resolve-transact-forward")]
   (fn [{:keys [db]} [_ event]]
-    (let [remote? (db-picker/remote-db? db)
-          valid?  (schema/valid-event? event)
-          dsdb    @db/dsdb
-          undo?   (undo-resolver/undo? event)]
+    (let [remote?     (db-picker/remote-db? db)
+          valid?      (schema/valid-event? event)
+          dsdb        @db/dsdb
+          undo?       (undo-resolver/undo? event)
+          presence-id (-> (subscribe [:presence/current-user]) deref :username)
+          event       (if (and remote? presence-id)
+                        (common-events/add-presence event presence-id)
+                        event)]
       (log/debug ":resolve-transact-forward event:" (pr-str event)
                  "remote?" (pr-str remote?)
                  "valid?" (pr-str valid?)
@@ -1427,9 +1431,9 @@
   [source-uid ref-uid relation string]
   (let [db                        @db/dsdb
         block-save-op             (graph-ops/build-block-save-op db source-uid string)
-        location                  (common-db/compat-position db {:block/uid ref-uid
+        position                  (common-db/compat-position db {:block/uid ref-uid
                                                                  :relation relation})
-        block-move-op             (graph-ops/build-block-move-op db source-uid location)
+        block-move-op             (graph-ops/build-block-move-op db source-uid position)
         block-save-block-move-op  (composite-ops/make-consequence-op {:op/type :block-save-block-move}
                                                                      [block-save-op
                                                                       block-move-op])]
@@ -1595,6 +1599,8 @@
   (fn [_ [_ {:keys [source-uid target-uid target-rel local-string] :as args}]]
     (log/debug ":block/move args" (pr-str args))
     (let [sentry-tx (close-and-get-sentry-tx "block/move")
+          local-string (or local-string
+                           (:block/string (common-db/get-block-document @db/dsdb [:block/uid source-uid])))
           event     (-> (block-save-block-move-composite-op source-uid target-uid target-rel local-string)
                         common-events/build-atomic-event)]
       {:fx [(transact-async-flow :block-move event sentry-tx [(focus-on-uid source-uid nil)])]})))
@@ -1614,8 +1620,7 @@
                                                                                                   (str "((" source-uid "))"))]))]
       {:fx [[:dispatch-n [[:resolve-transact-forward atomic-event]
                           [:reporting/block.create {:source :bullet-drop
-                                                    :count  1}] ; TODO :reporting/block.link
-                          ]]]})))
+                                                    :count  1}]]]]}))) ; TODO :reporting/block.link
 
 
 (reg-event-fx

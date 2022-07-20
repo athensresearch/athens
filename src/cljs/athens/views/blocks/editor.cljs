@@ -2,9 +2,11 @@
   (:require
     ["/components/Block/Anchor"                :refer [Anchor]]
     ["/components/Block/PropertyName"          :refer [PropertyName]]
+    ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
+    ["/components/EmojiPicker/EmojiPicker"     :refer [EmojiPickerPopoverContent]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    ["@chakra-ui/react"                        :refer [VStack PopoverAnchor Popover Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common-db                          :as common-db]
     [athens.db                                 :as db]
     [athens.events.inline-refs                 :as inline-refs.events]
@@ -15,11 +17,12 @@
     [athens.self-hosted.presence.views         :as presence]
     [athens.subs.inline-refs                   :as inline-refs.subs]
     [athens.subs.linked-refs                   :as linked-ref.subs]
-    [athens.subs.selection                     :as select-subs]
     [athens.util                               :as util]
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content               :as content]
-    [athens.views.blocks.context-menu          :refer [handle-copy-unformatted handle-copy-refs]]
+    [athens.views.blocks.reactions             :refer [toggle-reaction props->reactions]]
+    [athens.views.comments.core              :as comments]
+    [athens.views.comments.inline            :as inline-comments]
     [re-frame.core                             :as rf]))
 
 
@@ -149,23 +152,15 @@
 
 
 (defn editor-component
-  [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts]
+  [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts menu show-emoji-picker? hide-emoji-picker-fn]
   (let [{:keys [linked-ref
                 parent-uids]} linked-ref-data
         uid                   (:block/uid block-o)
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
-        on-open-block             (fn [e]
-                                    (router/navigate-uid uid e)
-                                    (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                         :target :block
-                                                                         :pane   :main-pane}]))
-        on-open-block-in-sidebar (fn [e]
-                                   (router/navigate-uid uid e)
-                                   (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                        :target :block
-                                                                        :pane   :right-pane}]))
-        selected-items        (rf/subscribe [::select-subs/items])]
+        feature-flags         (rf/subscribe [:feature-flags])
+        show-inline-comments  (rf/subscribe [:comment/show-inline-comments?])
+        show-textarea         (rf/subscribe [:comment/show-comment-textarea? uid])]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
       (let [{:block/keys [;; uid
@@ -173,67 +168,94 @@
                           children
                           key
                           properties
-                          _refs]} (reactive/get-reactive-block-document [:block/uid uid])]
+                          _refs]} (reactive/get-reactive-block-document [:block/uid uid])
+            reactions-enabled?    (:reactions @feature-flags)
+            user-id               (or (:username @(rf/subscribe [:presence/current-user]))
+                                      ;; We use empty string for when there is no user information, like in PKM.
+                                      "")
+            reactions             (and reactions-enabled?
+                                       (props->reactions properties))]
+
         [:<>
-         (when (and children?
-                    (or (seq children)
-                        (seq properties)))
-           [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
-                                        (and (false? linked-ref) open))
-                                  true
-                                  false)
-                       :onClick (fn [e]
-                                  (.. e stopPropagation)
-                                  (if (true? linked-ref)
-                                    (rf/dispatch [::linked-ref.events/toggle-open! uid])
-                                    (toggle uid (not open))))}])
+         [:div.block-body
+          (when (and children?
+                     (or (seq children)
+                         (seq properties)))
+            [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
+                                         (and (false? linked-ref) open))
+                                   true
+                                   false)
+                        :onClick (fn [e]
+                                   (.. e stopPropagation)
+                                   (if (true? linked-ref)
+                                     (rf/dispatch [::linked-ref.events/toggle-open! uid])
+                                     (toggle uid (not open))))}])
 
-         (when key
-           [:> PropertyName {:name    (:node/title key)
-                             :onClick (fn [e]
-                                        (let [shift? (.-shiftKey e)]
-                                          (rf/dispatch [:reporting/navigation {:source :block-property
-                                                                               :target :page
-                                                                               :pane   (if shift?
-                                                                                         :right-pane
-                                                                                         :main-pane)}])
-                                          (router/navigate-page (:node/title key) e)))}])
-         [:> Anchor {:isClosedWithChildren   (when (and (seq children)
-                                                        (or (and (true? linked-ref) (not @linked-ref-open?))
-                                                            (and (false? linked-ref) (not open))))
-                                               "closed-with-children")
-                     :uidSanitizedBlock      uid-sanitized-block
-                     :shouldShowDebugDetails (util/re-frame-10x-open?)
-                     :menu            (clj->js [{:children
-                                                 "Open block"
-                                                 :onClick on-open-block}
-                                                {:children
-                                                 "Open block in sidebar"
-                                                 :onClick on-open-block-in-sidebar}
-                                                {:children
-                                                 (if (> (count @selected-items) 1)
-                                                   "Copy selected block refs"
-                                                   "Copy block ref")
-                                                 :onClick #(handle-copy-refs nil uid)}
-                                                {:children "Copy unformatted text"
-                                                 :onClick  #(handle-copy-unformatted uid)}])
-                     :onOpenBlock          on-open-block
-                     :onOpenBlockInSidebar on-open-block-in-sidebar
-                     :on-drag-start          (fn [e] (bullet-drag-start e uid))
-                     :on-drag-end            (fn [e] (bullet-drag-end e uid))}]
+          (when key
+            [:> PropertyName {:name    (:node/title key)
+                              :onClick (fn [e]
+                                         (let [shift? (.-shiftKey e)]
+                                           (rf/dispatch [:reporting/navigation {:source :block-property
+                                                                                :target :page
+                                                                                :pane   (if shift?
+                                                                                          :right-pane
+                                                                                          :main-pane)}])
+                                           (router/navigate-page (:node/title key) e)))}])
 
-         [content/block-content-el block-o state-hooks]
 
-         [presence/inline-presence-el uid]
+          [:> Popover {:isOpen @show-emoji-picker?
+                       :placement "bottom-end"
+                       :onOpen #(js/console.log "tried to open")
+                       :onClose hide-emoji-picker-fn}
 
-         (when (and (> (count _refs) 0) (not= :block-embed? opts))
-           [block-refs-count-el
-            (count _refs)
-            (fn [e]
-              (if (.. e -shiftKey)
-                (rf/dispatch [:right-sidebar/open-item uid])
-                (rf/dispatch [::inline-refs.events/toggle-open! uid])))
-            @inline-refs-open?])
+           [:> PopoverAnchor
+            [:> Anchor {:isClosedWithChildren   (when (and (seq children)
+                                                           (or (and (true? linked-ref) (not @linked-ref-open?))
+                                                               (and (false? linked-ref) (not open))))
+                                                  "closed-with-children")
+                        :uidSanitizedBlock      uid-sanitized-block
+                        :shouldShowDebugDetails (util/re-frame-10x-open?)
+                        :menu                   menu
+                        :onClick                (fn [e]
+                                                  (let [shift? (.-shiftKey e)]
+                                                    (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                         :target :block
+                                                                                         :pane   (if shift?
+                                                                                                   :right-pane
+                                                                                                   :main-pane)}])
+                                                    (router/navigate-uid uid e)))
+                        :on-drag-start          (fn [e] (bullet-drag-start e uid))
+                        :on-drag-end            (fn [e] (bullet-drag-end e uid))}]]
+           [:> EmojiPickerPopoverContent
+            {:onClose hide-emoji-picker-fn
+             :onEmojiSelected (fn [e] (toggle-reaction [:block/uid uid] (.. e -detail -unicode) user-id))}]]
+
+
+
+
+          [content/block-content-el block-o state-hooks]
+
+          (when reactions [:> Reactions {:reactions (clj->js reactions)
+                                         :currentUser user-id
+                                         :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
+
+          ;; Show comments when the toggle is on
+          (when (and open
+                     (or @show-textarea
+                         (and @show-inline-comments
+                              (comments/get-comment-thread-uid @db/dsdb uid))))
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
+
+          [presence/inline-presence-el uid]
+
+          (when (and (> (count _refs) 0) (not= :block-embed? opts))
+            [block-refs-count-el
+             (count _refs)
+             (fn [e]
+               (if (.. e -shiftKey)
+                 (rf/dispatch [:right-sidebar/open-item uid])
+                 (rf/dispatch [::inline-refs.events/toggle-open! uid])))
+             @inline-refs-open?])]
 
          ;; Inline refs
          (when (and (> (count _refs) 0)
@@ -251,16 +273,14 @@
               (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid prop)))
               opts]))
 
-         [:div.block-children
-
-          ;; Children
-          (when (and (seq children)
-                     (or (and (true? linked-ref) @linked-ref-open?)
-                         (and (false? linked-ref) open)))
-            (for [child children
-                  :let  [child-uid (:block/uid child)]]
-              ^{:key (:db/id child)}
-              [block-el child
-               (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))
-               opts]))]]))))
+         ;; Children
+         (when (and (seq children)
+                    (or (and (true? linked-ref) @linked-ref-open?)
+                        (and (false? linked-ref) open)))
+           (for [child children
+                 :let  [child-uid (:block/uid child)]]
+             ^{:key (:db/id child)}
+             [block-el child
+              (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))
+              opts]))]))))
 

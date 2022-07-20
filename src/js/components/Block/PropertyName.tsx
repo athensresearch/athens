@@ -32,30 +32,30 @@ export const PropertyName = (props: PropertyNameProps) => {
       size="sm"
       p={0}
       sx={{
-      "svg": {
-        pointerEvents: "none",
-        transform: "scale(1.1001)", // Prevents the bullet being squished
-        overflow: "visible", // Prevents the bullet being cropped
-        width: "1em",
-        height: "1em",
-        "*": {
-          vectorEffect: "non-scaling-stroke"
+        "svg": {
+          pointerEvents: "none",
+          transform: "scale(1.1001)", // Prevents the bullet being squished
+          overflow: "visible", // Prevents the bullet being cropped
+          width: "1em",
+          height: "1em",
+          "*": {
+            vectorEffect: "non-scaling-stroke"
+          }
+        },
+        "circle": {
+          transformOrigin: 'center',
+          transition: 'all 0.15s ease-in-out',
+          stroke: "transparent",
+          strokeWidth: "0.125em",
+          fill: "currentColor",
         }
-      },
-      "circle": {
-        transformOrigin: 'center',
-        transition: 'all 0.15s ease-in-out',
-        stroke: "transparent",
-        strokeWidth: "0.125em",
-        fill: "currentColor",
-      }
 
       }}
-    onClick={onClick}
+      onClick={onClick}
     >
       <svg viewBox="0 0 24 24">
-        <circle cx="12" cy="6" r="3.5" />
-        <circle cx="12" cy="18" r="3.5" />
+        <circle cx="12" cy="7" r="2.5" />
+        <circle cx="12" cy="17" r="2.5" />
       </svg>
       {name}
     </Button>

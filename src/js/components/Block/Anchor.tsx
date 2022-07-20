@@ -1,18 +1,12 @@
 import React, { ReactNode } from 'react';
-import { MenuList, MenuItem, MenuGroup, MenuDivider, IconButton, Box, Text } from '@chakra-ui/react';
+import { IconButton, Text, MenuList, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
+import { ColonIcon, BulletIcon, DashIcon, ArrowRightIcon } from '@/Icons/Icons';
 import { useContextMenu } from '@/utils/useContextMenu';
 
 const ANCHORS = {
-  CIRCLE: <svg viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="4" />
-  </svg>,
-  PROPERTY: <svg viewBox="0 0 24 24">
-    <circle cy="17" cx="12" r="3" />
-    <circle cy="7" cx="12" r="3" />
-  </svg>,
-  DASH: <svg viewBox="0 0 1 1">
-    <line x1="-1" y1="0" x2="1" y2="0" />
-  </svg>
+  "bullet": <BulletIcon />,
+  "colon": <ColonIcon />,
+  "dash": <DashIcon />
 }
 
 const showValue = (value) => {
@@ -61,8 +55,11 @@ const propertiesList = (block) => {
   })
 }
 
+type Anchors = typeof ANCHORS;
+type AnchorImage = keyof Anchors;
+
 export interface AnchorProps {
-  anchorElement?: 'circle' | 'dash' | number;
+  anchorElement?: AnchorImage | React.ReactNode | number;
   isClosedWithChildren: boolean;
   block: any;
   uidSanitizedBlock: any;
@@ -72,9 +69,8 @@ export interface AnchorProps {
   onCopyUnformatted: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
-  onOpenBlock: () => void;
-  onOpenBlockInSidebar: () => void;
-  menu: any;
+  onClick: () => void;
+  menu?: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
 const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
@@ -83,15 +79,12 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
     "aria-label": "Block anchor",
     className: ['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' '),
     draggable: true,
-    gridArea: "bullet",
+    gridArea: "anchor",
     flexShrink: 0,
     position: 'relative',
     appearance: "none",
-    _dragging: {
-      cursor: "drag"
-    },
     border: "0",
-    color: "foreground.tertiary",
+    color: "foreground.secondary",
     display: "flex",
     placeItems: "center",
     placeContent: "center",
@@ -115,7 +108,7 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
           vectorEffect: "non-scaling-stroke"
         }
       },
-      "circle": {
+      "svg path": {
         transformOrigin: 'center',
         transition: 'all 0.15s ease-in-out',
         stroke: "transparent",
@@ -135,71 +128,60 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
 /**
  * A handle and indicator of a block's position in the document
 */
-export const Anchor = (props: AnchorProps) => {
+export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
+
   const { isClosedWithChildren,
     anchorElement,
     shouldShowDebugDetails,
     onDragStart,
     onDragEnd,
-    onOpenBlock,
-    onOpenBlockInSidebar,
+    onClick,
     uidSanitizedBlock,
     menu,
   } = props;
-  const ref = React.useRef(null);
-
-  const menuList = menu ? <MenuList>
-    {menu.map((action) => <MenuItem {...action} />)}
-    {shouldShowDebugDetails && (
-      <>
-        {menu && <MenuDivider />}
-        <MenuGroup title="Debug details">
-          <Box px={4} pb={3}>
-            {propertiesList(uidSanitizedBlock)}
-          </Box>
-        </MenuGroup>
-      </>)}
-  </MenuList> : null;
+  const innerRef = React.useRef(null);
+  const refs = useMergeRefs(innerRef, ref);
 
   const {
     menuSourceProps,
     ContextMenu,
-    isOpen: isContextMenuOpen,
-    onToggle: onContextMenuToggle,
+    isOpen: isContextMenuOpen
   } = useContextMenu({
-    ref,
-    menuProps: { size: "sm" },
+    ref: innerRef,
+    menuProps: {
+      size: "sm"
+    },
     source: "box"
   });
 
   return <>
     <IconButton
-      ref={ref}
+      ref={refs}
       aria-label="Block anchor"
-      onClick={(e) => {
-        if (isContextMenuOpen || !e.shiftKey) {
-          onContextMenuToggle(e);
-        }
-      }}
-      onContextMenu={(e) => onContextMenuToggle(e)}
-      onDoubleClick={(e) => {
-        console.log(e)
-        if (e.shiftKey) {
-          onOpenBlockInSidebar(e)
-        } else {
-          onOpenBlock(e)
-        }
-      }}
+      {...anchorButtonStyleProps(isClosedWithChildren)}
+      {...menuSourceProps}
       onDragStart={onDragStart}
+      onClick={onClick}
       onDragEnd={onDragEnd}
       isActive={isContextMenuOpen}
-      {...anchorButtonStyleProps(isClosedWithChildren)}
     >
-      {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
+      {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}
     </IconButton>
-    <ContextMenu>
-      {menuList}
-    </ContextMenu>
+    {(menu || shouldShowDebugDetails) && <ContextMenu>
+      {shouldShowDebugDetails ? (
+        <MenuList>
+          {menu}
+          <MenuGroup title="Debug details">
+            <Box px={4} pb={3}>
+              {propertiesList(uidSanitizedBlock)}
+            </Box>
+          </MenuGroup>
+        </MenuList>) : menu}
+    </ContextMenu>}
   </>
 
-};
+});
+
+Anchor.defaultProps = {
+  anchorElement: "bullet"
+}
