@@ -1,6 +1,7 @@
 import {
   Button, ButtonGroup, Text, Box, Tooltip,
 } from "@chakra-ui/react";
+import { formatList } from '@/utils/formatList';
 import { EmojiPickerPopover } from '@/EmojiPicker/EmojiPicker';
 
 type ReactionId = string;
@@ -24,29 +25,22 @@ const ReactionItem = ({ reaction, onToggleReaction, currentUser }: ReactionItemP
   const users: UserId[] = reaction[1];
   const usersCount: number = reaction[1].length;
   const isFromCurrentUser: boolean = users.includes(currentUser);
+  const tooltipText: string = `${formatList(users) || "Someone"} reacted with ${reactionItem}`
 
-  return <Button
-    key={reactionItem}
-    as={isFromCurrentUser ? "button" : "div"}
-    display="flex"
-    gap={1}
-    position="relative"
-    isActive={isFromCurrentUser}
-    onClick={isFromCurrentUser ? () => onToggleReaction(reactionItem, currentUser) : undefined}
-    {...isFromCurrentUser && {
-      sx: {
-        "&[data-active]:hover": {
-          bg: "interaction.surface.hover",
-        }
-      }
-    }}
-  >
-    <Tooltip label={users.join(', ')}>
+  return <Tooltip label={tooltipText}>
+    <Button
+      key={reactionItem}
+      display="flex"
+      gap={1}
+      position="relative"
+      isActive={isFromCurrentUser}
+      onClick={() => onToggleReaction(reactionItem, currentUser)}
+    >
       <Box position="absolute" inset={0} />
-    </Tooltip>
-    <Text transform="scale(1.35)" fontSize="md">{reactionItem}</Text>
-    <Text fontSize="xs" color="foreground.secondary">{usersCount < 10 ? usersCount : "9+"}</Text>
-  </Button>
+      <Text transform="scale(1.35)" fontSize="md">{reactionItem}</Text>
+      <Text fontSize="xs" color="foreground.secondary">{usersCount < 10 ? usersCount : "9+"}</Text>
+    </Button>
+  </Tooltip>
 }
 
 export const Reactions = ({ reactions, onToggleReaction, currentUser }: ReactionsProps): JSX.Element | null => {
