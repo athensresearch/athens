@@ -14,6 +14,7 @@
     [athens.common.utils                  :as common.utils]
     [athens.db                            :as db]
     [athens.reactive                      :as reactive]
+    [athens.self-hosted.presence.views    :as presence]
     [athens.types.tasks.events            :as task-events]
     [athens.views.blocks.content          :as content-editor]
     [athens.views.blocks.types            :as types]
@@ -21,8 +22,7 @@
     [clojure.string                       :as str]
     [goog.functions                       :as gfns]
     [re-frame.core                        :as rf]
-    [reagent.core                         :as r]
-    [reagent.ratom                        :as ratom]))
+    [reagent.core                         :as r]))
 
 
 ;; Create a new task
@@ -84,8 +84,9 @@
 ;; View
 
 (defn task-title-view
-  [_parent-block-uid _title-block-uid]
+  [_parent-block-uid title-block-uid]
   (let [title-id (str (random-uuid))]
+    (rf/dispatch [:editing/uid title-block-uid])
     (fn [parent-block-uid title-block-uid]
       (let [title-block    (reactive/get-reactive-block-document [:block/uid title-block-uid])
             title          (or (:block/string title-block) "")
@@ -128,12 +129,9 @@
           ;; NOTE: we generate temporary uid for title if it doesn't exist, so editor can work
           [content-editor/block-content-el {:block/uid (or title-block-uid
                                                            (str "tmp-title-uid-" (common.utils/gen-block-uid)))}
-           state-hooks]]
-         #_[:> Input {:value     (or title "")
-                      :id        title-id
-                      :on-change (fn [e]
-                                   (let [value (-> e .-target .-value)]
-                                     ))}]
+           state-hooks]
+          [presence/inline-presence-el title-block-uid]]
+
          (if invalid-title?
            [:> FormErrorMessage "Task title is required"]
            [:> FormHelperText "Please provide Task title"])]))))
