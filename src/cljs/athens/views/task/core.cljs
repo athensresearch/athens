@@ -84,14 +84,8 @@
 ;; View
 
 (defn task-title-view
-  [_parent-block-uid title-block-uid]
+  [_parent-block-uid _title-block-uid]
   (let [title-id (str (random-uuid))]
-    ;; TODO discover it title prop is missing, if so, create it
-    ;; NOTE this really should not be the case, unless user messed block structure
-    ;; nevertheless this should be general patter for all property editors
-    (when-not title-block-uid
-      (let []))    
-    
     (fn [parent-block-uid title-block-uid]
       (let [title-block    (reactive/get-reactive-block-document [:block/uid title-block-uid])
             title          (or (:block/string title-block) "")
@@ -124,7 +118,6 @@
                          :is-invalid  invalid-title?}
          [:> FormLabel {:html-for title-id}
           "Task Title"]
-         ;; TODO: Use actual editor
          [:> Box {:px 2
                   :mt 2
                   :minHeight "2.125em"
@@ -132,8 +125,9 @@
                   :bg "background.attic"
                   :cursor "text"
                   :_focusWithin {:shadow "focus"}}
-          [content-editor/block-content-el {:block/uid    title-block-uid
-                                            }
+          ;; NOTE: we generate temporary uid for title if it doesn't exist, so editor can work
+          [content-editor/block-content-el {:block/uid (or title-block-uid
+                                                           (str "tmp-title-uid-" (common.utils/gen-block-uid)))}
            state-hooks]]
          #_[:> Input {:value     (or title "")
                       :id        title-id
@@ -156,10 +150,10 @@
 
   (outline-view
     [this block-data block-el callbacks]
-    (let [block-uid      (:block/uid block-data)
-          reactive-block (reactive/get-reactive-block-document [:block/uid block-uid])]
+    (let [block-uid (:block/uid block-data)]
       (fn [this block-data block-el callbacks]
-        (let [{title-uid :block/uid} (->> reactive-block
+        (let [reactive-block         (reactive/get-reactive-block-document [:block/uid block-uid])
+              {title-uid :block/uid} (->> reactive-block
                                           :block/properties
                                           (filter (fn [[k _v]] (= ":task/title" k)))
                                           (map second)
