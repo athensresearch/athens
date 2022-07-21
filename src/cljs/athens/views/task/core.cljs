@@ -28,7 +28,7 @@
 
 ;; Create a new task
 (defn new-task
-  [db block-uid position title description priority creator assignee due-date status projects]
+  [db block-uid position title description priority creator assignee due-date status _projects]
   ;; TODO verify `status` correctness
   (->> (bfs/internal-representation->atomic-ops
          db
@@ -143,11 +143,25 @@
            [:> FormHelperText "Please provide Task title"])]))))
 
 
+(defn- find-allowed-statuses
+  [status-block-key]
+  (let [task-status-page    (reactive/get-reactive-node-document (:db/id status-block-key))
+        allowed-stat-blocks (-> task-status-page
+                                :block/properties
+                                (get ":property/enum")
+                                :block/children)
+        allowed-statuses    (map :block/string allowed-stat-blocks)]
+    (if (seq allowed-statuses)
+      allowed-statuses
+      ["To Do" "Doing" "Blocked" "Done" "Canceled"])))
+
+
 (defn task-status-view
   [parent-block-uid status-block-uid]
-  (let [status-id    (str (random-uuid))
-        status-block (reactive/get-reactive-block-document [:block/uid status-block-uid])
-        status-value (or (:block/string status-block) "To Do")]
+  (let [status-id        (str (random-uuid))
+        status-block     (reactive/get-reactive-block-document [:block/uid status-block-uid])
+        allowed-statuses (find-allowed-statuses (:block/key status-block))
+        status-value     (or (:block/string status-block) "To Do")]
     [:> FormControl {:is-required true}
      [:> FormLabel {:html-for status-id}
       "Task Status"]
@@ -158,23 +172,15 @@
                                                 {:parent-block-uid parent-block-uid
                                                  :status           new-status}])))}
       (doall
-       ;; TODO read it from configuration on the graph
-       (for [status ["To Do" "Doing" "Blocked" "Done" "Canceled"]]
-         ^{:key status}
-         [:option {:value    status
-                   :selected (= status-value status)}
-          status]))]
-     ]))
-
-;; - `:property/enum`
-;; - `To Do`
-;; - `Doing`
-;; - `Blocked`
-;; - `Done`
-;; - `Canceled`
+        (for [status allowed-statuses]
+          ^{:key status}
+          [:option {:value    status
+                    :selected (= status-value status)}
+           status]))]]))
 
 
-(defn- find-property-block-by-key-name [entity-block prop-name]
+(defn- find-property-block-by-key-name
+  [entity-block prop-name]
   (->> entity-block
        :block/properties
        (filter (fn [[k _v]] (= prop-name k)))
@@ -188,13 +194,13 @@
   types/BlockTypeProtocol
 
   (inline-ref-view
-    [this block-data attr ref-uid uid callbacks with-breadcrumb?])
+    [_this _block-data _attr _ref-uid _uid _callbacks _with-breadcrumb?])
 
 
   (outline-view
-    [this block-data block-el callbacks]
+    [_this block-data _block-el _callbacks]
     (let [block-uid (:block/uid block-data)]
-      (fn [this block-data block-el callbacks]
+      (fn [_this _block-data _block-el _callbacks]
         (let [reactive-block (reactive/get-reactive-block-document [:block/uid block-uid])
               title-uid      (:block/uid (find-property-block-by-key-name reactive-block ":task/title"))
               ;; projects-uid   (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
@@ -205,24 +211,24 @@
 
 
   (supported-transclusion-scopes
-    [this])
+    [_this])
 
 
   (transclusion-view
-    [this block-el block-uid callback transclusion-scope])
+    [_this _block-el _block-uid _callback _transclusion-scope])
 
 
   (zoomed-in-view
-    [this block-data callbacks])
+    [_this _block-data _callbacks])
 
 
   (supported-breadcrumb-styles
-    [this])
+    [_this])
 
 
   (breadcrumbs-view
-    [this block-data callbacks breadcrumb-style]))
+    [_this _block-data _callbacks _breadcrumb-style]))
 
 
-(defmethod dispatcher/block-type->protocol "[[athens/task]]" [_block-type args-map]
+(defmethod dispatcher/block-type->protocol "[[athens/task]]" [_block-type _args-map]
   (TaskView.))
