@@ -4,7 +4,8 @@
                                                   FormControl,
                                                   FormLabel,
                                                   FormErrorMessage,
-                                                  FormHelperText]]
+                                                  FormHelperText,
+                                                  Select]]
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs             :as bfs]
@@ -27,7 +28,8 @@
 
 ;; Create a new task
 (defn new-task
-  [db block-uid position title description priority creator assignee due-date status project-relation]
+  [db block-uid position title description priority creator assignee due-date status projects]
+  ;; TODO verify `status` correctness
   (->> (bfs/internal-representation->atomic-ops
          db
          [#:block{:uid        (common.utils/gen-block-uid)
@@ -56,9 +58,14 @@
                                ":task/status"
                                #:block{:string status
                                        :uid    (common.utils/gen-block-uid)}
-                               ":task/project"
-                               #:block{:string project-relation
-                                       :uid    (common.utils/gen-block-uid)}}}]
+                               ;; NOTE Task belonging to a Project is maintained on side of a Project
+                               #_#_
+                               ":task/projects"
+                               #:block{:string   ""
+                                       :uid      (common.utils/gen-block-uid)
+                                       :children (for [project projects]
+                                                   #:block{:string project
+                                                           :uid    (common.utils/gen-block-uid)})}}}]
          {:block/uid block-uid
           :relation  position})
        (composite/make-consequence-op {:op/type :new-type})))
@@ -84,9 +91,8 @@
 ;; View
 
 (defn task-title-view
-  [_parent-block-uid title-block-uid]
+  [_parent-block-uid _title-block-uid]
   (let [title-id (str (random-uuid))]
-    (rf/dispatch [:editing/uid title-block-uid])
     (fn [parent-block-uid title-block-uid]
       (let [title-block    (reactive/get-reactive-block-document [:block/uid title-block-uid])
             title          (or (:block/string title-block) "")
@@ -137,6 +143,45 @@
            [:> FormHelperText "Please provide Task title"])]))))
 
 
+(defn task-status-view
+  [parent-block-uid status-block-uid]
+  (let [status-id    (str (random-uuid))
+        status-block (reactive/get-reactive-block-document [:block/uid status-block-uid])
+        status-value (or (:block/string status-block) "To Do")]
+    [:> FormControl {:is-required true}
+     [:> FormLabel {:html-for status-id}
+      "Task Status"]
+     [:> Select {:placeholder "Select a status"
+                 :on-change   (fn [e]
+                                (let [new-status (-> e .-target .-value)]
+                                  (rf/dispatch [::task-events/save-status
+                                                {:parent-block-uid parent-block-uid
+                                                 :status           new-status}])))}
+      (doall
+       ;; TODO read it from configuration on the graph
+       (for [status ["To Do" "Doing" "Blocked" "Done" "Canceled"]]
+         ^{:key status}
+         [:option {:value    status
+                   :selected (= status-value status)}
+          status]))]
+     ]))
+
+;; - `:property/enum`
+;; - `To Do`
+;; - `Doing`
+;; - `Blocked`
+;; - `Done`
+;; - `Canceled`
+
+
+(defn- find-property-block-by-key-name [entity-block prop-name]
+  (->> entity-block
+       :block/properties
+       (filter (fn [[k _v]] (= prop-name k)))
+       (map second)
+       first))
+
+
 (defrecord TaskView
   []
 
@@ -150,14 +195,13 @@
     [this block-data block-el callbacks]
     (let [block-uid (:block/uid block-data)]
       (fn [this block-data block-el callbacks]
-        (let [reactive-block         (reactive/get-reactive-block-document [:block/uid block-uid])
-              {title-uid :block/uid} (->> reactive-block
-                                          :block/properties
-                                          (filter (fn [[k _v]] (= ":task/title" k)))
-                                          (map second)
-                                          first)]
+        (let [reactive-block (reactive/get-reactive-block-document [:block/uid block-uid])
+              title-uid      (:block/uid (find-property-block-by-key-name reactive-block ":task/title"))
+              ;; projects-uid   (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
+              status-uid     (:block/uid (find-property-block-by-key-name reactive-block ":task/status"))]
           [:div {:class "task_container"}
-           [task-title-view block-uid title-uid]]))))
+           [task-title-view block-uid title-uid]
+           [task-status-view block-uid status-uid]]))))
 
 
   (supported-transclusion-scopes
@@ -180,5 +224,5 @@
     [this block-data callbacks breadcrumb-style]))
 
 
-(defmethod dispatcher/block-type->protocol "athens/task" [_block-type args-map]
+(defmethod dispatcher/block-type->protocol "[[athens/task]]" [_block-type args-map]
   (TaskView.))
