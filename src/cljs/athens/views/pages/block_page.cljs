@@ -8,14 +8,13 @@
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
-    [athens.db :as db]
     [athens.views.blocks.core :as blocks]
+    [athens.views.comments.core :as comments]
+    [athens.views.comments.inline :as inline-comments]
     [athens.views.pages.node-page :as node-page]
     [komponentit.autosize :as autosize]
     [re-frame.core :as rf :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [athens.views.comments.inline :as inline-comments]
-    [athens.views.comments.core :as comments]))
+    [reagent.core :as r]))
 
 
 ;; Helpers

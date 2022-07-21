@@ -1,31 +1,30 @@
 (ns athens.views.blocks.editor
   (:require
-    ["/components/Block/Anchor" :refer [Anchor]]
-    ["/components/Block/PropertyName" :refer [PropertyName]]
-    ["/components/Block/Toggle" :refer [Toggle]]
+    ["/components/Block/Anchor"                :refer [Anchor]]
+    ["/components/Block/PropertyName"          :refer [PropertyName]]
+    ["/components/Block/Reactions"             :refer [Reactions]]
+    ["/components/Block/Toggle"                :refer [Toggle]]
+    ["/components/EmojiPicker/EmojiPicker"     :refer [EmojiPickerPopoverContent]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react" :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
-    ["/components/inbox/Notifications" :refer [KanbanBoard KanbanColumn KanbanCard]]
-    [athens.common-db :as common-db]
-    [athens.db :as db]
-    [athens.events.inline-refs :as inline-refs.events]
-    [athens.events.linked-refs :as linked-ref.events]
-    [athens.parse-renderer :as parse-renderer]
-    [athens.reactive :as reactive]
-    [athens.router :as router]
-    [athens.self-hosted.presence.views :as presence]
-    [athens.subs.inline-refs :as inline-refs.subs]
-    [athens.subs.linked-refs :as linked-ref.subs]
-    [athens.subs.selection :as select-subs]
-    [athens.util :as util]
-    [athens.views.blocks.bullet :refer [bullet-drag-start bullet-drag-end]]
-    [athens.views.blocks.content :as content]
-    [athens.views.blocks.context-menu :refer [handle-copy-unformatted handle-copy-refs]]
-    [re-frame.core :as rf]
-    [athens.views.blocks.context-menu  :refer [handle-copy-unformatted handle-copy-refs handle-click-comment]]
-    [athens.views.notifications.actions :as actions]
-    [athens.views.comments.core :as comments]
-    [athens.views.comments.inline :as inline-comments]))
+    ["@chakra-ui/react"                        :refer [VStack PopoverAnchor Popover Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    [athens.common-db                          :as common-db]
+    [athens.db                                 :as db]
+    [athens.events.inline-refs                 :as inline-refs.events]
+    [athens.events.linked-refs                 :as linked-ref.events]
+    [athens.parse-renderer                     :as parse-renderer]
+    [athens.reactive                           :as reactive]
+    [athens.router                             :as router]
+    [athens.self-hosted.presence.views         :as presence]
+    [athens.subs.inline-refs                   :as inline-refs.subs]
+    [athens.subs.linked-refs                   :as linked-ref.subs]
+    [athens.util                               :as util]
+    [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
+    [athens.views.blocks.content               :as content]
+    [athens.views.blocks.reactions             :refer [toggle-reaction props->reactions]]
+    [athens.views.notifications.actions        :as actions]
+    [athens.views.comments.core                :as comments]
+    [athens.views.comments.inline              :as inline-comments]
+    [re-frame.core                             :as rf]))
 
 
 (defn toggle
@@ -154,14 +153,15 @@
 
 
 (defn editor-component
-  [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts]
+  [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts menu show-emoji-picker? hide-emoji-picker-fn]
   (let [{:keys [linked-ref
                 parent-uids]} linked-ref-data
         uid                   (:block/uid block-o)
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
-        selected-items        (rf/subscribe [::select-subs/items])
-        block-str             (:block/string (common-db/get-block @db/dsdb [:block/uid uid]))]
+        feature-flags         (rf/subscribe [:feature-flags])
+        show-inline-comments  (rf/subscribe [:comment/show-inline-comments?])
+        show-textarea         (rf/subscribe [:comment/show-comment-textarea? uid])]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
       (let [{:block/keys [;; uid
@@ -169,7 +169,14 @@
                           children
                           key
                           properties
-                          _refs]} (reactive/get-reactive-block-document [:block/uid uid])]
+                          _refs]} (reactive/get-reactive-block-document [:block/uid uid])
+            reactions-enabled?    (:reactions @feature-flags)
+            user-id               (or (:username @(rf/subscribe [:presence/current-user]))
+                                      ;; We use empty string for when there is no user information, like in PKM.
+                                      "")
+            reactions             (and reactions-enabled?
+                                       (props->reactions properties))]
+
         [:<>
          [:div.block-body
           (when (and children?
@@ -196,56 +203,49 @@
                                                                                           :main-pane)}])
                                            (router/navigate-page (:node/title key) e)))}])
 
-          [:> Anchor {:isClosedWithChildren   (when (and (seq children)
-                                                         (or (and (true? linked-ref) (not @linked-ref-open?))
-                                                             (and (false? linked-ref) (not open))))
-                                                "closed-with-children")
-                      :uidSanitizedBlock      uid-sanitized-block
-                      :shouldShowDebugDetails (util/re-frame-10x-open?)
-                      :menuActions            (clj->js [{:children
-                                                         (if (> (count @selected-items) 1)
-                                                           "Copy selected block refs"
-                                                           "Copy block ref")
-                                                         :onClick #(handle-copy-refs nil uid)}
-                                                        {:children "Copy unformatted text"
-                                                         :onClick  #(handle-copy-unformatted uid)}
-                                                        (when (empty? @selected-items)
-                                                          {:children "Comment"
-                                                           :onClick  (fn [e] (handle-click-comment e uid))})
-                                                        (when (actions/is-block-inbox? properties "task-inbox")
-                                                          {:children "Show hidden notifications"
-                                                           :onClick #(actions/show-hidden-notifications uid)})
-                                                        (when (actions/is-block-inbox? properties "task-inbox")
-                                                          {:children "Hide read notifications"
-                                                           :onClick #(actions/hide-read-notifications uid)})
-                                                        ;; Don't know how to join the following 2 conditions in 1
-                                                        (when (actions/is-block-notification? properties)
-                                                          {:children "Mark as read and hide"
-                                                           :onClick #(rf/dispatch (actions/update-state-prop uid "read hidden"))})
-                                                        (when (actions/is-block-notification? properties)
-                                                          (if (actions/unread-notification? properties)
-                                                            {:children "Mark as read and don't hide"
-                                                             :onClick #(rf/dispatch (actions/update-state-prop uid "read"))}
-                                                            {:children "Mark as unread"
-                                                             :onClick #(rf/dispatch (actions/update-state-prop uid "unread"))}))])
-                      :onClick                (fn [e]
-                                                (let [shift? (.-shiftKey e)]
-                                                  (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                       :target :block
-                                                                                       :pane   (if shift?
-                                                                                                 :right-pane
-                                                                                                 :main-pane)}])
-                                                  (router/navigate-uid uid e)))
-                      :on-drag-start          (fn [e] (bullet-drag-start e uid))
-                      :on-drag-end            (fn [e] (bullet-drag-end e uid))
-                      :unreadNotification     (actions/unread-notification? properties)}]
+
+          [:> Popover {:isOpen @show-emoji-picker?
+                       :placement "bottom-end"
+                       :onOpen #(js/console.log "tried to open")
+                       :onClose hide-emoji-picker-fn}
+
+           [:> PopoverAnchor
+            [:> Anchor {:isClosedWithChildren   (when (and (seq children)
+                                                           (or (and (true? linked-ref) (not @linked-ref-open?))
+                                                               (and (false? linked-ref) (not open))))
+                                                  "closed-with-children")
+                        :uidSanitizedBlock      uid-sanitized-block
+                        :shouldShowDebugDetails (util/re-frame-10x-open?)
+                        :menu                   menu
+                        :onClick                (fn [e]
+                                                  (let [shift? (.-shiftKey e)]
+                                                    (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                         :target :block
+                                                                                         :pane   (if shift?
+                                                                                                   :right-pane
+                                                                                                   :main-pane)}])
+                                                    (router/navigate-uid uid e)))
+                        :on-drag-start          (fn [e] (bullet-drag-start e uid))
+                        :on-drag-end            (fn [e] (bullet-drag-end e uid))
+                        :unreadNotification     (actions/unread-notification? properties)}]]
+           [:> EmojiPickerPopoverContent
+            {:onClose hide-emoji-picker-fn
+             :onEmojiSelected (fn [e] (toggle-reaction [:block/uid uid] (.. e -detail -unicode) user-id))}]]
+
+
+
 
           [content/block-content-el block-o state-hooks]
 
+          (when reactions [:> Reactions {:reactions (clj->js reactions)
+                                         :currentUser user-id
+                                         :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
+
           ;; Show comments when the toggle is on
-          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
-                    (and @(rf/subscribe [:comment/show-inline-comments?])
-                         (comments/get-comment-thread-uid @db/dsdb uid)))
+          (when (and open
+                     (or @show-textarea
+                         (and @show-inline-comments
+                              (comments/get-comment-thread-uid @db/dsdb uid))))
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
 
           [presence/inline-presence-el uid]
@@ -265,12 +265,6 @@
                     @inline-refs-open?)
            [inline-linked-refs-el block-el uid])
 
-   ;; TODO Inbox
-         (when (= "Show inbox here" block-str)
-            [:> KanbanColumn {:name  "Inbox"
-                              :cards ["1" "2"]
-                              :messages ["@Jeff commented: Use the main branch for this instance" "@Jeff assigned a new task to you"]
-                              :titles ["T-13 Create a docker Instance for `123.345.45.54" "T-13 Create a docker Instance for `123.345.45.54"]}])
          ;; Properties
          (when (and (seq properties)
                     (or (and (true? linked-ref) @linked-ref-open?)

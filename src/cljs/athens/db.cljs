@@ -356,7 +356,8 @@
 (defntrace get-parents-recursively
   [id]
   (when (d/entity @dsdb id)
-    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string :edit/time
+    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string
+                         {:block/edits [{:event/time [:time/ts]}]}
                          {:block/property-of ...}
                          {:block/_children ...}]
                  id)
@@ -428,19 +429,22 @@
       ;; protect against orphaned nodes
       :else                 nil)))
 
+
 (defn get-block-type
-  [block-ir]
   "Here making assumption that we represent `type` by key `:block/type`"
+  [block-ir]
   (-> block-ir
       :block/properties
       (get ":block/type")
       :block/string))
+
 
 (defn get-comment-parent-block
   [comment-eid]
   (let [thread-eid    (:db/id (common-db/get-parent @dsdb comment-eid))
         thread-parent (common-db/get-parent @dsdb thread-eid)]
     thread-parent))
+
 
 (defn remove-properties-add-type
   [block-ir]
@@ -480,7 +484,8 @@
                                                with-parent)
                                             eid-of-blocks-with-properties)
            grouped                        (group-by :block/type result)]
-      grouped))))
+       grouped))))
+
 
 (defn search-in-block-content
   ([query] (search-in-block-content query 20))
@@ -676,8 +681,19 @@
               (let [parent (-> x
                                :block/parents
                                first)]
-                [(:node/title parent) (:edit/time parent 0)]))
+                [(:node/title parent) (->> parent :block/edits (map (comp :time/ts :event/time)) sort last (or 0))]))
             blocks))
+
+
+(defn eids->groups
+  [eids]
+  (->> eids
+       merge-parents-and-block
+       group-by-parent
+       (sort-by #(-> % first second))
+       (map #(vector (ffirst %) (second %)))
+       vec
+       rseq))
 
 
 (defntrace get-unlinked-references

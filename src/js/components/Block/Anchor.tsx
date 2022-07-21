@@ -1,14 +1,12 @@
 import React, { ReactNode } from 'react';
-import { MenuList, MenuItem, MenuGroup, MenuDivider, IconButton, Box, Text } from '@chakra-ui/react';
+import { IconButton, Text, MenuList, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
+import { ColonIcon, BulletIcon, DashIcon, ArrowRightIcon } from '@/Icons/Icons';
 import { useContextMenu } from '@/utils/useContextMenu';
 
 const ANCHORS = {
-  CIRCLE: <svg viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="4" />
-  </svg>,
-  DASH: <svg viewBox="0 0 1 1">
-    <line x1="-1" y1="0" x2="1" y2="0" />
-  </svg>
+  "bullet": <BulletIcon />,
+  "colon": <ColonIcon />,
+  "dash": <DashIcon />
 }
 
 const showValue = (value) => {
@@ -35,13 +33,13 @@ const Item = ({ children }) => {
     justifyContent={'space-between'}
     sx={{
       "span": {
-        color: "red",
+        color: "foreground.secondary",
         flex: "1 1 50%",
         fontWeight: "medium"
       },
       "span + span": {
         marginLeft: "1ch",
-        color: "red",
+        color: "foreground.primary",
         fontWeight: "normal"
       }
     }}
@@ -57,8 +55,11 @@ const propertiesList = (block) => {
   })
 }
 
+type Anchors = typeof ANCHORS;
+type AnchorImage = keyof Anchors;
+
 export interface AnchorProps {
-  anchorElement?: 'circle' | 'dash' | number;
+  anchorElement?: AnchorImage | React.ReactNode | number;
   isClosedWithChildren: boolean;
   block: any;
   uidSanitizedBlock: any;
@@ -69,22 +70,21 @@ export interface AnchorProps {
   onDragStart: () => void;
   onDragEnd: () => void;
   onClick: () => void;
-  menuActions: any;
+  menu?: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
-const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotification : boolean) => {
+const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
   return ({
     bg: "transparent",
     "aria-label": "Block anchor",
     className: ['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' '),
     draggable: true,
-    gridArea: "bullet",
+    gridArea: "anchor",
     flexShrink: 0,
     position: 'relative',
     appearance: "none",
     border: "0",
     color: "foreground.secondary",
-    ...unreadNotification && ({color: "green"}),
     display: "flex",
     placeItems: "center",
     placeContent: "center",
@@ -108,7 +108,7 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotificatio
           vectorEffect: "non-scaling-stroke"
         }
       },
-      "circle": {
+      "svg path": {
         transformOrigin: 'center',
         transition: 'all 0.15s ease-in-out',
         stroke: "transparent",
@@ -128,7 +128,7 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotificatio
 /**
  * A handle and indicator of a block's position in the document
 */
-export const Anchor = (props: AnchorProps) => {
+export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
 
   const { isClosedWithChildren,
     anchorElement,
@@ -138,48 +138,50 @@ export const Anchor = (props: AnchorProps) => {
     onClick,
     uidSanitizedBlock,
     menuActions,
-    unreadNotification,
   } = props;
-  const ref = React.useRef(null);
+  const innerRef = React.useRef(null);
+  const refs = useMergeRefs(innerRef, ref);
 
   const {
     menuSourceProps,
     ContextMenu,
     isOpen: isContextMenuOpen
   } = useContextMenu({
-    ref,
+    ref: innerRef,
+    menuProps: {
+      size: "sm"
+    },
     source: "box"
   });
 
   return <>
     <IconButton
-      ref={ref}
+      ref={refs}
       aria-label="Block anchor"
-      {...anchorButtonStyleProps(isClosedWithChildren, unreadNotification)}
+      {...anchorButtonStyleProps(isClosedWithChildren)}
       {...menuSourceProps}
       onDragStart={onDragStart}
       onClick={onClick}
       onDragEnd={onDragEnd}
       isActive={isContextMenuOpen}
     >
-      {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
+      {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}
     </IconButton>
-    {(menuActions) && <ContextMenu>
-      <MenuList>
-        {menuActions.map((action) => {
-          return <MenuItem {...action} />
-        })}
-        {shouldShowDebugDetails && (
-          <>
-            {menuActions && <MenuDivider />}
-            <MenuGroup title="Debug details">
-              <Box px={4} pb={3}>
-                {propertiesList(uidSanitizedBlock)}
-              </Box>
-            </MenuGroup>
-          </>)}
-      </MenuList>
+    {(menu || shouldShowDebugDetails) && <ContextMenu>
+      {shouldShowDebugDetails ? (
+        <MenuList>
+          {menu}
+          <MenuGroup title="Debug details">
+            <Box px={4} pb={3}>
+              {propertiesList(uidSanitizedBlock)}
+            </Box>
+          </MenuGroup>
+        </MenuList>) : menu}
     </ContextMenu>}
   </>
 
-};
+});
+
+Anchor.defaultProps = {
+  anchorElement: "bullet"
+}

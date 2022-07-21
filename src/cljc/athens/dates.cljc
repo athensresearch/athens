@@ -15,17 +15,14 @@
   "Returns today's date or a date OFFSET days before today"
   ([] (get-day 0))
   ([offset]
-   (let [day (t/<<
-               (t/date-time)
-               (t/new-duration offset :days))]
-     {:uid   (t/format US-format day)
-      :title (t/format title-format day)}))
+   (get-day (t/date) offset))
   ([date offset]
    (let [day (t/<<
                (-> date (t/at "00:00"))
                (t/new-duration offset :days))]
      {:uid   (t/format US-format day)
-      :title (t/format title-format day)})))
+      :title (t/format title-format day)
+      :inst  (t/inst day)})))
 
 
 (defn date-string

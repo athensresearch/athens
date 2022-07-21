@@ -1,13 +1,19 @@
 (ns athens.views.comments.core
-  (:require [athens.db :as db]
-            [re-frame.core :as rf]
-            [athens.common-db :as common-db]
-            [athens.common.utils :as common.utils]
-            [athens.common-events.graph.composite :as composite]
-            [athens.views.notifications.core  :refer [get-subscriber-data new-notification]]
-            [athens.common-events.graph.ops :as graph-ops]
-            [athens.common-events.bfs :as bfs]
-            [athens.common-events :as common-events]))
+  (:require
+    [athens.common-db :as common-db]
+    [athens.common-events :as common-events]
+    [athens.common-events.bfs :as bfs]
+    [athens.common-events.graph.composite :as composite]
+    [athens.views.notifications.core  :refer [get-subscriber-data new-notification]]
+    [athens.common-events.graph.ops :as graph-ops]
+    [athens.common.utils :as common.utils]
+    [athens.db :as db]
+    [re-frame.core :as rf]))
+
+
+(defn enabled?
+  []
+  (:comments @(rf/subscribe [:feature-flags])))
 
 
 (rf/reg-sub
@@ -15,20 +21,24 @@
   (fn [db [_ uid]]
     (= uid (:comment/show-comment-textarea db))))
 
+
 (rf/reg-event-fx
   :comment/show-comment-textarea
   (fn [{:keys [db]} [_ uid]]
     {:db (assoc db :comment/show-comment-textarea uid)}))
 
+
 (rf/reg-event-fx
   :comment/hide-comment-textarea
-  (fn [{:keys [db]} [_ uid]]
+  (fn [{:keys [db]} [_]]
     {:db (assoc db :comment/show-comment-textarea nil)}))
+
 
 (rf/reg-sub
   :comment/show-inline-comments?
   (fn [db [_]]
     (= true (:comment/show-inline-comments db))))
+
 
 (rf/reg-event-fx
   :comment/toggle-inline-comments
@@ -40,12 +50,11 @@
 
 (defn thread-child->comment
   [comment-block]
-  (let [comment-uid (:block/uid comment-block)
-        properties  (common-db/get-block-property-document @db/dsdb [:block/uid comment-uid])]
+  (let [comment-uid (:block/uid comment-block)]
     {:block/uid comment-uid
      :string (:block/string comment-block)
-     :author (:block/string (get properties ":comment/author"))
-     :time   (:block/string (get properties ":comment/time"))}))
+     :author (-> comment-block :block/create :event/auth :presence/id)
+     :time   (-> comment-block :block/create :event/time :time/ts)}))
 
 
 (defn get-comments-in-thread
@@ -56,7 +65,7 @@
 
 
 (defn get-comment-thread-uid
-  [db parent-block-uid]
+  [_db parent-block-uid]
   (-> (common-db/get-block-property-document @db/dsdb [:block/uid parent-block-uid])
       ;; TODO Multiple threads
       ;; I think for multiple we would have a top level property for all threads
@@ -66,20 +75,17 @@
 
 
 (defn new-comment
-  [db thread-uid comment-string author time]
+  [db thread-uid comment-string]
   (->> (bfs/internal-representation->atomic-ops db
                                                 [#:block{:uid    (common.utils/gen-block-uid)
                                                          :string comment-string
                                                          :properties
-                                                         {":block/type"     #:block{:string "comment"
-                                                                                    :uid    (common.utils/gen-block-uid)}
-                                                          ":comment/author" #:block{:string author
-                                                                                    :uid    (common.utils/gen-block-uid)}
-                                                          ":comment/time"   #:block{:string time
-                                                                                    :uid    (common.utils/gen-block-uid)}}}]
+                                                         {":block/type" #:block{:string "comment"
+                                                                                :uid    (common.utils/gen-block-uid)}}}]
                                                 {:block/uid thread-uid
                                                  :relation  :last})
        (composite/make-consequence-op {:op/type :new-comment})))
+
 
 (defn new-thread
   [db thread-uid thread-name block-uid author]
@@ -227,7 +233,7 @@
                                               [(new-thread @db/dsdb thread-uid "" uid author)
                                                (graph-ops/build-block-move-op @db/dsdb thread-uid {:block/uid uid
                                                                                                    :relation  {:page/title ":comment/threads"}})])
-                                            (concat [(new-comment @db/dsdb thread-uid comment-string author "12:09 pm")]
+                                            (concat [(new-comment @db/dsdb thread-uid comment-string)]
                                                     (add-mentioned-users-as-member-and-subscriber @db/dsdb thread-uid comment-string)))
 
           add-as-mem-or-subs        (when thread-exists?
