@@ -1,15 +1,17 @@
 (ns athens.views.notifications.actions
-  (:require [athens.common-db :as common-db]
-            [athens.db :as db]
-            [athens.common-events.graph.ops :as graph-ops]
-            [re-frame.core :as rf]
-            [athens.common-events.graph.composite :as composite-ops]
-            [athens.common-events :as common-events]))
+  (:require
+    [athens.common-db :as common-db]
+    [athens.common-events :as common-events]
+    [athens.common-events.graph.composite :as composite-ops]
+    [athens.common-events.graph.ops :as graph-ops]
+    [athens.db :as db]
+    [re-frame.core :as rf]))
 
 
 (defn is-block-inbox?
   [properties inbox-type]
   (= inbox-type (:block/string (get properties ":block/type"))))
+
 
 (defn is-block-notification?
   [properties]
@@ -26,7 +28,7 @@
   (= "read hidden" (:block/string (get properties ":notification/state"))))
 
 
-; (update-state-prop hidden-notif-uid "unread")))))
+;; (update-state-prop hidden-notif-uid "unread")))))
 
 ;; Mark as
 ;; uid of the notification
@@ -58,14 +60,12 @@
   (let [ops                  (into [] (map
                                         #(let [[prop-uid] (graph-ops/build-property-path @db/dsdb  % [key])
                                                save-op    (graph-ops/build-block-save-op @db/dsdb prop-uid new-val)]
-                                          save-op)
+                                           save-op)
                                         uids))
-         composite-op         (composite-ops/make-consequence-op {:op/type :show-hidden-notifications}
-                                                                 ops)
-         event                (common-events/build-atomic-event composite-op)]
+        composite-op         (composite-ops/make-consequence-op {:op/type :show-hidden-notifications}
+                                                                ops)
+        event                (common-events/build-atomic-event composite-op)]
     (rf/dispatch [:resolve-transact-forward event])))
-
-
 
 
 (defn show-hidden-notifications
