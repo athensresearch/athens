@@ -5,7 +5,6 @@
     ["framer-motion" :refer [AnimatePresence motion]]
     [athens.reactive :as reactive]
     [athens.router   :as router]
-    [athens.util     :as util]
     [re-frame.core   :as rf]))
 
 

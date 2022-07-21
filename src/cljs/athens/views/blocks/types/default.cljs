@@ -25,6 +25,7 @@
     [athens.views.blocks.editor              :as editor]
     [athens.views.blocks.types               :as types]
     [athens.views.blocks.types.dispatcher    :as dispatcher]
+    [athens.views.notifications.actions      :as actions]
     [clojure.string                          :as str]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
@@ -272,6 +273,7 @@
                                string
                                open
                                children
+                               properties
                                _refs]} (merge block-o block)
                  children-uids         (set (map :block/uid children))
                  uid-sanitized-block   (s/transform
@@ -297,6 +299,22 @@
                                           [:> MenuItem {:children "Copy unformatted text"
                                                         :icon (r/as-element [:> TextIcon])
                                                         :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                          (when (actions/is-block-inbox? properties "task-inbox")
+                                            [:> MenuItem {:children "Show hidden notifications"
+                                                          :onClick #(actions/show-hidden-notifications uid)}])
+                                          (when (actions/is-block-inbox? properties "task-inbox")
+                                            [:> MenuItem {:children "Hide read notifications"
+                                                          :onClick #(actions/hide-read-notifications uid)}])
+                                          ;; Don't know how to join the following 2 conditions in 1
+                                          (when (actions/is-block-notification? properties)
+                                            [:> MenuItem {:children "Mark as read and hide"
+                                                          :onClick #(rf/dispatch (actions/update-state-prop uid "read hidden"))}])
+                                          (when (actions/is-block-notification? properties)
+                                            (if (actions/unread-notification? properties)
+                                              [:> MenuItem {:children "Mark as read and don't hide"
+                                                            :onClick #(rf/dispatch (actions/update-state-prop uid "read"))}]
+                                              [:> MenuItem {:children "Mark as unread"
+                                                            :onClick #(rf/dispatch (actions/update-state-prop uid "unread"))}]))
                                           (when comments-enabled?
                                             [:> MenuItem {:children "Add comment"
                                                           :onClick #(ctx-menu/handle-click-comment % uid)
@@ -315,7 +333,8 @@
                (update-fn string)
                (update-old-fn string))
 
-             [:> Container {:isDragging   (and @dragging? (not is-selected))
+             [:> Container {:isHidden     (actions/hide-notification? properties)
+                            :isDragging   (and @dragging? (not is-selected))
                             :isSelected   is-selected
                             :hasChildren  (seq children)
                             :isOpen       open

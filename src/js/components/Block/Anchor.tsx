@@ -137,7 +137,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
     onDragEnd,
     onClick,
     uidSanitizedBlock,
-    menuActions,
+    menu,
   } = props;
   const innerRef = React.useRef(null);
   const refs = useMergeRefs(innerRef, ref);
