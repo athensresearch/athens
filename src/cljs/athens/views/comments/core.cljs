@@ -80,8 +80,8 @@
                                                 [#:block{:uid    (common.utils/gen-block-uid)
                                                          :string comment-string
                                                          :properties
-                                                         {":block/type" #:block{:string "comment"
-                                                                                :uid    (common.utils/gen-block-uid)}}}]
+                                                         {":entity/type" #:block{:string "athens/comment"
+                                                                                 :uid    (common.utils/gen-block-uid)}}}]
                                                 {:block/uid thread-uid
                                                  :relation  :last})
        (composite/make-consequence-op {:op/type :new-comment})))
@@ -93,16 +93,16 @@
                                                 [#:block{:uid    thread-uid
                                                          :string thread-name
                                                          :properties
-                                                         {":block/type"          #:block{:string "comment/thread"
-                                                                                         :uid    (common.utils/gen-block-uid)}
-                                                          ":thread/members"      #:block{:string   "comment/thread"
-                                                                                         :uid      (common.utils/gen-block-uid)
-                                                                                         :children [#:block{:string (str "@" author)
-                                                                                                            :uid    (common.utils/gen-block-uid)}]}
-                                                          ":thread/subscribers"  #:block{:string   "comment/thread"
-                                                                                         :uid      (common.utils/gen-block-uid)
-                                                                                         :children [#:block{:string (str "@" author)
-                                                                                                            :uid    (common.utils/gen-block-uid)}]}}}]
+                                                         {":entity/type"          #:block{:string "athens/comment-thread"
+                                                                                          :uid    (common.utils/gen-block-uid)}
+                                                          "athens/comment-thread/members"      #:block{:string   "athens/comment-thread/members"
+                                                                                                       :uid      (common.utils/gen-block-uid)
+                                                                                                       :children [#:block{:string (str "@" author)
+                                                                                                                          :uid    (common.utils/gen-block-uid)}]}
+                                                          "athens/comment-thread/subscribers"  #:block{:string   "athens/comment-thread/subscribers"
+                                                                                                       :uid      (common.utils/gen-block-uid)
+                                                                                                       :children [#:block{:string (str "@" author)
+                                                                                                                          :uid    (common.utils/gen-block-uid)}]}}}]
                                                 {:block/uid block-uid
                                                  :relation  :last})
        (composite/make-consequence-op {:op/type :new-thread})))
@@ -134,7 +134,7 @@
 
 (defn unsubscribe-from-thread
   [db thread-uid userpage]
-  (-> (:block/children (get-thread-property db thread-uid ":thread/subscribers"))
+  (-> (:block/children (get-thread-property db thread-uid "athens/comment-thread/subscribers"))
       (filter
         #((= userpage (:block/string %))))
       (:block/uid)
@@ -144,17 +144,17 @@
 
 (defn add-user-as-member-or-subscriber?
   [db thread-uid userpage]
-  (let [user-member?       (user-in-thread-as? db ":thread/members" thread-uid userpage)
-        user-subscriber?   (user-in-thread-as? db ":thread/subscribers" thread-uid userpage)]
+  (let [user-member?       (user-in-thread-as? db "athens/comment-thread/members" thread-uid userpage)
+        user-subscriber?   (user-in-thread-as? db "athens/comment-thread/subscribers" thread-uid userpage)]
     (cond-> []
-            (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid ":thread/members" userpage))
-            (empty? user-subscriber?) (concat (add-new-member-or-subscriber-to-thread db thread-uid ":thread/subscribers" userpage)))))
+            (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/members" userpage))
+            (empty? user-subscriber?) (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/subscribers" userpage)))))
 
 ;; Notifications
 
 (defn get-subscribers-for-notifying
   [db thread-uid author]
-  (->> (:block/children (get-thread-property db thread-uid ":thread/subscribers"))
+  (->> (:block/children (get-thread-property db thread-uid "athens/comment-thread/subscribers"))
        (filter #(not= (:block/string %) (str "@" author)))
        (map #(:block/string %))))
 
@@ -172,13 +172,13 @@
                                        (when (not= userpage (str "@" author))
                                          (composite/make-consequence-op {:op/type :userpage-notification-op}
                                                                         (concat userpage-inbox-op
-                                                                                [(new-notification db
-                                                                                                   inbox-uid
-                                                                                                   :first
-                                                                                                   "comment-notification"
-                                                                                                   notification-message
-                                                                                                   "unread"
-                                                                                                   parent-block-uid)]))))
+                                                                                [(new-notification {:db                          db
+                                                                                                    :inbox-block-uid             inbox-uid
+                                                                                                    :notification-position       :first
+                                                                                                    :notification-type           "athens/notification/type/comment"
+                                                                                                    :notification-message        notification-message
+                                                                                                    :notification-state          "unread"
+                                                                                                    :notification-trigger-parent parent-block-uid})]))))
 
                                     subscriber-data))
         ops              notifications]

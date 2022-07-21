@@ -59,9 +59,9 @@
         shift?                        (.. e -shiftKey)
         {:keys [index query results]} @state
         item                          (get results index)
-        block-type                    (:block/type item)
+        entity-type                   (:entity/type item)
         navigate-uid                  (cond
-                                        (= "comment" block-type)  (:block/uid (:block/parent item))
+                                        (= "athens/comment" entity-type)  (:block/uid (:block/parent item))
                                         :else                     (:block/uid item))]
     (cond
       (= KeyCodes.ENTER key) (cond
@@ -227,15 +227,15 @@
    (doall
      (for [[i x] (map-indexed list results)
            :let  [block-uid       (:block/uid x)
-                  block-type      (:block/type x)
+                  entity-type     (:entity/type x)
                   parent          (:block/parent x)
                   type            (if parent :block :node)
                   title           (cond
-                                    (= "comment" block-type)  (:block/string parent)
+                                    (= "athens/comment" entity-type)  (:block/string parent)
                                     :else                     (or (:node/title parent) (:node/title x)))
                   uid             (or (:block/uid parent) (:block/uid x))
                   navigate-to-uid (cond
-                                    (= "comment" block-type) (:block/uid parent)
+                                    (= "athens/comment" entity-type) (:block/uid parent)
                                     :else                    block-uid)
                   string          (:block/string x)]]
        (if (nil? x)

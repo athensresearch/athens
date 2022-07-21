@@ -8,28 +8,31 @@
 
 
 (defn new-notification
-  [db inbox-block-uid notification-position notification-type message state notification-from-block]
+  [{:keys [db inbox-block-uid notification-position notification-type message notification-state notification-trigger-uid notification-trigger-parent author]}]
   ;; notification-from-block can be used to show context for the notification
-  ;; notification-type: "*-notification" for e.g "task-notification", "comment-notification"
+  ;; notification-type: "*-notification" for e.g "task-notification", "athens/notification/type/comment"
   (->> (bfs/internal-representation->atomic-ops
          db
          [#:block{:uid        (common.utils/gen-block-uid)
                   :string     message;; Should the string be message or the breadcrumb or something else?
                   :open?      false
-                  :properties {":block/type"
+                  :properties {":entity/type"
                                #:block{:string "notification"
                                        :uid    (common.utils/gen-block-uid)}
-                               ":notification/type"
+                               "athens/notification/type"
                                #:block{:string notification-type
                                        :uid    (common.utils/gen-block-uid)}
-                               ":notification/message"
-                               #:block{:string message
+                               "athens/notification/trigger"
+                               #:block{:string (str "((" notification-trigger-uid "))")
                                        :uid    (common.utils/gen-block-uid)}
-                               ":notification/state"
-                               #:block{:string state
+                               "athens/notification/trigger/author"
+                               #:block{:string author
                                        :uid    (common.utils/gen-block-uid)}
-                               ":notification/from-block"
-                               #:block{:string  notification-from-block
+                               "athens/notification/state"
+                               #:block{:string notification-state
+                                       :uid    (common.utils/gen-block-uid)}
+                               "athens/notification/trigger/parent"
+                               #:block{:string  (str "((" notification-trigger-parent "))")
                                        :uid    (common.utils/gen-block-uid)}}}]
          {:block/uid inbox-block-uid
           :relation  notification-position})
@@ -38,7 +41,7 @@
 
 (defn update-notification-state
   [notification-block-uid to-state]
-  (rf/dispatch [:properties/update-in [:block/uid notification-block-uid] [":notification/state"]
+  (rf/dispatch [:properties/update-in [:block/uid notification-block-uid] ["athens/notification/state"]
                        (fn [db prop-uid]
                          [(graph-ops/build-block-save-op db prop-uid to-state)])]))
 

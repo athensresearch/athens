@@ -431,11 +431,11 @@
 
 
 (defn get-block-type
-  "Here making assumption that we represent `type` by key `:block/type`"
+  "Here making assumption that we represent `type` by key `:entity/type`"
   [block-ir]
   (-> block-ir
       :block/properties
-      (get ":block/type")
+      (get ":entity/type")
       :block/string))
 
 
@@ -449,7 +449,7 @@
 (defn remove-properties-add-type
   [block-ir]
   (let [removed  (dissoc block-ir :block/_property-of :block/properties)
-        add-type (assoc removed :block/type (get-block-type block-ir))]
+        add-type (assoc removed :entity/type (get-block-type block-ir))]
     add-type))
 
 
@@ -476,14 +476,14 @@
                                                                           remove-properties-add-type)
                                                    with-parent         (cond
                                                                          ;; For comments
-                                                                         (= "comment" (:block/type enhanced-block))
+                                                                         (= "athens/comment" (:entity/type enhanced-block))
                                                                          (assoc enhanced-block :block/parent (get-comment-parent-block (:db/id enhanced-block)))
 
                                                                          :else
                                                                          enhanced-block)]
                                                with-parent)
                                             eid-of-blocks-with-properties)
-           grouped                        (group-by :block/type result)]
+           grouped                        (group-by :entity/type result)]
        grouped))))
 
 
@@ -506,7 +506,7 @@
                                           (keep get-root-parent-node-from-block)
                                           (map #(dissoc % :block/_children)))))
            block-type-search-result (group-search-results-by-block-type query n)
-           search-comments          (get block-type-search-result "comment")
+           search-comments          (get block-type-search-result "athens/comment")
            result                   (concat search-comments block-search-result)]
        result))))
 

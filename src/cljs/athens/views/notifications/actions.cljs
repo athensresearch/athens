@@ -10,22 +10,22 @@
 
 (defn is-block-inbox?
   [properties inbox-type]
-  (= inbox-type (:block/string (get properties ":block/type"))))
+  (= inbox-type (:block/string (get properties ":entity/type"))))
 
 
 (defn is-block-notification?
   [properties]
-  (= "notification" (:block/string (get properties ":block/type"))))
+  (= "notification" (:block/string (get properties ":entity/type"))))
 
 
 (defn unread-notification?
   [properties]
-  (= "unread" (:block/string (get properties ":notification/state"))))
+  (= "unread" (:block/string (get properties "athens/notification/state"))))
 
 
 (defn hide-notification?
   [properties]
-  (= "read hidden" (:block/string (get properties ":notification/state"))))
+  (= "read hidden" (:block/string (get properties "athens/notification/state"))))
 
 
 ;; (update-state-prop hidden-notif-uid "unread")))))
@@ -46,7 +46,7 @@
                            ;; for a channel
                            ;; for a thread
                            ;; for an inbox(assuming inbox is a list of notification blocks)
-                           (is-block-notification? block-properties) ":notification/state")
+                           (is-block-notification? block-properties) "athens/notification/state")
         updated-prop    (cond
                           ;; Maybe for a block we need to update the prop of the children also
                           (is-block-notification? block-properties) [:properties/update-in [:block/uid uid] [block-state-prop]
@@ -74,7 +74,7 @@
         hidden-notifications (filter some? (for [block all-notifications]
                                              (when (hide-notification? (:block/properties block))
                                                (:block/uid block))))]
-    (multi-uids-prop-update hidden-notifications ":notification/state" "read unhidden")))
+    (multi-uids-prop-update hidden-notifications "athens/notification/state" "read unhidden")))
 
 
 (defn hide-read-notifications
@@ -83,6 +83,6 @@
         hidden-notifications (filter some? (for [block all-notifications]
                                              (when (not (unread-notification? (:block/properties block)))
                                                (:block/uid block))))]
-    (multi-uids-prop-update hidden-notifications ":notification/state" "read hidden")))
+    (multi-uids-prop-update hidden-notifications "athens/notification/state" "read hidden")))
 
 
