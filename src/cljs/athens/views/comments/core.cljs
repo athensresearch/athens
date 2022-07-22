@@ -99,7 +99,7 @@
                                                                                                        :uid    (common.utils/gen-block-uid)}
                                                           "athens/comment-thread/members"      #:block{:string   "athens/comment-thread/members"
                                                                                                        :uid      (common.utils/gen-block-uid)
-                                                                                                       :children [#:block{:string (str "[[@" author "]]")
+                                                                                                       :children [#:block{:string (str "@" author)
                                                                                                                           :uid    (common.utils/gen-block-uid)}]}
                                                           "athens/comment-thread/subscribers"  #:block{:string   "athens/comment-thread/subscribers"
                                                                                                        :uid      (common.utils/gen-block-uid)
@@ -149,7 +149,7 @@
   (let [user-member?       (user-in-thread-as? db "athens/comment-thread/members" thread-uid userpage)
         user-subscriber?   (user-in-thread-as? db "athens/comment-thread/subscribers" thread-uid userpage)]
     (cond-> []
-            (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/members" (str "[[" userpage "]]")))
+            (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/members" userpage))
             (empty? user-subscriber?) (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/subscribers" userpage)))))
 
 ;; Notifications
@@ -165,7 +165,7 @@
   ;; If the user does not have a userpage or inbox we create it
   ;; Find the uid of the inbox for these notifications for all the subscribers
   ;; Create a notification for all the subscribers, apart from the subscriber who wrote the comment.
-  [db parent-block-uid users author notification-message trigger-block-uid]
+  [db parent-block-uid users author notification-message trigger-block-uid notification-type]
   (let [subscriber-data (map
                           #(get-subscriber-data db %)
                           users)
@@ -177,7 +177,7 @@
                                                                                 [(new-notification {:db                          db
                                                                                                     :inbox-block-uid             inbox-uid
                                                                                                     :notification-position       :first
-                                                                                                    :notification-type           "athens/notification/type/comment"
+                                                                                                    :notification-type           notification-type
                                                                                                     :notification-message        notification-message
                                                                                                     :notification-state          "unread"
                                                                                                     :notification-trigger-uid    trigger-block-uid
@@ -204,7 +204,7 @@
 (defn create-mention-notifications
   [db block-uid mentioned-users author block-string]
   (let [notification-message  (str "**[[@" author "]] mentioned you: **" "*"  block-string "*")
-        notification-ops      (create-notification-op-for-users db block-uid mentioned-users author notification-message block-uid)]
+        notification-ops      (create-notification-op-for-users db block-uid mentioned-users author notification-message block-uid "athens/notification/type/mention")]
     notification-ops))
 
 (defn add-mentioned-users-as-member-and-subscriber
@@ -224,18 +224,13 @@
                       (concat (get-subscribers-for-notifying db thread-uid author)
                               (get-all-mentions comment-string)))]
     (when subscribers
-      (create-notification-op-for-users db parent-block-uid subscribers author notification-message comment-block-uid))))
+      (create-notification-op-for-users db parent-block-uid subscribers author notification-message comment-block-uid "athens/notification/type/comment"))))
 
 
 (rf/reg-event-fx
   :comment/write-comment
-  (fn [{db :db} [_ uid comment-string]]
-    (let [author                   (or (-> (common-db/get-block-document @db/dsdb [:block/uid uid])
-                                           :block/create
-                                           :event/auth
-                                           :presence/id)
-                                       (nth ["Sid" "Jeff" "Alex" "Filipe" "Stuart"] (rand-int 4)))
-          thread-exists?            (get-comment-thread-uid @db/dsdb uid)
+  (fn [{db :db} [_ uid comment-string author]]
+    (let [thread-exists?            (get-comment-thread-uid @db/dsdb uid)
           thread-uid                (or thread-exists?
                                        (common.utils/gen-block-uid))
           {comment-uid :comment-uid

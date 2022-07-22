@@ -93,7 +93,8 @@
           value-atom      (r/atom "")
           show-edit-atom? (r/atom false)]
       (fn [data uid _hide?]
-        (let [num-comments (count data)]
+        (let [num-comments (count data)
+              username     (rf/subscribe [:username])]
           [:> VStack (merge
                        (when-not (:hide? @state)
                          {:bg "background.upper"})
@@ -141,7 +142,8 @@
                     enter-handler     (fn jetsam-enter-handler
                                         [_uid _d-key-down]
                                         (when (not (str/blank? @value-atom))
-                                          (re-frame.core/dispatch [:comment/write-comment uid @value-atom block-uid])
+                                          ;; Passing username because we need the username for other ops before the block is created.
+                                          (re-frame.core/dispatch [:comment/write-comment uid @value-atom @username])
                                           (reset! value-atom "")
                                           (rf/dispatch [:editing/uid block-uid])))
                     tab-handler       (fn jetsam-tab-handler

@@ -6,15 +6,25 @@
             [athens.common-events.graph.ops :as graph-ops]
             [re-frame.core :as rf]))
 
+(defn create-notif-message
+  [{:keys [db inbox-block-uid notification-position notification-for-user notification-type message notification-state notification-trigger-uid notification-trigger-parent notification-trigger-author] :as opts}]
+  (cond
+    (= notification-type  "athens/notification/type/comment")
+    (str "**" notification-trigger-author "** " "commented on: " "**((" notification-trigger-parent "))**" "\n"
+         "***((" notification-trigger-uid "))***")
+
+    (= notification-type  "athens/notification/type/mention")
+    (str "**" notification-trigger-author "** " "mentioned you: " "**((" notification-trigger-uid"))**")))
+
 
 (defn new-notification
-  [{:keys [db inbox-block-uid notification-position notification-for-user notification-type message notification-state notification-trigger-uid notification-trigger-parent notification-trigger-author]}]
+  [{:keys [db inbox-block-uid notification-position notification-for-user notification-type message notification-state notification-trigger-uid notification-trigger-parent notification-trigger-author] :as opts}]
   ;; notification-from-block can be used to show context for the notification
   ;; notification-type: "*-notification" for e.g "task-notification", "athens/notification/type/comment"
   (->> (bfs/internal-representation->atomic-ops
          db
          [#:block{:uid        (common.utils/gen-block-uid)
-                  :string     (or message "ggwp");; Should the string be message or the breadcrumb or something else?
+                  :string     (create-notif-message opts);; Should the string be message or the breadcrumb or something else?
                   :open?      false
                   :properties {":entity/type"
                                #:block{:string "notification"
