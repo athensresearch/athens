@@ -299,10 +299,10 @@
                                           [:> MenuItem {:children "Copy unformatted text"
                                                         :icon (r/as-element [:> TextIcon])
                                                         :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
-                                          (when (actions/is-block-inbox? properties "task-inbox")
+                                          (when (actions/is-block-inbox? properties "athens/inbox/type/comments")
                                             [:> MenuItem {:children "Show hidden notifications"
                                                           :onClick #(actions/show-hidden-notifications uid)}])
-                                          (when (actions/is-block-inbox? properties "task-inbox")
+                                          (when (actions/is-block-inbox? properties "athens/inbox/type/comments")
                                             [:> MenuItem {:children "Hide read notifications"
                                                           :onClick #(actions/hide-read-notifications uid)}])
                                           ;; Don't know how to join the following 2 conditions in 1

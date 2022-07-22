@@ -74,15 +74,18 @@
 
 (defn create-comments-inbox
   [db userpage]
-  (let [inbox-uid    (common.utils/gen-block-uid)
-        block-new-op (graph-ops/build-block-new-op db
-                                                   inbox-uid
-                                                   {:relation   :first
-                                                    :page/title userpage})
-        block-save-op (graph-ops/build-block-save-op db inbox-uid "Comments inbox")
-        new-save-op   [block-new-op
-                       block-save-op]]
-    [new-save-op inbox-uid]))
+  (let [inbox-uid    (common.utils/gen-block-uid)]
+    [[(->> (bfs/internal-representation->atomic-ops
+             db
+             [#:block{:uid        inbox-uid
+                      :string     "Comments inbox"
+                      :properties {":entity/type"
+                                   #:block{:string "athens/inbox/type/comments"
+                                           :uid    (common.utils/gen-block-uid)}}}]
+             {:relation :first
+              :page/title userpage})
+           (composite/make-consequence-op {:op/type :new-inboxx}))]
+     inbox-uid]))
 
 
 (defn create-userpage
