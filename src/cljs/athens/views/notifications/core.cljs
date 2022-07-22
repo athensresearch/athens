@@ -8,13 +8,13 @@
 
 
 (defn new-notification
-  [{:keys [db inbox-block-uid notification-position notification-type message notification-state notification-trigger-uid notification-trigger-parent author]}]
+  [{:keys [db inbox-block-uid notification-position notification-for-user notification-type message notification-state notification-trigger-uid notification-trigger-parent notification-trigger-author]}]
   ;; notification-from-block can be used to show context for the notification
   ;; notification-type: "*-notification" for e.g "task-notification", "athens/notification/type/comment"
   (->> (bfs/internal-representation->atomic-ops
          db
          [#:block{:uid        (common.utils/gen-block-uid)
-                  :string     message;; Should the string be message or the breadcrumb or something else?
+                  :string     (or message "ggwp");; Should the string be message or the breadcrumb or something else?
                   :open?      false
                   :properties {":entity/type"
                                #:block{:string "notification"
@@ -25,8 +25,11 @@
                                "athens/notification/trigger"
                                #:block{:string (str "((" notification-trigger-uid "))")
                                        :uid    (common.utils/gen-block-uid)}
+                               "athens/notification/for-user"
+                               #:block{:string notification-for-user
+                                       :uid    (common.utils/gen-block-uid)}
                                "athens/notification/trigger/author"
-                               #:block{:string author
+                               #:block{:string notification-trigger-author
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/state"
                                #:block{:string notification-state

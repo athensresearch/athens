@@ -141,7 +141,7 @@
                     enter-handler     (fn jetsam-enter-handler
                                         [_uid _d-key-down]
                                         (when (not (str/blank? @value-atom))
-                                          (re-frame.core/dispatch [:comment/write-comment uid @value-atom])
+                                          (re-frame.core/dispatch [:comment/write-comment uid @value-atom block-uid])
                                           (reset! value-atom "")
                                           (rf/dispatch [:editing/uid block-uid])))
                     tab-handler       (fn jetsam-tab-handler

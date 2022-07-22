@@ -76,15 +76,17 @@
 
 (defn new-comment
   [db thread-uid comment-string]
-  (->> (bfs/internal-representation->atomic-ops db
-                                                [#:block{:uid    (common.utils/gen-block-uid)
-                                                         :string comment-string
-                                                         :properties
-                                                         {":entity/type" #:block{:string "athens/comment"
-                                                                                 :uid    (common.utils/gen-block-uid)}}}]
-                                                {:block/uid thread-uid
-                                                 :relation  :last})
-       (composite/make-consequence-op {:op/type :new-comment})))
+  (let [comment-uid (common.utils/gen-block-uid)]
+   {:comment-uid comment-uid
+    :comment-op  (->> (bfs/internal-representation->atomic-ops db
+                                                               [#:block{:uid    comment-uid
+                                                                        :string comment-string
+                                                                        :properties
+                                                                        {":entity/type" #:block{:string "athens/comment"
+                                                                                                :uid    (common.utils/gen-block-uid)}}}]
+                                                               {:block/uid thread-uid
+                                                                :relation  :last})
+                      (composite/make-consequence-op {:op/type :new-comment}))}))
 
 
 (defn new-thread
@@ -93,11 +95,11 @@
                                                 [#:block{:uid    thread-uid
                                                          :string thread-name
                                                          :properties
-                                                         {":entity/type"          #:block{:string "athens/comment-thread"
-                                                                                          :uid    (common.utils/gen-block-uid)}
+                                                         {":entity/type"                       #:block{:string "athens/comment-thread"
+                                                                                                       :uid    (common.utils/gen-block-uid)}
                                                           "athens/comment-thread/members"      #:block{:string   "athens/comment-thread/members"
                                                                                                        :uid      (common.utils/gen-block-uid)
-                                                                                                       :children [#:block{:string (str "@" author)
+                                                                                                       :children [#:block{:string (str "[[@" author "]]")
                                                                                                                           :uid    (common.utils/gen-block-uid)}]}
                                                           "athens/comment-thread/subscribers"  #:block{:string   "athens/comment-thread/subscribers"
                                                                                                        :uid      (common.utils/gen-block-uid)
@@ -147,7 +149,7 @@
   (let [user-member?       (user-in-thread-as? db "athens/comment-thread/members" thread-uid userpage)
         user-subscriber?   (user-in-thread-as? db "athens/comment-thread/subscribers" thread-uid userpage)]
     (cond-> []
-            (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/members" userpage))
+            (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/members" (str "[[" userpage "]]")))
             (empty? user-subscriber?) (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/subscribers" userpage)))))
 
 ;; Notifications
@@ -163,7 +165,7 @@
   ;; If the user does not have a userpage or inbox we create it
   ;; Find the uid of the inbox for these notifications for all the subscribers
   ;; Create a notification for all the subscribers, apart from the subscriber who wrote the comment.
-  [db parent-block-uid users author notification-message]
+  [db parent-block-uid users author notification-message trigger-block-uid]
   (let [subscriber-data (map
                           #(get-subscriber-data db %)
                           users)
@@ -178,7 +180,10 @@
                                                                                                     :notification-type           "athens/notification/type/comment"
                                                                                                     :notification-message        notification-message
                                                                                                     :notification-state          "unread"
-                                                                                                    :notification-trigger-parent parent-block-uid})]))))
+                                                                                                    :notification-trigger-uid    trigger-block-uid
+                                                                                                    :notification-trigger-parent parent-block-uid
+                                                                                                    :notification-trigger-author author
+                                                                                                    :notification-for-user       userpage})]))))
 
                                     subscriber-data))
         ops              notifications]
@@ -199,7 +204,7 @@
 (defn create-mention-notifications
   [db block-uid mentioned-users author block-string]
   (let [notification-message  (str "**[[@" author "]] mentioned you: **" "*"  block-string "*")
-        notification-ops      (create-notification-op-for-users db block-uid mentioned-users author notification-message)]
+        notification-ops      (create-notification-op-for-users db block-uid mentioned-users author notification-message block-uid)]
     notification-ops))
 
 (defn add-mentioned-users-as-member-and-subscriber
@@ -213,34 +218,41 @@
   ;; Find all the subscribed members to the thread
   ;; Find the uid of the inbox for these notifications for all the subscribers
   ;; Create a notification for all the subscribers, apart from the subscriber who wrote the comment.
-  [db parent-block-uid thread-uid author comment-string notification-message]
+  [db parent-block-uid thread-uid author comment-string notification-message comment-block-uid]
   (let [subscribers (if (empty? (get-all-mentions comment-string))
                       (get-subscribers-for-notifying db thread-uid author)
                       (concat (get-subscribers-for-notifying db thread-uid author)
                               (get-all-mentions comment-string)))]
     (when subscribers
-      (create-notification-op-for-users db parent-block-uid subscribers author notification-message))))
+      (create-notification-op-for-users db parent-block-uid subscribers author notification-message comment-block-uid))))
 
 
 (rf/reg-event-fx
   :comment/write-comment
-  (fn [{db :db} [_ uid comment-string author]]
-    (let [thread-exists?            (get-comment-thread-uid @db/dsdb uid)
+  (fn [{db :db} [_ uid comment-string]]
+    (let [author                   (or (-> (common-db/get-block-document @db/dsdb [:block/uid uid])
+                                           :block/create
+                                           :event/auth
+                                           :presence/id)
+                                       (nth ["Sid" "Jeff" "Alex" "Filipe" "Stuart"] (rand-int 4)))
+          thread-exists?            (get-comment-thread-uid @db/dsdb uid)
           thread-uid                (or thread-exists?
                                        (common.utils/gen-block-uid))
+          {comment-uid :comment-uid
+           comment-op  :comment-op} (new-comment @db/dsdb thread-uid comment-string)
           active-comment-ops        (concat (if thread-exists?
                                               []
                                               [(new-thread @db/dsdb thread-uid "" uid author)
                                                (graph-ops/build-block-move-op @db/dsdb thread-uid {:block/uid uid
                                                                                                    :relation  {:page/title ":comment/threads"}})])
-                                            (concat [(new-comment @db/dsdb thread-uid comment-string)]
+                                            (concat [comment-op]
                                                     (add-mentioned-users-as-member-and-subscriber @db/dsdb thread-uid comment-string)))
 
           add-as-mem-or-subs        (when thread-exists?
                                       (add-user-as-member-or-subscriber? @db/dsdb thread-uid (str "@" author)))
           notification-message      (str "**((" uid "))**" "\n"
                                          "*[[@" author "]] commented: "  comment-string "*")
-          notification-op           (create-notification-op-for-comment @db/dsdb uid thread-uid author comment-string notification-message)
+          notification-op           (create-notification-op-for-comment @db/dsdb uid thread-uid author comment-string notification-message comment-uid)
           comment-notif-op          (composite/make-consequence-op {:op/type :comment-notif-op}
                                                                    (concat add-as-mem-or-subs notification-op active-comment-ops))
           event                     (common-events/build-atomic-event comment-notif-op)]
