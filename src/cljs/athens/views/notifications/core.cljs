@@ -128,5 +128,49 @@
      :userpage-inbox-op userpage-inbox-op}))
 
 
+(defn get-notification-type-for-popover
+  [prop]
+  (let [type (:block/string (get prop "athens/notification/type"))]
+    (cond
+      (= type "athens/notification/type/comment")  "Comments"
+      (= type "athens/notification/type/mention")  "Mentions")))
 
 
+(defn get-notification-state-for-popover
+  [prop]
+  (let [state (:block/string (get prop "athens/notification/state"))]
+    {:isArchived  (if (= state "read hidden")
+                     true
+                     false)
+     :isRead      (if (or (= state "read hidden")
+                          (= state "read unhidden"))
+                    true
+                    false)}))
+
+
+(defn outliner->inbox-notifs
+  [db notification]
+  (let [notif-props           (:block/properties notification)
+        notif-type            (get-notification-type-for-popover notif-props)
+        notif-state           (get-notification-state-for-popover notif-props)
+        trigger-parent-uid    (-> (:block/string (get notif-props "athens/notification/trigger/parent"))
+                                  (common-db/strip-markup "((" "))"))
+        trigger-parent-string (:block/string (common-db/get-block db [:block/uid trigger-parent-uid]))
+        username              (:block/string (get notif-props "athens/notification/trigger/author"))]
+    {"id"         (:block/uid notification)
+     "type"       notif-type
+     "isArchived" (:isArchived notif-state)
+     "isRead"     (:isRead     notif-state)
+     "object"     {"name" trigger-parent-string}
+     "subject"    {"username" username}}))
+
+
+(defn get-inbox-items-for-popover
+  [db userpage]
+  (let [inbox-uid                 (get-inbox-uid-for-user db userpage)
+        inbox-notifications       (:block/children (common-db/get-block-document db [:block/uid inbox-uid]))
+        notifications-for-popover (into [] (map
+                                             #(outliner->inbox-notifs db %)
+                                             inbox-notifications))]
+    (cljs.pprint/pprint notifications-for-popover)
+    notifications-for-popover))
