@@ -28,7 +28,12 @@ import * as React from "react";
 import { faker } from "@faker-js/faker";
 import { motion } from "framer-motion";
 import { useNotifications } from "../utils/useNotifications";
-import { CheckmarkIcon } from "@/Icons/Icons";
+import {
+  CheckmarkIcon,
+  CheckmarkCircleFillIcon,
+  ArchiveIcon,
+  ArrowRightIcon,
+} from "@/Icons/Icons";
 
 type PAGE = {
   name: string
@@ -135,43 +140,56 @@ export const availableFilters = [
   READ_FILTER, ARCHIVED_FILTER
 ]
 
+
 export const InboxItemsList = (props) => {
-  const {notificationsList} = props;
+  const { notificationsList, onOpenItem, onMarkAsRead, onMarkAsUnread, onArchive, onUnarchive } = props;
   const [items, setItems] = React.useState(notificationsList);
 
-  const {
-    // hasMeaningfulFilters,
-    // filterIds,
-    // setFilterIds,
-    // filteredItems,
-    // setGrouping,
-    // grouping,
-    // groupedFilteredSortedItems,
-    // resetFilters,
-    selectedItemId,
-    selectedItemRef,
-    selectedItem,
-    getActionsForNotification,
-    selectItem,
-    deselectItem,
-    markAsRead,
-    markAsArchived,
-    markAsUnread,
-    markAsUnarchived,
-    openItem,
-  } = useNotifications(items, setItems, availableFilters, DEFAULT_FILTERS);
+
+  const getActionsForNotification = (notification) => {
+    const actions = [];
+    if (notification.isRead) {
+      actions.push({
+        label: "Mark as unread",
+        fn: () => onMarkAsUnread(notification.id),
+        icon: <CheckmarkCircleFillIcon />
+      });
+    } else {
+      actions.push({
+        label: "Mark as read",
+        fn: () => onMarkAsRead(notification.id),
+        icon: <CheckmarkCircleFillIcon />
+      });
+    }
+    if (notification.isArchived) {
+      actions.push({
+        label: "Unarchive",
+        fn: () => onUnarchive(notification.id),
+        icon: <ArchiveIcon />
+      });
+    } else {
+      actions.push({
+        label: "Archive",
+        fn: () => onArchive(notification.id),
+        icon: <ArchiveIcon />
+      });
+    }
+    actions.push({
+      label: "Open",
+      fn: () => onOpenItem(notification.id),
+      icon: <ArrowRightIcon />
+    });
+    return actions;
+  }
 
   const itemsList = items.map((i) => <InboxViewListItem
     message={messageForNotification(i)}
     actions={getActionsForNotification(i)}
-    isSelected={i.id === selectedItemId}
-    onOpen={openItem}
-    onSelect={selectItem}
-    onDeselect={deselectItem}
-    onMarkAsRead={markAsRead}
-    onMarkAsUnread={markAsUnread}
-    onMarkAsArchived={markAsArchived}
-    onMarkAsUnarchived={markAsUnarchived}
+    onOpen={onOpenItem}
+    onMarkAsRead={onMarkAsRead}
+    onMarkAsUnread={onMarkAsUnread}
+    onMarkAsArchived={onArchive}
+    onMarkAsUnarchived={onUnarchive}
     key={i.id}
     {...i}
   />);

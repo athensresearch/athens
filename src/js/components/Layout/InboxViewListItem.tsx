@@ -41,7 +41,7 @@ const InboxItemStatusIndicator = ({ isRead, isArchived }) => {
   }
 }
 
-const InboxViewListItemBody = ({ isRead, isArchived, message }) => {
+const InboxViewListItemBody = ({ isRead, isArchived, message, body }) => {
   return <HStack
     as="li"
     align="baseline"
@@ -51,6 +51,7 @@ const InboxViewListItemBody = ({ isRead, isArchived, message }) => {
     <InboxItemStatusIndicator isRead={isRead} isArchived={isArchived} />
     <VStack flexShrink={1} spacing={0} align="stretch">
       <Text color={isRead ? "foreground.secondary" : "foreground.primary"} fontSize="sm">{message}</Text>
+      {body && <Text color={isRead ? "foreground.secondary" : "foreground.primary"} fontSize="sm">{body}</Text>}
     </VStack>
   </HStack>
 }
@@ -62,7 +63,7 @@ export const InboxViewListItemActions = ({ children }) => {
 export const InboxViewListItem = (props): JSX.Element => {
   const {
     isSelected, onOpen, onMarkAsRead, onMarkAsUnread, onMarkAsArchived, onMarkAsUnarchived, onIncSelection, onDecSelection, onSelect, onDeselect, ...notificationProps } = props;
-  const { id, isRead, isArchived, message, actions } = notificationProps;
+  const { id, isRead, isArchived, message, body, actions } = notificationProps;
   const ref = React.useRef();
 
   const { isOpen: isContextMenuOpen, ContextMenu, menuSourceProps } = useContextMenu({
@@ -101,7 +102,9 @@ export const InboxViewListItem = (props): JSX.Element => {
           userSelect="none"
           onClick={(e) => {
             e.preventDefault();
-            isSelected ? onDeselect() : onSelect(id, ref);
+            if (onSelect && onDeselect) {
+              isSelected ? onDeselect() : onSelect(id, ref);
+            }
           }}
           borderRadius="md"
           bg={(isContextMenuOpen || isSelected) ? "interaction.surface.active" : "interaction.surface"}
@@ -112,6 +115,7 @@ export const InboxViewListItem = (props): JSX.Element => {
             isArchived={isArchived}
             isRead={isRead}
             message={message}
+            body={body}
           />
           <HStack justifyContent="flex-end">
             <ButtonGroup

@@ -1,26 +1,26 @@
 (ns athens.views.notifications.popover
   (:require
-    ["@chakra-ui/react" :refer [Box IconButton Spinner Flex Text Tooltip Heading VSptack ButtonGroup PopoverBody PopoverTrigger ButtonGroup Popover PopoverContent PopoverCloseButton PopoverHeader Portal Button]]
-    ["/components/Icons/Icons" :refer [CheckmarkIcon]]
-    ["/components/inbox/Inbox" :refer [InboxItemsList]]
-    [athens.common-db :as common-db]
-    [athens.db :as db]
-    [athens.views.notifications.core :refer [get-inbox-uid-for-user]]
-    [re-frame.core :as rf]))
+   ["@chakra-ui/react" :refer [Box IconButton Spinner Flex Text Tooltip Heading VStack ButtonGroup PopoverBody PopoverTrigger ButtonGroup Popover PopoverContent PopoverCloseButton PopoverHeader Portal Button]]
+   ["/components/Icons/Icons" :refer [CheckmarkIcon BellIcon]]
+   ["/components/inbox/Inbox" :refer [InboxItemsList]]
+   [athens.common-db :as common-db]
+   [athens.db :as db]
+   [athens.views.notifications.core :refer [get-inbox-uid-for-user]]
+   [re-frame.core :as rf]))
 
 
 
 (rf/reg-sub
-  :notification/show-popover?
-  (fn [db [_]]
-    (= true (:notification/show-popover db))))
+ :notification/show-popover?
+ (fn [db [_]]
+   (= true (:notification/show-popover db))))
 
 (rf/reg-event-fx
-  :notification/toggle-popover
-  (fn [{:keys [db]} [_]]
-    (println "toggle notification popover")
-    (let [current-state (:notification/show-popover db)]
-      {:db (assoc db :notification/show-popover (not current-state))})))
+ :notification/toggle-popover
+ (fn [{:keys [db]} [_]]
+   (println "toggle notification popover")
+   (let [current-state (:notification/show-popover db)]
+     {:db (assoc db :notification/show-popover (not current-state))})))
 
 (defn get-notification-type-for-popover
   [prop]
@@ -64,8 +64,8 @@
   (let [inbox-uid                 (get-inbox-uid-for-user db userpage)
         inbox-notifications       (:block/children (common-db/get-block-document db [:block/uid inbox-uid]))
         notifications-for-popover (into [] (map
-                                             #(outliner->inbox-notifs db %)
-                                             inbox-notifications))]
+                                            #(outliner->inbox-notifs db %)
+                                            inbox-notifications))]
     (cljs.pprint/pprint notifications-for-popover)
     notifications-for-popover))
 
@@ -75,20 +75,25 @@
   (let [username (rf/subscribe [:username])
         show-notifications-popover? (rf/subscribe [:notification/show-popover?])]
     (fn []
-        [:<>
-         [:> Popover {:closeOnBlur false}
-          [:> PopoverTrigger
-           [:> IconButton {"aria-label" "Notifications"
-                           :onClick #(rf/dispatch [:notification/toggle-popover])}
-            [:> CheckmarkIcon]]]
-          (when @show-notifications-popover?
-            [:> PopoverContent {:maxWidth  "max-content"
-                                :maxHeight "calc(100vh - 4rem)"}
-             [:> PopoverCloseButton {:onClick #(rf/dispatch [:notification/toggle-popover])}]
-             [:> PopoverHeader
-              "Notifications"]
-             [:> Flex {:p             0
-                       :as            PopoverBody
-                       :flexDirection "column"
-                       :overflow      "hidden"}
-              [:> InboxItemsList {:notificationsList (get-inbox-items-for-popover @db/dsdb (str "@Sid"))}]]])]])))
+      [:<>
+       [:> Popover {:closeOnBlur false
+                    :isOpen @show-notifications-popover?}
+        [:> PopoverTrigger
+         [:> IconButton {"aria-label" "Notifications"
+                         :onClick #(rf/dispatch [:notification/toggle-popover])}
+          [:> BellIcon]]]
+        [:> PopoverContent {:maxWidth  "max-content"
+                            :maxHeight "calc(100vh - 4rem)"}
+         [:> PopoverCloseButton {:onClick #(rf/dispatch [:notification/toggle-popover])}]
+         [:> PopoverHeader "Notifications"]
+         [:> Flex {:p             0
+                   :as            PopoverBody
+                   :flexDirection "column"
+                   :overflow      "hidden"}
+          [:> InboxItemsList
+           {:onOpenItem #(js/console.log "tried to open" %)
+            :onMarkAsRead #(js/console.log "tried to mark as read" %)
+            :onMarkAsUnread #(js/console.log "tried to mark as unread" %)
+            :onArchive #(js/console.log "tried to archive" %)
+            :onUnarchive #(js/console.log "tried to unarchive" %)
+            :notificationsList (get-inbox-items-for-popover @db/dsdb (str "@Sid"))}]]]]])))
