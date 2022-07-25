@@ -143,24 +143,25 @@ export const availableFilters = [
 
 export const InboxItemsList = (props) => {
   const { notificationsList, onOpenItem, onMarkAsRead, onMarkAsUnread, onArchive, onUnarchive } = props;
-  const [items, setItems] = React.useState(notificationsList);
+//  const [items, setItems] = React.useState(notificationsList);
+//  console.log("LIST1", notificationsList, items)
 
 
   const getActionsForNotification = (notification) => {
     const actions = [];
-    if (notification.isRead) {
-      actions.push({
-        label: "Mark as unread",
-        fn: () => onMarkAsUnread(notification.id),
-        icon: <CheckmarkCircleFillIcon />
-      });
-    } else {
-      actions.push({
-        label: "Mark as read",
-        fn: () => onMarkAsRead(notification.id),
-        icon: <CheckmarkCircleFillIcon />
-      });
-    }
+//    if (notification.isRead) {
+//      actions.push({
+//        label: "Mark as unread",
+//        fn: () => onMarkAsUnread(notification.id),
+//        icon: <CheckmarkCircleFillIcon />
+//      });
+//    } else {
+//      actions.push({
+//        label: "Mark as read",
+//        fn: () => onMarkAsRead(notification.id),
+//        icon: <CheckmarkCircleFillIcon />
+//      });
+//    }
     if (notification.isArchived) {
       actions.push({
         label: "Unarchive",
@@ -174,15 +175,16 @@ export const InboxItemsList = (props) => {
         icon: <ArchiveIcon />
       });
     }
-    actions.push({
-      label: "Open",
-      fn: () => onOpenItem(notification.id),
-      icon: <ArrowRightIcon />
-    });
+//    actions.push({
+//      label: "Open",
+//      fn: () => onOpenItem(notification.id),
+//      icon: <ArrowRightIcon />
+//    });
     return actions;
   }
 
-  const itemsList = items.map((i) => <InboxViewListItem
+  const itemsList = notificationsList.map((i) => {
+  return <InboxViewListItem
     message={messageForNotification(i)}
     actions={getActionsForNotification(i)}
     onOpen={onOpenItem}
@@ -192,7 +194,7 @@ export const InboxItemsList = (props) => {
     onMarkAsUnarchived={onUnarchive}
     key={i.id}
     {...i}
-  />);
+  />});
 
   return <InboxViewListBody>
     {!!itemsList.length ?

@@ -409,13 +409,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
             </ToolbarIconButton>
           </Tooltip>
 
-          <Tooltip label="Notifications">
-            <ToolbarIconButton
-              aria-label="Notification"
-              onClick={handleShowNotifications}>
-              <CheckmarkIcon />
-            </ToolbarIconButton>
-          </Tooltip>
           {notificationPopover}
           <ToolbarButton
             aria-label="Search"

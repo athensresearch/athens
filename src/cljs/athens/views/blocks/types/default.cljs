@@ -3,7 +3,7 @@
   A.k.a standard `:block/string` blocks"
   (:require
     ["/components/Block/Container"           :refer [Container]]
-    ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon]]
+    ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon ArchiveIcon]]
     ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
@@ -267,62 +267,64 @@
          :reagent-render
          (fn render-block
            [block linked-ref-data opts]
-           (let [ident                 [:block/uid (or original-uid uid)]
-                 block-o               (reactive/get-reactive-block-document ident)
+           (let [ident                [:block/uid (or original-uid uid)]
+                 block-o              (reactive/get-reactive-block-document ident)
                  {:block/keys [uid
                                string
                                open
                                children
                                properties
                                _refs]} (merge block-o block)
-                 children-uids         (set (map :block/uid children))
-                 uid-sanitized-block   (s/transform
-                                         (util/specter-recursive-path #(contains? % :block/uid))
-                                         (fn [{:block/keys [original-uid uid] :as block}]
-                                           (assoc block :block/uid (or original-uid uid)))
-                                         block)
-                 is-selected           @(rf/subscribe [::select-subs/selected? uid])
-                 present-user          @(rf/subscribe [:presence/has-presence uid])
-                 is-presence           (seq present-user)
-                 reactions-enabled?    (:reactions @feature-flags)
-                 comments-enabled?     (:comments @feature-flags)
-                 show-emoji-picker?    (r/atom false)
-                 hide-emoji-picker-fn  #(reset! show-emoji-picker? false)
-                 show-emoji-picker-fn  #(reset! show-emoji-picker? true)
-                 menu                  (r/as-element
-                                         [:> MenuList
-                                          [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                    "Copy selected block refs"
-                                                                    "Copy block ref")
-                                                        :icon (r/as-element [:> BlockEmbedIcon])
-                                                        :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                          [:> MenuItem {:children "Copy unformatted text"
-                                                        :icon (r/as-element [:> TextIcon])
-                                                        :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
-                                          (when (actions/is-block-inbox? properties "athens/inbox/type/comments")
-                                            [:> MenuItem {:children "Show hidden notifications"
-                                                          :onClick #(actions/show-hidden-notifications uid)}])
-                                          (when (actions/is-block-inbox? properties "athens/inbox/type/comments")
-                                            [:> MenuItem {:children "Hide read notifications"
-                                                          :onClick #(actions/hide-read-notifications uid)}])
-                                          ;; Don't know how to join the following 2 conditions in 1
-                                          (when (actions/is-block-notification? properties)
-                                            [:> MenuItem {:children "Mark as read and hide"
-                                                          :onClick #(rf/dispatch (actions/update-state-prop uid "read hidden"))}])
-                                          (when (actions/is-block-notification? properties)
-                                            (if (actions/unread-notification? properties)
-                                              [:> MenuItem {:children "Mark as read and don't hide"
-                                                            :onClick #(rf/dispatch (actions/update-state-prop uid "read"))}]
-                                              [:> MenuItem {:children "Mark as unread"
-                                                            :onClick #(rf/dispatch (actions/update-state-prop uid "unread"))}]))
-                                          (when comments-enabled?
-                                            [:> MenuItem {:children "Add comment"
-                                                          :onClick #(ctx-menu/handle-click-comment % uid)
-                                                          :icon (r/as-element [:> ChatIcon])}])
-                                          (when reactions-enabled?
-                                            [:> MenuItem {:children "Add reaction"
-                                                          :onClick show-emoji-picker-fn
-                                                          :icon (r/as-element [:> ThumbUpFillIcon])}])])]
+                 children-uids        (set (map :block/uid children))
+                 uid-sanitized-block  (s/transform
+                                        (util/specter-recursive-path #(contains? % :block/uid))
+                                        (fn [{:block/keys [original-uid uid] :as block}]
+                                          (assoc block :block/uid (or original-uid uid)))
+                                        block)
+                 is-selected          @(rf/subscribe [::select-subs/selected? uid])
+                 present-user         @(rf/subscribe [:presence/has-presence uid])
+                 is-presence          (seq present-user)
+                 reactions-enabled?   (:reactions @feature-flags)
+                 comments-enabled?    (:comments @feature-flags)
+                 show-emoji-picker?   (r/atom false)
+                 hide-emoji-picker-fn #(reset! show-emoji-picker? false)
+                 show-emoji-picker-fn #(reset! show-emoji-picker? true)
+                 menu                 (r/as-element
+                                        [:> MenuList
+                                         [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                   "Copy selected block refs"
+                                                                   "Copy block ref")
+                                                       :icon     (r/as-element [:> BlockEmbedIcon])
+                                                       :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                         [:> MenuItem {:children "Copy unformatted text"
+                                                       :icon     (r/as-element [:> TextIcon])
+                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                         (when (actions/is-block-inbox? properties "athens/inbox/type/comments")
+                                            [:> MenuItem {:children "Archive all notifications"
+                                                          :onClick  #(actions/archive-all-notifications uid)}])
+                                         (when (actions/is-block-inbox? properties "athens/inbox/type/comments")
+                                           [:> MenuItem {:children "Unarchive all notifications"
+                                                         :onClick  #(actions/unarchive-all-notifications uid)}])
+                                         ;; Don't know how to join the following 2 conditions in 1
+                                         (when (actions/is-block-notification? properties)
+                                           (when (not (actions/archive-notification? properties))
+                                             [:> MenuItem {:children "Archive"
+                                                           :icon     (r/as-element [:> ArchiveIcon])
+                                                           :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}]))
+                                         #_(when (actions/is-block-notification? properties)
+                                             (if (actions/read-notification? properties)
+                                               [:> MenuItem {:children "Mark as read and don't hide"
+                                                             :onClick  #(rf/dispatch (actions/update-state-prop uid "read"))}]
+                                               [:> MenuItem {:children "Mark as unread"
+                                                             :onClick  #(rf/dispatch (actions/update-state-prop uid "unread"))}]))
+                                         (when comments-enabled?
+                                           [:> MenuItem {:children "Add comment"
+                                                         :onClick  #(ctx-menu/handle-click-comment % uid)
+                                                         :icon     (r/as-element [:> ChatIcon])}])
+                                         (when reactions-enabled?
+                                           [:> MenuItem {:children "Add reaction"
+                                                         :onClick  show-emoji-picker-fn
+                                                         :icon     (r/as-element [:> ThumbUpFillIcon])}])])]
 
              ;; (prn uid is-selected)
 
@@ -333,7 +335,7 @@
                (update-fn string)
                (update-old-fn string))
 
-             [:> Container {:isHidden     (actions/hide-notification? properties)
+             [:> Container {:isHidden     (actions/archive-notification? properties)
                             :isDragging   (and @dragging? (not is-selected))
                             :isSelected   is-selected
                             :hasChildren  (seq children)

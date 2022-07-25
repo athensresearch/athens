@@ -18,14 +18,14 @@
   (= "notification" (:block/string (get properties ":entity/type"))))
 
 
-(defn unread-notification?
+(defn read-notification?
   [properties]
-  (= "unread" (:block/string (get properties "athens/notification/state"))))
+  (= "true" (:block/string (get properties "athens/notification/is-read"))))
 
 
-(defn hide-notification?
+(defn archive-notification?
   [properties]
-  (= "read hidden" (:block/string (get properties "athens/notification/state"))))
+  (= "true" (:block/string (get properties "athens/notification/is-archived"))))
 
 
 ;; (update-state-prop hidden-notif-uid "unread")))))
@@ -37,7 +37,7 @@
 ;; What to do for the case of marking multiple selected uids as something?
 
 (defn update-state-prop
-  [uid new-state]
+  [uid prop-key new-state]
   (let [block-properties (common-db/get-block-property-document @db/dsdb [:block/uid uid])
         ;; Find the prop that needs to be updated due to this action
         block-state-prop (cond
@@ -46,7 +46,7 @@
                            ;; for a channel
                            ;; for a thread
                            ;; for an inbox(assuming inbox is a list of notification blocks)
-                           (is-block-notification? block-properties) "athens/notification/state")
+                           (is-block-notification? block-properties) prop-key)
         updated-prop    (cond
                           ;; Maybe for a block we need to update the prop of the children also
                           (is-block-notification? block-properties) [:properties/update-in [:block/uid uid] [block-state-prop]
@@ -68,21 +68,19 @@
     (rf/dispatch [:resolve-transact-forward event])))
 
 
-(defn show-hidden-notifications
+(defn unarchive-all-notifications
   [inbox-uid]
-  (let [all-notifications    (:block/children (common-db/get-block-document @db/dsdb [:block/uid inbox-uid]))
-        hidden-notifications (filter some? (for [block all-notifications]
-                                             (when (hide-notification? (:block/properties block))
-                                               (:block/uid block))))]
-    (multi-uids-prop-update hidden-notifications "athens/notification/state" "read unhidden")))
+  (let [all-notifications (->> (common-db/get-block-document @db/dsdb [:block/uid inbox-uid])
+                               :block/children
+                               (mapv :block/uid))]
+    (multi-uids-prop-update all-notifications "athens/notification/is-archived" "false")))
 
 
-(defn hide-read-notifications
+(defn archive-all-notifications
   [inbox-uid]
-  (let [all-notifications    (:block/children (common-db/get-block-document @db/dsdb [:block/uid inbox-uid]))
-        hidden-notifications (filter some? (for [block all-notifications]
-                                             (when (not (unread-notification? (:block/properties block)))
-                                               (:block/uid block))))]
-    (multi-uids-prop-update hidden-notifications "athens/notification/state" "read hidden")))
+  (let [all-notifications (->> (common-db/get-block-document @db/dsdb [:block/uid inbox-uid])
+                               :block/children
+                               (mapv :block/uid))]
+    (multi-uids-prop-update all-notifications "athens/notification/is-archived" "true")))
 
 

@@ -62,11 +62,12 @@
 (defn get-inbox-uid-for-user
   [db username]
   (let [page-uid       (common-db/get-page-uid db username)
-        page-children  (:block/children (common-db/get-page-document db [:block/uid page-uid]))
-        inbox-uid      (:block/uid (first (filter
-                                            #(when (= "Comments inbox" (:block/string %))
-                                               %)
-                                            page-children)))]
+        inbox-document (common-db/get-block-document db [:block/uid page-uid])
+        inbox-uid      (->> inbox-document
+                            :block/children
+                            (filter #(when (= "Comments inbox" (:block/string %)) %))
+                            first
+                            :block/uid)]
     inbox-uid))
 
 

@@ -14,16 +14,31 @@ import { mapActionsToMenuList } from '../utils/mapActionsToMenuList';
 import { mapActionsToButtons } from '../utils/mapActionsToButtons';
 
 const InboxItemStatusIndicator = ({ isRead, isArchived }) => {
-  if (isArchived) {
-    return <ArchiveIcon
-      flexShrink={0}
-      position="relative"
-      top="-0.15ch"
-      transform="scale(1.5)"
-      color="foreground.secondary"
-      boxSize="0.5em"
-    />
-  } else {
+//  if (isArchived) {
+//    return <ArchiveIcon
+//      flexShrink={0}
+//      position="relative"
+//      top="-0.15ch"
+//      transform="scale(1.5)"
+//      color="foreground.secondary"
+//      boxSize="0.5em"
+//    />
+//  } else {
+//    return <Box
+//      flexShrink={0}
+//      borderRadius="100%"
+//      position="relative"
+//      top="-0.15ch"
+//      w="0.5em"
+//      h="0.5em"
+//      {...isRead ? {
+//        bg: "transparent",
+//        boxShadow: 'inset 0 0 0 1px foreground.secondary'
+//      } : {
+//        bg: "info",
+//      }}
+//    />
+//  }
     return <Box
       flexShrink={0}
       borderRadius="100%"
@@ -38,7 +53,6 @@ const InboxItemStatusIndicator = ({ isRead, isArchived }) => {
         bg: "info",
       }}
     />
-  }
 }
 
 const InboxViewListItemBody = ({ isRead, isArchived, message, body }) => {
@@ -100,15 +114,18 @@ export const InboxViewListItem = (props): JSX.Element => {
           ref={ref}
           align="stretch"
           userSelect="none"
-          onClick={(e) => {
-            e.preventDefault();
-            if (onSelect && onDeselect) {
-              isSelected ? onDeselect() : onSelect(id, ref);
-            }
+//          onClick={(e) => {
+//            e.preventDefault();
+//            if (onSelect && onDeselect) {
+//              isSelected ? onDeselect() : onSelect(id, ref);
+//            }
+//          }}
+          _hover={{
+            cursor: "pointer"
           }}
           borderRadius="md"
           bg={(isContextMenuOpen || isSelected) ? "interaction.surface.active" : "interaction.surface"}
-          onDoubleClick={() => onOpen(object.parentUid)}
+          onClick={() => onOpen(object.parentUid, id)}
           {...menuSourceProps}
         >
           <InboxViewListItemBody
@@ -128,9 +145,9 @@ export const InboxViewListItem = (props): JSX.Element => {
             </ButtonGroup>
           </HStack>
         </VStack>
-        <ContextMenu>
+        {/*<ContextMenu>
           {menuList}
-        </ContextMenu>
+        </ContextMenu>*/}
       </Box>
     </>);
 };
