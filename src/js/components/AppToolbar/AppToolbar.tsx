@@ -13,6 +13,7 @@ import {
   DailyNotesIcon,
   GraphIcon,
   EllipsisHorizontalCircleIcon,
+  CheckmarkIcon,
   ViewIcon,
   ViewOffIcon
 
@@ -217,7 +218,9 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   onPressHistoryForward(): void;
   onPressLeftSidebarToggle(): void;
   onPressRightSidebarToggle(): void;
+  onPressNotification(): void;
   databaseMenu?: React.FC;
+  notificationPopover?: React.FC;
   presenceDetails?: React.FC;
 }
 
@@ -282,7 +285,9 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressMinimize: handlePressMinimize,
     onPressMaximizeRestore: handlePressMaximizeRestore,
     onPressClose: handlePressClose,
+    onClickNotifications: handleShowNotifications,
     databaseMenu,
+    notificationPopover,
     presenceDetails,
     ...rest
   } = props;
@@ -403,7 +408,15 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               <GraphIcon />
             </ToolbarIconButton>
           </Tooltip>
-          <NotificationsPopover />
+
+          <Tooltip label="Notifications">
+            <ToolbarIconButton
+              aria-label="Notification"
+              onClick={handleShowNotifications}>
+              <CheckmarkIcon />
+            </ToolbarIconButton>
+          </Tooltip>
+          {notificationPopover}
           <ToolbarButton
             aria-label="Search"
             variant="outline"

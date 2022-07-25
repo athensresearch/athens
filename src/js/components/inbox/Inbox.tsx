@@ -135,8 +135,9 @@ export const availableFilters = [
   READ_FILTER, ARCHIVED_FILTER
 ]
 
-export const InboxItemsList = () => {
-  const [items, setItems] = React.useState(ITEMS);
+export const InboxItemsList = (props) => {
+  const {notificationsList} = props;
+  const [items, setItems] = React.useState(notificationsList);
 
   const {
     // hasMeaningfulFilters,

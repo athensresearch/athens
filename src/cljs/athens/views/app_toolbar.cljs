@@ -2,6 +2,7 @@
   (:require
     ["/components/AppToolbar/AppToolbar" :refer [AppToolbar]]
     [athens.electron.db-menu.core        :refer [db-menu]]
+    [athens.views.notifications.popover :refer  [notifications-popover]]
     [athens.electron.utils               :as electron.utils]
     [athens.router                       :as router]
     [athens.self-hosted.presence.views   :refer [toolbar-presence-el]]
@@ -99,7 +100,9 @@
                       :onPressMaximizeRestore    on-maximize
                       :onPressMinimize           on-minimize
                       :onPressClose              on-close
+                      :onClickNotifications      #(rf/dispatch [:notification/toggle-popover])
                       :databaseMenu              (r/as-element [db-menu])
+                      :notificationPopover      (r/as-element [notifications-popover])
                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)
                                                    (r/as-element [toolbar-presence-el]))}
                      (when (comments/enabled?)
