@@ -63,7 +63,7 @@ export const InboxViewListItemActions = ({ children }) => {
 export const InboxViewListItem = (props): JSX.Element => {
   const {
     isSelected, onOpen, onMarkAsRead, onMarkAsUnread, onMarkAsArchived, onMarkAsUnarchived, onIncSelection, onDecSelection, onSelect, onDeselect, ...notificationProps } = props;
-  const { id, isRead, isArchived, message, body, actions } = notificationProps;
+  const { id, isRead, isArchived, message, body, actions, object } = notificationProps;
   const ref = React.useRef();
 
   const { isOpen: isContextMenuOpen, ContextMenu, menuSourceProps } = useContextMenu({
@@ -108,7 +108,7 @@ export const InboxViewListItem = (props): JSX.Element => {
           }}
           borderRadius="md"
           bg={(isContextMenuOpen || isSelected) ? "interaction.surface.active" : "interaction.surface"}
-          onDoubleClick={() => onOpen(id)}
+          onDoubleClick={() => onOpen(object.parentUid)}
           {...menuSourceProps}
         >
           <InboxViewListItemBody

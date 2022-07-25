@@ -1,12 +1,14 @@
 (ns athens.views.notifications.popover
   (:require
-   ["@chakra-ui/react" :refer [Box IconButton Spinner Flex Text Tooltip Heading VStack ButtonGroup PopoverBody PopoverTrigger ButtonGroup Popover PopoverContent PopoverCloseButton PopoverHeader Portal Button]]
-   ["/components/Icons/Icons" :refer [CheckmarkIcon BellFillIcon]]
-   ["/components/inbox/Inbox" :refer [InboxItemsList]]
-   [athens.common-db :as common-db]
-   [athens.db :as db]
-   [athens.views.notifications.core :refer [get-inbox-uid-for-user]]
-   [re-frame.core :as rf]))
+    ["@chakra-ui/react" :refer [Box IconButton Spinner Flex Text Tooltip Heading VStack ButtonGroup PopoverBody PopoverTrigger ButtonGroup Popover PopoverContent PopoverCloseButton PopoverHeader Portal Button]]
+    ["/components/Icons/Icons" :refer [CheckmarkIcon BellFillIcon]]
+    ["/components/inbox/Inbox" :refer [InboxItemsList]]
+    [athens.common-db :as common-db]
+    [athens.db :as db]
+    [athens.views.notifications.core :refer [get-inbox-uid-for-user]]
+    [re-frame.core :as rf]
+    [athens.views.notifications.actions :as actions]
+    [athens.router :as router]))
 
 
 
@@ -50,13 +52,17 @@
         trigger-parent-uid    (-> (:block/string (get notif-props "athens/notification/trigger/parent"))
                                   (common-db/strip-markup "((" "))"))
         trigger-parent-string (:block/string (common-db/get-block db [:block/uid trigger-parent-uid]))
-        username              (:block/string (get notif-props "athens/notification/trigger/author"))]
+        username              (:block/string (get notif-props "athens/notification/trigger/author"))
+        trigger-uid           (-> (:block/string (get notif-props "athens/notification/trigger"))
+                                  (common-db/strip-markup "((" "))"))
+        body                  (:block/string (common-db/get-block db [:block/uid trigger-uid]))]
     {"id"         (:block/uid notification)
      "type"       notif-type
      "isArchived" (:isArchived notif-state)
      "isRead"     (:isRead     notif-state)
-     "body"       "Test body"
-     "object"     {"name" trigger-parent-string}
+     "body"       body
+     "object"     {"name"       trigger-parent-string
+                   "parentUid" trigger-parent-uid}
      "subject"    {"username" username}}))
 
 
@@ -92,9 +98,10 @@
                    :flexDirection "column"
                    :overflow      "hidden"}
           [:> InboxItemsList
-           {:onOpenItem #(js/console.log "tried to open" %)
-            :onMarkAsRead #(js/console.log "tried to mark as read" %)
-            :onMarkAsUnread #(js/console.log "tried to mark as unread" %)
-            :onArchive #(js/console.log "tried to archive" %)
-            :onUnarchive #(js/console.log "tried to unarchive" %)
+           {:onOpenItem        #(router/navigate-uid %)
+            :onMarkAsRead      #(rf/dispatch (actions/update-state-prop % "read"))
+            :onMarkAsUnread    #(rf/dispatch (actions/update-state-prop % "unread"))
+            ;; TODO for later
+            ;; :onArchive         #(rf/dispatch (actions/update-state-prop % "read hidden"))
+            ;; :onUnarchive       #(js/console.log "tried to unarchive" %)
             :notificationsList (get-inbox-items-for-popover @db/dsdb (str "@Sid"))}]]]]])))
