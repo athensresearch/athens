@@ -1,7 +1,7 @@
 (ns athens.views.notifications.popover
   (:require
    ["@chakra-ui/react" :refer [Box IconButton Spinner Flex Text Tooltip Heading VStack ButtonGroup PopoverBody PopoverTrigger ButtonGroup Popover PopoverContent PopoverCloseButton PopoverHeader Portal Button]]
-   ["/components/Icons/Icons" :refer [CheckmarkIcon BellIcon]]
+   ["/components/Icons/Icons" :refer [CheckmarkIcon BellFillIcon]]
    ["/components/inbox/Inbox" :refer [InboxItemsList]]
    [athens.common-db :as common-db]
    [athens.db :as db]
@@ -55,6 +55,7 @@
      "type"       notif-type
      "isArchived" (:isArchived notif-state)
      "isRead"     (:isRead     notif-state)
+     "body"       "Test body"
      "object"     {"name" trigger-parent-string}
      "subject"    {"username" username}}))
 
@@ -81,7 +82,7 @@
         [:> PopoverTrigger
          [:> IconButton {"aria-label" "Notifications"
                          :onClick #(rf/dispatch [:notification/toggle-popover])}
-          [:> BellIcon]]]
+          [:> BellFillIcon]]]
         [:> PopoverContent {:maxWidth  "max-content"
                             :maxHeight "calc(100vh - 4rem)"}
          [:> PopoverCloseButton {:onClick #(rf/dispatch [:notification/toggle-popover])}]
