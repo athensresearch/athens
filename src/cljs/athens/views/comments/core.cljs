@@ -99,11 +99,11 @@
                                                                                  :properties
                                                                                  {":entity/type"                       #:block{:string "[[athens/comment-thread]]"
                                                                                                                                :uid    (common.utils/gen-block-uid)}
-                                                                                  "athens/comment-thread/members"      #:block{:string   "athens/comment-thread/members"
+                                                                                  "athens/comment-thread/members"      #:block{:string   ""
                                                                                                                                :uid      members-prop-uid
                                                                                                                                :children [#:block{:string (str "[[@" author "]]")
                                                                                                                                                   :uid    (common.utils/gen-block-uid)}]}
-                                                                                  "athens/comment-thread/subscribers"  #:block{:string   "athens/comment-thread/subscribers"
+                                                                                  "athens/comment-thread/subscribers"  #:block{:string   ""
                                                                                                                                :uid      subs-prop-uid
                                                                                                                                :children [#:block{:string (str "[[@" author "]]")
                                                                                                                                                   :uid    (common.utils/gen-block-uid)}]}}}]
