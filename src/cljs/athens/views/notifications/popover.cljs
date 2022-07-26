@@ -31,8 +31,8 @@
   [prop]
   (let [type (:block/string (get prop "athens/notification/type"))]
     (cond
-      (= type "athens/notification/type/comment")  "Comments"
-      (= type "athens/notification/type/mention")  "Mentions")))
+      (= type "[[athens/notification/type/comment]]")  "Comments"
+      (= type "[[athens/notification/type/mention]]")  "Mentions")))
 
 
 

@@ -27,10 +27,10 @@
                   :string     (create-notif-message opts);; Should the string be message or the breadcrumb or something else?
                   :open?      false
                   :properties {":entity/type"
-                               #:block{:string "notification"
+                               #:block{:string "[[athens/notification]]"
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/type"
-                               #:block{:string notification-type
+                               #:block{:string (str "[[" notification-type "]]")
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/trigger"
                                #:block{:string (str "((" notification-trigger-uid "))")

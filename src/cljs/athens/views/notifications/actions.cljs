@@ -15,7 +15,7 @@
 
 (defn is-block-notification?
   [properties]
-  (= "notification" (:block/string (get properties ":entity/type"))))
+  (= "[[athens/notification]]" (:block/string (get properties ":entity/type"))))
 
 (defn unread-notification?
   [properties]
