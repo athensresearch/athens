@@ -9,29 +9,31 @@
 
 
 (defn is-block-inbox?
-  [properties inbox-type]
-  (= inbox-type (:block/string (get properties ":entity/type"))))
-
+  [properties]
+  (= "[[athens/inbox]]"
+     (:block/string (get properties ":entity/type"))))
 
 (defn is-block-notification?
   [properties]
-  (= "[[athens/notification]]" (:block/string (get properties ":entity/type"))))
+  (= "[[athens/notification]]"
+     (:block/string (get properties ":entity/type"))))
 
 (defn unread-notification?
   [properties]
-  (= "false" (:block/string (get properties "athens/notification/is-read"))))
+  (= "false"
+     (:block/string (get properties "athens/notification/is-read"))))
 
 (defn read-notification?
   [properties]
-  (= "true" (:block/string (get properties "athens/notification/is-read"))))
+  (= "true"
+     (:block/string (get properties "athens/notification/is-read"))))
 
 
-(defn archive-notification?
+(defn archived-notification?
   [properties]
-  (= "true" (:block/string (get properties "athens/notification/is-archived"))))
+  (= "true"
+     (:block/string (get properties "athens/notification/is-archived"))))
 
-
-;; (update-state-prop hidden-notif-uid "unread")))))
 
 ;; Mark as
 ;; uid of the notification
