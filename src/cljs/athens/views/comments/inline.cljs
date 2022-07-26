@@ -132,12 +132,14 @@
               (let [block-o           {:block/uid      block-uid
                                        ;; :block/string   @value-atom
                                        :block/children []}
+                    blur-fn           #(when (not (seq @value-atom))
+                                         (rf/dispatch [:comment/hide-comment-textarea]))
                     save-fn           #(reset! value-atom %)
                     enter-handler     (fn jetsam-enter-handler
                                         [_uid _d-key-down]
                                         (when (not (str/blank? @value-atom))
                                           ;; Passing username because we need the username for other ops before the block is created.
-                                          (re-frame.core/dispatch [:comment/write-comment uid @value-atom @username])
+                                          (rf/dispatch [:comment/write-comment uid @value-atom @username])
                                           (reset! value-atom "")
                                           (rf/dispatch [:editing/uid block-uid])))
                     tab-handler       (fn jetsam-tab-handler
@@ -146,7 +148,7 @@
                                         [_uid _value])
                     delete-handler    (fn jetsam-delete-handler
                                         [_uid _d-key-down])
-                    state-hooks       {:save-fn                 #(println "save-fn" (pr-str %))
+                    state-hooks       {:save-fn                 blur-fn
                                        :update-fn               #(save-fn %)
                                        :idle-fn                 #(println "idle-fn" (pr-str %))
                                        :read-value              value-atom
