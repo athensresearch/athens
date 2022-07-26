@@ -37,8 +37,6 @@
                         :onClick on-copy-comment-ref}])
         human-timestamp (timeAgo time)]
 
-    (prn "FOLLOW" is-followup? author string)
-
     (fn []
       [:> CommentContainer {:menu menu :isFollowUp is-followup?}
        [:> HStack {:gridArea "byline"
@@ -79,7 +77,6 @@
                     :lineHeight "1.5"
                     :gridArea "refs"} linked-refs-count])])))
 
-
 (defn inline-comments
   [_data _uid hide?]
   ;; TODO : Remove this state
@@ -87,7 +84,7 @@
     (let [state           (reagent.core/atom {:hide? hide?})
           block-uid       (common.utils/gen-block-uid)
           value-atom      (r/atom "")
-          show-edit-atom? (r/atom false)]
+          show-edit-atom? (r/atom true)]
       (fn [data uid _hide?]
         (let [num-comments (count data)
               username     (rf/subscribe [:username])]
