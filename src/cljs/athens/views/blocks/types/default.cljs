@@ -299,15 +299,17 @@
                                          [:> MenuItem {:children "Copy unformatted text"
                                                        :icon     (r/as-element [:> TextIcon])
                                                        :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
-                                         (when (actions/is-block-inbox? properties "[[athens/inbox]]")
-                                            [:> MenuItem {:children "Archive all notifications"
-                                                          :onClick  #(actions/archive-all-notifications uid)}])
-                                         (when (actions/is-block-inbox? properties "[[athens/inbox]]")
+                                         (when (actions/is-block-inbox? properties)
+                                           [:> MenuItem {:children "Archive all notifications"
+                                                         :icon     (r/as-element [:> ArchiveIcon])
+                                                         :onClick  #(actions/archive-all-notifications uid)}])
+                                         (when (actions/is-block-inbox? properties)
                                            [:> MenuItem {:children "Unarchive all notifications"
+                                                         :icon     (r/as-element [:> ArchiveIcon])
                                                          :onClick  #(actions/unarchive-all-notifications uid)}])
                                          ;; Don't know how to join the following 2 conditions in 1
                                          (when (actions/is-block-notification? properties)
-                                           (when (not (actions/archive-notification? properties))
+                                           (when (not (actions/archived-notification? properties))
                                              [:> MenuItem {:children "Archive"
                                                            :icon     (r/as-element [:> ArchiveIcon])
                                                            :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}]))
@@ -335,7 +337,7 @@
                (update-fn string)
                (update-old-fn string))
 
-             [:> Container {:isHidden     (actions/archive-notification? properties)
+             [:> Container {:isHidden     (actions/archived-notification? properties)
                             :isDragging   (and @dragging? (not is-selected))
                             :isSelected   is-selected
                             :hasChildren  (seq children)
