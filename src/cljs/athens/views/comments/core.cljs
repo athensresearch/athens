@@ -57,11 +57,32 @@
      :time   (-> comment-block :block/create :event/time :time/ts)}))
 
 
+(defn add-is-follow-up?
+  [comments-data]
+  (let [is-followups (for [i (range (count comments-data))]
+                       (let [prev-item (nth comments-data (dec i) nil)
+                             curr-item (nth comments-data i)
+                             {prev-author :author prev-time :time} prev-item
+                             {curr-author :author curr-time :time} curr-item
+                             time-delta (- curr-time prev-time)
+                             ;; hard-code to 30 minutes for now (* 1000 60 30)
+                             greater-than-time-delta? (> time-delta 1800000)]
+                         {:is-followup? (cond
+                                          (zero? i) false
+                                          greater-than-time-delta? false
+                                          (and (= prev-author curr-author)
+                                               (seq prev-author)
+                                               (seq curr-author)) true
+                                          :else false)}))]
+    (mapv merge comments-data is-followups)))
+
+
 (defn get-comments-in-thread
   [db thread-uid]
   (->> (common-db/get-block-document db [:block/uid thread-uid])
        :block/children
-       (map thread-child->comment)))
+       (map thread-child->comment)
+       add-is-follow-up?))
 
 
 (defn get-comment-thread-uid

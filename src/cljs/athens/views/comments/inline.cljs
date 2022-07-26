@@ -27,8 +27,8 @@
 
 
 (defn comment-el
-  [item is-followup?]
-  (let [{:keys [string time author block/uid]} item
+  [item]
+  (let [{:keys [string time author block/uid is-followup?]} item
         linked-refs (reactive/get-reactive-linked-references [:block/uid uid])
         linked-refs-count (count linked-refs)
         on-copy-comment-ref #(copy-comment-uid item)
@@ -37,23 +37,29 @@
                         :onClick on-copy-comment-ref}])
         human-timestamp (timeAgo time)]
 
+    (prn "FOLLOW" is-followup? author string)
+
     (fn []
-      [:> CommentContainer {:menu menu}
+      [:> CommentContainer {:menu menu :isFollowUp is-followup?}
        [:> HStack {:gridArea "byline"
                    :alignItems "center"
                    :lineHeight 1.25}
-        (when (and
-                (not is-followup?)
-                author)
-          [:> Avatar {:name author :color "#fff"}]
-          [:> Text {:fontWeight "bold"
-                    :fontSize "sm"
-                    :noOfLines 0}
-           author])
-        [:> Text {:fontSize "xs"
-                  :_hover   {:color "foreground.secondary"}
-                  :color    "foreground.tertiary"}
-         human-timestamp]]
+        ;; if is-followup?, hide byline and avatar
+        ;; else show avatar and byline
+
+        (when-not is-followup?
+          [:<>
+           [:> Avatar {:name author :color "#fff" :size "xs"}]
+           [:> Text {:fontWeight "bold"
+                     :fontSize   "sm"
+                     :noOfLines  0}
+            author]
+
+           [:> Text {:fontSize "xs"
+                     :_hover   {:color "foreground.secondary"}
+                     :color    "foreground.tertiary"}
+            human-timestamp]])]
+
        [:> Anchor {:menuActions menu
                    :ml "0.25em"
                    :height "2em"}]

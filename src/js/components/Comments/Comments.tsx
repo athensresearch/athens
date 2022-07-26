@@ -60,7 +60,7 @@ export const CommentCounter = ({ count }) => {
 
 const CommentErrorMessage = () => <Text color="foreground.secondary" display="block" p={2} borderRadius="sm">Couldn't show this comment</Text>;
 
-export const CommentContainer = withErrorBoundary(({ children, menu }) => {
+export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp }) => {
   const commentRef = React.useRef();
 
   const {
@@ -82,7 +82,7 @@ export const CommentContainer = withErrorBoundary(({ children, menu }) => {
     bg={isContextMenuOpen ? "interaction.surface.hover" : undefined}
     borderRadius={isContextMenuOpen ? "sm" : undefined}
     mb="-1px"
-    borderTop="1px solid"
+    borderTop={isFollowUp ? null : "1px solid"}
     borderTopColor="separator.divider"
     py={1}
     alignItems="stretch"
