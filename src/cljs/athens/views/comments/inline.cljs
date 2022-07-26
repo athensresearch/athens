@@ -79,9 +79,8 @@
 
 (defn inline-comments
   [_data _uid hide?]
-  ;; TODO : Remove this state
   (when (comments.core/enabled?)
-    (let [state           (reagent.core/atom {:hide? hide?})
+    (let [hide?           (r/atom hide?)
           block-uid       (common.utils/gen-block-uid)
           value-atom      (r/atom "")
           show-edit-atom? (r/atom true)]
@@ -89,7 +88,7 @@
         (let [num-comments (count data)
               username     (rf/subscribe [:username])]
           [:> VStack (merge
-                       (when-not (:hide? @state)
+                       (when-not @hide?
                          {:bg "background.upper"
                           :mb 4})
                        {:gridArea "comments"
@@ -98,9 +97,8 @@
                         :spacing 0
                         :borderRadius "md"
                         :align "stretch"})
-           ;; add time, author, and preview
            [:> Button (merge
-                        (when-not (:hide? @state)
+                        (when-not @hide?
                           {:bg "background.upper"
                            :borderColor "transparent"
                            :borderBottomRadius 0})
@@ -110,8 +108,8 @@
                          :size "sm"
                          :gap 2
                          :flex "1 0 auto"
-                         :onClick #(swap! state update :hide? not)})
-            (if (:hide? @state)
+                         :onClick #(swap! @hide? not)})
+            (if @hide?
               [:<>
                [:> ChevronRightIcon]
                [:> CommentCounter {:count num-comments}]
@@ -121,7 +119,7 @@
                [:> CommentCounter {:count num-comments}]
                [:> Text {:pl 1.5} "Comments"]])]
 
-           (when-not (:hide? @state)
+           (when-not @hide?
              [:> Box {:pl 8
                       :pr 4
                       :pb 4}
