@@ -61,7 +61,7 @@
         inbox-document (common-db/get-block-document db [:block/uid page-uid])
         inbox-uid      (->> inbox-document
                             :block/children
-                            (filter #(when (= "[[Comments inbox]]" (:block/string %)) %))
+                            (filter #(when (= "[[Athens inbox]]" (:block/string %)) %))
                             first
                             :block/uid)]
     inbox-uid))
@@ -73,7 +73,7 @@
     [[(->> (bfs/internal-representation->atomic-ops
              db
              [#:block{:uid        inbox-uid
-                      :string     "[[Comments inbox]]"
+                      :string     "[[Athens inbox]]"
                       :properties {":entity/type"
                                    #:block{:string "[[athens/inbox]]"
                                            :uid    (common.utils/gen-block-uid)}}}]

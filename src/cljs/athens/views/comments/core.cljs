@@ -82,7 +82,7 @@
                                                                [#:block{:uid    comment-uid
                                                                         :string comment-string
                                                                         :properties
-                                                                        {":entity/type" #:block{:string "athens/comment"
+                                                                        {":entity/type" #:block{:string "[[athens/comment]]"
                                                                                                 :uid    (common.utils/gen-block-uid)}}}]
                                                                {:block/uid thread-uid
                                                                 :relation  :last})
@@ -97,7 +97,7 @@
                                                                         [#:block{:uid    thread-uid
                                                                                  :string thread-name
                                                                                  :properties
-                                                                                 {":entity/type"                       #:block{:string "athens/comment-thread"
+                                                                                 {":entity/type"                       #:block{:string "[[athens/comment-thread]]"
                                                                                                                                :uid    (common.utils/gen-block-uid)}
                                                                                   "athens/comment-thread/members"      #:block{:string   "athens/comment-thread/members"
                                                                                                                                :uid      members-prop-uid

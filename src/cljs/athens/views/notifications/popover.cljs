@@ -9,7 +9,8 @@
     [re-frame.core :as rf]
     [athens.views.notifications.actions :as actions]
     [athens.router :as router]
-    [athens.reactive :as reactive]))
+    [athens.reactive :as reactive]
+    [cljs.analyzer :as cljs]))
 
 
 

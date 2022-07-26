@@ -61,7 +61,7 @@
         item                          (get results index)
         entity-type                   (:entity/type item)
         navigate-uid                  (cond
-                                        (= "athens/comment" entity-type)  (:block/uid (:block/parent item))
+                                        (= "[[athens/comment]]" entity-type)  (:block/uid (:block/parent item))
                                         :else                     (:block/uid item))]
     (cond
       (= KeyCodes.ENTER key) (cond
@@ -231,11 +231,11 @@
                   parent          (:block/parent x)
                   type            (if parent :block :node)
                   title           (cond
-                                    (= "athens/comment" entity-type)  (:block/string parent)
+                                    (= "[[athens/comment]]" entity-type)  (:block/string parent)
                                     :else                     (or (:node/title parent) (:node/title x)))
                   uid             (or (:block/uid parent) (:block/uid x))
                   navigate-to-uid (cond
-                                    (= "athens/comment" entity-type) (:block/uid parent)
+                                    (= "[[athens/comment]]" entity-type) (:block/uid parent)
                                     :else                    block-uid)
                   string          (:block/string x)]]
        (if (nil? x)

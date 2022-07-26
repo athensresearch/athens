@@ -476,7 +476,7 @@
                                                                           remove-properties-add-type)
                                                    with-parent         (cond
                                                                          ;; For comments
-                                                                         (= "athens/comment" (:entity/type enhanced-block))
+                                                                         (= "[[athens/comment]]" (:entity/type enhanced-block))
                                                                          (assoc enhanced-block :block/parent (get-comment-parent-block (:db/id enhanced-block)))
 
                                                                          :else
@@ -506,7 +506,7 @@
                                           (keep get-root-parent-node-from-block)
                                           (map #(dissoc % :block/_children)))))
            block-type-search-result (group-search-results-by-block-type query n)
-           search-comments          (get block-type-search-result "athens/comment")
+           search-comments          (get block-type-search-result "[[athens/comment]]")
            result                   (concat search-comments block-search-result)]
        result))))
 
