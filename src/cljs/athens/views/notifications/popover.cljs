@@ -1,7 +1,7 @@
 (ns athens.views.notifications.popover
   (:require
-    ["@chakra-ui/react" :refer [Box IconButton Spinner Flex Text Tooltip Heading VStack ButtonGroup PopoverBody PopoverTrigger ButtonGroup Popover PopoverContent PopoverCloseButton PopoverHeader Portal Button]]
-    ["/components/Icons/Icons" :refer [CheckmarkIcon BellIcon ArrowRightIcon]]
+    ["@chakra-ui/react" :refer [Badge Box IconButton Spinner Flex Text Tooltip Heading VStack ButtonGroup PopoverBody PopoverTrigger ButtonGroup Popover PopoverContent PopoverCloseButton PopoverHeader Portal Button]]
+    ["/components/Icons/Icons" :refer [CheckmarkIcon BellFillIcon ArrowRightIcon]]
     ["/components/inbox/Inbox" :refer [InboxItemsList]]
     [athens.common-db :as common-db]
     [athens.db :as db]
@@ -10,8 +10,8 @@
     [athens.views.notifications.actions :as actions]
     [athens.router :as router]
     [athens.reactive :as reactive]
+    [reagent.core :as r]
     [cljs.analyzer :as cljs]))
-
 
 
 
@@ -35,7 +35,6 @@
       (= type "[[athens/notification/type/mention]]")  "Mentions")))
 
 
-
 (defn get-archive-state
   [prop]
   (let [state (:block/string (get prop "athens/notification/is-archived"))]
@@ -50,18 +49,24 @@
 
 (defn outliner->inbox-notifs
   [db notification]
-  (let [notif-props           (:block/properties notification)
-        notif-type            (get-notification-type-for-popover notif-props)
-        archive-state         (get-archive-state notif-props)
-        read-state            (get-read-state notif-props)
-        trigger-parent-uid    (-> (:block/string (get notif-props "athens/notification/trigger/parent"))
+  (let [{:block/keys [properties uid]} notification
+        notif-type            (get-notification-type-for-popover properties)
+        archive-state         (get-archive-state properties)
+        read-state            (get-read-state properties)
+        trigger-parent-uid    (-> (get properties "athens/notification/trigger/parent")
+                                  :block/string
                                   (common-db/strip-markup "((" "))"))
-        trigger-parent-string (:block/string (common-db/get-block db [:block/uid trigger-parent-uid]))
-        username              (common-db/strip-markup (:block/string (get notif-props "athens/notification/trigger/author")) "[[" "]]")
-        trigger-uid           (-> (:block/string (get notif-props "athens/notification/trigger"))
+        trigger-parent-string (-> (common-db/get-block db [:block/uid trigger-parent-uid])
+                                  :block/string)
+        username              (-> (get properties "athens/notification/trigger/author")
+                                  :block/string
+                                  (common-db/strip-markup "[[" "]]"))
+        trigger-uid           (-> (get properties "athens/notification/trigger")
+                                  :block/string
                                   (common-db/strip-markup "((" "))"))
-        body                  (:block/string (common-db/get-block db [:block/uid trigger-uid]))]
-    {"id"         (:block/uid notification)
+        body                  (-> (common-db/get-block db [:block/uid trigger-uid])
+                                  :block/string)]
+    {"id"         uid
      "type"       notif-type
      "isArchived" archive-state
      "isRead"     read-state
@@ -87,6 +92,7 @@
                                        (filterv filter-hidden-notifs))]
     notifications-for-popover))
 
+;; TODO: if already on user page, close
 (defn on-click-notification-item
   [parent-uid notification-uid]
   (do (router/navigate-uid parent-uid)
@@ -96,17 +102,29 @@
   []
   (let [username (rf/subscribe [:username])]
     (fn []
-      (let [notification-list (get-inbox-items-for-popover @db/dsdb (str "@" @username))]
+      (let [user-page-title (str "@" @username)
+            notification-list (get-inbox-items-for-popover @db/dsdb user-page-title)
+            navigate-user-page #(router/navigate-page user-page-title)]
         [:<>
          [:> Popover {:closeOnBlur true}
 
           [:> PopoverTrigger
-           [:> IconButton {"aria-label" "Notifications"}
-            [:> BellIcon]]]
+           [:> Box {:position "relative"}
+            [:> IconButton {"aria-label"   "Notifications"
+                            :variant       "ghost"
+                            :fontSize      "1.3em"
+                            :onDoubleClick navigate-user-page
+                            :onClick       (fn [e]
+                                             (when (.. e -shiftKey)
+                                               (rf/dispatch [:right-sidebar/open-page user-page-title])))
+                            :icon          (r/as-element [:> BellFillIcon])}]
+            [:> Badge {:position "absolute" :right "-3px" :bottom "-1px" :variant "ghost"} (count notification-list)]]]
+
+
           [:> PopoverContent {:maxWidth  "max-content"
                               :maxHeight "calc(100vh - 4rem)"}
            [:> PopoverCloseButton]
-           [:> PopoverHeader  [:> Button {:onClick #(router/navigate-page (str "@" @username))} "Notifications" [:> ArrowRightIcon]]]
+           [:> PopoverHeader  [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])} "Notifications"]]
            [:> Flex {:p             0
                      :as            PopoverBody
                      :flexDirection "column"
