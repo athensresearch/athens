@@ -1,9 +1,9 @@
 (ns athens.views.comments.inline
   (:require
     ["/components/Block/Anchor" :refer [Anchor]]
-    ["/components/Comments/Comments" :refer [CommentCounter]]
-    ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon]]
-    ["@chakra-ui/react" :refer [Button Box Text VStack HStack]]
+    ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
+    ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon]]
+    ["@chakra-ui/react" :refer [Button Box Text VStack Avatar HStack Badge]]
     [athens.common.utils :as common.utils]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
@@ -11,77 +11,65 @@
     [athens.views.blocks.content :as b-content]
     [athens.views.comments.core :as comments.core]
     [clojure.string :as str]
-    [goog.events :as events]
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
 
 (defn copy-comment-uid
-  [comment-data state]
+  [comment-data]
   (let [uid (:block/uid comment-data)
         ref (str "((" uid "))")]
     (.. js/navigator -clipboard (writeText ref))
     (util/toast (clj->js {:status "info"
                           :position "top-right"
-                          :title "Copied uid to clipboard"}))
-    (swap! state update :comment/show? not)))
-
-
-(defn show-comment-context-menu
-  [_comment-data state]
-  (let [handle-click-outside  #(when (:comment/show? @state)
-                                 (swap! state assoc :comment/show? false))]
-    (reagent.core/create-class
-      {:component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
-       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn [comment-data state]
-                                 [:> Anchor {:menuActions (clj->js [{:children "Copy comment uid"
-                                                                     :onClick  #(copy-comment-uid comment-data state)}])}]
-                                 #_[:div (merge (stylefy/use-style dropdown-style)
-                                              {:style {:position "fixed"
-                                                       :left x
-                                                       :top  y}})
-                                  [:div (stylefy/use-style menu-style)
-                                   [:> Button {:on-mouse-down #(copy-comment-uid comment-data state)}
-                                    "Copy comment uid"]]])})))
+                          :title "Copied uid to clipboard"}))))
 
 
 (defn comment-el
-  [item]
+  [item is-followup?]
   (let [{:keys [string _time author block/uid]} item
         linked-refs (reactive/get-reactive-linked-references [:block/uid uid])
         linked-refs-count (count linked-refs)
-        state (reagent.core/atom {:comment/show? false
-                                  :comment/x     nil
-                                  :comment/y     nil})]
-    (fn [item]
-      [:> HStack {:mb "-1px"
-                  :borderTop "1px solid"
-                  :display "grid"
-                  :py 1
-                  :alignItems "baseline"
-                  :gridTemplateColumns "5em auto 1fr"
-                  :gridTemplateRows "2em auto"
-                  :gridTemplateAreas "'author anchor comment' '_ _ comment'"
-                  :borderTopColor "separator.divider"
-                  :sx {"> button.anchor" {:height "100%"}
-                       "> button.anchor:not([data-active])" {:opacity 0}
-                       ":hover > button.anchor" {:opacity 1}}}
-       [:> Text {:fontWeight "bold"
-                 :gridArea "author"
-                 :fontSize "sm"
-                 :flex "0 0 4em"
-                 :noOfLines 0}
-        author]
-       [show-comment-context-menu item state]
-       [:> Box {:flex 1
+        on-copy-comment-ref #(copy-comment-uid item)
+        menu (clj->js [{:children "Copy comment ref"
+                        :icon (r/as-element [:> BlockEmbedIcon])
+                        :onClick on-copy-comment-ref}])]
+    (fn []
+      [:> CommentContainer {:menu menu}
+       [:> HStack {:gridArea "byline"
+                   :alignItems "center"
+                   :lineHeight 1.25}
+        (when (and
+                (not is-followup?)
+                author)
+          [:> Avatar {:name author :color "#fff"}]
+          [:> Text {:fontWeight "bold"
+                    :fontSize "sm"
+                    :noOfLines 0}
+           author])
+        (when _time
+          [:> Text {:fontSize "xs"
+                    :_hover {:color "foreground.secondary"}
+                    :color "foreground.tertiary"}
+           _time])]
+       [:> Anchor {:menuActions menu
+                   :ml "0.25em"
+                   :height "2em"}]
+       [:> Box {:flex "1 1 100%"
                 :gridArea "comment"
-                :lineHeight 1.5
-                :fontSize "sm"}
+                :overflow "hidden"
+                :fontSize "sm"
+                :ml 1
+                :sx {"> *" {:lineHeight 1.5}}}
         ;; In future this should be rendered differently for reply type and ref-type
         [athens.parse-renderer/parse-and-render string uid]]
        (when (pos? linked-refs-count)
-         [:> Text linked-refs-count])])))
+         [:> Badge {:size "xs"
+                    :m 1.5
+                    :mr 0
+                    :alignSelf "baseline"
+                    :lineHeight "1.5"
+                    :gridArea "refs"} linked-refs-count])])))
 
 
 (defn inline-comments
@@ -97,7 +85,8 @@
               username     (rf/subscribe [:username])]
           [:> VStack (merge
                        (when-not (:hide? @state)
-                         {:bg "background.upper"})
+                         {:bg "background.upper"
+                          :mb 4})
                        {:gridArea "comments"
                         :color "foreground.secondary"
                         :flex "1 0 auto"
@@ -121,11 +110,11 @@
               [:<>
                [:> ChevronRightIcon]
                [:> CommentCounter {:count num-comments}]
-               [:> Text "Comments"]]
+               [:> Text {:pl 1.5} "Comments"]]
               [:<>
                [:> ChevronDownIcon]
                [:> CommentCounter {:count num-comments}]
-               [:> Text "Comments"]])]
+               [:> Text {:pl 1.5} "Comments"]])]
 
            (when-not (:hide? @state)
              [:> Box {:pl 8

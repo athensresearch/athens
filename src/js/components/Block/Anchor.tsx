@@ -78,7 +78,6 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotificatio
     bg: "transparent",
     "aria-label": "Block anchor",
     className: ['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' '),
-    draggable: true,
     gridArea: "anchor",
     flexShrink: 0,
     position: 'relative',
@@ -140,6 +139,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
     uidSanitizedBlock,
     menu,
     unreadNotification
+    ...rest
   } = props;
   const innerRef = React.useRef(null);
   const refs = useMergeRefs(innerRef, ref);
@@ -162,10 +162,12 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
       aria-label="Block anchor"
       {...anchorButtonStyleProps(isClosedWithChildren, unreadNotification)}
       {...menuSourceProps}
+      draggable={onDragStart ? true : undefined}
       onDragStart={onDragStart}
       onClick={onClick}
       onDragEnd={onDragEnd}
       isActive={isContextMenuOpen}
+      {...rest}
     >
       {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}
     </IconButton>

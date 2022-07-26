@@ -15,7 +15,8 @@ import {
   EllipsisHorizontalCircleIcon,
   CheckmarkIcon,
   ViewIcon,
-  ViewOffIcon
+  ViewOffIcon,
+  ChatFilledIcon
 
 } from '@/Icons/Icons';
 
@@ -199,6 +200,10 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   * Whether the theme is set to dark mode
   */
   isThemeDark: boolean;
+  /**
+  * Whether comments should be shown
+  */
+  isShowInlineComments: boolean;
   // Electron only
   onPressMinimize?(): void;
   onPressClose?(): void;
@@ -206,6 +211,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   onPressFullscreen?(): void;
   onPressHistoryBack(): void;
   onPressHistoryForward(): void;
+  onClickInlineComments(): void;
   // Main toolbar
   onPressCommandBar(): void;
   onPressDailyNotes(): void;
@@ -304,9 +310,17 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     } else if (!isThemeDark && colorMode !== 'light') {
       toggleColorMode()
     }
-  }, [isThemeDark, toggleColorMode])
+  }, [isThemeDark, toggleColorMode]);
 
   const secondaryTools = [
+    {
+      ...handleClickInlineComments && ({
+        label: isShowInlineComments ? "Hide comments" : "Show comments",
+        isActive: isShowInlineComments,
+        onClick: handleClickInlineComments,
+        icon: <ChatFilledIcon />
+      })
+    },
     {
       label: "Help",
       isActive: isHelpOpen,
@@ -330,21 +344,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       icon: <RightSidebarIcon />
     }
   ];
-
-  if (handleClickInlineComments) {
-    secondaryTools.unshift({
-     label: "Hide comments",
-     isActive: !isShowInlineComments,
-     onClick: handleClickInlineComments,
-     icon: <ViewOffIcon/>
-    });
-    secondaryTools.unshift({
-     label: "Show comments",
-     isActive: isShowInlineComments,
-     onClick: handleClickInlineComments,
-     icon: <ViewIcon/>
-    });
-  }
 
   return (
     <AppToolbarWrapper
@@ -436,7 +435,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
         {canShowFullSecondaryMenu
           ? SecondaryToolbarItems(secondaryTools)
-          : SecondaryToolbarOverflowMenu(secondaryTools)}0
+          : SecondaryToolbarOverflowMenu(secondaryTools)}
 
       </HStack>
       {isElectron && (os === 'windows' || os === 'linux') && (
