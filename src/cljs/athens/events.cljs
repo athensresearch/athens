@@ -1092,8 +1092,8 @@
 (reg-event-fx
   :check-for-mentions
   (fn [_ [_ uid string]]
-    (let [mentions    (comments/get-all-mentions string)
-          username    (rf/subscribe [:username])
+    (let [username    (rf/subscribe [:username])
+          mentions    (comments/get-all-mentions string @username)
           mention-op  (when (not-empty mentions)
                         (comments/create-mention-notifications @db/dsdb uid mentions @username string))
           event       (common-events/build-atomic-event  (composite-ops/make-consequence-op {:op/type :mention-notifications}

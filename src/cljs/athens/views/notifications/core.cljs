@@ -115,7 +115,6 @@
         userpage-inbox-op    (concat []
                                      new-userpage-op
                                      new-inbox-op)]
-    (println "userpage " userpage at-username)
     {:inbox-uid         inbox-uid
      :userpage          userpage
      :userpage-inbox-op userpage-inbox-op}))
