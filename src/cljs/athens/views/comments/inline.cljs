@@ -86,7 +86,12 @@
           show-edit-atom? (r/atom true)]
       (fn [data uid _hide?]
         (let [num-comments (count data)
-              username     (rf/subscribe [:username])]
+              username     (rf/subscribe [:username])
+              ;; hacky way to detect if user just wanted to start the first comment, but the block-uid of the textarea
+              ;; isn't accessible globally
+              focus-textarea-if-opening-first-time #(when (zero? num-comments)
+                                                       (rf/dispatch [:editing/uid block-uid]))]
+
           [:> VStack (merge
                        (when-not @hide?
                          {:bg "background.upper"
@@ -158,6 +163,7 @@
                                        :default-verbatim-paste? true
                                        :keyboard-navigation?    false
                                        :placeholder             "Write your comment here"}]
+                (focus-textarea-if-opening-first-time)
                 [:> Box {:px 2
                          :mt 2
                          :minHeight "2.125em"
