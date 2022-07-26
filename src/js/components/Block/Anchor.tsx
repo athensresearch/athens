@@ -138,7 +138,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
     onClick,
     uidSanitizedBlock,
     menu,
-    unreadNotification
+    unreadNotification,
     ...rest
   } = props;
   const innerRef = React.useRef(null);

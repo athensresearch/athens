@@ -3,6 +3,7 @@
     ["@chakra-ui/react" :refer [Badge Box IconButton Spinner Flex Text Tooltip Heading VStack ButtonGroup PopoverBody PopoverTrigger ButtonGroup Popover PopoverContent PopoverCloseButton PopoverHeader Portal Button]]
     ["/components/Icons/Icons" :refer [CheckmarkIcon BellFillIcon ArrowRightIcon]]
     ["/components/inbox/Inbox" :refer [InboxItemsList]]
+    ["/timeAgo.js" :refer [timeAgo]]
     [athens.common-db :as common-db]
     [athens.db :as db]
     [athens.views.notifications.core :refer [get-inbox-uid-for-user]]
@@ -49,8 +50,16 @@
 
 (defn outliner->inbox-notifs
   [db notification]
-  (let [{:block/keys [properties uid]} notification
+  (let [{:block/keys [properties uid create]} notification
         notif-type            (get-notification-type-for-popover properties)
+        ;; we could use presence auth instead of notification trigger
+        _presence-auth         (-> create
+                                   :event/auth
+                                   :presence/id)
+        create-time           (-> create
+                                  :event/time
+                                  :time/ts
+                                  timeAgo)
         archive-state         (get-archive-state properties)
         read-state            (get-read-state properties)
         trigger-parent-uid    (-> (get properties "athens/notification/trigger/parent")
@@ -69,11 +78,13 @@
     {"id"         uid
      "type"       notif-type
      "isArchived" archive-state
+     "notificationTime" create-time
      "isRead"     read-state
      "body"       body
      "object"     {"name"      trigger-parent-string
                    "parentUid" trigger-parent-uid}
      "subject"    {"username" username}}))
+
 
 (defn filter-hidden-notifs
   [inbox-notif]

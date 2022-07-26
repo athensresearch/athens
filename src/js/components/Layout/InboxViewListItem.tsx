@@ -77,7 +77,7 @@ export const InboxViewListItemActions = ({ children }) => {
 export const InboxViewListItem = (props): JSX.Element => {
   const {
     isSelected, onOpen, onMarkAsRead, onMarkAsUnread, onMarkAsArchived, onMarkAsUnarchived, onIncSelection, onDecSelection, onSelect, onDeselect, ...notificationProps } = props;
-  const { id, isRead, isArchived, message, body, actions, object } = notificationProps;
+  const { id, isRead, isArchived, message, body, actions, object, notificationTime } = notificationProps;
   const ref = React.useRef();
 
   const { isOpen: isContextMenuOpen, ContextMenu, menuSourceProps } = useContextMenu({
@@ -134,7 +134,10 @@ export const InboxViewListItem = (props): JSX.Element => {
             message={message}
             body={body}
           />
-          <HStack justifyContent="flex-end">
+          <HStack justifyContent="space-between">
+            <Text fontSize="sm"
+                  marginLeft="14px"
+                  color="gray">{notificationTime}</Text>
             <ButtonGroup
               flex="0 0 auto"
               onDoubleClick={(e) => e.stopPropagation()}

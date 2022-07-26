@@ -3,6 +3,7 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
     ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon]]
+    ["/timeAgo.js" :refer [timeAgo]]
     ["@chakra-ui/react" :refer [Button Box Text VStack Avatar HStack Badge]]
     [athens.common.utils :as common.utils]
     [athens.parse-renderer :as parse-renderer]
@@ -27,13 +28,15 @@
 
 (defn comment-el
   [item is-followup?]
-  (let [{:keys [string _time author block/uid]} item
+  (let [{:keys [string time author block/uid]} item
         linked-refs (reactive/get-reactive-linked-references [:block/uid uid])
         linked-refs-count (count linked-refs)
         on-copy-comment-ref #(copy-comment-uid item)
         menu (clj->js [{:children "Copy comment ref"
                         :icon (r/as-element [:> BlockEmbedIcon])
-                        :onClick on-copy-comment-ref}])]
+                        :onClick on-copy-comment-ref}])
+        human-timestamp (timeAgo time)]
+
     (fn []
       [:> CommentContainer {:menu menu}
        [:> HStack {:gridArea "byline"
@@ -47,11 +50,10 @@
                     :fontSize "sm"
                     :noOfLines 0}
            author])
-        (when _time
-          [:> Text {:fontSize "xs"
-                    :_hover {:color "foreground.secondary"}
-                    :color "foreground.tertiary"}
-           _time])]
+        [:> Text {:fontSize "xs"
+                  :_hover   {:color "foreground.secondary"}
+                  :color    "foreground.tertiary"}
+         human-timestamp]]
        [:> Anchor {:menuActions menu
                    :ml "0.25em"
                    :height "2em"}]
