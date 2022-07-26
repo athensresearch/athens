@@ -158,7 +158,6 @@
                                        :default-verbatim-paste? true
                                        :keyboard-navigation?    false
                                        :placeholder             "Write your comment here"}]
-                (rf/dispatch [:editing/uid block-uid])
                 [:> Box {:px 2
                          :mt 2
                          :minHeight "2.125em"
