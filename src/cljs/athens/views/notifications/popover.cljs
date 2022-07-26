@@ -56,7 +56,7 @@
         trigger-parent-uid    (-> (:block/string (get notif-props "athens/notification/trigger/parent"))
                                   (common-db/strip-markup "((" "))"))
         trigger-parent-string (:block/string (common-db/get-block db [:block/uid trigger-parent-uid]))
-        username              (:block/string (get notif-props "athens/notification/trigger/author"))
+        username              (common-db/strip-markup (:block/string (get notif-props "athens/notification/trigger/author")) "[[" "]]")
         trigger-uid           (-> (:block/string (get notif-props "athens/notification/trigger"))
                                   (common-db/strip-markup "((" "))"))
         body                  (:block/string (common-db/get-block db [:block/uid trigger-uid]))]
@@ -75,8 +75,8 @@
 
 
 (defn get-inbox-items-for-popover
-  [db userpage]
-  (let [inbox-uid                 (get-inbox-uid-for-user db userpage)
+  [db at-username]
+  (let [inbox-uid                 (get-inbox-uid-for-user db at-username)
         reactive-inbox            (reactive/get-reactive-block-document [:block/uid inbox-uid])
         reactive-inbox-items-ids  (->> reactive-inbox
                                        :block/children

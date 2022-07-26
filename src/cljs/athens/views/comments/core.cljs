@@ -99,11 +99,11 @@
                                                                                                        :uid    (common.utils/gen-block-uid)}
                                                           "athens/comment-thread/members"      #:block{:string   "athens/comment-thread/members"
                                                                                                        :uid      (common.utils/gen-block-uid)
-                                                                                                       :children [#:block{:string (str "@" author)
+                                                                                                       :children [#:block{:string (str "[[@" author "]]")
                                                                                                                           :uid    (common.utils/gen-block-uid)}]}
                                                           "athens/comment-thread/subscribers"  #:block{:string   "athens/comment-thread/subscribers"
                                                                                                        :uid      (common.utils/gen-block-uid)
-                                                                                                       :children [#:block{:string (str "@" author)
+                                                                                                       :children [#:block{:string (str "[[@" author "]]")
                                                                                                                           :uid    (common.utils/gen-block-uid)}]}}}]
                                                 {:block/uid block-uid
                                                  :relation  :last})
@@ -118,7 +118,7 @@
 (defn user-in-thread-as?
   [db member-or-subscriber thread-uid userpage]
   (filter
-    #(= userpage (:block/string %))
+    #(= (common-db/strip-markup userpage "[[" "]]" ) (:block/string %))
     (:block/children (get-thread-property db thread-uid member-or-subscriber))))
 
 
@@ -157,7 +157,7 @@
 (defn get-subscribers-for-notifying
   [db thread-uid author]
   (->> (:block/children (get-thread-property db thread-uid "athens/comment-thread/subscribers"))
-       (filter #(not= (:block/string %) (str "@" author)))
+       (filter #(not= (:block/string %) (str "[[@" author "]]")))
        (map #(:block/string %))))
 
 (defn create-notification-op-for-users
@@ -171,7 +171,7 @@
                           users)
         notifications    (into [] (map
                                     #(let [{:keys [inbox-uid userpage userpage-inbox-op]}  %]
-                                       (when (not= userpage (str "@" author))
+                                       (when (not= userpage (str "[[@" author "]]"))
                                          (composite/make-consequence-op {:op/type :userpage-notification-op}
                                                                         (concat userpage-inbox-op
                                                                                 [(new-notification {:db                          db
@@ -244,7 +244,7 @@
                                                     (add-mentioned-users-as-member-and-subscriber @db/dsdb thread-uid comment-string)))
 
           add-as-mem-or-subs        (when thread-exists?
-                                      (add-user-as-member-or-subscriber? @db/dsdb thread-uid (str "@" author)))
+                                      (add-user-as-member-or-subscriber? @db/dsdb thread-uid (str "[[@" author "]]")))
           notification-message      (str "**((" uid "))**" "\n"
                                          "*[[@" author "]] commented: "  comment-string "*")
           notification-op           (create-notification-op-for-comment @db/dsdb uid thread-uid author comment-string notification-message comment-uid)

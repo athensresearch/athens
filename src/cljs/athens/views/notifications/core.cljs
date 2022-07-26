@@ -39,10 +39,13 @@
                                #:block{:string notification-for-user
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/trigger/author"
-                               #:block{:string notification-trigger-author
+                               #:block{:string (str "[[@" notification-trigger-author "]]")
                                        :uid    (common.utils/gen-block-uid)}
-                               "athens/notification/state"
-                               #:block{:string notification-state
+                               "athens/notification/is-archived"
+                               #:block{:string  "false"
+                                       :uid    (common.utils/gen-block-uid)}
+                               "athens/notification/is-read"
+                               #:block{:string  "false"
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/trigger/parent"
                                #:block{:string  (str "((" notification-trigger-parent "))")
@@ -52,46 +55,39 @@
        (composite/make-consequence-op {:op/type :new-notification})))
 
 
-(defn update-notification-state
-  [notification-block-uid to-state]
-  (rf/dispatch [:properties/update-in [:block/uid notification-block-uid] ["athens/notification/state"]
-                       (fn [db prop-uid]
-                         [(graph-ops/build-block-save-op db prop-uid to-state)])]))
-
-
 (defn get-inbox-uid-for-user
-  [db username]
-  (let [page-uid       (common-db/get-page-uid db username)
+  [db at-username]
+  (let [page-uid       (common-db/get-page-uid db at-username)
         inbox-document (common-db/get-block-document db [:block/uid page-uid])
         inbox-uid      (->> inbox-document
                             :block/children
-                            (filter #(when (= "Comments inbox" (:block/string %)) %))
+                            (filter #(when (= "[[Comments inbox]]" (:block/string %)) %))
                             first
                             :block/uid)]
     inbox-uid))
 
 
 (defn create-comments-inbox
-  [db userpage]
+  [db at-username]
   (let [inbox-uid    (common.utils/gen-block-uid)]
     [[(->> (bfs/internal-representation->atomic-ops
              db
              [#:block{:uid        inbox-uid
-                      :string     "Comments inbox"
+                      :string     "[[Comments inbox]]"
                       :properties {":entity/type"
-                                   #:block{:string "athens/inbox/type/comments"
+                                   #:block{:string "[[athens/inbox]]"
                                            :uid    (common.utils/gen-block-uid)}}}]
              {:relation :first
-              :page/title userpage})
-           (composite/make-consequence-op {:op/type :new-inboxx}))]
+              :page/title at-username})
+           (composite/make-consequence-op {:op/type :new-inbox}))]
      inbox-uid]))
 
 
 (defn create-userpage
-  [db userpage-name]
-  (let [new-page-op        [(graph-ops/build-page-new-op db userpage-name)]
+  [db at-username]
+  (let [new-page-op        [(graph-ops/build-page-new-op db at-username)]
         [comments-inbox-op
-         inbox-uid]        (create-comments-inbox db userpage-name)
+         inbox-uid]        (create-comments-inbox db at-username)
         userpage-inbox-op  (concat new-page-op
                                    comments-inbox-op)]
     [userpage-inbox-op inbox-uid]))
@@ -104,20 +100,22 @@
   ;; Someone can subscribe to a thread without having the userpage, inbox or both.
   ;; So in that case we need to create these depending on the situation.
   [db userpage]
-  (let [user-exists?         (common-db/get-page-uid db userpage)
+  (let [at-username          (common-db/strip-markup userpage "[[" "]]")
+        user-exists?         (common-db/get-page-uid db at-username)
         [new-userpage-op
          comments-inbox-uid] (when (not user-exists?)
-                               (create-userpage db userpage))
+                               (create-userpage db at-username))
         ;; inbox-uid being nil means user page exists but inbox does not
-        inbox-uid            (or (get-inbox-uid-for-user db userpage)
+        inbox-uid            (or (get-inbox-uid-for-user db at-username)
                                  comments-inbox-uid)
         [new-inbox-op
          inbox-uid]          (if (not inbox-uid)
-                               (create-comments-inbox db userpage)
+                               (create-comments-inbox db at-username)
                                [[] inbox-uid])
         userpage-inbox-op    (concat []
                                      new-userpage-op
                                      new-inbox-op)]
+    (println "userpage " userpage at-username)
     {:inbox-uid         inbox-uid
      :userpage          userpage
      :userpage-inbox-op userpage-inbox-op}))
