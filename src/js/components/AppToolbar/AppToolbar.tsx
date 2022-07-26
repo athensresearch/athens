@@ -270,6 +270,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isRightSidebarOpen,
     isCommandBarOpen,
     isShowInlineComments,
+    isNotificationsPopoverOpen,
     onClickInlineComments: handleClickInlineComments,
     onPressCommandBar: handlePressCommandBar,
     onPressDailyNotes: handlePressDailyNotes,
@@ -286,6 +287,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressMaximizeRestore: handlePressMaximizeRestore,
     onPressClose: handlePressClose,
     onClickNotifications: handleShowNotifications,
+    handlePressNotifications,
     databaseMenu,
     notificationPopover,
     presenceDetails,
@@ -409,7 +411,15 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
             </ToolbarIconButton>
           </Tooltip>
 
+          {/*<Tooltip label="Notifications">
+            <ToolbarIconButton
+              isActive={isNotificationsPopoverOpen}
+              onClick={handlePressNotifications}>
+              {notificationPopover}
+            </ToolbarIconButton>
+          </Tooltip>*/}
           {notificationPopover}
+
           <ToolbarButton
             aria-label="Search"
             variant="outline"

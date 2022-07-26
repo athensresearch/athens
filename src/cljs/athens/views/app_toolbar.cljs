@@ -24,6 +24,7 @@
         route-name             (rf/subscribe [:current-route/name])
         theme-dark             (rf/subscribe [:theme/dark])
         selected-db            (rf/subscribe [:db-picker/selected-db])
+        notificationsPopoverOpen? (rf/subscribe [:notification/show-popover?])
         electron?              electron.utils/electron?
         win-focused?           (if electron?
                                  (rf/subscribe [:win-focused?])
@@ -72,7 +73,8 @@
         on-right-sidebar       #(rf/dispatch [:right-sidebar/toggle])
         on-maximize            #(rf/dispatch [:toggle-max-min-win])
         on-minimize            #(rf/dispatch [:minimize-win])
-        on-close               #(rf/dispatch [:close-win])]
+        on-close               #(rf/dispatch [:close-win])
+        on-notifications       #()]
     [:> AppToolbar (merge
                      {:style                     (unzoom)
                       :os                        os
@@ -101,6 +103,8 @@
                       :onPressMinimize           on-minimize
                       :onPressClose              on-close
                       :onClickNotifications      #(rf/dispatch [:notification/toggle-popover])
+                      :isNotificationsPopoverOpen @notificationsPopoverOpen?
+                      :handlePressNotifications on-notifications
                       :databaseMenu              (r/as-element [db-menu])
                       :notificationPopover      (r/as-element [notifications-popover])
                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)
