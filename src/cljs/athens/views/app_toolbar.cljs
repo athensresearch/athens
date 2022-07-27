@@ -102,7 +102,7 @@
                       :onPressMinimize           on-minimize
                       :onPressClose              on-close
                       :isNotificationsPopoverOpen @notificationsPopoverOpen?
-                      ;;:onPressNotifications      #(rf/dispatch [:notification/toggle-popover])
+                      ;; :onPressNotifications      #(rf/dispatch [:notification/toggle-popover])
                       :databaseMenu              (r/as-element [db-menu])
                       :notificationPopover      (r/as-element [notifications-popover])
                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)

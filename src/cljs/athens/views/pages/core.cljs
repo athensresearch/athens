@@ -3,7 +3,7 @@
     ["@chakra-ui/react" :refer [Box]]
     [athens.util :refer [toast]]
     [athens.views.hoc.perf-mon :as perf-mon]
-    [athens.views.notifications :as notifications]
+    #_[athens.views.notifications :as notifications]
     [athens.views.pages.all-pages :as all-pages]
     [athens.views.pages.daily-notes :as daily-notes]
     [athens.views.pages.graph :as graph]

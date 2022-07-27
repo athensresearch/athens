@@ -39,7 +39,7 @@ import {
   useMediaQuery
 } from '@chakra-ui/react';
 
-import { NotificationsPopover } from '@/inbox/Inbox'
+import { NotificationsPopover } from '@/Inbox/Inbox'
 
 import { WindowButtons } from './components/WindowButtons';
 

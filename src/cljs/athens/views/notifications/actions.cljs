@@ -26,10 +26,10 @@
      (:block/string (get properties "athens/notification/is-read"))))
 
 
-(defn read-notification?
-  [properties]
-  (= "true"
-     (:block/string (get properties "athens/notification/is-read"))))
+#_(defn read-notification?
+    [properties]
+    (= "true"
+       (:block/string (get properties "athens/notification/is-read"))))
 
 
 (defn archived-notification?
