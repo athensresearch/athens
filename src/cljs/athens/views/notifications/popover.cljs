@@ -1,7 +1,7 @@
 (ns athens.views.notifications.popover
   (:require
     ["/components/Icons/Icons" :refer [BellFillIcon ArrowRightIcon]]
-    ["/components/inbox/Inbox" :refer [InboxItemsList]]
+    ["/components/Inbox/Inbox" :refer [InboxItemsList]]
     ["/timeAgo.js" :refer [timeAgo]]
     ["@chakra-ui/react" :refer [Badge Box IconButton Flex PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
     [athens.common-db :as common-db]
@@ -143,6 +143,7 @@
                      :flexDirection "column"
                      :overflow      "hidden"}
             [:> InboxItemsList
+
              {:onOpenItem        on-click-notification-item
               :onMarkAsRead      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
               :onMarkAsUnread    #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))

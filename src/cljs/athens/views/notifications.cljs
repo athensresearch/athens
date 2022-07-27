@@ -3,6 +3,6 @@
     ["/components/Inbox/Inbox" :refer [Inbox]]))
 
 
-(defn inbox
-  []
-  [:> Inbox])
+#_(defn inbox
+    []
+    [:> Inbox])
