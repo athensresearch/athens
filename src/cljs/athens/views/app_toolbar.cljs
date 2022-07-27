@@ -9,6 +9,7 @@
     [athens.subs]
     [athens.util                         :as util]
     [athens.views.comments.core          :as comments]
+    [athens.views.notifications.core     :as notifications]
     [athens.views.notifications.popover :refer  [notifications-popover]]
     [re-frame.core                       :as rf]
     [reagent.core                        :as r]))
@@ -104,9 +105,10 @@
                       :isNotificationsPopoverOpen @notificationsPopoverOpen?
                       ;; :onPressNotifications      #(rf/dispatch [:notification/toggle-popover])
                       :databaseMenu              (r/as-element [db-menu])
-                      :notificationPopover      (r/as-element [notifications-popover])
+                      :notificationPopover       (when (notifications/enabled?)
+                                                   (r/as-element [notifications-popover]))
                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)
                                                    (r/as-element [toolbar-presence-el]))}
                      (when (comments/enabled?)
-                       {:isShowInlineComments @inline-comments
+                       {:isShowInlineComments  @inline-comments
                         :onClickInlineComments #(rf/dispatch [:comment/toggle-inline-comments])}))]))
