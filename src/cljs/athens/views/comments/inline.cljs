@@ -2,10 +2,11 @@
   (:require
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
-    ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon]]
+    ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon ArchiveIcon]]
     ["/timeAgo.js" :refer [timeAgo]]
     ["@chakra-ui/react" :refer [Button Box Text VStack Avatar HStack Badge]]
     [athens.common.utils :as common.utils]
+    [athens.common-events.graph.ops       :as graph-ops :refer [build-block-remove-op build-block-save-op]]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.util :as util]
@@ -13,7 +14,9 @@
     [athens.views.comments.core :as comments.core]
     [clojure.string :as str]
     [re-frame.core :as rf]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [athens.db :as db]
+    [athens.common-events :as common-events :refer [build-atomic-event]]))
 
 
 (defn copy-comment-uid
@@ -25,17 +28,53 @@
                           :position "top-right"
                           :title "Copied uid to clipboard"}))))
 
+(rf/reg-event-fx
+  :comment/remove-comment
+  (fn [_ [_ uid]]
+    (athens.common.logging/debug ":comment/remove-comment:" uid)
+    {:fx [[:dispatch [:resolve-transact-forward (-> (build-block-remove-op @db/dsdb uid)
+                                                    (build-atomic-event))]]]}))
+
+
+(rf/reg-event-fx
+  :comment/edit-comment
+  (fn [_ [_ uid]]
+    (rf/dispatch [:editing/uid uid :end])))
+
+
+(rf/reg-event-fx
+  :comment/update-comment
+  (fn [_ [_ uid string]]
+    (athens.common.logging/debug ":comment/update-comment:" uid string)
+    ;; TODO: show that block was edited and show last edit time?
+    {:fx [[:dispatch-n [[:resolve-transact-forward (-> (build-block-save-op @db/dsdb uid string)
+                                                       (build-atomic-event))]
+                        [:editing/uid nil]]]]}))
+
 
 (defn comment-el
   [item]
   (let [{:keys [string time author block/uid is-followup?]} item
-        linked-refs (reactive/get-reactive-linked-references [:block/uid uid])
-        linked-refs-count (count linked-refs)
-        on-copy-comment-ref #(copy-comment-uid item)
-        menu (clj->js [{:children "Copy comment ref"
-                        :icon (r/as-element [:> BlockEmbedIcon])
-                        :onClick on-copy-comment-ref}])
-        human-timestamp (timeAgo time)]
+        linked-refs             (reactive/get-reactive-linked-references [:block/uid uid])
+        linked-refs-count       (count linked-refs)
+        on-copy-comment-ref     #(copy-comment-uid item)
+        current-user-is-author? (= author @(rf/subscribe [:presence/current-username]))
+        menu                    [{:children "Copy comment ref"
+                                  :icon     (r/as-element [:> BlockEmbedIcon])
+                                  :onClick  on-copy-comment-ref}
+                                 (when current-user-is-author?
+                                   {:children "Edit"
+                                    :icon     (r/as-element [:> PencilIcon])
+                                    :onClick  #(rf/dispatch [:comment/edit-comment uid])})
+                                 (when current-user-is-author?
+                                   {:children "Delete"
+                                    :icon     (r/as-element [:> ArchiveIcon])
+                                    :onClick  #(rf/dispatch [:comment/remove-comment uid])})]
+        menu                    (filterv seq menu)
+        human-timestamp         (timeAgo time)
+        is-editing (rf/subscribe [:editing/is-editing uid])
+        value-atom (r/atom string)
+        show-edit-atom? (r/atom true)]
 
     (fn []
       [:> CommentContainer {:menu menu :isFollowUp is-followup?}
@@ -67,7 +106,41 @@
                 :ml 1
                 :sx {"> *" {:lineHeight 1.5}}}
         ;; In future this should be rendered differently for reply type and ref-type
-        [athens.parse-renderer/parse-and-render string uid]]
+        (if-not @is-editing
+          [athens.parse-renderer/parse-and-render string uid]
+          (let [block-o           {:block/uid      uid
+                                   :block/string   string
+                                   :block/children []}
+                blur-fn           #(prn "blur-fn")
+                save-fn           #(reset! value-atom %)
+                enter-handler     (fn jetsam-enter-handler
+                                    [_uid _d-key-down]
+                                    (rf/dispatch [:comment/update-comment uid @value-atom]))
+                tab-handler       (fn jetsam-tab-handler
+                                    [_uid _embed-id _d-key-down])
+                backspace-handler (fn jetsam-backspace-handler
+                                    [_uid _value])
+                delete-handler    (fn jetsam-delete-handler
+                                    [_uid _d-key-down])
+                state-hooks       {:save-fn                 blur-fn
+                                   :update-fn               #(save-fn %)
+                                   :idle-fn                 #(println "idle-fn" (pr-str %))
+                                   :read-value              value-atom
+                                   :show-edit?              show-edit-atom?
+                                   :enter-handler           enter-handler
+                                   :tab-handler             tab-handler
+                                   :backspace-handler       backspace-handler
+                                   :delete-handler          delete-handler
+                                   :default-verbatim-paste? true
+                                   :keyboard-navigation?    false
+                                   :style                   {:opacity 1
+                                                             :background-color "var(--chakra-colors-background-attic)"
+                                                             :margin-top "10px"
+                                                             :padding-left "5px"
+                                                             :font-size "1.2em"
+                                                             :border-radius "5px"}}]
+            [b-content/block-content-el block-o state-hooks]))]
+
        (when (pos? linked-refs-count)
          [:> Badge {:size "xs"
                     :m 1.5
