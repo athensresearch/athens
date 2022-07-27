@@ -21,9 +21,9 @@
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content               :as content]
     [athens.views.blocks.reactions             :refer [toggle-reaction props->reactions]]
-    [athens.views.notifications.actions        :as actions]
     [athens.views.comments.core                :as comments]
     [athens.views.comments.inline              :as inline-comments]
+    [athens.views.notifications.actions        :as actions]
     [re-frame.core                             :as rf]))
 
 

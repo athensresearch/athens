@@ -1,32 +1,32 @@
 (ns athens.views.notifications.popover
   (:require
-    ["@chakra-ui/react" :refer [Badge Box IconButton Spinner Flex Text Tooltip Heading VStack ButtonGroup PopoverBody PopoverTrigger ButtonGroup Popover PopoverContent PopoverCloseButton PopoverHeader Portal Button]]
-    ["/components/Icons/Icons" :refer [CheckmarkIcon BellFillIcon ArrowRightIcon]]
+    ["/components/Icons/Icons" :refer [BellFillIcon ArrowRightIcon]]
     ["/components/inbox/Inbox" :refer [InboxItemsList]]
     ["/timeAgo.js" :refer [timeAgo]]
+    ["@chakra-ui/react" :refer [Badge Box IconButton Flex PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
     [athens.common-db :as common-db]
     [athens.db :as db]
+    [athens.reactive :as reactive]
+    [athens.router :as router]
+    [athens.views.notifications.actions :as actions]
     [athens.views.notifications.core :refer [get-inbox-uid-for-user]]
     [re-frame.core :as rf]
-    [athens.views.notifications.actions :as actions]
-    [athens.router :as router]
-    [athens.reactive :as reactive]
-    [reagent.core :as r]
-    [cljs.analyzer :as cljs]))
-
+    [reagent.core :as r]))
 
 
 (rf/reg-sub
- :notification/show-popover?
- (fn [db [_]]
-   (= true (:notification/show-popover db))))
+  :notification/show-popover?
+  (fn [db [_]]
+    (= true (:notification/show-popover db))))
+
 
 (rf/reg-event-fx
- :notification/toggle-popover
- (fn [{:keys [db]} [_]]
-   (println "toggle notification popover")
-   (let [current-state (:notification/show-popover db)]
-     {:db (assoc db :notification/show-popover (not current-state))})))
+  :notification/toggle-popover
+  (fn [{:keys [db]} [_]]
+    (println "toggle notification popover")
+    (let [current-state (:notification/show-popover db)]
+      {:db (assoc db :notification/show-popover (not current-state))})))
+
 
 (defn get-notification-type-for-popover
   [prop]
@@ -103,11 +103,13 @@
                                        (filterv filter-hidden-notifs))]
     notifications-for-popover))
 
+
 ;; TODO: if already on user page, close
 (defn on-click-notification-item
   [parent-uid notification-uid]
-  (do (router/navigate-uid parent-uid)
-      (rf/dispatch (actions/update-state-prop notification-uid "athens/notification/is-read" "true"))))
+  (router/navigate-uid parent-uid)
+  (rf/dispatch (actions/update-state-prop notification-uid "athens/notification/is-read" "true")))
+
 
 (defn notifications-popover
   []
@@ -145,5 +147,5 @@
               :onMarkAsRead      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
               :onMarkAsUnread    #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
               :onArchive         #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))
-              ;;:onUnarchive       #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
+              ;; :onUnarchive       #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
               :notificationsList notification-list}]]]]]))))

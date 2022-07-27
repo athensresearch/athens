@@ -27,6 +27,7 @@
     [athens.util                          :as util]
     [athens.utils.sentry                  :as sentry]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [athens.views.comments.core :as comments]
     [clojure.pprint                       :as pp]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
@@ -35,8 +36,7 @@
     [goog.dom                             :refer [getElement]]
     [malli.core                           :as m]
     [malli.error                          :as me]
-    [re-frame.core                        :as rf :refer [reg-event-db reg-event-fx subscribe]]
-    [athens.views.comments.core :as comments]))
+    [re-frame.core                        :as rf :refer [reg-event-db reg-event-fx subscribe]]))
 
 
 ;; -- re-frame app-db events ---------------------------------------------
@@ -1089,6 +1089,7 @@
             [:dispatch [:reporting/block.create {:source :enter-new-block
                                                  :count  1}]]]})))
 
+
 (reg-event-fx
   :check-for-mentions
   (fn [_ [_ uid string]]
@@ -1100,6 +1101,7 @@
                                                                                             mention-op))]
       (when mention-op
         {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
+
 
 (reg-event-fx
   :block/save

@@ -77,6 +77,7 @@
                     :lineHeight "1.5"
                     :gridArea "refs"} linked-refs-count])])))
 
+
 (defn inline-comments
   [_data _uid hide?]
   (when (comments.core/enabled?)
@@ -90,7 +91,7 @@
               ;; hacky way to detect if user just wanted to start the first comment, but the block-uid of the textarea
               ;; isn't accessible globally
               focus-textarea-if-opening-first-time #(when (zero? num-comments)
-                                                       (rf/dispatch [:editing/uid block-uid]))]
+                                                      (rf/dispatch [:editing/uid block-uid]))]
 
           [:> VStack (merge
                        (when-not @hide?

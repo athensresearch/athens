@@ -2,7 +2,6 @@
   (:require
     ["/components/AppToolbar/AppToolbar" :refer [AppToolbar]]
     [athens.electron.db-menu.core        :refer [db-menu]]
-    [athens.views.notifications.popover :refer  [notifications-popover]]
     [athens.electron.utils               :as electron.utils]
     [athens.router                       :as router]
     [athens.self-hosted.presence.views   :refer [toolbar-presence-el]]
@@ -10,6 +9,7 @@
     [athens.subs]
     [athens.util                         :as util]
     [athens.views.comments.core          :as comments]
+    [athens.views.notifications.popover :refer  [notifications-popover]]
     [re-frame.core                       :as rf]
     [reagent.core                        :as r]))
 
