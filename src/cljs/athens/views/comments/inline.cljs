@@ -58,8 +58,7 @@
                      :color    "foreground.tertiary"}
             human-timestamp]])]
 
-       [:> Anchor {:menuActions menu
-                   :ml "0.25em"
+       [:> Anchor {:ml "0.25em"
                    :height "2em"}]
        [:> Box {:flex "1 1 100%"
                 :gridArea "comment"

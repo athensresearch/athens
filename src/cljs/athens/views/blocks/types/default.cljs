@@ -4,7 +4,7 @@
   (:require
     ["/components/Block/Container"           :refer [Container]]
     ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon ArchiveIcon]]
-    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem]]
+    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem Divider]]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -300,27 +300,32 @@
                                                        :icon     (r/as-element [:> TextIcon])
                                                        :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
 
+                                         (when comments-enabled?
+                                            [:> MenuItem {:children "Add comment"
+                                                          :onClick  #(ctx-menu/handle-click-comment % uid)
+                                                          :icon     (r/as-element [:> ChatIcon])}])
+                                         (when reactions-enabled?
+                                            [:> MenuItem {:children "Add reaction"
+                                                          :onClick  show-emoji-picker-fn
+                                                          :icon     (r/as-element [:> ThumbUpFillIcon])}])
+
                                          (when (actions/is-block-inbox? properties)
-                                           [:> MenuItem {:children "Archive all notifications"
-                                                         :icon     (r/as-element [:> ArchiveIcon])
-                                                         :onClick  #(actions/archive-all-notifications uid)}])
-                                         (when (actions/is-block-inbox? properties)
-                                           [:> MenuItem {:children "Unarchive all notifications"
-                                                         :icon     (r/as-element [:> ArchiveIcon])
-                                                         :onClick  #(actions/unarchive-all-notifications uid)}])
+                                           [:<>
+                                            [:> Divider]
+                                            [:> MenuItem {:children "Archive all notifications"
+                                                          :icon     (r/as-element [:> ArchiveIcon])
+                                                          :onClick  #(actions/archive-all-notifications uid)}]
+                                            [:> MenuItem {:children "Unarchive all notifications"
+                                                          :icon     (r/as-element [:> ArchiveIcon])
+                                                          :onClick  #(actions/unarchive-all-notifications uid)}]])
+
                                          (when (actions/is-block-notification? properties)
                                            [:> MenuItem {:children "Archive"
                                                          :icon     (r/as-element [:> ArchiveIcon])
-                                                         :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])
+                                                         :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])]
 
-                                         (when comments-enabled?
-                                           [:> MenuItem {:children "Add comment"
-                                                         :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                         :icon     (r/as-element [:> ChatIcon])}])
-                                         (when reactions-enabled?
-                                           [:> MenuItem {:children "Add reaction"
-                                                         :onClick  show-emoji-picker-fn
-                                                         :icon     (r/as-element [:> ThumbUpFillIcon])}])])]
+
+
 
              ;; (prn uid is-selected)
 
