@@ -87,4 +87,4 @@
                    :display "inline-block"
                    :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
                    :target "_blank"}
-          (athens.util/athens-version)]]])]))
+          (util/athens-version)]]])]))

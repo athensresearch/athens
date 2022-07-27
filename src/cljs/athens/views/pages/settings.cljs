@@ -192,7 +192,7 @@
 
 
 (defn feature-flags-comp
-  [{:keys [comments reactions cover-photo time-controls]} update-fn]
+  [{:keys [comments reactions notifications cover-photo time-controls]} update-fn]
   [setting-wrapper
    [:<>
     [header
@@ -200,19 +200,23 @@
     [form
      [:<>
       [:> FormControl
-       [:> Switch {:defaultChecked comments
+       [:> Switch {:isChecked comments
                    :onChange #(update-fn :comments %)}
         "Comments"]]
       [:> FormControl
-       [:> Switch {:defaultChecked reactions
+       [:> Switch {:isChecked reactions
                    :onChange #(update-fn :reactions %)}
         "Reactions"]]
       [:> FormControl
-       [:> Switch {:defaultChecked cover-photo
+       [:> Switch {:isChecked notifications
+                   :onChange #(update-fn :notifications %)}
+        "Notifications"]]
+      [:> FormControl
+       [:> Switch {:isChecked cover-photo
                    :onChange #(update-fn :cover-photo %)}
         "Cover Photo"]]
       [:> FormControl
-       [:> Switch {:defaultChecked time-controls
+       [:> Switch {:isChecked time-controls
                    :onChange #(update-fn :time-controls %)}
         "Time Controls"]]]]
     [help

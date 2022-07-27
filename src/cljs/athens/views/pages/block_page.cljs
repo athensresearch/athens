@@ -151,7 +151,6 @@
             (let [{:keys [db/id]} child]
               ^{:key id} [blocks/block-el child]))]
 
-
          ;; Refs
          [:> PageFooter
           [linked-refs-el id]]]))))

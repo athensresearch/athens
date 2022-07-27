@@ -9,6 +9,8 @@
     [athens.subs]
     [athens.util                         :as util]
     [athens.views.comments.core          :as comments]
+    [athens.views.notifications.core     :as notifications]
+    [athens.views.notifications.popover :refer  [notifications-popover]]
     [re-frame.core                       :as rf]
     [reagent.core                        :as r]))
 
@@ -23,6 +25,7 @@
         route-name             (rf/subscribe [:current-route/name])
         theme-dark             (rf/subscribe [:theme/dark])
         selected-db            (rf/subscribe [:db-picker/selected-db])
+        notificationsPopoverOpen? (rf/subscribe [:notification/show-popover?])
         electron?              electron.utils/electron?
         win-focused?           (if electron?
                                  (rf/subscribe [:win-focused?])
@@ -102,6 +105,9 @@
                       :databaseMenu              (r/as-element [db-menu])
                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)
                                                    (r/as-element [toolbar-presence-el]))}
+                     (when (notifications/enabled?)
+                       {:notificationPopover (r/as-element [notifications-popover])
+                        :isNotificationsPopoverOpen @notificationsPopoverOpen?})
                      (when (comments/enabled?)
-                       {:isShowInlineComments @inline-comments
+                       {:isShowInlineComments  @inline-comments
                         :onClickInlineComments #(rf/dispatch [:comment/toggle-inline-comments])}))]))
