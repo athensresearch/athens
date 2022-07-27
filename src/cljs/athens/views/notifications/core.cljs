@@ -4,7 +4,13 @@
     [athens.common-events.bfs :as bfs]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops :as graph-ops]
-    [athens.common.utils :as common.utils]))
+    [athens.common.utils :as common.utils]
+    [re-frame.core :as rf]))
+
+
+(defn enabled?
+  []
+  (:notifications @(rf/subscribe [:feature-flags])))
 
 
 (defn create-notif-message

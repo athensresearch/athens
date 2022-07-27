@@ -286,6 +286,7 @@
                  is-presence          (seq present-user)
                  reactions-enabled?   (:reactions @feature-flags)
                  comments-enabled?    (:comments @feature-flags)
+                 notifications-enabled?    (:notifications @feature-flags)
                  show-emoji-picker?   (r/atom false)
                  hide-emoji-picker-fn #(reset! show-emoji-picker? false)
                  show-emoji-picker-fn #(reset! show-emoji-picker? true)
@@ -301,15 +302,15 @@
                                                        :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
 
                                          (when comments-enabled?
-                                            [:> MenuItem {:children "Add comment"
-                                                          :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                          :icon     (r/as-element [:> ChatIcon])}])
+                                           [:> MenuItem {:children "Add comment"
+                                                         :onClick  #(ctx-menu/handle-click-comment % uid)
+                                                         :icon     (r/as-element [:> ChatIcon])}])
                                          (when reactions-enabled?
-                                            [:> MenuItem {:children "Add reaction"
-                                                          :onClick  show-emoji-picker-fn
-                                                          :icon     (r/as-element [:> ThumbUpFillIcon])}])
+                                           [:> MenuItem {:children "Add reaction"
+                                                         :onClick  show-emoji-picker-fn
+                                                         :icon     (r/as-element [:> ThumbUpFillIcon])}])
 
-                                         (when (actions/is-block-inbox? properties)
+                                         (when (and notifications-enabled? (actions/is-block-inbox? properties))
                                            [:<>
                                             [:> Divider]
                                             [:> MenuItem {:children "Archive all notifications"
@@ -319,7 +320,7 @@
                                                           :icon     (r/as-element [:> ArchiveIcon])
                                                           :onClick  #(actions/unarchive-all-notifications uid)}]])
 
-                                         (when (actions/is-block-notification? properties)
+                                         (when (and notifications-enabled? (actions/is-block-notification? properties))
                                            [:> MenuItem {:children "Archive"
                                                          :icon     (r/as-element [:> ArchiveIcon])
                                                          :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])]

@@ -208,6 +208,10 @@
                    :onChange #(update-fn :reactions %)}
         "Reactions"]]
       [:> FormControl
+       [:> Switch {:defaultChecked reactions
+                   :onChange #(update-fn :notifications %)}
+        "Notifications"]]
+      [:> FormControl
        [:> Switch {:defaultChecked cover-photo
                    :onChange #(update-fn :cover-photo %)}
         "Cover Photo"]]
