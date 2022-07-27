@@ -170,6 +170,7 @@
                           key
                           properties
                           _refs]} (reactive/get-reactive-block-document [:block/uid uid])
+            comments-enabled?     (:comments @feature-flags)
             reactions-enabled?    (:reactions @feature-flags)
             user-id               (or (:username @(rf/subscribe [:presence/current-user]))
                                       ;; We use empty string for when there is no user information, like in PKM.
@@ -242,10 +243,10 @@
                                          :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
 
           ;; Show comments when the toggle is on
-          (when (and open
+          (when (and @show-inline-comments
+                     open
                      (or @show-textarea
-                         (and @show-inline-comments
-                              (comments/get-comment-thread-uid @db/dsdb uid))))
+                         (comments/get-comment-thread-uid @db/dsdb uid)))
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
 
           [presence/inline-presence-el uid]
