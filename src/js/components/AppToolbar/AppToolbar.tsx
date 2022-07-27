@@ -231,7 +231,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const SecondaryToolbarItems = (items) => {
   return <ButtonGroup size="sm">
-    {items.map((item) => <Tooltip label={item.label} key={item.label}>
+    {items.filter(x => !!x).map((item) => <Tooltip label={item.label} key={item.label}>
       <ToolbarIconButton variant="ghost" colorScheme="subtle" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
         {item.icon}
       </ToolbarIconButton>
@@ -245,7 +245,7 @@ const SecondaryToolbarOverflowMenu = (items) => {
       <ToolbarIconButton size="sm" as={MenuButton} isActive={isOpen}><EllipsisHorizontalCircleIcon /></ToolbarIconButton>
       <Portal>
         <MenuList>
-          {items.map((item) => (<MenuItem
+          {items.filter(x => !!x).map((item) => (<MenuItem
             key={item.label}
             onClick={item.onClick}
             icon={item.icon}
@@ -312,13 +312,11 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   }, [isThemeDark, toggleColorMode]);
 
   const secondaryTools = [
-    {
-      ...handleClickInlineComments && ({
-        label: isShowInlineComments ? "Hide comments" : "Show comments",
-        isActive: isShowInlineComments,
-        onClick: handleClickInlineComments,
-        icon: <ChatFilledIcon />
-      })
+    handleClickInlineComments && {
+      label: isShowInlineComments ? "Hide comments" : "Show comments",
+      isActive: isShowInlineComments,
+      onClick: handleClickInlineComments,
+      icon: <ChatFilledIcon />
     },
     {
       label: "Help",
@@ -423,6 +421,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         </ButtonGroup>
 
         {presenceDetails}
+
         {notificationPopover}
 
         {canShowFullSecondaryMenu
