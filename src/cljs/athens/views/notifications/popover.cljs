@@ -113,13 +113,13 @@
 
 (defn notifications-popover
   []
-  (when (notifications/enabled?)
-    (let [username (rf/subscribe [:username])]
-      (fn []
-        (let [user-page-title (str "@" @username)
-              notification-list (get-inbox-items-for-popover @db/dsdb user-page-title)
+  (let [username (rf/subscribe [:username])]
+    (fn []
+      (when (notifications/enabled?)
+        (let [user-page-title    (str "@" @username)
+              notification-list  (get-inbox-items-for-popover @db/dsdb user-page-title)
               navigate-user-page #(router/navigate-page user-page-title)
-              num-notifications (count notification-list)]
+              num-notifications  (count notification-list)]
           (when (pos? num-notifications)
             [:> Popover {:closeOnBlur true}
 
@@ -139,7 +139,7 @@
              [:> PopoverContent {:maxWidth  "max-content"
                                  :maxHeight "calc(100vh - 4rem)"}
               [:> PopoverCloseButton]
-              [:> PopoverHeader  [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])} "Notifications"]]
+              [:> PopoverHeader [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])} "Notifications"]]
               [:> Flex {:p             0
                         :as            PopoverBody
                         :flexDirection "column"
