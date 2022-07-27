@@ -413,7 +413,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           {/*<Tooltip label="Notifications">
             <ToolbarIconButton
               isActive={isNotificationsPopoverOpen}
-              onClick={handlePressNotifications}>
+              onClick={onPressNotifications}>
               {notificationPopover}
             </ToolbarIconButton>
           </Tooltip>*/}

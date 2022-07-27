@@ -5,6 +5,7 @@
     ["framer-motion" :refer [AnimatePresence motion]]
     [athens.reactive :as reactive]
     [athens.router   :as router]
+    [athens.util     :as util]
     [re-frame.core   :as rf]))
 
 
@@ -86,4 +87,4 @@
                    :display "inline-block"
                    :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
                    :target "_blank"}
-          (athens.util/athens-version)]]])]))
+          (util/athens-version)]]])]))

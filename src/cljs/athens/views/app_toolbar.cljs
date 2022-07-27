@@ -73,8 +73,7 @@
         on-right-sidebar       #(rf/dispatch [:right-sidebar/toggle])
         on-maximize            #(rf/dispatch [:toggle-max-min-win])
         on-minimize            #(rf/dispatch [:minimize-win])
-        on-close               #(rf/dispatch [:close-win])
-        on-notifications       #()]
+        on-close               #(rf/dispatch [:close-win])]
     [:> AppToolbar (merge
                      {:style                     (unzoom)
                       :os                        os
@@ -102,9 +101,8 @@
                       :onPressMaximizeRestore    on-maximize
                       :onPressMinimize           on-minimize
                       :onPressClose              on-close
-                      :onClickNotifications      #(rf/dispatch [:notification/toggle-popover])
                       :isNotificationsPopoverOpen @notificationsPopoverOpen?
-                      :handlePressNotifications on-notifications
+                      ;;:onPressNotifications      #(rf/dispatch [:notification/toggle-popover])
                       :databaseMenu              (r/as-element [db-menu])
                       :notificationPopover      (r/as-element [notifications-popover])
                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)
