@@ -25,7 +25,6 @@ import {
 } from '../Layout/InboxView';
 import { InboxViewListItem } from "../Layout/InboxViewListItem";
 import * as React from "react";
-import { faker } from "@faker-js/faker";
 import { motion } from "framer-motion";
 import { useNotifications } from "../utils/useNotifications";
 import {
