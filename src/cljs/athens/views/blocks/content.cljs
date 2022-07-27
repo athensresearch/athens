@@ -238,9 +238,9 @@
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
   is-editing can be used for shift up/down, so it is used in both editing and selection."
-  [block {:keys [save-fn read-value show-edit? placeholder] :as state-hooks}]
+  [block {:keys [save-fn read-value show-edit? placeholder style] :as state-hooks}]
   (let [{:block/keys [uid original-uid]} block
-        is-editing?               (rf/subscribe [:editing/is-editing uid])
+        is-editing?            (rf/subscribe [:editing/is-editing uid])
         selected-items         (rf/subscribe [::select-subs/items])
         caret-position         (r/atom nil)
         last-key-w-shift?      (r/atom nil)
@@ -254,7 +254,8 @@
           (when editing?
             [autosize/textarea {:value          @read-value
                                 :placeholder    (or placeholder "")
-                                :class          ["block-input-textarea" (when (and (empty? @selected-items) editing?) "is-editing")]
+                                :class          ["block-input-textarea" (when (and (empty? @selected-items) @is-editing?) "is-editing")]
+                                :style          style
                                 ;; :auto-focus  true
                                 :id             (str "editable-uid-" uid)
                                 :on-change      (fn [e] (textarea-change e uid state-hooks))

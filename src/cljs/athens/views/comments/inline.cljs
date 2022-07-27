@@ -162,6 +162,7 @@
                                        :delete-handler          delete-handler
                                        :default-verbatim-paste? true
                                        :keyboard-navigation?    false
+                                       :style                   {:opacity 1}
                                        :placeholder             "Write your comment here"}]
                 (focus-textarea-if-opening-first-time)
                 [:> Box {:px 2
