@@ -772,6 +772,16 @@
     [uid parent-uid]))
 
 
+(defn drop-prop-position
+  [db uid target-uid rel]
+  (let [target-uid' (if (#{:first :last} rel)
+                      target-uid
+                      (:block/uid (get-parent db [:block/uid target-uid])))
+        k           (property-key db [:block/uid uid])]
+    (compat-position db {:block/uid target-uid'
+                         :relation  {:page/title k}})))
+
+
 (defn orphan-block-uids
   [db]
   (d/q '[:find ?uid
