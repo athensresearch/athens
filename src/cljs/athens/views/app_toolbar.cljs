@@ -102,13 +102,12 @@
                       :onPressMaximizeRestore    on-maximize
                       :onPressMinimize           on-minimize
                       :onPressClose              on-close
-                      :isNotificationsPopoverOpen @notificationsPopoverOpen?
-                      ;; :onPressNotifications      #(rf/dispatch [:notification/toggle-popover])
                       :databaseMenu              (r/as-element [db-menu])
-                      :notificationPopover       (when (notifications/enabled?)
-                                                   (r/as-element [notifications-popover]))
                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)
                                                    (r/as-element [toolbar-presence-el]))}
+                     (when (notifications/enabled?)
+                       {:notificationPopover (r/as-element [notifications-popover])
+                        :isNotificationsPopoverOpen @notificationsPopoverOpen?})
                      (when (comments/enabled?)
                        {:isShowInlineComments  @inline-comments
                         :onClickInlineComments #(rf/dispatch [:comment/toggle-inline-comments])}))]))
