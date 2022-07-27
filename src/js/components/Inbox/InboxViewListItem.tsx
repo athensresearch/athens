@@ -2,43 +2,14 @@ import React from 'react';
 import {
   Box,
   HStack,
-  Divider,
   ButtonGroup,
   VStack,
   Text
 } from "@chakra-ui/react";
-import { ArchiveIcon } from '@/Icons/Icons';
 import { motion } from "framer-motion";
-import { useContextMenu } from '@/utils/useContextMenu';
-import { mapActionsToMenuList } from '../utils/mapActionsToMenuList';
 import { mapActionsToButtons } from '../utils/mapActionsToButtons';
 
-const InboxItemStatusIndicator = ({ isRead, isArchived }) => {
-//  if (isArchived) {
-//    return <ArchiveIcon
-//      flexShrink={0}
-//      position="relative"
-//      top="-0.15ch"
-//      transform="scale(1.5)"
-//      color="foreground.secondary"
-//      boxSize="0.5em"
-//    />
-//  } else {
-//    return <Box
-//      flexShrink={0}
-//      borderRadius="100%"
-//      position="relative"
-//      top="-0.15ch"
-//      w="0.5em"
-//      h="0.5em"
-//      {...isRead ? {
-//        bg: "transparent",
-//        boxShadow: 'inset 0 0 0 1px foreground.secondary'
-//      } : {
-//        bg: "info",
-//      }}
-//    />
-//  }
+const InboxItemStatusIndicator = ({ isRead, }) => {
     return <Box
       flexShrink={0}
       borderRadius="100%"
@@ -55,23 +26,19 @@ const InboxItemStatusIndicator = ({ isRead, isArchived }) => {
     />
 }
 
-const InboxViewListItemBody = ({ isRead, isArchived, message, body }) => {
+const InboxViewListItemBody = ({ isRead, message, body }) => {
   return <HStack
     as="li"
     align="baseline"
     textAlign="left"
     spacing={1.5}
   >
-    <InboxItemStatusIndicator isRead={isRead} isArchived={isArchived} />
+    <InboxItemStatusIndicator isRead={isRead} />
     <VStack flexShrink={1} spacing={0} align="stretch">
       <Text color={isRead ? "foreground.secondary" : "foreground.primary"} fontSize="sm">{message}</Text>
       {body && <Text color={isRead ? "foreground.secondary" : "foreground.primary"} fontSize="sm">{body}</Text>}
     </VStack>
   </HStack>
-}
-
-export const InboxViewListItemActions = ({ children }) => {
-  return <>{children}</>
 }
 
 export const InboxViewListItem = (props): JSX.Element => {
@@ -80,12 +47,7 @@ export const InboxViewListItem = (props): JSX.Element => {
   const { id, isRead, isArchived, message, body, actions, object, notificationTime } = notificationProps;
   const ref = React.useRef();
 
-  const { isOpen: isContextMenuOpen, ContextMenu, menuSourceProps } = useContextMenu({
-    menuProps: { size: "sm" },
-    ref, source: "cursor"
-  });
 
-  const menuList = mapActionsToMenuList(actions);
 
   return (
     <>
@@ -114,19 +76,12 @@ export const InboxViewListItem = (props): JSX.Element => {
           ref={ref}
           align="stretch"
           userSelect="none"
-//          onClick={(e) => {
-//            e.preventDefault();
-//            if (onSelect && onDeselect) {
-//              isSelected ? onDeselect() : onSelect(id, ref);
-//            }
-//          }}
           _hover={{
             cursor: "pointer"
           }}
           borderRadius="md"
-          bg={(isContextMenuOpen || isSelected) ? "interaction.surface.active" : "interaction.surface"}
+          bg={"interaction.surface"}
           onClick={() => onOpen(object.parentUid, id)}
-          {...menuSourceProps}
         >
           <InboxViewListItemBody
             isArchived={isArchived}
@@ -148,9 +103,6 @@ export const InboxViewListItem = (props): JSX.Element => {
             </ButtonGroup>
           </HStack>
         </VStack>
-        {/*<ContextMenu>
-          {menuList}
-        </ContextMenu>*/}
       </Box>
     </>);
 };

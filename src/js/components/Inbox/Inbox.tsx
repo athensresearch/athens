@@ -1,37 +1,11 @@
 import {
-  Tooltip,
-  Box,
-  Divider,
-  Center,
-  Flex,
-  Button,
-  VStack,
   Text,
-  Avatar,
-  PopoverContent,
-  Popover,
-  IconButton,
-  PopoverTrigger,
-  PopoverBody,
-  PopoverHeader,
-  PopoverCloseButton
 } from "@chakra-ui/react";
-import {
-  InboxView,
-  InboxViewListHeader,
-  InboxViewListGroupHeader,
-  InboxViewListBody,
-  InboxViewList
-} from '../Layout/InboxView';
-import { InboxViewListItem } from "../Layout/InboxViewListItem";
+import { InboxViewListItem, } from "./InboxViewListItem";
+import { InboxViewListBody, } from "./InboxViewListBody";
 import * as React from "react";
-import { motion } from "framer-motion";
-import { useNotifications } from "../utils/useNotifications";
 import {
-  CheckmarkIcon,
-  CheckmarkCircleFillIcon,
   ArchiveIcon,
-  ArrowRightIcon,
 } from "@/Icons/Icons";
 
 type PAGE = {
@@ -58,7 +32,7 @@ type NOTIFICATION_TYPE = typeof notificationTypes[number];
 
 type NOTIFICATION = {
   id: string
-  // time: string
+  notificationTime: string
   type: NOTIFICATION_TYPE
   subject: Person
   object: OBJECT
@@ -88,79 +62,13 @@ const messageForNotification = (notification: NOTIFICATION): React.ReactNode => 
   }
 }
 
-const makeNotificationSubject = () => ({
-  personId: faker.datatype.uuid(),
-  username: faker.name.findName(),
-  color: faker.internet.color(),
-})
-
-const makeNotificationPageObject = () => ({
-  name: faker.lorem.words(),
-  url: faker.internet.url(),
-  breadcrumb: new Array(4).fill(true).map(() => (faker.lorem.words())),
-})
-const makeNotificationBlockObject = () => ({
-  string: faker.lorem.sentence(),
-  url: faker.internet.url(),
-  breadcrumb: new Array(4).fill(true).map(() => (faker.lorem.words())),
-})
-const makeNotificationPropertyObject = () => ({
-  name: faker.lorem.sentence(),
-  breadcrumb: new Array(4).fill(true).map(() => (faker.lorem.words())),
-})
-const makeNotificationObject = () => faker.helpers.arrayElement([makeNotificationPageObject,
-  makeNotificationBlockObject,
-  makeNotificationPropertyObject])()
-
-const makeNotification = (): NOTIFICATION => ({
-  id: faker.datatype.uuid(),
-  // time: faker.date.past().toISOString(),
-  type: faker.helpers.arrayElement(notificationTypes),
-  subject: makeNotificationSubject(),
-  object: makeNotificationObject(),
-  isRead: false,
-  isArchived: false
-})
-
-const MessageAllDone = () => <Text fontSize="sm">All done!</Text>
-const MessageNoNotificationsHere = ({ onClearFilters }) => <VStack>
-  <Text color="foreground.secondary" fontSize="sm">No notifications here</Text>
-  <Button size="sm" onClick={onClearFilters}>Clear filters</Button>
-</VStack>
-
-const ITEMS = new Array(12).fill(true).map(() => makeNotification());
-
-export const READ_FILTER = { id: "read", label: "Read", fn: (n) => !n.isRead }
-const ARCHIVED_FILTER = { id: "archived", label: "Archived", fn: (n) => n.isArchived }
-export const DEFAULT_FILTERS = [READ_FILTER.id]
-
-const availableGroupings = ["type", "isRead", "isArchived"]
-export const availableFilters = [
-  READ_FILTER, ARCHIVED_FILTER
-]
-
 
 export const InboxItemsList = (props) => {
   const { notificationsList, onOpenItem, onMarkAsRead, onMarkAsUnread, onArchive, onUnarchive } = props;
-//  const [items, setItems] = React.useState(notificationsList);
-//  console.log("LIST1", notificationsList, items)
 
 
   const getActionsForNotification = (notification) => {
     const actions = [];
-//    if (notification.isRead) {
-//      actions.push({
-//        label: "Mark as unread",
-//        fn: () => onMarkAsUnread(notification.id),
-//        icon: <CheckmarkCircleFillIcon />
-//      });
-//    } else {
-//      actions.push({
-//        label: "Mark as read",
-//        fn: () => onMarkAsRead(notification.id),
-//        icon: <CheckmarkCircleFillIcon />
-//      });
-//    }
     if (notification.isArchived) {
       actions.push({
         label: "Unarchive",
@@ -174,11 +82,6 @@ export const InboxItemsList = (props) => {
         icon: <ArchiveIcon />
       });
     }
-//    actions.push({
-//      label: "Open",
-//      fn: () => onOpenItem(notification.id),
-//      icon: <ArrowRightIcon />
-//    });
     return actions;
   }
 
@@ -196,229 +99,7 @@ export const InboxItemsList = (props) => {
   />});
 
   return <InboxViewListBody>
-    {!!itemsList.length ?
-      itemsList
-      : <Center
-        as={motion.div}
-        key="empty"
-        animate={{
-          height: "auto",
-          opacity: 1,
-        }}
-        exit={{
-          height: 0,
-          opacity: 0,
-        }}
-      >
-        {/* <Box py={4}>
-        {hasMeaningfulFilters ? <MessageNoNotificationsHere onClearFilters={resetFilters} /> : <MessageAllDone />}
-      </Box> */}
-      </Center>}
+      {itemsList}
   </InboxViewListBody>
 }
 
-export const Inbox = ({ showContent = true }) => {
-  const [items, setItems] = React.useState(ITEMS);
-
-  const {
-    // hasMeaningfulFilters,
-    // filterIds,
-    // setFilterIds,
-    // filteredItems,
-    // setGrouping,
-    // grouping,
-    // groupedFilteredSortedItems,
-    // resetFilters,
-    selectedItemId,
-    selectedItemRef,
-    selectedItem,
-    getActionsForNotification,
-    selectItem,
-    deselectItem,
-    markAsRead,
-    markAsArchived,
-    markAsUnread,
-    markAsUnarchived,
-    openItem,
-  } = useNotifications(items, setItems, availableFilters, DEFAULT_FILTERS);
-
-  React.useLayoutEffect(() => {
-    if (selectedItemId && selectedItemRef.current) {
-      selectedItemRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }, [selectedItemId])
-
-  // const actions = <ButtonGroup isAttached size="xs">
-  //   <Menu>
-  //     <Button as={MenuButton}>Group <Text display="inline" color="foreground.secondary" textTransform="capitalize">{grouping}</Text></Button>
-  //     <MenuList>
-  //       <MenuOptionGroup
-  //         type="radio"
-  //         value={grouping}
-  //         onChange={(value) => setGrouping(value as string)}
-  //       >
-  //         {availableGroupings.map((grouping) => {
-  //           return (<MenuItemOption
-  //             textTransform="capitalize"
-  //             key={grouping}
-  //             value={grouping}
-  //           >
-  //             {grouping}
-  //           </MenuItemOption>)
-  //         })}
-  //       </MenuOptionGroup>
-  //     </MenuList>
-  //   </Menu>
-  //   <Menu closeOnSelect={false}>
-  //     <Button as={MenuButton}>Filter</Button>
-  //     <MenuList>
-  //       <MenuOptionGroup
-  //         type="checkbox"
-  //         value={filterIds}
-  //         onChange={(value) => setFilterIds(value)}
-  //       >
-  //         {availableFilters.map((filter) => {
-  //           return (<MenuItemOption
-  //             key={filter.id}
-  //             value={filter.id}
-  //           >
-  //             {filter.label}
-  //           </MenuItemOption>)
-  //         })}
-  //       </MenuOptionGroup>
-  //     </MenuList>
-  //   </Menu>
-  // </ButtonGroup>;
-
-
-  // const itemsAsList = filteredItems.map((i) => (
-  //   <InboxViewListItem
-  //     message={messageForNotification(i)}
-  //     isSelected={i.id === selectedItemId}
-  //     actions={getActionsForNotification(i)}
-  //     onOpen={openItem}
-  //     onSelect={selectItem}
-  //     onDeselect={deselectItem}
-  //     onMarkAsRead={markAsRead}
-  //     onMarkAsUnread={markAsUnread}
-  //     onMarkAsArchived={markAsArchived}
-  //     onMarkAsUnarchived={markAsUnarchived}
-  //     key={i.id}
-  //     {...i}
-  //   />));
-
-
-  // const groupedItemsList = Object.keys(groupedFilteredSortedItems)
-  //   .flatMap(key => ([{ type: "listHeading", heading: key, count: groupedFilteredSortedItems[key].length }, ...groupedFilteredSortedItems[key]])).map((i) => {
-  //     if (i.type === 'listHeading') {
-  //       const { heading, count } = i;
-  //       return <InboxViewListGroupHeader key={heading.toString()} title={heading.toString()} count={count} />
-  //     }
-  //     else {
-  //       return (
-  //         <InboxViewListItem
-  //           message={messageForNotification(i)}
-  //           actions={getActionsForNotification(i)}
-  //           isSelected={i.id === selectedItemId}
-  //           onOpen={openItem}
-  //           onSelect={selectItem}
-  //           onDeselect={deselectItem}
-  //           onMarkAsRead={markAsRead}
-  //           onMarkAsUnread={markAsUnread}
-  //           onMarkAsArchived={markAsArchived}
-  //           onMarkAsUnarchived={markAsUnarchived}
-  //           key={i.id}
-  //           {...i}
-  //         />)
-  //     }
-  //   });
-
-  const itemsList = items.map((i) => <InboxViewListItem
-    message={messageForNotification(i)}
-    actions={getActionsForNotification(i)}
-    isSelected={i.id === selectedItemId}
-    onOpen={openItem}
-    onSelect={selectItem}
-    onDeselect={deselectItem}
-    onMarkAsRead={markAsRead}
-    onMarkAsUnread={markAsUnread}
-    onMarkAsArchived={markAsArchived}
-    onMarkAsUnarchived={markAsUnarchived}
-    key={i.id}
-    {...i}
-  />);
-
-  const hasMeaningfulFilters = false;
-
-  return (
-    <>
-      <InboxView>
-        <InboxViewList>
-          <InboxViewListHeader
-            title="Inbox"
-            subtitle={`${items.length} items`}
-          // actions={actions}
-          />
-          <InboxViewListBody>
-            {!!itemsList.length ?
-              itemsList
-              : <Center
-                as={motion.div}
-                key="empty"
-                animate={{
-                  height: "auto",
-                  opacity: 1,
-                }}
-                exit={{
-                  height: 0,
-                  opacity: 0,
-                }}
-              >
-                {/* <Box py={4}>
-                  {hasMeaningfulFilters ? <MessageNoNotificationsHere onClearFilters={resetFilters} /> : <MessageAllDone />}
-                </Box> */}
-              </Center>}
-          </InboxViewListBody>
-        </InboxViewList>
-        {showContent && <InboxViewContent>
-          <Center flex={1} maxHeight="100%">
-            {selectedItem
-              ? <Text flex={1} textAlign="center">
-                <Box>
-                  <Avatar
-                    name={selectedItem.subject.username}
-                    color={selectedItem.subject.color}
-                  />
-                  <Text>{selectedItem.subject.username}</Text>
-                </Box>
-                {messageForNotification(selectedItem)}
-                <Box>
-                  <Text>{selectedItem?.object?.name || selectItem?.object?.string}</Text>
-                  <Divider />
-                  <Text>{selectedItem?.object?.breadcrumb}</Text>
-                </Box>
-              </Text>
-              : <Text flex={1} textAlign="center" color="foreground.secondary">No item selected</Text>}
-          </Center>
-        </InboxViewContent>}
-      </InboxView>
-    </>
-  );
-}
-
-export const NotificationsPopover = () => {
-  return <Popover closeOnBlur={false}>
-    <Tooltip shouldWrapChildren label="Notifications">
-      <PopoverTrigger>
-        <IconButton aria-label="Notifications" icon={<CheckmarkIcon />} />
-      </PopoverTrigger>
-    </Tooltip>
-    <PopoverContent maxWidth="max-content" maxHeight="calc(100vh - 4rem)">
-      <PopoverCloseButton />
-      <PopoverHeader>Notifications</PopoverHeader>
-      <Flex p={0} as={PopoverBody} flexDirection="column" overflow="hidden">
-        <InboxItemsList />
-      </Flex>
-    </PopoverContent>
-  </Popover>
-}

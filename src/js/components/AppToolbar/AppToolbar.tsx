@@ -39,7 +39,6 @@ import {
   useMediaQuery
 } from '@chakra-ui/react';
 
-import { NotificationsPopover } from '@/Inbox/Inbox'
 
 import { WindowButtons } from './components/WindowButtons';
 
@@ -410,14 +409,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
             </ToolbarIconButton>
           </Tooltip>
 
-          {/*<Tooltip label="Notifications">
-            <ToolbarIconButton
-              isActive={isNotificationsPopoverOpen}
-              onClick={onPressNotifications}>
-              {notificationPopover}
-            </ToolbarIconButton>
-          </Tooltip>*/}
-          {notificationPopover}
 
           <ToolbarButton
             aria-label="Search"
@@ -432,6 +423,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         </ButtonGroup>
 
         {presenceDetails}
+        {notificationPopover}
 
         {canShowFullSecondaryMenu
           ? SecondaryToolbarItems(secondaryTools)
