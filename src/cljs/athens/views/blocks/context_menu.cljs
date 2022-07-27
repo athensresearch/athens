@@ -41,7 +41,7 @@
 
 (defn handle-click-comment
   [e uid]
-  (rf/dispatch [:comment/show-comment-textarea uid])
+  (rf/dispatch [:comment/show-editor uid])
   (.. e preventDefault))
 
 

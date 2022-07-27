@@ -136,7 +136,7 @@
                                        ;; :block/string   @value-atom
                                        :block/children []}
                     blur-fn           #(when (not (seq @value-atom))
-                                         (rf/dispatch [:comment/hide-comment-textarea]))
+                                         (rf/dispatch [:comment/hide-editor]))
                     save-fn           #(reset! value-atom %)
                     enter-handler     (fn jetsam-enter-handler
                                         [_uid _d-key-down]

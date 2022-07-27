@@ -164,7 +164,8 @@
                :fs/watcher          nil
                :presence            {}
                :connection-status   :disconnected
-               :comment/show-inline-comments true})
+               :comment/show-comments? true})
+
 
 
 (defn init-app-db

@@ -17,35 +17,33 @@
 
 
 (rf/reg-sub
-  :comment/show-comment-textarea?
+  :comment/show-editor?
   (fn [db [_ uid]]
-    (= uid (:comment/show-comment-textarea db))))
+    (= uid (:comment/show-editor db))))
 
 
 (rf/reg-event-fx
-  :comment/show-comment-textarea
+  :comment/show-editor
   (fn [{:keys [db]} [_ uid]]
-    {:db (assoc db :comment/show-comment-textarea uid)}))
+    {:db (assoc db :comment/show-editor uid)}))
 
 
 (rf/reg-event-fx
-  :comment/hide-comment-textarea
+  :comment/hide-editor
   (fn [{:keys [db]} [_]]
-    {:db (assoc db :comment/show-comment-textarea nil)}))
+    {:db (assoc db :comment/show-editor nil)}))
 
 
 (rf/reg-sub
-  :comment/show-inline-comments?
+  :comment/show-comments?
   (fn [db [_]]
-    (= true (:comment/show-inline-comments db))))
+    (= true (:comment/show-comments? db))))
 
 
-(rf/reg-event-fx
-  :comment/toggle-inline-comments
-  (fn [{:keys [db]} [_]]
-    (let [current-state (:comment/show-inline-comments db)]
-      (println "toggle inline comments" current-state)
-      {:db (assoc db :comment/show-inline-comments (not current-state))})))
+(rf/reg-event-db
+  :comment/toggle-comments
+  (fn [db [_]]
+    (update db :comment/show-comments? not)))
 
 
 (defn thread-child->comment

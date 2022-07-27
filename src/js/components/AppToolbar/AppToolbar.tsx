@@ -202,7 +202,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
   * Whether comments should be shown
   */
-  isShowInlineComments: boolean;
+  isShowComments: boolean;
   // Electron only
   onPressMinimize?(): void;
   onPressClose?(): void;
@@ -210,7 +210,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   onPressFullscreen?(): void;
   onPressHistoryBack(): void;
   onPressHistoryForward(): void;
-  onClickInlineComments(): void;
+  onClickComments(): void;
   // Main toolbar
   onPressCommandBar(): void;
   onPressDailyNotes(): void;
@@ -274,9 +274,9 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isLeftSidebarOpen,
     isRightSidebarOpen,
     isCommandBarOpen,
-    isShowInlineComments,
+    isShowComments,
     isNotificationsPopoverOpen,
-    onClickInlineComments: handleClickInlineComments,
+    onClickComments: handleClickComments,
     onPressCommandBar: handlePressCommandBar,
     onPressDailyNotes: handlePressDailyNotes,
     onPressAllPages: handlePressAllPages,
@@ -312,10 +312,10 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   }, [isThemeDark, toggleColorMode]);
 
   const secondaryTools = [
-    handleClickInlineComments && {
-      label: isShowInlineComments ? "Hide comments" : "Show comments",
-      isActive: isShowInlineComments,
-      onClick: handleClickInlineComments,
+    handleClickComments && {
+      label: isShowComments ? "Hide comments" : "Show comments",
+      isActive: isShowComments,
+      onClick: handleClickComments,
       icon: <ChatFilledIcon />
     },
     {

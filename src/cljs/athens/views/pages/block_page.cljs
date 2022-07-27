@@ -139,8 +139,8 @@
          ;; Show comments when the toggle is on
          [:> Box {:ml "4%"
                   :w "100%"}
-          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
-                    (and @(rf/subscribe [:comment/show-inline-comments?])
+          (when (or @(rf/subscribe [:comment/show-editor? uid])
+                    (and @(rf/subscribe [:comment/show-comments?])
                          (comments/get-comment-thread-uid @db/dsdb uid)))
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])]
 

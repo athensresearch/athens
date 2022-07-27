@@ -21,7 +21,7 @@
         right-open?            (rf/subscribe [:right-sidebar/open])
         help-open?             (rf/subscribe [:help/open?])
         athena-open?           (rf/subscribe [:athena/open])
-        inline-comments        (rf/subscribe [:comment/show-inline-comments?])
+        show-comments?         (rf/subscribe [:comment/show-comments?])
         route-name             (rf/subscribe [:current-route/name])
         theme-dark             (rf/subscribe [:theme/dark])
         selected-db            (rf/subscribe [:db-picker/selected-db])
@@ -109,5 +109,5 @@
                        {:notificationPopover (r/as-element [notifications-popover])
                         :isNotificationsPopoverOpen @notificationsPopoverOpen?})
                      (when (comments/enabled?)
-                       {:isShowInlineComments  @inline-comments
-                        :onClickInlineComments #(rf/dispatch [:comment/toggle-inline-comments])}))]))
+                       {:isShowComments  @show-comments?
+                        :onClickComments #(rf/dispatch [:comment/toggle-comments])}))]))
