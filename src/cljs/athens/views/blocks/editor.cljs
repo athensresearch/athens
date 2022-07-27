@@ -170,7 +170,6 @@
                           key
                           properties
                           _refs]} (reactive/get-reactive-block-document [:block/uid uid])
-            comments-enabled?     (:comments @feature-flags)
             reactions-enabled?    (:reactions @feature-flags)
             user-id               (or (:username @(rf/subscribe [:presence/current-user]))
                                       ;; We use empty string for when there is no user information, like in PKM.
