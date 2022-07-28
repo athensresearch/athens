@@ -2,7 +2,7 @@
   (:require
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
-    ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon ArchiveIcon]]
+    ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
     ["/timeAgo.js" :refer [timeAgo]]
     ["@chakra-ui/react" :refer [Button Box Text VStack Avatar HStack Badge]]
     [athens.common-events :as common-events]
@@ -65,7 +65,7 @@
            :onClick  #(rf/dispatch [:comment/edit-comment uid])})
         (when current-user-is-author?
           {:children "Delete"
-           :icon     (r/as-element [:> ArchiveIcon])
+           :icon     (r/as-element [:> TrashIcon])
            :onClick  #(rf/dispatch [:comment/remove-comment uid])})]
        (filterv seq)))
 
@@ -86,13 +86,14 @@
             menu                    (create-menu item current-user-is-author?)]
         (prn "MENU" menu)
         [:> CommentContainer {:menu menu :isFollowUp is-followup? :isEdited edited?}
-         [:> HStack {:gridArea   "byline"
-                     :alignItems "center"
-                     :lineHeight 1.25}
-          ;; if is-followup?, hide byline and avatar
-          ;; else show avatar and byline
 
-          (when-not is-followup?
+         ;; if is-followup?, hide byline and avatar
+         ;; else show avatar and byline
+         (when-not is-followup?
+           [:> HStack {:gridArea   "byline"
+                       :alignItems "center"
+                       :pt 1
+                       :lineHeight 1.25}
             [:<>
              [:> Avatar {:name author :color "#fff" :size "xs"}]
              [:> Text {:fontWeight "bold"
@@ -100,20 +101,18 @@
                        :noOfLines  0}
               author]
              [:> Text {:fontSize "xs"
-                       :_hover   {:color "foreground.secondary"}
-                       :color    "foreground.tertiary"}
-              human-timestamp]])]
-
-
-
-
+                       :color    "foreground.secondary"}
+              human-timestamp]]])
 
          [:> Anchor {:ml "0.25em"
                      :height "2em"}]
          [:> Box {:flex "1 1 100%"
                   :gridArea "comment"
+                  :alignItems "center"
+                  :display "flex"
                   :overflow "hidden"
                   :fontSize "sm"
+                  :py 1
                   :ml 1
                   :sx {"> *" {:lineHeight 1.5}}}
           ;; In future this should be rendered differently for reply type and ref-type
@@ -122,9 +121,8 @@
              [athens.parse-renderer/parse-and-render string uid]
              (when edited?
                [:> Text {:fontSize "xs"
-                         :as       "sub"
-                         :marginLeft "5px"
-                         :_hover   {:color "foreground.secondary"}
+                         :as       "span"
+                         :marginLeft "0.5em"
                          :color    "foreground.tertiary"}
                 "(edited)"])]
             (let [block-o           {:block/uid      uid
@@ -154,9 +152,7 @@
                                      :keyboard-navigation?    false
                                      :style                   {:opacity 1
                                                                :background-color "var(--chakra-colors-background-attic)"
-                                                               :margin-top "10px"
-                                                               :padding-left "5px"
-                                                               :font-size "1.2em"
+                                                               :minHeight "100%"
                                                                :border-radius "5px"}}]
               [b-content/block-content-el block-o state-hooks]))]
 

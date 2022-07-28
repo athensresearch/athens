@@ -100,11 +100,11 @@ const semanticTokens = {
     // foreground colors
     "foreground.primary": {
       default: 'hsla(0, 0%, 0%, 0.87)',
-      _dark: 'hsla(0, 0%, 100%, 0.8)'
+      _dark: 'hsla(0, 0%, 100%, 0.83)'
     },
     "foreground.secondary": {
       default: 'hsla(0, 0%, 0%, 0.57)',
-      _dark: 'hsla(0, 0%, 100%, 0.57)'
+      _dark: 'hsla(0, 0%, 100%, 0.5)'
     },
     "foreground.tertiary": {
       default: 'hsla(0, 0%, 0%, 0.2)',
@@ -491,6 +491,9 @@ const components = {
           margin: '0.35rem 0.5rem',
         }
       }
+    },
+    defaultProps: {
+      size: 'sm',
     }
   },
   Modal: {
