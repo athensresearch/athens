@@ -314,7 +314,7 @@
                          :maxWidth "calc(100vw - 4rem)"}
         [:> Input
          {:type "search"
-          :autocomplete "off"
+          :autoComplete "off"
           :width "100%"
           :border 0
           :fontSize "2.375rem"
