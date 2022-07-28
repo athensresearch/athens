@@ -46,15 +46,17 @@
   :comment/update-comment
   (fn [_ [_ uid string]]
     (athens.common.logging/debug ":comment/update-comment:" uid string)
-    ;; TODO: show that block was edited and show last edit time?
     {:fx [[:dispatch-n [[:resolve-transact-forward (-> (build-block-save-op @db/dsdb uid string)
                                                        (build-atomic-event))]
+                        [:properties/update-in [:block/uid uid] ["athens/comment/edited"] (fn [db prop-uid]
+                                                                                            [(graph-ops/build-block-save-op db prop-uid "")])]
                         [:editing/uid nil]]]]}))
 
+;; TODO react
 
 (defn comment-el
   [item]
-  (let [{:keys [string time author block/uid is-followup?]} item
+  (let [{:keys [string time author block/uid is-followup? edited?]} item
         linked-refs             (reactive/get-reactive-linked-references [:block/uid uid])
         linked-refs-count       (count linked-refs)
         on-copy-comment-ref     #(copy-comment-uid item)
@@ -77,7 +79,7 @@
         show-edit-atom? (r/atom true)]
 
     (fn []
-      [:> CommentContainer {:menu menu :isFollowUp is-followup?}
+      [:> CommentContainer {:menu menu :isFollowUp is-followup? :isEdited edited?}
        [:> HStack {:gridArea "byline"
                    :alignItems "center"
                    :lineHeight 1.25}
@@ -91,11 +93,18 @@
                      :fontSize   "sm"
                      :noOfLines  0}
             author]
-
            [:> Text {:fontSize "xs"
-                     :_hover   {:color "foreground.secondary"}
-                     :color    "foreground.tertiary"}
-            human-timestamp]])]
+                      :_hover   {:color "foreground.secondary"}
+                      :color    "foreground.tertiary"}
+             human-timestamp]
+           (when edited?
+             [:> Text {:fontSize "xs"
+                       :_hover   {:color "foreground.secondary"}
+                       :color    "foreground.tertiary"}
+              "(edited)"])])]
+
+
+
 
        [:> Anchor {:ml "0.25em"
                    :height "2em"}]

@@ -48,11 +48,12 @@
 
 (defn thread-child->comment
   [comment-block]
-  (let [comment-uid (:block/uid comment-block)]
-    {:block/uid comment-uid
-     :string (:block/string comment-block)
-     :author (-> comment-block :block/create :event/auth :presence/id)
-     :time   (-> comment-block :block/create :event/time :time/ts)}))
+  (let [{:block/keys [uid string create properties]} comment-block]
+    {:block/uid uid
+     :string    string
+     :author    (-> create :event/auth :presence/id)
+     :time      (-> create :event/time :time/ts)
+     :edited?   (boolean (get properties "athens/comment/edited"))}))
 
 
 (defn add-is-follow-up?
