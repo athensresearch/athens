@@ -17,7 +17,7 @@ const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: 
   return (closestBlockContainer?.dataset?.uid === thisBlockUid)
 }
 
-const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
+const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
   const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
 
   const internalRef = React.useRef(null)
@@ -58,6 +58,7 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
       borderRadius="0.125rem"
       justifyContent="flex-start"
       flexDirection="column"
+      display={isHidden ? "none" : "block"}
       background="var(--block-surface-color)"
       opacity={isDragging ? 0.5 : 1}
       data-uid={uid}
@@ -98,8 +99,8 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
           gridTemplateColumns: "1em auto 1em 1fr auto",
           gridTemplateRows: "0 1fr auto auto 0",
           gridTemplateAreas:
-            `'above above above above above above' 
-            'toggle name anchor content refs presence' 
+            `'above above above above above above'
+            'toggle name anchor content refs presence'
             '_ _ _ reactions reactions reactions'
             '_ _ _ comments comments comments'
             'below below below below below below'`,

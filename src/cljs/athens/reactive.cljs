@@ -132,6 +132,8 @@
   (vec (concat '[:db/id :block/uid :block/string :block/open :block/_refs
                  {:block/key [:node/title]}
                  {:block/children [:block/uid :block/order]}
+                 {:block/create [{:event/time [:time/ts]}
+                                 {:event/auth [:presence/id]}]}
                  {:block/edits [{:event/time [:time/ts]}]}]
                recursive-properties-document-pull-vector)))
 
@@ -170,6 +172,8 @@
 
 (comment
   ;; Print what ratoms are active.
-  (-> (ratoms) utils/spy)
-  ;;
-  )
+  (-> (ratoms) utils/spy))
+
+
+;;
+

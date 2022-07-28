@@ -21,8 +21,9 @@
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content               :as content]
     [athens.views.blocks.reactions             :refer [toggle-reaction props->reactions]]
-    [athens.views.comments.core              :as comments]
-    [athens.views.comments.inline            :as inline-comments]
+    [athens.views.comments.core                :as comments]
+    [athens.views.comments.inline              :as inline-comments]
+    [athens.views.notifications.actions        :as actions]
     [re-frame.core                             :as rf]))
 
 
@@ -225,7 +226,8 @@
                                                                                                    :main-pane)}])
                                                     (router/navigate-uid uid e)))
                         :on-drag-start          (fn [e] (bullet-drag-start e uid))
-                        :on-drag-end            (fn [e] (bullet-drag-end e uid))}]]
+                        :on-drag-end            (fn [e] (bullet-drag-end e uid))
+                        :unreadNotification     (actions/unread-notification? properties)}]]
            [:> EmojiPickerPopoverContent
             {:onClose hide-emoji-picker-fn
              :onEmojiSelected (fn [e] (toggle-reaction [:block/uid uid] (.. e -detail -unicode) user-id))}]]
@@ -240,10 +242,10 @@
                                          :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
 
           ;; Show comments when the toggle is on
-          (when (and open
+          (when (and @show-inline-comments
+                     open
                      (or @show-textarea
-                         (and @show-inline-comments
-                              (comments/get-comment-thread-uid @db/dsdb uid))))
+                         (comments/get-comment-thread-uid @db/dsdb uid)))
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
 
           [presence/inline-presence-el uid]
