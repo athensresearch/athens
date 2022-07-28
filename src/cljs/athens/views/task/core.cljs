@@ -5,7 +5,9 @@
                                                   FormLabel,
                                                   FormErrorMessage,
                                                   FormHelperText,
-                                                  Select]]
+                                                  Select
+                                                  HStack
+                                                  VStack]]
     [athens.common-db                     :as common-db]
     [athens.common-events                 :as common-events]
     [athens.common-events.bfs             :as bfs]
@@ -24,6 +26,77 @@
     [goog.functions                       :as gfns]
     [re-frame.core                        :as rf]
     [reagent.core                         :as r]))
+
+
+;; Create default task statuses configuration
+
+(defn- internal-representation-allowed-stauses
+  []
+  [#:block{:uid    (common.utils/gen-block-uid)
+           :string "To Do"}
+   #:block{:uid    (common.utils/gen-block-uid)
+           :string "Doing"}
+   #:block{:uid    (common.utils/gen-block-uid)
+           :string "Blocked"}
+   #:block{:uid    (common.utils/gen-block-uid)
+           :string "Done"}
+   #:block{:uid    (common.utils/gen-block-uid)
+           :string "Cancelled"}])
+
+
+(defn- internal-representation-task-status-property-enum
+  []
+  {":property/enum" #:block{:uid      (common.utils/gen-block-uid)
+                            :string   ""
+                            :children (internal-representation-allowed-stauses)}})
+
+
+(defn- internal-representation-task-status-page
+  []
+  {:page/title       ":task/status"
+   :block/properties (internal-representation-task-status-property-enum)})
+
+
+(defn- ensure-task-status-property-enum
+  [db task-status-page]
+  (let []
+    ;; TODO
+    ;; 3. find ":property/enum" prop of this page
+    ;; 4. create if not found
+    ;; 5. create default statuses
+    ;; 6. return :block/uid :block/string of these
+    ))
+
+
+(defn- extract-allowed-statuses
+  [ops]
+  (let [block-saves (graph-ops/contains-op? ops :block/save)]
+    (->> block-saves
+         (mapcat #(graph-ops/contains-op? % :block/save))
+         (map :op/args)
+         (filter #(contains? #{"To Do" "Doing" "Blocked" "Done" "Cancelled"} (:block/string %))))))
+
+
+(defn- create-task-status-page
+  [db]
+  (let [internal-repr    (internal-representation-task-status-page)
+        page-create-ops  (->> (bfs/internal-representation->atomic-ops db [internal-repr] nil)
+                              (composite/make-consequence-op {:op/type :create-task-statuses}))
+        allowed-statuses (extract-allowed-statuses page-create-ops)]
+    [allowed-statuses page-create-ops]))
+
+
+(defn- create-default-allowed-statuses
+  [db]
+  ;; 1. find :task/status page
+  (let [task-status-page (common-db/get-page-document db [:node/title ":task/status"])
+        [allowed-statuses
+         create-ops]     (if task-status-page
+                           ;; page exists
+                           (ensure-task-status-property-enum db task-status-page)
+                           ;; 2. create if not found
+                           (create-task-status-page db))]
+    [allowed-statuses create-ops]))
 
 
 ;; Create a new task
@@ -103,7 +176,7 @@
                              (let [new-value (-> e .-target .-value)]
                                (log/debug "title-save-fn" (pr-str new-value))
                                (reset! local-value new-value)))
-            update-fn     #(do
+            update-fn      #(do
                              (log/debug "update-fn:" (pr-str %))
                              (when-not (= title %)
                                (reset! local-value %)
@@ -114,23 +187,23 @@
                                              (log/debug "title-idle-fn" (pr-str @local-value))
                                              (update-fn @local-value))
                                           2000)
-            read-value    local-value
-            show-edit?    (r/atom true)
-            state-hooks   {:save-fn       save-fn
-                           :idle-fn       idle-fn
-                           :update-fn     update-fn
-                           :read-value    read-value
-                           :show-edit?    show-edit?}]
+            read-value     local-value
+            show-edit?     (r/atom true)
+            state-hooks    {:save-fn    save-fn
+                            :idle-fn    idle-fn
+                            :update-fn  update-fn
+                            :read-value read-value
+                            :show-edit? show-edit?}]
         [:> FormControl {:is-required true
                          :is-invalid  invalid-title?}
          [:> FormLabel {:html-for title-id}
           "Task Title"]
-         [:> Box {:px 2
-                  :mt 2
-                  :minHeight "2.125em"
+         [:> Box {:px           2
+                  :mt           2
+                  :minHeight    "2.125em"
                   :borderRadius "sm"
-                  :bg "background.attic"
-                  :cursor "text"
+                  :bg           "background.attic"
+                  :cursor       "text"
                   :_focusWithin {:shadow "focus"}}
           ;; NOTE: we generate temporary uid for title if it doesn't exist, so editor can work
           [content-editor/block-content-el {:block/uid (or title-block-uid
@@ -150,10 +223,15 @@
                                 :block/properties
                                 (get ":property/enum")
                                 :block/children)
-        allowed-statuses    (map :block/string allowed-stat-blocks)]
+        allowed-statuses    (map #(select-keys % [:block/uid :block/string]) allowed-stat-blocks)]
+    (println "task status page\n"
+             (pr-str task-status-page))
     (if (seq allowed-statuses)
       allowed-statuses
-      ["To Do" "Doing" "Blocked" "Done" "Canceled"])))
+      (let [[statuses ops] (create-default-allowed-statuses @db/dsdb)
+            event          (common-events/build-atomic-event ops)]
+        (rf/dispatch [:resolve-transact-forward event])
+        statuses))))
 
 
 (defn task-status-view
@@ -163,20 +241,23 @@
         allowed-statuses (find-allowed-statuses (:block/key status-block))
         status-value     (or (:block/string status-block) "To Do")]
     [:> FormControl {:is-required true}
-     [:> FormLabel {:html-for status-id}
-      "Task Status"]
-     [:> Select {:placeholder "Select a status"
-                 :on-change   (fn [e]
-                                (let [new-status (-> e .-target .-value)]
-                                  (rf/dispatch [::task-events/save-status
-                                                {:parent-block-uid parent-block-uid
-                                                 :status           new-status}])))}
-      (doall
-        (for [status allowed-statuses]
-          ^{:key status}
-          [:option {:value    status
-                    :selected (= status-value status)}
-           status]))]]))
+     [:> HStack {:spacing "2rem"}
+      [:> FormLabel {:html-for status-id
+                     :w        "9rem"}
+       "Task Status"]
+      [:> Select {:id          status-id
+                  :placeholder "Select a status"
+                  :on-change   (fn [e]
+                                 (let [new-status (-> e .-target .-value)]
+                                   (rf/dispatch [::task-events/save-status
+                                                 {:parent-block-uid parent-block-uid
+                                                  :status           (str "((" new-status "))")}])))}
+       (doall
+        (for [{:block/keys [uid string]} allowed-statuses]
+          ^{:key uid}
+          [:option {:value    uid
+                    :selected (= status-value (str "((" uid "))"))}
+           string]))]]]))
 
 
 (defn- find-property-block-by-key-name
@@ -205,9 +286,12 @@
               title-uid      (:block/uid (find-property-block-by-key-name reactive-block ":task/title"))
               ;; projects-uid   (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
               status-uid     (:block/uid (find-property-block-by-key-name reactive-block ":task/status"))]
-          [:div {:class "task_container"}
-           [task-title-view block-uid title-uid]
-           [task-status-view block-uid status-uid]]))))
+          [:> Box {:bg    "lightgreen"
+                   :class "task_container"
+                   :padding "1rem"}
+           [:> VStack {:spacing "2rem"}
+            [task-title-view block-uid title-uid]
+            [task-status-view block-uid status-uid]]]))))
 
 
   (supported-transclusion-scopes
