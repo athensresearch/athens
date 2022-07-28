@@ -5,8 +5,11 @@
     ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon ArchiveIcon]]
     ["/timeAgo.js" :refer [timeAgo]]
     ["@chakra-ui/react" :refer [Button Box Text VStack Avatar HStack Badge]]
+    [athens.common-events :as common-events]
+    [athens.common-events.graph.ops :as graph-ops]
+    [athens.common.logging :as log]
     [athens.common.utils :as common.utils]
-    [athens.common-events.graph.ops       :as graph-ops :refer [build-block-remove-op build-block-save-op]]
+    [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.util :as util]
@@ -14,9 +17,7 @@
     [athens.views.comments.core :as comments.core]
     [clojure.string :as str]
     [re-frame.core :as rf]
-    [reagent.core :as r]
-    [athens.db :as db]
-    [athens.common-events :as common-events :refer [build-atomic-event]]))
+    [reagent.core :as r]))
 
 
 (defn copy-comment-uid
@@ -28,12 +29,13 @@
                           :position "top-right"
                           :title "Copied uid to clipboard"}))))
 
+
 (rf/reg-event-fx
   :comment/remove-comment
   (fn [_ [_ uid]]
-    (athens.common.logging/debug ":comment/remove-comment:" uid)
-    {:fx [[:dispatch [:resolve-transact-forward (-> (build-block-remove-op @db/dsdb uid)
-                                                    (build-atomic-event))]]]}))
+    (log/debug ":comment/remove-comment:" uid)
+    {:fx [[:dispatch [:resolve-transact-forward (-> (graph-ops/build-block-remove-op @db/dsdb uid)
+                                                    (common-events/build-atomic-event))]]]}))
 
 
 (rf/reg-event-fx
@@ -46,11 +48,12 @@
   :comment/update-comment
   (fn [_ [_ uid string]]
     (athens.common.logging/debug ":comment/update-comment:" uid string)
-    {:fx [[:dispatch-n [[:resolve-transact-forward (-> (build-block-save-op @db/dsdb uid string)
-                                                       (build-atomic-event))]
+    {:fx [[:dispatch-n [[:resolve-transact-forward (-> (graph-ops/build-block-save-op @db/dsdb uid string)
+                                                       (common-events/build-atomic-event))]
                         [:properties/update-in [:block/uid uid] ["athens/comment/edited"] (fn [db prop-uid]
                                                                                             [(graph-ops/build-block-save-op db prop-uid "")])]
                         [:editing/uid nil]]]]}))
+
 
 ;; TODO react
 
@@ -94,9 +97,9 @@
                      :noOfLines  0}
             author]
            [:> Text {:fontSize "xs"
-                      :_hover   {:color "foreground.secondary"}
-                      :color    "foreground.tertiary"}
-             human-timestamp]
+                     :_hover   {:color "foreground.secondary"}
+                     :color    "foreground.tertiary"}
+            human-timestamp]
            (when edited?
              [:> Text {:fontSize "xs"
                        :_hover   {:color "foreground.secondary"}

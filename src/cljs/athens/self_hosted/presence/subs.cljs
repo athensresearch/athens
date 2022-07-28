@@ -39,6 +39,7 @@
         first
         second)))
 
+
 (rf/reg-sub
   :presence/current-username
   :<- [:presence/current-user]

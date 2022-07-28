@@ -167,7 +167,6 @@
                :comment/show-comments? true})
 
 
-
 (defn init-app-db
   [persisted]
   (merge rfdb {:athens/persist (update-persisted persisted)}))
