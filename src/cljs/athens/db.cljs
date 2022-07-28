@@ -590,33 +590,6 @@
       :else     uid)))
 
 
-;; history
-
-(defonce history (atom '()))
-#_(def ^:const history-limit 10)
-
-
-;; this gives us customization options
-;; now if there is a pattern for a tx then the datoms can be
-;; easily modified(mind the order of datoms) to add a custom undo/redo strategy
-;; Not seeing a use case now, but there is an option to do it
-(d/listen! dsdb :history
-           (fn [tx-report]
-             (when-not (or (->> tx-report :tx-data (some (fn [datom]
-                                                           (= (nth datom 1)
-                                                              :from-undo-redo))))
-                           (->> tx-report :tx-data empty?))
-               (swap! history (fn [buff]
-                                (->> buff (remove (fn [[_ applied? _]]
-                                                    (not applied?)))
-                                     doall)))
-               (swap! history (fn [cur-his]
-                                (cons [(-> tx-report :tx-data first vec (nth 3))
-                                       true
-                                       (:tx-data tx-report)]
-                                      cur-his))))))
-
-
 ;; -- Linked & Unlinked References ----------
 
 (defntrace get-ref-ids
