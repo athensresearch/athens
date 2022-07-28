@@ -69,6 +69,7 @@
            :onClick  #(rf/dispatch [:comment/remove-comment uid])})]
        (filterv seq)))
 
+
 (defn comment-el
   [item]
   (let [{:keys [string time author block/uid is-followup? edited?]} item
