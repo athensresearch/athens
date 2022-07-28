@@ -84,7 +84,6 @@
     (fn []
       (let [current-user-is-author? (= author @current-username)
             menu                    (create-menu item current-user-is-author?)]
-        (prn "MENU" menu)
         [:> CommentContainer {:menu menu :isFollowUp is-followup? :isEdited edited?}
 
          ;; if is-followup?, hide byline and avatar
@@ -164,6 +163,29 @@
                       :lineHeight "1.5"
                       :gridArea "refs"} linked-refs-count])]))))
 
+(defn comments-disclosure
+  [hide? num-comments]
+  [:> Button (merge
+               (when-not @hide?
+                 {:bg                 "background.upper"
+                  :borderColor        "transparent"
+                  :borderBottomRadius 0})
+               {:justifyContent "flex-start"
+                :color          "foreground.secondary"
+                :variant        "outline"
+                :size           "sm"
+                :gap            2
+                :flex           "1 0 auto"
+                :onClick        #(reset! hide? (not @hide?))})
+   (if @hide?
+     [:<>
+      [:> ChevronRightIcon]
+      [:> CommentCounter {:count num-comments}]
+      [:> Text {:pl 1.5} "Comments"]]
+     [:<>
+      [:> ChevronDownIcon]
+      [:> CommentCounter {:count num-comments}]
+      [:> Text {:pl 1.5} "Comments"]])])
 
 (defn inline-comments
   [_data _uid hide?]
@@ -190,27 +212,8 @@
                         :spacing 0
                         :borderRadius "md"
                         :align "stretch"})
-           [:> Button (merge
-                        (when-not @hide?
-                          {:bg "background.upper"
-                           :borderColor "transparent"
-                           :borderBottomRadius 0})
-                        {:justifyContent "flex-start"
-                         :color "foreground.secondary"
-                         :variant "outline"
-                         :size "sm"
-                         :gap 2
-                         :flex "1 0 auto"
-                         :onClick #(swap! @hide? not)})
-            (if @hide?
-              [:<>
-               [:> ChevronRightIcon]
-               [:> CommentCounter {:count num-comments}]
-               [:> Text {:pl 1.5} "Comments"]]
-              [:<>
-               [:> ChevronDownIcon]
-               [:> CommentCounter {:count num-comments}]
-               [:> Text {:pl 1.5} "Comments"]])]
+
+           [comments-disclosure hide? num-comments]
 
            (when-not @hide?
              [:> Box {:pl 8
