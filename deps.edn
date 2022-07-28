@@ -49,7 +49,12 @@
   cider/cider-nrepl                     #:mvn{:version "0.27.2"}}
 
  :aliases
- {:carve
+ {:shadow-cljs
+  ;; Increase max JVM stack size.
+  ;; Without this, the node_modules/highlight.js/lib/languages/isbl.js file will randomly break the e2e CI job
+  ;; because the Google Closure Compiler can't parse it without busting the stack size.
+  {:jvm-opts ["-Xss4m"]}
+  :carve
   {:extra-deps {borkdude/carve
                 #:git{:url "https://github.com/borkdude/carve"
                       :sha "7d87e7fdf471121b4f3cc4b442e6ca39503ca07e"}}
