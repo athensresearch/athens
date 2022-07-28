@@ -506,7 +506,8 @@
 
           ;; Properties
           [:div
-           (when (seq properties)
+           (when (and @(rf/subscribe [:feature-flags/enabled? :properties])
+                      (seq properties))
              (for [prop (common-db/sort-block-properties properties)]
                ^{:key (:db/id prop)}
                [blocks/block-el prop]))]
