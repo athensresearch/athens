@@ -21,9 +21,8 @@
 
 
 (defn copy-comment-uid
-  [comment-data]
-  (let [uid (:block/uid comment-data)
-        ref (str "((" uid "))")]
+  [uid]
+  (let [ref (str "((" uid "))")]
     (.. js/navigator -clipboard (writeText ref))
     (util/toast (clj->js {:status "info"
                           :position "top-right"
@@ -55,115 +54,118 @@
                         [:editing/uid nil]]]]}))
 
 
-;; TODO react
+(defn create-menu
+  [{:keys [block/uid]} current-user-is-author?]
+  (->> [{:children "Copy comment ref"
+         :icon     (r/as-element [:> BlockEmbedIcon])
+         :onClick  #(copy-comment-uid uid)}
+        (when current-user-is-author?
+          {:children "Edit"
+           :icon     (r/as-element [:> PencilIcon])
+           :onClick  #(rf/dispatch [:comment/edit-comment uid])})
+        (when current-user-is-author?
+          {:children "Delete"
+           :icon     (r/as-element [:> ArchiveIcon])
+           :onClick  #(rf/dispatch [:comment/remove-comment uid])})]
+       (filterv seq)))
 
 (defn comment-el
   [item]
   (let [{:keys [string time author block/uid is-followup? edited?]} item
-        linked-refs             (reactive/get-reactive-linked-references [:block/uid uid])
-        linked-refs-count       (count linked-refs)
-        on-copy-comment-ref     #(copy-comment-uid item)
-        current-user-is-author? (= author @(rf/subscribe [:presence/current-username]))
-        menu                    [{:children "Copy comment ref"
-                                  :icon     (r/as-element [:> BlockEmbedIcon])
-                                  :onClick  on-copy-comment-ref}
-                                 (when current-user-is-author?
-                                   {:children "Edit"
-                                    :icon     (r/as-element [:> PencilIcon])
-                                    :onClick  #(rf/dispatch [:comment/edit-comment uid])})
-                                 (when current-user-is-author?
-                                   {:children "Delete"
-                                    :icon     (r/as-element [:> ArchiveIcon])
-                                    :onClick  #(rf/dispatch [:comment/remove-comment uid])})]
-        menu                    (filterv seq menu)
-        human-timestamp         (timeAgo time)
-        is-editing (rf/subscribe [:editing/is-editing uid])
-        value-atom (r/atom string)
-        show-edit-atom? (r/atom true)]
+        linked-refs       (reactive/get-reactive-linked-references [:block/uid uid])
+        linked-refs-count (count linked-refs)
+        current-username  (rf/subscribe [:presence/current-username])
+        human-timestamp   (timeAgo time)
+        is-editing        (rf/subscribe [:editing/is-editing uid])
+        value-atom        (r/atom string)
+        show-edit-atom?   (r/atom true)]
 
     (fn []
-      [:> CommentContainer {:menu menu :isFollowUp is-followup? :isEdited edited?}
-       [:> HStack {:gridArea "byline"
-                   :alignItems "center"
-                   :lineHeight 1.25}
-        ;; if is-followup?, hide byline and avatar
-        ;; else show avatar and byline
+      (let [current-user-is-author? (= author @current-username)
+            menu                    (create-menu item current-user-is-author?)]
+        (prn "MENU" menu)
+        [:> CommentContainer {:menu menu :isFollowUp is-followup? :isEdited edited?}
+         [:> HStack {:gridArea   "byline"
+                     :alignItems "center"
+                     :lineHeight 1.25}
+          ;; if is-followup?, hide byline and avatar
+          ;; else show avatar and byline
 
-        (when-not is-followup?
-          [:<>
-           [:> Avatar {:name author :color "#fff" :size "xs"}]
-           [:> Text {:fontWeight "bold"
-                     :fontSize   "sm"
-                     :noOfLines  0}
-            author]
-           [:> Text {:fontSize "xs"
-                     :_hover   {:color "foreground.secondary"}
-                     :color    "foreground.tertiary"}
-            human-timestamp]])]
-
-
-
-
-
-       [:> Anchor {:ml "0.25em"
-                   :height "2em"}]
-       [:> Box {:flex "1 1 100%"
-                :gridArea "comment"
-                :overflow "hidden"
-                :fontSize "sm"
-                :ml 1
-                :sx {"> *" {:lineHeight 1.5}}}
-        ;; In future this should be rendered differently for reply type and ref-type
-        (if-not @is-editing
-          [:<>
-           [athens.parse-renderer/parse-and-render string uid]
-           (when edited?
+          (when-not is-followup?
+            [:<>
+             [:> Avatar {:name author :color "#fff" :size "xs"}]
+             [:> Text {:fontWeight "bold"
+                       :fontSize   "sm"
+                       :noOfLines  0}
+              author]
              [:> Text {:fontSize "xs"
-                       :as       "sub"
-                       :marginLeft "5px"
                        :_hover   {:color "foreground.secondary"}
                        :color    "foreground.tertiary"}
-              "(edited)"])]
-          (let [block-o           {:block/uid      uid
-                                   :block/string   string
-                                   :block/children []}
-                blur-fn           #(prn "blur-fn")
-                save-fn           #(reset! value-atom %)
-                enter-handler     (fn jetsam-enter-handler
-                                    [_uid _d-key-down]
-                                    (rf/dispatch [:comment/update-comment uid @value-atom]))
-                tab-handler       (fn jetsam-tab-handler
-                                    [_uid _embed-id _d-key-down])
-                backspace-handler (fn jetsam-backspace-handler
-                                    [_uid _value])
-                delete-handler    (fn jetsam-delete-handler
-                                    [_uid _d-key-down])
-                state-hooks       {:save-fn                 blur-fn
-                                   :update-fn               #(save-fn %)
-                                   :idle-fn                 #(println "idle-fn" (pr-str %))
-                                   :read-value              value-atom
-                                   :show-edit?              show-edit-atom?
-                                   :enter-handler           enter-handler
-                                   :tab-handler             tab-handler
-                                   :backspace-handler       backspace-handler
-                                   :delete-handler          delete-handler
-                                   :default-verbatim-paste? true
-                                   :keyboard-navigation?    false
-                                   :style                   {:opacity 1
-                                                             :background-color "var(--chakra-colors-background-attic)"
-                                                             :margin-top "10px"
-                                                             :padding-left "5px"
-                                                             :font-size "1.2em"
-                                                             :border-radius "5px"}}]
-            [b-content/block-content-el block-o state-hooks]))]
+              human-timestamp]])]
 
-       (when (pos? linked-refs-count)
-         [:> Badge {:size "xs"
-                    :m 1.5
-                    :mr 0
-                    :alignSelf "baseline"
-                    :lineHeight "1.5"
-                    :gridArea "refs"} linked-refs-count])])))
+
+
+
+
+         [:> Anchor {:ml "0.25em"
+                     :height "2em"}]
+         [:> Box {:flex "1 1 100%"
+                  :gridArea "comment"
+                  :overflow "hidden"
+                  :fontSize "sm"
+                  :ml 1
+                  :sx {"> *" {:lineHeight 1.5}}}
+          ;; In future this should be rendered differently for reply type and ref-type
+          (if-not @is-editing
+            [:<>
+             [athens.parse-renderer/parse-and-render string uid]
+             (when edited?
+               [:> Text {:fontSize "xs"
+                         :as       "sub"
+                         :marginLeft "5px"
+                         :_hover   {:color "foreground.secondary"}
+                         :color    "foreground.tertiary"}
+                "(edited)"])]
+            (let [block-o           {:block/uid      uid
+                                     :block/string   string
+                                     :block/children []}
+                  blur-fn           #(prn "blur-fn")
+                  save-fn           #(reset! value-atom %)
+                  enter-handler     (fn jetsam-enter-handler
+                                      [_uid _d-key-down]
+                                      (rf/dispatch [:comment/update-comment uid @value-atom]))
+                  tab-handler       (fn jetsam-tab-handler
+                                      [_uid _embed-id _d-key-down])
+                  backspace-handler (fn jetsam-backspace-handler
+                                      [_uid _value])
+                  delete-handler    (fn jetsam-delete-handler
+                                      [_uid _d-key-down])
+                  state-hooks       {:save-fn                 blur-fn
+                                     :update-fn               #(save-fn %)
+                                     :idle-fn                 #(println "idle-fn" (pr-str %))
+                                     :read-value              value-atom
+                                     :show-edit?              show-edit-atom?
+                                     :enter-handler           enter-handler
+                                     :tab-handler             tab-handler
+                                     :backspace-handler       backspace-handler
+                                     :delete-handler          delete-handler
+                                     :default-verbatim-paste? true
+                                     :keyboard-navigation?    false
+                                     :style                   {:opacity 1
+                                                               :background-color "var(--chakra-colors-background-attic)"
+                                                               :margin-top "10px"
+                                                               :padding-left "5px"
+                                                               :font-size "1.2em"
+                                                               :border-radius "5px"}}]
+              [b-content/block-content-el block-o state-hooks]))]
+
+         (when (pos? linked-refs-count)
+           [:> Badge {:size "xs"
+                      :m 1.5
+                      :mr 0
+                      :alignSelf "baseline"
+                      :lineHeight "1.5"
+                      :gridArea "refs"} linked-refs-count])]))))
 
 
 (defn inline-comments
