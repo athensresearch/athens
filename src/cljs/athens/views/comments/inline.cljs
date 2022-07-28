@@ -99,12 +99,8 @@
            [:> Text {:fontSize "xs"
                      :_hover   {:color "foreground.secondary"}
                      :color    "foreground.tertiary"}
-            human-timestamp]
-           (when edited?
-             [:> Text {:fontSize "xs"
-                       :_hover   {:color "foreground.secondary"}
-                       :color    "foreground.tertiary"}
-              "(edited)"])])]
+            human-timestamp]])]
+
 
 
 
@@ -119,7 +115,15 @@
                 :sx {"> *" {:lineHeight 1.5}}}
         ;; In future this should be rendered differently for reply type and ref-type
         (if-not @is-editing
-          [athens.parse-renderer/parse-and-render string uid]
+          [:<>
+           [athens.parse-renderer/parse-and-render string uid]
+           (when edited?
+             [:> Text {:fontSize "xs"
+                       :as       "sub"
+                       :marginLeft "5px"
+                       :_hover   {:color "foreground.secondary"}
+                       :color    "foreground.tertiary"}
+              "(edited)"])]
           (let [block-o           {:block/uid      uid
                                    :block/string   string
                                    :block/children []}
