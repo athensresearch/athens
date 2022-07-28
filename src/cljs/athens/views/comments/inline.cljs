@@ -163,6 +163,7 @@
                       :lineHeight "1.5"
                       :gridArea "refs"} linked-refs-count])]))))
 
+
 (defn comments-disclosure
   [hide? num-comments]
   [:> Button (merge
@@ -186,6 +187,7 @@
       [:> ChevronDownIcon]
       [:> CommentCounter {:count num-comments}]
       [:> Text {:pl 1.5} "Comments"]])])
+
 
 (defn inline-comments
   [_data _uid hide?]
