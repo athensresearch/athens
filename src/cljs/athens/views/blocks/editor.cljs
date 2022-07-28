@@ -266,7 +266,7 @@
            [inline-linked-refs-el block-el uid])
 
          ;; Properties
-         (when (and (seq properties)
+         (when (and @(rf/subscribe [:feature-flags/enabled? :properties])
                     (or (and (true? linked-ref) @linked-ref-open?)
                         (and (false? linked-ref) open)))
            (for [prop (common-db/sort-block-properties properties)]
