@@ -142,6 +142,59 @@
            [:> FormErrorMessage "Task title is required"]
            [:> FormHelperText "Please provide Task title"])]))))
 
+(defn task-description-view
+  [_parent-block-uid _description-block-uid]
+  (let [description-id (str (random-uuid))]
+    (fn [parent-block-uid description-block-uid]
+      (let [description-block    (reactive/get-reactive-block-document [:block/uid description-block-uid])
+            description          (or (:block/string description-block) "")
+            local-value          (r/atom description)
+            invalid-description? (and (str/blank? description)
+                                      (not (nil? description)))
+            save-fn              (fn [e]
+                                   (let [new-value (-> e .-target .-value)]
+                                     (log/debug "description-save-fn" (pr-str new-value))
+                                     (reset! local-value new-value)))
+            update-fn            #(do
+                                    (log/debug "update-fn:" (pr-str %))
+                                    (when-not (= description %)
+                                      (reset! local-value %)
+                                      (rf/dispatch [::task-events/save-description
+                                                    {:parent-block-uid parent-block-uid
+                                                     :description            %}])))
+            idle-fn              (gfns/debounce #(do
+                                                   (log/debug "description-idle-fn" (pr-str @local-value))
+                                                   (update-fn @local-value))
+                                                2000)
+            read-value           local-value
+            show-edit?           (r/atom true)
+            state-hooks          {:save-fn       save-fn
+                                  :idle-fn       idle-fn
+                                  :update-fn     update-fn
+                                  :read-value    read-value
+                                  :show-edit?    show-edit?}]
+        [:> FormControl {:is-required true
+                         :is-invalid  invalid-description?}
+         [:> FormLabel {:html-for description-id}
+          "Task Title"]
+         [:> Box {:px 2
+                  :mt 2
+                  :minHeight "2.125em"
+                  :borderRadius "sm"
+                  :bg "background.attic"
+                  :cursor "text"
+                  :_focusWithin {:shadow "focus"}}
+          ;; NOTE: we generate temporary uid for description if it doesn't exist, so editor can work
+          [content-editor/block-content-el {:block/uid (or description-block-uid
+                                                           (str "tmp-description-uid-" (common.utils/gen-block-uid)))}
+           state-hooks]
+          [presence/inline-presence-el description-block-uid]]
+
+         (if invalid-description?
+           [:> FormErrorMessage "Task description is required"]
+           [:> FormHelperText "Please provide Task description"])]))))
+
+
 
 (defn- find-allowed-statuses
   [status-block-key]
@@ -201,12 +254,14 @@
     [_this block-data _block-el _callbacks]
     (let [block-uid (:block/uid block-data)]
       (fn [_this _block-data _block-el _callbacks]
-        (let [reactive-block (reactive/get-reactive-block-document [:block/uid block-uid])
-              title-uid      (:block/uid (find-property-block-by-key-name reactive-block ":task/title"))
+        (let [reactive-block  (reactive/get-reactive-block-document [:block/uid block-uid])
+              title-uid       (:block/uid (find-property-block-by-key-name reactive-block ":task/title"))
               ;; projects-uid   (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
-              status-uid     (:block/uid (find-property-block-by-key-name reactive-block ":task/status"))]
+              status-uid      (:block/uid (find-property-block-by-key-name reactive-block ":task/status"))
+              description-uid (:block/uid (find-property-block-by-key-name reactive-block ":task/description"))]
           [:div {:class "task_container"}
            [task-title-view block-uid title-uid]
+           [task-description-view block-uid description-uid]
            [task-status-view block-uid status-uid]]))))
 
 

@@ -29,6 +29,11 @@
     (log/debug ":tasks/save-title" (pr-str args))
     (save-prop-value parent-block-uid ":task/title" title)))
 
+(rf/reg-event-fx
+  ::save-description
+  (fn [_rfdb [_event-name {:keys [parent-block-uid description] :as args}]]
+    (log/debug ":tasks/save-description" (pr-str args))
+    (save-prop-value parent-block-uid ":task/description" description)))
 
 (rf/reg-event-fx
   ::save-status
