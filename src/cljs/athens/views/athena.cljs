@@ -59,10 +59,8 @@
         shift?                        (.. e -shiftKey)
         {:keys [index query results]} @state
         item                          (get results index)
-        entity-type                   (:entity/type item)
-        navigate-uid                  (cond
-                                        (= "[[athens/comment]]" entity-type)  (:block/uid (:block/parent item))
-                                        :else                     (:block/uid item))]
+        navigate-uid                  (or (:block-search/navigate-uid item)
+                                          (:block/uid item))]
     (cond
       (= KeyCodes.ENTER key) (cond
                                ;; if page doesn't exist, create and open
@@ -226,17 +224,12 @@
               :_empty {:display "none"}}
    (doall
      (for [[i x] (map-indexed list results)
-           :let  [block-uid       (:block/uid x)
-                  entity-type     (:entity/type x)
-                  parent          (:block/parent x)
+           :let  [parent          (:block/parent x)
                   type            (if parent :block :node)
-                  title           (cond
-                                    (= "[[athens/comment]]" entity-type)  (:block/string parent)
-                                    :else                     (or (:node/title parent) (:node/title x)))
+                  title           (or (:node/title parent) (:node/title x) (:block/string parent))
                   uid             (or (:block/uid parent) (:block/uid x))
-                  navigate-to-uid (cond
-                                    (= "[[athens/comment]]" entity-type) (:block/uid parent)
-                                    :else                    block-uid)
+                  navigate-to-uid (or (:block-search/navigate-uid x)
+                                      (:block/uid x))
                   string          (:block/string x)]]
        (if (nil? x)
          ^{:key i}
