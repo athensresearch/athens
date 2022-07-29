@@ -72,11 +72,44 @@
     (monitoring-on (partial update-fn true))))
 
 
+;; re-frame
+
 (rf/reg-sub
   :feature-flags/enabled?
   :<- [:feature-flags]
   (fn [a [_ flag]]
     (get a flag)))
+
+
+(reg-event-fx
+  :settings/update
+  (fn [{:keys [db]} [_ k v]]
+    {:db (assoc-in db [:athens/persist :settings k] v)}))
+
+
+(reg-event-fx
+  :settings/update-in
+  (fn [{:keys [db]} [_ ks v]]
+    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
+
+
+(reg-event-fx
+  :settings/reset
+  (fn [{:keys [db]} _]
+    {:db (assoc db :athens/persist default-athens-persist)
+     :dispatch [:boot]}))
+
+
+(rf/reg-event-db
+  :settings/toggle-open
+  (fn [db _]
+    (update db :settings/open? not)))
+
+
+(rf/reg-sub
+  :settings/open?
+  (fn [db _]
+    (:settings/open? db)))
 
 
 ;; Components
@@ -265,39 +298,6 @@
      [:<> [:> Text "All settings saved between sessions will be restored to defaults."]
       [:> Text "Databases on disk will not be deleted, but you will need to add them to Athens again."]
       [:> Text "Athens will restart after reset and open the default database path."]]]]])
-
-
-;; re-frame
-
-(reg-event-fx
-  :settings/update
-  (fn [{:keys [db]} [_ k v]]
-    {:db (assoc-in db [:athens/persist :settings k] v)}))
-
-
-(reg-event-fx
-  :settings/update-in
-  (fn [{:keys [db]} [_ ks v]]
-    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
-
-
-(reg-event-fx
-  :settings/reset
-  (fn [{:keys [db]} _]
-    {:db (assoc db :athens/persist default-athens-persist)
-     :dispatch [:boot]}))
-
-
-(rf/reg-event-db
-  :settings/toggle-open
-  (fn [db _]
-    (update db :settings/open? not)))
-
-
-(rf/reg-sub
-  :settings/open?
-  (fn [db _]
-    (:settings/open? db)))
 
 
 (defn page
