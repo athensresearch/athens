@@ -160,7 +160,7 @@
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
         feature-flags         (rf/subscribe [:feature-flags])
-        enable-properties?    (rf/subscribe [:feature-flags/enabled? :properties])]
+        enable-properties?    (rf/subscribe [:feature-flags/enabled? :properties])
         show-comments?        (rf/subscribe [:comment/show-comments?])
         show-textarea         (rf/subscribe [:comment/show-editor? uid])]
     (fn editor-component-render
