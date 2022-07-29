@@ -29,7 +29,8 @@
 (defn main
   []
   (let [loading    (rf/subscribe [:loading?])
-        modal      (rf/subscribe [:modal])]
+        modal      (rf/subscribe [:modal])
+        settings-open? (rf/subscribe [:settings/open?])]
     (fn []
       [:div (merge {:style {:display "contents"}}
                    (zoom))
@@ -54,7 +55,11 @@
             [:> Spinner {:size "xl"}]]]
 
           :else [:<>
-                 (when @modal [db-modal/window])
+                 (when @modal
+                   [db-modal/window])
+                 (when @settings-open?
+                   [athens.views.pages.settings/page])
+
                  [:> Grid
                   {:gridTemplateColumns "auto 1fr auto"
                    :gridTemplateRows "auto 1fr auto"
@@ -71,5 +76,4 @@
                   [app-toolbar/app-toolbar]
                   [left-sidebar/left-sidebar]
                   [pages/view]
-                  #_[jetsam/jetsam-component]
                   [right-sidebar/right-sidebar]]])]])))

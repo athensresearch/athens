@@ -66,8 +66,6 @@
              :on-scroll (when (= @route-name :home)
                           throttled-scroll)}
      (case @route-name
-       :settings      [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/settings"}
-                       [settings/page]]
        :pages         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/all-pages"}
                        [all-pages/page]]
        :page          [perf-mon/hoc-perfmon {:span-name "pages/page"}

@@ -267,6 +267,8 @@
       [:> Text "Athens will restart after reset and open the default database path."]]]]])
 
 
+;; re-frame
+
 (reg-event-fx
   :settings/update
   (fn [{:keys [db]} [_ k v]]
@@ -286,12 +288,24 @@
      :dispatch [:boot]}))
 
 
+(rf/reg-event-db
+  :settings/toggle-open
+  (fn [db _]
+    (update db :settings/open? not)))
+
+(rf/reg-sub
+  :settings/open?
+  (fn [db _]
+    (:settings/open? db)))
+
+
+
 (defn page
   []
   (let [{:keys [email monitoring backup-time feature-flags]} @(subscribe [:settings])]
     [:> Modal {:isOpen true
                :scrollBehavior "inside"
-               :onClose #(.back js/window.history)
+               :onClose #(rf/dispatch [:settings/toggle-open])
                :size "xl"}
      [:> ModalOverlay]
      [:> ModalContent {:maxWidth "calc(100% - 8rem)"
