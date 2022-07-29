@@ -9,9 +9,9 @@
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.help :refer [help-popup]]
-    #_[athens.views.jetsam :as jetsam]
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
+    [athens.views.pages.settings :as settings]
     [athens.views.right-sidebar :as right-sidebar]
     [re-frame.core :as rf]))
 
@@ -58,7 +58,7 @@
                  (when @modal
                    [db-modal/window])
                  (when @settings-open?
-                   [athens.views.pages.settings/page])
+                   [settings/page])
 
                  [:> Grid
                   {:gridTemplateColumns "auto 1fr auto"

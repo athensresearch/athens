@@ -7,7 +7,6 @@
     [athens.views.pages.daily-notes :as daily-notes]
     [athens.views.pages.graph :as graph]
     [athens.views.pages.page :as page]
-    [athens.views.pages.settings :as settings]
     [goog.functions :refer [debounce]]
     [re-frame.core :as rf]))
 

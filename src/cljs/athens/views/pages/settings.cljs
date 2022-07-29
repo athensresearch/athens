@@ -293,11 +293,11 @@
   (fn [db _]
     (update db :settings/open? not)))
 
+
 (rf/reg-sub
   :settings/open?
   (fn [db _]
     (:settings/open? db)))
-
 
 
 (defn page
