@@ -72,11 +72,44 @@
     (monitoring-on (partial update-fn true))))
 
 
+;; re-frame
+
 (rf/reg-sub
   :feature-flags/enabled?
   :<- [:feature-flags]
   (fn [a [_ flag]]
     (get a flag)))
+
+
+(reg-event-fx
+  :settings/update
+  (fn [{:keys [db]} [_ k v]]
+    {:db (assoc-in db [:athens/persist :settings k] v)}))
+
+
+(reg-event-fx
+  :settings/update-in
+  (fn [{:keys [db]} [_ ks v]]
+    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
+
+
+(reg-event-fx
+  :settings/reset
+  (fn [{:keys [db]} _]
+    {:db (assoc db :athens/persist default-athens-persist)
+     :dispatch [:boot]}))
+
+
+(rf/reg-event-db
+  :settings/toggle-open
+  (fn [db _]
+    (update db :settings/open? not)))
+
+
+(rf/reg-sub
+  :settings/open?
+  (fn [db _]
+    (:settings/open? db)))
 
 
 ;; Components
@@ -267,31 +300,12 @@
       [:> Text "Athens will restart after reset and open the default database path."]]]]])
 
 
-(reg-event-fx
-  :settings/update
-  (fn [{:keys [db]} [_ k v]]
-    {:db (assoc-in db [:athens/persist :settings k] v)}))
-
-
-(reg-event-fx
-  :settings/update-in
-  (fn [{:keys [db]} [_ ks v]]
-    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
-
-
-(reg-event-fx
-  :settings/reset
-  (fn [{:keys [db]} _]
-    {:db (assoc db :athens/persist default-athens-persist)
-     :dispatch [:boot]}))
-
-
 (defn page
   []
   (let [{:keys [email monitoring backup-time feature-flags]} @(subscribe [:settings])]
     [:> Modal {:isOpen true
                :scrollBehavior "inside"
-               :onClose #(.back js/window.history)
+               :onClose #(rf/dispatch [:settings/toggle-open])
                :size "xl"}
      [:> ModalOverlay]
      [:> ModalContent {:maxWidth "calc(100% - 8rem)"

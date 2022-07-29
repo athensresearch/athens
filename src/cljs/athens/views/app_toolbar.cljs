@@ -64,10 +64,7 @@
                                                                       :pane   :main-pane}])
                                  (router/navigate :graph))
         on-settings            (fn [_]
-                                 (rf/dispatch [:reporting/navigation {:source :app-toolbar
-                                                                      :target :settings
-                                                                      :pane   :main-pane}])
-                                 (router/navigate :settings))
+                                 (rf/dispatch [:settings/toggle-open]))
         on-athena              #(rf/dispatch [:athena/toggle])
         on-help                #(rf/dispatch [:help/toggle])
         on-theme               #(rf/dispatch [:theme/toggle])
