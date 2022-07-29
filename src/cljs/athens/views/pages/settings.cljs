@@ -5,7 +5,7 @@
     [athens.util :refer [toast]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
-    [re-frame.core :refer [subscribe dispatch reg-event-fx]]
+    [re-frame.core :as rf :refer [subscribe dispatch reg-event-fx]]
     [reagent.core :as r])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
@@ -70,6 +70,13 @@
   (if monitoring
     (monitoring-off (partial update-fn false))
     (monitoring-on (partial update-fn true))))
+
+
+(rf/reg-sub
+  :feature-flags/enabled?
+  :<- [:feature-flags]
+  (fn [a [_ flag]]
+    (get a flag)))
 
 
 ;; Components
@@ -192,7 +199,7 @@
 
 
 (defn feature-flags-comp
-  [{:keys [comments reactions notifications cover-photo time-controls]} update-fn]
+  [{:keys [comments reactions notifications properties cover-photo time-controls]} update-fn]
   [setting-wrapper
    [:<>
     [header
@@ -211,6 +218,10 @@
        [:> Switch {:isChecked notifications
                    :onChange #(update-fn :notifications %)}
         "Notifications"]]
+      [:> FormControl
+       [:> Switch {:isChecked properties
+                   :onChange #(update-fn :properties %)}
+        "Properties"]]
       [:> FormControl
        [:> Switch {:isChecked cover-photo
                    :onChange #(update-fn :cover-photo %)}
