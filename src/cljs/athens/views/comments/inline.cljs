@@ -40,13 +40,13 @@
 (rf/reg-event-fx
   :comment/edit-comment
   (fn [_ [_ uid]]
-    (rf/dispatch [:editing/uid uid :end])))
+    {:fx [[:dispatch [:editing/uid uid :end]]]}))
 
 
 (rf/reg-event-fx
   :comment/update-comment
   (fn [_ [_ uid string]]
-    (athens.common.logging/debug ":comment/update-comment:" uid string)
+    (log/debug ":comment/update-comment:" uid string)
     {:fx [[:dispatch-n [[:resolve-transact-forward (-> (graph-ops/build-block-save-op @db/dsdb uid string)
                                                        (common-events/build-atomic-event))]
                         [:properties/update-in [:block/uid uid] ["athens/comment/edited"] (fn [db prop-uid]
