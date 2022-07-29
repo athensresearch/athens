@@ -432,7 +432,8 @@
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
         block-uid     (r/atom nil)
-        feature-flags (rf/subscribe [:feature-flags])]
+        properties-enabled? (rf/subscribe [:feature-flags/enabled? :properties])
+        cover-photo-enabled? (rf/subscribe [:feature-flags/enabled? :cover-photo])]
     (fn [node]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
@@ -443,8 +444,7 @@
             daily-note?                                                         (dates/is-daily-note uid)
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
             is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
-                                                                                    (= @(subscribe [:current-route/page-title]) title))
-            cover-photo-enabled?                                                (:cover-photo @feature-flags)]
+                                                                                    (= @(subscribe [:current-route/page-title]) title))]
 
         (sync-title title state)
 
@@ -461,8 +461,8 @@
                                                      (fn [e] (router/navigate-page title e)))
                            :onClickOpenInSidebar   (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
                                                      #(dispatch [:right-sidebar/open-item uid]))}
-                          (when cover-photo-enabled?
-                            {:headerImageEnabled     cover-photo-enabled?
+                          (when @cover-photo-enabled?
+                            {:headerImageEnabled     @cover-photo-enabled?
                              :headerImageUrl         (-> properties (get ":header/url") :block/string)
                              :onChangeHeaderImageUrl (fn [url]
                                                        (dispatch [:properties/update-in [:node/title title] [":header/url"]
@@ -506,7 +506,7 @@
 
           ;; Properties
           [:div
-           (when (and @(rf/subscribe [:feature-flags/enabled? :properties])
+           (when (and @properties-enabled?
                       (seq properties))
              (for [prop (common-db/sort-block-properties properties)]
                ^{:key (:db/id prop)}

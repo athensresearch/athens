@@ -161,7 +161,8 @@
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
         feature-flags         (rf/subscribe [:feature-flags])
         show-inline-comments  (rf/subscribe [:comment/show-inline-comments?])
-        show-textarea         (rf/subscribe [:comment/show-comment-textarea? uid])]
+        show-textarea         (rf/subscribe [:comment/show-comment-textarea? uid])
+        enable-properties?    (rf/subscribe [:feature-flags/enabled? :properties])]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
       (let [{:block/keys [;; uid
@@ -266,7 +267,7 @@
            [inline-linked-refs-el block-el uid])
 
          ;; Properties
-         (when (and @(rf/subscribe [:feature-flags/enabled? :properties])
+         (when (and @enable-properties?
                     (or (and (true? linked-ref) @linked-ref-open?)
                         (and (false? linked-ref) open)))
            (for [prop (common-db/sort-block-properties properties)]
