@@ -60,12 +60,12 @@
 (defn- ensure-task-status-property-enum
   [db task-status-page]
   (let []
-    ;; TODO
-    ;; 3. find ":property/enum" prop of this page
-    ;; 4. create if not found
-    ;; 5. create default statuses
-    ;; 6. return :block/uid :block/string of these
-    ))
+       ;; TODO
+       ;; 3. find ":property/enum" prop of this page
+       ;; 4. create if not found
+       ;; 5. create default statuses
+       ;; 6. return :block/uid :block/string of these
+       ))
 
 
 (defn- extract-allowed-statuses
@@ -262,11 +262,11 @@
                                                  {:parent-block-uid parent-block-uid
                                                   :status           (str "((" new-status "))")}])))}
        (doall
-        (for [{:block/keys [uid string]} allowed-statuses]
-          ^{:key uid}
-          [:option {:value    uid
-                    :selected (= status-value (str "((" uid "))"))}
-           string]))]]]))
+         (for [{:block/keys [uid string]} allowed-statuses]
+           ^{:key uid}
+           [:option {:value    uid
+                     :selected (= status-value (str "((" uid "))"))}
+            string]))]]]))
 
 
 (defn- find-property-block-by-key-name
