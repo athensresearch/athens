@@ -84,7 +84,6 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
     mb="-1px"
     borderTop={isFollowUp ? null : "1px solid"}
     borderTopColor="separator.divider"
-    py={1}
     alignItems="stretch"
     justifyContent="stretch"
     rowGap={0}

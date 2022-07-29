@@ -160,9 +160,9 @@
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
         feature-flags         (rf/subscribe [:feature-flags])
-        show-inline-comments  (rf/subscribe [:comment/show-inline-comments?])
-        show-textarea         (rf/subscribe [:comment/show-comment-textarea? uid])
-        enable-properties?    (rf/subscribe [:feature-flags/enabled? :properties])]
+        enable-properties?    (rf/subscribe [:feature-flags/enabled? :properties])
+        show-comments?        (rf/subscribe [:comment/show-comments?])
+        show-textarea         (rf/subscribe [:comment/show-editor? uid])]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
       (let [{:block/keys [;; uid
@@ -244,7 +244,7 @@
                                          :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
 
           ;; Show comments when the toggle is on
-          (when (and @show-inline-comments
+          (when (and @show-comments?
                      open
                      (or @show-textarea
                          (comments/get-comment-thread-uid @db/dsdb uid)))
