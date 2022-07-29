@@ -229,9 +229,10 @@
                         :on-drag-start          (fn [e] (bullet-drag-start e uid))
                         :on-drag-end            (fn [e] (bullet-drag-end e uid))
                         :unreadNotification     (actions/unread-notification? properties)}]]
-           [:> EmojiPickerPopoverContent
-            {:onClose hide-emoji-picker-fn
-             :onEmojiSelected (fn [e] (toggle-reaction [:block/uid uid] (.. e -detail -unicode) user-id))}]]
+           (when reactions-enabled?
+             [:> EmojiPickerPopoverContent
+              {:onClose hide-emoji-picker-fn
+               :onEmojiSelected (fn [e] (toggle-reaction [:block/uid uid] (.. e -detail -unicode) user-id))}])]
 
 
 
