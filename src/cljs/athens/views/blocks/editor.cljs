@@ -160,6 +160,7 @@
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
         feature-flags         (rf/subscribe [:feature-flags])
+        enable-properties?    (rf/subscribe [:feature-flags/enabled? :properties])]
         show-comments?        (rf/subscribe [:comment/show-comments?])
         show-textarea         (rf/subscribe [:comment/show-editor? uid])]
     (fn editor-component-render
@@ -266,7 +267,7 @@
            [inline-linked-refs-el block-el uid])
 
          ;; Properties
-         (when (and (seq properties)
+         (when (and @enable-properties?
                     (or (and (true? linked-ref) @linked-ref-open?)
                         (and (false? linked-ref) open)))
            (for [prop (common-db/sort-block-properties properties)]

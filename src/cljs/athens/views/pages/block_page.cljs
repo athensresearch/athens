@@ -93,9 +93,11 @@
 (defn block-page-el
   [_block]
   (let [state (r/atom {:string/local    nil
-                       :string/previous nil})]
+                       :string/previous nil})
+        properties-enabled? (rf/subscribe [:feature-flags/enabled? :properties])]
+
     (fn [block]
-      (let [{:block/keys [string children uid] :db/keys [id]} block
+      (let [{:block/keys [string children uid properties] :db/keys [id]} block
             is-current-route? (= @(subscribe [:current-route/uid]) uid)]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
@@ -144,6 +146,13 @@
                          (comments/get-comment-thread-uid @db/dsdb uid)))
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])]
 
+         ;; Properties
+         (when (and @properties-enabled?
+                    (seq properties))
+           [:> PageBody
+            (for [prop (common-db/sort-block-properties properties)]
+              ^{:key (:db/id prop)}
+              [blocks/block-el prop])])
 
          ;; Children
          [:> PageBody
