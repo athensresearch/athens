@@ -7,6 +7,7 @@
     ["/components/EmojiPicker/EmojiPicker"     :refer [EmojiPickerPopoverContent]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react"                        :refer [VStack PopoverAnchor Popover Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    ["react-intersection-observer"             :refer [useInView]]
     [athens.common-db                          :as common-db]
     [athens.db                                 :as db]
     [athens.events.inline-refs                 :as inline-refs.events]
@@ -171,6 +172,7 @@
                           key
                           properties
                           _refs]} (reactive/get-reactive-block-document [:block/uid uid])
+            [ref in-view?]        (useInView {:delay 250})
             reactions-enabled?    (:reactions @feature-flags)
             user-id               (or (:username @(rf/subscribe [:presence/current-user]))
                                       ;; We use empty string for when there is no user information, like in PKM.
@@ -179,19 +181,19 @@
                                        (props->reactions properties))]
 
         [:<>
-         [:div.block-body
+         [:div.block-body {:ref ref}
           (when (and children?
                      (or (seq children)
                          (seq properties)))
-            [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
-                                         (and (false? linked-ref) open))
-                                   true
-                                   false)
-                        :onClick (fn [e]
-                                   (.. e stopPropagation)
-                                   (if (true? linked-ref)
-                                     (rf/dispatch [::linked-ref.events/toggle-open! uid])
-                                     (toggle uid (not open))))}])
+            (when in-view? [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
+                                                        (and (false? linked-ref) open))
+                                                  true
+                                                  false)
+                                       :onClick (fn [e]
+                                                  (.. e stopPropagation)
+                                                  (if (true? linked-ref)
+                                                    (rf/dispatch [::linked-ref.events/toggle-open! uid])
+                                                    (toggle uid (not open))))}]))
 
           (when key
             [:> PropertyName {:name    (:node/title key)
@@ -207,7 +209,7 @@
 
           [:> Popover {:isOpen @show-emoji-picker?
                        :placement "bottom-end"
-                       :onOpen #(js/console.log "tried to open")
+                       :isLazy true
                        :onClose hide-emoji-picker-fn}
 
            [:> PopoverAnchor
@@ -229,22 +231,22 @@
                         :on-drag-start          (fn [e] (bullet-drag-start e uid))
                         :on-drag-end            (fn [e] (bullet-drag-end e uid))
                         :unreadNotification     (actions/unread-notification? properties)}]]
-           (when reactions-enabled?
+           (when (and reactions-enabled? in-view?)
              [:> EmojiPickerPopoverContent
               {:onClose hide-emoji-picker-fn
                :onEmojiSelected (fn [e] (toggle-reaction [:block/uid uid] (.. e -detail -unicode) user-id))}])]
 
-
-
-
           [content/block-content-el block-o state-hooks]
 
-          (when reactions [:> Reactions {:reactions (clj->js reactions)
-                                         :currentUser user-id
-                                         :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
+          (when (and
+                 in-view?
+                 reactions) [:> Reactions {:reactions (clj->js reactions)
+                                           :currentUser user-id
+                                           :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
 
           ;; Show comments when the toggle is on
           (when (and @show-comments?
+                     in-view?
                      open
                      (or @show-textarea
                          (comments/get-comment-thread-uid @db/dsdb uid)))
@@ -252,7 +254,9 @@
 
           [presence/inline-presence-el uid]
 
-          (when (and (> (count _refs) 0) (not= :block-embed? opts))
+          (when (and
+                 in-view?
+                 (> (count _refs) 0) (not= :block-embed? opts))
             [block-refs-count-el
              (count _refs)
              (fn [e]
@@ -263,12 +267,14 @@
 
          ;; Inline refs
          (when (and (> (count _refs) 0)
+                    in-view?
                     (not= :block-embed? opts)
                     @inline-refs-open?)
            [inline-linked-refs-el block-el uid])
 
          ;; Properties
          (when (and @enable-properties?
+                    in-view?
                     (or (and (true? linked-ref) @linked-ref-open?)
                         (and (false? linked-ref) open)))
            (for [prop (common-db/sort-block-properties properties)]
