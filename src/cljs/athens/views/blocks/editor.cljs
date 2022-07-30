@@ -252,7 +252,7 @@
                          (comments/get-comment-thread-uid @db/dsdb uid)))
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
 
-          [presence/inline-presence-el uid]
+          (when in-view? [presence/inline-presence-el uid])
 
           (when (and
                  in-view?
