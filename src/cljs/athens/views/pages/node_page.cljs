@@ -428,11 +428,18 @@
   title/local is the value of the textarea.
   We have both, because we want to be able to change the local title without transacting to the db until user confirms.
   Similar to atom-string in blocks. Hacky, but state consistency is hard!"
-  [_]
-  (let [state         (r/atom init-state)
-        unlinked-refs (r/atom [])
-        block-uid     (r/atom nil)
-        feature-flags (rf/subscribe [:feature-flags])]
+  [node]
+  (let [state                    (r/atom init-state)
+        unlinked-refs            (r/atom [])
+        block-uid                (r/atom nil)
+        feature-flags            (rf/subscribe [:feature-flags])
+        uid                      (:block/uid node)
+        current-route-name       (subscribe [:current-route/name])
+        current-route-uid        (subscribe [:current-route/uid])
+        current-route-page-title (subscribe [:current-route/page-title])
+        right-sidebar-items      (subscribe [:right-sidebar/items])
+        is-editing               (subscribe [:editing/is-editing uid])]
+
     (fn [node]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
@@ -441,9 +448,9 @@
       (let [{:block/keys [children uid properties] title :node/title}           node
             {:alert/keys [message confirm-fn cancel-fn confirm-text] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
-            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
-            is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
-                                                                                    (= @(subscribe [:current-route/page-title]) title))
+            on-daily-notes?                                                     (= :home @current-route-name)
+            is-current-route?                                                   (or (= @current-route-uid uid)
+                                                                                    (= @current-route-page-title title))
             cover-photo-enabled?                                                (:cover-photo @feature-flags)]
 
         (sync-title title state)
@@ -459,7 +466,7 @@
          [:> PageHeader (merge
                           {:onClickOpenInMainView  (when-not is-current-route?
                                                      (fn [e] (router/navigate-page title e)))
-                           :onClickOpenInSidebar   (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                           :onClickOpenInSidebar   (when-not (contains? @right-sidebar-items uid)
                                                      #(dispatch [:right-sidebar/open-item uid]))}
                           (when cover-photo-enabled?
                             {:headerImageEnabled     cover-photo-enabled?
@@ -468,7 +475,7 @@
                                                        (dispatch [:properties/update-in [:node/title title] [":header/url"]
                                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))}))
 
-          [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
+          [:> TitleContainer {:isEditing @is-editing}
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 
@@ -476,7 +483,7 @@
              [autosize/textarea
               {:value       (:title/local @state)
                :id          (str "editable-uid-" uid)
-               :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
+               :class       (when @is-editing "is-editing")
                :on-blur     (fn [_]
                               ;; add title Untitled-n for empty titles
                               (when (empty? (:title/local @state))

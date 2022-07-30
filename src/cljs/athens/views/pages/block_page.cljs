@@ -91,12 +91,18 @@
 
 
 (defn block-page-el
-  [_block]
+  [block]
   (let [state (r/atom {:string/local    nil
-                       :string/previous nil})]
+                       :string/previous nil})
+        uid                    (:block/uid block)
+        show-comment-textarea? (rf/subscribe [:comment/show-comment-textarea? uid])
+        show-inline-comments? (rf/subscribe [:comment/show-inline-comments?])
+        current-route         (rf/subscribe [:current-route/uid])
+        right-side-items      (rf/subscribe [:right-sidebar/items])
+        is-editing            (rf/subscribe [:editing/is-editing uid])]
     (fn [block]
       (let [{:block/keys [string children uid] :db/keys [id]} block
-            is-current-route? (= @(subscribe [:current-route/uid]) uid)]
+            is-current-route? (= @current-route uid)]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
@@ -105,12 +111,12 @@
          ;; Header
          [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
                                                   (fn [e] (router/navigate-uid uid e)))
-                         :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                         :onClickOpenInSidebar (when-not (contains? @right-side-items uid)
                                                  #(dispatch [:right-sidebar/open-item uid]))}
 
           ;; Parent Context
           [parents-el uid id]
-          [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])
+          [:> TitleContainer {:isEditing @is-editing
                               :onClick (fn [e]
                                          (.. e preventDefault)
                                          (if (.. e -shiftKey)
@@ -123,7 +129,7 @@
                                            (dispatch [:editing/uid uid])))}
            [autosize/textarea
             {:value       (:string/local @state)
-             :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
+             :class       (when @is-editing "is-editing")
              :id          (str "editable-uid-" uid)
              ;; :auto-focus  true
              :on-blur     (fn [_]
@@ -139,8 +145,8 @@
          ;; Show comments when the toggle is on
          [:> Box {:ml "4%"
                   :w "100%"}
-          (when (or @(rf/subscribe [:comment/show-comment-textarea? uid])
-                    (and @(rf/subscribe [:comment/show-inline-comments?])
+          (when (or @show-comment-textarea?
+                    (and @show-inline-comments?
                          (comments/get-comment-thread-uid @db/dsdb uid)))
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])]
 

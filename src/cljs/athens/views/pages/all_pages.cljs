@@ -70,13 +70,15 @@
 
 (defn page
   []
-  (let [all-pages (common-db/get-all-pages @db/dsdb)]
+  (let [all-pages (common-db/get-all-pages @db/dsdb)
+        sorted-pages (rf/subscribe [:all-pages/sorted all-pages])
+        sorted-by @(rf/subscribe [:all-pages/sorted-by])
+        sort-direction (@(rf/subscribe [:all-pages/sort-order-ascending?]))]
     (fn []
-      (let [sorted-pages @(rf/subscribe [:all-pages/sorted all-pages])]
-        [:> AllPagesTable {:sortedPages (clj->js sorted-pages :keyword-fn str)
-                           :sortedBy @(rf/subscribe [:all-pages/sorted-by])
+        [:> AllPagesTable {:sortedPages (clj->js @sorted-pages :keyword-fn str)
+                           :sortedBy    @sorted-by
                            :dateFormatFn #(dates/date-string %)
-                           :sortDirection (if @(rf/subscribe [:all-pages/sort-order-ascending?]) "asc" "desc")
+                           :sortDirection (if @sort-direction  "asc" "desc")
                            :onClickSort #(rf/dispatch [:all-pages/sort-by (cond
                                                                             (= % "title") :title
                                                                             (= % "links-count") :links-count
@@ -89,4 +91,4 @@
                                                                                  :pane   (if shift?
                                                                                            :right-pane
                                                                                            :main-pane)}])
-                                            (router/navigate-page title e)))}]))))
+                                            (router/navigate-page title e)))}])))

@@ -195,7 +195,7 @@
         close-modal       (fn []
                             (when-not @loading
                               (dispatch [:modal/toggle])))
-        selected-db       @(subscribe [:db-picker/selected-db])
+        selected-db       (subscribe [:db-picker/selected-db])
         state             (r/atom {:input ""})]
     (fn []
       [:> Modal {:isOpen loading
@@ -221,7 +221,7 @@
              [:> Tab "Create New"]])
           [:> TabPanels {:display "contents"}
            [:> TabPanel {:display "contents"}
-            [open-local-comp loading selected-db]]
+            [open-local-comp loading @selected-db]]
            [:> TabPanel {:display "contents"}
             [join-remote-comp]]
            [:> TabPanel {:display "contents"}

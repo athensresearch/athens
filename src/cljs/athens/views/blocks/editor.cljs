@@ -161,6 +161,7 @@
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
         feature-flags         (rf/subscribe [:feature-flags])
         show-inline-comments  (rf/subscribe [:comment/show-inline-comments?])
+        current-user          (rf/subscribe [:presence/current-user])
         show-textarea         (rf/subscribe [:comment/show-comment-textarea? uid])]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
@@ -171,7 +172,7 @@
                           properties
                           _refs]} (reactive/get-reactive-block-document [:block/uid uid])
             reactions-enabled?    (:reactions @feature-flags)
-            user-id               (or (:username @(rf/subscribe [:presence/current-user]))
+            user-id               (or (:username @current-user)
                                       ;; We use empty string for when there is no user information, like in PKM.
                                       "")
             reactions             (and reactions-enabled?

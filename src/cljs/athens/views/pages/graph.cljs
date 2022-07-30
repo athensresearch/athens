@@ -159,86 +159,86 @@
 
 (defn graph-controls
   [local-node-eid]
-  (fn []
-    (let [graph-conf     @(subscribe [:graph/conf])
-          graph-ref      (get @graph-ref-map (or local-node-eid :global))]
-      [:> Accordion {:width "14em"
-                     :position "absolute"
-                     :bg "background.basement"
-                     :overflow "hidden"
-                     :p 0
-                     :borderRadius "md"
-                     :allowToggle true
-                     :allowMultiple true
-                     :bottom 2
-                     :right 2}
-       (when-not local-node-eid
-         [:> AccordionItem {:borderTop 0}
-          [:> AccordionButton {:borderRadius "sm"}
-           "Nodes"]
-          [:> AccordionPanel
-           [:> VStack {:align "stretch"}
-            [:> FormControl
-             [:> FormLabel "Highlighted link levels"]
-             [:> Input {:type "number"
-                        :value (or (:hlt-link-levels graph-conf) 1)
-                        :min 1
-                        :max 5
-                        :step 1
-                        :onChange (fn [e] (rf/dispatch [:graph/set-conf :hlt-link-levels (.. e -target -value)]))}]]
-            [:> Switch {:isChecked (:orphans? graph-conf)
-                        :onChange (fn [e]
-                                    (rf/dispatch [:graph/set-conf :orphans? (.. e -target -checked)])
-                                    (.d3ReheatSimulation graph-ref))}
-             "Orphan nodes"]
-            [:> Switch {:isChecked (:daily-notes? graph-conf)
-                        :onChange (fn [e]
-                                    (rf/dispatch [:graph/set-conf :daily-notes? (.. e -target -checked)])
-                                    (.d3ReheatSimulation graph-ref))}
-             "Daily notes"]]]])
-       [:> AccordionItem
-        [:> AccordionButton {:borderRadius "sm"}
-         "Forces"]
-        [:> AccordionPanel
-         [:> VStack {:align "stretch"}
-          [:> FormControl
-           [:> FormLabel "Link distance"]
-           [:> Input {:type "number"
-                      :value (:link-distance graph-conf)
-                      :min 5
-                      :max 95
-                      :step 10
-                      :onChange (fn [e]
-                                  ((and graph-ref (.. graph-ref (d3Force "link") (distance (.. e -target -value)))))
-                                  (.d3ReheatSimulation graph-ref))}]]
-          [:> FormControl
-           [:> FormLabel "Attraction force"]
-           [:> Input {:type "number"
-                      :value (:charge-strength graph-conf)
-                      :min -30
-                      :max 0
-                      :step 5
-                      :onChange (fn [e]
-                                  ((and graph-ref (.. graph-ref (d3Force "charge") (distance (.. e -target -value)))))
-                                  (.d3ReheatSimulation graph-ref))}]]]]]
-       (when local-node-eid
+  (let [graph-conf  (rf/subscribe [:graph-conf])]
+    (fn []
+      (let [graph-ref      (get @graph-ref-map (or local-node-eid :global))]
+        [:> Accordion {:width "14em"
+                       :position "absolute"
+                       :bg "background.basement"
+                       :overflow "hidden"
+                       :p 0
+                       :borderRadius "md"
+                       :allowToggle true
+                       :allowMultiple true
+                       :bottom 2
+                       :right 2}
+         (when-not local-node-eid
+           [:> AccordionItem {:borderTop 0}
+            [:> AccordionButton {:borderRadius "sm"}
+             "Nodes"]
+            [:> AccordionPanel
+             [:> VStack {:align "stretch"}
+              [:> FormControl
+               [:> FormLabel "Highlighted link levels"]
+               [:> Input {:type "number"
+                          :value (or (:hlt-link-levels @graph-conf) 1)
+                          :min 1
+                          :max 5
+                          :step 1
+                          :onChange (fn [e] (rf/dispatch [:graph/set-conf :hlt-link-levels (.. e -target -value)]))}]]
+              [:> Switch {:isChecked (:orphans? @graph-conf)
+                          :onChange (fn [e]
+                                      (rf/dispatch [:graph/set-conf :orphans? (.. e -target -checked)])
+                                      (.d3ReheatSimulation graph-ref))}
+               "Orphan nodes"]
+              [:> Switch {:isChecked (:daily-notes? @graph-conf)
+                          :onChange (fn [e]
+                                      (rf/dispatch [:graph/set-conf :daily-notes? (.. e -target -checked)])
+                                      (.d3ReheatSimulation graph-ref))}
+               "Daily notes"]]]])
          [:> AccordionItem
           [:> AccordionButton {:borderRadius "sm"}
-           "Local options"]
+           "Forces"]
           [:> AccordionPanel
            [:> VStack {:align "stretch"}
             [:> FormControl
-             [:> FormLabel "Local depth"]
+             [:> FormLabel "Link distance"]
              [:> Input {:type "number"
-                        :value (:local-depth graph-conf)
-                        :min 1
-                        :max 5
-                        :step 1
-                        :onChange (fn [e] (rf/dispatch [:graph/set-conf :local-depth (.. e -target -value)]))}]]
-            [:> Switch {:isChecked (:root-links-only? graph-conf)
+                        :value (:link-distance @graph-conf)
+                        :min 5
+                        :max 95
+                        :step 10
                         :onChange (fn [e]
-                                    (rf/dispatch [:graph/set-conf :root-links-only? (.. e -target -checked)]))}
-             "Only root links?"]]]])])))
+                                    ((and graph-ref (.. graph-ref (d3Force "link") (distance (.. e -target -value)))))
+                                    (.d3ReheatSimulation graph-ref))}]]
+            [:> FormControl
+             [:> FormLabel "Attraction force"]
+             [:> Input {:type "number"
+                        :value (:charge-strength @graph-conf)
+                        :min -30
+                        :max 0
+                        :step 5
+                        :onChange (fn [e]
+                                    ((and graph-ref (.. graph-ref (d3Force "charge") (distance (.. e -target -value)))))
+                                    (.d3ReheatSimulation graph-ref))}]]]]]
+         (when local-node-eid
+           [:> AccordionItem
+            [:> AccordionButton {:borderRadius "sm"}
+             "Local options"]
+            [:> AccordionPanel
+             [:> VStack {:align "stretch"}
+              [:> FormControl
+               [:> FormLabel "Local depth"]
+               [:> Input {:type "number"
+                          :value (:local-depth @graph-conf)
+                          :min 1
+                          :max 5
+                          :step 1
+                          :onChange (fn [e] (rf/dispatch [:graph/set-conf :local-depth (.. e -target -value)]))}]]
+              [:> Switch {:isChecked (:root-links-only? @graph-conf)
+                          :onChange (fn [e]
+                                      (rf/dispatch [:graph/set-conf :root-links-only? (.. e -target -checked)]))}
+               "Only root links?"]]]])]))))
 
 
 (defn graph-root
@@ -256,6 +256,7 @@
         (fn [this]
           (let [dom-node   (dom/dom-node this)
                 dom-root (if local-node-eid ".graph-page" "#app")
+                ;; Not sure if this is correct
                 graph-conf @(subscribe [:graph/conf])
                 graph-ref  (get @graph-ref-map (or local-node-eid :global))]
             ;; set canvas dimensions

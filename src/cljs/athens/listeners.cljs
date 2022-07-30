@@ -266,35 +266,37 @@
   beforeunload is called before unload, where the window would be redirected/refreshed/quit.
   https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event "
   []
-  (js/window.addEventListener
-    EventType.BEFOREUNLOAD
-    (fn [e]
-      (let [synced? @(subscribe [:db/synced])
-            ;; See test/e2e/electron-test.ts for details about this flag.
-            e2e-ignore-save? (= (js/localStorage.getItem "E2E_IGNORE_SAVE") "true")
-            remote? (electron.utils/remote-db? @(subscribe [:db-picker/selected-db]))]
-        (cond
-          (and (not synced?)
-               (not @force-leave)
-               (not e2e-ignore-save?))
-          (do
-            ;; The browser blocks the confirm window during beforeunload, so
-            ;; instead we always cancel unload and separately show a confirm window
-            ;; that allows closing the window.
-            (dispatch [:confirm/js
-                       (str "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. "
-                            "Try refreshing or quitting again once the sync is complete. "
-                            "Press Cancel to wait, or OK to leave without saving (will cause data loss!).")
-                       (fn []
-                         (reset! force-leave true)
-                         (js/window.close))
-                       #()])
-            (.. e preventDefault)
-            (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
-            "Returning a string also prevents exit on other browsers.")
+  (let [synced (rf/subscribe [:db/synced])
+        selected-db (rf/subscribe [:db-picker/selected-db])]
+    (js/window.addEventListener
+      EventType.BEFOREUNLOAD
+      (fn [e]
+        (let [synced? @synced
+              ;; See test/e2e/electron-test.ts for details about this flag.
+              e2e-ignore-save? (= (js/localStorage.getItem "E2E_IGNORE_SAVE") "true")
+              remote? (electron.utils/remote-db? @selected-db)]
+          (cond
+            (and (not synced?)
+                 (not @force-leave)
+                 (not e2e-ignore-save?))
+            (do
+              ;; The browser blocks the confirm window during beforeunload, so
+              ;; instead we always cancel unload and separately show a confirm window
+              ;; that allows closing the window.
+              (dispatch [:confirm/js
+                         (str "Athens hasn't finished saving yet. Athens is finished saving when the sync dot is green. "
+                              "Try refreshing or quitting again once the sync is complete. "
+                              "Press Cancel to wait, or OK to leave without saving (will cause data loss!).")
+                         (fn []
+                           (reset! force-leave true)
+                           (js/window.close))
+                         #()])
+              (.. e preventDefault)
+              (set! (.. e -returnValue) "Setting e.returnValue to string prevents exit for some browsers.")
+              "Returning a string also prevents exit on other browsers.")
 
-          remote?
-          (dispatch-sync [:remote/disconnect!]))))))
+            remote?
+            (dispatch-sync [:remote/disconnect!])))))))
 
 
 (defn init
