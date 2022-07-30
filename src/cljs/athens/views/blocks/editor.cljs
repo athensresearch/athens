@@ -239,10 +239,10 @@
           [content/block-content-el block-o state-hooks]
 
           (when (and
-                 in-view?
-                 reactions) [:> Reactions {:reactions (clj->js reactions)
-                                           :currentUser user-id
-                                           :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
+                  in-view?
+                  reactions) [:> Reactions {:reactions (clj->js reactions)
+                                            :currentUser user-id
+                                            :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
 
           ;; Show comments when the toggle is on
           (when (and @show-comments?
@@ -255,8 +255,8 @@
           (when in-view? [presence/inline-presence-el uid])
 
           (when (and
-                 in-view?
-                 (> (count _refs) 0) (not= :block-embed? opts))
+                  in-view?
+                  (> (count _refs) 0) (not= :block-embed? opts))
             [block-refs-count-el
              (count _refs)
              (fn [e]
