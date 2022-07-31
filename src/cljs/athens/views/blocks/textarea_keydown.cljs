@@ -871,7 +871,8 @@
                                       (rf/dispatch [::inline-search.events/set-index! uid 0])
                                       (rf/dispatch [::inline-search.events/clear-results! uid])
                                       (rf/dispatch [::inline-search.events/clear-query! uid]))
-      (and (= key ":" look-behind-char)
+      (and @(rf/subscribe [:feature-flags/enabled? :properties])
+           (= key ":" look-behind-char)
            (nil? type))             (do
                                       (rf/dispatch [::inline-search.events/set-type! uid :property])
                                       (rf/dispatch [::inline-search.events/set-index! uid 0])

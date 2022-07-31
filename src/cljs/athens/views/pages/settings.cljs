@@ -5,7 +5,7 @@
     [athens.util :refer [toast]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
-    [re-frame.core :refer [subscribe dispatch reg-event-fx]]
+    [re-frame.core :as rf :refer [subscribe dispatch reg-event-fx]]
     [reagent.core :as r])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
@@ -70,6 +70,46 @@
   (if monitoring
     (monitoring-off (partial update-fn false))
     (monitoring-on (partial update-fn true))))
+
+
+;; re-frame
+
+(rf/reg-sub
+  :feature-flags/enabled?
+  :<- [:feature-flags]
+  (fn [a [_ flag]]
+    (get a flag)))
+
+
+(reg-event-fx
+  :settings/update
+  (fn [{:keys [db]} [_ k v]]
+    {:db (assoc-in db [:athens/persist :settings k] v)}))
+
+
+(reg-event-fx
+  :settings/update-in
+  (fn [{:keys [db]} [_ ks v]]
+    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
+
+
+(reg-event-fx
+  :settings/reset
+  (fn [{:keys [db]} _]
+    {:db (assoc db :athens/persist default-athens-persist)
+     :dispatch [:boot]}))
+
+
+(rf/reg-event-db
+  :settings/toggle-open
+  (fn [db _]
+    (update db :settings/open? not)))
+
+
+(rf/reg-sub
+  :settings/open?
+  (fn [db _]
+    (:settings/open? db)))
 
 
 ;; Components
@@ -212,7 +252,7 @@
 
 
 (defn feature-flags-comp
-  [{:keys [comments reactions cover-photo time-controls]} update-fn]
+  [{:keys [comments reactions notifications properties cover-photo time-controls]} update-fn]
   [setting-wrapper
    [:<>
     [header
@@ -222,6 +262,10 @@
       [setting-switch "Comments" comments #(update-fn :comments %) "Add comments to blocks"]
       [:> Divider]
       [setting-switch "Reactions" reactions #(update-fn :reactions %) "Add reactions to blocks"]
+      [:> Divider]
+      [setting-switch "Notifications" notifications #(update-fn :notifications %) "Get notified for important changes"]
+      [:> Divider]
+      [setting-switch "Properties" properties #(update-fn :properties %) "Show properties in outliner"]
       [:> Divider]
       [setting-switch "Time Controls" time-controls #(update-fn :time-controls %) "Enable time-related functions"]
       [:> Divider]
@@ -264,31 +308,12 @@
       [:> Text "Athens will restart after reset and open the default database path."]]]]])
 
 
-(reg-event-fx
-  :settings/update
-  (fn [{:keys [db]} [_ k v]]
-    {:db (assoc-in db [:athens/persist :settings k] v)}))
-
-
-(reg-event-fx
-  :settings/update-in
-  (fn [{:keys [db]} [_ ks v]]
-    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
-
-
-(reg-event-fx
-  :settings/reset
-  (fn [{:keys [db]} _]
-    {:db (assoc db :athens/persist default-athens-persist)
-     :dispatch [:boot]}))
-
-
 (defn page
   []
   (let [{:keys [email monitoring backup-time feature-flags]} @(subscribe [:settings])]
     [:> Modal {:isOpen true
                :scrollBehavior "inside"
-               :onClose #(.back js/window.history)
+               :onClose #(rf/dispatch [:settings/toggle-open])
                :size "xl"}
      [:> ModalOverlay]
      [:> ModalContent {:maxWidth "calc(100% - 8rem)"

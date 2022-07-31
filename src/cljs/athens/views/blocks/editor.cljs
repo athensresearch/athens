@@ -21,8 +21,9 @@
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
     [athens.views.blocks.content               :as content]
     [athens.views.blocks.reactions             :refer [toggle-reaction props->reactions]]
-    [athens.views.comments.core              :as comments]
-    [athens.views.comments.inline            :as inline-comments]
+    [athens.views.comments.core                :as comments]
+    [athens.views.comments.inline              :as inline-comments]
+    [athens.views.notifications.actions        :as actions]
     [re-frame.core                             :as rf]))
 
 
@@ -159,8 +160,9 @@
         linked-ref-open?      (rf/subscribe [::linked-ref.subs/open? uid])
         inline-refs-open?     (rf/subscribe [::inline-refs.subs/open? uid])
         feature-flags         (rf/subscribe [:feature-flags])
-        show-inline-comments  (rf/subscribe [:comment/show-inline-comments?])
-        show-textarea         (rf/subscribe [:comment/show-comment-textarea? uid])]
+        enable-properties?    (rf/subscribe [:feature-flags/enabled? :properties])
+        show-comments?        (rf/subscribe [:comment/show-comments?])
+        show-textarea         (rf/subscribe [:comment/show-editor? uid])]
     (fn editor-component-render
       [_block-el _block-o _children? _block _linked-ref-data _uid-sanitized-block _state-hooks _opts]
       (let [{:block/keys [;; uid
@@ -225,10 +227,12 @@
                                                                                                    :main-pane)}])
                                                     (router/navigate-uid uid e)))
                         :on-drag-start          (fn [e] (bullet-drag-start e uid))
-                        :on-drag-end            (fn [e] (bullet-drag-end e uid))}]]
-           [:> EmojiPickerPopoverContent
-            {:onClose hide-emoji-picker-fn
-             :onEmojiSelected (fn [e] (toggle-reaction [:block/uid uid] (.. e -detail -unicode) user-id))}]]
+                        :on-drag-end            (fn [e] (bullet-drag-end e uid))
+                        :unreadNotification     (actions/unread-notification? properties)}]]
+           (when reactions-enabled?
+             [:> EmojiPickerPopoverContent
+              {:onClose hide-emoji-picker-fn
+               :onEmojiSelected (fn [e] (toggle-reaction [:block/uid uid] (.. e -detail -unicode) user-id))}])]
 
 
 
@@ -240,10 +244,10 @@
                                          :onToggleReaction (partial toggle-reaction [:block/uid uid])}])
 
           ;; Show comments when the toggle is on
-          (when (and open
+          (when (and @show-comments?
+                     open
                      (or @show-textarea
-                         (and @show-inline-comments
-                              (comments/get-comment-thread-uid @db/dsdb uid))))
+                         (comments/get-comment-thread-uid @db/dsdb uid)))
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
 
           [presence/inline-presence-el uid]
@@ -264,7 +268,7 @@
            [inline-linked-refs-el block-el uid])
 
          ;; Properties
-         (when (and (seq properties)
+         (when (and @enable-properties?
                     (or (and (true? linked-ref) @linked-ref-open?)
                         (and (false? linked-ref) open)))
            (for [prop (common-db/sort-block-properties properties)]
