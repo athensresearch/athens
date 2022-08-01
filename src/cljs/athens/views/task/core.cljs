@@ -165,9 +165,9 @@
 
 
 (defn generic-textarea-view-for-task-props
-  [_parent-block-uid _prop-block-uid _prop-name]
+  [_parent-block-uid _prop-block-uid _prop-name _prop-title _required?]
   (let [prop-id (str (random-uuid))]
-    (fn [parent-block-uid prop-block-uid prop-name]
+    (fn [parent-block-uid prop-block-uid prop-name prop-title required?]
       (let [prop-block         (reactive/get-reactive-block-document [:block/uid prop-block-uid])
             prop-str           (or (:block/string prop-block) "")
             local-value        (r/atom prop-str)
@@ -203,10 +203,10 @@
                                 :update-fn  update-fn
                                 :read-value read-value
                                 :show-edit? show-edit?}]
-        [:> FormControl {:is-required true
+        [:> FormControl {:is-required required?
                          :is-invalid  invalid-prop-str?}
          [:> FormLabel {:html-for prop-id}
-          "Task Title"]
+          prop-title]
          [:> Box {:px           2
                   :mt           2
                   :minHeight    "2.125em"
@@ -221,8 +221,10 @@
           [presence/inline-presence-el prop-block-uid]]
 
          (if invalid-prop-str?
-           [:> FormErrorMessage (str prop-name "is required")]
-           [:> FormHelperText (str "Please provide" prop-name)])]))))
+           [:> FormErrorMessage (str prop-title " is " (if required?
+                                                         "required"
+                                                         "empty"))]
+           [:> FormHelperText (str "Please provide " prop-title)])]))))
 
 
 (defn- find-allowed-statuses
@@ -302,10 +304,10 @@
                    :class "task_container"
                    :padding "1rem"}
            [:> VStack {:spacing "2rem"}
-            [generic-textarea-view-for-task-props block-uid title-uid ":task/title"]
-            [generic-textarea-view-for-task-props block-uid description-uid ":task/description"]
+            [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true]
+            [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false]
             ;; Making assumption that for now we can add due date manually without date-picker.
-            [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date"]
+            [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false]
             [task-status-view block-uid status-uid]]]))))
 
 
