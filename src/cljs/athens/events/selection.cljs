@@ -51,6 +51,7 @@
       (let [ops          (map #(graph-ops/build-block-remove-op @db/dsdb %) sanitized-uids)
             composite-op (composite-ops/make-consequence-op {:op/type :selection/delete} ops)
             event        (common-events/build-atomic-event composite-op)]
+        (println "delete" ops)
         {:fx [[:dispatch-n [[:resolve-transact-forward event]
                             [:editing/uid nil]]]]
          :db (assoc-in db [:selection :items] [])}))))
