@@ -58,8 +58,8 @@
 
 
 (defn- ensure-task-status-property-enum
-  [db task-status-page]
-  (let []
+  [_db _task-status-page]
+  #_(let []
        ;; TODO
        ;; 3. find ":property/enum" prop of this page
        ;; 4. create if not found
@@ -226,8 +226,8 @@
 
 
 (defn- find-allowed-statuses
-  [status-block-key]
-  (let [task-status-page    (reactive/get-reactive-node-document (:db/id status-block-key))
+  []
+  (let [task-status-page    (reactive/get-reactive-node-document [:node/title ":task/status"])
         allowed-stat-blocks (-> task-status-page
                                 :block/properties
                                 (get ":property/enum")
@@ -247,14 +247,16 @@
   [parent-block-uid status-block-uid]
   (let [status-id        (str (random-uuid))
         status-block     (reactive/get-reactive-block-document [:block/uid status-block-uid])
-        allowed-statuses (find-allowed-statuses (:block/key status-block))
-        status-value     (or (:block/string status-block) "To Do")]
+        allowed-statuses (find-allowed-statuses)
+        status-string    (:block/string status-block "(())")
+        status-uid       (subs  status-string 2 (- (count status-string) 2))]
     [:> FormControl {:is-required true}
      [:> HStack {:spacing "2rem"}
       [:> FormLabel {:html-for status-id
                      :w        "9rem"}
        "Task Status"]
       [:> Select {:id          status-id
+                  :value       status-uid
                   :placeholder "Select a status"
                   :on-change   (fn [e]
                                  (let [new-status (-> e .-target .-value)]
@@ -264,8 +266,7 @@
        (doall
          (for [{:block/keys [uid string]} allowed-statuses]
            ^{:key uid}
-           [:option {:value    uid
-                     :selected (= status-value (str "((" uid "))"))}
+           [:option {:value uid}
             string]))]]]))
 
 
