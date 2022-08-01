@@ -58,14 +58,14 @@
 
 
 (defn- ensure-task-status-property-enum
-  [db task-status-page]
-  (let []
-    ;; TODO
-    ;; 3. find ":property/enum" prop of this page
-    ;; 4. create if not found
-    ;; 5. create default statuses
-    ;; 6. return :block/uid :block/string of these
-    ))
+  [_db _task-status-page]
+  #_(let []
+       ;; TODO
+       ;; 3. find ":property/enum" prop of this page
+       ;; 4. create if not found
+       ;; 5. create default statuses
+       ;; 6. return :block/uid :block/string of these
+       ))
 
 
 (defn- extract-allowed-statuses
@@ -177,12 +177,12 @@
                                (log/debug "title-save-fn" (pr-str new-value))
                                (reset! local-value new-value)))
             update-fn      #(do
-                             (log/debug "update-fn:" (pr-str %))
-                             (when-not (= title %)
-                               (reset! local-value %)
-                               (rf/dispatch [::task-events/save-title
-                                             {:parent-block-uid parent-block-uid
-                                              :title            %}])))
+                              (log/debug "update-fn:" (pr-str %))
+                              (when-not (= title %)
+                                (reset! local-value %)
+                                (rf/dispatch [::task-events/save-title
+                                              {:parent-block-uid parent-block-uid
+                                               :title            %}])))
             idle-fn        (gfns/debounce #(do
                                              (log/debug "title-idle-fn" (pr-str @local-value))
                                              (update-fn @local-value))
@@ -217,8 +217,8 @@
 
 
 (defn- find-allowed-statuses
-  [status-block-key]
-  (let [task-status-page    (reactive/get-reactive-node-document (:db/id status-block-key))
+  []
+  (let [task-status-page    (reactive/get-reactive-node-document [:node/title ":task/status"])
         allowed-stat-blocks (-> task-status-page
                                 :block/properties
                                 (get ":property/enum")
@@ -238,14 +238,16 @@
   [parent-block-uid status-block-uid]
   (let [status-id        (str (random-uuid))
         status-block     (reactive/get-reactive-block-document [:block/uid status-block-uid])
-        allowed-statuses (find-allowed-statuses (:block/key status-block))
-        status-value     (or (:block/string status-block) "To Do")]
+        allowed-statuses (find-allowed-statuses)
+        status-string    (:block/string status-block "(())")
+        status-uid       (subs  status-string 2 (- (count status-string) 2))]
     [:> FormControl {:is-required true}
      [:> HStack {:spacing "2rem"}
       [:> FormLabel {:html-for status-id
                      :w        "9rem"}
        "Task Status"]
       [:> Select {:id          status-id
+                  :value       status-uid
                   :placeholder "Select a status"
                   :on-change   (fn [e]
                                  (let [new-status (-> e .-target .-value)]
@@ -253,11 +255,10 @@
                                                  {:parent-block-uid parent-block-uid
                                                   :status           (str "((" new-status "))")}])))}
        (doall
-        (for [{:block/keys [uid string]} allowed-statuses]
-          ^{:key uid}
-          [:option {:value    uid
-                    :selected (= status-value (str "((" uid "))"))}
-           string]))]]]))
+         (for [{:block/keys [uid string]} allowed-statuses]
+           ^{:key uid}
+           [:option {:value uid}
+            string]))]]]))
 
 
 (defn- find-property-block-by-key-name
