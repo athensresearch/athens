@@ -163,40 +163,49 @@
 
 ;; View
 
-(defn task-title-view
-  [_parent-block-uid _title-block-uid]
-  (let [title-id (str (random-uuid))]
-    (fn [parent-block-uid title-block-uid]
-      (let [title-block    (reactive/get-reactive-block-document [:block/uid title-block-uid])
-            title          (or (:block/string title-block) "")
-            local-value    (r/atom title)
-            invalid-title? (and (str/blank? title)
-                                (not (nil? title)))
-            save-fn        (fn [e]
-                             (let [new-value (-> e .-target .-value)]
-                               (log/debug "title-save-fn" (pr-str new-value))
-                               (reset! local-value new-value)))
-            update-fn      #(do
-                              (log/debug "update-fn:" (pr-str %))
-                              (when-not (= title %)
-                                (reset! local-value %)
-                                (rf/dispatch [::task-events/save-title
-                                              {:parent-block-uid parent-block-uid
-                                               :title            %}])))
-            idle-fn        (gfns/debounce #(do
-                                             (log/debug "title-idle-fn" (pr-str @local-value))
-                                             (update-fn @local-value))
-                                          2000)
-            read-value     local-value
-            show-edit?     (r/atom true)
-            state-hooks    {:save-fn    save-fn
-                            :idle-fn    idle-fn
-                            :update-fn  update-fn
-                            :read-value read-value
-                            :show-edit? show-edit?}]
+
+(defn generic-textarea-view-for-task-props
+  [_parent-block-uid _prop-block-uid _prop-name]
+  (let [prop-id (str (random-uuid))]
+    (fn [parent-block-uid prop-block-uid prop-name]
+      (let [prop-block         (reactive/get-reactive-block-document [:block/uid prop-block-uid])
+            prop-str           (or (:block/string prop-block) "")
+            local-value        (r/atom prop-str)
+            invalid-prop-str?  (and (str/blank? prop-str)
+                                    (not (nil? prop-str)))
+            save-fn            (fn [e]
+                                 (let [new-value (-> e .-target .-value)]
+                                   (log/debug prop-name "save-fn" (pr-str new-value))
+                                   (reset! local-value new-value)))
+            update-fn          #(do
+                                  (log/debug prop-name "update-fn:" (pr-str %))
+                                  (when-not (= prop-str %)
+                                    (reset! local-value %)
+                                    (cond
+                                      (= prop-name ":task/title")       (rf/dispatch [::task-events/save-title
+                                                                                      {:parent-block-uid parent-block-uid
+                                                                                       :title            %}])
+                                      (= prop-name ":task/description") (rf/dispatch [::task-events/save-description
+                                                                                      {:parent-block-uid parent-block-uid
+                                                                                       :description      %}])
+                                      (= prop-name ":task/due-date")    (rf/dispatch [::task-events/save-title
+                                                                                      {:parent-block-uid parent-block-uid
+                                                                                       :due-date         %}]))))
+
+            idle-fn            (gfns/debounce #(do
+                                                 (log/debug prop-name "idle-fn" (pr-str @local-value))
+                                                 (update-fn @local-value))
+                                              2000)
+            read-value         local-value
+            show-edit?         (r/atom true)
+            state-hooks        {:save-fn    save-fn
+                                :idle-fn    idle-fn
+                                :update-fn  update-fn
+                                :read-value read-value
+                                :show-edit? show-edit?}]
         [:> FormControl {:is-required true
-                         :is-invalid  invalid-title?}
-         [:> FormLabel {:html-for title-id}
+                         :is-invalid  invalid-prop-str?}
+         [:> FormLabel {:html-for prop-id}
           "Task Title"]
          [:> Box {:px           2
                   :mt           2
@@ -205,15 +214,15 @@
                   :bg           "background.attic"
                   :cursor       "text"
                   :_focusWithin {:shadow "focus"}}
-          ;; NOTE: we generate temporary uid for title if it doesn't exist, so editor can work
-          [content-editor/block-content-el {:block/uid (or title-block-uid
-                                                           (str "tmp-title-uid-" (common.utils/gen-block-uid)))}
+          ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
+          [content-editor/block-content-el {:block/uid (or prop-block-uid
+                                                           (str "tmp-" prop-name "-uid-" (common.utils/gen-block-uid)))}
            state-hooks]
-          [presence/inline-presence-el title-block-uid]]
+          [presence/inline-presence-el prop-block-uid]]
 
-         (if invalid-title?
-           [:> FormErrorMessage "Task title is required"]
-           [:> FormHelperText "Please provide Task title"])]))))
+         (if invalid-prop-str?
+           [:> FormErrorMessage (str prop-name "is required")]
+           [:> FormHelperText (str "Please provide" prop-name)])]))))
 
 
 (defn- find-allowed-statuses
@@ -283,15 +292,20 @@
     [_this block-data _block-el _callbacks]
     (let [block-uid (:block/uid block-data)]
       (fn [_this _block-data _block-el _callbacks]
-        (let [reactive-block (reactive/get-reactive-block-document [:block/uid block-uid])
-              title-uid      (:block/uid (find-property-block-by-key-name reactive-block ":task/title"))
-              ;; projects-uid   (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
-              status-uid     (:block/uid (find-property-block-by-key-name reactive-block ":task/status"))]
+        (let [reactive-block   (reactive/get-reactive-block-document [:block/uid block-uid])
+              title-uid        (:block/uid (find-property-block-by-key-name reactive-block ":task/title"))
+              description-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/description"))
+              due-date-uid     (:block/uid (find-property-block-by-key-name reactive-block ":task/due-date"))
+              ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
+              status-uid       (:block/uid (find-property-block-by-key-name reactive-block ":task/status"))]
           [:> Box {:bg    "lightgreen"
                    :class "task_container"
                    :padding "1rem"}
            [:> VStack {:spacing "2rem"}
-            [task-title-view block-uid title-uid]
+            [generic-textarea-view-for-task-props block-uid title-uid ":task/title"]
+            [generic-textarea-view-for-task-props block-uid description-uid ":task/description"]
+            ;; Making assumption that for now we can add due date manually without date-picker.
+            [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date"]
             [task-status-view block-uid status-uid]]]))))
 
 
