@@ -120,35 +120,36 @@
               notification-list  (get-inbox-items-for-popover @db/dsdb user-page-title)
               navigate-user-page #(router/navigate-page user-page-title)
               num-notifications  (count notification-list)]
-          (when (pos? num-notifications)
-            [:> Popover {:closeOnBlur true}
+          [:> Popover {:closeOnBlur true}
 
-             [:> PopoverTrigger
-              [:> Box {:position "relative"}
-               [:> IconButton {"aria-label"   "Notifications"
-                               :variant       "ghost"
-                               :fontSize      "1.3em"
-                               :onDoubleClick navigate-user-page
-                               :onClick       (fn [e]
-                                                (when (.. e -shiftKey)
-                                                  (rf/dispatch [:right-sidebar/open-page user-page-title])))
-                               :icon          (r/as-element [:> BellFillIcon])}]
-               [:> Badge {:position "absolute" :right "-3px" :bottom "-1px" :variant "ghost" :z-index -1} num-notifications]]]
+           [:> PopoverTrigger
+            [:> Box {:position "relative"}
+             [:> IconButton {"aria-label"   "Notifications"
+                             :variant       "ghost"
+                             :fontSize      "1.3em"
+                             :onDoubleClick navigate-user-page
+                             :onClick       (fn [e]
+                                              (when (.. e -shiftKey)
+                                                (rf/dispatch [:right-sidebar/open-page user-page-title])))
+                             :icon          (r/as-element [:> BellFillIcon])}]
+             [:> Badge {:position "absolute" :right "-3px" :bottom "-1px" :variant "ghost" :z-index -1} num-notifications]]]
 
 
-             [:> PopoverContent {:maxWidth  "max-content"
-                                 :maxHeight "calc(100vh - 4rem)"}
-              [:> PopoverCloseButton]
-              [:> PopoverHeader [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])} "Notifications"]]
-              [:> Flex {:p             0
-                        :as            PopoverBody
-                        :flexDirection "column"
-                        :overflow      "hidden"}
-               [:> InboxItemsList
+           [:> PopoverContent {:maxWidth  "max-content"
+                               :maxHeight "calc(100vh - 4rem)"}
+            [:> PopoverCloseButton]
+            [:> PopoverHeader [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])} "Notifications"]]
+            [:> Flex {:p             0
+                      :as            PopoverBody
+                      :flexDirection "column"
+                      :overflow      "hidden"}
+             [:> InboxItemsList
 
-                {:onOpenItem        on-click-notification-item
-                 :onMarkAsRead      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
-                 :onMarkAsUnread    #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-                 :onArchive         #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))
-                 ;; :onUnarchive       #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-                 :notificationsList notification-list}]]]]))))))
+              {:onOpenItem        on-click-notification-item
+               :onMarkAsRead      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
+               :onMarkAsUnread    #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
+               :onArchive         (fn [e uid]
+                                    (.. e stopPropagation)
+                                    (rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true")))
+               ;; :onUnarchive       #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
+               :notificationsList notification-list}]]]])))))
