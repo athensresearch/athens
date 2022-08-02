@@ -6,14 +6,13 @@ interface PropertyNameProps extends React.HTMLAttributes<HTMLButtonElement> {
 }
 
 export const PropertyName = (props: PropertyNameProps) => {
-  const { name, onClick } = props;
+  const { name, onClick, onDragStart, onDragEnd } = props;
 
   return (
     <Button
       className="prop-name"
       bg="transparent"
       aria-label="Property name"
-      draggable={true}
       gridArea="name"
       flexShrink={0}
       position='relative'
@@ -51,7 +50,10 @@ export const PropertyName = (props: PropertyNameProps) => {
         }
 
       }}
+      draggable={onDragStart ? true : undefined}
+      onDragStart={onDragStart}
       onClick={onClick}
+      onDragEnd={onDragEnd}
     >
       <svg viewBox="0 0 24 24">
         <circle cx="12" cy="7" r="2.5" />
