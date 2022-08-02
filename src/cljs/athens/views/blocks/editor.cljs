@@ -202,7 +202,9 @@
                                                                                 :pane   (if shift?
                                                                                           :right-pane
                                                                                           :main-pane)}])
-                                           (router/navigate-page (:node/title key) e)))}])
+                                           (router/navigate-page (:node/title key) e)))
+                              :on-drag-start (fn [e] (bullet-drag-start e uid))
+                              :on-drag-end (fn [e] (bullet-drag-end e uid))}])
 
 
           [:> Popover {:isOpen @show-emoji-picker?
