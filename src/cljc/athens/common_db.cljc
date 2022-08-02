@@ -329,7 +329,7 @@
 
 
 (defn get-parent-eid
-  "Find parent's `:db/id` of given `eid`."
+  "Find parent's eids of given `eid`."
   [db eid]
   (-> (d/entity db eid)
       child-of-or-property-of
@@ -342,6 +342,16 @@
   "Given `:db/id` find it's parent."
   [db eid]
   (get-block db (get-parent-eid db eid)))
+
+
+(defn get-parent-eids
+  "Return parent parent eids for `eid`."
+  [db eid]
+  (loop [block eid
+         acc []]
+    (if-let [parent (get-parent-eid db block)]
+      (recur parent (conj acc parent))
+      acc)))
 
 
 (defn get-children-uids
