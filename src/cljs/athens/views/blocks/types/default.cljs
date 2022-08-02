@@ -3,8 +3,8 @@
   A.k.a standard `:block/string` blocks"
   (:require
     ["/components/Block/Container"           :refer [Container]]
-    ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon]]
-    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem]]
+    ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon ArchiveIcon]]
+    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem Divider]]
     [athens.common-db                        :as common-db]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
@@ -26,6 +26,7 @@
     [athens.views.blocks.editor              :as editor]
     [athens.views.blocks.types               :as types]
     [athens.views.blocks.types.dispatcher    :as dispatcher]
+    [athens.views.notifications.actions      :as actions]
     [clojure.string                          :as str]
     [com.rpl.specter                         :as s]
     [goog.functions                          :as gfns]
@@ -276,45 +277,66 @@
          :reagent-render
          (fn render-block
            [block linked-ref-data opts]
-           (let [ident                 [:block/uid (or original-uid uid)]
-                 block-o               (reactive/get-reactive-block-document ident)
+           (let [ident                [:block/uid (or original-uid uid)]
+                 block-o              (reactive/get-reactive-block-document ident)
                  {:block/keys [uid
                                string
                                open
                                children
+                               properties
                                _refs]} (merge block-o block)
-                 children-uids         (set (map :block/uid children))
-                 uid-sanitized-block   (s/transform
-                                         (util/specter-recursive-path #(contains? % :block/uid))
-                                         (fn [{:block/keys [original-uid uid] :as block}]
-                                           (assoc block :block/uid (or original-uid uid)))
-                                         block)
-                 is-selected           @(rf/subscribe [::select-subs/selected? uid])
-                 present-user          @(rf/subscribe [:presence/has-presence uid])
-                 is-presence           (seq present-user)
-                 reactions-enabled?    (:reactions @feature-flags)
-                 comments-enabled?     (:comments @feature-flags)
-                 show-emoji-picker?    (r/atom false)
-                 hide-emoji-picker-fn  #(reset! show-emoji-picker? false)
-                 show-emoji-picker-fn  #(reset! show-emoji-picker? true)
-                 menu                  (r/as-element
-                                         [:> MenuList
-                                          [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                    "Copy selected block refs"
-                                                                    "Copy block ref")
-                                                        :icon (r/as-element [:> BlockEmbedIcon])
-                                                        :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                          [:> MenuItem {:children "Copy unformatted text"
-                                                        :icon (r/as-element [:> TextIcon])
-                                                        :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
-                                          (when comments-enabled?
-                                            [:> MenuItem {:children "Add comment"
-                                                          :onClick #(ctx-menu/handle-click-comment % uid)
-                                                          :icon (r/as-element [:> ChatIcon])}])
-                                          (when reactions-enabled?
-                                            [:> MenuItem {:children "Add reaction"
-                                                          :onClick show-emoji-picker-fn
-                                                          :icon (r/as-element [:> ThumbUpFillIcon])}])])]
+                 children-uids        (set (map :block/uid children))
+                 uid-sanitized-block  (s/transform
+                                        (util/specter-recursive-path #(contains? % :block/uid))
+                                        (fn [{:block/keys [original-uid uid] :as block}]
+                                          (assoc block :block/uid (or original-uid uid)))
+                                        block)
+                 is-selected          @(rf/subscribe [::select-subs/selected? uid])
+                 present-user         @(rf/subscribe [:presence/has-presence uid])
+                 is-presence          (seq present-user)
+                 reactions-enabled?   (:reactions @feature-flags)
+                 comments-enabled?    (:comments @feature-flags)
+                 notifications-enabled?    (:notifications @feature-flags)
+                 show-emoji-picker?   (r/atom false)
+                 hide-emoji-picker-fn #(reset! show-emoji-picker? false)
+                 show-emoji-picker-fn #(reset! show-emoji-picker? true)
+                 menu                 (r/as-element
+                                        [:> MenuList
+                                         [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                   "Copy selected block refs"
+                                                                   "Copy block ref")
+                                                       :icon     (r/as-element [:> BlockEmbedIcon])
+                                                       :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                         [:> MenuItem {:children "Copy unformatted text"
+                                                       :icon     (r/as-element [:> TextIcon])
+                                                       :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+
+                                         (when comments-enabled?
+                                           [:> MenuItem {:children "Add comment"
+                                                         :onClick  #(ctx-menu/handle-click-comment % uid)
+                                                         :icon     (r/as-element [:> ChatIcon])}])
+                                         (when reactions-enabled?
+                                           [:> MenuItem {:children "Add reaction"
+                                                         :onClick  show-emoji-picker-fn
+                                                         :icon     (r/as-element [:> ThumbUpFillIcon])}])
+
+                                         (when (and notifications-enabled? (actions/is-block-inbox? properties))
+                                           [:<>
+                                            [:> Divider]
+                                            [:> MenuItem {:children "Archive all notifications"
+                                                          :icon     (r/as-element [:> ArchiveIcon])
+                                                          :onClick  #(actions/archive-all-notifications uid)}]
+                                            [:> MenuItem {:children "Unarchive all notifications"
+                                                          :icon     (r/as-element [:> ArchiveIcon])
+                                                          :onClick  #(actions/unarchive-all-notifications uid)}]])
+
+                                         (when (and notifications-enabled? (actions/is-block-notification? properties))
+                                           [:> MenuItem {:children "Archive"
+                                                         :icon     (r/as-element [:> ArchiveIcon])
+                                                         :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])]
+
+
+
 
              ;; (prn uid is-selected)
 
@@ -325,7 +347,8 @@
                (update-fn string)
                (update-old-fn string))
 
-             [:> Container {:isDragging   (and @dragging? (not is-selected))
+             [:> Container {:isHidden     (actions/archived-notification? properties)
+                            :isDragging   (and @dragging? (not is-selected))
                             :isSelected   is-selected
                             :hasChildren  (seq children)
                             :isOpen       open

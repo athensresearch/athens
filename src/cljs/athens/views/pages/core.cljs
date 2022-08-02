@@ -7,7 +7,6 @@
     [athens.views.pages.daily-notes :as daily-notes]
     [athens.views.pages.graph :as graph]
     [athens.views.pages.page :as page]
-    [athens.views.pages.settings :as settings]
     [goog.functions :refer [debounce]]
     [re-frame.core :as rf]))
 
@@ -66,8 +65,6 @@
              :on-scroll (when (= @route-name :home)
                           throttled-scroll)}
      (case @route-name
-       :settings      [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/settings"}
-                       [settings/page]]
        :pages         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/all-pages"}
                        [all-pages/page]]
        :page          [perf-mon/hoc-perfmon {:span-name "pages/page"}
