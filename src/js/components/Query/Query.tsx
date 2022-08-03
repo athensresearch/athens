@@ -22,12 +22,30 @@ export const Controls = (props) => {
           {properties.map((property) => {
             const isActive = hiddenProperties[property]
             return <MenuItemOption
-                color={isActive ? "gray" : "black"}
                 icon={<ViewIcon/>}
                 value={property}
                 onClick={(e) => onChange(e.target.innerHTML)}>{property}
             </MenuItemOption>
           })}
+        </MenuOptionGroup>
+      </MenuList>
+    </Menu>
+  );
+}
+
+
+export const QueryRadioMenu = (props) => {
+  const { heading, options, onChange, value } = props
+  return (
+    <Menu closeOnSelect={false}>
+      <MenuButton><Heading size="sm" as={Button} rightIcon={<ChevronDownIcon/>}>{heading}</Heading></MenuButton>
+      <MenuList>
+        <MenuOptionGroup type="radio" onChange={onChange} value={value}>
+            {options.map(x =>
+                <MenuItemOption value={x}>
+                    {x}
+                </MenuItemOption>
+            )}
         </MenuOptionGroup>
       </MenuList>
     </Menu>

@@ -2,7 +2,7 @@
   (:require
    ["/components/Query/KanbanBoard" :refer [QueryKanban]]
    ["/components/Query/Table" :refer [QueryTable]]
-   ["/components/Query/Query" :refer [Controls]]
+   ["/components/Query/Query" :refer [Controls QueryRadioMenu]]
    ["@chakra-ui/react" :refer [Box
                                Button
                                ButtonGroup
@@ -52,7 +52,6 @@
                                           (assoc acc prop-key (get-in properties [prop-key :block/string])))
                                         {}
                                         property-keys)
-        _ (prn "RPOPS" props-map)
         merged-map              (merge {":block/uid" uid}
                                        props-map
                                        create-auth-and-time
@@ -163,6 +162,12 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-title)])]))
 
+(defn update-entity-type
+  [uid new-type]
+  (rf/dispatch [:properties/update-in [:block/uid uid] ["query/type"]
+                (fn [db prop-uid]
+                  [(graph-ops/build-block-save-op db prop-uid new-type)])]))
+
 
 (defn toggle-hidden-property
   "If property is hidden, remove key. Otherwise, add property key."
@@ -213,6 +218,12 @@
   (->> (sort-by :block/order children)
        (mapv :block/string)))
 
+(def default-props
+  {"query/layout" "table"
+   ":entity/type" "[[athens/query]]"
+   "query/type" "[[athens/comment-thread]]"})
+
+
 (defn get-query-props
   [properties]
   (->> properties
@@ -226,7 +237,8 @@
                                                       {}
                                                       nested-properties)
                         :else string)))
-        {})))
+        {})
+       (merge default-props)))
     
 
 (defn get-reactive-property
@@ -265,18 +277,21 @@
   [s]
   (str "[[" s "]]"))
 
-(defn get-schema
-  [query-types]
-  (let [base-schema [":block/uid" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time"]]
-    (if (string? query-types)
-      (get-schema [query-types])
-      (->> query-types
-           (map (fn [title]
-                  (get-reactive-property [:node/title (parse-for-title title)] ":entity.type/schema")))
-           (filter seq)
-           flatten
-           (concat base-schema)))))
 
+(def base-schema
+  [":block/uid" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time"])
+
+
+(def SCHEMA
+  {"[[athens/task]]" (concat base-schema ["title" "status" "assignee" "project" "due date"])
+   "[[athens/comment-thread]]" (concat base-schema [])})
+
+(defn get-schema
+  [k]
+  (or (get SCHEMA k) base-schema))
+
+(def entity-types
+  (keys SCHEMA))
 
 ;; Views
 
@@ -292,21 +307,24 @@
         menuOptionGroupValue (keys query-properties-hide)
         menuOptionGroupValue (if (nil? menuOptionGroupValue) [] menuOptionGroupValue)]
     [:> Stack {:direction "row" :spacing 5}
-     [:> ButtonGroup
-      (for [x ["table" "board"]]
-        [:> Button {:value    x
-                    :onClick  (fn [e]
-                                (update-layout uid x))
-                    :isActive (or (= query-layout x))}
-         (clojure.string/capitalize x)])]
+
+     [:> QueryRadioMenu {:heading "Entity Type"
+                         :options entity-types
+                         :onChange #(update-entity-type uid %)}]
+
+     [:> QueryRadioMenu {:heading "Layout"
+                         :options ["table" "board" "outliner"]
+                         :onChange #(update-layout uid %)
+                         :value query-layout}]
+
 
      [:> Controls {:isCheckedFn          #(get query-properties-hide %)
-                   :properties           []
+                   :properties           schema
                    :hiddenProperties     query-properties-hide
                    :menuOptionGroupValue menuOptionGroupValue
                    :onChange             #(toggle-hidden-property uid %)}]
-     [:> Button {:onClick #(prn parsed-properties) :disabled true}
-      [:> Heading {:size "sm"} "Save View"]]]))
+     #_[:> Button {:onClick #(prn parsed-properties) :disabled true}
+        [:> Heading {:size "sm"} "Save View"]]]))
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
@@ -343,6 +361,20 @@
                             :onUpdateKanbanColumn update-kanban-column
                             :onAddNewColumn  #(new-kanban-column query-group-by)
                             :onAddNewProjectClick (fn [])}])
+
+       ;; for comment, get parent of parent
+       ;; what about groupBy page or something
+       "outliner"
+       (let [uids (map #(get % ":block/uid") query-data)
+             comments-data (map #(db/get-comment-for-query @db/dsdb %) uids)]
+         ;; only works for comments
+         ;; how would i do filters for author
+         ;; how would i create a UI for it
+         (for [comment comments-data]
+           ;; needs breadcrumbs
+           [athens.views.blocks.core/block-el
+             comment]))
+
        (let [sorted-data (sort-table query-data query-sort-by query-sort-direction)]
          [:> QueryTable {:data           sorted-data
                          :columns        schema
@@ -352,29 +384,35 @@
                          :hideProperties query-properties-hide
                          :dateFormatFn   #(dates/date-string %)}]))]))
 
-
+(defn invalid-query?
+  [parsed-props]
+  (let [layout (get parsed-props "query/layout")
+        groupBy (get parsed-props "query/group-by")]
+    (and (= layout "board")
+         (nil? groupBy))))
 
 
 (defn query-block
   [block-data properties]
-  (let [block-uid (:block/uid block-data)
+  (let [block-uid         (:block/uid block-data)
         parsed-properties (get-query-props properties)
-        query-types (get parsed-properties "query/types")
-        schema (get-schema query-types)
-        query-data (->> (reactive/get-reactive-instances-of-key-value ":entity/type" query-types)
-                        (map block-to-flat-map))]
+        query-type        (get parsed-properties "query/type")
+        schema            (get-schema query-type)
+        query-data        (->> (reactive/get-reactive-instances-of-key-value ":entity/type" query-type)
+                               (map block-to-flat-map))]
 
-
-    [:> Box {:width        "100%" :borderColor "gray"
-             :padding-left 38 :padding-top 15}
-      [options-el {:parsed-properties parsed-properties}
-           :properties properties
-           :schema schema
-           :query-data        query-data
-           :uid               block-uid]
-      [query-el {:query-data        query-data}
-         :uid               block-uid
-         :schema schema
-         :parsed-properties parsed-properties]]))
+       (if (invalid-query? parsed-properties)
+         [:> Box {:color "red"} "invalid query"]
+         [:> Box {:width        "100%" :borderColor "gray"
+                  :padding-left 38 :padding-top 15}
+           [options-el {:parsed-properties parsed-properties
+                        :properties        properties
+                        :schema            schema
+                        :query-data        query-data
+                        :uid               block-uid}]
+           [query-el {:query-data        query-data
+                      :uid               block-uid
+                      :schema            schema
+                      :parsed-properties parsed-properties}]])))
 
 
