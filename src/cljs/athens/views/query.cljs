@@ -52,6 +52,7 @@
                                           (assoc acc prop-key (get-in properties [prop-key :block/string])))
                                         {}
                                         property-keys)
+        _ (prn "RPOPS" props-map)
         merged-map              (merge {":block/uid" uid}
                                        props-map
                                        create-auth-and-time
@@ -249,26 +250,16 @@
        (sort-by #(get % query-sort-by)
                 (sort-dir-fn query-sort-direction))))
 
-;; (def data (atom nil))
-
-#_(defn save-view
-   [properties]
-   (reset! data properties)
-   (prn properties))
-
-
-#_(let [data @data]
-   (for [[k v] data]
-     [k (:block/string v) (:block/children v)]))
-
 (defn parse-for-title
   "should be able to pass in a plain string, a wikilink, or both?"
   [s]
-  (let [re #"\[\[(.*)\]\]"]
-    (cond
-      (re-find re s) (second (re-find re s))
-      (clojure.string/blank? s) (throw "parse-for-title got an empty string")
-      :else s)))
+  (when (seq s)
+    (let [re #"\[\[(.*)\]\]"]
+      (cond
+        (re-find re s) (second (re-find re s))
+        (clojure.string/blank? s) (throw "parse-for-title got an empty string")
+        :else s))))
+
 
 (defn str-to-title
   [s]
@@ -282,192 +273,9 @@
       (->> query-types
            (map (fn [title]
                   (get-reactive-property [:node/title (parse-for-title title)] ":entity.type/schema")))
+           (filter seq)
            flatten
-           (concat base-schema)
-           #_(map str-to-title)))))
-
-#_(concat [1 2] [3 4])
-
-(get-schema ["athens/task"])
-(get-schema ["[[athens/task]]"])
-
-;; (re-find #"\[\[(.+)\]\]" "a")
-
-(parse-for-title "[[athens/task]]")
-
-
-(defn schema-to-block-properties
-  [schema]
-  (zipmap schema
-          (repeatedly (fn [] {:block/string ""
-                              :block/uid (utils/gen-block-uid)}))))
-
-
-(defn remove-keys-from-schema
-  [prev-schema curr-schema]
-  (remove (set curr-schema) (keys prev-schema)))
-
-#_(let [a '(":block/uid" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time" ":task/title" ":task/status" ":task/due-date" ":task/project" ":task/priority" ":task/assignee")
-        b {":REMOVEME" 1 ":task/project" "", ":create/time" "", ":create/auth" "", ":last-edit/time" "", ":last-edit/auth" "", ":task/priority" "1", ":block/uid" "", ":task/title" "", ":task/due-date" "", ":task/assignee" "", ":task/status" ""}]
-   (remove (set a) (keys b)))
-
-(def d (atom nil))
-
-
-(defn build-remove-ops
-  [uid remove-keys]
-  (let [block (common-db/get-block-document @athens.db/dsdb [:block/uid uid])
-        ops (->> (map #(get-in block [:block/properties "athens/schema" :block/properties %]) remove-keys)
-                 (map :block/uid)
-                 (map #(graph-ops/build-block-remove-op @athens.db/dsdb %))
-                 vec)]
-    ;; (reset! d block)
-    ;; (prn "OPSS" ops)
-    (athens.common-events/build-atomic-event
-     (composite/make-consequence-op {:op/type :remove-extra-schema-keys} ops))))
-
-
-
-(->> (map #(get-in @d [:block/properties "athens/schema" %]) [":bad boy"]))
-
-
-;; (get-in @d [:block/properties "athens/schema" :block/properties ":bad boy"])
-
-(defn update-schema
-  "Remove extraneous keys and adds proper keys to schema.
-   
-   Removing keys will typically just have an empty consequence events.
-   Adding keys consistently fails if trying to add key that already exists."
-  [uid schema prev-schema]
-  (let [schema-key "athens/schema"
-        remove-keys (remove-keys-from-schema prev-schema schema)
-        remove-ops (build-remove-ops uid remove-keys)]
-    (rf/dispatch [:properties/update-in [:block/uid uid] [schema-key]
-                  (fn [db prop-uid]
-                    (mapv #(graph-ops/build-block-new-op db
-                                                         (utils/gen-block-uid)
-                                                         {:block/uid prop-uid
-                                                          :relation {:page/title %}})
-                          schema))])
-    (rf/dispatch [:resolve-transact-forward remove-ops])))
-
-#_(let [schema-key "athens/schema"
-        schema-properties (schema-to-block-properties schema)
-        evt (->> (bfs/internal-representation->atomic-ops
-                  @athens.db/dsdb
-                  [#:block{:uid        (utils/gen-block-uid)
-                           :string     "a"
-                           :properties schema-properties}]
-                  {:block/uid uid
-                   :relation   {:page/title schema-key}})
-                 (composite/make-consequence-op {:op/type :new-type})
-                 athens.common-events/build-atomic-event)]
-    (rf/dispatch [:resolve-transact-forward evt]))
-
-
-
-;; create a bunch of block news 
-
-#_(let [parent-uid "e68edef87"
-        schema '(":block/uid"
-                 ":create/auth"
-                 ":create/time"
-                 ":last-edit/auth"
-                 ":last-edit/time"
-                 ":task/title"
-                 ":task/status"
-                 ":task/due-date"
-                 ":task/project"
-                 ":task/priority"
-                 ":task/assignee")]
-   (rf/dispatch [:properties/update-in [:block/uid parent-uid] ["athens/schema"]
-                 (fn [db prop-uid]
-                   (mapv #(graph-ops/build-block-new-op db
-                                                        (utils/gen-block-uid)
-                                                        {:block/uid prop-uid
-                                                         :relation {:page/title %}})
-                         schema)
-                   
-                   #_(graph-ops/build-block-move-op db "d51dabd91" {:block/uid parent-uid
-                                                                            :relation {:page/title "hey"}})
-                   #_[(graph-ops/build-block-save-op db prop-uid "desc")])]))
-
-(defn update-query-types-hook!
-  "TODO: When query component that new types have been detected,
-   update schema, order, and hidden properties."
-  [prev curr ratom schema uid prev-schema]
-  (when (not= prev curr)
-    (update-schema uid schema prev-schema)
-    (reset! ratom curr)))
-
-
-(defn save-query
-  [db block-uid position title description priority creator assignee due-date status project-relation]
-  (->> (bfs/internal-representation->atomic-ops
-        db
-        [#:block{:uid        (utils/gen-block-uid)
-                 :string     ""
-                 :properties {":block/type"
-                              #:block{:string "athens/task"
-                                      :uid    (utils/gen-block-uid)}
-                              ":task/title"
-                              #:block{:string title
-                                      :uid    (utils/gen-block-uid)}
-                              ":task/description"
-                              #:block{:string description
-                                      :uid    (utils/gen-block-uid)}
-                              ":task/priority"
-                              #:block{:string priority
-                                      :uid    (utils/gen-block-uid)}
-                              ":task/creator"
-                              #:block{:string creator
-                                      :uid    (utils/gen-block-uid)}
-                              ":task/assignee"
-                              #:block{:string assignee
-                                      :uid    (utils/gen-block-uid)}
-                              ":task/due-date"
-                              #:block{:string due-date
-                                      :uid    (utils/gen-block-uid)}
-                              ":task/status"
-                              #:block{:string status
-                                      :uid    (utils/gen-block-uid)}
-                              ":comment/project-relation"
-                              #:block{:string project-relation
-                                      :uid    (utils/gen-block-uid)}}}]
-        {:block/uid block-uid
-         :relation  position})
-       (composite/make-consequence-op {:op/type :new-type})))
-
-
-;; one difference between Notion and Athens queries is that we could have different inputs to the query
-;; but i don't think we should have different views over different types for one query. that could get confusing
-;; views should only deal with the middle and output, not inputs. because we want different views over the same DATA
-;; and different types lead to different queries
-
-;; i could either use the block/properties and re-add new block/uids (but would i have to strip the other meta-datas like edit/time)
-;; or map the parsed-properties back to the block/strings and such
-
-;; TODO: now save all these properties on another property
-;; is there an analog for `merge` such as we have with `:properties/update-in`?
-
-;; TODO: on clicking a different saved view, update all the current values
-
-#_(let [d {"query/properties-order" [":task/title" ":task/status" ":task/assignee" ":task/due-date" ":block/uid" ":task/project" ":task/priority" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time"], "query/types" "[[athens/task]]", "query/layout" "board", "query/subgroup-by" ":task/project", "query/group-by" ":task/status", ":block/type" "[[athens/query]]", "query/group-by-columns" ["todo" "doing" "done"], "query/sort-by" ":create/time", "query/properties-hide" {":create/auth" true, ":last-edit/auth" true, ":last-edit/time" true, ":task/priority" true, ":block/uid" true, ":task/due-date" true, ":task/assignee" true}, "query/sort-direction" "asc"}]
-   (->> (map (fn [[k v]]
-               [k
-                (merge
-                 {:block/uid (utils/gen-block-uid)}
-                 (cond
-                   (vector? v) {:block/children (mapv (fn [x] {:block/uid (utils/gen-block-uid)
-                                                               :block/string x}) v)}
-                   (map? v) {:block/properties (zipmap (map (fn [[k v]] k) v)
-                                                       (repeatedly (fn [] {:block/uid (utils/gen-block-uid)
-                                                                           :block/string ""})))}
-                   :else
-                   {:block/string v}))])
-             d)
-        flatten
-        (apply hash-map)))
+           (concat base-schema)))))
 
 
 ;; Views
@@ -483,7 +291,6 @@
                                 query-properties-hide)
         menuOptionGroupValue (keys query-properties-hide)
         menuOptionGroupValue (if (nil? menuOptionGroupValue) [] menuOptionGroupValue)]
-    ;; (prn "HIDE" query-properties-hide)
     [:> Stack {:direction "row" :spacing 5}
      [:> ButtonGroup
       (for [x ["table" "board"]]
@@ -494,11 +301,11 @@
          (clojure.string/capitalize x)])]
 
      [:> Controls {:isCheckedFn          #(get query-properties-hide %)
-                   :properties           schema
+                   :properties           []
                    :hiddenProperties     query-properties-hide
                    :menuOptionGroupValue menuOptionGroupValue
                    :onChange             #(toggle-hidden-property uid %)}]
-     [:> Button {:onClick #(prn parsed-properties)}
+     [:> Button {:onClick #(prn parsed-properties) :disabled true}
       [:> Heading {:size "sm"} "Save View"]]]))
 
 (defn query-el
@@ -508,8 +315,8 @@
         query-sort-by          (get parsed-properties "query/sort-by")
         query-sort-by          (parse-for-title query-sort-by)
         query-sort-direction   (get parsed-properties "query/sort-direction")
-        query-properties-hide  (get parsed-properties "query/properties-hide")]
-    ;; (prn query-data)
+        ;; TODO
+        query-properties-hide  (or (get parsed-properties "query/properties-hide") [])]
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case query-layout
        "board"
@@ -517,7 +324,7 @@
              query-group-by    (parse-for-title query-group-by)
              query-subgroup-by (get parsed-properties "query/subgroup-by")
              query-subgroup-by (parse-for-title query-subgroup-by)
-             columns           (get-reactive-property [:node/title query-group-by] ":property/values")
+             columns           (or (get-reactive-property [:node/title query-group-by] ":property/values") [])
              boardData         (if (and query-subgroup-by query-group-by)
                                  (group-stuff query-group-by query-subgroup-by query-data)
                                  (group-by query-group-by query-data))]
@@ -546,36 +353,28 @@
                          :dateFormatFn   #(dates/date-string %)}]))]))
 
 
+
+
 (defn query-block
   [block-data properties]
-  (let [last-query-types (r/atom nil)]
-    (fn [block-data properties]
-      (let [block-uid (:block/uid block-data)
-            parsed-properties (get-query-props properties)
-            query-types (get parsed-properties "query/types")
-            schema (get-schema query-types)
-            prev-schema (get parsed-properties "athens/schema")
-            query-group-by (get properties "query/group-by")
-            query-subgroup-by (get properties "query/subgroup-by")
-            query-data (->> (reactive/get-reactive-instances-of-key-value ":block/type" query-types)
-                            (map block-to-flat-map))]
-        
-        (update-query-types-hook! @last-query-types query-types last-query-types schema block-uid prev-schema)
-        
-        (cond
-          (nil? query-group-by) [:> Box {:color "red"} "Please add property query/group-by"]
-          (nil? query-subgroup-by) [:> Box {:color "red"} "Please add property query/subgroup-by"]
+  (let [block-uid (:block/uid block-data)
+        parsed-properties (get-query-props properties)
+        query-types (get parsed-properties "query/types")
+        schema (get-schema query-types)
+        query-data (->> (reactive/get-reactive-instances-of-key-value ":entity/type" query-types)
+                        (map block-to-flat-map))]
 
-          :else [:> Box {:width        "100%" #_#_:border "1px" :borderColor "gray"
-                         :padding-left 38 :padding-top 15}
-                 [options-el {:parsed-properties parsed-properties
-                              :properties properties
-                              :schema schema
-                              :query-data        query-data
-                              :uid               block-uid}]
-                 [query-el {:query-data        query-data
-                            :uid               block-uid
-                            :schema schema
-                            :parsed-properties parsed-properties}]])))))
+
+    [:> Box {:width        "100%" :borderColor "gray"
+             :padding-left 38 :padding-top 15}
+      [options-el {:parsed-properties parsed-properties}
+           :properties properties
+           :schema schema
+           :query-data        query-data
+           :uid               block-uid]
+      [query-el {:query-data        query-data}
+         :uid               block-uid
+         :schema schema
+         :parsed-properties parsed-properties]]))
 
 

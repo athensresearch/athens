@@ -172,7 +172,7 @@
                           key
                           properties
                           _refs] :as block-data} (reactive/get-reactive-block-document [:block/uid uid])
-            entity-type (get-in properties [":block/type" :block/string])
+            entity-type (get-in properties [":entity/type" :block/string])
             reactions-enabled?    (:reactions @feature-flags)
             user-id               (or (:username @(rf/subscribe [:presence/current-user]))
                                       ;; We use empty string for when there is no user information, like in PKM.
