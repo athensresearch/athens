@@ -13,8 +13,10 @@ import {
   DailyNotesIcon,
   GraphIcon,
   EllipsisHorizontalCircleIcon,
+  CheckmarkIcon,
   ViewIcon,
-  ViewOffIcon
+  ViewOffIcon,
+  ChatFilledIcon
 
 } from '@/Icons/Icons';
 
@@ -36,6 +38,7 @@ import {
   useColorMode,
   useMediaQuery
 } from '@chakra-ui/react';
+
 
 import { WindowButtons } from './components/WindowButtons';
 
@@ -77,7 +80,7 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
   gridArea="app-header"
   borderBottom="1px solid transparent"
   justifyContent="space-between"
-  overflow="hidden"
+  // overflow="hidden"
   py={1}
   px={1}
   h={6}
@@ -196,6 +199,10 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   * Whether the theme is set to dark mode
   */
   isThemeDark: boolean;
+  /**
+  * Whether comments should be shown
+  */
+  isShowComments: boolean;
   // Electron only
   onPressMinimize?(): void;
   onPressClose?(): void;
@@ -203,6 +210,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   onPressFullscreen?(): void;
   onPressHistoryBack(): void;
   onPressHistoryForward(): void;
+  onClickComments(): void;
   // Main toolbar
   onPressCommandBar(): void;
   onPressDailyNotes(): void;
@@ -215,13 +223,15 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   onPressHistoryForward(): void;
   onPressLeftSidebarToggle(): void;
   onPressRightSidebarToggle(): void;
+  onPressNotification(): void;
   databaseMenu?: React.FC;
+  notificationPopover?: React.FC;
   presenceDetails?: React.FC;
 }
 
 const SecondaryToolbarItems = (items) => {
   return <ButtonGroup size="sm">
-    {items.map((item) => <Tooltip label={item.label} key={item.label}>
+    {items.filter(x => !!x).map((item) => <Tooltip label={item.label} key={item.label}>
       <ToolbarIconButton variant="ghost" colorScheme="subtle" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
         {item.icon}
       </ToolbarIconButton>
@@ -235,7 +245,7 @@ const SecondaryToolbarOverflowMenu = (items) => {
       <ToolbarIconButton size="sm" as={MenuButton} isActive={isOpen}><EllipsisHorizontalCircleIcon /></ToolbarIconButton>
       <Portal>
         <MenuList>
-          {items.map((item) => (<MenuItem
+          {items.filter(x => !!x).map((item) => (<MenuItem
             key={item.label}
             onClick={item.onClick}
             icon={item.icon}
@@ -264,8 +274,9 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isLeftSidebarOpen,
     isRightSidebarOpen,
     isCommandBarOpen,
-    isShowInlineComments,
-    onClickInlineComments: handleClickInlineComments,
+    isShowComments,
+    isNotificationsPopoverOpen,
+    onClickComments: handleClickComments,
     onPressCommandBar: handlePressCommandBar,
     onPressDailyNotes: handlePressDailyNotes,
     onPressAllPages: handlePressAllPages,
@@ -280,7 +291,10 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressMinimize: handlePressMinimize,
     onPressMaximizeRestore: handlePressMaximizeRestore,
     onPressClose: handlePressClose,
+    onClickNotifications: handleShowNotifications,
+    handlePressNotifications,
     databaseMenu,
+    notificationPopover,
     presenceDetails,
     ...rest
   } = props;
@@ -295,9 +309,15 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     } else if (!isThemeDark && colorMode !== 'light') {
       toggleColorMode()
     }
-  }, [isThemeDark, toggleColorMode])
+  }, [isThemeDark, toggleColorMode]);
 
   const secondaryTools = [
+    handleClickComments && {
+      label: isShowComments ? "Hide comments" : "Show comments",
+      isActive: isShowComments,
+      onClick: handleClickComments,
+      icon: <ChatFilledIcon />
+    },
     {
       label: "Help",
       isActive: isHelpOpen,
@@ -321,21 +341,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       icon: <RightSidebarIcon />
     }
   ];
-
-  if (handleClickInlineComments) {
-    secondaryTools.unshift({
-     label: "Hide comments",
-     isActive: !isShowInlineComments,
-     onClick: handleClickInlineComments,
-     icon: <ViewOffIcon/>
-    });
-    secondaryTools.unshift({
-     label: "Show comments",
-     isActive: isShowInlineComments,
-     onClick: handleClickInlineComments,
-     icon: <ViewIcon/>
-    });
-  }
 
   return (
     <AppToolbarWrapper
@@ -401,6 +406,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               <GraphIcon />
             </ToolbarIconButton>
           </Tooltip>
+
+
           <ToolbarButton
             aria-label="Search"
             variant="outline"
@@ -415,9 +422,11 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
         {presenceDetails}
 
+        {notificationPopover}
+
         {canShowFullSecondaryMenu
           ? SecondaryToolbarItems(secondaryTools)
-          : SecondaryToolbarOverflowMenu(secondaryTools)}0
+          : SecondaryToolbarOverflowMenu(secondaryTools)}
 
       </HStack>
       {isElectron && (os === 'windows' || os === 'linux') && (

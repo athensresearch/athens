@@ -40,6 +40,13 @@
         second)))
 
 
+(rf/reg-sub
+  :presence/current-username
+  :<- [:presence/current-user]
+  (fn [current-user _]
+    (:username current-user)))
+
+
 (defn on-page-uid?
   [page-uid [_username user]]
   (= page-uid (:page/uid user)))

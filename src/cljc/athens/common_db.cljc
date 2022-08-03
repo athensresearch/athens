@@ -860,7 +860,8 @@
   "Remove `start` and `end` from s if present.
    Returns nil if markup was not present."
   [s start end]
-  (when (and (string/starts-with? s start)
+  (when (and (string? s)
+             (string/starts-with? s start)
              (string/ends-with? s end))
     (subs s (count start) (- (count s) (count end)))))
 

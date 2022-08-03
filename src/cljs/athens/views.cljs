@@ -9,9 +9,9 @@
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.help :refer [help-popup]]
-    #_[athens.views.jetsam :as jetsam]
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
+    [athens.views.pages.settings :as settings]
     [athens.views.right-sidebar :as right-sidebar]
     [re-frame.core :as rf]))
 
@@ -29,7 +29,8 @@
 (defn main
   []
   (let [loading    (rf/subscribe [:loading?])
-        modal      (rf/subscribe [:modal])]
+        modal      (rf/subscribe [:modal])
+        settings-open? (rf/subscribe [:settings/open?])]
     (fn []
       [:div (merge {:style {:display "contents"}}
                    (zoom))
@@ -54,7 +55,11 @@
             [:> Spinner {:size "xl"}]]]
 
           :else [:<>
-                 (when @modal [db-modal/window])
+                 (when @modal
+                   [db-modal/window])
+                 (when @settings-open?
+                   [settings/page])
+
                  [:> Grid
                   {:gridTemplateColumns "auto 1fr auto"
                    :gridTemplateRows "auto 1fr auto"
@@ -71,5 +76,4 @@
                   [app-toolbar/app-toolbar]
                   [left-sidebar/left-sidebar]
                   [pages/view]
-                  #_[jetsam/jetsam-component]
                   [right-sidebar/right-sidebar]]])]])))

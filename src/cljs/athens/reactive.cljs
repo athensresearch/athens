@@ -134,8 +134,7 @@
                  {:block/children [:block/uid :block/order]}
                  {:block/create [{:event/time [:time/ts]}
                                  {:event/auth [:presence/id]}]}
-                 {:block/edits [{:event/time [:time/ts]}
-                                {:event/auth [:presence/id]}]}]
+                 {:block/edits [{:event/time [:time/ts]}]}]
                recursive-properties-document-pull-vector)))
 
 
@@ -166,13 +165,12 @@
        (sort-by first)))
 
 
-
 (defntrace get-reactive-block-or-page-by-uid
   [uid]
   @(p/pull db/dsdb '[:node/title :block/string :db/id] [:block/uid uid]))
 
 
-#_(defn get-reactive-instances-of-key-value
+#_(defn get-reactive-instances-of-key-value)
   "Does lookups based on ref value, not string value"
   [k v]
   (->> @(p/q '[:find [?parent ...]
@@ -184,20 +182,20 @@
                [?p :node/title ?value]
                [?eid :block/property-of ?parent]]
              athens.db/dsdb k v)
-       (mapv get-reactive-block-document)))
+       (mapv get-reactive-block-document))
 
 
 (defn get-reactive-instances-of-key-value
   "Find all blocks that have key-value matching where
   key is a string and value is a string, then find that property block's parent."
   [k v]
-  (->> @(p/q '[:find [?parent ...]
+  (->> @(p/q '[:find [?parent ...]]
               :in $ ?key ?value
               :where
               [?eid :block/key ?k]
               [?k :node/title ?key]
               [?eid :block/string ?value]
-              [?eid :block/property-of ?parent]]
+              [?eid :block/property-of ?parent]
             athens.db/dsdb k v)
        (mapv get-reactive-block-document)))
 
@@ -219,6 +217,8 @@
 
 (comment
   ;; Print what ratoms are active.
-  (-> (ratoms) utils/spy)
-  ;;
-  )
+  (-> (ratoms) utils/spy))
+
+
+;;
+
