@@ -1,10 +1,18 @@
 (ns athens.views.query
   (:require
    ["/components/Query/KanbanBoard" :refer [QueryKanban]]
+   [com.rpl.specter :as s]
    ["/components/Query/Table" :refer [QueryTable]]
    ["/components/Query/Query" :refer [Controls QueryRadioMenu]]
+   ["/components/References/References" :refer [ReferenceBlock ReferenceGroup]]
    ["@chakra-ui/react" :refer [Box
                                Button
+                               HStack
+                               VStack
+                               Toggle
+                               Breadcrumb
+                               BreadcrumbItem
+                               BreadcrumbLink
                                ButtonGroup
                                ListItem
                                UnorderedList
@@ -24,6 +32,9 @@
    [clojure.string            :refer [lower-case]]
    [re-frame.core             :as rf]
    [athens.common-events.bfs :as bfs]
+   [athens.parse-renderer :as parse-renderer]
+   ;;[athens.views.pages.node-page :as node-page]
+   [athens.util :as util]
    [athens.common.utils :as utils]
    [reagent.core :as r]))
 
@@ -232,7 +243,9 @@
 (def default-props
   {"query/layout" "table"
    ":entity/type" "[[athens/query]]"
-   "query/type" "[[athens/comment-thread]]"})
+   "query/type" "[[athens/comment-thread]]"
+   "query/filter-author" "None"
+   "query/special-filters" "None"})
 
 
 (defn get-query-props
@@ -304,8 +317,75 @@
 (def entity-types
   (keys SCHEMA))
 
+(def AUTHORS
+  ["None" "Sid" "Jeff" "Stuart" "Filipe" "Alex"])
+
+(def LAYOUTS
+  ["table" "board" "list"])
+
 ;; Views
 
+(defn get-merged-breadcrumbs
+  [uids]
+  (->> uids
+       (map #(datascript.core/entity @db/dsdb [:block/uid %]))
+       (mapv :db/id)
+       (db/eids->groups)
+       vec))
+
+
+(defn ref-comp
+  [block]
+  (let [
+        state           (r/atom {:block    (db/get-comment-threads-for-query @db/dsdb (:block/uid block))
+                                 :embed-id (random-uuid)
+                                 :parents  (rest (:block/parents block))})
+        linked-ref-data {:linked-ref     true
+                         :initial-open   true
+                         :linked-ref-uid (:block/uid block)
+                         :parent-uids    (set (map :block/uid (:block/parents block)))}]
+    (fn [_]
+      (let [{:keys [block parents embed-id]} @state]
+        [:> VStack {:spacing 0
+                    :align "stretch"}
+         [:> Breadcrumb {:fontSize "sm"
+                         :variant "strict"
+                         :color "foreground.secondary"}
+          (doall
+            (for [{:keys [block/uid]} parents]
+              [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
+               [:> BreadcrumbLink
+                {:onClick #(let [new-B (db/get-block [:block/uid uid])
+                                 new-P (drop-last parents)]
+                             (swap! state assoc :block new-B :parents new-P))}
+                [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb uid) uid]]]))]
+         [:> Box {:class "block-embed"}
+          [athens.views.blocks.core/block-el
+           (util/recursively-modify-block-for-embed block embed-id)
+           linked-ref-data
+           {:block-embed? true}]]]))))
+
+(defn breadcrumbs-el
+  [linked-refs]
+  (when (seq linked-refs)
+    (doall
+      [:div
+       (for [[group-title group] linked-refs]
+         [:> ReferenceGroup {:key          (str "group-" group-title)
+                             :title        group-title
+                             :onClickTitle (fn [e]
+                                             (let [shift?       (.-shiftKey e)
+                                                   parsed-title (athens.parse-renderer/parse-title group-title)]
+                                               (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
+                                                                                    :target :page
+                                                                                    :pane   (if shift?
+                                                                                              :right-pane
+                                                                                              :main-pane)}])
+                                               (router/navigate-page parsed-title)))}
+          (doall
+            (for [block group]
+              [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
+               [ref-comp block]]))])])))
 
 (defn options-el
   [{:keys [properties parsed-properties uid schema]}]
@@ -328,12 +408,12 @@
                          :value    query-type}]
 
      [:> QueryRadioMenu {:heading "Layout"
-                         :options ["table" "board" "outliner"]
+                         :options LAYOUTS
                          :onChange #(update-layout uid %)
                          :value query-layout}]
 
      [:> QueryRadioMenu {:heading "Filter By Author"
-                         :options ["None" "Sid" "Jeff" "Stuart" "Filipe" "Alex"]
+                         :options AUTHORS
                          :onChange #(update-filter-author uid %)
                          :value query-filter-author}]
 
@@ -361,9 +441,13 @@
         query-special-filters  (get parsed-properties "query/special-filters")
 
         filter-author-fn       (fn [x]
-                                 (or (= query-filter-author "None")
-                                     (= query-filter-author
-                                        (get x ":create/auth"))))
+                                 (let [entity-author (get x ":create/auth")]
+                                   (and (not= query-filter-author "None")
+                                        (= query-filter-author
+                                           entity-author))))
+
+
+
         special-filter-fn      (fn [x]
                                  (cond
                                    (= query-special-filters "On this page") (let [comment-uid (get x ":block/uid")
@@ -409,25 +493,29 @@
                             :onAddNewColumn  #(new-kanban-column query-group-by)
                             :onAddNewProjectClick (fn [])}])
 
-       ;; for comment, get parent of parent
        ;; what about groupBy page or something
-       "outliner"
-       (let [uids (map #(get % ":block/uid") query-data)
-             comments-data (map #(db/get-comment-for-query @db/dsdb %) uids)]
-         ;; only works for comments
-         [:> Box {:borderWidth "1px" :borderRadius "lg"}
-          (for [comment comments-data]
-            ;; needs breadcrumbs
-            [athens.views.blocks.core/block-el
-             comment])])
+
+       "list"
+       (let [uids    (map #(get % ":block/uid") query-data)
+             threads (map #(db/get-comment-threads-for-query @db/dsdb %) uids)
+             merged-parents (get-merged-breadcrumbs uids)]
+             ;; only works for comments
+            [:> Box {:borderWidth "1px" :borderRadius "lg"}
+             [breadcrumbs-el merged-parents]
+             #_(for [thread threads]
+                 [athens.views.blocks.core/block-el thread])])
+
 
        [:> QueryTable {:data           query-data
                        :columns        schema
                        :onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
                        :sortBy         query-sort-by
                        :sortDirection  query-sort-direction
+                       :rowCount       (count query-data)
                        :hideProperties query-properties-hide
                        :dateFormatFn   #(dates/date-string %)}])]))
+
+
 
 (defn invalid-query?
   [parsed-props]
@@ -436,6 +524,9 @@
     (and (= layout "board")
          (nil? groupBy))))
 
+;; TODO: fix proeprties
+;; clicking on them can add an SVG somehow
+;; and then if there are block/children, it is no bueno
 
 (defn query-block
   [block-data properties]

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Box, Table, Thead, Tbody, Th, Td, Tr } from '@chakra-ui/react';
+import { Button, Box, Table, Thead, Tbody, Th, Td, Tr, Tfoot } from '@chakra-ui/react';
 import { AddCardButton } from '../KanbanBoard/KanbanBoard'
 import { ChevronDownIcon, ChevronUpIcon } from '@/Icons/Icons';
 
@@ -10,7 +10,7 @@ const isDateFn = (value) => {
 
 
 export const QueryTable = (props) => {
-    const { data, columns, dateFormatFn, onClickSort, sortBy, sortDirection, hideProperties } = props;
+    const { data, columns, dateFormatFn, onClickSort, sortBy, sortDirection, hideProperties, rowCount } = props;
     return (columns && columns.length > 0 && <Box>
         <Table>
             <Thead>
@@ -35,11 +35,17 @@ export const QueryTable = (props) => {
                 })}
                 </Tr>})}
             </Tbody>
+            <Tfoot>
+                <Tr>
+                    <Th>
+                        Count: {rowCount}
+                    </Th>
+                </Tr>
+            </Tfoot>
         </Table>
         <Button display="flex" width="100%" onClick={()=>console.log("TODO: onAddNewCardClick on table view.")}>
             + New
         </Button>
         {/* <AddCardButton column={null} onAddNewCardClick={null} /> */}
-
     </Box>)
 }

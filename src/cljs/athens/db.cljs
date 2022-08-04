@@ -654,7 +654,7 @@
                              :string new-string
                              :source source}]))
 
-(defn get-comment-for-query
+(defn get-comment-threads-for-query
   [db uid]
   (->> (d/q '[:find ?p .
               :in $ ?uid
