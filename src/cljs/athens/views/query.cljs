@@ -168,6 +168,17 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-type)])]))
 
+(defn update-filter-author
+  [uid author]
+  (rf/dispatch [:properties/update-in [:block/uid uid] ["query/filter-author"]
+                (fn [db prop-uid]
+                  [(graph-ops/build-block-save-op db prop-uid author)])]))
+
+(defn update-special-filters
+  [uid special-filter]
+  (rf/dispatch [:properties/update-in [:block/uid uid] ["query/special-filters"]
+                (fn [db prop-uid]
+                  [(graph-ops/build-block-save-op db prop-uid special-filter)])]))
 
 (defn toggle-hidden-property
   "If property is hidden, remove key. Otherwise, add property key."
@@ -299,8 +310,11 @@
 (defn options-el
   [{:keys [properties parsed-properties uid schema]}]
   (let [query-layout           (get parsed-properties "query/layout")
+        query-type             (get parsed-properties "query/type")
         query-properties-order (get parsed-properties "query/properties-order")
         query-properties-hide  (get parsed-properties "query/properties-hide")
+        query-filter-author    (get parsed-properties "query/filter-author")
+        query-special-filters  (get parsed-properties "query/special-filters")
         query-properties-hide (if (clojure.string/blank? query-properties-hide)
                                 {}
                                 query-properties-hide)
@@ -310,13 +324,23 @@
 
      [:> QueryRadioMenu {:heading "Entity Type"
                          :options entity-types
-                         :onChange #(update-entity-type uid %)}]
+                         :onChange #(update-entity-type uid %)
+                         :value    query-type}]
 
      [:> QueryRadioMenu {:heading "Layout"
                          :options ["table" "board" "outliner"]
                          :onChange #(update-layout uid %)
                          :value query-layout}]
 
+     [:> QueryRadioMenu {:heading "Filter By Author"
+                         :options ["None" "Sid" "Jeff" "Stuart" "Filipe" "Alex"]
+                         :onChange #(update-filter-author uid %)
+                         :value query-filter-author}]
+
+     [:> QueryRadioMenu {:heading "Special Filters"
+                          :options ["None" "On this page" #_"Created in the past week"]
+                          :onChange #(update-special-filters uid %)
+                          :value query-special-filters}]
 
      [:> Controls {:isCheckedFn          #(get query-properties-hide %)
                    :properties           schema
@@ -333,6 +357,29 @@
         query-sort-by          (get parsed-properties "query/sort-by")
         query-sort-by          (parse-for-title query-sort-by)
         query-sort-direction   (get parsed-properties "query/sort-direction")
+        query-filter-author    (get parsed-properties "query/filter-author")
+        query-special-filters  (get parsed-properties "query/special-filters")
+
+        filter-author-fn       (fn [x]
+                                 (or (= query-filter-author "None")
+                                     (= query-filter-author
+                                        (get x ":create/auth"))))
+        special-filter-fn      (fn [x]
+                                 (cond
+                                   (= query-special-filters "On this page") (let [comment-uid (get x ":block/uid")
+                                                                                  comments-parent-page (-> (db/get-root-parent-page comment-uid)
+                                                                                                           :node/title)
+                                                                                  current-page-of-query (-> (db/get-root-parent-page uid)
+                                                                                                            :node/title)]
+                                                                              (= comments-parent-page current-page-of-query))
+                                   :else true))
+
+        query-data             (filterv special-filter-fn query-data)
+        query-data             (filterv filter-author-fn query-data)
+
+        query-data             (sort-table query-data query-sort-by query-sort-direction)
+
+
         ;; TODO
         query-properties-hide  (or (get parsed-properties "query/properties-hide") [])]
     [:> Box {#_#_:margin-top "40px" :width "100%"}
@@ -368,21 +415,19 @@
        (let [uids (map #(get % ":block/uid") query-data)
              comments-data (map #(db/get-comment-for-query @db/dsdb %) uids)]
          ;; only works for comments
-         ;; how would i do filters for author
-         ;; how would i create a UI for it
-         (for [comment comments-data]
-           ;; needs breadcrumbs
-           [athens.views.blocks.core/block-el
-             comment]))
+         [:> Box {:borderWidth "1px" :borderRadius "lg"}
+          (for [comment comments-data]
+            ;; needs breadcrumbs
+            [athens.views.blocks.core/block-el
+             comment])])
 
-       (let [sorted-data (sort-table query-data query-sort-by query-sort-direction)]
-         [:> QueryTable {:data           sorted-data
-                         :columns        schema
-                         :onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
-                         :sortBy         query-sort-by
-                         :sortDirection  query-sort-direction
-                         :hideProperties query-properties-hide
-                         :dateFormatFn   #(dates/date-string %)}]))]))
+       [:> QueryTable {:data           query-data
+                       :columns        schema
+                       :onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
+                       :sortBy         query-sort-by
+                       :sortDirection  query-sort-direction
+                       :hideProperties query-properties-hide
+                       :dateFormatFn   #(dates/date-string %)}])]))
 
 (defn invalid-query?
   [parsed-props]
@@ -401,18 +446,18 @@
         query-data        (->> (reactive/get-reactive-instances-of-key-value ":entity/type" query-type)
                                (map block-to-flat-map))]
 
-       (if (invalid-query? parsed-properties)
-         [:> Box {:color "red"} "invalid query"]
-         [:> Box {:width        "100%" :borderColor "gray"
-                  :padding-left 38 :padding-top 15}
-           [options-el {:parsed-properties parsed-properties
-                        :properties        properties
-                        :schema            schema
-                        :query-data        query-data
-                        :uid               block-uid}]
-           [query-el {:query-data        query-data
-                      :uid               block-uid
-                      :schema            schema
-                      :parsed-properties parsed-properties}]])))
+    (if (invalid-query? parsed-properties)
+      [:> Box {:color "red"} "invalid query"]
+      [:> Box {:width        "100%" :borderColor "gray"
+               :padding-left 38 :padding-top 15}
+        [options-el {:parsed-properties parsed-properties
+                     :properties        properties
+                     :schema            schema
+                     :query-data        query-data
+                     :uid               block-uid}]
+        [query-el {:query-data        query-data
+                   :uid               block-uid
+                   :schema            schema
+                   :parsed-properties parsed-properties}]])))
 
 

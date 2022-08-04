@@ -51,3 +51,11 @@ export const QueryRadioMenu = (props) => {
     </Menu>
   );
 }
+
+export const AuthorFilter = (props) => {
+    return 1
+}
+
+export const ThisPageFilter = (props) => {
+    return 1
+}
