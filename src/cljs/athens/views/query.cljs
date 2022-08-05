@@ -442,8 +442,8 @@
 
         filter-author-fn       (fn [x]
                                  (let [entity-author (get x ":create/auth")]
-                                   (and (not= query-filter-author "None")
-                                        (= query-filter-author
+                                   (or (= query-filter-author "None")
+                                       (= query-filter-author
                                            entity-author))))
 
 
