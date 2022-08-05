@@ -59,18 +59,24 @@
 
 
 (def DEFAULT-PROPS
-  {":entity/type" "[[athens/query]]"
-   "athens/query/layout" "table"
-   "athens/query/select" "[[athens/comment-thread]]"
-   "athens/query/filter/author" "None"
-   "athens/query/filter/special" "None"
-   "athens/query/sort/by" ":create/time"
-   "athens/query/sort/direction" "desc"
-   "athens/query/group/by" ":create/auth"
-   "athens/query/group/subgroup/by" ":create/auth"})
-;; TODO
-;;("athens/query/properties/order")
-;;("athens/query/properties/hide")
+  {":entity/type"                   "[[athens/query]]"
+   "athens/query/layout"            "table"
+   "athens/query/select"            "[[athens/comment-thread]]"
+   "athens/query/filter/author"     "None"
+   "athens/query/filter/special"    "None"
+   "athens/query/sort/by"           ":create/time"
+   "athens/query/sort/direction"    "desc"
+   "athens/query/group/by"          ":create/auth"
+   "athens/query/group/subgroup/by" ":create/auth"
+   "athens/query/properties/hide"   {}
+   "athens/query/properties/order" nil})
+
+(defn get*
+  [hm ks]
+  (->> (map #(str "athens/query/" %) ks)
+       (map #(get hm %))))
+
+
 
 ;; Helpers
 
@@ -171,11 +177,7 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
-(defn update-layout
-  [id new-layout]
-  (rf/dispatch [:properties/update-in [:block/uid id] ["athens/query/layout"]
-                (fn [db prop-uid]
-                  [(graph-ops/build-block-save-op db prop-uid new-layout)])]))
+
 
 (defn update-many-properties
   [db key value new-value]
@@ -213,9 +215,11 @@
 
 (defn update-query-property
   [uid key new-value]
-  (rf/dispatch [:properties/update-in [:block/uid uid] [key]
-                 (fn [db prop-uid]
-                   [(graph-ops/build-block-save-op db prop-uid new-value)])]))
+  (let [namespaced-key (str "athens/query/" key)]
+    (rf/dispatch [:properties/update-in [:block/uid uid] [namespaced-key]
+                   (fn [db prop-uid]
+                     [(graph-ops/build-block-save-op db prop-uid new-value)])])))
+
 
 (defn toggle-hidden-property
   "If property is hidden, remove key. Otherwise, add property key."
@@ -252,7 +256,7 @@
                         :else string)))
         {})
        (merge DEFAULT-PROPS)))
-    
+
 
 (defn get-reactive-property
   [eid property-key]
@@ -365,53 +369,42 @@
               [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
                [ref-comp block]]))])])))
 
+
+
 (defn options-el
   [{:keys [properties parsed-properties uid schema]}]
-  (let [query-layout           (get parsed-properties "athens/query/layout")
-        query-type             (get parsed-properties "athens/query/select")
-        query-properties-order (get parsed-properties "athens/query/properties/order")
-        query-properties-hide  (get parsed-properties "athens/query/properties/hide")
-        query-filter-author    (get parsed-properties "athens/query/filter/author")
-        query-special-filters  (get parsed-properties "athens/query/filter/special")
-        query-sort-by          (get parsed-properties "athens/query/sort/by")
-        query-sort-by          (parse-for-title query-sort-by)
-        query-sort-direction   (get parsed-properties "athens/query/sort/direction")
-        query-properties-hide (if (clojure.string/blank? query-properties-hide)
-                                {}
-                                query-properties-hide)
-        menuOptionGroupValue (keys query-properties-hide)
-        menuOptionGroupValue (if (nil? menuOptionGroupValue) [] menuOptionGroupValue)]
+  (let [[layout select p-order p-hide f-author f-special s-by s-direction] (get* parsed-properties ["layout" "select" "properties/order" "properties/hide" "filter/author" "filter/special" "sort/by" "sort/direction"])
+        s-by       (parse-for-title s-by)
+        menus-data [{:heading  "Entity Type"
+                     :options  entity-types
+                     :onChange #(update-query-property uid "select" %)
+                     :value    select}
+                    {:heading  "Layout"
+                     :options  LAYOUTS
+                     :onChange #(update-query-property uid "layout" %)
+                     :value    layout}
+                    {:heading  "Filter By Author"
+                     :options  AUTHORS
+                     :onChange #(update-query-property uid "filter/author" %)
+                     :value    f-author}
+                    {:heading  "Special Filters"
+                     :options  ["None" "On this page"]
+                     :onChange #(update-query-property uid "filter/special" %)
+                     :value    f-special}
+                    {:heading  "Sort By"
+                     :options  schema
+                     :onChange #(update-query-property uid "sort/by" %)
+                     :value    s-by}
+                    {:heading  "Sort Direction"
+                     :options  ["asc" "desc"]
+                     :onChange #(update-query-property uid "sort/direction" %)
+                     :value    s-direction}]]
     [:> Stack {:direction "row" :spacing 5}
+     (for [menu menus-data]
+       (let [{:keys [heading options onChange value]} menu]
+         [:> QueryRadioMenu {:key heading :heading heading :options options :onChange onChange :value value}]))
 
-     [:> QueryRadioMenu {:heading "Entity Type"
-                         :options entity-types
-                         :onChange #(update-query-property uid "athens/query/select" %)
-                         :value    query-type}]
 
-     [:> QueryRadioMenu {:heading "Layout"
-                         :options LAYOUTS
-                         :onChange #(update-layout uid %)
-                         :value query-layout}]
-
-     [:> QueryRadioMenu {:heading "Filter By Author"
-                         :options AUTHORS
-                         :onChange #(update-query-property uid "athens/query/filter/author" %)
-                         :value query-filter-author}]
-
-     [:> QueryRadioMenu {:heading "Special Filters"
-                          :options ["None" "On this page" #_"Created in the past week"]
-                          :onChange #(update-query-property uid "athens/query/filter/special" %)
-                          :value query-special-filters}]
-
-     [:> QueryRadioMenu {:heading  "Sort By"
-                         :options  schema
-                         :onChange #(update-query-property uid "athens/query/sort/by" %)
-                         :value    query-sort-by}]
-
-     [:> QueryRadioMenu {:heading "Sort Direction"
-                         :options ["asc" "desc"]
-                         :onChange #(update-query-property uid "athens/query/sort/direction" %)
-                         :value query-sort-direction}]
 
      #_[:> Controls {:isCheckedFn          #(get query-properties-hide %)
                      :properties           schema
@@ -423,66 +416,53 @@
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
-  (let [query-layout           (get parsed-properties "athens/query/layout")
-        query-properties-order (get parsed-properties "athens/query/properties/order")
-        query-sort-by          (get parsed-properties "athens/query/sort/by")
-        query-sort-by          (parse-for-title query-sort-by)
-        query-sort-direction   (get parsed-properties "athens/query/sort/direction")
-        query-filter-author    (get parsed-properties "athens/query/filter/author")
-        query-special-filters  (get parsed-properties "athens/query/filter/special")
-
+  (let [[layout s-by s-direction f-author f-special p-order p-hide]     (get* parsed-properties ["layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
+        s-by          (parse-for-title s-by)
         filter-author-fn       (fn [x]
                                  (let [entity-author (get x ":create/auth")]
-                                   (or (= query-filter-author "None")
-                                       (= query-filter-author
-                                           entity-author))))
-
-
-
+                                   (or (= f-author "None")
+                                       (= f-author
+                                          entity-author))))
         special-filter-fn      (fn [x]
                                  (cond
-                                   (= query-special-filters "On this page") (let [comment-uid (get x ":block/uid")
-                                                                                  comments-parent-page (-> (db/get-root-parent-page comment-uid)
-                                                                                                           :node/title)
-                                                                                  current-page-of-query (-> (db/get-root-parent-page uid)
-                                                                                                            :node/title)]
-                                                                              (= comments-parent-page current-page-of-query))
+                                   (= f-special "On this page") (let [comment-uid (get x ":block/uid")
+                                                                      comments-parent-page (-> (db/get-root-parent-page comment-uid)
+                                                                                               :node/title)
+                                                                      current-page-of-query (-> (db/get-root-parent-page uid)
+                                                                                                :node/title)]
+                                                                  (= comments-parent-page current-page-of-query))
                                    :else true))
 
         query-data             (filterv special-filter-fn query-data)
         query-data             (filterv filter-author-fn query-data)
 
-        query-data             (sort-table query-data query-sort-by query-sort-direction)
-
-
-        ;; TODO
-        query-properties-hide  (or (get parsed-properties "athens/query/properties/hide") [])]
+        query-data (sort-table query-data s-by s-direction)]
+    ;; TODO
     [:> Box {#_#_:margin-top "40px" :width "100%"}
-     (case query-layout
+     (case layout
        "board"
-       (let [query-group-by    (get parsed-properties "athens/query/group/by")
-             query-group-by    (parse-for-title query-group-by)
-             query-subgroup-by (get parsed-properties "athens/query/group/subgroup/by")
-             query-subgroup-by (parse-for-title query-subgroup-by)
+       (let [[group-by subgroup-by] (get* parsed-properties ["group/by" "subgroup/by"])
+             query-group-by    (parse-for-title group-by)
+             query-subgroup-by (parse-for-title subgroup-by)
              columns           (or (get-reactive-property [:node/title query-group-by] ":property/values") [])
              boardData         (if (and query-subgroup-by query-group-by)
                                  (group-stuff query-group-by query-subgroup-by query-data)
                                  (group-by query-group-by query-data))]
          [:> QueryKanban {:boardData            boardData
                           ;; store column order here
-                            :columns              columns
-                            :hasSubGroup          (boolean query-subgroup-by)
-                            :onUpdateStatusClick  update-status
-                            :hideProperties       query-properties-hide
-                            :onAddNewCardClick    new-card
-                            :groupBy              query-group-by
-                            :subgroupBy           query-subgroup-by
-                            :filter               nil
-                            :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
-                            :onUpdateTaskTitle    update-task-title
-                            :onUpdateKanbanColumn update-kanban-column
-                            :onAddNewColumn  #(new-kanban-column query-group-by)
-                            :onAddNewProjectClick (fn [])}])
+                          :columns              columns
+                          :hasSubGroup          (boolean query-subgroup-by)
+                          :onUpdateStatusClick  update-status
+                          :hideProperties       p-hide
+                          :onAddNewCardClick    new-card
+                          :groupBy              query-group-by
+                          :subgroupBy           query-subgroup-by
+                          :filter               nil
+                          :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
+                          :onUpdateTaskTitle    update-task-title
+                          :onUpdateKanbanColumn update-kanban-column
+                          :onAddNewColumn       #(new-kanban-column query-group-by)
+                          :onAddNewProjectClick (fn [])}])
 
        ;; what about groupBy page or something
 
@@ -500,20 +480,19 @@
        [:> QueryTable {:data           query-data
                        :columns        schema
                        ;;:onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
-                       :sortBy         query-sort-by
-                       :sortDirection  query-sort-direction
+                       :sortBy         s-by
+                       :sortDirection  s-direction
                        :rowCount       (count query-data)
-                       :hideProperties query-properties-hide
+                       :hideProperties p-hide
                        :dateFormatFn   #(dates/date-string %)}])]))
 
 
 
 (defn invalid-query?
   [parsed-props]
-  (let [layout (get parsed-props "athens/query/layout")
-        groupBy (get parsed-props "athens/query/group/by")]
+  (let [[layout group-by] (get* parsed-props ["layout" "group/by"])]
     (and (= layout "board")
-         (nil? groupBy))))
+         (nil? group-by))))
 
 ;; TODO: fix proeprties
 ;; clicking on them can add an SVG somehow
@@ -523,9 +502,9 @@
   [block-data properties]
   (let [block-uid         (:block/uid block-data)
         parsed-properties (get-query-props properties)
-        query-type        (get parsed-properties "athens/query/select")
-        schema            (get-schema query-type)
-        query-data        (->> (reactive/get-reactive-instances-of-key-value ":entity/type" query-type)
+        [select] (get* parsed-properties ["select"])
+        schema            (get-schema select)
+        query-data        (->> (reactive/get-reactive-instances-of-key-value ":entity/type" select)
                                (map block-to-flat-map))]
 
     (if (invalid-query? parsed-properties)
