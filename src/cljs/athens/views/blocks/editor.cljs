@@ -19,7 +19,7 @@
     [athens.subs.linked-refs                   :as linked-ref.subs]
     [athens.util                               :as util]
     [athens.views.blocks.bullet                :refer [bullet-drag-start bullet-drag-end]]
-    [athens.views.query                        :as query]
+    [athens.views.query.core                   :as query]
     [athens.views.blocks.content               :as content]
     [athens.views.blocks.reactions             :refer [toggle-reaction props->reactions]]
     [athens.views.comments.core                :as comments]

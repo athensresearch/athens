@@ -22,7 +22,6 @@
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.hoc.perf-mon :as perf-mon]
-    [athens.views.query :as query]
     [clojure.string :as str]
     [datascript.core :as d]
     [komponentit.autosize :as autosize]
@@ -422,14 +421,6 @@
                                           "Link"]))}
                [ref-comp block]]))]))]))
 
-#_(defn query-el
-    [title]
-    (let [instances (wrap-span-no-new-tx "query-el"
-                                            (reactive/get-reactive-instances-of-key-value ":entity/type"
-                                                                                          (str "[[" title "]]")
-                                                                                          #_title))]
-      (when (pos? (count instances))
-        [query/query {:query-data instances}])))
 
 ;; TODO: where to put page-level link filters?
 (defn node-page-el
