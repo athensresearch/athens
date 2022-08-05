@@ -57,6 +57,11 @@
 (def LAYOUTS
   ["table" "board" "list"])
 
+(def SORT_DIRECTIONS
+  ["asc" "desc"])
+
+(def SPECIAL_FILTERS
+  ["None" "On this page"])
 
 (def DEFAULT-PROPS
   {":entity/type"                   "[[athens/query]]"
@@ -77,6 +82,12 @@
        (map #(get hm %))))
 
 
+(defn get-schema
+  [k]
+  (or (get SCHEMA k) base-schema))
+
+(def ENTITY_TYPES
+  (keys SCHEMA))
 
 ;; Helpers
 
@@ -93,7 +104,7 @@
 
 (defn block-to-flat-map
   [block]
-  (let [{:block/keys [uid #_string properties create edits]} block
+  (let [{:block/keys [uid string properties create edits]} block
         create-auth-and-time    (get-create-auth-and-time create)
         last-edit-auth-and-time (get-last-edit-auth-and-time edits)
         property-keys           (keys properties)
@@ -101,7 +112,8 @@
                                           (assoc acc prop-key (get-in properties [prop-key :block/string])))
                                         {}
                                         property-keys)
-        merged-map              (merge {":block/uid" uid}
+        merged-map              (merge {":block/uid" uid
+                                        ":block/string" string}
                                        props-map
                                        create-auth-and-time
                                        last-edit-auth-and-time)]
@@ -177,15 +189,12 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
-
-
 (defn update-many-properties
   [db key value new-value]
   (->> (common-db/get-instances-of-key-value db key value)
        (map #(get-in % [key :block/uid]))
        (map (fn [uid]
               (graph-ops/build-block-save-op db uid new-value)))))
-
 
 (defn update-kanban-column
   "Update the property page that is the source of values for a property.
@@ -233,12 +242,10 @@
                          (graph-ops/build-block-save-op db hidden-prop-uid ""))]))]))
 
 
-
 (defn order-children
   [children]
   (->> (sort-by :block/order children)
        (mapv :block/string)))
-
 
 
 (defn get-query-props
@@ -251,8 +258,8 @@
                            (seq children) (order-children children)
                            nested-properties (reduce-kv (fn [acc k v]
                                                            (assoc acc k (:block/string v)))
-                                                         {}
-                                                         nested-properties)
+                                                        {}
+                                                        nested-properties)
                            :else string)))
          {})
        (merge DEFAULT-PROPS)))
@@ -294,19 +301,6 @@
   [s]
   (str "[[" s "]]"))
 
-
-
-(defn get-schema
-  [k]
-  (or (get SCHEMA k) base-schema))
-
-(def entity-types
-  (keys SCHEMA))
-
-
-
-;; Views
-
 (defn get-merged-breadcrumbs
   [uids]
   (->> uids
@@ -314,6 +308,9 @@
        (mapv :db/id)
        (db/eids->groups)
        vec))
+
+
+;; Views
 
 
 (defn ref-comp
@@ -370,13 +367,12 @@
                [ref-comp block]]))])])))
 
 
-
 (defn options-el
   [{:keys [properties parsed-properties uid schema]}]
   (let [[layout select p-order p-hide f-author f-special s-by s-direction] (get* parsed-properties ["layout" "select" "properties/order" "properties/hide" "filter/author" "filter/special" "sort/by" "sort/direction"])
         s-by       (parse-for-title s-by)
         menus-data [{:heading  "Entity Type"
-                     :options  entity-types
+                     :options  ENTITY_TYPES
                      :onChange #(update-query-property uid "select" %)
                      :value    select}
                     {:heading  "Layout"
@@ -388,7 +384,7 @@
                      :onChange #(update-query-property uid "filter/author" %)
                      :value    f-author}
                     {:heading  "Special Filters"
-                     :options  ["None" "On this page"]
+                     :options  SPECIAL_FILTERS
                      :onChange #(update-query-property uid "filter/special" %)
                      :value    f-special}
                     {:heading  "Sort By"
@@ -396,7 +392,7 @@
                      :onChange #(update-query-property uid "sort/by" %)
                      :value    s-by}
                     {:heading  "Sort Direction"
-                     :options  ["asc" "desc"]
+                     :options  SORT_DIRECTIONS
                      :onChange #(update-query-property uid "sort/direction" %)
                      :value    s-direction}]]
     [:> Stack {:direction "row" :spacing 5}
@@ -416,7 +412,7 @@
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
-  (let [[layout s-by s-direction f-author f-special p-order p-hide] (get* parsed-properties ["layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
+  (let [[select layout s-by s-direction f-author f-special p-order p-hide] (get* parsed-properties ["select" "layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
         s-by              (parse-for-title s-by)
         filter-author-fn  (fn [x]
                             (let [entity-author (get x ":create/auth")]
