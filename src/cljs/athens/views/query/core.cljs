@@ -1,42 +1,42 @@
 (ns athens.views.query.core
   (:require
-   ["/components/Query/KanbanBoard" :refer [QueryKanban]]
-   [com.rpl.specter :as s]
-   ["/components/Query/Table" :refer [QueryTable]]
-   ["/components/Query/Query" :refer [Controls QueryRadioMenu]]
-   ["/components/References/References" :refer [ReferenceBlock ReferenceGroup]]
-   ["@chakra-ui/react" :refer [Box
-                               Button
-                               HStack
-                               VStack
-                               Toggle
-                               Breadcrumb
-                               BreadcrumbItem
-                               BreadcrumbLink
-                               ButtonGroup
-                               ListItem
-                               UnorderedList
-                               Stack
-                               Text
-                               Heading
-                               Checkbox
-                               CheckboxGroup
-                               Menu]]
-   [athens.db          :as db]
-   [athens.common-db          :as common-db]
-   [athens.common-events.graph.ops            :as graph-ops]
-   [athens.common-events.graph.composite :as composite]
-   [athens.dates              :as dates]
-   [athens.reactive :as reactive]
-   [athens.router             :as router]
-   [clojure.string            :refer [lower-case]]
-   [re-frame.core             :as rf]
-   [athens.common-events.bfs :as bfs]
-   [athens.parse-renderer :as parse-renderer]
-   ;;[athens.views.pages.node-page :as node-page]
-   [athens.util :as util]
-   [athens.common.utils :as utils]
-   [reagent.core :as r]))
+    ["/components/Query/KanbanBoard" :refer [QueryKanban]]
+    [com.rpl.specter :as s]
+    ["/components/Query/Table" :refer [QueryTable]]
+    ["/components/Query/Query" :refer [Controls QueryRadioMenu]]
+    ["/components/References/References" :refer [ReferenceBlock ReferenceGroup]]
+    ["@chakra-ui/react" :refer [Box
+                                Button
+                                HStack
+                                VStack
+                                Toggle
+                                Breadcrumb
+                                BreadcrumbItem
+                                BreadcrumbLink
+                                ButtonGroup
+                                ListItem
+                                UnorderedList
+                                Stack
+                                Text
+                                Heading
+                                Checkbox
+                                CheckboxGroup
+                                Menu]]
+    [athens.db :as db]
+    [athens.common-db :as common-db]
+    [athens.common-events.graph.ops :as graph-ops]
+    [athens.common-events.graph.composite :as composite]
+    [athens.dates :as dates]
+    [athens.reactive :as reactive]
+    [athens.router :as router]
+    [clojure.string :refer [lower-case]]
+    [re-frame.core :as rf]
+    [athens.common-events.bfs :as bfs]
+    [athens.parse-renderer :as parse-renderer]
+    ;;[athens.views.pages.node-page :as node-page]
+    [athens.util :as util]
+    [athens.common.utils :as utils]
+    [reagent.core :as r]))
 
 
 
@@ -48,7 +48,7 @@
 
 
 (def SCHEMA
-  {"[[athens/task]]" (concat base-schema ["title" "status" "assignee" "project" "due date"])
+  {"[[athens/task]]"           (concat base-schema ["title" "status" "assignee" "project" "due date"])
    "[[athens/comment-thread]]" (concat base-schema [])})
 
 (def AUTHORS
@@ -69,7 +69,7 @@
    "athens/query/group/by"          ":create/auth"
    "athens/query/group/subgroup/by" ":create/auth"
    "athens/query/properties/hide"   {}
-   "athens/query/properties/order" nil})
+   "athens/query/properties/order"  nil})
 
 (defn get*
   [hm ks]
@@ -136,8 +136,8 @@
   "This creates a new block/child at the property/values key, but the kanban board doesn't trigger a re-render because it isn't aware of property/values yet."
   [group-by-id]
   (rf/dispatch [:properties/update-in [:node/title group-by-id] [":property/values"]
-                 (fn [db prop-uid]
-                   [(graph-ops/build-block-new-op db (utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
+                (fn [db prop-uid]
+                  [(graph-ops/build-block-new-op db (utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
 
 
 (defn new-card
@@ -217,8 +217,8 @@
   [uid key new-value]
   (let [namespaced-key (str "athens/query/" key)]
     (rf/dispatch [:properties/update-in [:block/uid uid] [namespaced-key]
-                   (fn [db prop-uid]
-                     [(graph-ops/build-block-save-op db prop-uid new-value)])])))
+                  (fn [db prop-uid]
+                    [(graph-ops/build-block-save-op db prop-uid new-value)])])))
 
 
 (defn toggle-hidden-property
@@ -245,23 +245,23 @@
   [properties]
   (->> properties
        (reduce-kv
-        (fn [acc k {:block/keys [children string] nested-properties :block/properties :as v}]
-          (assoc acc k (cond
-                        (and (seq children) (not (clojure.string/blank? string))) {:key string :values (order-children children)}
-                        (seq children) (order-children children)
-                        nested-properties  (reduce-kv (fn [acc k v]
-                                                        (assoc acc k (:block/string v)))
-                                                      {}
-                                                      nested-properties)
-                        :else string)))
-        {})
+         (fn [acc k {:block/keys [children string] nested-properties :block/properties :as v}]
+           (assoc acc k (cond
+                           (and (seq children) (not (clojure.string/blank? string))) {:key string :values (order-children children)}
+                           (seq children) (order-children children)
+                           nested-properties (reduce-kv (fn [acc k v]
+                                                           (assoc acc k (:block/string v)))
+                                                         {}
+                                                         nested-properties)
+                           :else string)))
+         {})
        (merge DEFAULT-PROPS)))
 
 
 (defn get-reactive-property
   [eid property-key]
   (let [property-page (reactive/get-reactive-block-document eid)
-        property (get-in property-page [:block/properties property-key])
+        property      (get-in property-page [:block/properties property-key])
         {:block/keys [children properties sting]} property]
     (cond
       (seq children) (order-children children)
@@ -329,10 +329,10 @@
     (fn [_]
       (let [{:keys [block parents embed-id]} @state]
         [:> VStack {:spacing 0
-                    :align "stretch"}
+                    :align   "stretch"}
          [:> Breadcrumb {:fontSize "sm"
-                         :variant "strict"
-                         :color "foreground.secondary"}
+                         :variant  "strict"
+                         :color    "foreground.secondary"}
           (doall
             (for [{:keys [block/uid]} parents]
               [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
@@ -416,27 +416,27 @@
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
-  (let [[layout s-by s-direction f-author f-special p-order p-hide]     (get* parsed-properties ["layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
-        s-by          (parse-for-title s-by)
-        filter-author-fn       (fn [x]
-                                 (let [entity-author (get x ":create/auth")]
-                                   (or (= f-author "None")
-                                       (= f-author
-                                          entity-author))))
-        special-filter-fn      (fn [x]
-                                 (cond
-                                   (= f-special "On this page") (let [comment-uid (get x ":block/uid")
-                                                                      comments-parent-page (-> (db/get-root-parent-page comment-uid)
-                                                                                               :node/title)
-                                                                      current-page-of-query (-> (db/get-root-parent-page uid)
-                                                                                                :node/title)]
-                                                                  (= comments-parent-page current-page-of-query))
-                                   :else true))
+  (let [[layout s-by s-direction f-author f-special p-order p-hide] (get* parsed-properties ["layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
+        s-by              (parse-for-title s-by)
+        filter-author-fn  (fn [x]
+                            (let [entity-author (get x ":create/auth")]
+                              (or (= f-author "None")
+                                  (= f-author
+                                     entity-author))))
+        special-filter-fn (fn [x]
+                            (cond
+                              (= f-special "On this page") (let [comment-uid           (get x ":block/uid")
+                                                                 comments-parent-page  (-> (db/get-root-parent-page comment-uid)
+                                                                                           :node/title)
+                                                                 current-page-of-query (-> (db/get-root-parent-page uid)
+                                                                                           :node/title)]
+                                                             (= comments-parent-page current-page-of-query))
+                              :else true))
 
-        query-data             (filterv special-filter-fn query-data)
-        query-data             (filterv filter-author-fn query-data)
+        query-data        (filterv special-filter-fn query-data)
+        query-data        (filterv filter-author-fn query-data)
 
-        query-data (sort-table query-data s-by s-direction)]
+        query-data        (sort-table query-data s-by s-direction)]
     ;; TODO
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case layout
@@ -467,14 +467,14 @@
        ;; what about groupBy page or something
 
        "list"
-       (let [uids    (map #(get % ":block/uid") query-data)
+       (let [uids           (map #(get % ":block/uid") query-data)
              ;;threads (map #(db/get-comment-threads-for-query @db/dsdb %) uids)
              merged-parents (get-merged-breadcrumbs uids)]
-             ;; only works for comments
-            [:> Box {:borderWidth "1px" :borderRadius "lg"}
-             [breadcrumbs-el merged-parents]
-             #_(for [thread threads]
-                 [athens.views.blocks.core/block-el thread])])
+         ;; only works for comments
+         [:> Box {:borderWidth "1px" :borderRadius "lg"}
+          [breadcrumbs-el merged-parents]
+          #_(for [thread threads]
+              [athens.views.blocks.core/block-el thread])])
 
 
        [:> QueryTable {:data           query-data
@@ -511,14 +511,14 @@
       [:> Box {:color "red"} "invalid query"]
       [:> Box {:width        "100%" :borderColor "gray"
                :padding-left 38 :padding-top 15}
-        [options-el {:parsed-properties parsed-properties
-                     :properties        properties
-                     :schema            schema
-                     :query-data        query-data
-                     :uid               block-uid}]
-        [query-el {:query-data        query-data
-                   :uid               block-uid
-                   :schema            schema
-                   :parsed-properties parsed-properties}]])))
+       [options-el {:parsed-properties parsed-properties
+                    :properties        properties
+                    :schema            schema
+                    :query-data        query-data
+                    :uid               block-uid}]
+       [query-el {:query-data        query-data
+                  :uid               block-uid
+                  :schema            schema
+                  :parsed-properties parsed-properties}]])))
 
 
