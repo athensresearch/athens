@@ -210,42 +210,31 @@
     "asc"))
 
 (defn update-sort-by
-  [id curr-sort-by curr-sort-dir new-sort-by]
-  (prn "SORT" curr-sort-by new-sort-by)
-  (if (= curr-sort-by new-sort-by)
-    (rf/dispatch [:properties/update-in [:block/uid id] ["query/sort-direction"]
-                  (fn [db prop-uid]
-                    [(graph-ops/build-block-save-op db prop-uid (flip-sort-dir curr-sort-dir))])])
-    (do
-      (rf/dispatch [:properties/update-in [:block/uid id] ["query/sort-direction"]
-                     (fn [db prop-uid] [(graph-ops/build-block-save-op db prop-uid "desc")])])
-      (rf/dispatch [:properties/update-in [:block/uid id] ["query/sort-by"]
-                    (fn [db prop-uid]
-                      [(graph-ops/build-block-save-op db prop-uid new-sort-by)])]))))
+  [id new-sort-by]
+  (rf/dispatch [:properties/update-in [:block/uid id] ["query/sort-direction"]
+                (fn [db prop-uid] [(graph-ops/build-block-save-op db prop-uid "desc")])])
+  (rf/dispatch [:properties/update-in [:block/uid id] ["query/sort-by"]
+                (fn [db prop-uid] [(graph-ops/build-block-save-op db prop-uid new-sort-by)])]))
 
+(defn update-sort-direction
+  [id new-sort-dir]
+  (rf/dispatch [:properties/update-in [:block/uid id] ["query/sort-direction"]
+                (fn [db prop-uid] [(graph-ops/build-block-save-op db prop-uid new-sort-dir)])]))
 
-#_(defn get-prop-node-title
-   "Could either be 1-arity (just block/string) or multi-arity (multiple children).
-
-   XXX: to make multi-arity, look at block/children of \"query/types\"
-   TODO: what happens if a user enters in multiple refs in a block/string? Should have some sort of schema enforcement, such as 1 ref per block to avoid confusion
-   not using :block/string, because i want the node/title without having to do some reg-ex"
-   [prop]
-   (->> (get-in prop [#_"query/types" :block/refs 0 :db/id])
-        (datascript.core/entity @athens.db/dsdb)
-        :node/title))
 
 (defn order-children
   [children]
   (->> (sort-by :block/order children)
        (mapv :block/string)))
 
-(def default-props
+(def DEFAULT-PROPS
   {"query/layout" "table"
    ":entity/type" "[[athens/query]]"
    "query/type" "[[athens/comment-thread]]"
    "query/filter-author" "None"
-   "query/special-filters" "None"})
+   "query/special-filters" "None"
+   "query/sort-by" ":create/time"
+   "query/sort-direction" "desc"})
 
 
 (defn get-query-props
@@ -262,7 +251,7 @@
                                                       nested-properties)
                         :else string)))
         {})
-       (merge default-props)))
+       (merge DEFAULT-PROPS)))
     
 
 (defn get-reactive-property
@@ -395,6 +384,9 @@
         query-properties-hide  (get parsed-properties "query/properties-hide")
         query-filter-author    (get parsed-properties "query/filter-author")
         query-special-filters  (get parsed-properties "query/special-filters")
+        query-sort-by          (get parsed-properties "query/sort-by")
+        query-sort-by          (parse-for-title query-sort-by)
+        query-sort-direction   (get parsed-properties "query/sort-direction")
         query-properties-hide (if (clojure.string/blank? query-properties-hide)
                                 {}
                                 query-properties-hide)
@@ -422,11 +414,21 @@
                           :onChange #(update-special-filters uid %)
                           :value query-special-filters}]
 
-     [:> Controls {:isCheckedFn          #(get query-properties-hide %)
-                   :properties           schema
-                   :hiddenProperties     query-properties-hide
-                   :menuOptionGroupValue menuOptionGroupValue
-                   :onChange             #(toggle-hidden-property uid %)}]
+     [:> QueryRadioMenu {:heading  "Sort By"
+                         :options  schema
+                         :onChange #(update-sort-by uid %)
+                         :value    query-sort-by}]
+
+     [:> QueryRadioMenu {:heading "Sort Direction"
+                         :options ["asc" "desc"]
+                         :onChange #(update-sort-direction uid %)
+                         :value query-sort-direction}]
+
+     #_[:> Controls {:isCheckedFn          #(get query-properties-hide %)
+                     :properties           schema
+                     :hiddenProperties     query-properties-hide
+                     :menuOptionGroupValue menuOptionGroupValue
+                     :onChange             #(toggle-hidden-property uid %)}]
      #_[:> Button {:onClick #(prn parsed-properties) :disabled true}
         [:> Heading {:size "sm"} "Save View"]]]))
 
@@ -508,7 +510,7 @@
 
        [:> QueryTable {:data           query-data
                        :columns        schema
-                       :onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
+                       ;;:onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
                        :sortBy         query-sort-by
                        :sortDirection  query-sort-direction
                        :rowCount       (count query-data)

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Box, Table, Thead, Tbody, Th, Td, Tr, Tfoot } from '@chakra-ui/react';
+import { Button, Box, Table, Thead, Tbody, Th, Td, Tr, Tfoot, textDecoration } from '@chakra-ui/react';
 import { AddCardButton } from '../KanbanBoard/KanbanBoard'
 import { ChevronDownIcon, ChevronUpIcon } from '@/Icons/Icons';
 
@@ -14,7 +14,8 @@ export const QueryTable = (props) => {
     return (columns && columns.length > 0 && <Box>
         <Table>
             <Thead>
-                <Tr>{columns.map((column) =>
+                {/* Column headers control sorting */}
+                {/* <Tr>{columns.map((column) =>
                     (!hideProperties[column] &&
                         <Th key={column} onClick={()=>onClickSort(column)}>
                             <Button>
@@ -22,6 +23,13 @@ export const QueryTable = (props) => {
                                 {(sortBy == column &&
                                     (sortDirection == "asc" ? <ChevronUpIcon/> : <ChevronDownIcon/>))}
                             </Button>
+                        </Th>))}
+                </Tr> */}
+                <Tr>{columns.map((column => 
+                        <Th key={column} textDecoration={sortBy==column && "underline"}>
+                            {column}
+                            {(sortBy == column &&
+                                (sortDirection == "asc" ? <ChevronUpIcon ml="1"/> : <ChevronDownIcon ml="1" fontWeight={""}/>))}
                         </Th>))}
                 </Tr>
             </Thead>
