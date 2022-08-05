@@ -216,15 +216,20 @@
                   :_focusWithin {:shadow "focus"}}
           ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
           [content-editor/block-content-el {:block/uid (or prop-block-uid
-                                                           (str "tmp-" prop-name "-uid-" (common.utils/gen-block-uid)))}
+                                                           ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                                           (str "tmp-" (subs prop-name
+                                                                             (.indexOf prop-name "/"))
+                                                                "-uid-" (common.utils/gen-block-uid)))}
            state-hooks]
           [presence/inline-presence-el prop-block-uid]]
 
          (if invalid-prop-str?
-           [:> FormErrorMessage (str prop-title " is " (if required?
-                                                         "required"
-                                                         "empty"))]
-           [:> FormHelperText (str "Please provide " prop-title)])]))))
+           [:> FormErrorMessage
+            (str prop-title " is " (if required?
+                                     "required"
+                                     "empty"))]
+           [:> FormHelperText
+            (str "Please provide " prop-title)])]))))
 
 
 (defn- find-allowed-statuses
@@ -291,24 +296,22 @@
 
 
   (outline-view
-    [_this block-data _block-el _callbacks]
+    [_this block-data _callbacks]
     (let [block-uid (:block/uid block-data)]
-      (fn [_this _block-data _block-el _callbacks]
-        (let [reactive-block   (reactive/get-reactive-block-document [:block/uid block-uid])
-              title-uid        (:block/uid (find-property-block-by-key-name reactive-block ":task/title"))
-              description-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/description"))
-              due-date-uid     (:block/uid (find-property-block-by-key-name reactive-block ":task/due-date"))
+      (fn [_this _block-data _callbacks]
+        (let [reactive-block  (reactive/get-reactive-block-document [:block/uid block-uid])
+              title-uid       (:block/uid (find-property-block-by-key-name reactive-block ":task/title"))
+              description-uid (:block/uid (find-property-block-by-key-name reactive-block ":task/description"))
+              due-date-uid    (:block/uid (find-property-block-by-key-name reactive-block ":task/due-date"))
               ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
-              status-uid       (:block/uid (find-property-block-by-key-name reactive-block ":task/status"))]
-          [:> Box {:bg    "lightgreen"
-                   :class "task_container"
-                   :padding "1rem"}
-           [:> VStack {:spacing "2rem"}
-            [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true]
-            [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false]
-            ;; Making assumption that for now we can add due date manually without date-picker.
-            [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false]
-            [task-status-view block-uid status-uid]]]))))
+              status-uid      (:block/uid (find-property-block-by-key-name reactive-block ":task/status"))]
+          [:> VStack {:spacing "2rem"
+                      :class   "task_container"}
+           [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true]
+           [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false]
+           ;; Making assumption that for now we can add due date manually without date-picker.
+           [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false]
+           [task-status-view block-uid status-uid]]))))
 
 
   (supported-transclusion-scopes

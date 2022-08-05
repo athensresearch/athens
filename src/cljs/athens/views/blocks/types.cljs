@@ -10,7 +10,7 @@
     "Render Block/Entity Type as inline reference")
 
   (outline-view
-    [this block-data block-el callbacks]
+    [this block-data callbacks]
     "Render Block/Entity Type as outline representation")
 
   (supported-transclusion-scopes
