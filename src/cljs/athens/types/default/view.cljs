@@ -5,8 +5,6 @@
     ["/components/Icons/Icons"   :refer [PencilIcon]]
     ["@chakra-ui/react"          :refer [Box Button ButtonGroup IconButton]]
     [athens.db                   :as db]
-    [athens.events.inline-refs   :as inline-refs.events]
-    [athens.events.linked-refs   :as linked-ref.events]
     [athens.parse-renderer       :as parser]
     [athens.reactive             :as reactive]
     [athens.router               :as router]
@@ -88,9 +86,7 @@
 
   (outline-view
     [_this block-data _callbacks]
-    (let [{:keys [linked-ref
-                  initial-open]}       linked-ref-data
-          {:block/keys [uid
+    (let [{:block/keys [uid
                         original-uid]} block-data
           local-value                  (r/atom nil)
           old-value                    (r/atom nil)
@@ -110,33 +106,23 @@
                                         :read-value     read-value
                                         :read-old-value read-old-value
                                         :show-edit?     show-edit?}]
-      (rf/dispatch [::linked-ref.events/set-open! uid (or (false? linked-ref) initial-open)])
-      (rf/dispatch [::inline-refs.events/set-open! uid false])
+      (fn render-block
+        [_this block _callbacks]
+        (let [ident                 [:block/uid (or original-uid uid)]
+              block-o               (reactive/get-reactive-block-document ident)
+              {:block/keys [string
+                            _refs]} (merge block-o block)]
 
-      (r/create-class
-        {:component-will-unmount
-         (fn will-unmount-block
-           [_]
-           (rf/dispatch [::linked-ref.events/cleanup! uid])
-           (rf/dispatch [::inline-refs.events/cleanup! uid]))
-         :reagent-render
-         (fn render-block
-           [_this block _callbacks]
-           (let [ident                  [:block/uid (or original-uid uid)]
-                 block-o                (reactive/get-reactive-block-document ident)
-                 {:block/keys [string
-                               _refs]}  (merge block-o block)]
+          ;; (prn uid is-selected)
 
-             ;; (prn uid is-selected)
+          ;; If datascript string value does not equal local value, overwrite local value.
+          ;; Write on initialization
+          ;; Write also from backspace, which can join bottom block's contents to top the block.
+          (when (not= string @old-value)
+            (update-fn string)
+            (update-old-fn string))
 
-             ;; If datascript string value does not equal local value, overwrite local value.
-             ;; Write on initialization
-             ;; Write also from backspace, which can join bottom block's contents to top the block.
-             (when (not= string @old-value)
-               (update-fn string)
-               (update-old-fn string))
-
-             [content/block-content-el block state-hooks]))})))
+          [content/block-content-el block state-hooks]))))
 
 
   (supported-transclusion-scopes
