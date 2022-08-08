@@ -1,4 +1,4 @@
-(ns athens.views.task.core
+(ns athens.types.tasks.view
   (:require
     ["@chakra-ui/react"                   :refer [Box,
                                                   FormControl,
@@ -18,10 +18,10 @@
     [athens.db                            :as db]
     [athens.reactive                      :as reactive]
     [athens.self-hosted.presence.views    :as presence]
+    [athens.types.core                    :as types]
+    [athens.types.dispatcher              :as dispatcher]
     [athens.types.tasks.events            :as task-events]
     [athens.views.blocks.content          :as content-editor]
-    [athens.views.blocks.types            :as types]
-    [athens.views.blocks.types.dispatcher :as dispatcher]
     [clojure.string                       :as str]
     [goog.functions                       :as gfns]
     [re-frame.core                        :as rf]
@@ -218,7 +218,7 @@
           [content-editor/block-content-el {:block/uid (or prop-block-uid
                                                            ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
                                                            (str "tmp-" (subs prop-name
-                                                                             (.indexOf prop-name "/"))
+                                                                             (inc (.indexOf prop-name "/")))
                                                                 "-uid-" (common.utils/gen-block-uid)))}
            state-hooks]
           [presence/inline-presence-el prop-block-uid]]
@@ -240,8 +240,6 @@
                                 (get ":property/enum")
                                 :block/children)
         allowed-statuses    (map #(select-keys % [:block/uid :block/string]) allowed-stat-blocks)]
-    (println "task status page\n"
-             (pr-str task-status-page))
     (if (seq allowed-statuses)
       allowed-statuses
       (let [[statuses ops] (create-default-allowed-statuses @db/dsdb)

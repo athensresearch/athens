@@ -1,4 +1,4 @@
-(ns athens.views.blocks.types
+(ns athens.types.core
   "Athens Block/Entity Types")
 
 

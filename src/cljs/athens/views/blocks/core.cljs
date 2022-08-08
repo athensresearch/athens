@@ -27,20 +27,20 @@
     [athens.subs.linked-refs                   :as linked-ref.subs]
     [athens.subs.selection                     :as select-subs]
     [athens.time-controls                      :as time-controls]
+    [athens.types.core                         :as types]
+    ;; need to require it for multimethod participation
+    [athens.types.default.view]
+    [athens.types.dispatcher                   :as block-type-dispatcher]
+    ;; need to require it for multimethod participation
+    [athens.types.tasks.view]
     [athens.util                               :as util]
     [athens.views.blocks.bullet                :as block-bullet]
     [athens.views.blocks.context-menu          :as ctx-menu]
     [athens.views.blocks.drop-area-indicator   :as drop-area-indicator]
     [athens.views.blocks.reactions             :as block-reaction]
-    [athens.views.blocks.types                 :as types]
-    ;; need to require it for multimethod participation
-    [athens.views.blocks.types.default]
-    [athens.views.blocks.types.dispatcher      :as block-type-dispatcher]
     [athens.views.comments.core                :as comments]
     [athens.views.comments.inline              :as inline-comments]
     [athens.views.notifications.actions        :as actions]
-    ;; need to require it for multimethod participation
-    [athens.views.task.core]
     [com.rpl.specter                           :as s]
     [re-frame.core                             :as rf]
     [reagent.core                              :as r]))

@@ -1,21 +1,21 @@
 ^:cljstyle/ignore
 (ns athens.parse-renderer
   (:require
-   ["@chakra-ui/react"                   :refer [Link Button Text Box]]
-   ["katex"                              :as katex]
+   ["@chakra-ui/react"      :refer [Link Button Text Box]]
+   ["katex"                 :as katex]
    ["katex/dist/contrib/mhchem"]
-   [athens.common-db                     :as common-db]
-   [athens.config                        :as config]
-   [athens.db                            :as db]
-   [athens.parser.impl                   :as parser-impl]
-   [athens.reactive                      :as reactive]
-   [athens.router                        :as router]
-   [athens.views.blocks.types            :as types]
-   [athens.views.blocks.types.dispatcher :as block-type-dispatcher]
-   [clojure.string                       :as str]
-   [instaparse.core                      :as insta]
-   [re-frame.core                        :as rf]
-   [reagent.core                         :as r]))
+   [athens.common-db        :as common-db]
+   [athens.config           :as config]
+   [athens.db               :as db]
+   [athens.parser.impl      :as parser-impl]
+   [athens.reactive         :as reactive]
+   [athens.router           :as router]
+   [athens.types.core       :as types]
+   [athens.types.dispatcher :as block-type-dispatcher]
+   [clojure.string          :as str]
+   [instaparse.core         :as insta]
+   [re-frame.core           :as rf]
+   [reagent.core            :as r]))
 
 
 (declare parse-and-render)
