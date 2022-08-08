@@ -1,17 +1,17 @@
 (ns athens.views.blocks.reactions
   (:require
-   ["@chakra-ui/react" :refer [Box
-                               Tooltip
-                               VStack
-                               HStack
-                               MenuItem
-                               MenuGroup
-                               Text]]
-   [athens.common-db                          :as common-db]
-   [athens.common-events.graph.ops            :as graph-ops]
-   [athens.db                                 :as db]
-   [re-frame.core                             :as rf]
-   [reagent.core :as r]))
+    ["@chakra-ui/react" :refer [Box
+                                Tooltip
+                                VStack
+                                HStack
+                                MenuItem
+                                MenuGroup
+                                Text]]
+    [athens.common-db                          :as common-db]
+    [athens.common-events.graph.ops            :as graph-ops]
+    [athens.db                                 :as db]
+    [re-frame.core                             :as rf]
+    [reagent.core :as r]))
 
 
 (def common-reactions ["❤️" "💔" "😐" "😕" "😡"])
@@ -54,11 +54,6 @@
                        (graph-ops/build-block-remove-op @db/dsdb user-reaction-uid))]))]))
 
 
-
-
-
-
-
 (defn props->reactions
   [props]
   (->> (get props ":reactions")
@@ -74,7 +69,6 @@
        (into [])))
 
 
-
 (defn reactions-menu-list-item
   [props]
   (let [{:keys [icon fn command]} props]
@@ -84,9 +78,10 @@
                                         (when command [:> Text command])])}
       [:> MenuItem {:justifyContent "center" :on-click fn} icon]]]))
 
- (defn reactions-menu-list
-   [uid user-id]
-   [:> MenuGroup {:title "Add reaction"}
-    [:> HStack {:spacing 0 :justifyContent "stretch"}
-     (for [reaction-icon common-reactions]
-          [reactions-menu-list-item {:icon reaction-icon :fn (toggle-reaction uid reaction-icon user-id)}])]])
+
+(defn reactions-menu-list
+  [uid user-id]
+  [:> MenuGroup {:title "Add reaction"}
+   [:> HStack {:spacing 0 :justifyContent "stretch"}
+    (for [reaction-icon common-reactions]
+      [reactions-menu-list-item {:icon reaction-icon :fn (toggle-reaction uid reaction-icon user-id)}])]])

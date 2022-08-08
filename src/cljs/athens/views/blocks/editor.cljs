@@ -204,24 +204,24 @@
                                            (router/navigate-page (:node/title key) e)))}])
 
 
-            [:> Anchor {:isClosedWithChildren   (when (and (seq children)
-                                                           (or (and (true? linked-ref) (not @linked-ref-open?))
-                                                               (and (false? linked-ref) (not open))))
-                                                  "closed-with-children")
-                        :uidSanitizedBlock      uid-sanitized-block
-                        :shouldShowDebugDetails (util/re-frame-10x-open?)
-                        :menu                   menu
-                        :onClick                (fn [e]
-                                                  (let [shift? (.-shiftKey e)]
-                                                    (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                         :target :block
-                                                                                         :pane   (if shift?
-                                                                                                   :right-pane
-                                                                                                   :main-pane)}])
-                                                    (router/navigate-uid uid e)))
-                        :on-drag-start          (fn [e] (bullet-drag-start e uid))
-                        :on-drag-end            (fn [e] (bullet-drag-end e uid))
-                        :unreadNotification     (actions/unread-notification? properties)}]
+          [:> Anchor {:isClosedWithChildren   (when (and (seq children)
+                                                         (or (and (true? linked-ref) (not @linked-ref-open?))
+                                                             (and (false? linked-ref) (not open))))
+                                                "closed-with-children")
+                      :uidSanitizedBlock      uid-sanitized-block
+                      :shouldShowDebugDetails (util/re-frame-10x-open?)
+                      :menu                   menu
+                      :onClick                (fn [e]
+                                                (let [shift? (.-shiftKey e)]
+                                                  (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                       :target :block
+                                                                                       :pane   (if shift?
+                                                                                                 :right-pane
+                                                                                                 :main-pane)}])
+                                                  (router/navigate-uid uid e)))
+                      :on-drag-start          (fn [e] (bullet-drag-start e uid))
+                      :on-drag-end            (fn [e] (bullet-drag-end e uid))
+                      :unreadNotification     (actions/unread-notification? properties)}]
 
 
 
