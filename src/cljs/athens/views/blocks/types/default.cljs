@@ -2,36 +2,37 @@
   "Default Block Type Renderer.
   A.k.a standard `:block/string` blocks"
   (:require
-    ["/components/Block/Container"           :refer [Container]]
-    ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon ArchiveIcon]]
-    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem Divider]]
-    [athens.common.logging                   :as log]
-    [athens.db                               :as db]
-    [athens.electron.images                  :as images]
-    [athens.electron.utils                   :as electron.utils]
-    [athens.events.dragging                  :as drag.events]
-    [athens.events.inline-refs               :as inline-refs.events]
-    [athens.events.linked-refs               :as linked-ref.events]
-    [athens.events.selection                 :as select-events]
-    [athens.parse-renderer                   :as parser]
-    [athens.reactive                         :as reactive]
-    [athens.router                           :as router]
-    [athens.subs.dragging                    :as drag.subs]
-    [athens.subs.selection                   :as select-subs]
-    [athens.time-controls                    :as time-controls]
-    [athens.util                             :as util]
-    [athens.views.blocks.context-menu        :as ctx-menu]
-    [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
-    [athens.views.blocks.editor              :as editor]
-    [athens.views.blocks.types               :as types]
-    [athens.views.blocks.types.dispatcher    :as dispatcher]
-    [athens.views.notifications.actions      :as actions]
-    [clojure.string                          :as str]
-    [com.rpl.specter                         :as s]
-    [goog.functions                          :as gfns]
-    [re-frame.core                           :as rf]
-    [reagent.core                            :as r]
-    [reagent.ratom                           :as ratom]))
+   ["/components/Block/Container"           :refer [Container]]
+   ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ArchiveIcon]]
+   ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem MenuDivider Divider]]
+   [athens.common.logging                   :as log]
+   [athens.db                               :as db]
+   [athens.electron.images                  :as images]
+   [athens.electron.utils                   :as electron.utils]
+   [athens.events.dragging                  :as drag.events]
+   [athens.events.inline-refs               :as inline-refs.events]
+   [athens.events.linked-refs               :as linked-ref.events]
+   [athens.events.selection                 :as select-events]
+   [athens.parse-renderer                   :as parser]
+   [athens.reactive                         :as reactive]
+   [athens.router                           :as router]
+   [athens.subs.dragging                    :as drag.subs]
+   [athens.subs.selection                   :as select-subs]
+   [athens.time-controls                    :as time-controls]
+   [athens.util                             :as util]
+   [athens.views.blocks.context-menu        :as ctx-menu]
+   [athens.views.blocks.drop-area-indicator :as drop-area-indicator]
+   [athens.views.blocks.editor              :as editor]
+   [athens.views.blocks.reactions           :as reactions]
+   [athens.views.blocks.types               :as types]
+   [athens.views.blocks.types.dispatcher    :as dispatcher]
+   [athens.views.notifications.actions      :as actions]
+   [clojure.string                          :as str]
+   [com.rpl.specter                         :as s]
+   [goog.functions                          :as gfns]
+   [re-frame.core                           :as rf]
+   [reagent.core                            :as r]
+   [reagent.ratom                           :as ratom]))
 
 
 (defn- block-breadcrumb-string
@@ -287,9 +288,6 @@
                  reactions-enabled?   (:reactions @feature-flags)
                  comments-enabled?    (:comments @feature-flags)
                  notifications-enabled?    (:notifications @feature-flags)
-                 show-emoji-picker?   (r/atom false)
-                 hide-emoji-picker-fn #(reset! show-emoji-picker? false)
-                 show-emoji-picker-fn #(reset! show-emoji-picker? true)
                  menu                 (r/as-element
                                         [:> MenuList
                                          [:> MenuItem {:children (if (> (count @selected-items) 1)
@@ -306,9 +304,9 @@
                                                          :onClick  #(ctx-menu/handle-click-comment % uid)
                                                          :icon     (r/as-element [:> ChatIcon])}])
                                          (when reactions-enabled?
-                                           [:> MenuItem {:children "Add reaction"
-                                                         :onClick  show-emoji-picker-fn
-                                                         :icon     (r/as-element [:> ThumbUpFillIcon])}])
+                                           [:<>
+                                           [:> MenuDivider]
+                                            [reactions/reactions-menu-list uid "Stuart"]])
 
                                          (when (and notifications-enabled? (actions/is-block-inbox? properties))
                                            [:<>
@@ -369,9 +367,7 @@
                uid-sanitized-block
                state-hooks
                opts
-               menu
-               show-emoji-picker?
-               hide-emoji-picker-fn]
+               menu]
 
               (when (= @drag-target :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
               (when (= @drag-target :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])]))})))

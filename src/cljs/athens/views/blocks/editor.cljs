@@ -4,9 +4,8 @@
     ["/components/Block/PropertyName"          :refer [PropertyName]]
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
-    ["/components/EmojiPicker/EmojiPicker"     :refer [EmojiPickerPopoverContent]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [VStack PopoverAnchor Popover Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
+    ["@chakra-ui/react"                        :refer [VStack Button Breadcrumb BreadcrumbItem BreadcrumbLink HStack]]
     [athens.common-db                          :as common-db]
     [athens.db                                 :as db]
     [athens.events.inline-refs                 :as inline-refs.events]
@@ -153,7 +152,7 @@
 
 
 (defn editor-component
-  [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts menu show-emoji-picker? hide-emoji-picker-fn]
+  [block-el block-o children? linked-ref-data uid-sanitized-block state-hooks opts menu]
   (let [{:keys [linked-ref
                 parent-uids]} linked-ref-data
         uid                   (:block/uid block-o)
@@ -205,12 +204,6 @@
                                            (router/navigate-page (:node/title key) e)))}])
 
 
-          [:> Popover {:isOpen @show-emoji-picker?
-                       :placement "bottom-end"
-                       :onOpen #(js/console.log "tried to open")
-                       :onClose hide-emoji-picker-fn}
-
-           [:> PopoverAnchor
             [:> Anchor {:isClosedWithChildren   (when (and (seq children)
                                                            (or (and (true? linked-ref) (not @linked-ref-open?))
                                                                (and (false? linked-ref) (not open))))
@@ -228,11 +221,7 @@
                                                     (router/navigate-uid uid e)))
                         :on-drag-start          (fn [e] (bullet-drag-start e uid))
                         :on-drag-end            (fn [e] (bullet-drag-end e uid))
-                        :unreadNotification     (actions/unread-notification? properties)}]]
-           (when reactions-enabled?
-             [:> EmojiPickerPopoverContent
-              {:onClose hide-emoji-picker-fn
-               :onEmojiSelected (fn [e] (toggle-reaction [:block/uid uid] (.. e -detail -unicode) user-id))}])]
+                        :unreadNotification     (actions/unread-notification? properties)}]
 
 
 
