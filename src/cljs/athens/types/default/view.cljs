@@ -2,21 +2,21 @@
   "Default Block Type Renderer.
   A.k.a standard `:block/string` blocks"
   (:require
-    ["/components/Icons/Icons"   :refer [PencilIcon]]
-    ["@chakra-ui/react"          :refer [Box Button ButtonGroup IconButton]]
-    [athens.db                   :as db]
-    [athens.parse-renderer       :as parser]
-    [athens.reactive             :as reactive]
-    [athens.router               :as router]
-    [athens.types.core           :as types]
-    [athens.types.dispatcher     :as dispatcher]
-    [athens.util                 :as util]
-    [athens.views.blocks.content :as content]
-    [clojure.string              :as str]
-    [goog.functions              :as gfns]
-    [re-frame.core               :as rf]
-    [reagent.core                :as r]
-    [reagent.ratom               :as ratom]))
+    ["/components/Icons/Icons"  :refer [PencilIcon]]
+    ["@chakra-ui/react"         :refer [Box Button ButtonGroup IconButton]]
+    [athens.db                  :as db]
+    [athens.parse-renderer      :as parser]
+    [athens.reactive            :as reactive]
+    [athens.router              :as router]
+    [athens.types.core          :as types]
+    [athens.types.dispatcher    :as dispatcher]
+    [athens.util                :as util]
+    [athens.views.blocks.editor :as editor]
+    [clojure.string             :as str]
+    [goog.functions             :as gfns]
+    [re-frame.core              :as rf]
+    [reagent.core               :as r]
+    [reagent.ratom              :as ratom]))
 
 
 (defn- block-breadcrumb-string
@@ -122,7 +122,7 @@
             (update-fn string)
             (update-old-fn string))
 
-          [content/block-content-el block state-hooks]))))
+          [editor/block-editor block state-hooks]))))
 
 
   (supported-transclusion-scopes

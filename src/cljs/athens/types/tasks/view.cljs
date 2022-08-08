@@ -21,7 +21,7 @@
     [athens.types.core                    :as types]
     [athens.types.dispatcher              :as dispatcher]
     [athens.types.tasks.events            :as task-events]
-    [athens.views.blocks.content          :as content-editor]
+    [athens.views.blocks.editor           :as editor]
     [clojure.string                       :as str]
     [goog.functions                       :as gfns]
     [re-frame.core                        :as rf]
@@ -215,11 +215,11 @@
                   :cursor       "text"
                   :_focusWithin {:shadow "focus"}}
           ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
-          [content-editor/block-content-el {:block/uid (or prop-block-uid
-                                                           ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
-                                                           (str "tmp-" (subs prop-name
-                                                                             (inc (.indexOf prop-name "/")))
-                                                                "-uid-" (common.utils/gen-block-uid)))}
+          [editor/block-editor {:block/uid (or prop-block-uid
+                                               ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                               (str "tmp-" (subs prop-name
+                                                                 (inc (.indexOf prop-name "/")))
+                                                    "-uid-" (common.utils/gen-block-uid)))}
            state-hooks]
           [presence/inline-presence-el prop-block-uid]]
 

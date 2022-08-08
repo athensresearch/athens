@@ -1,4 +1,4 @@
-(ns athens.views.blocks.content
+(ns athens.views.blocks.editor
   (:require
     ["/components/Block/Content"                 :refer [Content]]
     [athens.config                               :as config]
@@ -233,7 +233,7 @@
 
 ;; View
 
-(defn block-content-el
+(defn block-editor
   "Actual string contents. Two elements, one for reading and one for writing.
   The CSS class is-editing is used for many things, such as block selection.
   Opacity is 0 when block is selected, so that the block is entirely blue, rather than darkened like normal editing.
@@ -245,7 +245,8 @@
         caret-position         (r/atom nil)
         last-key-w-shift?      (r/atom nil)
         last-event             (r/atom nil)]
-    (fn [_block _state-hooks]
+    (fn block-editor-render
+      [_block _state-hooks]
       (let [editing? (or @show-edit? @is-editing?)]
         [:<>
          [:> Content {:on-click (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
