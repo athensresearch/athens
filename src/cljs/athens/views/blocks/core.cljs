@@ -440,15 +440,19 @@
                                        (block-open-toggle! uid (not open))))}])
 
             (when key
-              [:> PropertyName {:name    (:node/title key)
-                                :onClick (fn [e]
-                                           (let [shift? (.-shiftKey e)]
-                                             (rf/dispatch [:reporting/navigation {:source :block-property
-                                                                                  :target :page
-                                                                                  :pane   (if shift?
-                                                                                            :right-pane
-                                                                                            :main-pane)}])
-                                             (router/navigate-page (:node/title key) e)))}])
+              [:> PropertyName {:name          (:node/title key)
+                                :onClick       (fn [e]
+                                                 (let [shift? (.-shiftKey e)]
+                                                   (rf/dispatch [:reporting/navigation {:source :block-property
+                                                                                        :target :page
+                                                                                        :pane   (if shift?
+                                                                                                  :right-pane
+                                                                                                  :main-pane)}])
+                                                   (router/navigate-page (:node/title key) e)))
+                                :on-drag-start (fn [e]
+                                                 (block-bullet/bullet-drag-start e uid))
+                                :on-drag-stop  (fn [e]
+                                                 (block-bullet/bullet-drag-end e uid))}])
 
 
             [:> Popover {:isOpen    @show-emoji-picker?
