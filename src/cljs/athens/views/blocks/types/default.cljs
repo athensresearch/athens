@@ -5,6 +5,7 @@
     ["/components/Block/Container"           :refer [Container]]
     ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon ArchiveIcon]]
     ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem Divider]]
+    [athens.common-db                        :as common-db]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
     [athens.electron.images                  :as images]
@@ -102,12 +103,21 @@
 
   [source-uid target-uid drag-target action-allowed]
   (let [move-action? (= action-allowed "move")
-        event         [(if move-action?
-                         :block/move
-                         :block/link)
-                       {:source-uid source-uid
-                        :target-uid target-uid
-                        :target-rel drag-target}]]
+        db            @db/dsdb
+        event         (if (and move-action?
+                               (common-db/property-key db [:block/uid source-uid]))
+                        (let [{:keys [relation block/uid page/title]}
+                              (common-db/drop-prop-position db source-uid target-uid drag-target)]
+                          [:block/move
+                           {:source-uid source-uid
+                            :target-uid (or uid (common-db/get-page-uid db title))
+                            :target-rel relation}])
+                        [(if move-action?
+                           :block/move
+                           :block/link)
+                         {:source-uid source-uid
+                          :target-uid target-uid
+                          :target-rel drag-target}])]
     (log/debug "drop-bullet" (pr-str {:source-uid     source-uid
                                       :target-uid     target-uid
                                       :drag-target    drag-target
@@ -361,7 +371,7 @@
 
               (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
-              [editor/editor-component
+              [:f> editor/editor-component
                block-el
                block-o
                true
