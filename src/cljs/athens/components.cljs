@@ -83,7 +83,10 @@
         block-eid (db/e-by-av :block/uid block-uid)]
     (if block-eid
       (let [block-type (common-db/get-block-type @db/dsdb [:block/uid block-uid])
-            renderer   (block-type-dispatcher/block-type->protocol block-type {})]
+            ff         @(rf/subscribe [:feature-flags])
+            renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
+            renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]
+        ^{:key renderer-k}
         [types/transclusion-view renderer blocks/block-el block-uid  {} :embed])
       ;; roam actually hides the brackets around [[embed]]
       [:span "{{" content "}}"])))

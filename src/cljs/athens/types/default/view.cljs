@@ -176,5 +176,5 @@
     [_this _block-data _callbacks _breadcrumb-style]))
 
 
-(defmethod dispatcher/block-type->protocol :default [_block-type args-map]
+(defmethod dispatcher/block-type->protocol :default [_k args-map]
   (DefaultBlockRenderer. (:linked-ref-data args-map)))

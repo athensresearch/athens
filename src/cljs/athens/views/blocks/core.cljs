@@ -401,7 +401,9 @@
                                             [:> MenuItem {:children "Archive"
                                                           :icon     (r/as-element [:> ArchiveIcon])
                                                           :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
-                renderer (block-type-dispatcher/block-type->protocol block-type {:linked-ref-data linked-ref-data})]
+                ff @(rf/subscribe [:feature-flags])
+                renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
+                renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})]
             (log/debug "block open render: block-o:" (pr-str (:block/open block-o))
                        "block:" (pr-str (:block/open block))
                        "merge:" (pr-str (:block/open (merge block-o block))))
@@ -499,6 +501,7 @@
 
                ;; `BlockTypeProtocol` dispatch placement
                [:> Box {:gridArea "content"}
+                ^{:key renderer-k}
                 [types/outline-view renderer block {}]]
 
                (when reactions

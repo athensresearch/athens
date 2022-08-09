@@ -205,8 +205,11 @@
      :block-ref            (fn [{_from :from :as attr} ref-uid]
                              (let [block      (reactive/get-reactive-block-or-page-by-uid ref-uid)
                                    block-type (common-db/get-block-type @db/dsdb [:block/uid ref-uid])
-                                   renderer   (block-type-dispatcher/block-type->protocol block-type {})]
-                               (types/inline-ref-view renderer block attr ref-uid uid {} true)))
+                                   ff         @(rf/subscribe [:feature-flags])
+                                   renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
+                                   renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]
+                               ^{:key renderer-k}
+                               [types/inline-ref-view renderer block attr ref-uid uid {} true]))
      :url-image            (fn [{url :src alt :alt}]
                              [:> Box {:class        "url-image"
                                       :as           "img"

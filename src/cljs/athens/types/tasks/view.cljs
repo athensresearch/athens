@@ -332,5 +332,5 @@
     [_this _block-data _callbacks _breadcrumb-style]))
 
 
-(defmethod dispatcher/block-type->protocol "[[athens/task]]" [_block-type _args-map]
+(defmethod dispatcher/block-type->protocol "[[athens/task]]" [_k _args-map]
   (TaskView.))
