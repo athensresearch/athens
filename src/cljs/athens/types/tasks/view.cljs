@@ -44,61 +44,6 @@
            :string "Cancelled"}])
 
 
-(defn- internal-representation-task-status-property-enum
-  []
-  {":property/enum" #:block{:uid      (common.utils/gen-block-uid)
-                            :string   ""
-                            :children (internal-representation-allowed-stauses)}})
-
-
-(defn- internal-representation-task-status-page
-  []
-  {:page/title       ":task/status"
-   :block/properties (internal-representation-task-status-property-enum)})
-
-
-(defn- ensure-task-status-property-enum
-  [_db _task-status-page]
-  #_(let []
-       ;; TODO
-       ;; 3. find ":property/enum" prop of this page
-       ;; 4. create if not found
-       ;; 5. create default statuses
-       ;; 6. return :block/uid :block/string of these
-       ))
-
-
-(defn- extract-allowed-statuses
-  [ops]
-  (let [block-saves (graph-ops/contains-op? ops :block/save)]
-    (->> block-saves
-         (mapcat #(graph-ops/contains-op? % :block/save))
-         (map :op/args)
-         (filter #(contains? #{"To Do" "Doing" "Blocked" "Done" "Cancelled"} (:block/string %))))))
-
-
-(defn- create-task-status-page
-  [db]
-  (let [internal-repr    (internal-representation-task-status-page)
-        page-create-ops  (->> (bfs/internal-representation->atomic-ops db [internal-repr] nil)
-                              (composite/make-consequence-op {:op/type :create-task-statuses}))
-        allowed-statuses (extract-allowed-statuses page-create-ops)]
-    [allowed-statuses page-create-ops]))
-
-
-(defn- create-default-allowed-statuses
-  [db]
-  ;; 1. find :task/status page
-  (let [task-status-page (common-db/get-page-document db [:node/title ":task/status"])
-        [allowed-statuses
-         create-ops]     (if task-status-page
-                           ;; page exists
-                           (ensure-task-status-property-enum db task-status-page)
-                           ;; 2. create if not found
-                           (create-task-status-page db))]
-    [allowed-statuses create-ops]))
-
-
 ;; Create a new task
 (defn new-task
   [db block-uid position title description priority creator assignee due-date status _projects]
@@ -244,12 +189,14 @@
                                 (get ":property/enum")
                                 :block/children)
         allowed-statuses    (map #(select-keys % [:block/uid :block/string]) allowed-stat-blocks)]
-    (if (seq allowed-statuses)
-      allowed-statuses
-      (let [[statuses ops] (create-default-allowed-statuses @db/dsdb)
-            event          (common-events/build-atomic-event ops)]
-        (rf/dispatch [:resolve-transact-forward event])
-        statuses))))
+    (when-not allowed-stat-blocks
+      (rf/dispatch [:properties/update-in [:node/title ":task/status"] [":property/enum"]
+                    (fn [db uid]
+                      (when-not (common-db/block-exists? db [:block/uid uid])
+                        (bfs/internal-representation->atomic-ops db (internal-representation-allowed-stauses)
+                                                                 {:block/uid uid :relation :first})))]))
+    (when (seq allowed-statuses)
+      allowed-statuses)))
 
 
 (defn task-status-view
