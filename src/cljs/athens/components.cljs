@@ -82,7 +82,7 @@
   (let [block-uid (last (re-find #"\(\((.+)\)\)" content))
         block-eid (db/e-by-av :block/uid block-uid)]
     (if block-eid
-      (let [block-type (common-db/get-block-type @db/dsdb [:block/uid block-uid])
+      (let [block-type (common-db/get-entity-type @db/dsdb [:block/uid block-uid])
             ff         @(rf/subscribe [:feature-flags])
             renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
             renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]

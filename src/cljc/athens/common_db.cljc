@@ -424,13 +424,13 @@
       :block/properties))
 
 
-(defn get-block-type
+(defn get-entity-type
+  "Returns the value of eids `:entity/type` prop, if any"
   [db eid]
   (->> (d/entity db eid)
        :block/_property-of
        (some (fn [e]
-               (when (= ":block/type"
-                        (-> e :block/key :node/title))
+               (when (-> e :block/key :node/title (= ":entity/type"))
                  (:block/string e))))))
 
 

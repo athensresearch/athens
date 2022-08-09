@@ -312,7 +312,7 @@
                  linked-ref
                  linked-ref-uid]} linked-ref-data
          ;; TODO: this is not reactive, so when we change block/type we don't see the change until reload
-         block-type               (common-db/get-block-type @db/dsdb [:block/uid block-uid])
+         block-type               (common-db/get-entity-type @db/dsdb [:block/uid block-uid])
          ident                    [:block/uid block-uid]
          show-edit?               (r/atom false)
          hide-edit-fn             #(reset! show-edit? false)
