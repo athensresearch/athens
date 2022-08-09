@@ -32,16 +32,11 @@
 
 (defn- internal-representation-allowed-stauses
   []
-  [#:block{:uid    (common.utils/gen-block-uid)
-           :string "To Do"}
-   #:block{:uid    (common.utils/gen-block-uid)
-           :string "Doing"}
-   #:block{:uid    (common.utils/gen-block-uid)
-           :string "Blocked"}
-   #:block{:uid    (common.utils/gen-block-uid)
-           :string "Done"}
-   #:block{:uid    (common.utils/gen-block-uid)
-           :string "Cancelled"}])
+  [{:block/string "To Do"}
+   {:block/string "Doing"}
+   {:block/string "Blocked"}
+   {:block/string "Done"}
+   {:block/string "Cancelled"}])
 
 
 ;; Create a new task
@@ -50,37 +45,27 @@
   ;; TODO verify `status` correctness
   (->> (bfs/internal-representation->atomic-ops
          db
-         [#:block{:uid        (common.utils/gen-block-uid)
-                  :string     ""
+         [#:block{:string     ""
                   :properties {":block/type"
-                               #:block{:string "[[athens/task]]"
-                                       :uid    (common.utils/gen-block-uid)}
+                               {:block/string "[[athens/task]]"}
                                ":task/title"
-                               #:block{:string title
-                                       :uid    (common.utils/gen-block-uid)}
+                               {:block/string title}
                                ":task/description"
-                               #:block{:string description
-                                       :uid    (common.utils/gen-block-uid)}
+                               {:block/string description}
                                ":task/priority"
-                               #:block{:string priority
-                                       :uid    (common.utils/gen-block-uid)}
+                               {:block/string priority}
                                ":task/creator"
-                               #:block{:string creator
-                                       :uid    (common.utils/gen-block-uid)}
+                               {:block/string creator}
                                ":task/assignee"
-                               #:block{:string assignee
-                                       :uid    (common.utils/gen-block-uid)}
+                               {:block/string assignee}
                                ":task/due-date"
-                               #:block{:string due-date
-                                       :uid    (common.utils/gen-block-uid)}
+                               {:block/string due-date}
                                ":task/status"
-                               #:block{:string status
-                                       :uid    (common.utils/gen-block-uid)}
+                               {:block/string status}
                                ;; NOTE Task belonging to a Project is maintained on side of a Project
                                #_#_
                                ":task/projects"
                                #:block{:string   ""
-                                       :uid      (common.utils/gen-block-uid)
                                        :children (for [project projects]
                                                    #:block{:string project
                                                            :uid    (common.utils/gen-block-uid)})}}}]
