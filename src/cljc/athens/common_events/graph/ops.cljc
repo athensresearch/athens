@@ -309,24 +309,34 @@
 
 
 (defn- new-prop
-  [db uid prop-uid k]
-  (let [position (merge {:relation {:page/title k}}
-                        (if-let [title (common-db/get-page-title db uid)]
+  [db [a v :as uid-or-eid] prop-uid k]
+  (let [uid?     (-> uid-or-eid vector? not)
+        uid      (if uid?
+                   uid-or-eid
+                   (common-db/get-block-uid db uid-or-eid))
+        title    (or (common-db/get-page-title db uid)
+                     (and (= a :node/title) v))
+        position (merge {:relation {:page/title k}}
+                        (if title
                           {:page/title title}
                           {:block/uid uid}))]
+    (println position)
     (build-block-new-op db prop-uid position)))
 
 
 (defn build-property-path
   ([db uid ks]
    (build-property-path db uid ks []))
-  ([db uid [k & ks] ops]
+  ([db uid-or-eid [k & ks] ops]
    (if-not k
-     [uid ops]
-     (let [block      (common-db/get-block db [:block/uid uid])
+     [uid-or-eid ops]
+     (let [uid?       (-> uid-or-eid vector? not)
+           block      (common-db/get-block db (if uid?
+                                                [:block/uid uid-or-eid]
+                                                uid-or-eid))
            prop-block (-> block :block/properties (get k))
            prop-uid   (or (:block/uid prop-block)
                           (common.utils/gen-block-uid))
            ops'       (cond-> ops
-                        (not prop-block) (conj (new-prop db uid prop-uid k)))]
+                        (not prop-block) (conj (new-prop db uid-or-eid prop-uid k)))]
        (recur db prop-uid ks ops')))))
