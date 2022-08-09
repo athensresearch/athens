@@ -1,4 +1,5 @@
 (ns athens.types.tasks.view
+  "Views for Athens Tasks"
   (:require
     ["@chakra-ui/react"                   :refer [Box,
                                                   FormControl,
@@ -164,37 +165,48 @@
 
 
 (defn generic-textarea-view-for-task-props
-  [_parent-block-uid _prop-block-uid _prop-name _prop-title _required?]
+  [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
   (let [prop-id (str (random-uuid))]
-    (fn [parent-block-uid prop-block-uid prop-name prop-title required?]
-      (let [prop-block         (reactive/get-reactive-block-document [:block/uid prop-block-uid])
-            prop-str           (or (:block/string prop-block) "")
-            local-value        (r/atom prop-str)
-            invalid-prop-str?  (and (str/blank? prop-str)
-                                    (not (nil? prop-str)))
-            save-fn            (fn [e]
-                                 (let [new-value (-> e .-target .-value)]
-                                   (log/debug prop-name "save-fn" (pr-str new-value))
-                                   (reset! local-value new-value)))
-            update-fn          #(do
-                                  (log/debug prop-name "update-fn:" (pr-str %))
-                                  (when-not (= prop-str %)
-                                    (reset! local-value %)
-                                    (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
-                                      (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
-                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid %)])]))))
-
-            idle-fn            (gfns/debounce #(do
-                                                 (log/debug prop-name "idle-fn" (pr-str @local-value))
-                                                 (update-fn @local-value))
-                                              2000)
-            read-value         local-value
-            show-edit?         (r/atom true)
-            state-hooks        {:save-fn    save-fn
-                                :idle-fn    idle-fn
-                                :update-fn  update-fn
-                                :read-value read-value
-                                :show-edit? show-edit?}]
+    (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
+      (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
+            prop-str            (or (:block/string prop-block) "")
+            local-value         (r/atom prop-str)
+            invalid-prop-str?   (and (str/blank? prop-str)
+                                     (not (nil? prop-str)))
+            save-fn             (fn [e]
+                                  (let [new-value (-> e .-target .-value)]
+                                    (log/debug prop-name "save-fn" (pr-str new-value))
+                                    (reset! local-value new-value)))
+            update-fn           #(do
+                                   (log/debug prop-name "update-fn:" (pr-str %))
+                                   (when-not (= prop-str %)
+                                     (reset! local-value %)
+                                     (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
+                                       (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                                     (fn [db uid] [(graph-ops/build-block-save-op db uid %)])]))))
+            idle-fn             (gfns/debounce #(do
+                                                  (log/debug prop-name "idle-fn" (pr-str @local-value))
+                                                  (update-fn @local-value))
+                                               2000)
+            read-value          local-value
+            show-edit?          (r/atom true)
+            custom-key-handlers {:enter-handler (if multiline?
+                                                  editor/enter-handler-new-line
+                                                  (fn [_uid _d-key-down]
+                                                    ;; TODO dispatch save and jump to next input
+                                                    (println "TODO dispatch save and jump to next input")
+                                                    (update-fn @local-value)))
+                                 :tab-handler   (fn [_uid _embed-id _d-key-down]
+                                                  ;; TODO implement focus on next input
+                                                  (update-fn @local-value))}
+            state-hooks         (merge {:save-fn                 save-fn
+                                        :idle-fn                 idle-fn
+                                        :update-fn               update-fn
+                                        :read-value              read-value
+                                        :show-edit?              show-edit?
+                                        :default-verbatim-paste? true
+                                        :keyboard-navigation?    false}
+                                       custom-key-handlers)]
         [:> FormControl {:is-required required?
                          :is-invalid  invalid-prop-str?}
          [:> FormLabel {:html-for prop-id}
@@ -295,12 +307,12 @@
               due-date-uid    (:block/uid (find-property-block-by-key-name reactive-block ":task/due-date"))
               ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
               status-uid      (:block/uid (find-property-block-by-key-name reactive-block ":task/status"))]
-          [:> VStack {:spacing "2rem"
+          [:> VStack {:spacing "0.5rem"
                       :class   "task_container"}
-           [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true]
-           [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false]
+           [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]
+           [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
            ;; Making assumption that for now we can add due date manually without date-picker.
-           [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false]
+           [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
            [task-status-view block-uid status-uid]]))))
 
 

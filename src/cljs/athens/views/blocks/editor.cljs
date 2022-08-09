@@ -23,6 +23,11 @@
       EventType)))
 
 
+(defn enter-handler-new-line
+  [_uid _d-key-down]
+  (textarea-keydown/replace-selection-with "\n"))
+
+
 (defn find-selected-items
   "Used by both shift-click and click-drag for multi-block-selection.
   Given a mouse event, a source block, and a target block, highlight blocks.
