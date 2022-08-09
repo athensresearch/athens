@@ -311,8 +311,6 @@
                  parent-uids
                  linked-ref
                  linked-ref-uid]} linked-ref-data
-         ;; TODO: this is not reactive, so when we change block/type we don't see the change until reload
-         block-type               (common-db/get-entity-type @db/dsdb [:block/uid block-uid])
          ident                    [:block/uid block-uid]
          show-edit?               (r/atom false)
          hide-edit-fn             #(reset! show-edit? false)
@@ -349,6 +347,7 @@
                               key
                               properties
                               _refs]}  (merge block-o block)
+                block-type             (reactive/reactive-get-entity-type [:block/uid block-uid])
                 children-uids          (set (map :block/uid children))
                 children?              (seq children-uids)
                 presence?              (seq @present-user)

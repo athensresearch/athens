@@ -425,7 +425,7 @@
 
 
 (defn get-entity-type
-  "Returns the value of eids `:entity/type` prop, if any"
+  "Returns the value of eids `:entity/type` prop, if any."
   [db eid]
   (->> (d/entity db eid)
        :block/_property-of

@@ -1,9 +1,9 @@
 (ns athens.components
   (:require
     ["@chakra-ui/react"       :refer [Checkbox Button]]
-    [athens.common-db         :as common-db]
     [athens.db                :as db]
     [athens.parse-renderer    :refer [component]]
+    [athens.reactive          :as reactive]
     [athens.types.core        :as types]
     [athens.types.dispatcher  :as block-type-dispatcher]
     [athens.views.blocks.core :as blocks]
@@ -82,7 +82,7 @@
   (let [block-uid (last (re-find #"\(\((.+)\)\)" content))
         block-eid (db/e-by-av :block/uid block-uid)]
     (if block-eid
-      (let [block-type (common-db/get-entity-type @db/dsdb [:block/uid block-uid])
+      (let [block-type (reactive/reactive-get-entity-type [:block/uid block-uid])
             ff         @(rf/subscribe [:feature-flags])
             renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
             renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]

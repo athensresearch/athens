@@ -204,7 +204,7 @@
                               [:span {:class "contents"} title-coll]])
      :block-ref            (fn [{_from :from :as attr} ref-uid]
                              (let [block      (reactive/get-reactive-block-or-page-by-uid ref-uid)
-                                   block-type (common-db/get-entity-type @db/dsdb [:block/uid ref-uid])
+                                   block-type (reactive/reactive-get-entity-type [:block/uid ref-uid])
                                    ff         @(rf/subscribe [:feature-flags])
                                    renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
                                    renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]
