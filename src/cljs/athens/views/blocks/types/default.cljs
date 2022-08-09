@@ -371,7 +371,7 @@
 
               (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
-              [editor/editor-component
+              [:f> editor/editor-component
                block-el
                block-o
                true
