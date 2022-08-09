@@ -17,7 +17,7 @@ export const Item = (props) => {
     }
   }, [ref]);
 
-  const [_order, name, hasUnread] = id;
+  const [_order, name, isUnread, isCurrent] = id;
 
   const {
     attributes,
@@ -37,8 +37,9 @@ export const Item = (props) => {
     <Button
       size="sm"
       flexShrink={0}
-      width={width}
+      maxWidth="var(--parentWidth)"
       variant="ghost"
+      isActive={isCurrent}
       justifyContent="flex-start"
       overflow="hidden"
       ref={setNodeRef}
@@ -48,7 +49,15 @@ export const Item = (props) => {
       {...listeners}
       {...rest}
     >
-      <Text as="span" fontWeight={hasUnread ? "bold" : "normal"} overflow="hidden" textOverflow="ellipsis">{name}</Text>
+      <Text
+        as="span"
+        textAlign="start"
+        flex="1 1 100%"
+        fontWeight={isUnread ? "bold" : "n"}
+        overflow="hidden"
+        textOverflow="ellipsis">
+        {name}
+      </Text>
       {children}
     </Button>
   );
