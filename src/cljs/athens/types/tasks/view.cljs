@@ -20,7 +20,6 @@
     [athens.self-hosted.presence.views    :as presence]
     [athens.types.core                    :as types]
     [athens.types.dispatcher              :as dispatcher]
-    [athens.types.tasks.events            :as task-events]
     [athens.views.blocks.editor           :as editor]
     [clojure.string                       :as str]
     [goog.functions                       :as gfns]
@@ -181,16 +180,9 @@
                                   (log/debug prop-name "update-fn:" (pr-str %))
                                   (when-not (= prop-str %)
                                     (reset! local-value %)
-                                    (cond
-                                      (= prop-name ":task/title")       (rf/dispatch [::task-events/save-title
-                                                                                      {:parent-block-uid parent-block-uid
-                                                                                       :title            %}])
-                                      (= prop-name ":task/description") (rf/dispatch [::task-events/save-description
-                                                                                      {:parent-block-uid parent-block-uid
-                                                                                       :description      %}])
-                                      (= prop-name ":task/due-date")    (rf/dispatch [::task-events/save-title
-                                                                                      {:parent-block-uid parent-block-uid
-                                                                                       :due-date         %}]))))
+                                    (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
+                                      (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid %)])]))))
 
             idle-fn            (gfns/debounce #(do
                                                  (log/debug prop-name "idle-fn" (pr-str @local-value))
@@ -264,10 +256,10 @@
                   :value       status-uid
                   :placeholder "Select a status"
                   :on-change   (fn [e]
-                                 (let [new-status (-> e .-target .-value)]
-                                   (rf/dispatch [::task-events/save-status
-                                                 {:parent-block-uid parent-block-uid
-                                                  :status           (str "((" new-status "))")}])))}
+                                 (let [new-status (-> e .-target .-value)
+                                       status-ref (str "((" new-status "))")]
+                                   (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+                                                 (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}
        (doall
          (for [{:block/keys [uid string]} allowed-statuses]
            ^{:key uid}
