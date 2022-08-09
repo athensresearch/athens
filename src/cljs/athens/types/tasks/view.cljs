@@ -226,15 +226,6 @@
             string]))]]]))
 
 
-(defn- find-property-block-by-key-name
-  [entity-block prop-name]
-  (->> entity-block
-       :block/properties
-       (filter (fn [[k _v]] (= prop-name k)))
-       (map second)
-       first))
-
-
 (defrecord TaskView
   []
 
@@ -248,12 +239,12 @@
     [_this block-data _callbacks]
     (let [block-uid (:block/uid block-data)]
       (fn [_this _block-data _callbacks]
-        (let [reactive-block  (reactive/get-reactive-block-document [:block/uid block-uid])
-              title-uid       (:block/uid (find-property-block-by-key-name reactive-block ":task/title"))
-              description-uid (:block/uid (find-property-block-by-key-name reactive-block ":task/description"))
-              due-date-uid    (:block/uid (find-property-block-by-key-name reactive-block ":task/due-date"))
+        (let [props (-> [:block/uid block-uid] reactive/get-reactive-block-document :block/properties)
+              title-uid       (-> props (get ":task/title") :block/uid)
+              description-uid (-> props (get ":task/description") :block/uid)
+              due-date-uid    (-> props (get ":task/due-date") :block/uid)
               ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
-              status-uid      (:block/uid (find-property-block-by-key-name reactive-block ":task/status"))]
+              status-uid      (-> props (get ":task/status") :block/uid)]
           [:> VStack {:spacing "0.5rem"
                       :class   "task_container"}
            [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]
