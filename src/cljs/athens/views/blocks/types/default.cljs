@@ -4,7 +4,7 @@
   (:require
     ["/components/Block/Container"           :refer [Container]]
     ["/components/Icons/Icons"               :refer [PencilIcon BlockEmbedIcon TextIcon ChatIcon ArchiveIcon]]
-    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuList MenuItem Divider]]
+    ["@chakra-ui/react"                      :refer [Box Button ButtonGroup IconButton MenuDivider MenuList MenuItem Divider]]
     [athens.common-db                        :as common-db]
     [athens.common.logging                   :as log]
     [athens.db                               :as db]
