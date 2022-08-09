@@ -185,14 +185,28 @@
     (seq filtered)))
 
 
+(defn- split-props-from-blocks
+  [db uids]
+  (let [group-f #(if (common-db/property-key db [:block/uid %])
+                   :props
+                   :blocks)
+        {:keys [props blocks]} (group-by group-f uids)]
+    [props blocks]))
+
+
 (defn block-move-chain
-  [target-uid source-uids first-rel]
-  (composite/make-consequence-op {:op/type :block/move-chain}
-                                 (concat [(atomic/make-block-move-op (first source-uids)
-                                                                     {:block/uid target-uid
-                                                                      :relation first-rel})]
-                                         (doall
-                                           (for [[one two] (partition 2 1 source-uids)]
+  [db target-uid source-uids first-rel]
+  (let [[prop-uids block-uids] (split-props-from-blocks db source-uids)]
+    (composite/make-consequence-op {:op/type :block/move-chain}
+                                   (concat (for [uid prop-uids]
+                                             (->> (common-db/drop-prop-position db uid target-uid first-rel)
+                                                  (atomic/make-block-move-op uid)))
+
+                                           (when (seq block-uids)
+                                             [(atomic/make-block-move-op (first block-uids)
+                                                                         {:block/uid target-uid
+                                                                          :relation first-rel})])
+                                           (for [[one two] (partition 2 1 block-uids)]
                                              (atomic/make-block-move-op two
                                                                         {:block/uid one
                                                                          :relation :after}))))))
@@ -212,7 +226,7 @@
         children           (common-db/get-children-uids db [:block/uid old-block-uid])
         children?          (seq children)
         move-children-op   (when children?
-                             (block-move-chain new-block-uid children :first))
+                             (block-move-chain db new-block-uid children :first))
         close-new-block-op (when children?
                              (atomic/make-block-open-op new-block-uid open))
         split-block-op     (composite/make-consequence-op {:op/type :block/split}
