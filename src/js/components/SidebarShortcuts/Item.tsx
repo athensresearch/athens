@@ -17,7 +17,7 @@ export const Item = (props) => {
     }
   }, [ref]);
 
-  const [_order, name] = id;
+  const [_order, name, hasUnread] = id;
 
   const {
     attributes,
@@ -48,7 +48,7 @@ export const Item = (props) => {
       {...listeners}
       {...rest}
     >
-      <Text as="span" overflow="hidden" textOverflow="ellipsis">{name}</Text>
+      <Text as="span" fontWeight={hasUnread ? "bold" : "normal"} overflow="hidden" textOverflow="ellipsis">{name}</Text>
       {children}
     </Button>
   );
