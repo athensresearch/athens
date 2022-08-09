@@ -78,7 +78,7 @@ export const InboxItemsList = (props) => {
     } else {
       actions.push({
         label: "Archive",
-        fn: () => onArchive(notification.id),
+        fn: (e) => onArchive(e, notification.id),
         icon: <ArchiveIcon />
       });
     }
