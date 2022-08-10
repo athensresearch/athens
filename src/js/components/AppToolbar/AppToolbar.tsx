@@ -13,11 +13,11 @@ import {
   DailyNotesIcon,
   GraphIcon,
   EllipsisHorizontalCircleIcon,
-  CheckmarkIcon,
-  ViewIcon,
-  ViewOffIcon,
-  ChatFilledIcon
-
+  ChatFilledIcon,
+  TrashIcon,
+  BookmarkIcon,
+  TimeNowIcon,
+  ArrowRightOnBoxIcon
 } from '@/Icons/Icons';
 
 import {
@@ -36,11 +36,14 @@ import {
   IconButton,
   ButtonGroup,
   useColorMode,
-  useMediaQuery
+  useMediaQuery,
+  Spacer,
 } from '@chakra-ui/react';
 
-
 import { WindowButtons } from './components/WindowButtons';
+import { LocationIndicator } from './components/LocationIndicator';
+
+const PAGE_TITLE_SHOW_HEIGHT = 50;
 
 interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
   children: React.ReactChild;
@@ -80,7 +83,6 @@ const AppToolbarWrapper = ({ children, ...props }) => <Flex
   gridArea="app-header"
   borderBottom="1px solid transparent"
   justifyContent="space-between"
-  // overflow="hidden"
   py={1}
   px={1}
   h={6}
@@ -299,7 +301,24 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     ...rest
   } = props;
   const { colorMode, toggleColorMode } = useColorMode();
+  const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState(null);
   const [canShowFullSecondaryMenu] = useMediaQuery('(min-width: 900px)');
+
+  // add event listener to detect when the user scrolls past the title
+  React.useLayoutEffect(() => {
+    const scrollContainer = document.getElementsByClassName("main-content")[0] as HTMLElement;
+
+    const handleScroll = () => {
+      if (scrollContainer.scrollTop > PAGE_TITLE_SHOW_HEIGHT) {
+        setIsScrolledPastTitle(true);
+      } else {
+        setIsScrolledPastTitle(false);
+      }
+    }
+    handleScroll();
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // If the database color mode doesn't match
   // the chakra color mode, update the chakra color mode
@@ -350,8 +369,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       ].filter(Boolean).join(' ')}
       {...rest}
     >
-      <HStack flex="1">
-        <ButtonGroup size="sm" mr="auto">
+      <HStack flex="1" overflow="hidden">
+        <ButtonGroup size="sm" mr="auto" overflow="hidden">
           {databaseMenu}
           <Tooltip label="Navigation">
             <ToolbarIconButton
@@ -406,24 +425,75 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               <GraphIcon />
             </ToolbarIconButton>
           </Tooltip>
+          <Tooltip label="Find or create a page">
+            <ToolbarIconButton
+              aria-label="Search"
+              isActive={isCommandBarOpen}
+              onClick={handlePressCommandBar}>
+              <SearchIcon />
+            </ToolbarIconButton>
+          </Tooltip>
 
+          <LocationIndicator
+            isVisible={isScrolledPastTitle}
+            title="Q3 2022 Goals"
+            uid="123"
+            type="node"
+            path={[{ label: "cool", path: "cool" }, { label: "page", path: "page" }, { label: "bro", path: "bro" }]}
+            actions={[
+              {
+                type: "action",
+                title: "Add to shortcuts",
+                icon: <BookmarkIcon />,
+                fn: (target) => console.log("create", target.uid)
+              },
+              { type: "divider" },
+              {
+                type: "action",
+                title: "Show local graph",
+                icon: <GraphIcon />,
+                fn: (target) => console.log("create", target.uid)
+              },
+              {
+                type: "action",
+                title: "Open in new tab",
+                icon: <ArrowRightOnBoxIcon />,
+                fn: (target) => console.log("create", target.uid)
+              },
+              {
+                type: "action",
+                title: "Show in sidebar",
+                icon: <ArrowRightOnBoxIcon />,
+                fn: (target) => console.log("create", target.uid)
+              },
+              { type: "divider" },
+              {
+                type: "action",
+                title: "Show time slider",
+                tooltip: "This is only a test",
+                icon: <TimeNowIcon />,
+                fn: (target) => console.log("create", target.uid)
+              },
+              {
+                type: "action",
+                title: "Show time heatmap",
+                icon: <TimeNowIcon />,
+                fn: (target) => console.log("create", target.uid)
+              },
+              { type: "divider" },
+              {
+                type: "action",
+                title: "Delete page",
+                icon: <TrashIcon />,
+                fn: (target) => console.log("delete", target.uid)
+              },
+            ]}
+          />
 
-          <ToolbarButton
-            aria-label="Search"
-            variant="outline"
-            leftIcon={<SearchIcon />}
-            isActive={isCommandBarOpen}
-            onClick={handlePressCommandBar}
-            pl="0.5rem"
-          >
-            Find or create a page
-          </ToolbarButton>
         </ButtonGroup>
 
         {presenceDetails}
-
         {notificationPopover}
-
         {canShowFullSecondaryMenu
           ? SecondaryToolbarItems(secondaryTools)
           : SecondaryToolbarOverflowMenu(secondaryTools)}
