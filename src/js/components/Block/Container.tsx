@@ -1,9 +1,9 @@
 import React from 'react';
-import { Box, AlertIcon, Alert, AlertTitle, useMergeRefs } from "@chakra-ui/react";
+import { Box, useMergeRefs } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
 import { useContextMenu } from '@/utils/useContextMenu';
 
-const ERROR_MESSAGE = <Alert ml={4} status='error'><AlertIcon /><AlertTitle>An error occurred while rendering this block.</AlertTitle></Alert>;
+const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
 // Don't open the context menu on these elements
 const CONTAINER_CONTEXT_MENU_FILTERED_TAGS = ["A", "BUTTON", "INPUT", "TEXTAREA", "LABEL", "VIDEO", "EMBED", "IFRAME", "IMG"];
@@ -52,6 +52,7 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
         isHoveredNotChild && "is-hovered-not-child",
         hasPresence ? "is-presence" : "",
       ].filter(Boolean).join(' ')}
+      display="flex"
       lineHeight="2em"
       position="relative"
       borderRadius="0.125rem"
