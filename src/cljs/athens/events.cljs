@@ -1341,9 +1341,12 @@
         {:keys [value start]} d-key-down
         event                 (cond
                                 (:block/key block)
-                                [:enter/open-block-add-child {:block    block
-                                                              :new-uid  new-uid
-                                                              :embed-id embed-id}]
+                                [:enter/split-block {:uid        uid
+                                                     :value      value
+                                                     :index      start
+                                                     :new-uid    new-uid
+                                                     :embed-id   embed-id
+                                                     :relation   :first}]
 
                                 (and (:block/open block)
                                      has-children?
@@ -1805,16 +1808,16 @@
 
 ;; Works like clojure's update-in.
 ;; Calls (f db uid), where uid is the existing block uid, or a uid that will be created in ks property path.
-;; (f db uid) should return a seq of operations to perform. If no operations are return, nothing is transacted.
+;; (f db uid) should return a seq of operations to perform. If no operations are returned, nothing is transacted.
 (reg-event-fx
   :properties/update-in
-  (fn [_ [_ id ks f]]
-    (log/debug ":properties/update-in args" id ks)
-    (let [db                  @db/dsdb
-          uid                 (common-db/get-block-uid db id)
-          [prop-uid path-ops] (graph-ops/build-property-path db uid ks)
-          f-ops               (f db prop-uid)]
-      (when (seq f-ops)
-        {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
-                                                            (composite-ops/make-consequence-op {:op/type :properties/update})
-                                                            common-events/build-atomic-event)]]]]}))))
+  (fn [_ [_ eid ks f]]
+    (log/debug ":properties/update-in args" eid ks)
+    (when (seq ks)
+      (let [db                  @db/dsdb
+            [prop-uid path-ops] (graph-ops/build-property-path db eid ks)
+            f-ops               (f db prop-uid)]
+        (when (seq f-ops)
+          {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
+                                                              (composite-ops/make-consequence-op {:op/type :properties/update})
+                                                              common-events/build-atomic-event)]]]]})))))
