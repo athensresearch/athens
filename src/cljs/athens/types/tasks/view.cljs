@@ -103,20 +103,26 @@
             local-value         (r/atom prop-str)
             invalid-prop-str?   (and (str/blank? prop-str)
                                      (not (nil? prop-str)))
-            save-fn             (fn [e]
-                                  (let [new-value (-> e .-target .-value)]
-                                    (log/debug prop-name "save-fn" (pr-str new-value))
-                                    (reset! local-value new-value)))
-            update-fn           #(do
-                                   (log/debug prop-name "update-fn:" (pr-str %))
-                                   (when-not (= prop-str %)
-                                     (reset! local-value %)
+            save-fn             (fn
+                                  ([]
+                                   (log/debug prop-name "save-fn" (pr-str @local-value))
+                                   (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
+                                     (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
+                                  ([e]
+                                   (let [new-value (-> e .-target .-value)]
+                                     (log/debug prop-name "save-fn" (pr-str new-value))
+                                     (reset! local-value new-value)
                                      (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
                                        (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
-                                                     (fn [db uid] [(graph-ops/build-block-save-op db uid %)])]))))
+                                                     (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
+            update-fn           #(do
+                                   (when-not (= prop-str %)
+                                     (log/debug prop-name "update-fn:" (pr-str %))
+                                     (reset! local-value %)))
             idle-fn             (gfns/debounce #(do
                                                   (log/debug prop-name "idle-fn" (pr-str @local-value))
-                                                  (update-fn @local-value))
+                                                  (save-fn))
                                                2000)
             read-value          local-value
             show-edit?          (r/atom true)
