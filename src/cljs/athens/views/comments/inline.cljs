@@ -1,23 +1,23 @@
 (ns athens.views.comments.inline
   (:require
-    ["/components/Block/Anchor" :refer [Anchor]]
+    ["/components/Block/Anchor"      :refer [Anchor]]
     ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
-    ["/components/Icons/Icons" :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
-    ["/timeAgo.js" :refer [timeAgo]]
-    ["@chakra-ui/react" :refer [Button Box Text VStack Avatar HStack Badge]]
-    [athens.common-events :as common-events]
-    [athens.common-events.graph.ops :as graph-ops]
-    [athens.common.logging :as log]
-    [athens.common.utils :as common.utils]
-    [athens.db :as db]
-    [athens.parse-renderer :as parse-renderer]
-    [athens.reactive :as reactive]
-    [athens.util :as util]
-    [athens.views.blocks.content :as b-content]
-    [athens.views.comments.core :as comments.core]
-    [clojure.string :as str]
-    [re-frame.core :as rf]
-    [reagent.core :as r]))
+    ["/components/Icons/Icons"       :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
+    ["/timeAgo.js"                   :refer [timeAgo]]
+    ["@chakra-ui/react"              :refer [Button Box Text VStack Avatar HStack Badge]]
+    [athens.common-events            :as common-events]
+    [athens.common-events.graph.ops  :as graph-ops]
+    [athens.common.logging           :as log]
+    [athens.common.utils             :as common.utils]
+    [athens.db                       :as db]
+    [athens.parse-renderer           :as parse-renderer]
+    [athens.reactive                 :as reactive]
+    [athens.util                     :as util]
+    [athens.views.blocks.editor      :as editor]
+    [athens.views.comments.core      :as comments.core]
+    [clojure.string                  :as str]
+    [re-frame.core                   :as rf]
+    [reagent.core                    :as r]))
 
 
 (defn copy-comment-uid
@@ -153,7 +153,7 @@
                                                                :background-color "var(--chakra-colors-background-attic)"
                                                                :minHeight "100%"
                                                                :border-radius "5px"}}]
-              [b-content/block-content-el block-o state-hooks]))]
+              [editor/block-editor block-o state-hooks]))]
 
          (when (pos? linked-refs-count)
            [:> Badge {:size "xs"
@@ -265,4 +265,4 @@
                          :bg "background.attic"
                          :cursor "text"
                          :_focusWithin {:shadow "focus"}}
-                 [b-content/block-content-el block-o state-hooks]])])])))))
+                 [editor/block-editor block-o state-hooks]])])])))))
