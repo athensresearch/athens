@@ -113,7 +113,10 @@
                                    (let [new-value (-> e .-target .-value)]
                                      (log/debug prop-name "save-fn" (pr-str new-value))
                                      (reset! local-value new-value)
-                                     (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
+                                     (when (#{":task/title"
+                                              ":task/assignee"
+                                              ":task/description"
+                                              ":task/due-date"} prop-name)
                                        (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
                                                      (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
             update-fn           #(do
@@ -232,6 +235,7 @@
       (fn [_this _block-data _callbacks]
         (let [props (-> [:block/uid block-uid] reactive/get-reactive-block-document :block/properties)
               title-uid       (-> props (get ":task/title") :block/uid)
+              assignee-uid    (-> props (get ":task/assignee") :block/uid)
               description-uid (-> props (get ":task/description") :block/uid)
               due-date-uid    (-> props (get ":task/due-date") :block/uid)
               ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
@@ -239,6 +243,7 @@
           [:> VStack {:spacing "0.5rem"
                       :class   "task_container"}
            [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]
+           [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]
            [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
            ;; Making assumption that for now we can add due date manually without date-picker.
            [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
