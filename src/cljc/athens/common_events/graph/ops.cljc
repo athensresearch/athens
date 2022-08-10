@@ -215,15 +215,17 @@
 (defn build-block-split-op
   "Creates `:block/split` composite op, taking into account context.
   If old-block has children, pass them on to new-block.
-  If old-block is open or closed, pass that state on to new-block."
+  If old-block is open or closed, pass that state on to new-block.
+  Ignores both behaviours above if old-block is a property."
   [db {:keys [old-block-uid new-block-uid
               string index relation]}]
   (let [save-block-op      (build-block-save-op db old-block-uid (subs string 0 index))
         new-block-op       (atomic/make-block-new-op new-block-uid {:block/uid old-block-uid
                                                                     :relation  relation})
         new-block-save-op  (build-block-save-op db new-block-uid (subs string index))
-        {:block/keys [open]} (common-db/get-block db [:block/uid old-block-uid])
-        children           (common-db/get-children-uids db [:block/uid old-block-uid])
+        {:block/keys [open key]} (common-db/get-block db [:block/uid old-block-uid])
+        children           (when-not key
+                             (common-db/get-children-uids db [:block/uid old-block-uid]))
         children?          (seq children)
         move-children-op   (when children?
                              (block-move-chain db new-block-uid children :first))

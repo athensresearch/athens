@@ -1341,9 +1341,12 @@
         {:keys [value start]} d-key-down
         event                 (cond
                                 (:block/key block)
-                                [:enter/open-block-add-child {:block    block
-                                                              :new-uid  new-uid
-                                                              :embed-id embed-id}]
+                                [:enter/split-block {:uid        uid
+                                                     :value      value
+                                                     :index      start
+                                                     :new-uid    new-uid
+                                                     :embed-id   embed-id
+                                                     :relation   :first}]
 
                                 (and (:block/open block)
                                      has-children?

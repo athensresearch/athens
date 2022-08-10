@@ -39,6 +39,15 @@
    {:block/string "Cancelled"}])
 
 
+(defn- internal-representation-allowed-priorities
+  []
+  [{:block/string "Expedite"}
+   {:block/string "P1"}
+   {:block/string "P2"}
+   {:block/string "P3"}
+   {:block/string "Nice to have"}])
+
+
 ;; Create a new task
 (defn new-task
   [db block-uid position title description priority creator assignee due-date status _projects]
@@ -113,7 +122,10 @@
                                    (let [new-value (-> e .-target .-value)]
                                      (log/debug prop-name "save-fn" (pr-str new-value))
                                      (reset! local-value new-value)
-                                     (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
+                                     (when (#{":task/title"
+                                              ":task/assignee"
+                                              ":task/description"
+                                              ":task/due-date"} prop-name)
                                        (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
                                                      (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
             update-fn           #(do
@@ -172,6 +184,24 @@
             (str "Please provide " prop-title)])]))))
 
 
+(defn- find-allowed-priorities
+  []
+  (let [task-priority-page  (reactive/get-reactive-node-document [:node/title ":task/priority"])
+        allowed-prio-blocks (-> task-priority-page
+                                :block/properties
+                                (get ":property/enum")
+                                :block/children)
+        allowed-priorities  (map #(select-keys % [:block/uid :block/string]) allowed-prio-blocks)]
+    (when-not allowed-prio-blocks
+      (rf/dispatch [:properties/update-in [:node/title ":task/priority"] [":property/enum"]
+                    (fn [db uid]
+                      (when-not (common-db/block-exists? db [:block/uid uid])
+                        (bfs/internal-representation->atomic-ops db (internal-representation-allowed-priorities)
+                                                                 {:block/uid uid :relation :first})))]))
+    (when (seq allowed-priorities)
+      allowed-priorities)))
+
+
 (defn- find-allowed-statuses
   []
   (let [task-status-page    (reactive/get-reactive-node-document [:node/title ":task/status"])
@@ -188,6 +218,33 @@
                                                                  {:block/uid uid :relation :first})))]))
     (when (seq allowed-statuses)
       allowed-statuses)))
+
+
+(defn task-priority-view
+  [parent-block-uid priority-block-uid]
+  (let [priority-id        (str (random-uuid))
+        priority-block     (reactive/get-reactive-block-document [:block/uid priority-block-uid])
+        allowed-priorities (find-allowed-priorities)
+        priority-string    (:block/string priority-block "(())")
+        priority-uid       (subs priority-string 2 (- (count priority-string) 2))]
+    [:> FormControl {:is-required true}
+     [:> HStack {:spacing "2rem"}
+      [:> FormLabel {:html-for priority-id
+                     :w        "9rem"}
+       "Task priority"]
+      [:> Select {:id          priority-id
+                  :value       priority-uid
+                  :placeholder "Select a priority"
+                  :on-change   (fn [e]
+                                 (let [new-priority (-> e .-target .-value)
+                                       priority-ref (str "((" new-priority "))")]
+                                   (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
+                                                 (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
+       (doall
+         (for [{:block/keys [uid string]} allowed-priorities]
+           ^{:key uid}
+           [:option {:value uid}
+            string]))]]]))
 
 
 (defn task-status-view
@@ -232,6 +289,8 @@
       (fn [_this _block-data _callbacks]
         (let [props (-> [:block/uid block-uid] reactive/get-reactive-block-document :block/properties)
               title-uid       (-> props (get ":task/title") :block/uid)
+              assignee-uid    (-> props (get ":task/assignee") :block/uid)
+              priority-uid    (-> props (get ":task/priority") :block/uid)
               description-uid (-> props (get ":task/description") :block/uid)
               due-date-uid    (-> props (get ":task/due-date") :block/uid)
               ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
@@ -239,6 +298,8 @@
           [:> VStack {:spacing "0.5rem"
                       :class   "task_container"}
            [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]
+           [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]
+           [task-priority-view block-uid priority-uid]
            [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
            ;; Making assumption that for now we can add due date manually without date-picker.
            [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
