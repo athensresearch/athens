@@ -85,12 +85,11 @@
 
 
   (outline-view
-    [_this block-data _callbacks]
+    [_this block-data callbacks]
     (let [{:block/keys [uid
                         original-uid]} block-data
           local-value                  (r/atom nil)
           old-value                    (r/atom nil)
-          show-edit?                   (r/atom false)
           savep-fn                     (partial db/transact-state-for-uid (or original-uid uid))
           save-fn                      #(savep-fn @local-value :block-save)
           idle-fn                      (gfns/debounce #(savep-fn @local-value :autosave)
@@ -99,13 +98,13 @@
           update-old-fn                #(reset! old-value %)
           read-value                   (ratom/reaction @local-value)
           read-old-value               (ratom/reaction @old-value)
-          state-hooks                  {:save-fn        save-fn
-                                        :idle-fn        idle-fn
-                                        :update-fn      update-fn
-                                        :update-old-fn  update-old-fn
-                                        :read-value     read-value
-                                        :read-old-value read-old-value
-                                        :show-edit?     show-edit?}]
+          state-hooks                  (merge callbacks
+                                              {:save-fn        save-fn
+                                               :idle-fn        idle-fn
+                                               :update-fn      update-fn
+                                               :update-old-fn  update-old-fn
+                                               :read-value     read-value
+                                               :read-old-value read-old-value})]
       (fn render-block
         [_this block _callbacks]
         (let [ident                 [:block/uid (or original-uid uid)]

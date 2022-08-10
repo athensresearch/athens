@@ -501,7 +501,7 @@
                ;; `BlockTypeProtocol` dispatch placement
                [:> Box {:gridArea "content"}
                 ^{:key renderer-k}
-                [types/outline-view renderer block {}]]
+                [types/outline-view renderer block {:show-edit? show-edit?}]]
 
                (when reactions
                  [:> Reactions {:reactions        (clj->js reactions)
