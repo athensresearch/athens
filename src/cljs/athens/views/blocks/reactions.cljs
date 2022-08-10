@@ -84,4 +84,5 @@
   [:> MenuGroup {:title "Add reaction"}
    [:> HStack {:spacing 0 :justifyContent "stretch"}
     (for [reaction-icon common-reactions]
-      [reactions-menu-list-item {:icon reaction-icon :fn (toggle-reaction uid reaction-icon user-id)}])]])
+      ^{:key reaction-icon}
+      [reactions-menu-list-item {:icon reaction-icon :fn #(toggle-reaction uid reaction-icon user-id)}])]])

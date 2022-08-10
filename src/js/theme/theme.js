@@ -230,14 +230,6 @@ const components = {
             color: "var(--toast-color)",
           }
         })
-      },
-      subtle: {
-        container: {
-          borderRadius: "md"
-        },
-        title: {
-          fontWeight: "normal"
-        },
       }
     }
   },
