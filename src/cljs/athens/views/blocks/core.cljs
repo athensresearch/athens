@@ -346,7 +346,7 @@
                               children
                               key
                               properties
-                              _refs]}  (merge block-o block)
+                              _refs]}  (merge block block-o)
                 block-type             (reactive/reactive-get-entity-type [:block/uid block-uid])
                 children-uids          (set (map :block/uid children))
                 children?              (seq children-uids)
