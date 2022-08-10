@@ -73,10 +73,11 @@
   [props]
   (let [{:keys [icon fn command]} props]
     [:> Box {:display "inline-flex" :flex 1}
-     [:> Tooltip {:label (r/as-element [:> VStack {:align "center"}
+     [:> Tooltip {:closeOnMouseDown true
+                  :label (r/as-element [:> VStack {:align "center"}
                                         [:> Text "React with '" icon "'"]
                                         (when command [:> Text command])])}
-      [:> MenuItem {:justifyContent "center" :on-click fn} icon]]]))
+      [:> MenuItem {:justifyContent "center" :on-click #(fn)} icon]]]))
 
 
 (defn reactions-menu-list
