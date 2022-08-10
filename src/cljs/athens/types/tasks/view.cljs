@@ -241,9 +241,9 @@
                                    (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
        (doall
-        (for [{:block/keys [uid string]} allowed-priorities]
-          ^{:key uid}
-          [:option {:value uid}
+         (for [{:block/keys [uid string]} allowed-priorities]
+           ^{:key uid}
+           [:option {:value uid}
             string]))]]]))
 
 
