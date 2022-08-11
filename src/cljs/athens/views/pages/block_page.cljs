@@ -107,8 +107,8 @@
          ;; Header
          [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
                                                   (fn [e] (router/navigate-uid uid e)))
-                         :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
-                                                 #(dispatch [:right-sidebar/open-item uid]))}
+                         :onClickOpenInSidebar  (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                                                  #(dispatch [:right-sidebar/open-item [:block/uid uid]]))}
 
           ;; Parent Context
           [parents-el uid id]

@@ -81,7 +81,7 @@
                                ;; if shift: open in right-sidebar
                                shift?
                                (do (dispatch [:athena/toggle])
-                                   (dispatch [:right-sidebar/open-item navigate-uid])
+                                   (dispatch [:right-sidebar/open-item [:block/uid navigate-uid]])
                                    (dispatch [:reporting/navigation {:source :athena
                                                                      :target :page
                                                                      :pane   :right-pane}]))

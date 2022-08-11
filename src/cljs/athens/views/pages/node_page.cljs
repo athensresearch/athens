@@ -241,12 +241,12 @@
           [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])
                         :icon (r/as-element [:> BookmarkIcon])}
            [:span "Add Shortcut"]])
-        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])
-                      :icon (r/as-element [:> GraphIcon])}
+        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item [:block/uid uid] true])
+                      :icon    (r/as-element [:> GraphIcon])}
          "Show Local Graph"]
-        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid])
+        [:> MenuItem {:onClick    #(dispatch [:right-sidebar/open-item [:block/uid uid]])
                       :isDisabled (contains? @(subscribe [:right-sidebar/items]) uid)
-                      :icon (r/as-element [:> ArrowRightOnBoxIcon])}
+                      :icon       (r/as-element [:> ArrowRightOnBoxIcon])}
          "Open in Sidebar"]]
        (when (and (not on-daily-notes?)
                   (time-controls/enabled?))
@@ -457,10 +457,10 @@
                            :onClose     cancel-fn}]
          ;; Header
          [:> PageHeader (merge
-                          {:onClickOpenInMainView  (when-not is-current-route?
-                                                     (fn [e] (router/navigate-page title e)))
-                           :onClickOpenInSidebar   (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
-                                                     #(dispatch [:right-sidebar/open-item uid]))}
+                          {:onClickOpenInMainView (when-not is-current-route?
+                                                    (fn [e] (router/navigate-page title e)))
+                           :onClickOpenInSidebar  (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
+                                                    #(dispatch [:right-sidebar/open-item [:block/uid uid]]))}
                           (when @cover-photo-enabled?
                             {:headerImageEnabled     @cover-photo-enabled?
                              :headerImageUrl         (-> properties (get ":header/url") :block/string)

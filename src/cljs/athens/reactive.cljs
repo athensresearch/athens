@@ -144,6 +144,9 @@
        common-db/sort-block-children
        common-db/add-property-map))
 
+(defntrace get-reactive-title-or-string
+  [id]
+  (->> @(p/pull db/dsdb '[:db/id :block/string :node/title] id)))
 
 (defntrace get-reactive-parents-recursively
   [id]

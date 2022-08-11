@@ -12,7 +12,7 @@
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.pages.settings :as settings]
-    [athens.views.right-sidebar :as right-sidebar]
+    [athens.views.right-sidebar.core :as right-sidebar]
     [re-frame.core :as rf]))
 
 

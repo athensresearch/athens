@@ -1,4 +1,4 @@
-(ns athens.views.right-sidebar
+(ns athens.views.right-sidebar.core
   (:require
     ["/components/Icons/Icons" :refer [RightSidebarAddIcon]]
     ["/components/Layout/RightSidebar" :refer [RightSidebarContainer SidebarItem]]
@@ -7,6 +7,7 @@
     [athens.views.pages.block-page :as block-page]
     [athens.views.pages.graph :as graph]
     [athens.views.pages.node-page :as node-page]
+    [athens.views.right-sidebar.events]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]))
 
@@ -97,18 +98,24 @@
                                    (if (empty? items)
                                      [empty-message]
                                      (doall
-                                       (for [[uid {:keys [open node/title block/string is-graph?]}] items]
-                                         [:> SidebarItem {:isOpen open
-                                                          :key uid
-                                                          :type (cond is-graph? "graph" title "node" :else "block")
-                                                          :onRemove #(dispatch [:right-sidebar/close-item uid])
-                                                          :onToggle #(dispatch [:right-sidebar/toggle-item uid])
-                                                          ;; nth 1 to get just the title
-                                                          :title (nth [parse-renderer/parse-and-render (or title string) uid] 1)}
-                                          (cond
-                                            is-graph? [graph/page uid]
-                                            title     [node-page/page [:block/uid uid]]
-                                            :else     [block-page/page [:block/uid uid]])])))]])})))
+                                       (for [[uid ent] items]
+                                         (let [{:keys [open node/title is-graph?]} ent
+                                               eid (if title [:node/title title]
+                                                             [:block/uid uid])
+                                               ;; reactively subscribe to title or string in case contents update
+                                               string-or-title (athens.reactive/get-reactive-title-or-string eid)
+                                               {:keys [node/title block/string]} string-or-title]
+                                           [:> SidebarItem {:isOpen open
+                                                            :key uid
+                                                            :type (cond is-graph? "graph" title "node" :else "block")
+                                                            :onRemove #(dispatch [:right-sidebar/close-item uid])
+                                                            :onToggle #(dispatch [:right-sidebar/toggle-item uid])
+                                                            ;; nth 1 to get just the title
+                                                            :title (nth [parse-renderer/parse-and-render (or title string) uid] 1)}
+                                            (cond
+                                              is-graph? [graph/page uid]
+                                              title     [node-page/page [:block/uid uid]]
+                                              :else     [block-page/page [:block/uid uid]])]))))]])})))
 
 
 (defn right-sidebar
