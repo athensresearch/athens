@@ -5,10 +5,9 @@
     ["/components/Block/PropertyName"          :refer [PropertyName]]
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
-    ["/components/EmojiPicker/EmojiPicker"     :refer [EmojiPickerPopoverContent]]
-    ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatIcon ThumbUpFillIcon ArchiveIcon]]
+    ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatIcon ArchiveIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [Box Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuItem MenuList Popover PopoverAnchor VStack]]
+    ["@chakra-ui/react"                        :refer [Box MenuDivider Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuItem MenuList Popover PopoverAnchor VStack]]
     ["react"             :as react]
     ["react-intersection-observer"             :refer [useInView]]
     [athens.common-db                          :as common-db]
@@ -329,14 +328,12 @@
          show-textarea?           (rf/subscribe [:comment/show-editor? block-uid])
          inline-refs-open?        (rf/subscribe [::inline-refs.subs/open? block-uid])
          enable-properties?       (rf/subscribe [:feature-flags/enabled? :properties])
-         show-emoji-picker?       (r/atom false)
          on-block-mount           (fn []
                                     (rf/dispatch [::linked-ref.events/set-open! block-uid (or (false? linked-ref) initial-open)])
                                     (rf/dispatch [::inline-refs.events/set-open! block-uid false]))
          on-unmount-block         (fn []
                                     (rf/dispatch [::linked-ref.events/cleanup! block-uid])
-                                    (rf/dispatch [::inline-refs.events/cleanup! block-uid]))
-         hide-emoji-picker-fn     #(reset! show-emoji-picker? false)]
+                                    (rf/dispatch [::inline-refs.events/cleanup! block-uid]))]
 
      (fn [opts]
        [block linked-ref-data opts]
@@ -354,9 +351,6 @@
              comments-enabled?      (:comments @feature-flags)
              reactions-enabled?     (:reactions @feature-flags)
              notifications-enabled? (:notifications @feature-flags)
-             show-emoji-picker?     (r/atom false)
-             show-emoji-picker-fn   #(reset! show-emoji-picker? true)
-
              uid-sanitized-block    (s/transform
                                      (util/specter-recursive-path #(contains? % :block/uid))
                                      (fn [{:block/keys [original-uid uid] :as block}]
@@ -383,9 +377,9 @@
                                                       :onClick  #(ctx-menu/handle-click-comment % uid)
                                                       :icon     (r/as-element [:> ChatIcon])}])
                                       (when reactions-enabled?
-                                        [:> MenuItem {:children "Add reaction"
-                                                      :onClick  show-emoji-picker-fn
-                                                      :icon     (r/as-element [:> ThumbUpFillIcon])}])
+                                        [:<>
+                                         [:> MenuDivider]
+                                         [block-reaction/reactions-menu-list uid user-id]])
 
                                       (when (and notifications-enabled? (actions/is-block-inbox? properties))
                                         [:<>
@@ -472,39 +466,26 @@
                                                  (block-bullet/bullet-drag-end e uid))}])
 
 
-            [:> Popover {:isOpen    @show-emoji-picker?
-                         :placement "bottom-end"
-                         :onOpen    #(js/console.log "tried to open")
-                         :isLazy    true
-                         :onClose   hide-emoji-picker-fn}
-
-             [:> PopoverAnchor
-              [:> Anchor {:isClosedWithChildren   (when (and (seq children)
-                                                             (or (and (true? linked-ref) (not @linked-ref-open?))
-                                                                 (and (false? linked-ref) (not open))))
-                                                    "closed-with-children")
-                          :uidSanitizedBlock      uid-sanitized-block
-                          :shouldShowDebugDetails (util/re-frame-10x-open?)
-                          :menu                   menu
-                          :onClick                (fn [e]
-                                                    (let [shift? (.-shiftKey e)]
-                                                      (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                           :target :block
-                                                                                           :pane   (if shift?
-                                                                                                     :right-pane
-                                                                                                     :main-pane)}])
-                                                      (router/navigate-uid uid e)))
-                          :on-drag-start          (fn [e]
-                                                    (block-bullet/bullet-drag-start e uid))
-                          :on-drag-end            (fn [e]
-                                                    (block-bullet/bullet-drag-end e uid))
-                          :unreadNotification     (actions/unread-notification? properties)}]]
-             (when (and in-view? reactions-enabled?)
-               [:> EmojiPickerPopoverContent {:onClose         hide-emoji-picker-fn
-                                              :onEmojiSelected (fn [e]
-                                                                 (block-reaction/toggle-reaction [:block/uid uid]
-                                                                                                 (.. e -detail -unicode)
-                                                                                                 user-id))}])]
+            [:> Anchor {:isClosedWithChildren   (when (and (seq children)
+                                                           (or (and (true? linked-ref) (not @linked-ref-open?))
+                                                               (and (false? linked-ref) (not open))))
+                                                  "closed-with-children")
+                        :uidSanitizedBlock      uid-sanitized-block
+                        :shouldShowDebugDetails (util/re-frame-10x-open?)
+                        :menu                   menu
+                        :onClick                (fn [e]
+                                                  (let [shift? (.-shiftKey e)]
+                                                    (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                         :target :block
+                                                                                         :pane   (if shift?
+                                                                                                   :right-pane
+                                                                                                   :main-pane)}])
+                                                    (router/navigate-uid uid e)))
+                        :on-drag-start          (fn [e]
+                                                  (block-bullet/bullet-drag-start e uid))
+                        :on-drag-end            (fn [e]
+                                                  (block-bullet/bullet-drag-end e uid))
+                        :unreadNotification     (actions/unread-notification? properties)}]
 
             ;; `BlockTypeProtocol` dispatch placement
             [:> Box {:gridArea "content"}
