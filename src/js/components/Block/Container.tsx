@@ -107,6 +107,9 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
           minHeight: '2em',
           position: "relative",
         },
+        "> .block-body > .block-content": {
+          gridArea: "content",
+        },
         "&:hover > .block-toggle, &:focus-within > .block-toggle": { opacity: "1" },
         "button.block-edit-toggle": {
           position: "absolute",

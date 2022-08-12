@@ -488,9 +488,8 @@
                         :unreadNotification     (actions/unread-notification? properties)}]
 
             ;; `BlockTypeProtocol` dispatch placement
-            [:> Box {:gridArea "content"}
-             ^{:key renderer-k}
-             [types/outline-view renderer block {:show-edit? show-edit?}]]
+            ^{:key renderer-k}
+            [types/outline-view renderer block {:show-edit? show-edit?}]
 
             (when (and in-view? reactions-enabled? reactions)
               [:> Reactions {:reactions        (clj->js reactions)
