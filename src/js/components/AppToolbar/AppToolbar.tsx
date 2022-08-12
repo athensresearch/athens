@@ -37,13 +37,12 @@ import {
   ButtonGroup,
   useColorMode,
   useMediaQuery,
-  Spacer,
 } from '@chakra-ui/react';
 
 import { WindowButtons } from './components/WindowButtons';
 import { LocationIndicator } from './components/LocationIndicator';
 
-const PAGE_TITLE_SHOW_HEIGHT = 50;
+const PAGE_TITLE_SHOW_HEIGHT = 30;
 
 interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
   children: React.ReactChild;
@@ -73,9 +72,9 @@ const ToolbarButton = React.forwardRef((props: ToolbarButtonProps, ref) => {
 });
 
 const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) => {
-  const { children } = props;
+  const { children, "aria-label": ariaLabel } = props;
   return <IconButton ref={ref as any} {...toolbarIconButtonStyle
-  } {...props}>{children}</IconButton>
+  } {...props} aria-label={ariaLabel}>{children}</IconButton>
 });
 
 const AppToolbarWrapper = ({ children, ...props }) => <Flex
@@ -470,7 +469,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               {
                 type: "action",
                 title: "Show time slider",
-                tooltip: "This is only a test",
                 icon: <TimeNowIcon />,
                 fn: (target) => console.log("create", target.uid)
               },

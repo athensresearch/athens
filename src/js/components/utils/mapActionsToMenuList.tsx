@@ -9,26 +9,22 @@ import {
 } from "@chakra-ui/react";
 import React from "react";
 
-type ActionsListItemType = "action" | "group" | "divider";
 
-type BaseActionsListItem = {
-  type: ActionsListItemType;
-  title: React.ReactNode;
-}
-
-type ActionsListMenuItem = BaseActionsListItem & MenuItemProps & {
+type ActionsListMenuItem = MenuItemProps & {
   type: "action";
+  title: React.ReactNode;
   tooltip?: React.ReactNode;
-  tooltipProps?: TooltipProps,
+  tooltipProps?: TooltipProps;
   fn: (any) => void;
 }
 
-type ActionsListDivider = BaseActionsListItem & {
+type ActionsListDivider = {
   type: "divider";
 }
 
-type ActionsListGroup = BaseActionsListItem & MenuGroupProps & {
+type ActionsListGroup = MenuGroupProps & {
   type: 'group';
+  title?: React.ReactNode;
   items: Exclude<ActionsListItem, ActionsListGroup>[];
 }
 
@@ -36,7 +32,7 @@ export type ActionsListItem = ActionsListMenuItem | ActionsListDivider | Actions
 
 interface mapActionsToMenuListProps {
   target: any;
-  menuItems: ActionsListItem[];
+  menuItems?: ActionsListItem[];
 }
 
 /**
@@ -46,43 +42,43 @@ interface mapActionsToMenuListProps {
  * @returns an array of items which can be rendered in a MenuList
  */
 export const mapActionsToMenuList = ({ target, menuItems }: mapActionsToMenuListProps): React.ReactChild[] => {
+  if (!target) console.error("mapActionsToMenuList: target is undefined");
   if (!menuItems) return null;
 
   return menuItems.map((menuItem, index) => {
     const { type, ...itemProps } = menuItem;
 
-    switch (type) {
+    if (type === "divider") {
+      return <MenuDivider key={"divider-" + index} />;
 
-      case "divider":
-        return <MenuDivider key={"divider-" + index} />;
+    } else if (type === "group") {
+      const { items, ...groupProps } = itemProps;
+      return (
+        <MenuGroup {...groupProps}>
+          {mapActionsToMenuList({ target, menuItems: items })}
+        </MenuGroup>
+      );
 
-      case "group":
-        const { items, ...groupProps } = itemProps;
+    } else if (type === "action") {
+      const { title, tooltip, tooltipProps, ...menuItemProps } = itemProps;
+      const niceProps = menuItemProps as MenuItemProps;
+
+      if (tooltip) {
         return (
-          <MenuGroup {...groupProps}>
-            {mapActionsToMenuList({ target, menuItems: items })}
-          </MenuGroup>
+          <Tooltip
+            {...tooltipProps}
+            label={tooltip}
+            hasArrow
+            placement="right"
+          >
+            <MenuItem {...niceProps}>{title}</MenuItem>
+          </Tooltip >
         );
-
-      case "action":
-      default:
-        const { title, tooltip, tooltipProps, ...menuItemProps } = itemProps;
-        const niceProps = menuItemProps as MenuItemProps;
-
-        if (tooltip) {
-          return (
-            <Tooltip
-              {...tooltipProps}
-              label={tooltip}
-              hasArrow
-              placement="right"
-            >
-              <MenuItem {...niceProps}>{title}</MenuItem>
-            </Tooltip >
-          );
-        } else {
-          return <MenuItem {...niceProps}>{title}</MenuItem>
-        }
+      } else {
+        return <MenuItem {...niceProps}>{title}</MenuItem>
+      }
+    } else {
+      return null;
     }
   });
 };
