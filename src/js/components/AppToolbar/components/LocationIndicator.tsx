@@ -16,8 +16,15 @@ export const LocationIndicator = (props: LocationIndicatorProps) => {
   const { title, uid, type, path, actions } = locationProps;
   if (type !== 'node') return null;
 
-  return <VStack spacing={-0.25} align="flex-start" flex={1}
-    maxWidth="50%">
+  return <VStack
+    opacity={isVisible ? 1 : 0}
+    transform={isVisible ? 'translateY(0)' : 'translateY(1rem)'}
+    transition="transform 0.2s ease-in-out, opacity 0.2s ease-in-out"
+    spacing={-0.25} align="flex-start" flex={1}
+    maxWidth="50%"
+    tabIndex={isVisible ? 0 : -1}
+    pointerEvents={isVisible ? 'all' : 'none'}
+  >
     <Menu placement="bottom" isLazy>
       <MenuButton
         as={Button}
