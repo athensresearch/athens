@@ -330,12 +330,15 @@
          inline-refs-open?        (rf/subscribe [::inline-refs.subs/open? block-uid])
          enable-properties?       (rf/subscribe [:feature-flags/enabled? :properties])
          show-emoji-picker?       (r/atom false)
+         ;; MOVED CLEANUP FN
          cleanup                  (fn []
                                     (prn "cleaned up")
                                     (rf/dispatch [::linked-ref.events/cleanup! block-uid])
                                     (rf/dispatch [::inline-refs.events/cleanup! block-uid]))
          hide-emoji-picker-fn     #(reset! show-emoji-picker? false)]
 
+
+     ;; OLD FNS
      ;;  (r/create-class
      ;;    {:component-will-unmount
      ;;     (fn will-unmount-block
@@ -366,12 +369,17 @@
              show-emoji-picker?     (r/atom false)
              show-emoji-picker-fn   #(reset! show-emoji-picker? true)
              [ref in-view?]         (useInView {:delay 250})
+
+             ;; NEW HOOK
              _ (react/useEffect (fn []
+                                  ;; RUN ON (FIRST) RENDER
                                   (prn "effect")
                                   (rf/dispatch [::linked-ref.events/set-open! block-uid (or (false? linked-ref) initial-open)])
                                   (rf/dispatch [::inline-refs.events/set-open! block-uid false])
-                                  #(cleanup)
-                                  #js []))
+
+                                  ;; RUN ON UNMOUNT
+                                  cleanup)
+                                #js [])
              uid-sanitized-block    (s/transform
                                       (util/specter-recursive-path #(contains? % :block/uid))
                                       (fn [{:block/keys [original-uid uid] :as block}]
