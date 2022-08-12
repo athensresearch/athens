@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon } from '@/Icons/Icons';
+import { DragIcon, XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon } from '@/Icons/Icons';
 import { Button, IconButton, Box, Collapse, VStack } from '@chakra-ui/react';
 
 const Container = motion(Box);
@@ -58,7 +58,8 @@ const typeIcon = (type, isOpen) => {
     : { "node": <PageIcon />, "graph": <GraphIcon />, "block": <BlockIcon /> }[type];
 };
 
-export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children }) => {
+export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children, ...props }) => {
+console.log(isOpen, props)
   const canToggle = type !== 'graph';
   return (
     <VStack
@@ -76,7 +77,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
         position="sticky"
         background="background.floor"
         display="grid"
-        gridTemplateColumns="1fr 3rem"
+        gridTemplateColumns="1fr 3rem 3rem"
         pr={2}
         alignItems="center"
         justifyContent="center"
@@ -122,6 +123,14 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
           >{title}</Box>
         </Button>
         <IconButton
+            size={"sm"}
+            alignSelf="center"
+            justifySelf={"center"}
+            bg="transparent"
+            aria-label="drag">
+          <DragIcon alignSelf={"center"} justifySelf={"center"}/>
+        </IconButton>
+        <IconButton
           onClick={onRemove}
           size="sm"
           color="foreground.secondary"
@@ -144,5 +153,6 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
       >
         {children}
       </Box>
-    </VStack>);
+    </VStack>
+    );
 };

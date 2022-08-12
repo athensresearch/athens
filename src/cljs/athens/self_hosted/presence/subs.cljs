@@ -47,6 +47,14 @@
     (:username current-user)))
 
 
+(rf/reg-sub
+  :presence/user-page
+  :<- [:presence/current-username]
+  (fn [current-user _]
+    (when-not (seq current-user)
+      (js/alert "Define PKM userpage, maybe @You"))
+    (str "@" current-user)))
+
 (defn on-page-uid?
   [page-uid [_username user]]
   (= page-uid (:page/uid user)))
