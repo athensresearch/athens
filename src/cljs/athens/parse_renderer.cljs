@@ -1,19 +1,19 @@
 ^:cljstyle/ignore
 (ns athens.parse-renderer
   (:require
-   ["@chakra-ui/react"                   :refer [Link Button Text Box]]
-   ["katex"                              :as katex]
+   ["@chakra-ui/react"      :refer [Link Button Text Box]]
+   ["katex"                 :as katex]
    ["katex/dist/contrib/mhchem"]
-   [athens.config                        :as config]
-   [athens.parser.impl                   :as parser-impl]
-   [athens.reactive                      :as reactive]
-   [athens.router                        :as router]
-   [athens.views.blocks.types            :as types]
-   [athens.views.blocks.types.dispatcher :as block-type-dispatcher]
-   [clojure.string                       :as str]
-   [instaparse.core                      :as insta]
-   [re-frame.core                        :as rf]
-   [reagent.core                         :as r]))
+   [athens.config           :as config]
+   [athens.parser.impl      :as parser-impl]
+   [athens.reactive         :as reactive]
+   [athens.router           :as router]
+   [athens.types.core       :as types]
+   [athens.types.dispatcher :as block-type-dispatcher]
+   [clojure.string          :as str]
+   [instaparse.core         :as insta]
+   [re-frame.core           :as rf]
+   [reagent.core            :as r]))
 
 
 (declare parse-and-render)
@@ -202,9 +202,12 @@
                               [:span {:class "contents"} title-coll]])
      :block-ref            (fn [{_from :from :as attr} ref-uid]
                              (let [block      (reactive/get-reactive-block-or-page-by-uid ref-uid)
-                                   block-type nil ; TODO: make real block type discovery
-                                   renderer   (block-type-dispatcher/block-type->protocol block-type {})]
-                               (types/inline-ref-view renderer block attr ref-uid uid {} true)))
+                                   block-type (reactive/reactive-get-entity-type [:block/uid ref-uid])
+                                   ff         @(rf/subscribe [:feature-flags])
+                                   renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
+                                   renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]
+                               ^{:key renderer-k}
+                               [types/inline-ref-view renderer block attr ref-uid uid {} true]))
      :url-image            (fn [{url :src alt :alt}]
                              [:> Box {:class        "url-image"
                                       :as           "img"
@@ -338,4 +341,3 @@
           (js/console.log "view creation:" vt-total)
           (js/console.groupEnd))
         view))))
-
