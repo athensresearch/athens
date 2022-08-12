@@ -7,7 +7,7 @@
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatIcon ArchiveIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [Box MenuDivider Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuItem MenuList Popover PopoverAnchor VStack]]
+    ["@chakra-ui/react"                        :refer [MenuDivider Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuItem MenuList VStack]]
     ["react"             :as react]
     ["react-intersection-observer"             :refer [useInView]]
     [athens.common-db                          :as common-db]
@@ -352,49 +352,49 @@
              reactions-enabled?     (:reactions @feature-flags)
              notifications-enabled? (:notifications @feature-flags)
              uid-sanitized-block    (s/transform
-                                     (util/specter-recursive-path #(contains? % :block/uid))
-                                     (fn [{:block/keys [original-uid uid] :as block}]
-                                       (assoc block :block/uid (or original-uid uid)))
-                                     block)
+                                      (util/specter-recursive-path #(contains? % :block/uid))
+                                      (fn [{:block/keys [original-uid uid] :as block}]
+                                        (assoc block :block/uid (or original-uid uid)))
+                                      block)
              user-id                (or (:username @current-user)
                                         ;; We use empty string for when there is no user information, like in PKM.
                                         "")
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
-                                     [:> MenuList
-                                      [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                "Copy selected block refs"
-                                                                "Copy block ref")
-                                                    :icon     (r/as-element [:> BlockEmbedIcon])
-                                                    :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                      [:> MenuItem {:children "Copy unformatted text"
-                                                    :icon     (r/as-element [:> TextIcon])
-                                                    :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                      [:> MenuList
+                                       [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                 "Copy selected block refs"
+                                                                 "Copy block ref")
+                                                     :icon     (r/as-element [:> BlockEmbedIcon])
+                                                     :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                       [:> MenuItem {:children "Copy unformatted text"
+                                                     :icon     (r/as-element [:> TextIcon])
+                                                     :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
 
-                                      (when comments-enabled?
-                                        [:> MenuItem {:children "Add comment"
-                                                      :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                      :icon     (r/as-element [:> ChatIcon])}])
-                                      (when reactions-enabled?
-                                        [:<>
-                                         [:> MenuDivider]
-                                         [block-reaction/reactions-menu-list uid user-id]])
+                                       (when comments-enabled?
+                                         [:> MenuItem {:children "Add comment"
+                                                       :onClick  #(ctx-menu/handle-click-comment % uid)
+                                                       :icon     (r/as-element [:> ChatIcon])}])
+                                       (when reactions-enabled?
+                                         [:<>
+                                          [:> MenuDivider]
+                                          [block-reaction/reactions-menu-list uid user-id]])
 
-                                      (when (and notifications-enabled? (actions/is-block-inbox? properties))
-                                        [:<>
-                                         [:> Divider]
-                                         [:> MenuItem {:children "Archive all notifications"
+                                       (when (and notifications-enabled? (actions/is-block-inbox? properties))
+                                         [:<>
+                                          [:> Divider]
+                                          [:> MenuItem {:children "Archive all notifications"
+                                                        :icon     (r/as-element [:> ArchiveIcon])
+                                                        :onClick  #(actions/archive-all-notifications uid)}]
+                                          [:> MenuItem {:children "Unarchive all notifications"
+                                                        :icon     (r/as-element [:> ArchiveIcon])
+                                                        :onClick  #(actions/unarchive-all-notifications uid)}]])
+
+                                       (when (and notifications-enabled? (actions/is-block-notification? properties))
+                                         [:> MenuItem {:children "Archive"
                                                        :icon     (r/as-element [:> ArchiveIcon])
-                                                       :onClick  #(actions/archive-all-notifications uid)}]
-                                         [:> MenuItem {:children "Unarchive all notifications"
-                                                       :icon     (r/as-element [:> ArchiveIcon])
-                                                       :onClick  #(actions/unarchive-all-notifications uid)}]])
-
-                                      (when (and notifications-enabled? (actions/is-block-notification? properties))
-                                        [:> MenuItem {:children "Archive"
-                                                      :icon     (r/as-element [:> ArchiveIcon])
-                                                      :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
+                                                       :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
              ff @(rf/subscribe [:feature-flags])
              renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
              renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})

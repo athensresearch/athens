@@ -1,17 +1,17 @@
 (ns athens.views.blocks.reactions
   (:require
-   ["@chakra-ui/react" :refer [Box
-                               Tooltip
-                               VStack
-                               HStack
-                               MenuItem
-                               MenuGroup
-                               Text]]
-   [athens.common-db                          :as common-db]
-   [athens.common-events.graph.ops            :as graph-ops]
-   [athens.db                                 :as db]
-   [re-frame.core                             :as rf]
-   [reagent.core                              :as r]))
+    ["@chakra-ui/react" :refer [Box
+                                Tooltip
+                                VStack
+                                HStack
+                                MenuItem
+                                MenuGroup
+                                Text]]
+    [athens.common-db                          :as common-db]
+    [athens.common-events.graph.ops            :as graph-ops]
+    [athens.db                                 :as db]
+    [re-frame.core                             :as rf]
+    [reagent.core                              :as r]))
 
 
 (def common-reactions ["❤️" "💔" "😐" "😕" "😡"])
@@ -67,7 +67,6 @@
                       (mapv second))]))
        (sort-by first)
        (into [])))
-
 
 
 (defn reactions-menu-list-item
