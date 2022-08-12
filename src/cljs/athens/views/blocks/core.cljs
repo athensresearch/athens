@@ -330,25 +330,13 @@
          inline-refs-open?        (rf/subscribe [::inline-refs.subs/open? block-uid])
          enable-properties?       (rf/subscribe [:feature-flags/enabled? :properties])
          show-emoji-picker?       (r/atom false)
-         ;; MOVED CLEANUP FN
-         cleanup                  (fn []
-                                    (prn "cleaned up")
+         on-block-mount           (fn []
+                                    (rf/dispatch [::linked-ref.events/set-open! block-uid (or (false? linked-ref) initial-open)])
+                                    (rf/dispatch [::inline-refs.events/set-open! block-uid false]))
+         on-unmount-block         (fn []
                                     (rf/dispatch [::linked-ref.events/cleanup! block-uid])
                                     (rf/dispatch [::inline-refs.events/cleanup! block-uid]))
          hide-emoji-picker-fn     #(reset! show-emoji-picker? false)]
-
-
-     ;; OLD FNS
-     ;;  (r/create-class
-     ;;    {:component-will-unmount
-     ;;     (fn will-unmount-block
-     ;;       [_]
-     ;;       (rf/dispatch [::linked-ref.events/cleanup! block-uid])
-     ;;       (rf/dispatch [::inline-refs.events/cleanup! block-uid]))
-     ;;     :reagent-render
-
-     ;; (doall (rf/dispatch [::linked-ref.events/set-open! block-uid (or (false? linked-ref) initial-open)])
-     ;; (rf/dispatch [::inline-refs.events/set-open! block-uid false]))
 
      (fn [opts]
        [block linked-ref-data opts]
@@ -368,65 +356,59 @@
              notifications-enabled? (:notifications @feature-flags)
              show-emoji-picker?     (r/atom false)
              show-emoji-picker-fn   #(reset! show-emoji-picker? true)
-             [ref in-view?]         (useInView {:delay 250})
 
-             ;; NEW HOOK
-             _ (react/useEffect (fn []
-                                  ;; RUN ON (FIRST) RENDER
-                                  (prn "effect")
-                                  (rf/dispatch [::linked-ref.events/set-open! block-uid (or (false? linked-ref) initial-open)])
-                                  (rf/dispatch [::inline-refs.events/set-open! block-uid false])
-
-                                  ;; RUN ON UNMOUNT
-                                  cleanup)
-                                #js [])
              uid-sanitized-block    (s/transform
-                                      (util/specter-recursive-path #(contains? % :block/uid))
-                                      (fn [{:block/keys [original-uid uid] :as block}]
-                                        (assoc block :block/uid (or original-uid uid)))
-                                      block)
+                                     (util/specter-recursive-path #(contains? % :block/uid))
+                                     (fn [{:block/keys [original-uid uid] :as block}]
+                                       (assoc block :block/uid (or original-uid uid)))
+                                     block)
              user-id                (or (:username @current-user)
                                         ;; We use empty string for when there is no user information, like in PKM.
                                         "")
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
-                                      [:> MenuList
-                                       [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                 "Copy selected block refs"
-                                                                 "Copy block ref")
-                                                     :icon     (r/as-element [:> BlockEmbedIcon])
-                                                     :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                       [:> MenuItem {:children "Copy unformatted text"
-                                                     :icon     (r/as-element [:> TextIcon])
-                                                     :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                     [:> MenuList
+                                      [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                "Copy selected block refs"
+                                                                "Copy block ref")
+                                                    :icon     (r/as-element [:> BlockEmbedIcon])
+                                                    :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                      [:> MenuItem {:children "Copy unformatted text"
+                                                    :icon     (r/as-element [:> TextIcon])
+                                                    :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
 
-                                       (when comments-enabled?
-                                         [:> MenuItem {:children "Add comment"
-                                                       :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                       :icon     (r/as-element [:> ChatIcon])}])
-                                       (when reactions-enabled?
-                                         [:> MenuItem {:children "Add reaction"
-                                                       :onClick  show-emoji-picker-fn
-                                                       :icon     (r/as-element [:> ThumbUpFillIcon])}])
+                                      (when comments-enabled?
+                                        [:> MenuItem {:children "Add comment"
+                                                      :onClick  #(ctx-menu/handle-click-comment % uid)
+                                                      :icon     (r/as-element [:> ChatIcon])}])
+                                      (when reactions-enabled?
+                                        [:> MenuItem {:children "Add reaction"
+                                                      :onClick  show-emoji-picker-fn
+                                                      :icon     (r/as-element [:> ThumbUpFillIcon])}])
 
-                                       (when (and notifications-enabled? (actions/is-block-inbox? properties))
-                                         [:<>
-                                          [:> Divider]
-                                          [:> MenuItem {:children "Archive all notifications"
-                                                        :icon     (r/as-element [:> ArchiveIcon])
-                                                        :onClick  #(actions/archive-all-notifications uid)}]
-                                          [:> MenuItem {:children "Unarchive all notifications"
-                                                        :icon     (r/as-element [:> ArchiveIcon])
-                                                        :onClick  #(actions/unarchive-all-notifications uid)}]])
-
-                                       (when (and notifications-enabled? (actions/is-block-notification? properties))
-                                         [:> MenuItem {:children "Archive"
+                                      (when (and notifications-enabled? (actions/is-block-inbox? properties))
+                                        [:<>
+                                         [:> Divider]
+                                         [:> MenuItem {:children "Archive all notifications"
                                                        :icon     (r/as-element [:> ArchiveIcon])
-                                                       :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
+                                                       :onClick  #(actions/archive-all-notifications uid)}]
+                                         [:> MenuItem {:children "Unarchive all notifications"
+                                                       :icon     (r/as-element [:> ArchiveIcon])
+                                                       :onClick  #(actions/unarchive-all-notifications uid)}]])
+
+                                      (when (and notifications-enabled? (actions/is-block-notification? properties))
+                                        [:> MenuItem {:children "Archive"
+                                                      :icon     (r/as-element [:> ArchiveIcon])
+                                                      :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
              ff @(rf/subscribe [:feature-flags])
              renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
-             renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})]
+             renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
+             [ref in-view?]         (useInView {:delay 250})
+             _ (react/useEffect (fn []
+                                  #(on-block-mount)
+                                  on-unmount-block)
+                                #js [])]
          (log/debug "block open render: block-o:" (pr-str (:block/open block-o))
                     "block:" (pr-str (:block/open block))
                     "merge:" (pr-str (:block/open (merge block-o block))))
