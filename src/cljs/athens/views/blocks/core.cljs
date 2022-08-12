@@ -371,7 +371,6 @@
                                        [:> MenuItem {:children "Copy unformatted text"
                                                      :icon     (r/as-element [:> TextIcon])
                                                      :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
-
                                        (when comments-enabled?
                                          [:> MenuItem {:children "Add comment"
                                                        :onClick  #(ctx-menu/handle-click-comment % uid)

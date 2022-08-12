@@ -457,9 +457,8 @@ const components = {
       },
       groupTitle: {
         color: "foreground.secondary",
-        textTransform: "uppercase",
         fontSize: "0.75em",
-        fontWeight: "bold",
+        fontWeight: "700",
       },
       item: {
         "&.isActive": {
