@@ -1,11 +1,11 @@
 (ns athens.types.tasks.view
   "Views for Athens Tasks"
   (:require
-    ["@chakra-ui/react"                   :refer [Box,
-                                                  FormControl,
-                                                  FormLabel,
-                                                  FormErrorMessage,
-                                                  FormHelperText,
+    ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
+    ["@chakra-ui/react"                   :refer [FormControl
+                                                  FormLabel
+                                                  FormErrorMessage
+                                                  FormHelperText
                                                   Select
                                                   HStack
                                                   VStack]]
@@ -159,13 +159,7 @@
                          :is-invalid  invalid-prop-str?}
          [:> FormLabel {:html-for prop-id}
           prop-title]
-         [:> Box {:px           2
-                  :mt           2
-                  :minHeight    "2.125em"
-                  :borderRadius "sm"
-                  :bg           "background.attic"
-                  :cursor       "text"
-                  :_focusWithin {:shadow "focus"}}
+         [:> BlockFormInput 
           ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
           [editor/block-editor {:block/uid (or prop-block-uid
                                                ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
