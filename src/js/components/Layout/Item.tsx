@@ -6,7 +6,7 @@ import { SidebarItem } from './RightSidebar';
 
 export const Item = (props) => {
   const { id, title, isOpen, key, type, onRemove, onToggle, children, ...rest } = props;
-  console.log("ITEM", props)
+  // console.log("ITEM", props)
   const [width, setWidth] = React.useState(undefined);
   const ref = React.useRef();
 

@@ -131,8 +131,8 @@
                                    (if (empty? items)
                                      [empty-message]
                                      [:> List {:items              (create-sidebar-list items)
-                                               :onUpdateItemsOrder (fn [x]
-                                                                     (prn "NEW" (js->clj x)))}])]])})))
+                                               :onUpdateItemsOrder (fn [source-uid target-uid old-index new-index]
+                                                                     (rf/dispatch [:right-sidebar/reorder source-uid target-uid old-index new-index]))}])]])})))
 
 
 

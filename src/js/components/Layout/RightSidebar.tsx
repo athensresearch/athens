@@ -59,7 +59,6 @@ const typeIcon = (type, isOpen) => {
 };
 
 export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children, ...props }) => {
-console.log(isOpen, props)
   const canToggle = type !== 'graph';
   return (
     <VStack

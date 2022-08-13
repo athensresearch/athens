@@ -31,7 +31,9 @@ export const List = (props) => {
     onOpenItem,
     ...rest
   } = props;
-  console.log("LIST ITEMS", outerItems)
+  const ids = outerItems.map(x => x.key)
+  // console.log("LIST ITEMS", outerItems, ids)
+
   const container = React.useRef();
   const [containerWidth, setContainerWidth] = React.useState("unset");
 
@@ -67,10 +69,10 @@ export const List = (props) => {
 
     if (active.id !== over.id) {
       setItems((items) => {
-        const oldIndex = items.indexOf(active.id);
-        const newIndex = items.indexOf(over.id);
+        const oldIndex = ids.indexOf(active.id);
+        const newIndex = ids.indexOf(over.id);
         const newItems = arrayMove(items, oldIndex, newIndex);
-        onUpdateItemsOrder(newItems);
+        onUpdateItemsOrder(items[oldIndex].key, items[newIndex].key, oldIndex, newIndex);
         return newItems;
       });
     }

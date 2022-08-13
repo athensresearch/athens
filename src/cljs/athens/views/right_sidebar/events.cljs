@@ -109,4 +109,16 @@
 
 
 
-;; TODO: drag and drop reorder
+(reg-event-fx
+  :right-sidebar/reorder
+  [(interceptors/sentry-span-no-new-tx "right-sidebar/navigate-item")]
+  (fn [_ [_ source-uid target-uid old-index new-index]]
+    (let [before-after (cond
+                         (< old-index new-index) :after
+                         (> old-index new-index) :before)
+          evt          (common-events/build-atomic-event
+                         (graph-ops/build-block-move-op @athens.db/dsdb source-uid {:relation  before-after
+                                                                                    :block/uid target-uid}))]
+      {:fx [[:dispatch [:resolve-transact-forward evt]]
+            [:dispatch [:posthog/report-feature :right-sidebar true]]]})))
+
