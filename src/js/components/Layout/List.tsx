@@ -32,7 +32,6 @@ export const List = (props) => {
     ...rest
   } = props;
   const ids = outerItems.map(x => x.key)
-  // console.log("LIST ITEMS", outerItems, ids)
 
   const container = React.useRef();
   const [containerWidth, setContainerWidth] = React.useState("unset");
@@ -88,15 +87,9 @@ export const List = (props) => {
       >
         <VStack spacing={0.25} align="stretch" overflowX="hidden" {...rest}>
           <SortableContext strategy={verticalListSortingStrategy} items={items}>
-            {items.map(({ onToggle, onRemove, isOpen, key, title, children }) => <Item
-              // onClick={(e) => onOpenItem(e, item)}
-              isOpen={isOpen}
-              onRemove={onRemove}
-              onToggle={onToggle}
-              title={title}
-              key={key}
-              children={children}
-              id={key}></Item>)}
+            {items.map(({ ...props }) => <Item
+              {...props}
+              ></Item>)}
           </SortableContext>
         </VStack>
 

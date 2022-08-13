@@ -30,6 +30,7 @@
                   {:keys [node/title block/string block/uid]} item]
               {:isOpen   open?
                :key      source-uid
+               :id       source-uid
                :type     (cond
                            (= type "graph") "graph"
                            (= type "page") "node"

@@ -5,8 +5,6 @@ import { useSortable } from "@dnd-kit/sortable";
 import { SidebarItem } from './RightSidebar';
 
 export const Item = (props) => {
-  const { id, title, isOpen, key, type, onRemove, onToggle, children, ...rest } = props;
-  // console.log("ITEM", props)
   const [width, setWidth] = React.useState(undefined);
   const ref = React.useRef();
 
@@ -28,7 +26,7 @@ export const Item = (props) => {
     setNodeRef,
     transform,
     transition
-  } = useSortable({ id });
+  } = useSortable({ id: props.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -42,9 +40,8 @@ export const Item = (props) => {
       opacity={isDragging ? 0.5 : 1}
       {...attributes}
       {...listeners}
-      {...rest}
     >
-      <SidebarItem isOpen={isOpen} title={title} type={type} onToggle={onToggle} onRemove={onRemove} isOpen={isOpen} key={key} children={children}></SidebarItem>
+      <SidebarItem {...props}></SidebarItem>
     </Box>
   );
 };
