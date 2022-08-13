@@ -16,8 +16,8 @@ export const BlockFormInput = ({ children }) => {
         },
         ".chakra-avatar__group": {
           position: "absolute",
-          right: 0,
-          top: 0
+          right: 0.5,
+          top: 0.5
         }
       }}
     >

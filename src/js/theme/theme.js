@@ -407,6 +407,7 @@ const components = {
   },
   FormLabel: {
     baseStyle: {
+      fontSize: "sm",
       color: "foreground.secondary",
     }
   },

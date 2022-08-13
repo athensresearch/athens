@@ -7,7 +7,7 @@
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatIcon ArchiveIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [Box Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
+    ["@chakra-ui/react"                        :refer [Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
     [athens.common-db                          :as common-db]
     [athens.common.logging                     :as log]
     [athens.db                                 :as db]
@@ -482,9 +482,8 @@
                            :unreadNotification     (actions/unread-notification? properties)}]
 
                ;; `BlockTypeProtocol` dispatch placement
-               [:> Box {:gridArea "content"}
-                ^{:key renderer-k}
-                [types/outline-view renderer block {:show-edit? show-edit?}]]
+               ^{:key renderer-k}
+               [types/outline-view renderer block {:show-edit? show-edit?}]
 
                (when reactions
                  [:> Reactions {:reactions        (clj->js reactions)
