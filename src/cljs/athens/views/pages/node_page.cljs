@@ -215,70 +215,72 @@
 
 (defn menu-dropdown
   [node daily-note? on-daily-notes?]
-  (let [{:block/keys [uid] sidebar
-         :page/sidebar title
-         :node/title} node]
-    [:> Menu {:isLazy true :size "sm"}
-     [:> MenuButton {:as IconButton
-                     "aria-label" "Page menu"
-                     :gridArea "menu"
-                     :justifySelf "flex-end"
-                     :size "sm"
-                     :alignSelf "center"
-                     :fontSize "70%"
-                     :color "foreground.secondary"
-                     :bg "transparent"
-                     :borderRadius "full"
-                     :sx {"span" {:display "contents"}}}
-      [:> EllipsisHorizontalIcon]]
-     [:> Portal
-      [:> MenuList
-       [:<>
-        (if sidebar
-          [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])
-                        :icon (r/as-element [:> BookmarkFillIcon])}
-           "Remove Shortcut"]
-          [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])
-                        :icon (r/as-element [:> BookmarkIcon])}
-           [:span "Add Shortcut"]])
-        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item [:block/uid uid] true])
-                      :icon    (r/as-element [:> GraphIcon])}
-         "Show Local Graph"]
-        [:> MenuItem {:onClick    #(dispatch [:right-sidebar/open-item [:block/uid uid]])
-                      :isDisabled (contains? @(subscribe [:right-sidebar/items]) uid)
-                      :icon       (r/as-element [:> ArrowRightOnBoxIcon])}
-         "Open in Sidebar"]]
-       (when (and (not on-daily-notes?)
-                  (time-controls/enabled?))
-         [:<>
-          [:> MenuItem {:onClick (fn []
-                                   (dispatch [:time/set-page-range title])
-                                   (dispatch [:time/toggle-slider]))
-                        :icon (r/as-element [:> TimeNowIcon])}
-           "Toggle Time Slider"]
-          [:> MenuItem {:onClick (fn []
-                                   (dispatch [:time/set-page-range title])
-                                   (dispatch [:time/toggle-heatmap]))
-                        :icon (r/as-element [:> TimeNowIcon])}
-           "Toggle Time Heatmap"]])
-       [:> MenuDivider]
-       [:> MenuItem {:icon (r/as-element [:> TrashIcon])
-                     :onClick (fn []
-                                ;; if page being deleted is in right sidebar, remove from right sidebar
-                                (when (contains? @(subscribe [:right-sidebar/items]) uid)
-                                  (dispatch [:right-sidebar/close-item uid]))
-                                ;; if page being deleted is open, navigate to back
-                                (when (or (= @(subscribe [:current-route/page-title]) title)
-                                          (= @(subscribe [:current-route/uid]) uid))
-                                  (rf/dispatch [:reporting/navigation {:source :page-title-delete
-                                                                       :target :back
-                                                                       :pane   :main-pane}])
-                                  (.back js/window.history))
-                                ;; if daily note, delete page and remove from daily notes, otherwise just delete page
-                                (if daily-note?
-                                  (dispatch [:daily-note/delete uid title])
-                                  (dispatch [:page/delete title])))}
-        "Delete Page"]]]]))
+  (let [contains-item? (subscribe [:right-sidebar/contains-item? [:node/title (:node/title node)]])]
+    (fn [node daily-note? on-daily-notes?]
+      (let [{:block/keys [uid]
+             sidebar :page/sidebar
+             title :node/title} node]
+        [:> Menu {:isLazy true :size "sm"}
+         [:> MenuButton {:as           IconButton
+                         "aria-label"  "Page menu"
+                         :gridArea     "menu"
+                         :justifySelf  "flex-end"
+                         :size         "sm"
+                         :alignSelf    "center"
+                         :fontSize     "70%"
+                         :color        "foreground.secondary"
+                         :bg           "transparent"
+                         :borderRadius "full"
+                         :sx           {"span" {:display "contents"}}}
+          [:> EllipsisHorizontalIcon]]
+         [:> Portal
+          [:> MenuList
+           [:<>
+            (if sidebar
+              [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])
+                            :icon    (r/as-element [:> BookmarkFillIcon])}
+               "Remove Shortcut"]
+              [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])
+                            :icon    (r/as-element [:> BookmarkIcon])}
+               [:span "Add Shortcut"]])
+            [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item [:node/title title] true])
+                          :icon    (r/as-element [:> GraphIcon])}
+             "Show Local Graph"]
+            [:> MenuItem {:onClick    #(dispatch [:right-sidebar/open-item [:node/title title]])
+                          :isDisabled @contains-item?
+                          :icon       (r/as-element [:> ArrowRightOnBoxIcon])}
+             "Open in Sidebar"]]
+           (when (and (not on-daily-notes?)
+                      (time-controls/enabled?))
+             [:<>
+              [:> MenuItem {:onClick (fn []
+                                       (dispatch [:time/set-page-range title])
+                                       (dispatch [:time/toggle-slider]))
+                            :icon    (r/as-element [:> TimeNowIcon])}
+               "Toggle Time Slider"]
+              [:> MenuItem {:onClick (fn []
+                                       (dispatch [:time/set-page-range title])
+                                       (dispatch [:time/toggle-heatmap]))
+                            :icon    (r/as-element [:> TimeNowIcon])}
+               "Toggle Time Heatmap"]])
+           [:> MenuDivider]
+           [:> MenuItem {:icon    (r/as-element [:> TrashIcon])
+                         :onClick (fn []
+                                    ;; if page being deleted is in right sidebar, remove from right sidebar
+                                    (when @contains-item?
+                                      (dispatch [:right-sidebar/close-item [:node/title title]]))
+                                    ;; if page being deleted is open, navigate to back
+                                    (when (or (= @(subscribe [:current-route/page-title]) title)
+                                              (= @(subscribe [:current-route/uid]) uid))
+                                      (rf/dispatch [:reporting/navigation {:source :page-title-delete
+                                                                           :target :back
+                                                                           :pane   :main-pane}])
+                                      (.back js/window.history))
+                                    ;; if daily note, delete page and remove from daily notes, otherwise just delete page
+                                    (if daily-note?
+                                      (dispatch [:daily-note/delete uid title])
+                                      (dispatch [:page/delete title])))}
+            "Delete Page"]]]]))))
 
 
 (defn ref-comp
@@ -459,8 +461,8 @@
          [:> PageHeader (merge
                           {:onClickOpenInMainView (when-not is-current-route?
                                                     (fn [e] (router/navigate-page title e)))
-                           :onClickOpenInSidebar  (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
-                                                    #(dispatch [:right-sidebar/open-item [:block/uid uid]]))}
+                           :onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:node/title title]])
+                                                    #(dispatch [:right-sidebar/open-item [:node/title title]]))}
                           (when @cover-photo-enabled?
                             {:headerImageEnabled     @cover-photo-enabled?
                              :headerImageUrl         (-> properties (get ":header/url") :block/string)

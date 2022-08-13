@@ -1066,7 +1066,7 @@
     (let [page-uid (common-db/get-page-uid @db/dsdb title)]
       {:fx [[:dispatch-n [(cond
                             shift?
-                            [:right-sidebar/open-item [:block/uid page-uid]]
+                            [:right-sidebar/open-item [:node/title title]]
 
                             (not (dates/is-daily-note page-uid))
                             [:navigate :page {:id page-uid}])]]]})))

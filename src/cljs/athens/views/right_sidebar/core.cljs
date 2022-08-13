@@ -24,18 +24,18 @@
   [items]
   (doall
     (mapv (fn [entity]
-            (let [{:keys [open? name uid type]} entity
+            (let [{:keys [open? name source-uid type]} entity
                   eid             (shared/get-eid entity)
-                  string-or-title (reactive/get-reactive-title-or-string eid)
-                  {:keys [node/title block/string]} string-or-title]
+                  item (reactive/get-reactive-right-sidebar-item eid)
+                  {:keys [node/title block/string block/uid]} item]
               {:isOpen   open?
-               :key      uid
+               :key      source-uid
                :type     (cond
                            (= type "graph") "graph"
                            (= type "page") "node"
                            :else "block")
-               :onRemove #(dispatch [:right-sidebar/close-item uid])
-               :onToggle #(dispatch [:right-sidebar/toggle-item uid])
+               :onRemove #(dispatch [:right-sidebar/close-item source-uid])
+               :onToggle #(dispatch [:right-sidebar/toggle-item source-uid])
                ;; nth 1 to get just the title
                :title    (nth [parse-renderer/parse-and-render (or title string) name] 1)
                :children (r/as-element (cond
