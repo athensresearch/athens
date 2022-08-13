@@ -15,15 +15,7 @@
     [reagent.core :as r]
     [re-frame.core :as rf]
     [athens.common-db :as common-db]
-    [athens.views.right-sidebar.shared :refer [NS ns-str get-open?]]))
-
-
-(defn get-eid
-  [item-block]
-  (let [{:keys [type name]} item-block]
-    (if (= type "page")
-      [:node/title name]
-      [:block/uid name])))
+    [athens.views.right-sidebar.shared :as shared :refer [NS ns-str]]))
 
 
 (defn- create-sidebar-list
@@ -33,11 +25,11 @@
   (doall
     (mapv (fn [entity]
             (let [{:keys [open? name uid type]} entity
-                  eid             (get-eid entity)
-                  string-or-title (athens.reactive/get-reactive-title-or-string eid)
+                  eid             (shared/get-eid entity)
+                  string-or-title (reactive/get-reactive-title-or-string eid)
                   {:keys [node/title block/string]} string-or-title]
               {:isOpen   open?
-               :key      name
+               :key      uid
                :type     (cond
                            (= type "graph") "graph"
                            (= type "page") "node"
@@ -51,33 +43,6 @@
                                          (= type "page") [node-page/page eid]
                                          :else [block-page/page eid]))}))
           items)))
-
-
-(defn get-items
-  []
-  (let [user-page     @(rf/subscribe [:presence/user-page])
-        sidebar-props (-> (reactive/get-reactive-node-document [:node/title user-page])
-                          :block/properties
-                          (get NS)
-                          :block/properties)
-        filter-fn     (fn [x]
-                        (common-db/block-exists? @athens.db/dsdb (get-eid x)))
-        map-props-fn  (fn [{:block/keys [uid string properties]}]
-                        (let [type  (or (-> (get properties (ns-str "/items/type"))
-                                            :block/string)
-                                        "block")
-                              open? (-> (get properties (ns-str "/items/open?"))
-                                        boolean)]
-                          {:uid   uid
-                           :name  string
-                           :type  type
-                           :open? open?}))
-        items         (->> (get sidebar-props (ns-str "/items"))
-                           :block/children
-                           (sort-by :block/order)
-                           (mapv map-props-fn)
-                           (filter filter-fn))]
-    items))
 
 
 ;; Components
@@ -174,7 +139,7 @@
 
 (defn right-sidebar
   []
-  (let [open? (get-open?)
-        items (get-items)
+  (let [open? (shared/get-open?)
+        items (shared/get-items)
         width @(subscribe [:right-sidebar/width])]
     [right-sidebar-el open? items width]))
