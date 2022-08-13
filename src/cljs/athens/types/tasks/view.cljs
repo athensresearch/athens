@@ -1,43 +1,43 @@
 (ns athens.types.tasks.view
   "Views for Athens Tasks"
   (:require
-   ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
-   ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
-   ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
-   ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
-   ["@chakra-ui/react"                   :refer [FormControl
-                                                 FormLabel
-                                                 Text
-                                                 AvatarGroup
-                                                 Avatar
-                                                 Divider
-                                                 Checkbox
-                                                 Checkbox
-                                                 Box
-                                                 Button
-                                                 Badge
-                                                 FormErrorMessage
-                                                 FormHelperText
-                                                 Select
-                                                 HStack
-                                                 VStack]]
-   [athens.common-db                     :as common-db]
-   [athens.common-events                 :as common-events]
-   [athens.common-events.bfs             :as bfs]
-   [athens.common-events.graph.composite :as composite]
-   [athens.common-events.graph.ops       :as graph-ops]
-   [athens.common.logging                :as log]
-   [athens.common.utils                  :as common.utils]
-   [athens.db                            :as db]
-   [athens.reactive                      :as reactive]
-   [athens.self-hosted.presence.views    :as presence]
-   [athens.types.core                    :as types]
-   [athens.types.dispatcher              :as dispatcher]
-   [athens.views.blocks.editor           :as editor]
-   [clojure.string                       :as str]
-   [goog.functions                       :as gfns]
-   [re-frame.core                        :as rf]
-   [reagent.core                         :as r]))
+    ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
+    ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
+    ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
+    ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
+    ["@chakra-ui/react"                   :refer [FormControl
+                                                  FormLabel
+                                                  Text
+                                                  AvatarGroup
+                                                  Avatar
+                                                  Divider
+                                                  Checkbox
+                                                  Checkbox
+                                                  Box
+                                                  Button
+                                                  Badge
+                                                  FormErrorMessage
+                                                  FormHelperText
+                                                  Select
+                                                  HStack
+                                                  VStack]]
+    [athens.common-db                     :as common-db]
+    [athens.common-events                 :as common-events]
+    [athens.common-events.bfs             :as bfs]
+    [athens.common-events.graph.composite :as composite]
+    [athens.common-events.graph.ops       :as graph-ops]
+    [athens.common.logging                :as log]
+    [athens.common.utils                  :as common.utils]
+    [athens.db                            :as db]
+    [athens.reactive                      :as reactive]
+    [athens.self-hosted.presence.views    :as presence]
+    [athens.types.core                    :as types]
+    [athens.types.dispatcher              :as dispatcher]
+    [athens.views.blocks.editor           :as editor]
+    [clojure.string                       :as str]
+    [goog.functions                       :as gfns]
+    [re-frame.core                        :as rf]
+    [reagent.core                         :as r]))
 
 
 ;; Create default task statuses configuration
@@ -65,32 +65,32 @@
   [db block-uid position title description priority creator assignee due-date status _projects]
   ;; TODO verify `status` correctness
   (->> (bfs/internal-representation->atomic-ops
-        db
-        [#:block{:string     ""
-                 :properties {":block/type"
-                              {:block/string "[[athens/task]]"}
-                              ":task/title"
-                              {:block/string title}
-                              ":task/description"
-                              {:block/string description}
-                              ":task/priority"
-                              {:block/string priority}
-                              ":task/creator"
-                              {:block/string creator}
-                              ":task/assignee"
-                              {:block/string assignee}
-                              ":task/due-date"
-                              {:block/string due-date}
-                              ":task/status"
-                              {:block/string status}
+         db
+         [#:block{:string     ""
+                  :properties {":block/type"
+                               {:block/string "[[athens/task]]"}
+                               ":task/title"
+                               {:block/string title}
+                               ":task/description"
+                               {:block/string description}
+                               ":task/priority"
+                               {:block/string priority}
+                               ":task/creator"
+                               {:block/string creator}
+                               ":task/assignee"
+                               {:block/string assignee}
+                               ":task/due-date"
+                               {:block/string due-date}
+                               ":task/status"
+                               {:block/string status}
                                ;; NOTE Task belonging to a Project is maintained on side of a Project
-                              #_#_":task/projects"
+                               #_#_":task/projects"
                                 #:block{:string   ""
                                         :children (for [project projects]
                                                     #:block{:string project
                                                             :uid    (common.utils/gen-block-uid)})}}}]
-        {:block/uid block-uid
-         :relation  position})
+         {:block/uid block-uid
+          :relation  position})
        (composite/make-consequence-op {:op/type :new-type})))
 
 
@@ -99,12 +99,12 @@
   [db task-block-uid new-properties-map]
   (let [task-properties       (common-db/get-block-property-document @db/dsdb [:block/uid task-block-uid])
         ops                   (concat
-                               (for [[prop-name prop-value] new-properties-map]
-                                 (let [[new-uid prop-ops] (graph-ops/build-property-path db task-block-uid [prop-name])
-                                       save-op            (graph-ops/build-block-save-op db new-uid prop-value)]
-                                   (if-not (= (get task-properties prop-name) prop-value)
-                                     (conj prop-ops save-op)
-                                     []))))
+                                (for [[prop-name prop-value] new-properties-map]
+                                  (let [[new-uid prop-ops] (graph-ops/build-property-path db task-block-uid [prop-name])
+                                        save-op            (graph-ops/build-block-save-op db new-uid prop-value)]
+                                    (if-not (= (get task-properties prop-name) prop-value)
+                                      (conj prop-ops save-op)
+                                      []))))
         updated-properties-op (composite/make-consequence-op {:op/type :update-task-properties}
                                                              ops)
         event                 (common-events/build-atomic-event updated-properties-op)]
@@ -321,10 +321,10 @@
                                    (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
        (doall
-        (for [{:block/keys [uid string]} allowed-priorities]
-          ^{:key uid}
-          [:option {:value uid}
-           string]))]]]))
+         (for [{:block/keys [uid string]} allowed-priorities]
+           ^{:key uid}
+           [:option {:value uid}
+            string]))]]]))
 
 
 (defn task-status-view
@@ -348,10 +348,10 @@
                                    (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}
        (doall
-        (for [{:block/keys [uid string]} allowed-statuses]
-          ^{:key uid}
-          [:option {:value uid}
-           string]))]]]))
+         (for [{:block/keys [uid string]} allowed-statuses]
+           ^{:key uid}
+           [:option {:value uid}
+            string]))]]]))
 
 
 (defn task-el
@@ -379,15 +379,15 @@
            [:> Avatar {:name creator}]])
         (when (and show-created-date? created-date)
           [:> Text {:fontSize "xs"} created-date])]
-        (when (and show-due-date? due-date)
-          [:> Text {:fontSize "xs"} due-date])
+       (when (and show-due-date? due-date)
+         [:> Text {:fontSize "xs"} due-date])
        (when (and show-description? description)
          [:> Text {:fontSize "sm"  :color "foreground.secondary"}
           description])])))
 
 
 (defrecord TaskView
-           []
+  []
 
   types/BlockTypeProtocol
 
@@ -430,7 +430,7 @@
              [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]
              [task-priority-view block-uid priority-uid]
              [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
-           ;; Making assumption that for now we can add due date manually without date-picker.
+             ;; Making assumption that for now we can add due date manually without date-picker.
              [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
              [task-status-view block-uid status-uid]
              [:> Divider]
