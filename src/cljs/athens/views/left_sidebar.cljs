@@ -15,8 +15,8 @@
 
 (defn route-button
   []
-  (fn [route current-route label on-click]
-    [:> Button {:isActive (= current-route route)
+  (fn [is-active? label on-click]
+    [:> Button {:isActive is-active?
                 :textAlign "start"
                 :justifyContent "flex-start"
                 :variant "ghost"
@@ -26,31 +26,34 @@
 
 (defn left-sidebar
   []
-  (let [route-name (rf/subscribe [:current-route/name])
+  (let [current-route-name (rf/subscribe [:current-route/name])
+        route-name @current-route-name
         shortcuts (reactive/get-reactive-shortcuts)]
+  (js/console.log current-route-name route-name)
     [:> MainSidebar
 
      [:> VStack {:role "nav" :alignSelf "stretch" :as ButtonGroup :size "sm" :align "stretch" :px 4 :spacing "0.25rem"}
-      [route-button "home" route-name "Daily Notes" (fn [_]
-                                                      (rf/dispatch [:reporting/navigation {:source :main-sidebar
-                                                                                           :target :home
-                                                                                           :pane   :main-pane}])
-                                                      (router/nav-daily-notes))]
-      [route-button "all-pages" route-name "All Pages" (fn [_]
-                                                         (rf/dispatch [:reporting/navigation {:source :main-sidebar
-                                                                                              :target :all-pages
-                                                                                              :pane   :main-pane}])
-                                                         (router/navigate :pages))]
-      [route-button "graph" route-name "Graph" (fn [_]
-                                                 (rf/dispatch [:reporting/navigation {:source :main-sidebar
-                                                                                      :target :graph
-                                                                                      :pane   :main-pane}])
-                                                 (router/navigate :graph))]]
+      [route-button (= route-name :home) "Daily Notes" (fn [_]
+                                                          (rf/dispatch [:reporting/navigation {:source :main-sidebar
+                                                                                               :target :home
+                                                                                               :pane   :main-pane}])
+                                                          (router/nav-daily-notes))]
+      [route-button (= route-name :pages) "All Pages" (fn [_]
+                                                             (rf/dispatch [:reporting/navigation {:source :main-sidebar
+                                                                                                  :target :all-pages
+                                                                                                  :pane   :main-pane}])
+                                                             (router/navigate :pages))]
+    #_   [route-button (= route-name :graph) (fn [_]
+                                                (rf/dispatch [:reporting/navigation {:source :main-sidebar
+                                                                                     :target :graph
+                                                                                     :pane   :main-pane}])
+                                                (router/navigate :graph))]]
 
         ;; SHORTCUTS
      [:> VStack {:as "ol"
                  :align "stretch"
                  :py "1rem"
+                 :flex 1
                  :spacing "0.25rem"
                  :overflowY "auto"
                  :backdropFilter "blur(1em)"
