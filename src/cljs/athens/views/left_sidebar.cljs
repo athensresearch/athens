@@ -33,11 +33,11 @@
   (let [current-route-name (rf/subscribe [:current-route/name])
         on-athena              #(rf/dispatch [:athena/toggle])
         route-name @current-route-name
+        is-open? (rf/subscribe [:left-sidebar/open])
         shortcuts (reactive/get-reactive-shortcuts)]
-    [:> MainSidebar
+    [:> MainSidebar {:isMainSidebarOpen @is-open?}
 
      [:> VStack {:spacing 4 :align "stretch" :height "100%"}
-
 
       [:> VStack {:spacing 0.5 :role "nav" :alignSelf "stretch" :as ButtonGroup :size "sm" :align "stretch" :p 4}
        [:> Button {:onClick on-athena
