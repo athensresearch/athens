@@ -132,7 +132,10 @@
                                               (when (.. e -shiftKey)
                                                 (rf/dispatch [:right-sidebar/open-page user-page-title])))
                              :icon          (r/as-element [:> BellFillIcon])}]
-             [:> Badge {:position "absolute" :right "-3px" :bottom "-1px" :variant "ghost" :z-index -1} num-notifications]]]
+             [:> Badge {:position "absolute"
+                        :bg "highlight"
+                        :color "highlightContrast"
+                        :right "-3px" :bottom "-1px" :variant "ghost" :zIndex 1} num-notifications]]]
 
 
            [:> PopoverContent {:maxWidth  "max-content"
