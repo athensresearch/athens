@@ -47,10 +47,10 @@ export const PageNotFound = ({ title, onClickHome, children }) => {
 export const PageContainer = ({ children, uid, type }) => <Box
   {...PAGE_PROPS}
   flexGrow={1}
+  pt={2}
   data-ui={uid}
   className={type + '-page'}
   flexDirection="column"
-  marginInline="auto"
 >{children}</Box>
 
 export const HeaderImage = ({ src }) => <Image
@@ -158,7 +158,6 @@ const DailyNotePageError = () => {
       display="flex"
       borderWidth="1px"
       borderStyle="solid"
-      m={8}
       borderColor="separator.divider"
       transitionDuration="0s"
       borderRadius="0.5rem"
@@ -174,7 +173,7 @@ const DailyNotePageError = () => {
 }
 
 
-export const DailyNotesPage = withErrorBoundary(({ isReal, children, onFirstAppear, ...rest }) => {
+export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...rest }) => {
   const hasAppeared = React.useRef(false);
   const { ref, inView } = useInView({ threshold: 1, triggerOnce: true, delay: 50 });
 
@@ -205,12 +204,10 @@ export const DailyNotesPage = withErrorBoundary(({ isReal, children, onFirstAppe
         opacity: 0,
       }}
       ref={ref}
-      m={8}
       overflowY="auto"
       className="node-page daily-notes"
       boxShadow="page"
       bg="background.floor"
-      opacity={isReal ? 1 : 0.5}
       borderWidth="1px"
       borderStyle="solid"
       borderColor="separator.divider"

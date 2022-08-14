@@ -1,11 +1,12 @@
 (ns athens.views.pages.daily-notes
   (:require
-   ["/components/Page/Page" :refer [DailyNotesPage]]
-   ["framer-motion" :refer [AnimatePresence]]
-   [athens.dates :as dates]
-   [athens.reactive :as reactive]
-   [athens.views.pages.node-page :as node-page]
-   [re-frame.core :refer [dispatch subscribe]]))
+    ["/components/Page/Page" :refer [DailyNotesPage]]
+    ["@chakra-ui/react" :refer [VStack]]
+    ["framer-motion" :refer [AnimatePresence]]
+    [athens.dates :as dates]
+    [athens.reactive :as reactive]
+    [athens.views.pages.node-page :as node-page]
+    [re-frame.core :refer [dispatch subscribe]]))
 
 
 (defn reactive-pull-many
@@ -30,11 +31,10 @@
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (dates/get-day)])
         (let [notes (reactive-pull-many @note-refs)]
-          [:> AnimatePresence {:initial false}
-           (doall
-            (for [{:keys [block/uid]} notes]
-              [:> DailyNotesPage {:key uid
-                                  :isReal true
-                                  :m 8
-                                  :onFirstAppear get-next-note}
-               [node-page/page [:block/uid uid]]]))])))))
+          [:> VStack {:alignSelf "stretch" :align "stretch" :py 16 :px [2 4 8] :spacing 8}
+           [:> AnimatePresence {:initial false}
+            (doall
+              (for [{:keys [block/uid]} notes]
+                [:> DailyNotesPage {:key uid
+                                    :onFirstAppear get-next-note}
+                 [node-page/page [:block/uid uid]]]))]])))))

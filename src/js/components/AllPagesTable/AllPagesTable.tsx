@@ -105,6 +105,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
 
   return <Box
     flex="1 1 100%"
+    alignSelf="stretch"
     height="100vh"
     px={4}
     sx={{

@@ -2,23 +2,14 @@ import React from 'react';
 
 import {
   RightSidebarIcon,
-  SearchIcon,
   MenuIcon,
   HelpIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  AllPagesIcon,
   SettingsIcon,
   ContrastIcon,
-  DailyNotesIcon,
-  GraphIcon,
   EllipsisHorizontalCircleIcon,
-  CheckmarkIcon,
-  ViewIcon,
-  ViewOffIcon,
   ChatFilledIcon,
-  ChevronDownIcon,
-  RightSidebarAddIcon
 } from '@/Icons/Icons';
 
 import {
@@ -31,13 +22,10 @@ import {
   MenuList,
   Tooltip,
   Box,
-  Divider,
   Flex,
   Spacer,
-  Text,
   Button,
   ButtonOptions,
-  HStack,
   IconButton,
   ButtonGroup,
   useColorMode,
@@ -316,7 +304,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         {/* Left side */}
         <ButtonGroup
           size="sm"
-          px={3}
+          pr={3}
+          pl={4}
           alignItems="center"
           justifyContent="flex-start"
           {...(isElectron && os) === "mac" && ({
@@ -324,13 +313,14 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
             pl: "88px"
           })}
         >
-          <IconButton
+          <ToolbarIconButton
             aria-label="View mode"
             onClick={() =>
               setViewMode(viewMode === "compact" ? "regular" : "compact")
             }
-            icon={<MenuIcon />}
-          />
+          >
+            <MenuIcon />
+          </ToolbarIconButton>
           {databaseMenu}
         </ButtonGroup>
         {/* Right side */}
