@@ -9,7 +9,7 @@ import {
   SettingsIcon,
   ContrastIcon,
   EllipsisHorizontalCircleIcon,
-  ChatFilledIcon,
+  ChatIcon,
 } from '@/Icons/Icons';
 
 import {
@@ -36,7 +36,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "@/Layout/useLayoutState";
 import { WindowButtons } from './components/WindowButtons';
 import { LocationIndicator } from './components/LocationIndicator';
-import { MainSidebar } from '@/Layout/MainSidebar';
 
 interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
   children: React.ReactChild;
@@ -154,7 +153,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   presenceDetails?: React.FC;
 }
 
-const SecondaryToolbarItems = (items) => {
+const secondaryToolbarItems = (items) => {
   return <ButtonGroup size="sm">
     {items.filter(x => !!x).map((item) => <Tooltip label={item.label} key={item.label}>
       <ToolbarIconButton variant="ghost" colorScheme="subtle" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
@@ -164,7 +163,7 @@ const SecondaryToolbarItems = (items) => {
   </ButtonGroup>
 }
 
-const SecondaryToolbarOverflowMenu = (items) => {
+const secondaryToolbarOverflowMenu = (items) => {
   return <Menu>
     {({ isOpen }) => <>
       <ToolbarIconButton size="sm" as={MenuButton} isActive={isOpen}><EllipsisHorizontalCircleIcon /></ToolbarIconButton>
@@ -260,7 +259,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       label: isShowComments ? "Hide comments" : "Show comments",
       isActive: isShowComments,
       onClick: handleClickComments,
-      icon: <ChatFilledIcon />
+      icon: <ChatIcon />
     },
     {
       label: "Help",
@@ -361,8 +360,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       {presenceDetails}
       {notificationPopover}
       {canShowFullSecondaryMenu
-        ? SecondaryToolbarItems(secondaryTools)
-        : SecondaryToolbarOverflowMenu(secondaryTools)}
+        ? secondaryToolbarItems(secondaryTools)
+        : secondaryToolbarOverflowMenu(secondaryTools)}
     </ButtonGroup>
   );
 
