@@ -31,8 +31,6 @@ export const List = (props) => {
     onOpenItem,
     ...rest
   } = props;
-  const container = React.useRef();
-  const [containerWidth, setContainerWidth] = React.useState("unset");
 
   // Maintain an internal list of items for proper animation
   const [items, setItems] = React.useState(outerItems);
@@ -41,13 +39,6 @@ export const List = (props) => {
   React.useEffect(() => {
     setItems(outerItems)
   }, [outerItems])
-
-  React.useEffect(() => {
-    if (container.current) {
-      const el = container.current as HTMLElement;
-      setContainerWidth(el.getBoundingClientRect().width.toString());
-    }
-  }, [container]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint }),
@@ -75,14 +66,14 @@ export const List = (props) => {
   };
 
   return (
-    <Box sx={{ "--parentWidth": containerWidth }}>
+    <Box >
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
         onDragStart={handleDragStart}
       >
-        <VStack spacing={0.25} align="stretch" overflowX="hidden" {...rest}>
+        <VStack spacing={0.5} px={4} align="stretch" overflowX="hidden" {...rest}>
           <SortableContext strategy={verticalListSortingStrategy} items={items}>
             {items.map(item => <Item
               onClick={(e) => onOpenItem(e, item)}
@@ -93,7 +84,7 @@ export const List = (props) => {
 
         <Portal>
           <DragOverlay>
-            {activeId ? <ItemDragOverlay sx={{ "--parentWidth": containerWidth }} key={activeId} id={activeId} /> : null}
+            {activeId ? <ItemDragOverlay key={activeId} id={activeId} /> : null}
           </DragOverlay>
         </Portal>
       </DndContext>

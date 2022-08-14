@@ -69,8 +69,8 @@ const semanticTokens = {
     },
     // separator colors
     "separator.border": {
-      default: '00000022',
-      _dark: '#ffffff55'
+      default: '#00000033',
+      _dark: '#ffffff22'
     },
     "separator.divider": {
       default: '#00000022',

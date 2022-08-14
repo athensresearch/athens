@@ -1,4 +1,4 @@
-import { Box, Text, Heading, VStack, Divider } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import * as React from "react";
 import { AnimatePresence } from "framer-motion";
@@ -36,9 +36,9 @@ export const MainSidebar = (props) => {
             right: "auto"
           })}
         >
-          <Box width={sidebarWidth}>
+          <Flex flexDirection="column" height="100%" width={sidebarWidth}>
             {children}
-          </Box>
+          </Flex>
         </Box>
       )}
     </AnimatePresence>

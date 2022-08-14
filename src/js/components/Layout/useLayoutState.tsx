@@ -1,4 +1,3 @@
-import { LayoutGroupContextProps } from "framer-motion/types/context/LayoutGroupContext";
 import * as React from "react";
 
 export const LayoutContext = React.createContext(null);
