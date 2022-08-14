@@ -30,6 +30,8 @@ import {
   MenuItem,
   MenuList,
   Tooltip,
+  Box,
+  Divider,
   Flex,
   Spacer,
   Text,
@@ -43,8 +45,10 @@ import {
 } from '@chakra-ui/react';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutContext, layoutAnimationProps } from "@/Layout/useLayoutState";
+import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "@/Layout/useLayoutState";
 import { WindowButtons } from './components/WindowButtons';
+import { LocationIndicator } from './components/LocationIndicator';
+import { MainSidebar } from '@/Layout/MainSidebar';
 
 interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
   children: React.ReactChild;
@@ -52,6 +56,8 @@ interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, T
 interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
   children: React.ReactChild;
 }
+
+const PAGE_TITLE_SHOW_HEIGHT = 30;
 
 const toolbarButtonStyle = {
   variant: "ghost",
@@ -133,6 +139,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   * Whether comments should be shown
   */
   isShowComments: boolean;
+  currentPageTitle?: string;
   // Electron only
   onPressMinimize?(): void;
   onPressClose?(): void;
@@ -221,10 +228,29 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressClose: handlePressClose,
     databaseMenu,
     notificationPopover,
+    currentPageTitle,
     presenceDetails,
   } = props;
+  console.log(currentPageTitle)
   const { colorMode, toggleColorMode } = useColorMode();
   const [canShowFullSecondaryMenu] = useMediaQuery('(min-width: 900px)');
+  const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState(null);
+
+  // add event listener to detect when the user scrolls past the title
+  React.useLayoutEffect(() => {
+    const scrollContainer = document.getElementById("main-layout") as HTMLElement;
+
+    const handleScroll = () => {
+      if (scrollContainer.scrollTop > PAGE_TITLE_SHOW_HEIGHT) {
+        setIsScrolledPastTitle(true);
+      } else {
+        setIsScrolledPastTitle(false);
+      }
+    }
+    handleScroll();
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // If the database color mode doesn't match
   // the chakra color mode, update the chakra color mode
@@ -367,10 +393,9 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       flex="0 0 auto"
       display="flex"
       justifyContent="flex-start"
-    >
-      <Button variant="ghost" rightIcon={<ChevronDownIcon />}>
-        <Text fontWeight="medium">Current Page</Text>
-      </Button>
+    >{currentPageTitle && (
+      <LocationIndicator isVisible={isScrolledPastTitle} type="node" uid="123" title={currentPageTitle} />
+    )}
     </ButtonGroup>
   )
 
@@ -411,6 +436,35 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         {currentLocationTools}
         {contentControls || <Spacer />}
         {rightToolbarControls}
+
+        {(isScrolledPastTitle && (
+          <Box
+            as={motion.div}
+            key="header-backdrop"
+            className="header-content-backdrop"
+            backdropFilter={`blur(10px)`}
+            _after={{
+              content: "''",
+              position: "absolute",
+              inset: 0,
+              bg: "background.floor",
+              opacity: 0.5,
+            }}
+            position="absolute"
+            zIndex={-1}
+            borderBottom="1px solid"
+            borderColor="separator.divider"
+            height={toolbarHeight}
+            left={viewMode === "regular" ? mainSidebarWidth : 0}
+            right={0}
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 1,
+              transition: layoutAnimationTransition
+            }}
+            exit={{ opacity: 0 }}
+          />
+        ))}
       </AnimatePresence>
 
       {isElectron && (os === 'windows' || os === 'linux') && (

@@ -62,9 +62,18 @@
                     [db-modal/window])
                   (when @settings-open?
                     [settings/page])
-                  [:> VStack {:spacing 0 :overflowY "auto" :height "100vh" :align "stretch" :position "relative"}
+                  [:> VStack {:overscrollBehavior "contain"
+                              :id "main-layout"
+                              :spacing 0
+                              :overflowY "auto"
+                              :height "100vh"
+                              :align "stretch"
+                              :position "relative"}
                    [app-toolbar/app-toolbar]
-                   [:> HStack {:align "stretch" :spacing 0 :flex 1}
+                   [:> HStack {:overscrollBehavior "contain"
+                               :align "stretch"
+                               :spacing 0
+                               :flex 1}
                     [left-sidebar/left-sidebar]
                     [:> MainContent
                      [pages/view]]
