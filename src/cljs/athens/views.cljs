@@ -1,6 +1,7 @@
 (ns athens.views
   (:require
     ["/components/Layout/MainContent" :refer [MainContent]]
+    ["/components/Layout/RightSidebarResizeControl" :refer [RightSidebarResizeControl]]
     ["/components/Layout/useLayoutState" :refer [LayoutProvider]]
     ["/theme/theme" :refer [theme]]
     ["@chakra-ui/react" :refer [ChakraProvider Flex VStack HStack Spinner Center]]
@@ -32,6 +33,8 @@
   []
   (let [loading        (rf/subscribe [:loading?])
         modal          (rf/subscribe [:modal])
+        right-sidebar-open? (rf/subscribe [:right-sidebar/open])
+        right-sidebar-width (rf/subscribe [:right-sidebar/width])
         settings-open? (rf/subscribe [:settings/open?])]
     (fn []
       [:div (merge {:style {:display "contents"}}
@@ -75,7 +78,10 @@
                                :spacing 0
                                :flex 1}
                     [left-sidebar/left-sidebar]
-                    [:> MainContent
+                    [:> MainContent {:rightSidebarWidth @right-sidebar-width
+                                     :isRightSidebarOpen @right-sidebar-open?}
                      [pages/view]]
-
+                    [:> RightSidebarResizeControl {:sidebarWidth @right-sidebar-width
+                                                   :isSidebarOpen @right-sidebar-open?
+                                                   :onResizeSidebar #(rf/dispatch [:right-sidebar/set-width %])}]
                     [right-sidebar/right-sidebar]]]])]]])))

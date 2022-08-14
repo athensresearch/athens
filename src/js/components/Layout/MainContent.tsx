@@ -4,12 +4,10 @@ import * as React from "react";
 import { LayoutContext, layoutAnimationTransition } from "./useLayoutState";
 
 /** Main Content */
-export const MainContent = ({ children }) => {
+export const MainContent = ({ children, isRightSidebarOpen, rightSidebarWidth }) => {
   const {
     toolbarHeight,
     mainContentRef,
-    hasRightSidebar,
-    rightSidebarWidth
   } = React.useContext(LayoutContext);
 
   return (
@@ -32,7 +30,7 @@ export const MainContent = ({ children }) => {
           "--app-header-height": toolbarHeight,
         }}
         animate={{
-          paddingRight: hasRightSidebar ? rightSidebarWidth : 0,
+          paddingRight: isRightSidebarOpen ? rightSidebarWidth : 0,
           transition: layoutAnimationTransition
         }}
       >

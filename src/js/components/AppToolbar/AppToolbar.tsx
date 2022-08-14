@@ -254,7 +254,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     toolbarRef,
     setViewMode,
     setHasRightSidebar,
-    hasRightSidebar,
     toolbarHeight,
     mainSidebarWidth
   } = React.useContext(LayoutContext);
@@ -285,7 +284,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     },
     {
       label: 'Show right sidebar',
-      onClick: () => setHasRightSidebar(!hasRightSidebar),
+      onClick: handlePressRightSidebarToggle,
       icon: <RightSidebarIcon />
     }
   ];

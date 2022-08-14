@@ -5,16 +5,15 @@ import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFi
 import { Button, IconButton, Box, Collapse, VStack } from '@chakra-ui/react';
 
 /** Right Sidebar */
-export const RightSidebar = ({ children }) => {
+export const RightSidebar = (props) => {
+  const { children, rightSidebarWidth, isOpen } = props;
   const {
-    rightSidebarWidth,
-    hasRightSidebar,
     toolbarHeight
   } = React.useContext(LayoutContext);
 
   return (
     <AnimatePresence initial={false}>
-      {hasRightSidebar && (
+      {isOpen && (
         <Box
           as={motion.div}
           {...layoutAnimationProps(rightSidebarWidth + "px")}

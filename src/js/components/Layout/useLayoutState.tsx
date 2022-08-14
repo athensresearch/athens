@@ -35,9 +35,7 @@ export const useLayoutState = () => {
   );
   const mainContentRef = React.useRef();
   const toolbarRef = React.useRef();
-  const [hasRightSidebar, setHasRightSidebar] = React.useState(true);
   const [mainSidebarWidth, setMainSidebarWidth] = React.useState(300);
-  const [rightSidebarWidth, setRightSidebarWidth] = React.useState(600);
   const [isMainSidebarFloating, setIsMainSidebarFloating] = React.useState(
     false
   );
@@ -46,17 +44,13 @@ export const useLayoutState = () => {
   return {
     mainSidebarWidth,
     setMainSidebarWidth,
-    hasRightSidebar,
     isMainSidebarFloating,
     setIsMainSidebarFloating,
-    rightSidebarWidth,
-    setRightSidebarWidth,
     toolbarHeight,
     viewMode,
     mainContentRef,
     toolbarRef,
     setViewMode,
-    setHasRightSidebar
   };
 };
 
