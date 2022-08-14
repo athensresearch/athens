@@ -1,11 +1,11 @@
 (ns athens.views.pages.daily-notes
   (:require
-    ["/components/Page/Page" :refer [PageHeader TitleContainer DailyNotesPage]]
-    ["@chakra-ui/react" :refer [VStack]]
-    [athens.dates :as dates]
-    [athens.reactive :as reactive]
-    [athens.views.pages.node-page :as node-page]
-    [re-frame.core :refer [dispatch subscribe]]))
+   ["/components/Page/Page" :refer [DailyNotesPage]]
+   ["framer-motion" :refer [AnimatePresence]]
+   [athens.dates :as dates]
+   [athens.reactive :as reactive]
+   [athens.views.pages.node-page :as node-page]
+   [re-frame.core :refer [dispatch subscribe]]))
 
 
 (defn reactive-pull-many
@@ -24,26 +24,17 @@
 
 (defn page
   []
-  (let [note-refs (subscribe [:daily-notes/items])]
+  (let [note-refs (subscribe [:daily-notes/items])
+        get-next-note #(dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last @note-refs)) 1)])]
     (fn []
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (dates/get-day)])
         (let [notes (reactive-pull-many @note-refs)]
-          [:> VStack {:id "daily-notes"
-                      :minHeight     "calc(100vh + 1px)"
-                      :height        "calc(100vh + 1px)"
-                      :display       "flex"
-                      :overflowY     "auto"
-                      :gap           "1.5rem"
-                      :px            "2rem"
-                      :alignItems    "center"
-                      :flex          "1 1 100%"
-                      :flexDirection "column"}
+          [:> AnimatePresence {:initial false}
            (doall
-             (for [{:keys [block/uid]} notes]
-               [:> DailyNotesPage {:key uid
-                                   :isReal true}
-                [node-page/page [:block/uid uid]]]))
-           [:> DailyNotesPage {:isReal false}
-            [:> PageHeader
-             [:> TitleContainer "Earlier"]]]])))))
+            (for [{:keys [block/uid]} notes]
+              [:> DailyNotesPage {:key uid
+                                  :isReal true
+                                  :m 8
+                                  :onFirstAppear get-next-note}
+               [node-page/page [:block/uid uid]]]))])))))

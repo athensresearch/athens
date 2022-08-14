@@ -18,10 +18,16 @@ export const MainContent = ({ children }) => {
     <AnimatePresence initial={false}>
       <Flex
         zIndex={1}
-        id="main-content"
         ref={mainContentRef}
         as={motion.div}
         key="main content"
+        flex="1 1"
+        position="relative"
+        flexDir="column"
+        alignItems="center"
+        justifyContent="stretch"
+        display="flex"
+        overflowY="auto"
         sx={{
           "--app-header-height": toolbarHeight,
         }}
@@ -29,9 +35,6 @@ export const MainContent = ({ children }) => {
           paddingRight: hasRightSidebar ? rightSidebarWidth : 0,
           transition: layoutAnimationTransition
         }}
-        flex={1}
-        justifyContent="center"
-        overflowY="auto"
       >
         {children}
       </Flex>

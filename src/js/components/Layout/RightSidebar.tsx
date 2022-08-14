@@ -18,6 +18,8 @@ export const RightSidebar = ({ children }) => {
         <Box
           as={motion.div}
           {...layoutAnimationProps(rightSidebarWidth + "px")}
+          zIndex={1}
+          bg="background.floor"
           overflowY="auto"
           borderLeft="1px solid"
           borderColor="separator.divider"

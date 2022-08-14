@@ -231,7 +231,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     currentPageTitle,
     presenceDetails,
   } = props;
-  console.log(currentPageTitle)
   const { colorMode, toggleColorMode } = useColorMode();
   const [canShowFullSecondaryMenu] = useMediaQuery('(min-width: 900px)');
   const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState(null);
