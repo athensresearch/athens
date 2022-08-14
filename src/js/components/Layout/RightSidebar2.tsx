@@ -1,11 +1,11 @@
 import { Box, Text, VStack, HStack } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import * as React from "react";
 import { AnimatePresence } from "framer-motion";
 import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
 
-const MIN_WIDTH = 100;
-const MAX_WIDTH = 500;
+const MIN_WIDTH = 0;
+const MAX_WIDTH = 1000;
 
 /** Right Sidebar */
 export const RightSidebar = ({ children, onResizeSidebar }) => {
@@ -16,73 +16,74 @@ export const RightSidebar = ({ children, onResizeSidebar }) => {
     toolbarHeight
   } = React.useContext(LayoutContext);
 
-  const [isDragging, setIsDragging] = React.useState(false);
-  const draggedWidth = React.useRef(0)
+  const [localWidth, setLocalWidth] = React.useState(rightSidebarWidth);
 
-  const defaultAnimationProps = layoutAnimationProps(rightSidebarWidth + "px");
-
-  const animationProps = {
-    ...defaultAnimationProps,
-    animate: {
-      ...defaultAnimationProps.animate,
-      transition: isDragging
-        ? { type: "tween", duration: 0 }
-        : defaultAnimationProps.animate.transition
-    }
+  const startResizing = () => {
+    document.body.style.cursor = "col-resize";
   }
+
+  const stopResizing = () => {
+    document.body.style.cursor = "default";
+    setRightSidebarWidth(localWidth);
+  }
+
+  console.log(localWidth);
+
+  // const defaultAnimationProps = layoutAnimationProps(mvWidth.get() + "px");
+  // const animationProps = {
+  //   ...defaultAnimationProps,
+  //   animate: {
+  //     ...defaultAnimationProps.animate,
+  //     transition: defaultAnimationProps.animate.transition
+  //   }
+  // }
 
   return (
     <AnimatePresence initial={false}>
       {hasRightSidebar && (
         <HStack
           as={motion.div}
-          {...animationProps}
+          // {...animationProps}
+          {...layoutAnimationProps(rightSidebarWidth + "px")}
           spacing={0}
           overflowY="auto"
+          align="stretch"
+          border="2px solid red"
           position="fixed"
           height="100vh"
           inset={0}
           pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
-          <Box
-            alignSelf="stretch"
-            zIndex={10}
-            width="5px"
-            background="white"
-            position="relative"
-            _hover={{
-              bg: "foreground.primary"
+          <motion.div
+            style={{
+              background: "white",
+              height: "100%",
+              width: "2px",
+              cursor: "col-resize",
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              zIndex: 1,
             }}
-            bg={
-              isDragging ? "link" :
-                "separator.divider"
-            }
-          >
-            <motion.div
-              drag="x"
-              style={{
-                position: "absolute",
-                opacity: 0,
-                inset: 0
-              }}
-              dragElastic={false}
-              dragMomentum={false}
-              onDrag={
-                (event, info) => {
-                  if (!isDragging) { setIsDragging(true) };
-                  const width = window.innerWidth - info.point.x;
-                  if (width !== draggedWidth.current) {
-                    console.log(width)
-                    setRightSidebarWidth(width);
-                  }
-                  draggedWidth.current = width;
-                }
-              }
-              onDragEnd={() => setIsDragging(false)}
-            />
-          </Box>
-          <Box overflow="hidden" flex={1}>
+            drag="x"
+            dragElastic={0.025}
+            dragMomentum={false}
+            whileTap="active"
+            whileHover="active"
+            onDrag={(event, info) => {
+              const { delta } = info;
+              const newWidth = localWidth - delta.x;
+              setLocalWidth(newWidth);
+              setRightSidebarWidth(newWidth);
+            }}
+            onPointerDown={startResizing}
+            onPointerUp={stopResizing}
+            onPanEnd={stopResizing}
+            onTap={stopResizing}
+          />
+          <Box overflow="hidden" flex="1 1 100%">
             {children}
           </Box>
         </HStack>

@@ -1,4 +1,4 @@
-import { Box, Flex } from "@chakra-ui/react";
+import { Flex } from "@chakra-ui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import * as React from "react";
 import { LayoutContext, layoutAnimationTransition } from "./useLayoutState";
