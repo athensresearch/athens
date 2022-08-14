@@ -43,7 +43,7 @@ import {
 } from '@chakra-ui/react';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutContext, layoutAnimationProps } from "@/Layout/useLayoutState";
+import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "@/Layout/useLayoutState";
 import { WindowButtons } from './components/WindowButtons';
 
 interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
@@ -283,55 +283,62 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
 
   const leftSidebarControls = (
-    <Flex
-      as={motion.div}
-      key="leftSidebar tools"
-      {...layoutAnimationProps(viewMode === "compact" ? "auto" : sidebarWidth)}
-      justifyContent="space-between"
-      flexShrink={0}
-
-    >
-      {/* Left side */}
-      <ButtonGroup
-        size="sm"
-        px={3}
-        alignItems="center"
-        justifyContent="flex-start"
+    <>
+      <Flex
+        as={motion.div}
+        key="leftSidebar tools"
+        {...layoutAnimationProps(viewMode === "compact" ? "auto" : sidebarWidth)}
+        justifyContent="space-between"
+        flexShrink={0}
       >
-        <IconButton
-          aria-label="View mode"
-          onClick={() =>
-            setViewMode(viewMode === "compact" ? "regular" : "compact")
-          }
-          icon={<MenuIcon />}
-        />
-        {databaseMenu}
-      </ButtonGroup>
-      {/* Right side */}
-      {isElectron && (
-        <ButtonGroup isAttached
+
+        {/* Left side */}
+        <ButtonGroup
+          size="sm"
+          px={3}
           alignItems="center"
-          justifyContent="flex-end"
-          pr={3} size="sm">
-          <Tooltip
-            label="Go back">
-            <ToolbarIconButton
-              aria-label="Go back"
-              onClick={handlePressHistoryBack}
-            >
-              <ChevronLeftIcon />
-            </ToolbarIconButton>
-          </Tooltip>
-          <Tooltip label="Go forward">
-            <ToolbarIconButton
-              aria-label="Go forward"
-              onClick={handlePressHistoryForward}>
-              <ChevronRightIcon />
-            </ToolbarIconButton>
-          </Tooltip>
-        </ButtonGroup>)
-      }
-    </Flex>
+          justifyContent="flex-start"
+          {...(isElectron && os) === "mac" && ({
+            // Make room for macOS traffic lights
+            pl: "88px"
+          })}
+        >
+          <IconButton
+            aria-label="View mode"
+            onClick={() =>
+              setViewMode(viewMode === "compact" ? "regular" : "compact")
+            }
+            icon={<MenuIcon />}
+          />
+          {databaseMenu}
+        </ButtonGroup>
+        {/* Right side */}
+        {isElectron && (
+          <ButtonGroup isAttached
+            alignItems="center"
+            justifyContent="flex-end"
+            pr={3}
+            size="sm">
+            <Tooltip
+              label="Go back">
+              <ToolbarIconButton
+                aria-label="Go back"
+                onClick={handlePressHistoryBack}
+              >
+                <ChevronLeftIcon />
+              </ToolbarIconButton>
+            </Tooltip>
+            <Tooltip label="Go forward">
+              <ToolbarIconButton
+                aria-label="Go forward"
+                onClick={handlePressHistoryForward}>
+                <ChevronRightIcon />
+              </ToolbarIconButton>
+            </Tooltip>
+          </ButtonGroup>)
+        }
+      </Flex>
+    </>
   );
 
   const rightToolbarControls = (
@@ -403,10 +410,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         }
       }}
     >
-      {(isElectron && os) === "mac" && (
-        <Spacer flex="0 0 80px" />
-      )}
-
       <AnimatePresence initial={false}>
         {leftSidebarControls}
         {currentLocationTools}

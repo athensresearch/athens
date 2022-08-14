@@ -18,6 +18,9 @@ export const MainContent = ({ children }) => {
         ref={mainContentRef}
         as={motion.div}
         key="main content"
+        sx={{
+          "--app-header-height": toolbarHeight,
+        }}
         animate={{
           paddingRight: hasRightSidebar ? rightSidebarWidth : 0,
           transition: layoutAnimationTransition

@@ -29,7 +29,7 @@
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (dates/get-day)])
         (let [notes (reactive-pull-many @note-refs)]
-          [:> VStack {:id            "daily-notes"
+          [:> VStack {:id "daily-notes"
                       :minHeight     "calc(100vh + 1px)"
                       :height        "calc(100vh + 1px)"
                       :display       "flex"

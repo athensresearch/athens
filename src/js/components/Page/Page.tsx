@@ -70,7 +70,7 @@ export const PageHeader = ({
   headerImageUrl,
   onClickOpenInSidebar,
   onClickOpenInMainView,
-  headerImageEnabled}
+  headerImageEnabled }
 ) => {
   const [isPropertiesOpen, setIsPropertiesOpen] = React.useState(false)
 
