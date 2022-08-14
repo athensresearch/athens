@@ -11,9 +11,6 @@
     [reagent.core :as r]))
 
 
-
-
-
 ;; Components
 
 
@@ -102,8 +99,6 @@
                                      [:> List {:items              (shared/create-sidebar-list items)
                                                :onUpdateItemsOrder (fn [source-uid target-uid old-index new-index]
                                                                      (rf/dispatch [:right-sidebar/reorder source-uid target-uid old-index new-index]))}])]])})))
-
-
 
 
 (defn right-sidebar

@@ -11,13 +11,16 @@
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
+
 (def NS "athens/right-sidebar")
+
 
 (defn ns-str
   ([]
    (ns-str ""))
   ([s]
    (str NS s)))
+
 
 (defn get-open?
   []
@@ -38,13 +41,13 @@
       (= type "graph") [:node/title name]
       :else [:block/uid name])))
 
+
 (defn eid->type
   [eid]
   (let [[attr _value] eid]
     (cond
       (= attr :node/title) "page"
       :else "block")))
-
 
 
 (defn get-items

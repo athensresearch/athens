@@ -247,7 +247,6 @@
      :dispatch [:posthog/report-feature :left-sidebar]}))
 
 
-
 (reg-event-db
   :mouse-down/set
   (fn [db _]
@@ -267,7 +266,6 @@
   (fn [_ _]
     (log/warn "Called :no-op re-frame event, this shouldn't be happening.")
     {}))
-
 
 
 (reg-event-fx

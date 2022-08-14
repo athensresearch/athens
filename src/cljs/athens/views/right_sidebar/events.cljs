@@ -1,12 +1,15 @@
 (ns athens.views.right-sidebar.events
-  (:require [athens.common-db :as common-db]
-            [athens.common-events :as common-events]
-            [athens.common-events.bfs             :as bfs]
-            [athens.common-events.graph.ops :as graph-ops]
-            [athens.db :as db]
-            [athens.interceptors :as interceptors]
-            [athens.views.right-sidebar.shared :as shared]
-            [re-frame.core :as rf :refer [reg-event-fx reg-event-db]]))
+  (:require
+    [athens.common-db :as common-db]
+    [athens.common-events :as common-events]
+    [athens.common-events.bfs             :as bfs]
+    [athens.common-events.graph.ops :as graph-ops]
+    [athens.db :as db]
+    [athens.interceptors :as interceptors]
+    [athens.views.right-sidebar.shared :as shared]
+    [re-frame.core :as rf :refer [reg-event-fx reg-event-db]]))
+
+
 ;; UI
 
 (reg-event-fx
@@ -29,11 +32,13 @@
   (fn [db [_ width]]
     (assoc db :right-sidebar/width width)))
 
+
 (reg-event-fx
   :right-sidebar/scroll-top
   [(interceptors/sentry-span-no-new-tx "right-sidebar/scroll-top")]
   (fn []
     {:right-sidebar/scroll-top nil}))
+
 
 ;; ITEM
 
@@ -63,7 +68,6 @@
                          [(graph-ops/build-block-save-op db uid "")]))]
                     [:right-sidebar/scroll-top]
                     [:posthog/report-feature :right-sidebar true]]})))
-
 
 
 (reg-event-fx
@@ -108,6 +112,7 @@
                            ;; update the entity reference
                            (graph-ops/build-block-save-op @athens.db/dsdb update-uid value)])]]
             [:dispatch [:posthog/report-feature :right-sidebar true]]]})))
+
 
 "72538ef7f" "7e409b1cb" nil
 (shared/get-items)
