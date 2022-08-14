@@ -243,9 +243,9 @@
               [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])
                             :icon    (r/as-element [:> BookmarkIcon])}
                [:span "Add Shortcut"]])
-            [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item [:node/title title] true])
-                          :icon    (r/as-element [:> GraphIcon])}
-             "Show Local Graph"]
+            #_[:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item [:node/title title] true])
+                            :icon    (r/as-element [:> GraphIcon])}
+               "Show Local Graph"]
             [:> MenuItem {:onClick    #(dispatch [:right-sidebar/open-item [:node/title title]])
                           :isDisabled @contains-item?
                           :icon       (r/as-element [:> ArrowRightOnBoxIcon])}

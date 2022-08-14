@@ -32,9 +32,10 @@
 (defn get-eid
   [item-block]
   (let [{:keys [type name]} item-block]
-    (if (= type "page")
-      [:node/title name]
-      [:block/uid name])))
+    (cond
+      (= type "page") [:node/title name]
+      (= type "graph") [:node/title name]
+      :else [:block/uid name])))
 
 
 (defn get-items

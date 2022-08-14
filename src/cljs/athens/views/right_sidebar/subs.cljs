@@ -27,8 +27,10 @@
                                   (and (= value name)
                                        (or (and (= type "page")
                                                 (= attr :node/title))
-                                           (and (= type "block")
-                                                (= attr :block/uid)))))
+                                           (and (= type "graph"
+                                                 (= attr :node/title)))
+                                           (and (= type "block"
+                                                 (= attr :block/uid))))))
                                 items)]
                (seq find))))
 
