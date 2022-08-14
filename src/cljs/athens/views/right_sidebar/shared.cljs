@@ -1,12 +1,13 @@
 (ns athens.views.right-sidebar.shared
   (:require
+    [athens.common-db :as common-db]
+    [athens.db :as db]
+    [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
-    [athens.parse-renderer :as parse-renderer]
     [athens.views.pages.block-page :as block-page]
     [athens.views.pages.graph :as graph]
     [athens.views.pages.node-page :as node-page]
-    [athens.common-db :as common-db]
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
@@ -52,7 +53,7 @@
         props        (-> (reactive/get-reactive-node-document [:node/title user-page])
                          :block/properties)
         filter-fn    (fn [x]
-                       (common-db/block-exists? @athens.db/dsdb (get-eid x)))
+                       (common-db/block-exists? @db/dsdb (get-eid x)))
         map-props-fn (fn [{:block/keys [uid string properties]}]
                        (let [type  (or (-> (get properties (ns-str "/items/type"))
                                            :block/string)

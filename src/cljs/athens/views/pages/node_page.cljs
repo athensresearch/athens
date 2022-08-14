@@ -3,7 +3,7 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Block/Container" :refer [Container]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
+    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon #_GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
@@ -214,7 +214,7 @@
 
 
 (defn menu-dropdown
-  [node daily-note? on-daily-notes?]
+  [node _daily-note? _on-daily-notes?]
   (let [contains-item? (subscribe [:right-sidebar/contains-item? [:node/title (:node/title node)]])]
     (fn [node daily-note? on-daily-notes?]
       (let [{:block/keys [uid]
@@ -444,9 +444,7 @@
       (let [{:block/keys [children uid properties] title :node/title}           node
             {:alert/keys [message confirm-fn cancel-fn confirm-text] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
-            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
-            is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
-                                                                                    (= @(subscribe [:current-route/page-title]) title))]
+            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))]
 
         (sync-title title state)
 

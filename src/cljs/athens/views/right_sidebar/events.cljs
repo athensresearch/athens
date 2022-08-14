@@ -1,15 +1,12 @@
 (ns athens.views.right-sidebar.events
-  (:require [re-frame.core :refer [reg-event-fx reg-event-db]]
-            [athens.db :as db]
-            [athens.common-events.graph.ops :as graph-ops]
-            [athens.common-events.bfs             :as bfs]
-            [athens.interceptors :as interceptors]
-            [datascript.core :as d]
-            [athens.views.right-sidebar.shared :as shared]
-            [athens.common-db :as common-db]
+  (:require [athens.common-db :as common-db]
             [athens.common-events :as common-events]
-            [re-frame.core :as rf]))
-
+            [athens.common-events.bfs             :as bfs]
+            [athens.common-events.graph.ops :as graph-ops]
+            [athens.db :as db]
+            [athens.interceptors :as interceptors]
+            [athens.views.right-sidebar.shared :as shared]
+            [re-frame.core :as rf :refer [reg-event-fx reg-event-db]]))
 ;; UI
 
 (reg-event-fx

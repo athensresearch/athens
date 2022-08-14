@@ -100,8 +100,7 @@
         properties-enabled? (rf/subscribe [:feature-flags/enabled? :properties])]
 
     (fn [block]
-      (let [{:block/keys [string children uid properties] :db/keys [id]} block
-            is-current-route? (= @(subscribe [:current-route/uid]) uid)]
+      (let [{:block/keys [string children uid properties] :db/keys [id]} block]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 

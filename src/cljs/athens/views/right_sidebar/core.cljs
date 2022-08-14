@@ -1,17 +1,14 @@
 (ns athens.views.right-sidebar.core
   (:require
-    ["/components/Layout/List" :refer [List]]
     ["/components/Icons/Icons" :refer [RightSidebarAddIcon]]
-    ["/components/Layout/RightSidebar" :refer [RightSidebarContainer SidebarItem]]
+    ["/components/Layout/List" :refer [List]]
+    ["/components/Layout/RightSidebar" :refer [RightSidebarContainer #_SidebarItem]]
     ["@chakra-ui/react" :refer [Flex Text Box]]
     [athens.views.right-sidebar.events]
+    [athens.views.right-sidebar.shared :as shared]
     [athens.views.right-sidebar.subs]
-    [athens.reactive :as reactive]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
     [re-frame.core :as rf]
-    [athens.common-db :as common-db]
-    [athens.views.right-sidebar.shared :as shared :refer [NS ns-str]]))
+    [reagent.core :as r]))
 
 
 
@@ -56,7 +53,7 @@
         mouse-up-handler (fn []
                            (when (:dragging @state)
                              (swap! state assoc :dragging false)
-                             (dispatch [:right-sidebar/set-width (:width @state)])))]
+                             (rf/dispatch [:right-sidebar/set-width (:width @state)])))]
     (r/create-class
       {:display-name           "right-sidebar"
        :component-did-mount    (fn []
@@ -113,5 +110,5 @@
   []
   (let [open? (shared/get-open?)
         items (shared/get-items)
-        width @(subscribe [:right-sidebar/width])]
+        width @(rf/subscribe [:right-sidebar/width])]
     [right-sidebar-el open? items width]))
