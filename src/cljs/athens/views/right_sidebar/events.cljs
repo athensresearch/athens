@@ -97,16 +97,23 @@
 (reg-event-fx
   :right-sidebar/navigate-item
   [(interceptors/sentry-span-no-new-tx "right-sidebar/navigate-item")]
-  (fn [_ [_ block-page-uid breadcrumb-uid]]
-    (let [update-uid (->> (shared/get-items)
+  (fn [_ [_ block-page-uid breadcrumb-eid]]
+    (let [[_attr value] breadcrumb-eid
+          type (shared/eid->type breadcrumb-eid)
+          update-uid (->> (shared/get-items)
                           (filter #(= (:name %) block-page-uid))
                           first
-                          :uid)
-          evt        (common-events/build-atomic-event
-                       (graph-ops/build-block-save-op @athens.db/dsdb update-uid breadcrumb-uid))]
-      {:fx [[:dispatch [:resolve-transact-forward evt]]
+                          :source-uid)]
+      {:fx [[:dispatch [:properties/update-in [:block/uid update-uid] [(shared/ns-str "/items/type")]
+                        (fn [db uid]
+                          ;; update type
+                          [(graph-ops/build-block-save-op db uid type)
+                           ;; update the entity reference
+                           (graph-ops/build-block-save-op @athens.db/dsdb update-uid value)])]]
             [:dispatch [:posthog/report-feature :right-sidebar true]]]})))
 
+"72538ef7f" "7e409b1cb" nil
+(shared/get-items)
 
 
 (reg-event-fx

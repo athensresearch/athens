@@ -40,7 +40,7 @@
 
 (defn breadcrumb-handle-click
   "If block is in main, navigate to page. If in right sidebar, replace right sidebar item."
-  [e uid breadcrumb-uid]
+  [e uid breadcrumb-uid breadcrumb-node-title]
   (let [right-sidebar? (.. e -target (closest ".right-sidebar"))]
     (rf/dispatch [:reporting/navigation {:source :block-page-breadcrumb
                                          :target :block
@@ -48,7 +48,10 @@
                                                    :right-pane
                                                    :main-pane)}])
     (if right-sidebar?
-      (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
+      (let [eid (if breadcrumb-node-title
+                  [:node/title breadcrumb-node-title]
+                  [:block/uid breadcrumb-uid])]
+        (dispatch [:right-sidebar/navigate-item uid eid]))
       (router/navigate-uid breadcrumb-uid e))))
 
 
@@ -82,10 +85,10 @@
   (let [parents (reactive/get-reactive-parents-recursively id)]
     [:> Breadcrumb {:gridArea "breadcrumb" :opacity 0.75}
      (doall
-       (for [{breadcrumb-uid :block/uid} parents]
+       (for [{breadcrumb-uid :block/uid breadcrumb-node-title :node/title} parents]
          ^{:key breadcrumb-uid}
          [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
-          [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid)}
+          [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid breadcrumb-node-title)}
            [:span {:style {:pointer-events "none"}}
             [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb breadcrumb-uid)]]]]))]))
 

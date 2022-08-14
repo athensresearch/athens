@@ -37,6 +37,14 @@
       (= type "graph") [:node/title name]
       :else [:block/uid name])))
 
+(defn eid->type
+  [eid]
+  (let [[attr _value] eid]
+    (cond
+      (= attr :node/title) "page"
+      :else "block")))
+
+
 
 (defn get-items
   []
