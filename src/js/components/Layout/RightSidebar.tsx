@@ -2,7 +2,7 @@ import * as React from "react";
 import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
 import { AnimatePresence, motion } from 'framer-motion';
 import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon } from '@/Icons/Icons';
-import { Button, IconButton, HStack, Box, Collapse, VStack } from '@chakra-ui/react';
+import { Button, IconButton, Box, Collapse, VStack } from '@chakra-ui/react';
 
 /** Right Sidebar */
 export const RightSidebar = ({ children }) => {

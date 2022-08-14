@@ -1,19 +1,20 @@
 (ns athens.views.left-sidebar
   (:require
-    ["/components/Layout/MainSidebar" :refer [MainSidebar]]
     ["/components/Icons/Icons" :refer [DailyNotesIcon AllPagesIcon SearchIcon GraphIcon]]
+    ["/components/Layout/MainSidebar" :refer [MainSidebar]]
     ["/components/SidebarShortcuts/List" :refer [List]]
     ["@chakra-ui/react" :refer [Button VStack Flex Heading ButtonGroup Link Flex]]
     [athens.reactive :as reactive]
     [athens.router   :as router]
     [athens.util     :as util]
-    [reagent.core    :as r]
-    [re-frame.core   :as rf]))
+    [re-frame.core   :as rf]
+    [reagent.core    :as r]))
 
 
 ;; Components
 
 (def expanded-sidebar-width "clamp(12rem, 25vw, 18rem)")
+
 
 (defn route-button
   []
@@ -39,11 +40,11 @@
 
 
       [:> VStack {:spacing 0.5 :role "nav" :alignSelf "stretch" :as ButtonGroup :size "sm" :align "stretch" :p 4}
-        [:> Button {:onClick on-athena
-                    :variant "outline"
-                    :justifyContent "start"
-                    :leftIcon (r/as-element [:> SearchIcon])}
-         "Find or Create a Page"]
+       [:> Button {:onClick on-athena
+                   :variant "outline"
+                   :justifyContent "start"
+                   :leftIcon (r/as-element [:> SearchIcon])}
+        "Find or Create a Page"]
        [route-button (= route-name :home) "Daily Notes" (r/as-element [:> DailyNotesIcon]) (fn [_]
                                                                                              (rf/dispatch [:reporting/navigation {:source :main-sidebar
                                                                                                                                   :target :home
@@ -60,7 +61,7 @@
                                                                                                                         :pane   :main-pane}])
                                                                                    (router/navigate :graph))]]
 
-        ;; SHORTCUTS
+      ;; SHORTCUTS
       [:> VStack {:as "ol"
                   :align "stretch"
                   :flex 1
@@ -90,7 +91,7 @@
                                          (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
                                          (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])))}]]
 
-        ;; LOGO + BOTTOM BUTTONS
+      ;; LOGO + BOTTOM BUTTONS
       [:> Flex {:as "footer"
                 :width expanded-sidebar-width
                 :flexWrap "wrap"
