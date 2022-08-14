@@ -10,7 +10,7 @@ test('athena create new page then enter', async ({ page }) => {
 
   // Press Enter
   await Promise.all([
-    page.press('[placeholder="Find or Create Page"]', 'Enter'),
+    page.press('[placeholder="Find or Create a Page"]', 'Enter'),
     page.waitForNavigation()
   ]);
   await expect(page.locator(pageTitleLocator)).toHaveText(title);

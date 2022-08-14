@@ -21,7 +21,7 @@ export const createLocalAthensDB = async (page: Page, dbName: string) => {
     // Fill [placeholder="DB Name"]
     await page.fill('[placeholder="DB Name"]', dbName);
 
-    const [ fileChooser ] = await Promise.all([
+    const [fileChooser] = await Promise.all([
         // TODO this is broken in Playwright for electron, no fix in sight
         page.waitForEvent('filechooser'),
         page.click('text=Browse')
@@ -83,11 +83,12 @@ export const waitForBoot = async (page: Page) => {
     // only on visible behaviour.
     // TODO: This isn't necessary on production builds, but is necessary for dev
     // builds, not sure why. Maybe because the app runs slower?
-    await page.waitForSelector("text=Find");
+    await page.waitForSelector("[aria-label='Show navigation']");
 }
 
 export const inputInAthena = async (page: Page, query: string) => {
-    await page.click('button:has-text("Find or create a page")');
+    // await page.click('[aria-label="Show navigation"]');
+    await page.click('button:has-text("Find or Create a Page")');
     await page.fill('[placeholder="Find or Create Page"]', query);
 }
 
@@ -119,6 +120,6 @@ export const todaysDate = async (page: Page) => {
     // TODO: this doesn't work in the prod build, disabled usage for now.
     // Need to match the date formatting logic to use again.
     const todaysDate = await page.evaluate(`athens.dates.get_day()`);
-    const dateTitle = todaysDate.arr[ 3 ];
+    const dateTitle = todaysDate.arr[3];
     return dateTitle;
 };

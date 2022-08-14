@@ -309,7 +309,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           })}
         >
           <ToolbarIconButton
-            aria-label="View mode"
+            aria-label="Show navigation"
             onClick={handlePressLeftSidebarToggle}
           >
             <MenuIcon />
