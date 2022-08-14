@@ -1,10 +1,9 @@
 (ns athens.views
   (:require
-    ["/theme/theme" :refer [theme]]
-    ["/components/Layout/useLayoutState" :refer [LayoutProvider]]
-    ["/components/Layout/RightSidebar2" :refer [RightSidebar]]
     ["/components/Layout/MainContent" :refer [MainContent]]
-    ["@chakra-ui/react" :refer [ChakraProvider Flex Grid VStack HStack Spinner Center]]
+    ["/components/Layout/useLayoutState" :refer [LayoutProvider]]
+    ["/theme/theme" :refer [theme]]
+    ["@chakra-ui/react" :refer [ChakraProvider Flex VStack HStack Spinner Center]]
     [athens.config]
     [athens.electron.db-modal :as db-modal]
     [athens.style :refer [zoom]]
@@ -69,4 +68,5 @@
                     [left-sidebar/left-sidebar]
                     [:> MainContent
                      [pages/view]]
+
                     [right-sidebar/right-sidebar]]]])]]])))

@@ -1,88 +1,34 @@
-import { Box, Text, VStack, HStack } from "@chakra-ui/react";
-import { motion, useMotionValue, useTransform } from "framer-motion";
 import * as React from "react";
-import { AnimatePresence } from "framer-motion";
 import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
-
-const MIN_WIDTH = 0;
-const MAX_WIDTH = 1000;
+import { AnimatePresence, motion } from 'framer-motion';
+import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon } from '@/Icons/Icons';
+import { Button, IconButton, HStack, Box, Collapse, VStack } from '@chakra-ui/react';
 
 /** Right Sidebar */
-export const RightSidebar = ({ children, onResizeSidebar }) => {
+export const RightSidebar = ({ children }) => {
   const {
     rightSidebarWidth,
-    setRightSidebarWidth,
     hasRightSidebar,
     toolbarHeight
   } = React.useContext(LayoutContext);
-
-  const [localWidth, setLocalWidth] = React.useState(rightSidebarWidth);
-
-  const startResizing = () => {
-    document.body.style.cursor = "col-resize";
-  }
-
-  const stopResizing = () => {
-    document.body.style.cursor = "default";
-    setRightSidebarWidth(localWidth);
-  }
-
-  console.log(localWidth);
-
-  // const defaultAnimationProps = layoutAnimationProps(mvWidth.get() + "px");
-  // const animationProps = {
-  //   ...defaultAnimationProps,
-  //   animate: {
-  //     ...defaultAnimationProps.animate,
-  //     transition: defaultAnimationProps.animate.transition
-  //   }
-  // }
 
   return (
     <AnimatePresence initial={false}>
       {hasRightSidebar && (
         <HStack
           as={motion.div}
-          // {...animationProps}
           {...layoutAnimationProps(rightSidebarWidth + "px")}
           spacing={0}
           overflowY="auto"
+          borderLeft="1px solid"
+          borderColor="separator.divider"
           align="stretch"
-          border="2px solid red"
           position="fixed"
           height="100vh"
           inset={0}
           pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
-          <motion.div
-            style={{
-              background: "white",
-              height: "100%",
-              width: "2px",
-              cursor: "col-resize",
-              position: "absolute",
-              top: 0,
-              bottom: 0,
-              left: 0,
-              zIndex: 1,
-            }}
-            drag="x"
-            dragElastic={0.025}
-            dragMomentum={false}
-            whileTap="active"
-            whileHover="active"
-            onDrag={(event, info) => {
-              const { delta } = info;
-              const newWidth = localWidth - delta.x;
-              setLocalWidth(newWidth);
-              setRightSidebarWidth(newWidth);
-            }}
-            onPointerDown={startResizing}
-            onPointerUp={stopResizing}
-            onPanEnd={stopResizing}
-            onTap={stopResizing}
-          />
           <Box overflow="hidden" flex="1 1 100%">
             {children}
           </Box>
@@ -90,4 +36,98 @@ export const RightSidebar = ({ children, onResizeSidebar }) => {
       )}
     </AnimatePresence>
   );
+};
+
+const typeIcon = (type, isOpen) => {
+  return isOpen ? { "node": <PageFillIcon />, "graph": <GraphIcon />, "block": <BlockFillIcon /> }[type]
+    : { "node": <PageIcon />, "graph": <GraphIcon />, "block": <BlockIcon /> }[type];
+};
+
+export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children }) => {
+  const canToggle = type !== 'graph';
+  return (
+    <VStack
+      align="stretch"
+      position="relative"
+      spacing={0}
+      ml="1px" // Account for the floating separator
+      _notFirst={{
+        borderTop: "1px solid",
+        borderColor: "separator.divider"
+      }}>
+      <Box
+        top="-1px"
+        zIndex={2}
+        position="sticky"
+        background="background.floor"
+        display="grid"
+        gridTemplateColumns="1fr 3rem"
+        pr={2}
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Button
+          onClick={canToggle ? onToggle : undefined}
+          as={canToggle ? undefined : 'div'}
+          {...(!canToggle && {
+            _hover: {},
+            _focus: {},
+            _active: {},
+          })}
+          display="flex"
+          bg="transparent"
+          borderRadius="0"
+          gap={2}
+          py={3}
+          pl={5}
+          pr={0}
+          height="auto"
+          textAlign="left"
+          overflow="hidden"
+          whiteSpace="nowrap"
+          sx={{ maskImage: "linear-gradient(to right, black, black calc(100% - 1rem), transparent calc(100%))" }}
+        >
+          {canToggle && (
+            <ChevronRightIcon
+              transform={isOpen ? "rotate(90deg)" : null}
+              transitionProperty="common"
+              transitionDuration="0.15s"
+              transitionTimingFunction="ease-in-out"
+              justifySelf="center" />
+          )}
+          {typeIcon(type, isOpen)}
+          <Box
+            flex="1 1 100%"
+            tabIndex={-1}
+            pointerEvents="none"
+            position="relative"
+            bottom="1px"
+            overflow="hidden"
+            color="foreground.secondary"
+          >{title}</Box>
+        </Button>
+        <IconButton
+          onClick={onRemove}
+          size="sm"
+          color="foreground.secondary"
+          alignSelf="center"
+          justifySelf="center"
+          bg="transparent"
+          aria-label="Close"
+        >
+          <XmarkIcon />
+        </IconButton>
+      </Box>
+      <Box
+        as={Collapse}
+        in={isOpen}
+        className={`${type}-page`}
+        animateOpacity
+        unmountOnExit
+        zIndex={1}
+        px={4}
+      >
+        {children}
+      </Box>
+    </VStack>);
 };

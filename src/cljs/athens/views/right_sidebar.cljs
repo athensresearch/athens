@@ -1,15 +1,14 @@
 (ns athens.views.right-sidebar
   (:require
-    ["/components/Icons/Icons" :refer [RightSidebarAddIcon]]
-    ["/components/Layout/RightSidebar2" :refer [RightSidebar]]
-    ["/components/Layout/RightSidebar" :refer [RightSidebarContainer SidebarItem]]
-    ["@chakra-ui/react" :refer [Flex Text Box]]
-    [athens.parse-renderer :as parse-renderer]
-    [athens.views.pages.block-page :as block-page]
-    [athens.views.pages.graph :as graph]
-    [athens.views.pages.node-page :as node-page]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]))
+   ["/components/Icons/Icons" :refer [RightSidebarAddIcon]]
+   ["/components/Layout/RightSidebar" :refer [SidebarItem]]
+   ["/components/Layout/RightSidebar2" :refer [RightSidebar]]
+   ["@chakra-ui/react" :refer [Text Box]]
+   [athens.parse-renderer :as parse-renderer]
+   [athens.views.pages.block-page :as block-page]
+   [athens.views.pages.graph :as graph]
+   [athens.views.pages.node-page :as node-page]
+   [re-frame.core :refer [dispatch subscribe]]))
 
 
 ;; Components
