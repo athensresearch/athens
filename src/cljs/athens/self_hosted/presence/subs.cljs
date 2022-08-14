@@ -51,9 +51,10 @@
   :presence/user-page
   :<- [:presence/current-username]
   (fn [current-user _]
-    (when-not (seq current-user)
-      (js/alert "Define PKM userpage, maybe @You"))
-    (str "@" current-user)))
+    (if (seq current-user)
+      (str "@" current-user)
+      "@You")))
+
 
 (defn on-page-uid?
   [page-uid [_username user]]
