@@ -63,7 +63,7 @@
                     [db-modal/window])
                   (when @settings-open?
                     [settings/page])
-                  [:> VStack {:spacing 0 :height "100vh" :align "stretch" :position "relative"}
+                  [:> VStack {:spacing 0 :overflowY "auto" :height "100vh" :align "stretch" :position "relative"}
                    [app-toolbar/app-toolbar]
                    [:> HStack {:align "stretch" :spacing 0 :flex 1}
                     [left-sidebar/left-sidebar]

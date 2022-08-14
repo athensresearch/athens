@@ -29,14 +29,15 @@
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (dates/get-day)])
         (let [notes (reactive-pull-many @note-refs)]
-          [:> VStack {:id "daily-notes"
-                      :minHeight "calc(100vh + 1px)"
-                      :display        "flex"
-                      :gap            "1.5rem"
-                      :py             "6rem"
-                      :px             "2rem"
+          [:> VStack {:id            "daily-notes"
+                      :minHeight     "calc(100vh + 1px)"
+                      :height        "calc(100vh + 1px)"
+                      :display       "flex"
+                      :overflowY     "auto"
+                      :gap           "1.5rem"
+                      :px            "2rem"
                       :alignItems    "center"
-                      :flex           "1 1 100%"
+                      :flex          "1 1 100%"
                       :flexDirection "column"}
            (doall
              (for [{:keys [block/uid]} notes]

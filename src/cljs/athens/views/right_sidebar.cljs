@@ -1,6 +1,7 @@
 (ns athens.views.right-sidebar
   (:require
     ["/components/Icons/Icons" :refer [RightSidebarAddIcon]]
+    ["/components/Layout/RightSidebar2" :refer [RightSidebar]]
     ["/components/Layout/RightSidebar" :refer [RightSidebarContainer SidebarItem]]
     ["@chakra-ui/react" :refer [Flex Text Box]]
     [athens.parse-renderer :as parse-renderer]
@@ -60,10 +61,11 @@
                                  (js/document.removeEventListener "mousemove" move-handler)
                                  (js/document.removeEventListener "mouseup" mouse-up-handler))
        :reagent-render         (fn [open? items _]
-                                 [:> RightSidebarContainer
-                                  {:isOpen open?
-                                   :isDragging (:dragging @state)
-                                   :width (:width @state)}
+                                 [:> RightSidebar
+                                  ;; [:> RightSidebarContainer
+                                  ;;  {:isOpen open?
+                                  ;;   :isDragging (:dragging @state)
+                                  ;;   :width (:width @state)}
                                   [:> Box
                                    {:role "separator"
                                     :aria-orientation "vertical"
@@ -97,18 +99,18 @@
                                    (if (empty? items)
                                      [empty-message]
                                      (doall
-                                       (for [[uid {:keys [open node/title block/string is-graph?]}] items]
-                                         [:> SidebarItem {:isOpen open
-                                                          :key uid
-                                                          :type (cond is-graph? "graph" title "node" :else "block")
-                                                          :onRemove #(dispatch [:right-sidebar/close-item uid])
-                                                          :onToggle #(dispatch [:right-sidebar/toggle-item uid])
+                                      (for [[uid {:keys [open node/title block/string is-graph?]}] items]
+                                        [:> SidebarItem {:isOpen open
+                                                         :key uid
+                                                         :type (cond is-graph? "graph" title "node" :else "block")
+                                                         :onRemove #(dispatch [:right-sidebar/close-item uid])
+                                                         :onToggle #(dispatch [:right-sidebar/toggle-item uid])
                                                           ;; nth 1 to get just the title
-                                                          :title (nth [parse-renderer/parse-and-render (or title string) uid] 1)}
-                                          (cond
-                                            is-graph? [graph/page uid]
-                                            title     [node-page/page [:block/uid uid]]
-                                            :else     [block-page/page [:block/uid uid]])])))]])})))
+                                                         :title (nth [parse-renderer/parse-and-render (or title string) uid] 1)}
+                                         (cond
+                                           is-graph? [graph/page uid]
+                                           title     [node-page/page [:block/uid uid]]
+                                           :else     [block-page/page [:block/uid uid]])])))]])})))
 
 
 (defn right-sidebar

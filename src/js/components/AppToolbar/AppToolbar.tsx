@@ -16,8 +16,9 @@ import {
   CheckmarkIcon,
   ViewIcon,
   ViewOffIcon,
-  ChatFilledIcon
-
+  ChatFilledIcon,
+  ChevronDownIcon,
+  RightSidebarAddIcon
 } from '@/Icons/Icons';
 
 import {
@@ -30,6 +31,8 @@ import {
   MenuList,
   Tooltip,
   Flex,
+  Spacer,
+  Text,
   Button,
   ButtonOptions,
   HStack,
@@ -39,7 +42,8 @@ import {
   useMediaQuery
 } from '@chakra-ui/react';
 
-
+import { AnimatePresence, motion } from 'framer-motion';
+import { LayoutContext, layoutAnimationProps } from "@/Layout/useLayoutState";
 import { WindowButtons } from './components/WindowButtons';
 
 interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
@@ -75,80 +79,6 @@ const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) 
   } {...props}>{children}</IconButton>
 });
 
-const AppToolbarWrapper = ({ children, ...props }) => <Flex
-  className="app-toolbar"
-  gridArea="app-header"
-  borderBottom="1px solid transparent"
-  justifyContent="space-between"
-  // overflow="hidden"
-  py={1}
-  px={1}
-  h={6}
-  zIndex="3"
-  userSelect="none"
-  transition='0.5s ease-in-out'
-  transitionProperty='border'
-  height="var(--app-header-height, 44px)"
-  _hover={{
-    borderBottomColor: 'separator.divider',
-    bg: "background.floor",
-  }}
-  sx={{
-    WebkitAppRegion: "drag",
-    "&.is-right-sidebar-open": {
-      borderBottomColor: 'separator.divider',
-      bg: "background.floor",
-    },
-    "button, a": {
-      WebkitAppRegion: "no-drag"
-    },
-    ".is-fullscreen &": {
-      height: '44px'
-    },
-    ".os-windows &": {
-      pl: '10px',
-      py: '0',
-      pr: '0',
-
-      "&:hover": {
-        background: 'background.floor',
-      },
-    },
-    ".os-linux &": {
-      height: '44px',
-      pl: '10px',
-      py: '0',
-      pr: '0',
-
-      "&:hover": {
-        background: 'background.floor',
-      },
-    },
-    ".os-mac &": {
-      paddingLeft: '22px',
-      paddingRight: '22px',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-
-      "&:hover": {
-        background: 'background.floor',
-      },
-    },
-    ".os-mac.is-electron &": {
-      paddingLeft: "88px",
-      borderTopLeftRadius: '12px',
-      borderTopRightRadius: '12px'
-    },
-    ".os-mac.is-fullscreen &": {
-      paddingLeft: '22px'
-    }
-  }}
-  {...props}
->
-  {children}
-</Flex>;
 
 export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
@@ -261,7 +191,6 @@ const SecondaryToolbarOverflowMenu = (items) => {
 }
 
 export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
-
   const {
     os,
     route,
@@ -311,6 +240,16 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     }
   }, [isThemeDark, toggleColorMode]);
 
+  const {
+    viewMode,
+    toolbarRef,
+    setViewMode,
+    setHasRightSidebar,
+    hasRightSidebar,
+    toolbarHeight,
+    sidebarWidth
+  } = React.useContext(LayoutContext);
+
   const secondaryTools = [
     handleClickComments && {
       label: isShowComments ? "Hide comments" : "Show comments",
@@ -337,98 +276,144 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     },
     {
       label: 'Show right sidebar',
-      onClick: handlePressRightSidebarToggle,
+      onClick: () => setHasRightSidebar(!hasRightSidebar),
       icon: <RightSidebarIcon />
     }
   ];
 
-  return (
-    <AppToolbarWrapper
-      className={[
-        "app-toolbar",
-        isRightSidebarOpen && 'is-right-sidebar-open',
-      ].filter(Boolean).join(' ')}
-      {...rest}
+
+  const leftSidebarControls = (
+    <Flex
+      as={motion.div}
+      key="leftSidebar tools"
+      {...layoutAnimationProps(viewMode === "compact" ? "auto" : sidebarWidth)}
+      justifyContent="space-between"
+      flexShrink={0}
+
     >
-      <HStack flex="1">
-        <ButtonGroup size="sm" mr="auto">
-          {databaseMenu}
-          <Tooltip label="Navigation">
-            <ToolbarIconButton
-              aria-label="Navigation"
-              onClick={handlePressLeftSidebarToggle}
-            >
-              <MenuIcon />
-            </ToolbarIconButton>
-          </Tooltip>
-          {isElectron && (
-            <ButtonGroup isAttached size="sm">
-              <Tooltip
-                label="Go back">
-                <ToolbarIconButton
-                  aria-label="Go back"
-                  onClick={handlePressHistoryBack}
-                >
-                  <ChevronLeftIcon />
-                </ToolbarIconButton>
-              </Tooltip>
-              <Tooltip label="Go forward">
-                <ToolbarIconButton
-                  aria-label="Go forward"
-                  onClick={handlePressHistoryForward}>
-                  <ChevronRightIcon />
-                </ToolbarIconButton>
-              </Tooltip>
-            </ButtonGroup>)
+      {/* Left side */}
+      <ButtonGroup
+        size="sm"
+        px={3}
+        alignItems="center"
+        justifyContent="flex-start"
+      >
+        <IconButton
+          aria-label="View mode"
+          onClick={() =>
+            setViewMode(viewMode === "compact" ? "regular" : "compact")
           }
-          <Tooltip label="Daily notes">
+          icon={<MenuIcon />}
+        />
+        {databaseMenu}
+      </ButtonGroup>
+      {/* Right side */}
+      {isElectron && (
+        <ButtonGroup isAttached
+          alignItems="center"
+          justifyContent="flex-end"
+          pr={3} size="sm">
+          <Tooltip
+            label="Go back">
             <ToolbarIconButton
-              aria-label="Daily notes"
-              isActive={route === 'home'}
-              onClick={handlePressDailyNotes}>
-              <DailyNotesIcon />
-            </ToolbarIconButton>
-          </Tooltip>
-          <Tooltip label="All pages">
-            <ToolbarIconButton
-              aria-label="All pages"
-              isActive={route === 'pages'}
-              onClick={handlePressAllPages}
+              aria-label="Go back"
+              onClick={handlePressHistoryBack}
             >
-              <AllPagesIcon />
+              <ChevronLeftIcon />
             </ToolbarIconButton>
           </Tooltip>
-          <Tooltip label="Graph">
+          <Tooltip label="Go forward">
             <ToolbarIconButton
-              aria-label="Graph"
-              isActive={route === 'graph'}
-              onClick={handlePressGraph}>
-              <GraphIcon />
+              aria-label="Go forward"
+              onClick={handlePressHistoryForward}>
+              <ChevronRightIcon />
             </ToolbarIconButton>
           </Tooltip>
+        </ButtonGroup>)
+      }
+    </Flex>
+  );
 
+  const rightToolbarControls = (
+    <ButtonGroup
+      alignItems="center"
+      justifySelf="flex-end"
+      as={motion.div}
+      key="extras"
+      pr={3}
+      size="sm"
+      flex={`0 0 auto`}
+      display="flex"
+      justifyContent="flex-end"
+    >
+      {presenceDetails}
+      {notificationPopover}
+      {canShowFullSecondaryMenu
+        ? SecondaryToolbarItems(secondaryTools)
+        : SecondaryToolbarOverflowMenu(secondaryTools)}
+    </ButtonGroup>
+  );
 
-          <ToolbarButton
-            aria-label="Search"
-            variant="outline"
-            leftIcon={<SearchIcon />}
-            isActive={isCommandBarOpen}
-            onClick={handlePressCommandBar}
-            pl="0.5rem"
-          >
-            Find or create a page
-          </ToolbarButton>
-        </ButtonGroup>
+  const currentLocationTools = (
+    <ButtonGroup
+      as={motion.div}
+      key="location tools"
+      alignItems="center"
+      px={2}
+      size="sm"
+      flex="0 0 auto"
+      display="flex"
+      justifyContent="flex-start"
+    >
+      <Button variant="ghost" rightIcon={<ChevronDownIcon />}>
+        <Text fontWeight="medium">Current Page</Text>
+      </Button>
+    </ButtonGroup>
+  )
 
-        {presenceDetails}
+  const contentControls = (
+    <ButtonGroup
+      alignItems="center"
+      as={motion.div}
+      key="content tools"
+      px={1}
+      size="sm"
+      flex={`1 1 100%`}
+      display="flex"
+      justifyContent="center"
+    />
+  )
 
-        {notificationPopover}
+  return (
+    <Flex
+      flex={1}
+      width="100vw"
+      ref={toolbarRef}
+      height={toolbarHeight}
+      alignItems="center"
+      position="fixed"
+      inset={0}
+      zIndex={2}
+      bottom="auto"
+      className="toolbar"
+      sx={{
+        WebkitAppRegion: "drag",
+        "button, a": {
+          WebkitAppRegion: "no-drag"
+        }
+      }}
+    >
+      {(isElectron && os) === "mac" && (
+        <Spacer flex="0 0 80px" />
+      )}
 
-        {canShowFullSecondaryMenu
-          ? SecondaryToolbarItems(secondaryTools)
-          : SecondaryToolbarOverflowMenu(secondaryTools)}
+      <AnimatePresence initial={false}>
+        {leftSidebarControls}
+        {currentLocationTools}
+        {contentControls || <Spacer />}
+        {rightToolbarControls}
+      </AnimatePresence>
 
-      </HStack>
       {isElectron && (os === 'windows' || os === 'linux') && (
         <WindowButtons
           isWinMaximized={isWinMaximized}
@@ -438,5 +423,5 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           handlePressMaximizeRestore={handlePressMaximizeRestore}
           handlePressClose={handlePressClose}
         />)}
-    </AppToolbarWrapper>);
+    </Flex>);
 };
