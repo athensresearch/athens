@@ -204,7 +204,6 @@ export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...r
         opacity: 0,
       }}
       ref={ref}
-      overflowY="auto"
       className="node-page daily-notes"
       boxShadow="page"
       bg="background.floor"
