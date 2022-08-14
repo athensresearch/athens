@@ -43,7 +43,7 @@ import {
 } from '@chakra-ui/react';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "@/Layout/useLayoutState";
+import { LayoutContext, layoutAnimationProps } from "@/Layout/useLayoutState";
 import { WindowButtons } from './components/WindowButtons';
 
 interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
@@ -204,7 +204,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isRightSidebarOpen,
     isCommandBarOpen,
     isShowComments,
-    isNotificationsPopoverOpen,
     onClickComments: handleClickComments,
     onPressCommandBar: handlePressCommandBar,
     onPressDailyNotes: handlePressDailyNotes,
@@ -220,12 +219,9 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressMinimize: handlePressMinimize,
     onPressMaximizeRestore: handlePressMaximizeRestore,
     onPressClose: handlePressClose,
-    onClickNotifications: handleShowNotifications,
-    handlePressNotifications,
     databaseMenu,
     notificationPopover,
     presenceDetails,
-    ...rest
   } = props;
   const { colorMode, toggleColorMode } = useColorMode();
   const [canShowFullSecondaryMenu] = useMediaQuery('(min-width: 900px)');
@@ -247,7 +243,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     setHasRightSidebar,
     hasRightSidebar,
     toolbarHeight,
-    sidebarWidth
+    mainSidebarWidth
   } = React.useContext(LayoutContext);
 
   const secondaryTools = [
@@ -287,7 +283,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       <Flex
         as={motion.div}
         key="leftSidebar tools"
-        {...layoutAnimationProps(viewMode === "compact" ? "auto" : sidebarWidth)}
+        {...layoutAnimationProps(viewMode === "compact" ? "auto" : mainSidebarWidth + "px")}
         justifyContent="space-between"
         flexShrink={0}
       >

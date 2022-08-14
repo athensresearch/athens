@@ -1,8 +1,7 @@
 (ns athens.views.right-sidebar
   (:require
    ["/components/Icons/Icons" :refer [RightSidebarAddIcon]]
-   ["/components/Layout/RightSidebar" :refer [SidebarItem]]
-   ["/components/Layout/RightSidebar2" :refer [RightSidebar]]
+   ["/components/Layout/RightSidebar" :refer [RightSidebar SidebarItem]]
    ["@chakra-ui/react" :refer [Text Box]]
    [athens.parse-renderer :as parse-renderer]
    [athens.views.pages.block-page :as block-page]

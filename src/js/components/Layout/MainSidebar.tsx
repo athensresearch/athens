@@ -10,7 +10,7 @@ import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
 export const MainSidebar = (props) => {
   const { children } = props;
   const {
-    sidebarWidth,
+    mainSidebarWidth,
     viewMode,
     toolbarHeight,
     isMainSidebarFloating
@@ -29,14 +29,14 @@ export const MainSidebar = (props) => {
           top={0}
           bottom={0}
           overflowY="auto"
-          {...layoutAnimationProps(sidebarWidth)}
+          {...layoutAnimationProps(mainSidebarWidth + "px")}
           {...(isMainSidebarFloating && {
             position: "absolute",
             inset: 0,
             right: "auto"
           })}
         >
-          <Flex flexDirection="column" height="100%" width={sidebarWidth}>
+          <Flex flexDirection="column" height="100%" width={mainSidebarWidth + "px"}>
             {children}
           </Flex>
         </Box>

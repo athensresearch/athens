@@ -15,24 +15,22 @@ export const RightSidebar = ({ children }) => {
   return (
     <AnimatePresence initial={false}>
       {hasRightSidebar && (
-        <HStack
+        <Box
           as={motion.div}
           {...layoutAnimationProps(rightSidebarWidth + "px")}
-          spacing={0}
           overflowY="auto"
           borderLeft="1px solid"
           borderColor="separator.divider"
-          align="stretch"
           position="fixed"
           height="100vh"
           inset={0}
           pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
-          <Box overflow="hidden" flex="1 1 100%">
+          <Box overflow="hidden" width={rightSidebarWidth + "px"}>
             {children}
           </Box>
-        </HStack>
+        </Box>
       )}
     </AnimatePresence>
   );
