@@ -8,17 +8,16 @@ import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
  * Main Sidebar
  */
 export const MainSidebar = (props) => {
-  const { children } = props;
+  const { children, isMainSidebarOpen } = props;
   const {
     mainSidebarWidth,
-    viewMode,
     toolbarHeight,
     isMainSidebarFloating
   } = React.useContext(LayoutContext);
 
   return (
     <AnimatePresence initial={false}>
-      {(viewMode === "full" || viewMode === "regular") && (
+      {isMainSidebarOpen && (
         <Box
           as={motion.div}
           key="main sidebar"

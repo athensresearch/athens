@@ -250,10 +250,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   }, [isThemeDark, toggleColorMode]);
 
   const {
-    viewMode,
     toolbarRef,
-    setViewMode,
-    setHasRightSidebar,
     toolbarHeight,
     mainSidebarWidth
   } = React.useContext(LayoutContext);
@@ -295,7 +292,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       <Flex
         as={motion.div}
         key="leftSidebar tools"
-        {...layoutAnimationProps(viewMode === "compact" ? "auto" : mainSidebarWidth + "px")}
+        {...layoutAnimationProps(isLeftSidebarOpen ? mainSidebarWidth + "px" : "auto")}
         justifyContent="space-between"
         flexShrink={0}
       >
@@ -314,9 +311,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         >
           <ToolbarIconButton
             aria-label="View mode"
-            onClick={() =>
-              setViewMode(viewMode === "compact" ? "regular" : "compact")
-            }
+            onClick={handlePressLeftSidebarToggle}
           >
             <MenuIcon />
           </ToolbarIconButton>
@@ -443,7 +438,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
             borderBottom="1px solid"
             borderColor="separator.divider"
             height={toolbarHeight}
-            left={viewMode === "regular" ? mainSidebarWidth : 0}
+            left={isLeftSidebarOpen ? mainSidebarWidth : 0}
             right={0}
             initial={{ opacity: 0 }}
             animate={{

@@ -30,27 +30,17 @@ export const layoutAnimationProps = (openWidth) => ({
  * Instantiate state for an app layout
  */
 export const useLayoutState = () => {
-  const [viewMode, setViewMode] = React.useState<typeof VIEW_MODES[number]>(
-    VIEW_MODES[0]
-  );
   const mainContentRef = React.useRef();
   const toolbarRef = React.useRef();
   const [mainSidebarWidth, setMainSidebarWidth] = React.useState(300);
-  const [isMainSidebarFloating, setIsMainSidebarFloating] = React.useState(
-    false
-  );
   const toolbarHeight = "3rem";
 
   return {
     mainSidebarWidth,
     setMainSidebarWidth,
-    isMainSidebarFloating,
-    setIsMainSidebarFloating,
     toolbarHeight,
-    viewMode,
     mainContentRef,
     toolbarRef,
-    setViewMode,
   };
 };
 

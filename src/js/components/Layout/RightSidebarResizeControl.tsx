@@ -9,9 +9,6 @@ const clamp = (value: number, min: number, max: number) => Math.max(Math.min(val
 export const RightSidebarResizeControl = (props) => {
   const { onResizeSidebar, isSidebarOpen, sidebarWidth, ...rest } = props;
   const [isDragging, setIsDragging] = React.useState(false);
-  if (!isSidebarOpen) {
-    return null;
-  }
 
   const moveHandler = (e) => {
     if (isDragging) {
@@ -32,6 +29,10 @@ export const RightSidebarResizeControl = (props) => {
       window.removeEventListener('mouseup', mouseUpHandler);
     }
   });
+
+  if (!isSidebarOpen) {
+    return null;
+  }
 
   return (
     <Box
