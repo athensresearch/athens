@@ -4,10 +4,6 @@
     ["/components/Icons/Icons" :refer [RightSidebarAddIcon]]
     ["/components/Layout/RightSidebar" :refer [RightSidebarContainer SidebarItem]]
     ["@chakra-ui/react" :refer [Flex Text Box]]
-    [athens.parse-renderer :as parse-renderer]
-    [athens.views.pages.block-page :as block-page]
-    [athens.views.pages.graph :as graph]
-    [athens.views.pages.node-page :as node-page]
     [athens.views.right-sidebar.events]
     [athens.views.right-sidebar.subs]
     [athens.reactive :as reactive]
@@ -18,32 +14,7 @@
     [athens.views.right-sidebar.shared :as shared :refer [NS ns-str]]))
 
 
-(defn- create-sidebar-list
-  "Accepts right-sidebar as a map of uids and entities.
-  Entity contains either the block uid or node title, and additionally open/close state and whether the page is a graph view or not."
-  [items]
-  (doall
-    (mapv (fn [entity]
-            (let [{:keys [open? name source-uid type]} entity
-                  eid             (shared/get-eid entity)
-                  item (reactive/get-reactive-right-sidebar-item eid)
-                  {:keys [node/title block/string block/uid]} item]
-              {:isOpen   open?
-               :key      source-uid
-               :id       source-uid
-               :type     (cond
-                           (= type "graph") "graph"
-                           (= type "page") "node"
-                           :else "block")
-               :onRemove #(dispatch [:right-sidebar/close-item source-uid])
-               :onToggle #(dispatch [:right-sidebar/toggle-item source-uid])
-               ;; nth 1 to get just the title
-               :title    (nth [parse-renderer/parse-and-render (or title string) name] 1)
-               :children (r/as-element (cond
-                                         (= type "graph") [graph/page name]
-                                         (= type "page") [node-page/page eid]
-                                         :else [block-page/page eid]))}))
-          items)))
+
 
 
 ;; Components
@@ -131,7 +102,7 @@
                                     :sx            {"@supports (overflow-y: overlay)" {:overflowY "overlay"}}}
                                    (if (empty? items)
                                      [empty-message]
-                                     [:> List {:items              (create-sidebar-list items)
+                                     [:> List {:items              (shared/create-sidebar-list items)
                                                :onUpdateItemsOrder (fn [source-uid target-uid old-index new-index]
                                                                      (rf/dispatch [:right-sidebar/reorder source-uid target-uid old-index new-index]))}])]])})))
 

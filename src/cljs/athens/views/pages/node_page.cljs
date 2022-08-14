@@ -459,9 +459,7 @@
                            :onClose     cancel-fn}]
          ;; Header
          [:> PageHeader (merge
-                          {:onClickOpenInMainView (when-not is-current-route?
-                                                    (fn [e] (router/navigate-page title e)))
-                           :onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:node/title title]])
+                          {:onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:node/title title]])
                                                     #(dispatch [:right-sidebar/open-item [:node/title title]]))}
                           (when @cover-photo-enabled?
                             {:headerImageEnabled     @cover-photo-enabled?

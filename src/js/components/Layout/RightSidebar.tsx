@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { DragIcon, XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon } from '@/Icons/Icons';
+import { DragIcon, XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
 import { Button, IconButton, Box, Collapse, VStack } from '@chakra-ui/react';
 
 const Container = motion(Box);
@@ -54,11 +54,11 @@ export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) =
   </AnimatePresence>;
 };
 const typeIcon = (type, isOpen) => {
-  return isOpen ? { "node": <PageFillIcon />, "graph": <GraphIcon />, "block": <BlockFillIcon /> }[type]
-    : { "node": <PageIcon />, "graph": <GraphIcon />, "block": <BlockIcon /> }[type];
+  return isOpen ? { "page": <PageFillIcon />, "graph": <GraphIcon />, "block": <BlockFillIcon /> }[type]
+    : { "page": <PageIcon />, "graph": <GraphIcon />, "block": <BlockIcon /> }[type];
 };
 
-export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children, ...props }) => {
+export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigate, children, ...props }) => {
   const canToggle = type !== 'graph';
   return (
     <VStack
@@ -122,13 +122,24 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children,
           >{title}</Box>
         </Button>
         <IconButton
+          onClick={onNavigate}
+          size="sm"
+          color="foreground.secondary"
+          alignSelf="center"
+          justifySelf="center"
+          bg="transparent"
+          aria-label="Close"
+        >
+          <ArrowLeftOnBoxIcon />
+        </IconButton>
+        {/* <IconButton
             size={"sm"}
             alignSelf="center"
             justifySelf={"center"}
             bg="transparent"
             aria-label="drag">
           <DragIcon alignSelf={"center"} justifySelf={"center"}/>
-        </IconButton>
+        </IconButton> */}
         <IconButton
           onClick={onRemove}
           size="sm"

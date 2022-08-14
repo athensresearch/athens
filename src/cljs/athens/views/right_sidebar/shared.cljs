@@ -1,8 +1,14 @@
 (ns athens.views.right-sidebar.shared
   (:require
     [athens.reactive :as reactive]
+    [athens.router :as router]
+    [athens.parse-renderer :as parse-renderer]
+    [athens.views.pages.block-page :as block-page]
+    [athens.views.pages.graph :as graph]
+    [athens.views.pages.node-page :as node-page]
     [athens.common-db :as common-db]
-    [re-frame.core :as rf]))
+    [re-frame.core :as rf]
+    [reagent.core :as r]))
 
 (def NS "athens/right-sidebar")
 
@@ -55,3 +61,30 @@
                           (filter filter-fn))]
     items))
 
+
+(defn create-sidebar-list
+  "Accepts right-sidebar as a map of uids and entities.
+  Entity contains either the block uid or node title, and additionally open/close state and whether the page is a graph view or not."
+  [items]
+  (doall
+    (mapv (fn [entity]
+            (let [{:keys [open? name source-uid type]} entity
+                  eid  (get-eid entity)
+                  item (reactive/get-reactive-right-sidebar-item eid)
+                  {:keys [node/title block/string block/uid]} item]
+              {:isOpen     open?
+               :key        source-uid
+               :id         source-uid
+               :type       type
+               :onRemove   #(rf/dispatch [:right-sidebar/close-item source-uid])
+               :onToggle   #(rf/dispatch [:right-sidebar/toggle-item source-uid])
+               :onNavigate (if (= type "page")
+                             #(router/navigate-page title %)
+                             #(router/navigate-uid uid %))
+               ;; nth 1 to get just the title
+               :title      (nth [parse-renderer/parse-and-render (or title string) name] 1)
+               :children   (r/as-element (cond
+                                           (= type "graph") [graph/page name]
+                                           (= type "page") [node-page/page eid]
+                                           :else [block-page/page eid]))}))
+          items)))
