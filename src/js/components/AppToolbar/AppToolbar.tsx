@@ -142,7 +142,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const secondaryToolbarItems = (items) => {
   return <ButtonGroup size="sm">
-    {items.filter(x => !!x).map((item) => <Tooltip label={item.label} key={item.label}>
+    {items.filter(x => !!x).map((item) => <Tooltip closeOnMouseDown label={item.label} key={item.label}>
       <ToolbarIconButton variant="ghost" colorScheme="subtle" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
         {item.icon}
       </ToolbarIconButton>

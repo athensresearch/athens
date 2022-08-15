@@ -20,6 +20,7 @@ export const MainSidebar = (props) => {
       {isMainSidebarOpen && (
         <Box
           as={motion.div}
+          userSelect="none"
           key="main sidebar"
           bg="background.upper"
           pt={toolbarHeight}
