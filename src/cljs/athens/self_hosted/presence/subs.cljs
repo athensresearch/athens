@@ -32,12 +32,15 @@
   :presence/current-user
   :<- [:presence/users-with-page-data]
   :<- [:presence/session-id]
-  (fn [[users session-id] [_]]
-    (-> (filter (fn [[_ user]]
-                  (= session-id (:session-id user)))
-                users)
-        first
-        second)))
+  :<- [:db-picker/remote-db?]
+  (fn [[users session-id remote-db?] [_]]
+    (if remote-db?
+      (-> (filter (fn [[_ user]]
+                    (= session-id (:session-id user)))
+                  users)
+          first
+          second)
+      {:username "You"})))
 
 
 (rf/reg-sub
@@ -51,9 +54,7 @@
   :presence/user-page
   :<- [:presence/current-username]
   (fn [current-user _]
-    (if (seq current-user)
-      (str "@" current-user)
-      "@You")))
+    (str "@" current-user)))
 
 
 (defn on-page-uid?

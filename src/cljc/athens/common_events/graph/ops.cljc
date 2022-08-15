@@ -322,7 +322,6 @@
                         (if title
                           {:page/title title}
                           {:block/uid uid}))]
-    (println position)
     (build-block-new-op db prop-uid position)))
 
 
