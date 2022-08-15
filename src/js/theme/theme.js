@@ -406,7 +406,7 @@ const components = {
   },
   IconButton: {
     baseStyle: {
-      fontSize: "1em",
+      fontSize: "1.5em",
       _active: {
         transitionDuration: "0s",
       },
@@ -417,6 +417,11 @@ const components = {
       _focusVisible: {
         outline: 'none',
         boxShadow: 'focus'
+      },
+      sx: {
+        "& > svg": {
+          fontSize: "1.5em",
+        }
       }
     },
     variants: {
@@ -511,6 +516,13 @@ const components = {
       content: {
         bg: "background.upper",
         shadow: "popover",
+        _focus: {
+          outline: 'none',
+          shadow: "popover",
+        },
+        _focusVisible: {
+          shadow: "popover",
+        },
         [$arrowBg.variable]: "colors.background.upper",
       }
     }

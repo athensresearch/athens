@@ -9,8 +9,8 @@
   [:> Box {:class "icon"
            :position "relative"
            :flex "0 0 auto"
-           :width "1.75em"
-           :height "1.75em"
+           :width "1.25em"
+           :height "1.25em"
            :sx {"text" {:fontSize "16px"}}}
    [:> Box {:as "svg"
             :viewBox "0 0 24 24"
