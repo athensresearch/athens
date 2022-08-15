@@ -94,28 +94,25 @@ export const PageHeader = ({
   >
     {children}
 
-    <ButtonGroup gridArea="extras" size="sm">
+    <ButtonGroup
+      gridArea="extras"
+      size="sm"
+      variant="ghost"
+      colorScheme="subtle"
+    >
       {headerImageEnabled && <Button onClick={() => setIsPropertiesOpen(!isPropertiesOpen)}>Properties</Button>}
       {onClickOpenInMainView && <Tooltip label="Open in main view">
         <IconButton
           aria-label='Open in main view'
-          color="foreground.secondary"
-          variant="ghost"
-          colorScheme="subtle"
           onClick={onClickOpenInMainView}
-        >
-          <ArrowLeftOnBoxIcon boxSize="1.5em" />
-        </IconButton></Tooltip>}
+          icon={<ArrowLeftOnBoxIcon />}
+        /></Tooltip>}
       {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
         <IconButton
           aria-label='Open in right sidebar'
-          color="foreground.secondary"
-          variant="ghost"
-          colorScheme="subtle"
           onClick={onClickOpenInSidebar}
-        >
-          <ArrowRightOnBoxIcon boxSize="1.5em" />
-        </IconButton></Tooltip>}
+          icon={<ArrowRightOnBoxIcon />}
+        /></Tooltip>}
     </ButtonGroup>
 
     {isPropertiesOpen && <Box gridArea="properties">
@@ -125,7 +122,6 @@ export const PageHeader = ({
       </FormControl>
     </Box>
     }
-
 
     {headerImageUrl && <HeaderImage src={headerImageUrl} />}
   </Box>)
