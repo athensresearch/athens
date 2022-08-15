@@ -427,7 +427,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
             borderColor="separator.divider"
             height={toolbarHeight}
             right={0}
-            initial={{ opacity: 0, left: 0 }}
+            initial={{ opacity: 0, left: isLeftSidebarOpen ? mainSidebarWidth : 0 }}
             variants={variants}
             animate={[
               isLeftSidebarOpen && "isLeftSidebarOpen",
