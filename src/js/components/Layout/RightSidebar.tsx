@@ -1,12 +1,22 @@
 import * as React from "react";
 import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
 import { AnimatePresence, motion } from 'framer-motion';
-import { DragIcon, XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
-import { Button, IconButton, Box, Collapse, VStack } from '@chakra-ui/react';
+import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import { Button, IconButton, Box, Collapse, VStack, BoxProps } from '@chakra-ui/react';
 
 /** Right Sidebar */
-export const RightSidebar = (props) => {
+
+
+interface RightSidebarProps extends BoxProps {
+  isOpen: boolean;
+  rightSidebarWidth: number;
+}
+
+export const RightSidebar = (props: RightSidebarProps) => {
   const { children, rightSidebarWidth, isOpen } = props;
+
+  console.log(rightSidebarWidth)
+
   const {
     toolbarHeight
   } = React.useContext(LayoutContext);
@@ -148,5 +158,5 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
         {children}
       </Box>
     </VStack>
-    );
+  );
 };

@@ -9,11 +9,11 @@ const clamp = (value: number, min: number, max: number) => Math.max(Math.min(val
 interface RightSidebarResizeControlProps extends BoxProps {
   onResizeSidebar: (size: number) => void;
   isSidebarOpen: boolean;
-  sidebarWidth: number;
+  rightSidebarWidth: number;
 }
 
 export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps) => {
-  const { onResizeSidebar, isSidebarOpen, sidebarWidth, ...rest } = props;
+  const { onResizeSidebar, isSidebarOpen, rightSidebarWidth, ...rest } = props;
   const [isDragging, setIsDragging] = React.useState(false);
 
   const moveHandler = (e) => {
@@ -23,7 +23,7 @@ export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps)
     }
   }
 
-  const mouseUpHandler = (e) => {
+  const mouseUpHandler = () => {
     setIsDragging(false);
   }
 
@@ -48,7 +48,8 @@ export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps)
       position="fixed"
       zIndex={100}
       opacity={0}
-      right={sidebarWidth + "px"}
+      outline="none"
+      right={rightSidebarWidth + "px"}
       height="100%"
       cursor="col-resize"
       onMouseDown={() => setIsDragging(true)}
