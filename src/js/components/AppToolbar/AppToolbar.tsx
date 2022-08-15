@@ -426,6 +426,9 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               position: "absolute",
               inset: 0,
               bg: "background.floor",
+              transitionProperty: "background",
+              transitionTimingFunction: "ease-in-out",
+              transitionDuration: "fast",
               opacity: 0.7,
             }}
             position="absolute"

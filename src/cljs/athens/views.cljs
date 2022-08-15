@@ -70,6 +70,10 @@
                               :spacing 0
                               :overflowY "auto"
                               :height "100vh"
+                              :bg "background.floor"
+                              :transitionDuration "fast"
+                              :transitionProperty "background"
+                              :transitionTimingFunction "ease-in-out"
                               :align "stretch"
                               :position "relative"}
                    [app-toolbar/app-toolbar]

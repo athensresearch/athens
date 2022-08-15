@@ -29,6 +29,9 @@ export const RightSidebar = (props: RightSidebarProps) => {
           {...layoutAnimationProps(rightSidebarWidth + "px")}
           zIndex={1}
           bg="background.floor"
+          transitionProperty="background"
+          transitionTimingFunction="ease-in-out"
+          transitionDuration="fast"
           overflowY="auto"
           borderLeft="1px solid"
           borderColor="separator.divider"

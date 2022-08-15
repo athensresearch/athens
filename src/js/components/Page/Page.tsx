@@ -16,6 +16,9 @@ const PAGE_PROPS = {
   alignSelf: "stretch",
   gridTemplateAreas: "'header' 'content' 'footer'",
   gridTemplateRows: "auto 1fr auto",
+  transitionProperty: "background",
+  transitionTimingFunction: "ease-in-out",
+  transitionDuration: "fast",
   sx: {
     "--page-padding": "3rem",
   }
@@ -159,7 +162,6 @@ const DailyNotePageError = () => {
       borderWidth="1px"
       borderStyle="solid"
       borderColor="separator.divider"
-      transitionDuration="0s"
       borderRadius="0.5rem"
       minHeight="calc(100vh - 10rem)"
       textAlign="center"
@@ -208,7 +210,6 @@ export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...r
       borderWidth="1px"
       borderStyle="solid"
       borderColor="separator.divider"
-      transitionDuration="0s"
       borderRadius="0.5rem"
       minHeight="calc(100vh - 10rem)"
     >
