@@ -1,58 +1,42 @@
+import * as React from "react";
+import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
 import { AnimatePresence, motion } from 'framer-motion';
 import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon } from '@/Icons/Icons';
 import { Button, IconButton, Box, Collapse, VStack } from '@chakra-ui/react';
 
-const Container = motion(Box);
+/** Right Sidebar */
+export const RightSidebar = (props) => {
+  const { children, rightSidebarWidth, isOpen } = props;
+  const {
+    toolbarHeight
+  } = React.useContext(LayoutContext);
 
-export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) => {
-  return <AnimatePresence initial={false}>
-    {isOpen &&
-      <Container
-        className="right-sidebar"
-        display="flex"
-        flexDirection="column"
-        height="calc(100% - 3.25rem)"
-        marginTop="3.25rem"
-        alignItems="stretch"
-        justifySelf="stretch"
-        transformOrigin="right"
-        justifyContent="space-between"
-        overflowX="visible"
-        position="relative"
-        gridArea="secondary-content"
-        sx={{
-          "WebkitAppRegion": "no-drag",
-          "--page-title-font-size": "1.25rem",
-          ".node-page, .block-page": {
-            "--page-padding": "1rem",
-          },
-          ".page-header": {
-            pb: 1
-          },
-          ".page-body": {},
-          ".page-footer": {
-            px: 0,
-            py: 4
-          }
-        }}
-        initial={{
-          width: 0,
-          opacity: 0
-        }}
-        transition={isDragging ? { duration: 0 } : undefined}
-        animate={{
-          width: isOpen ? `${width}vw` : 0,
-          opacity: 1
-        }}
-        exit={{
-          width: 0,
-          opacity: 0
-        }}
-      >
-        {children}
-      </Container>}
-  </AnimatePresence>;
+  return (
+    <AnimatePresence initial={false}>
+      {isOpen && (
+        <Box
+          as={motion.div}
+          {...layoutAnimationProps(rightSidebarWidth + "px")}
+          zIndex={1}
+          bg="background.floor"
+          overflowY="auto"
+          borderLeft="1px solid"
+          borderColor="separator.divider"
+          position="fixed"
+          height="100vh"
+          inset={0}
+          pt={`calc(${toolbarHeight} + 1rem)`}
+          left="auto"
+        >
+          <Box overflow="hidden" width={rightSidebarWidth + "px"}>
+            {children}
+          </Box>
+        </Box>
+      )}
+    </AnimatePresence>
+  );
 };
+
 const typeIcon = (type, isOpen) => {
   return isOpen ? { "node": <PageFillIcon />, "graph": <GraphIcon />, "block": <BlockFillIcon /> }[type]
     : { "node": <PageIcon />, "graph": <GraphIcon />, "block": <BlockIcon /> }[type];

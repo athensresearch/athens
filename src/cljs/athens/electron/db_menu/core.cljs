@@ -38,8 +38,8 @@
      [:> Popover {:placement "bottom-start" :isLazy true}
       [:> PopoverTrigger
        [:> IconButton {:p 0
-                       "aria-label" "Database menu"
-                       :bg "background.floor"}
+                       :variant "ghost"
+                       :aria-label "Database menu"}
         ;; DB Icon + Dropdown toggle
         [db-icon {:db     active-db
                   :status sync-status}]]]

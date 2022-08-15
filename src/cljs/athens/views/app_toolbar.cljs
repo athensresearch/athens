@@ -17,7 +17,8 @@
 
 (defn app-toolbar
   []
-  (let [left-open?             (rf/subscribe [:left-sidebar/open])
+  (let [current-page-title     (rf/subscribe [:current-route/page-title])
+        left-open?             (rf/subscribe [:left-sidebar/open])
         right-open?            (rf/subscribe [:right-sidebar/open])
         help-open?             (rf/subscribe [:help/open?])
         athena-open?           (rf/subscribe [:athena/open])
@@ -72,6 +73,7 @@
         on-maximize            #(rf/dispatch [:toggle-max-min-win])
         on-minimize            #(rf/dispatch [:minimize-win])
         on-close               #(rf/dispatch [:close-win])]
+
     [:> AppToolbar (merge
                      {:style                     (unzoom)
                       :os                        os
@@ -98,6 +100,7 @@
                       :onPressRightSidebarToggle on-right-sidebar
                       :onPressMaximizeRestore    on-maximize
                       :onPressMinimize           on-minimize
+                      :currentPageTitle          (or @current-page-title nil)
                       :onPressClose              on-close
                       :databaseMenu              (r/as-element [db-menu])
                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)
