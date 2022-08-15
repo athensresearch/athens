@@ -1,9 +1,9 @@
 (ns athens.views.left-sidebar
   (:require
-    ["/components/Icons/Icons" :refer [DailyNotesIcon AllPagesIcon SearchIcon GraphIcon SettingsIcon]]
+    ["/components/Icons/Icons" :refer [DailyNotesIcon AllPagesIcon SearchIcon #_ GraphIcon SettingsIcon]]
     ["/components/Layout/MainSidebar" :refer [MainSidebar SidebarSection SidebarSectionHeading]]
-    ["/components/Widgets/Widgets" :refer [TasksWidget]]
     ["/components/SidebarShortcuts/List" :refer [List]]
+    ["/components/Widgets/Widgets" :refer [TasksWidget]]
     ["@chakra-ui/react" :refer [Button IconButton Divider VStack Flex ButtonGroup Link Flex]]
     [athens.reactive :as reactive]
     [athens.router   :as router]
@@ -13,9 +13,6 @@
 
 
 ;; Components
-
-(def expanded-sidebar-width "clamp(12rem, 25vw, 18rem)")
-
 
 (defn route-button
   []
@@ -27,6 +24,7 @@
                 :leftIcon icon
                 :onClick on-click}
      label]))
+
 
 (defn left-sidebar
   []
