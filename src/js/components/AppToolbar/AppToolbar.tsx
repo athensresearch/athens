@@ -2,22 +2,15 @@ import React from 'react';
 
 import {
   RightSidebarIcon,
-  SearchIcon,
   MenuIcon,
   HelpIcon,
+  ChatFilledIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  AllPagesIcon,
   SettingsIcon,
   ContrastIcon,
-  DailyNotesIcon,
-  GraphIcon,
   EllipsisHorizontalCircleIcon,
-  CheckmarkIcon,
-  ViewIcon,
-  ViewOffIcon,
-  ChatFilledIcon
-
+  ChatIcon,
 } from '@/Icons/Icons';
 
 import {
@@ -29,30 +22,26 @@ import {
   MenuItem,
   MenuList,
   Tooltip,
+  Box,
   Flex,
-  Button,
+  Spacer,
   ButtonOptions,
-  HStack,
   IconButton,
   ButtonGroup,
   useColorMode,
   useMediaQuery
 } from '@chakra-ui/react';
 
-
+import { AnimatePresence, motion } from 'framer-motion';
+import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "@/Layout/useLayoutState";
+import { FakeTrafficLights } from './components/FakeTrafficLights';
 import { WindowButtons } from './components/WindowButtons';
-
-interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
-  children: React.ReactChild;
-};
+import { LocationIndicator } from './components/LocationIndicator';
 interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
   children: React.ReactChild;
 }
 
-const toolbarButtonStyle = {
-  variant: "ghost",
-  colorScheme: "subtle",
-}
+const PAGE_TITLE_SHOW_HEIGHT = 24;
 
 const toolbarIconButtonStyle = {
   variant: "ghost",
@@ -64,91 +53,12 @@ const toolbarIconButtonStyle = {
   }
 }
 
-const ToolbarButton = React.forwardRef((props: ToolbarButtonProps, ref) => {
-  const { children } = props;
-  return <Button ref={ref as any} {...toolbarButtonStyle} {...props}> {children}</ Button>
-});
-
 const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) => {
   const { children } = props;
   return <IconButton ref={ref as any} {...toolbarIconButtonStyle
   } {...props}>{children}</IconButton>
 });
 
-const AppToolbarWrapper = ({ children, ...props }) => <Flex
-  className="app-toolbar"
-  gridArea="app-header"
-  borderBottom="1px solid transparent"
-  justifyContent="space-between"
-  // overflow="hidden"
-  py={1}
-  px={1}
-  h={6}
-  zIndex="3"
-  userSelect="none"
-  transition='0.5s ease-in-out'
-  transitionProperty='border'
-  height="var(--app-header-height, 44px)"
-  _hover={{
-    borderBottomColor: 'separator.divider',
-    bg: "background.floor",
-  }}
-  sx={{
-    WebkitAppRegion: "drag",
-    "&.is-right-sidebar-open": {
-      borderBottomColor: 'separator.divider',
-      bg: "background.floor",
-    },
-    "button, a": {
-      WebkitAppRegion: "no-drag"
-    },
-    ".is-fullscreen &": {
-      height: '44px'
-    },
-    ".os-windows &": {
-      pl: '10px',
-      py: '0',
-      pr: '0',
-
-      "&:hover": {
-        background: 'background.floor',
-      },
-    },
-    ".os-linux &": {
-      height: '44px',
-      pl: '10px',
-      py: '0',
-      pr: '0',
-
-      "&:hover": {
-        background: 'background.floor',
-      },
-    },
-    ".os-mac &": {
-      paddingLeft: '22px',
-      paddingRight: '22px',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-
-      "&:hover": {
-        background: 'background.floor',
-      },
-    },
-    ".os-mac.is-electron &": {
-      paddingLeft: "88px",
-      borderTopLeftRadius: '12px',
-      borderTopRightRadius: '12px'
-    },
-    ".os-mac.is-fullscreen &": {
-      paddingLeft: '22px'
-    }
-  }}
-  {...props}
->
-  {children}
-</Flex>;
 
 export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
@@ -203,6 +113,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   * Whether comments should be shown
   */
   isShowComments: boolean;
+  currentPageTitle?: string;
   // Electron only
   onPressMinimize?(): void;
   onPressClose?(): void;
@@ -229,9 +140,9 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   presenceDetails?: React.FC;
 }
 
-const SecondaryToolbarItems = (items) => {
+const secondaryToolbarItems = (items) => {
   return <ButtonGroup size="sm">
-    {items.filter(x => !!x).map((item) => <Tooltip label={item.label} key={item.label}>
+    {items.filter(x => !!x).map((item) => <Tooltip closeOnMouseDown label={item.label} key={item.label}>
       <ToolbarIconButton variant="ghost" colorScheme="subtle" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
         {item.icon}
       </ToolbarIconButton>
@@ -239,7 +150,7 @@ const SecondaryToolbarItems = (items) => {
   </ButtonGroup>
 }
 
-const SecondaryToolbarOverflowMenu = (items) => {
+const secondaryToolbarOverflowMenu = (items) => {
   return <Menu>
     {({ isOpen }) => <>
       <ToolbarIconButton size="sm" as={MenuButton} isActive={isOpen}><EllipsisHorizontalCircleIcon /></ToolbarIconButton>
@@ -261,7 +172,6 @@ const SecondaryToolbarOverflowMenu = (items) => {
 }
 
 export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
-
   const {
     os,
     route,
@@ -272,15 +182,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isHelpOpen,
     isThemeDark,
     isLeftSidebarOpen,
-    isRightSidebarOpen,
-    isCommandBarOpen,
     isShowComments,
-    isNotificationsPopoverOpen,
     onClickComments: handleClickComments,
-    onPressCommandBar: handlePressCommandBar,
-    onPressDailyNotes: handlePressDailyNotes,
-    onPressAllPages: handlePressAllPages,
-    onPressGraph: handlePressGraph,
     onPressHelp: handlePressHelp,
     onPressThemeToggle: handlePressThemeToggle,
     onPressSettings: handlePressSettings,
@@ -291,15 +194,30 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressMinimize: handlePressMinimize,
     onPressMaximizeRestore: handlePressMaximizeRestore,
     onPressClose: handlePressClose,
-    onClickNotifications: handleShowNotifications,
-    handlePressNotifications,
     databaseMenu,
     notificationPopover,
+    currentPageTitle,
     presenceDetails,
-    ...rest
   } = props;
   const { colorMode, toggleColorMode } = useColorMode();
   const [canShowFullSecondaryMenu] = useMediaQuery('(min-width: 900px)');
+  const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState(null);
+
+  // add event listener to detect when the user scrolls past the title
+  React.useLayoutEffect(() => {
+    const scrollContainer = document.getElementById("main-layout") as HTMLElement;
+
+    const handleScroll = () => {
+      if (scrollContainer.scrollTop > PAGE_TITLE_SHOW_HEIGHT) {
+        setIsScrolledPastTitle(true);
+      } else {
+        setIsScrolledPastTitle(false);
+      }
+    }
+    handleScroll();
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // If the database color mode doesn't match
   // the chakra color mode, update the chakra color mode
@@ -311,16 +229,20 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     }
   }, [isThemeDark, toggleColorMode]);
 
+  const {
+    toolbarRef,
+    toolbarHeight,
+    mainSidebarWidth
+  } = React.useContext(LayoutContext);
+
   const secondaryTools = [
     handleClickComments && {
       label: isShowComments ? "Hide comments" : "Show comments",
-      isActive: isShowComments,
       onClick: handleClickComments,
-      icon: <ChatFilledIcon />
+      icon: isShowComments ? <ChatFilledIcon /> : <ChatIcon />
     },
     {
       label: "Help",
-      isActive: isHelpOpen,
       onClick: handlePressHelp,
       icon: <HelpIcon />
     },
@@ -342,93 +264,188 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     }
   ];
 
-  return (
-    <AppToolbarWrapper
-      className={[
-        "app-toolbar",
-        isRightSidebarOpen && 'is-right-sidebar-open',
-      ].filter(Boolean).join(' ')}
-      {...rest}
-    >
-      <HStack flex="1">
-        <ButtonGroup size="sm" mr="auto">
-          {databaseMenu}
-          <Tooltip label="Navigation">
-            <ToolbarIconButton
-              aria-label="Navigation"
-              onClick={handlePressLeftSidebarToggle}
-            >
-              <MenuIcon />
-            </ToolbarIconButton>
-          </Tooltip>
-          {isElectron && (
-            <ButtonGroup isAttached size="sm">
-              <Tooltip
-                label="Go back">
-                <ToolbarIconButton
-                  aria-label="Go back"
-                  onClick={handlePressHistoryBack}
-                >
-                  <ChevronLeftIcon />
-                </ToolbarIconButton>
-              </Tooltip>
-              <Tooltip label="Go forward">
-                <ToolbarIconButton
-                  aria-label="Go forward"
-                  onClick={handlePressHistoryForward}>
-                  <ChevronRightIcon />
-                </ToolbarIconButton>
-              </Tooltip>
-            </ButtonGroup>)
-          }
-          <Tooltip label="Daily notes">
-            <ToolbarIconButton
-              aria-label="Daily notes"
-              isActive={route === 'home'}
-              onClick={handlePressDailyNotes}>
-              <DailyNotesIcon />
-            </ToolbarIconButton>
-          </Tooltip>
-          <Tooltip label="All pages">
-            <ToolbarIconButton
-              aria-label="All pages"
-              isActive={route === 'pages'}
-              onClick={handlePressAllPages}
-            >
-              <AllPagesIcon />
-            </ToolbarIconButton>
-          </Tooltip>
-          <Tooltip label="Graph">
-            <ToolbarIconButton
-              aria-label="Graph"
-              isActive={route === 'graph'}
-              onClick={handlePressGraph}>
-              <GraphIcon />
-            </ToolbarIconButton>
-          </Tooltip>
 
+  const leftSidebarControls = (
+    <>
+      <Flex
+        as={motion.div}
+        key="leftSidebar tools"
+        {...layoutAnimationProps(isLeftSidebarOpen ? mainSidebarWidth + "px" : "auto")}
+        justifyContent="space-between"
+        flexShrink={0}
+      >
 
-          <ToolbarButton
-            aria-label="Search"
-            variant="outline"
-            leftIcon={<SearchIcon />}
-            isActive={isCommandBarOpen}
-            onClick={handlePressCommandBar}
-            pl="0.5rem"
+        {/* Left side */}
+        <ButtonGroup
+          size="sm"
+          pr={3}
+          pl={4}
+          alignItems="center"
+          justifyContent="flex-start"
+        >
+
+          {isElectron && os === "mac" && (
+            <FakeTrafficLights opacity={isWinFocused ? 1 : 0} />
+          )}
+
+          <ToolbarIconButton
+            aria-label="Show navigation"
+            onClick={handlePressLeftSidebarToggle}
           >
-            Find or create a page
-          </ToolbarButton>
+            <MenuIcon />
+          </ToolbarIconButton>
+          {databaseMenu}
         </ButtonGroup>
+        {/* Right side */}
+        {isElectron && (
+          <ButtonGroup isAttached
+            alignItems="center"
+            justifyContent="flex-end"
+            pr={3}
+            size="sm">
+            <Tooltip
+              label="Go back">
+              <ToolbarIconButton
+                aria-label="Go back"
+                onClick={handlePressHistoryBack}
+              >
+                <ChevronLeftIcon />
+              </ToolbarIconButton>
+            </Tooltip>
+            <Tooltip label="Go forward">
+              <ToolbarIconButton
+                aria-label="Go forward"
+                onClick={handlePressHistoryForward}>
+                <ChevronRightIcon />
+              </ToolbarIconButton>
+            </Tooltip>
+          </ButtonGroup>)
+        }
+      </Flex>
+    </>
+  );
 
-        {presenceDetails}
+  const rightToolbarControls = (
+    <ButtonGroup
+      alignItems="center"
+      justifySelf="flex-end"
+      as={motion.div}
+      key="extras"
+      pr={3}
+      size="sm"
+      flex={`0 0 auto`}
+      display="flex"
+      justifyContent="flex-end"
+    >
+      {presenceDetails}
+      {notificationPopover}
+      {canShowFullSecondaryMenu
+        ? secondaryToolbarItems(secondaryTools)
+        : secondaryToolbarOverflowMenu(secondaryTools)}
+    </ButtonGroup>
+  );
 
-        {notificationPopover}
+  const currentLocationTools = (
+    <ButtonGroup
+      as={motion.div}
+      key="location tools"
+      alignItems="center"
+      px={2}
+      size="sm"
+      flex="0 0 auto"
+      display="flex"
+      justifyContent="flex-start"
+    >
+      {currentPageTitle && (
+        <LocationIndicator
+          isVisible={isScrolledPastTitle}
+          type="node"
+          uid="123"
+          title={currentPageTitle}
+        />
+      )}
+    </ButtonGroup>
+  )
 
-        {canShowFullSecondaryMenu
-          ? SecondaryToolbarItems(secondaryTools)
-          : SecondaryToolbarOverflowMenu(secondaryTools)}
+  const contentControls = (
+    <ButtonGroup
+      alignItems="center"
+      as={motion.div}
+      key="content tools"
+      px={1}
+      size="sm"
+      flex={`1 1 100%`}
+      display="flex"
+      justifyContent="center"
+    />
+  )
 
-      </HStack>
+  const variants = {
+    visible: {
+      opacity: 1,
+      transition: layoutAnimationTransition
+    },
+    isLeftSidebarOpen: {
+      left: mainSidebarWidth,
+      transition: layoutAnimationTransition
+    },
+  }
+
+  return (
+    <Flex
+      flex={1}
+      width="100vw"
+      ref={toolbarRef}
+      height={toolbarHeight}
+      alignItems="center"
+      position="fixed"
+      inset={0}
+      zIndex={2}
+      bottom="auto"
+      className="toolbar"
+      sx={{
+        WebkitAppRegion: "drag",
+        "button, a": {
+          WebkitAppRegion: "no-drag"
+        }
+      }}
+    >
+      <AnimatePresence initial={false}>
+        {leftSidebarControls}
+        {currentLocationTools}
+        {contentControls || <Spacer />}
+        {rightToolbarControls}
+
+        {(isScrolledPastTitle && (
+          <Box
+            as={motion.div}
+            key="header-backdrop"
+            className="header-content-backdrop"
+            backdropFilter={`blur(10px)`}
+            _after={{
+              content: "''",
+              position: "absolute",
+              inset: 0,
+              bg: "background.floor",
+              opacity: 0.7,
+            }}
+            position="absolute"
+            zIndex={-1}
+            borderBottom="1px solid"
+            borderColor="separator.divider"
+            height={toolbarHeight}
+            right={0}
+            initial={{ opacity: 0, left: isLeftSidebarOpen ? mainSidebarWidth : 0 }}
+            variants={variants}
+            animate={[
+              isLeftSidebarOpen && "isLeftSidebarOpen",
+              isScrolledPastTitle && "visible"
+            ].filter(Boolean)}
+            exit={{ opacity: 0 }}
+          />
+        ))}
+      </AnimatePresence>
+
       {isElectron && (os === 'windows' || os === 'linux') && (
         <WindowButtons
           isWinMaximized={isWinMaximized}
@@ -438,5 +455,5 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           handlePressMaximizeRestore={handlePressMaximizeRestore}
           handlePressClose={handlePressClose}
         />)}
-    </AppToolbarWrapper>);
+    </Flex>);
 };

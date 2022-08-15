@@ -5,17 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 
 export const Item = (props) => {
   const { id, children, ...rest } = props;
-  const [width, setWidth] = React.useState(undefined);
   const ref = React.useRef();
-
-  // Lightweight way to 'set' these items in the width they render at
-  // Important for when the item is dragged
-  React.useEffect(() => {
-    if (ref.current) {
-      const el = ref.current as HTMLElement;
-      setWidth(el.getBoundingClientRect().width + "px")
-    }
-  }, [ref]);
 
   const [_order, name, isUnread, isCurrent] = id;
 
@@ -37,7 +27,6 @@ export const Item = (props) => {
     <Button
       size="sm"
       flexShrink={0}
-      maxWidth="var(--parentWidth)"
       variant="ghost"
       isActive={isCurrent}
       justifyContent="flex-start"

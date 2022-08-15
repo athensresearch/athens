@@ -3,22 +3,21 @@ import {
   Button, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
   Tooltip, FormLabel
 } from '@chakra-ui/react';
+import { useInView } from "react-intersection-observer";
 import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import { withErrorBoundary } from "react-error-boundary";
+import { motion } from 'framer-motion';
+
 
 const PAGE_PROPS = {
   as: "article",
   display: "grid",
   flexBasis: "100%",
-  width: "100%",
-  maxWidth: "70em",
+  alignSelf: "stretch",
   gridTemplateAreas: "'header' 'content' 'footer'",
   gridTemplateRows: "auto 1fr auto",
-  marginInline: "auto",
   sx: {
     "--page-padding": "3rem",
-    "&:not(.right-sidebar &)": {
-      mt: 2,
-    }
   }
 }
 
@@ -48,10 +47,10 @@ export const PageNotFound = ({ title, onClickHome, children }) => {
 export const PageContainer = ({ children, uid, type }) => <Box
   {...PAGE_PROPS}
   flexGrow={1}
+  pt={2}
   data-ui={uid}
   className={type + '-page'}
   flexDirection="column"
-  marginInline="auto"
 >{children}</Box>
 
 export const HeaderImage = ({ src }) => <Image
@@ -70,7 +69,7 @@ export const PageHeader = ({
   headerImageUrl,
   onClickOpenInSidebar,
   onClickOpenInMainView,
-  headerImageEnabled}
+  headerImageEnabled }
 ) => {
   const [isPropertiesOpen, setIsPropertiesOpen] = React.useState(false)
 
@@ -148,19 +147,76 @@ export const PageFooter = ({ children }) => <Box
 >{children}</Box>
 
 
-export const DailyNotesPage = ({ isReal, children }) => <Box
-  {...PAGE_PROPS}
-  className="node-page daily-notes"
-  boxShadow="page"
-  bg="background.floor"
-  opacity={isReal ? 1 : 0.5}
-  borderWidth="1px"
-  borderStyle="solid"
-  borderColor="separator.divider"
-  transitionDuration="0s"
-  borderRadius="0.5rem"
-  minHeight="calc(100vh - 10rem)"
->{children}</Box>
+const DailyNotePageError = () => {
+  return (
+    <Box
+      {...PAGE_PROPS}
+      className="node-page daily-notes"
+      boxShadow="page"
+      bg="background.floor"
+      alignSelf="stretch"
+      display="flex"
+      borderWidth="1px"
+      borderStyle="solid"
+      borderColor="separator.divider"
+      transitionDuration="0s"
+      borderRadius="0.5rem"
+      minHeight="calc(100vh - 10rem)"
+      textAlign="center"
+      p={12}
+      color="foreground.secondary"
+      placeItems="center"
+      placeContent="center"
+    >
+      Couldn't load page
+    </Box>)
+}
+
+
+export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...rest }) => {
+  const hasAppeared = React.useRef(false);
+  const { ref, inView } = useInView({ threshold: 1, triggerOnce: true, delay: 50 });
+
+  if (!hasAppeared.current) {
+    if (inView) {
+      onFirstAppear();
+      hasAppeared.current = true;
+    }
+  }
+
+  return (
+    <Box
+      {...PAGE_PROPS}
+      {...rest}
+      as={motion.div}
+      initial={{
+        opacity: 0,
+      }}
+      animate={{
+        opacity: 1,
+        transition: {
+          duration: 0.5,
+        }
+      }}
+      exit={{
+        opacity: 0,
+      }}
+      ref={ref}
+      className="node-page daily-notes"
+      boxShadow="page"
+      bg="background.floor"
+      borderWidth="1px"
+      borderStyle="solid"
+      borderColor="separator.divider"
+      transitionDuration="0s"
+      borderRadius="0.5rem"
+      minHeight="calc(100vh - 10rem)"
+    >
+      {children}
+    </Box>)
+}, {
+  fallback: <DailyNotePageError />
+});
 
 
 export const TitleContainer = ({ children, isEditing, props }) => <Box
