@@ -126,6 +126,7 @@
             [:> Box {:position "relative"}
              [:> IconButton {"aria-label"   "Notifications"
                              :variant       "ghost"
+                             :colorScheme   "subtle"
                              :fontSize      "1.3em"
                              :onDoubleClick navigate-user-page
                              :onClick       (fn [e]

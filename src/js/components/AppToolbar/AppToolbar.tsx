@@ -6,9 +6,9 @@ import {
   HelpIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  SettingsIcon,
   ContrastIcon,
   EllipsisHorizontalCircleIcon,
+  ChatFilledIcon,
   ChatIcon,
 } from '@/Icons/Icons';
 
@@ -257,13 +257,11 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   const secondaryTools = [
     handleClickComments && {
       label: isShowComments ? "Hide comments" : "Show comments",
-      isActive: isShowComments,
       onClick: handleClickComments,
-      icon: <ChatIcon />
+      icon: isShowComments ? <ChatFilledIcon /> : <ChatIcon />
     },
     {
       label: "Help",
-      isActive: isHelpOpen,
       onClick: handlePressHelp,
       icon: <HelpIcon />
     },
@@ -271,12 +269,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       label: "Toggle theme",
       onClick: handlePressThemeToggle,
       icon: <ContrastIcon />
-    },
-    {
-      label: "Settings",
-      isActive: route === '/settings',
-      onClick: handlePressSettings,
-      icon: <SettingsIcon />
     },
     {
       label: 'Show right sidebar',
@@ -310,6 +302,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         >
           <ToolbarIconButton
             aria-label="Show navigation"
+            colorScheme=""
             onClick={handlePressLeftSidebarToggle}
           >
             <MenuIcon />

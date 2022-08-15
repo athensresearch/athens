@@ -73,7 +73,7 @@ export const List = (props) => {
         onDragEnd={handleDragEnd}
         onDragStart={handleDragStart}
       >
-        <VStack spacing={0.5} px={4} align="stretch" overflowX="hidden" {...rest}>
+        <VStack spacing={0.5} pl={3} align="stretch" overflowX="hidden" {...rest}>
           <SortableContext strategy={verticalListSortingStrategy} items={items}>
             {items.map(item => <Item
               onClick={(e) => onOpenItem(e, item)}
