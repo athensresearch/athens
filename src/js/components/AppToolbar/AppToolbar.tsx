@@ -24,7 +24,6 @@ import {
   Box,
   Flex,
   Spacer,
-  Button,
   ButtonOptions,
   IconButton,
   ButtonGroup,
@@ -36,20 +35,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "@/Layout/useLayoutState";
 import { WindowButtons } from './components/WindowButtons';
 import { LocationIndicator } from './components/LocationIndicator';
-
-interface ToolbarButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
-  children: React.ReactChild;
-};
 interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
   children: React.ReactChild;
 }
 
-const PAGE_TITLE_SHOW_HEIGHT = 30;
-
-const toolbarButtonStyle = {
-  variant: "ghost",
-  colorScheme: "subtle",
-}
+const PAGE_TITLE_SHOW_HEIGHT = 24;
 
 const toolbarIconButtonStyle = {
   variant: "ghost",
@@ -60,11 +50,6 @@ const toolbarIconButtonStyle = {
     }
   }
 }
-
-const ToolbarButton = React.forwardRef((props: ToolbarButtonProps, ref) => {
-  const { children } = props;
-  return <Button ref={ref as any} {...toolbarButtonStyle} {...props}> {children}</ Button>
-});
 
 const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) => {
   const { children } = props;
@@ -195,14 +180,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isHelpOpen,
     isThemeDark,
     isLeftSidebarOpen,
-    isRightSidebarOpen,
-    isCommandBarOpen,
     isShowComments,
     onClickComments: handleClickComments,
-    onPressCommandBar: handlePressCommandBar,
-    onPressDailyNotes: handlePressDailyNotes,
-    onPressAllPages: handlePressAllPages,
-    onPressGraph: handlePressGraph,
     onPressHelp: handlePressHelp,
     onPressThemeToggle: handlePressThemeToggle,
     onPressSettings: handlePressSettings,
@@ -375,9 +354,15 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       flex="0 0 auto"
       display="flex"
       justifyContent="flex-start"
-    >{currentPageTitle && (
-      <LocationIndicator isVisible={isScrolledPastTitle} type="node" uid="123" title={currentPageTitle} />
-    )}
+    >
+      {currentPageTitle && (
+        <LocationIndicator
+          isVisible={isScrolledPastTitle}
+          type="node"
+          uid="123"
+          title={currentPageTitle}
+        />
+      )}
     </ButtonGroup>
   )
 
@@ -393,6 +378,17 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       justifyContent="center"
     />
   )
+
+  const variants = {
+    visible: {
+      opacity: 1,
+      transition: layoutAnimationTransition
+    },
+    isLeftSidebarOpen: {
+      left: mainSidebarWidth,
+      transition: layoutAnimationTransition
+    },
+  }
 
   return (
     <Flex
@@ -430,20 +426,20 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               position: "absolute",
               inset: 0,
               bg: "background.floor",
-              opacity: 0.5,
+              opacity: 0.7,
             }}
             position="absolute"
             zIndex={-1}
             borderBottom="1px solid"
             borderColor="separator.divider"
             height={toolbarHeight}
-            left={isLeftSidebarOpen ? mainSidebarWidth : 0}
             right={0}
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: 1,
-              transition: layoutAnimationTransition
-            }}
+            initial={{ opacity: 0, left: 0 }}
+            variants={variants}
+            animate={[
+              isLeftSidebarOpen && "isLeftSidebarOpen",
+              isScrolledPastTitle && "visible"
+            ].filter(Boolean)}
             exit={{ opacity: 0 }}
           />
         ))}
