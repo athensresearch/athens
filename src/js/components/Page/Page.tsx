@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Button, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
-  Tooltip, FormLabel
+  Tooltip, FormLabel, BoxProps
 } from '@chakra-ui/react';
 import { useInView } from "react-intersection-observer";
 import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
@@ -171,12 +171,18 @@ const DailyNotePageError = () => {
 }
 
 
-export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...rest }) => {
+interface DailyNotesPageProps extends BoxProps {
+  onFirstAppear?: () => void
+}
+
+export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => {
+  const { children, onFirstAppear, ...boxProps } = props
+
   const hasAppeared = React.useRef(false);
   const { ref, inView } = useInView({ threshold: 1, triggerOnce: true, delay: 50 });
 
   if (!hasAppeared.current) {
-    if (inView) {
+    if (inView && onFirstAppear) {
       onFirstAppear();
       hasAppeared.current = true;
     }
@@ -185,7 +191,7 @@ export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...r
   return (
     <Box
       {...PAGE_PROPS}
-      {...rest}
+      {...boxProps}
       as={motion.div}
       initial={{
         opacity: 0,
