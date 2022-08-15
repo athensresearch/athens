@@ -4,7 +4,6 @@ import {
   RightSidebarIcon,
   MenuIcon,
   HelpIcon,
-  ChatFilledIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ContrastIcon,
@@ -245,11 +244,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       label: "Help",
       onClick: handlePressHelp,
       icon: <HelpIcon />
-    },
-    {
-      label: "Toggle theme",
-      onClick: handlePressThemeToggle,
-      icon: <ContrastIcon />
     },
     {
       label: 'Show right sidebar',

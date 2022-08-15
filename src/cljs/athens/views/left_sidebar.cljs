@@ -1,6 +1,6 @@
 (ns athens.views.left-sidebar
   (:require
-    ["/components/Icons/Icons" :refer [DailyNotesIcon AllPagesIcon SearchIcon #_ GraphIcon SettingsIcon]]
+    ["/components/Icons/Icons" :refer [DailyNotesIcon AllPagesIcon ContrastIcon SearchIcon #_ GraphIcon SettingsIcon]]
     ["/components/Layout/MainSidebar" :refer [MainSidebar SidebarSection SidebarSectionHeading]]
     ["/components/SidebarShortcuts/List" :refer [List]]
     ["/components/Widgets/Widgets" :refer [TasksWidget]]
@@ -30,6 +30,7 @@
   []
   (let [current-route-name (rf/subscribe [:current-route/name])
         on-athena              #(rf/dispatch [:athena/toggle])
+        on-theme               #(rf/dispatch [:theme/toggle])
         on-settings            (fn [_]
                                  (rf/dispatch [:settings/toggle-open]))
         route-name @current-route-name
@@ -114,9 +115,10 @@
                    :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
                    :target "_blank"}
           (util/athens-version)]]
-        [:> IconButton {:onClick on-settings
-                        :size "sm"
-                        :colorScheme "subtle"
-                        :variant "ghost"
-                        :mr "auto"
-                        :icon (r/as-element [:> SettingsIcon])}]]]]]))
+        [:> ButtonGroup {:size "sm" :spacing 0 :variant "ghost" :colorScheme "subtle"}
+
+         [:> IconButton {:onClick on-theme
+                         :icon (r/as-element [:> ContrastIcon])}]
+
+         [:> IconButton {:onClick on-settings
+                         :icon (r/as-element [:> SettingsIcon])}]]]]]]))
