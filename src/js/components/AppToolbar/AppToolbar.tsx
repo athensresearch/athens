@@ -4,6 +4,7 @@ import {
   RightSidebarIcon,
   MenuIcon,
   HelpIcon,
+  ChatFilledIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ContrastIcon,
@@ -141,7 +142,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const secondaryToolbarItems = (items) => {
   return <ButtonGroup size="sm">
-    {items.filter(x => !!x).map((item) => <Tooltip label={item.label} key={item.label}>
+    {items.filter(x => !!x).map((item) => <Tooltip closeOnMouseDown label={item.label} key={item.label}>
       <ToolbarIconButton variant="ghost" colorScheme="subtle" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
         {item.icon}
       </ToolbarIconButton>
@@ -275,11 +276,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           pl={4}
           alignItems="center"
           justifyContent="flex-start"
-
-        // {...(isElectron && os) === "mac" && ({
-        //   // Make room for macOS traffic lights
-        //   pl: "88px"
-        // })}
         >
 
           {isElectron && os === "mac" && (
@@ -288,7 +284,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
           <ToolbarIconButton
             aria-label="Show navigation"
-            colorScheme=""
             onClick={handlePressLeftSidebarToggle}
           >
             <MenuIcon />

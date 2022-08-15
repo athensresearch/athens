@@ -21,6 +21,7 @@ export const MainSidebar = (props) => {
       {isMainSidebarOpen && (
         <Box
           as={motion.div}
+          userSelect="none"
           key="main sidebar"
           bg="background.upper"
           transition="background 0.2s ease-in-out"
