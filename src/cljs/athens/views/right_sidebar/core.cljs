@@ -3,11 +3,11 @@
     ["/components/Icons/Icons" :refer [RightSidebarAddIcon]]
     ["/components/Layout/List" :refer [List]]
     ["/components/Layout/RightSidebar" :refer [RightSidebar]]
-    ["@chakra-ui/react" :refer [Flex Text Box]]
+    ["@chakra-ui/react" :refer [Text Box]]
     [athens.views.right-sidebar.events]
     [athens.views.right-sidebar.shared :as shared]
     [athens.views.right-sidebar.subs]
-    [re-frame.core :as rf :refer [dispatch subscribe]]))
+    [re-frame.core :as rf :refer [dispatch]]))
 
 
 ;; Components
