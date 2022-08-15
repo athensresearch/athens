@@ -47,6 +47,15 @@
     (:username current-user)))
 
 
+(rf/reg-sub
+  :presence/user-page
+  :<- [:presence/current-username]
+  (fn [current-user _]
+    (if (seq current-user)
+      (str "@" current-user)
+      "@You")))
+
+
 (defn on-page-uid?
   [page-uid [_username user]]
   (= page-uid (:page/uid user)))

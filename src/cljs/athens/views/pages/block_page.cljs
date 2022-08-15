@@ -40,7 +40,7 @@
 
 (defn breadcrumb-handle-click
   "If block is in main, navigate to page. If in right sidebar, replace right sidebar item."
-  [e uid breadcrumb-uid]
+  [e uid breadcrumb-uid breadcrumb-node-title]
   (let [right-sidebar? (.. e -target (closest ".right-sidebar"))]
     (rf/dispatch [:reporting/navigation {:source :block-page-breadcrumb
                                          :target :block
@@ -48,7 +48,10 @@
                                                    :right-pane
                                                    :main-pane)}])
     (if right-sidebar?
-      (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
+      (let [eid (if breadcrumb-node-title
+                  [:node/title breadcrumb-node-title]
+                  [:block/uid breadcrumb-uid])]
+        (dispatch [:right-sidebar/navigate-item uid eid]))
       (router/navigate-uid breadcrumb-uid e))))
 
 
@@ -82,10 +85,10 @@
   (let [parents (reactive/get-reactive-parents-recursively id)]
     [:> Breadcrumb {:gridArea "breadcrumb" :opacity 0.75}
      (doall
-       (for [{breadcrumb-uid :block/uid} parents]
+       (for [{breadcrumb-uid :block/uid breadcrumb-node-title :node/title} parents]
          ^{:key breadcrumb-uid}
          [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
-          [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid)}
+          [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid breadcrumb-node-title)}
            [:span {:style {:pointer-events "none"}}
             [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb breadcrumb-uid)]]]]))]))
 
@@ -97,18 +100,15 @@
         properties-enabled? (rf/subscribe [:feature-flags/enabled? :properties])]
 
     (fn [block]
-      (let [{:block/keys [string children uid properties] :db/keys [id]} block
-            is-current-route? (= @(subscribe [:current-route/uid]) uid)]
+      (let [{:block/keys [string children uid properties] :db/keys [id]} block]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
         [:> Box
 
          ;; Header
-         [:> PageHeader {:onClickOpenInMainView (when-not is-current-route?
-                                                  (fn [e] (router/navigate-uid uid e)))
-                         :onClickOpenInSidebar (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
-                                                 #(dispatch [:right-sidebar/open-item uid]))}
+         [:> PageHeader {:onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:block/uid uid]])
+                                                  #(dispatch [:right-sidebar/open-item [:block/uid uid]]))}
 
           ;; Parent Context
           [parents-el uid id]

@@ -210,7 +210,7 @@
        (do
          (.. js/window getSelection empty)
          (.. e preventDefault)
-         (rf/dispatch [:right-sidebar/open-page title]))
+         (rf/dispatch [:right-sidebar/open-item [:node/title title]]))
        (navigate-page title)))))
 
 
@@ -231,7 +231,7 @@
        (do
          (.. js/window getSelection empty)
          (.. e preventDefault)
-         (rf/dispatch [:right-sidebar/open-item uid]))
+         (rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))
        (navigate-uid uid)))))
 
 
