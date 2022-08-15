@@ -4,6 +4,7 @@ import {
   RightSidebarIcon,
   MenuIcon,
   HelpIcon,
+  ChatFilledIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   SettingsIcon,
