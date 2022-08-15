@@ -82,6 +82,6 @@
                                      :isRightSidebarOpen @right-sidebar-open?}
                      [pages/view]]
                     [:> RightSidebarResizeControl {:rightSidebarWidth @right-sidebar-width
-                                                   :isSidebarOpen @right-sidebar-open?
+                                                   :isRightSidebarOpen @right-sidebar-open?
                                                    :onResizeSidebar #(rf/dispatch [:right-sidebar/set-width %])}]
                     [right-sidebar/right-sidebar]]]])]]])))

@@ -8,12 +8,12 @@ const clamp = (value: number, min: number, max: number) => Math.max(Math.min(val
 
 interface RightSidebarResizeControlProps extends BoxProps {
   onResizeSidebar: (size: number) => void;
-  isSidebarOpen: boolean;
+  isRightSidebarOpen: boolean;
   rightSidebarWidth: number;
 }
 
 export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps) => {
-  const { onResizeSidebar, isSidebarOpen, rightSidebarWidth, ...rest } = props;
+  const { onResizeSidebar, isRightSidebarOpen, rightSidebarWidth, ...rest } = props;
   const [isDragging, setIsDragging] = React.useState(false);
 
   const moveHandler = (e) => {
@@ -36,7 +36,7 @@ export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps)
     }
   });
 
-  if (!isSidebarOpen) {
+  if (!isRightSidebarOpen) {
     return null;
   }
 
