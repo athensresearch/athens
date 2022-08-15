@@ -178,9 +178,7 @@ export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...r
   const { ref, inView } = useInView({ threshold: 1, triggerOnce: true, delay: 50 });
 
   if (!hasAppeared.current) {
-    console.log("!hasAppeared.current");
     if (inView) {
-      console.log("inView");
       onFirstAppear();
       hasAppeared.current = true;
     }
