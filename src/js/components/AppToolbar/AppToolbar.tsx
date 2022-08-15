@@ -33,6 +33,7 @@ import {
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "@/Layout/useLayoutState";
+import { FakeTrafficLights } from './components/FakeTrafficLights';
 import { WindowButtons } from './components/WindowButtons';
 import { LocationIndicator } from './components/LocationIndicator';
 interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
@@ -236,13 +237,11 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   const secondaryTools = [
     handleClickComments && {
       label: isShowComments ? "Hide comments" : "Show comments",
-      isActive: isShowComments,
       onClick: handleClickComments,
-      icon: <ChatIcon />
+      icon: isShowComments ? <ChatFilledIcon /> : <ChatIcon />
     },
     {
       label: "Help",
-      isActive: isHelpOpen,
       onClick: handlePressHelp,
       icon: <HelpIcon />
     },
@@ -282,11 +281,12 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           pl={4}
           alignItems="center"
           justifyContent="flex-start"
-          {...(isElectron && os) === "mac" && ({
-            // Make room for macOS traffic lights
-            pl: "88px"
-          })}
         >
+
+          {isElectron && os === "mac" && (
+            <FakeTrafficLights opacity={isWinFocused ? 1 : 0} />
+          )}
+
           <ToolbarIconButton
             aria-label="Show navigation"
             onClick={handlePressLeftSidebarToggle}

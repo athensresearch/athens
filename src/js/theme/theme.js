@@ -366,15 +366,9 @@ const components = {
           })
         }
       },
-      ghost: {
+      ghost: ({ colorScheme }) => ({
         bg: "transparent",
-        color: (colorScheme) => {
-          if (colorScheme === 'subtle') {
-            return "foreground.secondary"
-          } else {
-            return "foreground.primary"
-          }
-        },
+        color: (colorScheme === 'subtle') ? "foreground.secondary" : "foreground.primary",
         _hover: {
           bg: "interaction.surface.hover"
         },
@@ -382,7 +376,7 @@ const components = {
           color: 'foreground.primary',
           bg: 'interaction.surface.active',
         },
-      },
+      }),
       outline: {
         bg: "transparent",
         borderWidth: "1px",
