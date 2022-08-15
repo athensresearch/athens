@@ -114,10 +114,6 @@
             [:dispatch [:posthog/report-feature :right-sidebar true]]]})))
 
 
-"72538ef7f" "7e409b1cb" nil
-(shared/get-items)
-
-
 (reg-event-fx
   :right-sidebar/reorder
   [(interceptors/sentry-span-no-new-tx "right-sidebar/navigate-item")]
