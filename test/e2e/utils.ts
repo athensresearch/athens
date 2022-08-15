@@ -67,13 +67,6 @@ export const unindentLastBlock = async (page: Page) => {
     return page.press(lastBlockSelector, 'Shift+Tab');
 };
 
-
-export const goToDailyPages = async (page: Page) => {
-    // The sixth button is the daily notes button.
-    // TODO: find a better way to address this button, maybe tooltip?
-    await page.click('button:nth-child(6)');
-}
-
 export const waitForBoot = async (page: Page) => {
     if (!isElectron) {
         await page.goto('/');
@@ -86,33 +79,37 @@ export const waitForBoot = async (page: Page) => {
     await page.waitForSelector("[aria-label='Show navigation']");
 }
 
+export const menuButtonLocator = '[aria-label="Show navigation"]';
+export const athenaInputFieldLocator = '[placeholder="Find or Create Page"]';
+export const pageTitleLocator = ".page-header > h1.page-title .block";
+
 export const inputInAthena = async (page: Page, query: string) => {
-    // await page.click('[aria-label="Show navigation"]');
+    await page.locator(menuButtonLocator).click();
     await page.click('button:has-text("Find or Create a Page")');
-    await page.fill('[placeholder="Find or Create Page"]', query);
+    await page.fill(athenaInputFieldLocator, query);
 }
 
-
-export const pageTitleLocator = ".page-header > h1.page-title .block";
+export const waitForPageNavigation = async (page: Page, title: string) => {
+    // Wait for the page to show the title.
+    await page.locator(`${pageTitleLocator}:has-text("${title}")`).waitFor();
+}
 
 export const createPage = async (page: Page, title: string) => {
     await inputInAthena(page, title);
 
     // Press Enter
     await Promise.all([
-        page.press('[placeholder="Find or Create Page"]', 'Enter'),
+        page.press(athenaInputFieldLocator, 'Enter'),
         page.waitForNavigation()
     ]);
 
-    // Wait for the page to show the title.
-    await page.locator(`${pageTitleLocator}:has-text("${title}")`).waitFor();
+    await waitForPageNavigation(page, title);
 }
 
 export const deleteCurrentPage = async (page: Page) => {
     // Open page elipsis menu
     await page.click(".page-header > h1.page-title button");
     await page.click('button:has-text("Delete Page")');
-    await page.click('button:nth-child(6)');
 }
 
 export const todaysDate = async (page: Page) => {
