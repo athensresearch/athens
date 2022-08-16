@@ -7,13 +7,12 @@ import { useInView } from "react-intersection-observer";
 import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
 import { withErrorBoundary } from "react-error-boundary";
 import { motion } from 'framer-motion';
+import { layoutAnimationTransition } from '@/Layout/useLayoutState';
 
 
 const PAGE_PROPS = {
   as: "article",
   display: "grid",
-  flexBasis: "100%",
-  alignSelf: "stretch",
   gridTemplateAreas: "'header' 'content' 'footer'",
   gridTemplateRows: "auto 1fr auto",
   transitionProperty: "background",
@@ -153,13 +152,11 @@ const DailyNotePageError = () => {
       className="node-page daily-notes"
       boxShadow="page"
       bg="background.floor"
-      alignSelf="stretch"
       display="flex"
       borderWidth="1px"
       borderStyle="solid"
       borderColor="separator.divider"
       borderRadius="0.5rem"
-      minHeight="calc(100vh - 10rem)"
       textAlign="center"
       p={12}
       color="foreground.secondary"
@@ -179,7 +176,7 @@ export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => 
   const { children, onFirstAppear, ...boxProps } = props
 
   const hasAppeared = React.useRef(false);
-  const { ref, inView } = useInView({ threshold: 1, triggerOnce: true, delay: 50 });
+  const { ref, inView } = useInView({ threshold: 1, triggerOnce: true, delay: 10 });
 
   if (!hasAppeared.current) {
     if (inView && onFirstAppear) {
@@ -195,17 +192,20 @@ export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => 
       as={motion.div}
       initial={{
         opacity: 0,
+        height: 0,
+        translateY: "10vh",
       }}
       animate={{
         opacity: 1,
-        transition: {
-          duration: 0.5,
-        }
+        translateY: 0,
+        height: "auto",
+        transition: layoutAnimationTransition
       }}
       exit={{
         opacity: 0,
+        height: 0,
+        translateY: "10vh",
       }}
-      ref={ref}
       className="node-page daily-notes"
       boxShadow="page"
       bg="background.floor"
@@ -213,9 +213,9 @@ export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => 
       borderStyle="solid"
       borderColor="separator.divider"
       borderRadius="0.5rem"
-      minHeight="calc(100vh - 10rem)"
     >
       {children}
+      <Box ref={ref} />
     </Box>)
 }, {
   fallback: <DailyNotePageError />
