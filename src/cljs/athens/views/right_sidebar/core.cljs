@@ -7,7 +7,7 @@
     [athens.views.right-sidebar.events]
     [athens.views.right-sidebar.shared :as shared]
     [athens.views.right-sidebar.subs]
-    [re-frame.core :as rf :refer [dispatch]]))
+    [re-frame.core :as rf]))
 
 
 ;; Components
