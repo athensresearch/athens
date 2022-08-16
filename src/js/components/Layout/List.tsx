@@ -53,9 +53,6 @@ export const List = (props) => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates
-    })
   );
 
   const handleDragStart = (e) => {
