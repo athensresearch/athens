@@ -7,7 +7,8 @@ import {
   PopoverTrigger,
   useOutsideClick,
   PopoverContent,
-  Portal
+  Portal,
+  ButtonProps
 } from '@chakra-ui/react';
 import getCaretCoordinates from '@/../textarea'
 
@@ -34,11 +35,12 @@ const scrollToEl = (el) => {
   }
 }
 
-export const AutocompleteButton = ({ children, onClick, isActive, ...props }) => {
+export const AutocompleteButton = (props: ButtonProps) => {
+  const { children, onClick, isActive, ...buttonProps } = props;
   const buttonRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (isActive) {
+    if (isActive && buttonRef.current) {
       scrollToEl(buttonRef.current);
     }
   }, [isActive]);
@@ -47,6 +49,7 @@ export const AutocompleteButton = ({ children, onClick, isActive, ...props }) =>
     <Button
       ref={buttonRef}
       variant="ghost"
+      size="sm"
       borderRadius={0}
       flexShrink={0}
       maxWidth="100%"
@@ -65,8 +68,7 @@ export const AutocompleteButton = ({ children, onClick, isActive, ...props }) =>
       _last={{
         borderBottomRadius: "inherit",
       }}
-      {...props}
-      onClick={onClick}
+      {...buttonProps}
     >
       {children}
     </Button>
@@ -74,38 +76,28 @@ export const AutocompleteButton = ({ children, onClick, isActive, ...props }) =>
 }
 
 export const Autocomplete = ({ isOpen, onClose, event, children }) => {
-  // Early return with nothing, to avoid rendering all
-  // the juicy portaling goodness.
-  if (!isOpen) {
-    return null;
-  }
-
   const menuRef = React.useRef(null);
-  const lastEventTargetValue = React.useRef(null);
-  const currentEventPosition = React.useRef({ left: null, top: null });
-  const newEventTargetValue = event?.target?.value;
-  const isNewEvent = newEventTargetValue !== lastEventTargetValue.current;
+  const [menuPosition, setMenuPosition] = React.useState({ left: null, top: null });
 
   useOutsideClick({
     ref: menuRef,
     handler: () => onClose(),
   })
 
-  if (isOpen && isNewEvent) {
-    currentEventPosition.current = getCaretPositionFromKeyDownEvent(event)
-  };
-
-  lastEventTargetValue.current = newEventTargetValue;
+  React.useEffect(() => {
+    if (isOpen) {
+      setMenuPosition(getCaretPositionFromKeyDownEvent(event))
+    }
+  }, [isOpen]);
 
   return (
     <Popover
       isOpen={isOpen}
       placement="bottom-start"
-      isLazy={true}
+      isLazy
+      size="sm"
       returnFocusOnClose={false}
-      closeOnBlur={true}
-      closeOnEsc={true}
-      onClose={onClose}
+      closeOnBlur={false}
       autoFocus={false}
     >
       <PopoverTrigger>
@@ -116,14 +108,13 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
           width="1px"
           height="1.5em"
           zIndex="100"
-          left={currentEventPosition.current.left + 'px'}
-          top={currentEventPosition.current.top + "px"}
+          left={menuPosition?.left || 0 + 'px'}
+          top={menuPosition?.top || 0 + "px"}
         >
         </Box>
       </PopoverTrigger>
       <Portal>
         <PopoverContent
-          borderRadius="md"
           shadow="menu"
           bg="background.vibrancy"
           borderColor="separator.divider"
@@ -132,7 +123,7 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
           ref={menuRef}
           p={0}
           overflow="auto"
-          maxHeight={`calc(100vh - 2rem - 2rem - ${currentEventPosition.current.top}px)`}
+          maxHeight={`calc(100vh - 2rem - 2rem - ${menuPosition?.top || 0}px)`}
         >
           {children}
         </PopoverContent>

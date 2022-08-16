@@ -1,26 +1,26 @@
 (ns athens.views.blocks.editor
   (:require
-    ["/components/Block/Content"                 :refer [Content]]
-    [athens.config                               :as config]
-    [athens.db                                   :as db]
-    [athens.events.selection                     :as select-events]
-    [athens.parse-renderer                       :refer [parse-and-render]]
-    [athens.subs.selection                       :as select-subs]
-    [athens.util                                 :as util]
-    [athens.views.blocks.autocomplete-search     :as autocomplete-search]
-    [athens.views.blocks.autocomplete-slash      :as autocomplete-slash]
-    [athens.views.blocks.internal-representation :as internal-representation]
-    [athens.views.blocks.textarea-keydown        :as textarea-keydown]
-    [clojure.edn                                 :as edn]
-    [clojure.set                                 :as set]
-    [clojure.string                              :as str]
-    [goog.events                                 :as goog-events]
-    [komponentit.autosize                        :as autosize]
-    [re-frame.core                               :as rf]
-    [reagent.core                                :as r])
+   ["/components/Block/Content"                 :refer [Content]]
+   [athens.config                               :as config]
+   [athens.db                                   :as db]
+   [athens.events.selection                     :as select-events]
+   [athens.parse-renderer                       :refer [parse-and-render]]
+   [athens.subs.selection                       :as select-subs]
+   [athens.util                                 :as util]
+   [athens.views.blocks.autocomplete-search     :as autocomplete-search]
+   [athens.views.blocks.autocomplete-slash      :as autocomplete-slash]
+   [athens.views.blocks.internal-representation :as internal-representation]
+   [athens.views.blocks.textarea-keydown        :as textarea-keydown]
+   [clojure.edn                                 :as edn]
+   [clojure.set                                 :as set]
+   [clojure.string                              :as str]
+   [goog.events                                 :as goog-events]
+   [komponentit.autosize                        :as autosize]
+   [re-frame.core                               :as rf]
+   [reagent.core                                :as r])
   (:import
-    (goog.events
-      EventType)))
+   (goog.events
+    EventType)))
 
 
 (defn enter-handler-new-line
@@ -272,6 +272,6 @@
                                 :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))
                                 :on-mouse-down  (fn [e] (textarea-mouse-down e uid))}])
           [parse-and-render @read-value (or original-uid uid)]]
-         [autocomplete-search/inline-search-el block state-hooks last-event]
-         [autocomplete-slash/slash-menu-el block last-event]]))))
+         (when editing? [autocomplete-search/inline-search-el block state-hooks last-event]
+               [autocomplete-slash/slash-menu-el block last-event])]))))
 
