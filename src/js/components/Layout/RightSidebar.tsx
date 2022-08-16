@@ -15,8 +15,6 @@ interface RightSidebarProps extends BoxProps {
 export const RightSidebar = (props: RightSidebarProps) => {
   const { children, rightSidebarWidth, isOpen } = props;
 
-  console.log(rightSidebarWidth)
-
   const {
     toolbarHeight
   } = React.useContext(LayoutContext);
