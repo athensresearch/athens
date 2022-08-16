@@ -272,6 +272,6 @@
                                 :on-mouse-enter (fn [e] (textarea-mouse-enter e uid))
                                 :on-mouse-down  (fn [e] (textarea-mouse-down e uid))}])
           [parse-and-render @read-value (or original-uid uid)]]
-         (when editing? [autocomplete-search/inline-search-el block state-hooks last-event]
+         (when @is-editing? [autocomplete-search/inline-search-el block state-hooks last-event]
                [autocomplete-slash/slash-menu-el block last-event])]))))
 
