@@ -198,7 +198,7 @@ export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => 
       animate={{
         opacity: 1,
         translateY: 0,
-        height: "auto",
+        height: "fit-content",
         transition: layoutAnimationTransition
       }}
       exit={{
@@ -207,7 +207,6 @@ export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => 
         translateY: "10vh",
       }}
       className="node-page daily-notes"
-      overflow="hidden"
       boxShadow="page"
       bg="background.floor"
       borderWidth="1px"

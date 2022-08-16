@@ -31,11 +31,10 @@
       (if (empty? @note-refs)
         (dispatch [:daily-note/next (dates/get-day)])
         (let [notes (reactive-pull-many @note-refs)]
-          [:> VStack {:alignSelf "stretch" :align "stretch" :py 16 :px [2 4 8] :spacing 8}
+          [:> VStack {:alignSelf "stretch" :display "block" :py 16 :px [2 4 8] :spacing 8}
            [:> AnimatePresence {:initial false}
             (doall
               (for [{:keys [block/uid]} notes]
-
                 [:> DailyNotesPage {:key uid
                                     ;; only the last gets onFirstAppear
                                     :onFirstAppear (if (= (last @note-refs) uid)
