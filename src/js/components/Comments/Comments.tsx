@@ -53,8 +53,8 @@ const formatCount = (count: number): string => {
 
 export const CommentCounter = ({ count }) => {
   return <Box display="grid" gridTemplateAreas="'main'">
-    <ChatFilledIcon gridArea="main" transform="scale(1.5) translateY(5%)" zIndex={0} />
-    <Text zIndex={1} gridArea="main" color="background.basement" fontSize="xs">{formatCount(count)}</Text>
+    <ChatFilledIcon gridArea="main" zIndex={0} />
+    <Text zIndex={1} gridArea="main" transform="translateY(5%)" color="background.basement" fontSize="xs">{formatCount(count)}</Text>
   </Box>
 }
 

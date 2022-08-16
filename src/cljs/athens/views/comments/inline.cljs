@@ -180,11 +180,11 @@
                 :onClick        #(reset! hide? (not @hide?))})
    (if @hide?
      [:<>
-      [:> ChevronRightIcon]
+      [:> ChevronRightIcon {:boxSize 3.5}]
       [:> CommentCounter {:count num-comments}]
       [:> Text {:pl 1.5} "Comments"]]
      [:<>
-      [:> ChevronDownIcon]
+      [:> ChevronDownIcon {:boxSize 3.5}]
       [:> CommentCounter {:count num-comments}]
       [:> Text {:pl 1.5} "Comments"]])])
 
