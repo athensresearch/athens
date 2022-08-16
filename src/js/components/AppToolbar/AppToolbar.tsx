@@ -308,8 +308,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               <IconButton
                 aria-label="Go forward"
                 onClick={handlePressHistoryForward}
-                icon={
-                  <ChevronRightIcon />}
+                icon={<ChevronRightIcon />}
               />
             </Tooltip>
           </ToolbarButtonGroup>)
@@ -324,7 +323,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       justifySelf="flex-end"
       key="extras"
       pr={3}
-      flex={`0 0 auto`}
+      flex="0 0 auto"
       display="flex"
       justifyContent="flex-end"
     >
@@ -361,7 +360,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       alignItems="center"
       key="content tools"
       px={1}
-      flex={`1 1 100%`}
+      flex="1 1 100%"
       display="flex"
       justifyContent="center"
     />

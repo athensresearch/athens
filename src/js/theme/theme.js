@@ -4,6 +4,13 @@ import { spacing } from './spacing'
 
 const $arrowBg = cssVar("popper-arrow-bg");
 
+const buttonIconFontSize = {
+  xs: "16px",
+  sm: "20px",
+  md: "24px",
+  lg: "32px",
+}
+
 const shadows = {
   focusLight: '0 0 0 3px #0071DB',
   focusDark: '0 0 0 3px #498eda',
@@ -311,8 +318,7 @@ const components = {
     }
   },
   Button: {
-    baseStyle: {
-      transitionProperty: 'common',
+    baseStyle: ({ size }) => ({
       transitionTimingFunction: 'ease-in-out',
       _active: {
         transitionDuration: "0s",
@@ -326,9 +332,9 @@ const components = {
         boxShadow: 'focus'
       },
       "svg": {
-        fontSize: "1.5em",
+        fontSize: buttonIconFontSize[size],
       }
-    },
+    }),
     variants: {
       link: {
         color: "link",
