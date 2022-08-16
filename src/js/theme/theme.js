@@ -5,10 +5,10 @@ import { spacing } from './spacing'
 const $arrowBg = cssVar("popper-arrow-bg");
 
 const buttonIconFontSize = {
-  xs: "1.25em",
-  sm: "1.5em",
-  md: "1.75em",
-  lg: "2em",
+  xs: "16px",
+  sm: "20px",
+  md: "24px",
+  lg: "32px",
 }
 
 const shadows = {
