@@ -343,7 +343,7 @@
                               children
                               key
                               properties
-                              _refs]}  (merge block block-o)
+                              _refs]} (merge block block-o)
                 block-type             (reactive/reactive-get-entity-type [:block/uid block-uid])
                 children-uids          (set (map :block/uid children))
                 children?              (seq children-uids)
@@ -395,9 +395,9 @@
                                             [:> MenuItem {:children "Archive"
                                                           :icon     (r/as-element [:> ArchiveIcon])
                                                           :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
-                ff @(rf/subscribe [:feature-flags])
-                renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
-                renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})]
+                ff                     @(rf/subscribe [:feature-flags])
+                renderer-k             (block-type-dispatcher/block-type->protocol-k block-type ff)
+                renderer               (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})]
             (log/debug "block open render: block-o:" (pr-str (:block/open block-o))
                        "block:" (pr-str (:block/open block))
                        "merge:" (pr-str (:block/open (merge block-o block))))
@@ -505,7 +505,7 @@
                   (count _refs)
                   (fn [e]
                     (if (.. e -shiftKey)
-                      (rf/dispatch [:right-sidebar/open-item uid])
+                      (rf/dispatch [:right-sidebar/open-item [:block/uid uid]])
                       (rf/dispatch [::inline-refs.events/toggle-open! uid])))
                   @inline-refs-open?])]
 
@@ -530,7 +530,7 @@
                          (or (and (true? linked-ref) @linked-ref-open?)
                              (and (false? linked-ref) open)))
                 (for [child children
-                      :let  [child-uid (:block/uid child)]]
+                      :let [child-uid (:block/uid child)]]
                   ^{:key (:db/id child)}
                   [block-el child
                    (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))

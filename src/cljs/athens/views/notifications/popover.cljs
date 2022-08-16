@@ -131,7 +131,7 @@
                              :onDoubleClick navigate-user-page
                              :onClick       (fn [e]
                                               (when (.. e -shiftKey)
-                                                (rf/dispatch [:right-sidebar/open-page user-page-title])))
+                                                (rf/dispatch [:right-sidebar/open-item [:node/title user-page-title]])))
                              :icon          (r/as-element [:> BellFillIcon])}]
              (when (> 0 num-notifications)
                [:> Badge {:position "absolute"
