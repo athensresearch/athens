@@ -1,13 +1,11 @@
 import React from 'react';
 import {
-  Button, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
+  Button, VStack, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
   Tooltip, FormLabel, BoxProps
 } from '@chakra-ui/react';
-import { useInView } from "react-intersection-observer";
 import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import { useInView } from 'react-intersection-observer';
 import { withErrorBoundary } from "react-error-boundary";
-import { motion } from 'framer-motion';
-import { layoutAnimationTransition } from '@/Layout/useLayoutState';
 
 
 const PAGE_PROPS = {
@@ -168,56 +166,54 @@ const DailyNotePageError = () => {
     </Box>)
 }
 
+interface DailyNotesListProps extends BoxProps {
+  onGetAnotherNote: () => void;
+}
+
+export const DailyNotesList = (props: DailyNotesListProps) => {
+  const { onGetAnotherNote, ...boxProps } = props;
+  const listRef = React.useRef<HTMLDivElement>(null)
+  const { ref, inView } = useInView({ threshold: 0 });
+
+  React.useLayoutEffect(() => {
+    if (inView) {
+      onGetAnotherNote();
+    }
+  });
+
+  return <VStack py={16} align="stretch" pb={4} width="100%" ref={listRef} {...boxProps}>
+    {boxProps.children}
+    <DailyNotesPage isReal={false}>
+      <Box ref={ref} />
+      <PageHeader>
+        <TitleContainer isEditing="false">Earlier</TitleContainer>
+      </PageHeader>
+    </DailyNotesPage>
+  </VStack>
+
+}
+
 
 interface DailyNotesPageProps extends BoxProps {
-  onFirstAppear?: () => void
+  isReal: boolean;
 }
 
 export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => {
-  const { children, onFirstAppear, ...boxProps } = props
-
-  const hasAppeared = React.useRef(false);
-  const { ref, inView } = useInView({ threshold: 1, triggerOnce: true, delay: 10 });
-
-  if (!hasAppeared.current) {
-    if (inView && onFirstAppear) {
-      onFirstAppear();
-      hasAppeared.current = true;
-    }
-  }
+  const { isReal, ...boxProps } = props
 
   return (
     <Box
       {...PAGE_PROPS}
       {...boxProps}
-      as={motion.div}
-      initial={{
-        opacity: 0,
-        height: 0,
-        translateY: "10vh",
-      }}
-      animate={{
-        opacity: 1,
-        translateY: 0,
-        height: "fit-content",
-        transition: layoutAnimationTransition
-      }}
-      exit={{
-        opacity: 0,
-        height: 0,
-        translateY: "10vh",
-      }}
       className="node-page daily-notes"
+      minHeight="calc(100vh - 4rem)"
       boxShadow="page"
       bg="background.floor"
       borderWidth="1px"
       borderStyle="solid"
       borderColor="separator.divider"
       borderRadius="0.5rem"
-    >
-      {children}
-      <Box ref={ref} />
-    </Box>)
+    />)
 }, {
   fallback: <DailyNotePageError />
 });
