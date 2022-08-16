@@ -13,6 +13,7 @@ import { layoutAnimationTransition } from '@/Layout/useLayoutState';
 const PAGE_PROPS = {
   as: "article",
   display: "grid",
+  alignSelf: "stretch",
   gridTemplateAreas: "'header' 'content' 'footer'",
   gridTemplateRows: "auto 1fr auto",
   transitionProperty: "background",
