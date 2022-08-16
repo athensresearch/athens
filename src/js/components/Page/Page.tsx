@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Button, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
-  Tooltip, FormLabel
+  Tooltip, FormLabel, BoxProps
 } from '@chakra-ui/react';
 import { useInView } from "react-intersection-observer";
 import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
@@ -16,6 +16,9 @@ const PAGE_PROPS = {
   alignSelf: "stretch",
   gridTemplateAreas: "'header' 'content' 'footer'",
   gridTemplateRows: "auto 1fr auto",
+  transitionProperty: "background",
+  transitionTimingFunction: "ease-in-out",
+  transitionDuration: "fast",
   sx: {
     "--page-padding": "3rem",
   }
@@ -91,28 +94,25 @@ export const PageHeader = ({
   >
     {children}
 
-    <ButtonGroup gridArea="extras" size="sm">
+    <ButtonGroup
+      gridArea="extras"
+      size="sm"
+      variant="ghost"
+      colorScheme="subtle"
+    >
       {headerImageEnabled && <Button onClick={() => setIsPropertiesOpen(!isPropertiesOpen)}>Properties</Button>}
       {onClickOpenInMainView && <Tooltip label="Open in main view">
         <IconButton
           aria-label='Open in main view'
-          color="foreground.secondary"
-          variant="ghost"
-          colorScheme="subtle"
           onClick={onClickOpenInMainView}
-        >
-          <ArrowLeftOnBoxIcon boxSize="1.5em" />
-        </IconButton></Tooltip>}
+          icon={<ArrowLeftOnBoxIcon />}
+        /></Tooltip>}
       {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
         <IconButton
           aria-label='Open in right sidebar'
-          color="foreground.secondary"
-          variant="ghost"
-          colorScheme="subtle"
           onClick={onClickOpenInSidebar}
-        >
-          <ArrowRightOnBoxIcon boxSize="1.5em" />
-        </IconButton></Tooltip>}
+          icon={<ArrowRightOnBoxIcon />}
+        /></Tooltip>}
     </ButtonGroup>
 
     {isPropertiesOpen && <Box gridArea="properties">
@@ -122,7 +122,6 @@ export const PageHeader = ({
       </FormControl>
     </Box>
     }
-
 
     {headerImageUrl && <HeaderImage src={headerImageUrl} />}
   </Box>)
@@ -159,7 +158,6 @@ const DailyNotePageError = () => {
       borderWidth="1px"
       borderStyle="solid"
       borderColor="separator.divider"
-      transitionDuration="0s"
       borderRadius="0.5rem"
       minHeight="calc(100vh - 10rem)"
       textAlign="center"
@@ -173,12 +171,18 @@ const DailyNotePageError = () => {
 }
 
 
-export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...rest }) => {
+interface DailyNotesPageProps extends BoxProps {
+  onFirstAppear?: () => void
+}
+
+export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => {
+  const { children, onFirstAppear, ...boxProps } = props
+
   const hasAppeared = React.useRef(false);
   const { ref, inView } = useInView({ threshold: 1, triggerOnce: true, delay: 50 });
 
   if (!hasAppeared.current) {
-    if (inView) {
+    if (inView && onFirstAppear) {
       onFirstAppear();
       hasAppeared.current = true;
     }
@@ -187,7 +191,7 @@ export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...r
   return (
     <Box
       {...PAGE_PROPS}
-      {...rest}
+      {...boxProps}
       as={motion.div}
       initial={{
         opacity: 0,
@@ -208,7 +212,6 @@ export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...r
       borderWidth="1px"
       borderStyle="solid"
       borderColor="separator.divider"
-      transitionDuration="0s"
       borderRadius="0.5rem"
       minHeight="calc(100vh - 10rem)"
     >

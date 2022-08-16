@@ -120,14 +120,11 @@
               notification-list  (get-inbox-items-for-popover @db/dsdb user-page-title)
               navigate-user-page #(router/navigate-page user-page-title)
               num-notifications  (count notification-list)]
-          [:> Popover {:closeOnBlur true}
+          [:> Popover {:closeOnBlur true :size "md"}
 
            [:> PopoverTrigger
             [:> Box {:position "relative"}
              [:> IconButton {"aria-label"   "Notifications"
-                             :variant       "ghost"
-                             :colorScheme   "subtle"
-                             :fontSize      "1.3em"
                              :onDoubleClick navigate-user-page
                              :onClick       (fn [e]
                                               (when (.. e -shiftKey)
@@ -140,8 +137,7 @@
                           :right "-3px" :bottom "-1px" :variant "ghost" :zIndex 1} num-notifications])]]
 
 
-           [:> PopoverContent {:maxWidth  "max-content"
-                               :maxHeight "calc(100vh - 4rem)"}
+           [:> PopoverContent {:maxHeight "calc(100vh - 4rem)"}
             [:> PopoverCloseButton]
             [:> PopoverHeader [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])} "Notifications"]]
             [:> Flex {:p             0

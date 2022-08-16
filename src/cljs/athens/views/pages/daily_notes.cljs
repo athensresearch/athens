@@ -35,6 +35,10 @@
            [:> AnimatePresence {:initial false}
             (doall
               (for [{:keys [block/uid]} notes]
+
                 [:> DailyNotesPage {:key uid
-                                    :onFirstAppear get-next-note}
+                                    ;; only the last gets onFirstAppear
+                                    :onFirstAppear (if (= (last @note-refs) uid)
+                                                     get-next-note
+                                                     nil)}
                  [node-page/page [:block/uid uid]]]))]])))))

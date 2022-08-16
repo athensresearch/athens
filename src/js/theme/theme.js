@@ -324,6 +324,9 @@ const components = {
       _focusVisible: {
         outline: 'none',
         boxShadow: 'focus'
+      },
+      "svg": {
+        fontSize: "1.5em",
       }
     },
     variants: {
@@ -397,35 +400,11 @@ const components = {
       error: {
         color: "error"
       }
-    }
+    },
   },
   FormLabel: {
     baseStyle: {
       color: "foreground.secondary",
-    }
-  },
-  IconButton: {
-    baseStyle: {
-      fontSize: "1em",
-      _active: {
-        transitionDuration: "0s",
-      },
-      _focus: {
-        outline: 'none',
-        boxShadow: 'none'
-      },
-      _focusVisible: {
-        outline: 'none',
-        boxShadow: 'focus'
-      }
-    },
-    variants: {
-      solid: {
-        _active: {
-          color: 'linkContrast',
-          bg: 'link',
-        },
-      }
     }
   },
   Menu: {
@@ -511,6 +490,13 @@ const components = {
       content: {
         bg: "background.upper",
         shadow: "popover",
+        _focus: {
+          outline: 'none',
+          shadow: "popover",
+        },
+        _focusVisible: {
+          shadow: "popover",
+        },
         [$arrowBg.variable]: "colors.background.upper",
       }
     }
@@ -619,7 +605,11 @@ const components = {
 }
 
 // Default prop overrides
-Tooltip.defaultProps = { ...Tooltip.defaultProps, openDelay: 500 }
+Tooltip.defaultProps = {
+  ...Tooltip.defaultProps,
+  closeOnMouseDown: true,
+  openDelay: 500
+}
 
 const config = {
   initialColorMode: 'system',

@@ -24,7 +24,9 @@ export const MainSidebar = (props) => {
           userSelect="none"
           key="main sidebar"
           bg="background.upper"
-          transition="background 0.2s ease-in-out"
+          transitionProperty="background"
+          transitionTimingFunction="ease-in-out"
+          transitionDuration="fast"
           pt={toolbarHeight}
           height="100vh"
           position="sticky"
