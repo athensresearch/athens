@@ -88,13 +88,13 @@
                                     :y (.-y main-window-state)
                                     :width (.-width main-window-state)
                                     :height (.-height main-window-state)
-                                    :minWidth 650 ; Minimum width before clipping in toolbar
+                                    :minWidth 400 ; Minimum width before clipping in toolbar
                                     :minHeight 300
                                     :backgroundColor "#1A1A1A"
                                     :autoHideMenuBar true
                                     :frame false
                                     :titleBarStyle "hidden"
-                                    :trafficLightPosition {:x 19, :y 36}
+                                    :trafficLightPosition {:x 19, :y 34}
                                     :webPreferences {:contextIsolation false
                                                      :nodeIntegration true
                                                      :worldSafeExecuteJavaScript true

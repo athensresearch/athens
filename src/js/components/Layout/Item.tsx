@@ -2,12 +2,22 @@ import React from 'react';
 import { Button, Text, Box } from "@chakra-ui/react";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
+import { SidebarItem } from './RightSidebar';
 
 export const Item = (props) => {
-  const { id, children, ...rest } = props;
+  const [width, setWidth] = React.useState(undefined);
   const ref = React.useRef();
 
-  const [_order, name, isUnread, isCurrent] = id;
+  // Lightweight way to 'set' these items in the width they render at
+  // Important for when the item is dragged
+  React.useEffect(() => {
+    if (ref.current) {
+      const el = ref.current as HTMLElement;
+      setWidth(el.getBoundingClientRect().width + "px")
+    }
+  }, [ref]);
+
+  // const [_order, name, isUnread, isCurrent] = id;
 
   const {
     attributes,
@@ -16,7 +26,7 @@ export const Item = (props) => {
     setNodeRef,
     transform,
     transition
-  } = useSortable({ id });
+  } = useSortable({ id: props.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -24,31 +34,15 @@ export const Item = (props) => {
   };
 
   return (
-    <Button
-      size="sm"
-      flexShrink={0}
-      variant="ghost"
-      isActive={isCurrent}
-      justifyContent="flex-start"
-      overflow="hidden"
+    <Box
       ref={setNodeRef}
       style={style}
       opacity={isDragging ? 0.5 : 1}
       {...attributes}
       {...listeners}
-      {...rest}
     >
-      <Text
-        as="span"
-        textAlign="start"
-        flex="1 1 100%"
-        fontWeight={isUnread ? "bold" : "n"}
-        overflow="hidden"
-        textOverflow="ellipsis">
-        {name}
-      </Text>
-      {children}
-    </Button>
+      <SidebarItem {...props}></SidebarItem>
+    </Box>
   );
 };
 

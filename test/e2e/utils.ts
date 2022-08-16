@@ -21,7 +21,7 @@ export const createLocalAthensDB = async (page: Page, dbName: string) => {
     // Fill [placeholder="DB Name"]
     await page.fill('[placeholder="DB Name"]', dbName);
 
-    const [ fileChooser ] = await Promise.all([
+    const [fileChooser] = await Promise.all([
         // TODO this is broken in Playwright for electron, no fix in sight
         page.waitForEvent('filechooser'),
         page.click('text=Browse')
@@ -67,13 +67,6 @@ export const unindentLastBlock = async (page: Page) => {
     return page.press(lastBlockSelector, 'Shift+Tab');
 };
 
-
-export const goToDailyPages = async (page: Page) => {
-    // The sixth button is the daily notes button.
-    // TODO: find a better way to address this button, maybe tooltip?
-    await page.click('button:nth-child(6)');
-}
-
 export const waitForBoot = async (page: Page) => {
     if (!isElectron) {
         await page.goto('/');
@@ -83,35 +76,40 @@ export const waitForBoot = async (page: Page) => {
     // only on visible behaviour.
     // TODO: This isn't necessary on production builds, but is necessary for dev
     // builds, not sure why. Maybe because the app runs slower?
-    await page.waitForSelector("text=Find");
+    await page.waitForSelector("[aria-label='Show navigation']");
 }
+
+export const menuButtonLocator = '[aria-label="Show navigation"]';
+export const athenaInputFieldLocator = '[placeholder="Find or Create Page"]';
+export const pageTitleLocator = ".page-header > h1.page-title .block";
 
 export const inputInAthena = async (page: Page, query: string) => {
-    await page.click('button:has-text("Find or create a page")');
-    await page.fill('[placeholder="Find or Create Page"]', query);
+    await page.locator(menuButtonLocator).click();
+    await page.click('button:has-text("Find or Create a Page")');
+    await page.fill(athenaInputFieldLocator, query);
 }
 
-
-export const pageTitleLocator = ".page-header > h1.page-title .block";
+export const waitForPageNavigation = async (page: Page, title: string) => {
+    // Wait for the page to show the title.
+    await page.locator(`${pageTitleLocator}:has-text("${title}")`).waitFor();
+}
 
 export const createPage = async (page: Page, title: string) => {
     await inputInAthena(page, title);
 
     // Press Enter
     await Promise.all([
-        page.press('[placeholder="Find or Create Page"]', 'Enter'),
+        page.press(athenaInputFieldLocator, 'Enter'),
         page.waitForNavigation()
     ]);
 
-    // Wait for the page to show the title.
-    await page.locator(`${pageTitleLocator}:has-text("${title}")`).waitFor();
+    await waitForPageNavigation(page, title);
 }
 
 export const deleteCurrentPage = async (page: Page) => {
     // Open page elipsis menu
     await page.click(".page-header > h1.page-title button");
     await page.click('button:has-text("Delete Page")');
-    await page.click('button:nth-child(6)');
 }
 
 export const todaysDate = async (page: Page) => {
@@ -119,6 +117,6 @@ export const todaysDate = async (page: Page) => {
     // TODO: this doesn't work in the prod build, disabled usage for now.
     // Need to match the date formatting logic to use again.
     const todaysDate = await page.evaluate(`athens.dates.get_day()`);
-    const dateTitle = todaysDate.arr[ 3 ];
+    const dateTitle = todaysDate.arr[3];
     return dateTitle;
 };

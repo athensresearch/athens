@@ -153,9 +153,7 @@
                :athena/open         false
                :athena/recent-items '()
                :left-sidebar/open   false
-               :right-sidebar/open  false
-               :right-sidebar/items {}
-               :right-sidebar/width 32
+               :right-sidebar/width 300
                :mouse-down          false
                :daily-notes/items   []
                :selection           {:items []}
