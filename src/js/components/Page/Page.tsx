@@ -207,6 +207,7 @@ export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => 
         translateY: "10vh",
       }}
       className="node-page daily-notes"
+      overflow="hidden"
       boxShadow="page"
       bg="background.floor"
       borderWidth="1px"
