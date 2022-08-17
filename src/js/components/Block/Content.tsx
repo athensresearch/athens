@@ -1,7 +1,7 @@
 import { Box } from '@chakra-ui/react';
 import { withErrorBoundary } from 'react-error-boundary';
 
-const _Content = ({ children, fontSize, ...props }) => {
+const _Content = ({ children, ...props }) => {
   return <Box
     className="block-content"
     display="grid"
@@ -17,7 +17,6 @@ const _Content = ({ children, fontSize, ...props }) => {
     zIndex={2}
     flexGrow={1}
     wordBreak="break-word"
-    fontSize={fontSize}
     sx={{
       // DANGER DANGER DANGER
       //

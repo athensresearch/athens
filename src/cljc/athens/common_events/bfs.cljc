@@ -7,6 +7,7 @@
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
+    [athens.common.utils                  :as common.utils]
     [clojure.string                       :as string]
     [clojure.walk                         :as walk]))
 
@@ -105,11 +106,30 @@
     (concat [] not-save save)))
 
 
+(defn add-missing-block-uids
+  [internal-representation]
+  (walk/postwalk
+    (fn [x]
+      (if (and (map? x)
+               ;; looks like a block
+               (or (:block/string x)
+                   (:block/properties x)
+                   (:block/children x)
+                   (:block/open? x))
+               ;; but doesn't have uid
+               (not (:block/uid x)))
+        ;; add it
+        (assoc x :block/uid (common.utils/gen-block-uid))
+        x))
+    internal-representation))
+
+
 (defn internal-representation->atomic-ops
   "Convert internal representation to the vector of atomic operations that would create it.
   :block/save operations are grouped at the end so that any ref'd entities are already created."
   [db internal-representation default-position]
   (->> internal-representation
+       add-missing-block-uids
        enhance-internal-representation
        (mapcat (partial tree-seq common-db/has-descendants? common-db/descendants))
        (map (partial enhanced-internal-representation->atomic-ops db default-position))

@@ -185,14 +185,28 @@
     (seq filtered)))
 
 
+(defn- split-props-from-blocks
+  [db uids]
+  (let [group-f #(if (common-db/property-key db [:block/uid %])
+                   :props
+                   :blocks)
+        {:keys [props blocks]} (group-by group-f uids)]
+    [props blocks]))
+
+
 (defn block-move-chain
-  [target-uid source-uids first-rel]
-  (composite/make-consequence-op {:op/type :block/move-chain}
-                                 (concat [(atomic/make-block-move-op (first source-uids)
-                                                                     {:block/uid target-uid
-                                                                      :relation first-rel})]
-                                         (doall
-                                           (for [[one two] (partition 2 1 source-uids)]
+  [db target-uid source-uids first-rel]
+  (let [[prop-uids block-uids] (split-props-from-blocks db source-uids)]
+    (composite/make-consequence-op {:op/type :block/move-chain}
+                                   (concat (for [uid prop-uids]
+                                             (->> (common-db/drop-prop-position db uid target-uid first-rel)
+                                                  (atomic/make-block-move-op uid)))
+
+                                           (when (seq block-uids)
+                                             [(atomic/make-block-move-op (first block-uids)
+                                                                         {:block/uid target-uid
+                                                                          :relation first-rel})])
+                                           (for [[one two] (partition 2 1 block-uids)]
                                              (atomic/make-block-move-op two
                                                                         {:block/uid one
                                                                          :relation :after}))))))
@@ -201,18 +215,20 @@
 (defn build-block-split-op
   "Creates `:block/split` composite op, taking into account context.
   If old-block has children, pass them on to new-block.
-  If old-block is open or closed, pass that state on to new-block."
+  If old-block is open or closed, pass that state on to new-block.
+  Ignores both behaviours above if old-block is a property."
   [db {:keys [old-block-uid new-block-uid
               string index relation]}]
   (let [save-block-op      (build-block-save-op db old-block-uid (subs string 0 index))
         new-block-op       (atomic/make-block-new-op new-block-uid {:block/uid old-block-uid
                                                                     :relation  relation})
         new-block-save-op  (build-block-save-op db new-block-uid (subs string index))
-        {:block/keys [open]} (common-db/get-block db [:block/uid old-block-uid])
-        children           (common-db/get-children-uids db [:block/uid old-block-uid])
+        {:block/keys [open key]} (common-db/get-block db [:block/uid old-block-uid])
+        children           (when-not key
+                             (common-db/get-children-uids db [:block/uid old-block-uid]))
         children?          (seq children)
         move-children-op   (when children?
-                             (block-move-chain new-block-uid children :first))
+                             (block-move-chain db new-block-uid children :first))
         close-new-block-op (when children?
                              (atomic/make-block-open-op new-block-uid open))
         split-block-op     (composite/make-consequence-op {:op/type :block/split}
@@ -295,9 +311,15 @@
 
 
 (defn- new-prop
-  [db uid prop-uid k]
-  (let [position (merge {:relation {:page/title k}}
-                        (if-let [title (common-db/get-page-title db uid)]
+  [db [a v :as uid-or-eid] prop-uid k]
+  (let [uid?     (-> uid-or-eid vector? not)
+        uid      (if uid?
+                   uid-or-eid
+                   (common-db/get-block-uid db uid-or-eid))
+        title    (or (common-db/get-page-title db uid)
+                     (and (= a :node/title) v))
+        position (merge {:relation {:page/title k}}
+                        (if title
                           {:page/title title}
                           {:block/uid uid}))]
     (build-block-new-op db prop-uid position)))
@@ -306,13 +328,16 @@
 (defn build-property-path
   ([db uid ks]
    (build-property-path db uid ks []))
-  ([db uid [k & ks] ops]
+  ([db uid-or-eid [k & ks] ops]
    (if-not k
-     [uid ops]
-     (let [block      (common-db/get-block db [:block/uid uid])
+     [uid-or-eid ops]
+     (let [uid?       (-> uid-or-eid vector? not)
+           block      (common-db/get-block db (if uid?
+                                                [:block/uid uid-or-eid]
+                                                uid-or-eid))
            prop-block (-> block :block/properties (get k))
            prop-uid   (or (:block/uid prop-block)
                           (common.utils/gen-block-uid))
            ops'       (cond-> ops
-                        (not prop-block) (conj (new-prop db uid prop-uid k)))]
+                        (not prop-block) (conj (new-prop db uid-or-eid prop-uid k)))]
        (recur db prop-uid ks ops')))))

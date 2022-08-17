@@ -59,10 +59,8 @@
         shift?                        (.. e -shiftKey)
         {:keys [index query results]} @state
         item                          (get results index)
-        block-type                    (:block/type item)
-        navigate-uid                  (cond
-                                        (= "comment" block-type)  (:block/uid (:block/parent item))
-                                        :else                     (:block/uid item))]
+        navigate-uid                  (or (:block-search/navigate-uid item)
+                                          (:block/uid item))]
     (cond
       (= KeyCodes.ENTER key) (cond
                                ;; if page doesn't exist, create and open
@@ -83,7 +81,10 @@
                                ;; if shift: open in right-sidebar
                                shift?
                                (do (dispatch [:athena/toggle])
-                                   (dispatch [:right-sidebar/open-item navigate-uid])
+                                   (let [title (:node/title item)]
+                                     (dispatch [:right-sidebar/open-item (if title
+                                                                           [:node/title title]
+                                                                           [:block/uid navigate-uid])]))
                                    (dispatch [:reporting/navigation {:source :athena
                                                                      :target :page
                                                                      :pane   :right-pane}]))
@@ -226,17 +227,12 @@
               :_empty {:display "none"}}
    (doall
      (for [[i x] (map-indexed list results)
-           :let  [block-uid       (:block/uid x)
-                  block-type      (:block/type x)
-                  parent          (:block/parent x)
+           :let  [parent          (:block/parent x)
                   type            (if parent :block :node)
-                  title           (cond
-                                    (= "comment" block-type)  (:block/string parent)
-                                    :else                     (or (:node/title parent) (:node/title x)))
+                  title           (or (:node/title parent) (:node/title x) (:block/string parent))
                   uid             (or (:block/uid parent) (:block/uid x))
-                  navigate-to-uid (cond
-                                    (= "comment" block-type) (:block/uid parent)
-                                    :else                    block-uid)
+                  navigate-to-uid (or (:block-search/navigate-uid x)
+                                      (:block/uid x))
                   string          (:block/string x)]]
        (if (nil? x)
          ^{:key i}
@@ -314,7 +310,7 @@
                          :maxWidth "calc(100vw - 4rem)"}
         [:> Input
          {:type "search"
-          :autocomplete "off"
+          :autoComplete "off"
           :width "100%"
           :border 0
           :fontSize "2.375rem"
