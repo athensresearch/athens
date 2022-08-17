@@ -4,19 +4,17 @@ import {
   RightSidebarIcon,
   MenuIcon,
   HelpIcon,
-  ChatFilledIcon,
+  ChatBubbleFillIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   SettingsIcon,
   ContrastIcon,
   EllipsisHorizontalCircleIcon,
-  ChatIcon,
+  ChatBubbleIcon,
 } from '@/Icons/Icons';
 
 import {
-  HTMLChakraProps,
   Portal,
-  ThemingProps,
   Menu,
   MenuButton,
   MenuItem,
@@ -25,11 +23,12 @@ import {
   Box,
   Flex,
   Spacer,
-  ButtonOptions,
   IconButton,
   ButtonGroup,
   useColorMode,
-  useMediaQuery
+  useMediaQuery,
+  ButtonGroupProps,
+  useToast
 } from '@chakra-ui/react';
 
 import { AnimatePresence, motion } from 'framer-motion';
@@ -37,28 +36,15 @@ import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "
 import { FakeTrafficLights } from './components/FakeTrafficLights';
 import { WindowButtons } from './components/WindowButtons';
 import { LocationIndicator } from './components/LocationIndicator';
-interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
-  children: React.ReactChild;
-}
 
 const PAGE_TITLE_SHOW_HEIGHT = 24;
 
-const toolbarIconButtonStyle = {
-  variant: "ghost",
-  colorScheme: "subtle",
-  sx: {
-    "svg": {
-      fontSize: "1.5em"
-    }
-  }
+interface ToolbarButtonGroupProps extends ButtonGroupProps {
+  key: string
 }
 
-const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) => {
-  const { children } = props;
-  return <IconButton ref={ref as any} {...toolbarIconButtonStyle
-  } {...props}>{children}</IconButton>
-});
-
+const ToolbarButtonGroup = (props: ToolbarButtonGroupProps) => <ButtonGroup
+  as={motion.div} variant="ghost" colorScheme="subtle" size="sm" {...props} />
 
 export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
@@ -141,19 +127,17 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const secondaryToolbarItems = (items) => {
-  return <ButtonGroup size="sm">
+  return <ToolbarButtonGroup key="secondary-items">
     {items.filter(x => !!x).map((item) => <Tooltip closeOnMouseDown label={item.label} key={item.label}>
-      <ToolbarIconButton variant="ghost" colorScheme="subtle" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
-        {item.icon}
-      </ToolbarIconButton>
+      <IconButton key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick} icon={item.icon} />
     </Tooltip>)}
-  </ButtonGroup>
+  </ToolbarButtonGroup>
 }
 
 const secondaryToolbarOverflowMenu = (items) => {
   return <Menu>
     {({ isOpen }) => <>
-      <ToolbarIconButton size="sm" as={MenuButton} isActive={isOpen}><EllipsisHorizontalCircleIcon /></ToolbarIconButton>
+      <IconButton as={MenuButton} aria-label="Menu" isActive={isOpen} icon={<EllipsisHorizontalCircleIcon />} />
       <Portal>
         <MenuList>
           {items.filter(x => !!x).map((item) => (<MenuItem
@@ -179,7 +163,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isWinFullscreen,
     isWinFocused,
     isWinMaximized,
-    isHelpOpen,
     isThemeDark,
     isLeftSidebarOpen,
     isShowComments,
@@ -202,6 +185,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   const { colorMode, toggleColorMode } = useColorMode();
   const [canShowFullSecondaryMenu] = useMediaQuery('(min-width: 900px)');
   const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState(null);
+
+  const toast = useToast();
 
   // add event listener to detect when the user scrolls past the title
   React.useLayoutEffect(() => {
@@ -238,8 +223,28 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   const secondaryTools = [
     handleClickComments && {
       label: isShowComments ? "Hide comments" : "Show comments",
-      onClick: handleClickComments,
-      icon: isShowComments ? <ChatFilledIcon /> : <ChatIcon />
+      onClick: () => {
+        if (isShowComments) {
+          handleClickComments();
+          toast({
+            title: "Comments hidden",
+            status: "info",
+            duration: 5000,
+            position: "top-right"
+          });
+
+        } else {
+          handleClickComments();
+          toast({
+            title: "Comments shown",
+            status: "info",
+            duration: 5000,
+            position: "top-right"
+          });
+
+        }
+      },
+      icon: isShowComments ? <ChatBubbleFillIcon /> : <ChatBubbleIcon />
     },
     {
       label: "Help",
@@ -276,8 +281,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       >
 
         {/* Left side */}
-        <ButtonGroup
-          size="sm"
+        <ToolbarButtonGroup
+          key="left-sidebar-left-controls"
           pr={3}
           pl={4}
           alignItems="center"
@@ -288,52 +293,49 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
             <FakeTrafficLights opacity={isWinFocused ? 1 : 0} />
           )}
 
-          <ToolbarIconButton
+          <IconButton
             aria-label="Show navigation"
             onClick={handlePressLeftSidebarToggle}
           >
             <MenuIcon />
-          </ToolbarIconButton>
+          </IconButton>
           {databaseMenu}
-        </ButtonGroup>
+        </ToolbarButtonGroup>
         {/* Right side */}
         {isElectron && (
-          <ButtonGroup isAttached
+          <ToolbarButtonGroup
+            isAttached
+            key="left-sidebar-right-controls"
             alignItems="center"
             justifyContent="flex-end"
-            pr={3}
-            size="sm">
-            <Tooltip
-              label="Go back">
-              <ToolbarIconButton
+            pr={3}>
+            <Tooltip label="Go back">
+              <IconButton
                 aria-label="Go back"
                 onClick={handlePressHistoryBack}
-              >
-                <ChevronLeftIcon />
-              </ToolbarIconButton>
+                icon={<ChevronLeftIcon />}
+              />
             </Tooltip>
             <Tooltip label="Go forward">
-              <ToolbarIconButton
+              <IconButton
                 aria-label="Go forward"
-                onClick={handlePressHistoryForward}>
-                <ChevronRightIcon />
-              </ToolbarIconButton>
+                onClick={handlePressHistoryForward}
+                icon={<ChevronRightIcon />}
+              />
             </Tooltip>
-          </ButtonGroup>)
+          </ToolbarButtonGroup>)
         }
       </Flex>
     </>
   );
 
   const rightToolbarControls = (
-    <ButtonGroup
+    <ToolbarButtonGroup
       alignItems="center"
       justifySelf="flex-end"
-      as={motion.div}
       key="extras"
       pr={3}
-      size="sm"
-      flex={`0 0 auto`}
+      flex="0 0 auto"
       display="flex"
       justifyContent="flex-end"
     >
@@ -342,16 +344,14 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       {canShowFullSecondaryMenu
         ? secondaryToolbarItems(secondaryTools)
         : secondaryToolbarOverflowMenu(secondaryTools)}
-    </ButtonGroup>
+    </ToolbarButtonGroup>
   );
 
   const currentLocationTools = (
-    <ButtonGroup
-      as={motion.div}
+    <ToolbarButtonGroup
       key="location tools"
       alignItems="center"
       px={2}
-      size="sm"
       flex="0 0 auto"
       display="flex"
       justifyContent="flex-start"
@@ -364,17 +364,15 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           title={currentPageTitle}
         />
       )}
-    </ButtonGroup>
+    </ToolbarButtonGroup>
   )
 
   const contentControls = (
-    <ButtonGroup
+    <ToolbarButtonGroup
       alignItems="center"
-      as={motion.div}
       key="content tools"
       px={1}
-      size="sm"
-      flex={`1 1 100%`}
+      flex="1 1 100%"
       display="flex"
       justifyContent="center"
     />
@@ -427,6 +425,9 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
               position: "absolute",
               inset: 0,
               bg: "background.floor",
+              transitionProperty: "background",
+              transitionTimingFunction: "ease-in-out",
+              transitionDuration: "fast",
               opacity: 0.7,
             }}
             position="absolute"

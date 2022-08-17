@@ -70,6 +70,10 @@
                               :spacing 0
                               :overflowY "auto"
                               :height "100vh"
+                              :bg "background.floor"
+                              :transitionDuration "fast"
+                              :transitionProperty "background"
+                              :transitionTimingFunction "ease-in-out"
                               :align "stretch"
                               :position "relative"}
                    [app-toolbar/app-toolbar]
@@ -81,7 +85,7 @@
                     [:> MainContent {:rightSidebarWidth @right-sidebar-width
                                      :isRightSidebarOpen @right-sidebar-open?}
                      [pages/view]]
-                    [:> RightSidebarResizeControl {:sidebarWidth @right-sidebar-width
-                                                   :isSidebarOpen @right-sidebar-open?
+                    [:> RightSidebarResizeControl {:rightSidebarWidth @right-sidebar-width
+                                                   :isRightSidebarOpen @right-sidebar-open?
                                                    :onResizeSidebar #(rf/dispatch [:right-sidebar/set-width %])}]
                     [right-sidebar/right-sidebar]]]])]]])))
