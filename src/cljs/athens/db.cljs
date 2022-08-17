@@ -313,21 +313,11 @@
       (conj :node/title :page/sidebar)))
 
 
-(def roam-node-document-pull-vector
-  '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
-
-
 (defntrace get-node-document
   [id db]
   (when (d/entity db id)
     (->> (d/pull db node-document-pull-vector id)
          sort-block-children)))
-
-
-(defntrace get-roam-node-document
-  [id db]
-  (->> (d/pull db roam-node-document-pull-vector id)
-       sort-block-children))
 
 
 (defntrace shape-parent-query
