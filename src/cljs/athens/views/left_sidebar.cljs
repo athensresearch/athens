@@ -46,10 +46,10 @@
                    :leftIcon (r/as-element [:> SearchIcon])}
         "Find or Create a Page"]
        [route-button (= route-name :home) "Daily Notes" (r/as-element [:> CalendarEditFillIcon]) (fn [_]
-                                                                                             (rf/dispatch [:reporting/navigation {:source :main-sidebar
-                                                                                                                                  :target :home
-                                                                                                                                  :pane   :main-pane}])
-                                                                                             (router/nav-daily-notes))]
+                                                                                                   (rf/dispatch [:reporting/navigation {:source :main-sidebar
+                                                                                                                                        :target :home
+                                                                                                                                        :pane   :main-pane}])
+                                                                                                   (router/nav-daily-notes))]
        [route-button (= route-name :pages) "All Pages" (r/as-element [:> AllPagesIcon]) (fn [_]
                                                                                           (rf/dispatch [:reporting/navigation {:source :main-sidebar
                                                                                                                                :target :all-pages
