@@ -36,7 +36,7 @@ const scrollToEl = (el) => {
 }
 
 export const AutocompleteButton = (props: ButtonProps) => {
-  const { children, onClick, isActive, ...buttonProps } = props;
+  const { children, isActive, ...buttonProps } = props;
   const buttonRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -85,10 +85,20 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
   })
 
   React.useEffect(() => {
-    if (isOpen) {
-      setMenuPosition(getCaretPositionFromKeyDownEvent(event))
+    const target = event?.target;
+    if (isOpen && target) {
+      const position = getCaretPositionFromKeyDownEvent(event);
+      if (position.left && position.top) {
+        setMenuPosition(position);
+      } else {
+        onClose();
+      }
     }
   }, [isOpen]);
+
+  if (!isOpen) {
+    return false;
+  }
 
   return (
     <Popover
@@ -102,14 +112,13 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
     >
       <PopoverTrigger>
         <Box
-          visibility="hidden"
           bg="red"
           position="fixed"
-          width="1px"
+          width="2px"
           height="1.5em"
           zIndex="100"
-          left={menuPosition?.left || 0 + 'px'}
-          top={menuPosition?.top || 0 + "px"}
+          left={menuPosition.left + 'px'}
+          top={menuPosition.top + "px"}
         >
         </Box>
       </PopoverTrigger>
