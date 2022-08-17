@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Text, HStack, Textarea, Button, MenuList, MenuItem } from '@chakra-ui/react'
-import { ChatFilledIcon } from '@/Icons/Icons'
+import { ChatFillIcon } from '@/Icons/Icons'
 import { useContextMenu } from '@/utils/useContextMenu';
 import { withErrorBoundary } from "react-error-boundary";
 
@@ -53,7 +53,7 @@ const formatCount = (count: number): string => {
 
 export const CommentCounter = ({ count }) => {
   return <Box display="grid" gridTemplateAreas="'main'">
-    <ChatFilledIcon gridArea="main" zIndex={0} />
+    <ChatFillIcon gridArea="main" zIndex={0} />
     <Text zIndex={1} gridArea="main" transform="translateY(5%)" color="background.basement" fontSize="xs">{formatCount(count)}</Text>
   </Box>
 }

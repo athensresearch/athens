@@ -4,13 +4,13 @@ import {
   RightSidebarIcon,
   MenuIcon,
   HelpIcon,
-  ChatFilledIcon,
+  ChatBubbleFillIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   SettingsIcon,
   ContrastIcon,
   EllipsisHorizontalCircleIcon,
-  ChatIcon,
+  ChatBubbleIcon,
 } from '@/Icons/Icons';
 
 import {
@@ -244,7 +244,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
         }
       },
-      icon: isShowComments ? <ChatFilledIcon /> : <ChatIcon />
+      icon: isShowComments ? <ChatBubbleFillIcon /> : <ChatBubbleIcon />
     },
     {
       label: "Help",

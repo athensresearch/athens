@@ -1,6 +1,6 @@
 (ns athens.views.left-sidebar
   (:require
-    ["/components/Icons/Icons" :refer [DailyNotesIcon AllPagesIcon SearchIcon GraphIcon]]
+    ["/components/Icons/Icons" :refer [CalendarEditFillIcon AllPagesIcon SearchIcon GraphIcon]]
     ["/components/Layout/MainSidebar" :refer [MainSidebar]]
     ["/components/SidebarShortcuts/List" :refer [List]]
     ["@chakra-ui/react" :refer [Button VStack Flex Heading ButtonGroup Link Flex]]
@@ -45,7 +45,7 @@
                    :justifyContent "start"
                    :leftIcon (r/as-element [:> SearchIcon])}
         "Find or Create a Page"]
-       [route-button (= route-name :home) "Daily Notes" (r/as-element [:> DailyNotesIcon]) (fn [_]
+       [route-button (= route-name :home) "Daily Notes" (r/as-element [:> CalendarEditFillIcon]) (fn [_]
                                                                                              (rf/dispatch [:reporting/navigation {:source :main-sidebar
                                                                                                                                   :target :home
                                                                                                                                   :pane   :main-pane}])
