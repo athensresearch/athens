@@ -66,24 +66,6 @@
 
 
 (rf/reg-sub
-  :right-sidebar/open
-  (fn-traced [db _]
-             (:right-sidebar/open db)))
-
-
-(rf/reg-sub
-  :right-sidebar/items
-  (fn-traced [db _]
-             (:right-sidebar/items db)))
-
-
-(rf/reg-sub
-  :right-sidebar/width
-  (fn [db _]
-    (:right-sidebar/width db)))
-
-
-(rf/reg-sub
   :mouse-down
   (fn [db _]
     (:mouse-down db)))
@@ -135,6 +117,13 @@
   :settings
   (fn [db _]
     (-> db :athens/persist :settings)))
+
+
+(rf/reg-sub
+  :feature-flags
+  :<- [:settings]
+  (fn [settings _]
+    (:feature-flags settings)))
 
 
 (rf/reg-sub

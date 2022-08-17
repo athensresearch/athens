@@ -66,8 +66,8 @@ const Row = ({ index, data, style }) => {
         </Button>
       </Td>
       <Td>{item[":block/_refs"]?.length || 0}</Td>
-      <Td>{renderDate(item[":edit/time"])}</Td>
-      <Td>{renderDate(item[":create/time"])}</Td>
+      <Td>{renderDate(item[":time/modified"])}</Td>
+      <Td>{renderDate(item[":time/created"])}</Td>
     </Tr>
   )
 };
@@ -88,8 +88,8 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
     return {
       ...row,
       onClick: (e) => onClickItem(e, row[":node/title"]),
-      ":edit/time": dateFormatFn(row[":edit/time"]),
-      ":create/time": dateFormatFn(row[":create/time"]),
+      ":time/modified": dateFormatFn(row[":time/modified"]),
+      ":time/created": dateFormatFn(row[":time/created"]),
     }
   }), [sortedPages]);
 
@@ -104,8 +104,10 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
   })
 
   return <Box
-    width="100%"
+    flex="1 1 100%"
+    alignSelf="stretch"
     height="100vh"
+    px={4}
     sx={{
       "--margin-top": "2rem",
       "--thead-height": "8rem",
@@ -116,20 +118,20 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
     <Table variant="striped"
       height="100vh"
       sx={{
-        "tr > *:nth-child(1)": {
+        "tr > *:nth-of-type(1)": {
           flex: "0 0 calc(100% - 39rem)"
         },
-        "tr > *:nth-child(2)": {
+        "tr > *:nth-of-type(2)": {
           flex: "0 0 7rem",
           color: "foreground.secondary",
           fontSize: "sm"
         },
-        "tr > *:nth-child(3)": {
+        "tr > *:nth-of-type(3)": {
           flex: "0 0 16rem",
           color: "foreground.secondary",
           fontSize: "sm"
         },
-        "tr > *:nth-child(4)": {
+        "tr > *:nth-of-type(4)": {
           flex: "0 0 16rem",
           color: "foreground.secondary",
           fontSize: "sm"

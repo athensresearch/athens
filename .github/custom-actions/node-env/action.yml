@@ -13,9 +13,9 @@ runs:
       id: restore-yarn
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+        key: ${{ runner.os }}-v1-yarn-${{ hashFiles('yarn.lock') }}
         restore-keys: |
-          ${{ runner.os }}-yarn-
+          ${{ runner.os }}-v1-yarn-
 
     - name: Fetch yarn dependencies
       run: yarn install --frozen-lockfile --network-timeout 10000000

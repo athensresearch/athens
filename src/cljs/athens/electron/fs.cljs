@@ -6,7 +6,6 @@
     [athens.db                            :as db]
     [athens.electron.utils                :as utils]
     [athens.interceptors                  :as interceptors]
-    [datascript.core                      :as d]
     [datascript.transit                   :as dt]
     [goog.functions                       :refer [debounce]]
     [re-frame.core                        :as rf]))
@@ -66,7 +65,7 @@
 (rf/reg-event-fx
   :fs/create-and-watch
   (fn [_ [_ {:keys [base-dir images-dir db-path] :as local-db}]]
-    (let [conn (d/create-conn common-db/schema)]
+    (let [conn (common-db/create-conn)]
       (doseq [[_id data] athens-datoms/welcome-events]
         (atomic-resolver/resolve-transact! conn data))
       (utils/create-dir-if-needed! base-dir)
