@@ -136,6 +136,7 @@
     "react-highlight.js": "1.0.7",
     "react-intersection-observer": "^8.32.1",
     "react-window": "^1.8.6",
+    "textarea-caret": "^3.1.0",
     "tslib": "^2.3.1"
   },
   "devDependencies": {

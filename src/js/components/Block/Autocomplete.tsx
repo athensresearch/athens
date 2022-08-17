@@ -10,16 +10,18 @@ import {
   Portal,
   ButtonProps
 } from '@chakra-ui/react';
-import getCaretCoordinates from '@/../textarea'
+import getCaretCoordinates from 'textarea-caret';
 
 const getCaretPositionFromKeyDownEvent = (event) => {
   if (event?.target) {
-    const localCaretCoordinates = getCaretCoordinates(event?.target);
+    const target = event.target;
+    const selectionStart = target.selectionStart;
+    const { left: caretLeft, top: caretTop, height: caretHeight } = getCaretCoordinates(event.target, selectionStart);
     const { x: targetLeft, y: targetTop } = event?.target.getBoundingClientRect();
     const position = {
-      left: localCaretCoordinates.left + targetLeft,
-      top: localCaretCoordinates.top + targetTop,
-      height: localCaretCoordinates.height + targetLeft,
+      left: caretLeft + targetLeft,
+      top: caretTop + targetTop,
+      height: caretHeight + targetTop,
     }
     return position;
   }
@@ -105,6 +107,7 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
       isOpen={isOpen}
       placement="bottom-start"
       isLazy
+      offset={[0, 0]}
       size="sm"
       returnFocusOnClose={false}
       closeOnBlur={false}
