@@ -1,6 +1,8 @@
 (ns athens.util
   (:require
     ["/textarea" :as getCaretCoordinates]
+    ["/theme/theme" :refer [theme]]
+    ["@chakra-ui/react" :refer [createStandaloneToast]]
     [athens.config :as config]
     [athens.electron.utils :as electron.utils]
     [clojure.string :as string]
@@ -14,12 +16,7 @@
       KeyCodes)))
 
 
-;; Electron ipcMain Channels
-
-(def ipcMainChannels
-  {:toggle-max-or-min-win-channel "toggle-max-or-min-active-win"
-   :close-win-channel "close-win"
-   :exit-fullscreen-win-channel "exit-fullscreen-win"})
+(def toast (createStandaloneToast (clj->js {:theme theme})))
 
 
 ;; embed block
@@ -182,21 +179,6 @@
   (.. event -target -value))
 
 
-;; -- Regex -----------------------------------------------------------
-
-;; https://stackoverflow.com/a/11672480
-(def regex-esc-char-map
-  (let [esc-chars "()*&^%$#![]"]
-    (zipmap esc-chars
-            (map #(str "\\" %) esc-chars))))
-
-
-(defn escape-str
-  "Take a string and escape all regex special characters in it"
-  [str]
-  (string/escape str regex-esc-char-map))
-
-
 ;; -- specter --------------------------------------------------------
 
 
@@ -217,8 +199,8 @@
   (let [os (.. js/window -navigator -appVersion)]
     (cond
       (re-find #"Windows" os) :windows
-      (re-find #"Linux" os) :linux
-      (re-find #"Mac" os) :mac)))
+      (re-find #"Mac" os) :mac
+      :else :linux)))
 
 
 (defn is-mac?
@@ -231,7 +213,8 @@
    [(case os
       :windows "os-windows"
       :mac "os-mac"
-      :linux "os-linux")
+      :linux "os-linux"
+      "os-linux")
     (if electron? "is-electron" "is-web")
     (if theme-dark? "is-theme-dark" "is-theme-light")
     (when win-focused? "is-focused")

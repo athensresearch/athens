@@ -7,10 +7,17 @@
 
 
 (def tree-with-page
-  [{:page/title     "Welcome"
-    :block/children [#:block{:uid    "block-1"
-                             :string "block with link to [[Welcome]]"
-                             :open?   false}]}])
+  [{:page/title "Welcome"
+    :block/properties
+    {"key" #:block{:uid    "prop-1"
+                   :string "value"}}
+    :block/children
+    [#:block{:uid    "block-1"
+             :string "block with link to [[Welcome]]"
+             :open?  false
+             :properties
+             {"another-key" #:block{:uid    "prop-2"
+                                    :string "another-value"}}}]}])
 
 
 (def tree-without-page
@@ -31,12 +38,18 @@
   (let [db common-db/empty-db]
     (is (= [#:op{:type :page/new, :atomic? true, :args {:page/title "Welcome"}}
             #:op{:type :block/new, :atomic? true, :args {:block/uid "block-1", :block/position {:page/title "Welcome", :relation :last}}}
-            #:op{:type :page/new, :atomic? true, :args {:page/title "Welcome"}}
             #:op{:type :block/open :atomic? true :args {:block/uid "block-1" :block/open? false}}
-            #:op{:type :block/save, :atomic? true, :args {:block/uid "block-1", :block/string "block with link to [[Welcome]]"}}]
+            #:op{:type :page/new, :atomic? true, :args {:page/title "another-key"}}
+            #:op{:type :block/new, :atomic? true, :args #:block{:uid "prop-2", :position {:block/uid "block-1", :relation #:page{:title "another-key"}}}}
+            #:op{:type :page/new, :atomic? true, :args {:page/title "key"}}
+            #:op{:type :block/new, :atomic? true, :args {:block/uid "prop-1", :block/position {:page/title "Welcome", :relation {:page/title "key"}}}}
+            #:op{:type :block/save, :atomic? true, :args {:block/uid "block-1", :block/string "block with link to [[Welcome]]"}}
+            #:op{:type :block/save, :atomic? true, :args {:block/uid "prop-2", :block/string "another-value"}}
+            #:op{:type :block/save, :atomic? true, :args {:block/uid "prop-1", :block/string "value"}}]
            (bfs/internal-representation->atomic-ops db tree-with-page nil)))
 
-    (is (= [#:op{:type :block/new, :atomic? true, :args {:block/uid "eaa4c9435", :block/position {:page/title "title", :relation :first}}}
+    (is (= [#:op{:type :page/new, :atomic? true, :args #:page{:title "title"}}
+            #:op{:type :block/new, :atomic? true, :args {:block/uid "eaa4c9435", :block/position {:page/title "title", :relation :first}}}
             #:op{:type :block/new, :atomic? true, :args {:block/uid "88c9ff662", :block/position {:block/uid "eaa4c9435", :relation :last}}}
             #:op{:type :block/new, :atomic? true, :args {:block/uid "7d11d532f", :block/position {:block/uid "88c9ff662", :relation :after}}}
             #:op{:type :block/open :atomic? true :args {:block/uid "7d11d532f" :block/open? false}}
@@ -50,12 +63,23 @@
 
 (deftest get-internal-representation
   (let [db (-> common-db/empty-db
-               (d/db-with [{:node/title     "Welcome"
-                            :page/sidebar   0
-                            :block/children [#:block{:uid    "block-1"
-                                                     :string "block with link to [[Welcome]]"
-                                                     :open   false
-                                                     :order  0}]}
+               (d/db-with [{:node/title "key"}
+                           {:node/title "another-key"}
+                           {:node/title   "Welcome"
+                            :page/sidebar 0
+                            :block/_property-of
+                            [#:block{:uid    "prop-1"
+                                     :string "value"
+                                     :key    [:node/title "key"]}]
+                            :block/children
+                            [#:block{:uid    "block-1"
+                                     :string "block with link to [[Welcome]]"
+                                     :open   false
+                                     :order  0
+                                     :_property-of
+                                     [#:block{:uid    "prop-2"
+                                              :string "another-value"
+                                              :key    [:node/title "another-key"]}]}]}
                            {:block/uid    "eaa4c9435",
                             :block/string "block 1",
                             :block/open   true,

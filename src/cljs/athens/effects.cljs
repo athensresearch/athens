@@ -12,13 +12,11 @@
     [cljs.core.async             :refer [go <!]]
     [cljs.core.async.interop     :refer [<p!]]
     [com.stuartsierra.component  :as component]
-    [datascript.core             :as d]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection          :refer [setCursorPosition]]
     [malli.core                  :as m]
     [malli.error                 :as me]
-    [re-frame.core               :as rf]
-    [stylefy.core                :as stylefy]))
+    [re-frame.core               :as rf]))
 
 
 ;; Effects
@@ -40,7 +38,7 @@
     ;; the watchers from processing a massive tx-report.
     (reactive/unwatch!)
     (wrap-span-no-new-tx "ds/reset-conn"
-                         (d/reset-conn! db/dsdb new-db))
+                         (common-db/reset-conn! db/dsdb new-db))
     (when-not skip-health-check?
       (wrap-span-no-new-tx "db/health-check"
                            (common-db/health-check db/dsdb)))
@@ -134,12 +132,6 @@
 
 
 (rf/reg-fx
-  :stylefy/tag
-  (fn [[tag properties]]
-    (stylefy/tag tag properties)))
-
-
-(rf/reg-fx
   :alert/js!
   (fn [message]
     (js/alert message)))
@@ -217,7 +209,10 @@
       ;; valid event let's send it
       (do
         (log/debug "Sending event:" (pr-str event))
-        (client/send! event))
+        (let [ret (client/send! event)]
+          (when (= :rejected (:result ret))
+            (rf/dispatch [:remote/reject-forwarded-event event])
+            (log/warn "Tried to send invalid event. Error:" (pr-str (:reason ret))))))
       (let [explanation (-> schema/event
                             (m/explain event)
                             (me/humanize))]

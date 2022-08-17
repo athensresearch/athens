@@ -2,7 +2,6 @@
   (:require
     [athens.electron.utils :as electron.utils]
     [athens.style :refer [zoom-level-min zoom-level-max]]
-    [athens.util :as util]
     [re-frame.core :as rf]))
 
 
@@ -33,14 +32,14 @@
 (rf/reg-event-fx
   :toggle-max-min-win
   (fn [_ [_ toggle-min?]]
-    {:invoke-win! {:channel (:toggle-max-or-min-win-channel util/ipcMainChannels)
+    {:invoke-win! {:channel (:toggle-max-or-min-win-channel electron.utils/ipcMainChannels)
                    :arg (clj->js toggle-min?)}}))
 
 
 (rf/reg-event-fx
   :minimize-win
   (fn [_ _]
-    {:invoke-win! {:channel (:toggle-max-or-min-win-channel util/ipcMainChannels)
+    {:invoke-win! {:channel (:toggle-max-or-min-win-channel electron.utils/ipcMainChannels)
                    :arg (clj->js true)}}))
 
 
@@ -53,13 +52,13 @@
 (rf/reg-event-fx
   :exit-fullscreen-win
   (fn [_ _]
-    {:invoke-win! {:channel (:exit-fullscreen-win-channel util/ipcMainChannels)}}))
+    {:invoke-win! {:channel (:exit-fullscreen-win-channel electron.utils/ipcMainChannels)}}))
 
 
 (rf/reg-event-fx
   :close-win
   (fn [_ _]
-    {:invoke-win! {:channel (:close-win-channel util/ipcMainChannels)}}))
+    {:invoke-win! {:channel (:close-win-channel electron.utils/ipcMainChannels)}}))
 
 
 (rf/reg-event-db

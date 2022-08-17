@@ -8,7 +8,9 @@
     [athens.self-hosted.web.presence   :as presence]
     [com.stuartsierra.component        :as component]
     [compojure.core                    :as compojure]
-    [org.httpkit.server                :as http]))
+    [org.httpkit.server                :as http]
+    [ring.middleware.resource          :as ring.resource]
+    [ring.util.response                :as ring.response]))
 
 
 ;; WebSocket handlers
@@ -24,14 +26,25 @@
 
 (defn- valid-event-handler
   "Processes valid event received from the client."
-  [datascript fluree config channel username {:event/keys [id type] :as data}]
-  (if (and (false? username)
-           (not= :presence/hello type))
+  [datascript fluree config channel username {:event/keys [id type presence-id] :as data}]
+  (cond
+    (and (false? username)
+         (not= :presence/hello type))
     (do
       (log/warn "Message out of order, didn't say :presence/hello.")
-      (clients/send! channel (common-events/build-event-rejected id
-                                                                 :introduce-yourself
-                                                                 {:protocol-error :client-not-introduced})))
+      (common-events/build-event-rejected id
+                                          :introduce-yourself
+                                          {:protocol-error :client-not-introduced}))
+
+    (and presence-id (not= presence-id username))
+    (do
+      (log/warn "Message presence-id didn't match username")
+      (common-events/build-event-rejected id
+                                          :presence-id-mismatch
+                                          {:presence-id presence-id
+                                           :username    username}))
+
+    :else
     (if-let [result (cond
                       (contains? presence/supported-event-types type)
                       (presence/presence-handler (:conn datascript) (-> config :config :password) channel data)
@@ -59,13 +72,28 @@
   (fn receive-handler
     [channel msg]
     (let [username (clients/get-client-username channel)
-          data     (clients/<-transit msg)]
-      (if-not (schema/valid-event? data)
+          data     (common-events/deserialize msg)
+          errors   (common-events/validate-serialized-event msg)]
+      (cond
+        ;; TODO: we should be able to validate the serialized event without deserializing it, but
+        ;; we also need to build a rejected event to pass back to the client, and to do that we need
+        ;; the :event/id, which we only get after deserializing the event.
+        ;; I think this means that we should separate the :event/id from the payload itself.
+        errors
+        (do
+          (log/warn "username:" username "Invalid serialized event received, errors:" errors)
+          (clients/send! channel (common-events/build-event-rejected (:event/id data)
+                                                                     (str "Invalid serialized event")
+                                                                     errors)))
+
+        (not (schema/valid-event? data))
         (let [explanation (schema/explain-event data)]
           (log/warn "username:" username "Invalid event received, explanation:" explanation)
           (clients/send! channel (common-events/build-event-rejected (:event/id data)
                                                                      (str "Invalid event: " (pr-str data))
                                                                      explanation)))
+
+        :else
         (let [{:event/keys [id type]} data]
           (log/info "Received valid event" "username:" username ", event-id:" id ", type:" (common-events/find-event-or-atomic-op-type data))
           (let [{:event/keys [status]
@@ -103,9 +131,15 @@
                                                         :body "ok"}))
 
 
+(compojure/defroutes web-client
+                     (-> (compojure/GET "/" [] (ring.response/resource-response "public/index.html"))
+                         (ring.resource/wrap-resource "public")))
+
+
 (defn make-handler
   [datascript fluree config]
-  (compojure/routes health-check-route
+  (compojure/routes web-client
+                    health-check-route
                     (make-ws-route datascript fluree config)))
 
 

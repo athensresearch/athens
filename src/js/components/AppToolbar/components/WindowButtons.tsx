@@ -1,142 +1,133 @@
-import styled from 'styled-components';
-import { classnames } from '@/utils/classnames';
-import { SvgIcon } from '@material-ui/core';
+import { Box, Icon } from '@chakra-ui/react';
 
-const Wrapper = styled.div`
-  display: flex;
-  margin-left: 1rem;
-  align-self: stretch;
-  align-items: stretch;
-  color: inherit;
+const Wrapper = ({ children }) => <Box
+  display="flex"
+  marginLeft="1rem"
+  alignSelf="stretch"
+  alignItems="stretch"
+  color="inherit"
+  sx={{
 
-  &.os-windows {
-    button {
-      border-radius: 0;
-      width: 48px;
-      min-height: 32px;
-      display: flex;
-      align-items: center;
-      color: var(--body-text-color---opacity-med);
-      background: var(--background-minus-1);
-      transition: ackground 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out;
-      justify-content: center;
-      border: 0;
+    "button": {
+      appearance: 'none',
+    },
 
-      svg {
-        path, line, rect {
-          fill: none;
-          stroke-width: 2px;
-          stroke: currentColor;
+    ".os-windows &": {
+
+      "button": {
+        borderRadius: 0,
+        width: "48px",
+        minHeight: "32px",
+        display: "flex",
+        alignItems: "center",
+        color: "foreground.secondary",
+        background: "background.floor",
+        transition: "background 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out",
+        justifyContent: "center",
+        border: 0,
+
+        "path, line, rect": {
+          fill: "none",
+          strokeWidth: "2px",
+          stroke: "currentColor",
+        },
+
+        "&:hover, &:focus, &:focus-visible": {
+          outline: "none",
+          background: "background.upper",
+        },
+
+        "&.close:hover, &:focus, &.close:focus-visible": {
+          background: "#e81123",
+          filter: "none",
+          color: "#fff",
         }
+      },
+
+      "svg": {
+        fontSize: "16px",
       }
+    },
 
-      &:hover {
-        backdrop-filter: brightness(92%);
+    ".os-linux &": {
+      display: "grid",
+      padding: "4px",
+      paddingRight: "8px",
+      gridAutoFlow: "column",
+      gridGap: "4px",
 
-        .is-theme-dark & {
-          backdrop-filter: brightness(150%);
+      "svg": {
+        "path, line, rect": {
+          fill: "none",
+          strokeWidth: "2px",
+          stroke: "currentColor",
         }
-      }
+      },
 
-      &.close:hover {
-        background: #e81123;
-        filter: none;
-        color: #fff;
+      "button": {
+        position: "relative",
+        margin: "auto",
+        width: "32px",
+        height: "32px",
+        display: "flex",
+        alignItems: "center",
+        background: "transparent",
+        color: "foreground.secondary",
+        transition: "background 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out",
+        justifyContent: "center",
+        border: 0,
+
+        "&:hover, &:focus, &:focus-visible": {
+          outline: "none",
+        },
+
+        "&:before": {
+          content: "''",
+          position: "absolute",
+          borderRadius: "full",
+          zIndex: 0,
+          background: "background.upper",
+          inset: "6px",
+        },
+
+        "&:hover:before, &:focus-visible:before, &:focus:before": {
+          background: "background.attic"
+        },
+
+        "svg": {
+          zIndex: 1,
+          fontSize: "12px",
+        },
+
+        "&.close": {
+          color: "#fff",
+
+          "&:before": {
+            background: "#555",
+          }
+        },
+        "&.minimize": {
+          "svg": {
+            position: "relative",
+            top: "5px",
+          }
+        },
+      },
+
+      ".is-win-focused &": {
+        ".close:before": {
+          background: "#e9541f",
+        },
       }
     }
-
-    svg {
-      font-size: 16px;
-    }
-  }
-
-  &.os-linux {
-    display: grid;
-    padding: 4px;
-    padding-right: 8px;
-    grid-auto-flow: column;
-    grid-gap: 4px;
-
-    svg {
-        path, line, rect {
-          fill: none;
-          stroke-width: 2px;
-          stroke: currentColor;
-        }
-      }
-
-    button {
-      position: relative;
-      margin: auto;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      background: transparent;
-      color: var(--body-text-color---opacity-med);
-      transition: ackground 0.075s ease-in-out, filter 0.075s ease-in-out, color 0.075s ease-in-out;
-      justify-content: center;
-      border: 0;
-
-      &:before {
-        content: '';
-        position: absolute;
-        border-radius: 1000em;
-        z-index: 0;
-        background: var(--background-plus-1);
-        inset: 6px;
-      }
-
-      svg {
-        z-index: 1;
-      }
-
-      &.close {
-        color: #fff;
-
-        &:before {
-          background: #555;
-        }
-      }
-      &.minimize {
-        svg {
-          position: relative;
-          top: 5px;
-        }
-      }
-
-      svg {
-        font-size: 12px;
-      }
-
-      .is-theme-light & {
-        button:hover:before {
-          backdrop-filter: brightness(92%);
-        }
-      }
-      .is-theme-dark & {
-        button:hover:before {
-          backdrop-filter: brightness(150%);
-        }
-      }
-    }
-
-    .is-win-focused & {
-      .close:before {
-        background: #e9541f;
-      };
-    }
-  }
-
-`;
+  }}
+>{children}</Box>;
 
 export interface WindowButtonsProps {
-
-  handlePressMinimize(): void;
+  handlePressMinimize(): void,
 }
 
 export const WindowButtons = ({
-  os,
   isWinFocused,
   isWinFullscreen,
   isWinMaximized,
@@ -144,23 +135,16 @@ export const WindowButtons = ({
   handlePressMaximizeRestore,
   handlePressClose
 }) => {
-  return (<Wrapper
-    className={classnames(
-      "os-" + os,
-      isWinFocused && "is-win-focused",
-      isWinFullscreen && "is-win-fullscreen",
-      isWinMaximized && "is-win-maximized",
-    )}
-  >
+  return (<Wrapper>
     {/* Minimize button */}
     <button
       title="Minimize"
       onClick={handlePressMinimize}
       className="minimize"
     >
-      <SvgIcon>
+      <Icon>
         <line x1={4} y1={11} x2={20} y2={11} />
-      </SvgIcon>
+      </Icon>
     </button>
     {isWinFullscreen ? (
       <button
@@ -168,10 +152,10 @@ export const WindowButtons = ({
         onClick={handlePressMinimize}
         className="minimize"
       >
-        <SvgIcon>
+        <Icon>
           <path d="M11 13L5 19M11 13V19M11 13H5" />
           <path d="M13 11L19.5 4.5M13 11L13 5M13 11L19 11" />
-        </SvgIcon>
+        </Icon>
       </button>
     ) : (
       <button
@@ -180,14 +164,14 @@ export const WindowButtons = ({
         className="maximize-restore"
       >
         {isWinMaximized ? (
-          <SvgIcon>
+          <Icon>
             <path d="M11 13L5 19M11 13V19M11 13H5" />
             <path d="M13 11L19.5 4.5M13 11L13 5M13 11L19 11" />
-          </SvgIcon>
+          </Icon>
         ) : (
-          <SvgIcon>
+          <Icon>
             <rect height={14} width={14} x={5} y={5} />
-          </SvgIcon>
+          </Icon>
 
         )}
       </button>
@@ -197,9 +181,9 @@ export const WindowButtons = ({
       onClick={handlePressClose}
       className="close"
     >
-      <SvgIcon>
+      <Icon>
         <path d="M4 4L19 19M19 4L4 19" />
-      </SvgIcon>
+      </Icon>
     </button>
   </Wrapper>)
 }

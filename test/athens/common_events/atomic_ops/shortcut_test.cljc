@@ -3,9 +3,7 @@
     [athens.common-db                     :as common-db]
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
-    [athens.common-events.resolver.atomic :as atomic-resolver]
-    [clojure.test                         :as t]
-    [datascript.core                      :as d]))
+    [clojure.test                         :as t]))
 
 
 (t/use-fixtures :each (partial fixture/integration-test-fixture []))
@@ -15,8 +13,7 @@
   (let [setup-tx [{:block/uid  "parent-uid"
                    :node/title "Hello World!"}]
         add! #(->> (atomic-graph-ops/make-shortcut-new-op "Hello World!")
-                   (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
-                   (d/transact! @fixture/connection))]
+                   fixture/op-resolve-transact!)]
 
 
     ;; setup
@@ -33,8 +30,7 @@
                      :node/title   "Hello World!"
                      :page/sidebar 0}]
           remove!  #(->> (atomic-graph-ops/make-shortcut-remove-op "Hello World!")
-                         (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
-                         (d/transact! @fixture/connection))]
+                         fixture/op-resolve-transact!)]
       ;; setup
       (fixture/transact-with-middleware setup-tx)
       (t/is (= 1 (common-db/get-sidebar-count @@fixture/connection)))
@@ -53,8 +49,7 @@
                      :node/title   "page 3"
                      :page/sidebar 2}]
           remove!  #(->> (atomic-graph-ops/make-shortcut-remove-op "page 2")
-                         (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
-                         (d/transact! @fixture/connection))]
+                         fixture/op-resolve-transact!)]
       ;; setup
       (fixture/transact-with-middleware setup-tx)
       (t/is (= 3 (common-db/get-sidebar-count @@fixture/connection)))
@@ -94,11 +89,9 @@
                    :node/title   "page 3"
                    :page/sidebar 2}]
         move-1!  #(->> (atomic-graph-ops/make-shortcut-move-op "page 3" {:page/title "page 1" :relation :before})
-                       (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
-                       (d/transact! @fixture/connection))
+                       fixture/op-resolve-transact!)
         move-2!  #(->> (atomic-graph-ops/make-shortcut-move-op "page 3" {:page/title "page 2" :relation :before})
-                       (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
-                       (d/transact! @fixture/connection))]
+                       fixture/op-resolve-transact!)]
     ;; setup
     (fixture/transact-with-middleware setup-tx)
     (t/is (= 3 (common-db/get-sidebar-count @@fixture/connection)))
@@ -145,11 +138,9 @@
                    :node/title   "page 3"
                    :page/sidebar 2}]
         test-1! #(->> (atomic-graph-ops/make-shortcut-move-op "page 3" {:page/title "page 2" :relation   :before})
-                      (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
-                      (d/transact! @fixture/connection))
+                      fixture/op-resolve-transact!)
         test-2! #(->> (atomic-graph-ops/make-shortcut-move-op "page 1" {:page/title "page 2" :relation   :after})
-                      (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection)
-                      (d/transact! @fixture/connection))]
+                      fixture/op-resolve-transact!)]
     ;; setup
     (fixture/transact-with-middleware setup-tx)
     (t/is (= 3 (common-db/get-sidebar-count @@fixture/connection)))
@@ -201,20 +192,18 @@
     (t/is (= 0
              (-> (common-db/get-sidebar-elements @@fixture/connection)
                  (count))))
-    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                              (atomic-graph-ops/make-shortcut-new-op "page 1")))
-    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                              (atomic-graph-ops/make-shortcut-new-op "page 2")))
-    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                              (atomic-graph-ops/make-shortcut-new-op "page 3")))
+    (-> (atomic-graph-ops/make-shortcut-new-op "page 1") fixture/op-resolve-transact!)
+    (-> (atomic-graph-ops/make-shortcut-new-op "page 2") fixture/op-resolve-transact!)
+    (-> (atomic-graph-ops/make-shortcut-new-op "page 3") fixture/op-resolve-transact!)
+
     (t/is (= 3
              (-> (common-db/get-sidebar-elements @@fixture/connection)
                  (count))))
 
-    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                              (atomic-graph-ops/make-shortcut-move-op "page 3"
-                                                                                                                      {:page/title "page 1"
-                                                                                                                       :relation :after})))
+    (-> (atomic-graph-ops/make-shortcut-move-op "page 3"
+                                                {:page/title "page 1"
+                                                 :relation :after})
+        fixture/op-resolve-transact!)
 
     (let [page-1-loc  (common-db/find-order-from-title @@fixture/connection "page 1")
           page-2-loc  (common-db/find-order-from-title @@fixture/connection "page 2")
@@ -225,10 +214,11 @@
 
 
     ;; Test 2
-    (d/transact! @fixture/connection (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                              (atomic-graph-ops/make-shortcut-move-op "page 1"
-                                                                                                                      {:page/title "page 2"
-                                                                                                                       :relation :after})))
+    (-> (atomic-graph-ops/make-shortcut-move-op "page 1"
+                                                {:page/title "page 2"
+                                                 :relation :after})
+        fixture/op-resolve-transact!)
+
     (let [page-1-loc  (common-db/find-order-from-title @@fixture/connection "page 1")
           page-2-loc  (common-db/find-order-from-title @@fixture/connection "page 2")
           page-3-loc  (common-db/find-order-from-title @@fixture/connection "page 3")]

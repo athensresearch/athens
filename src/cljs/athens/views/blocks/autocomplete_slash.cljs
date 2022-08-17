@@ -1,48 +1,41 @@
 (ns athens.views.blocks.autocomplete-slash
   (:require
-    ["/components/Button/Button" :refer [Button]]
+    ["/components/Block/Autocomplete" :refer [Autocomplete AutocompleteButton]]
+    [athens.events.inline-search :as inline-search.events]
+    [athens.subs.inline-search :as inline-search.subs]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [athens.views.dropdown :as dropdown]
-    [goog.events :as events]
+    [re-frame.core :as rf]
     [reagent.core :as r]
-    [stylefy.core :as stylefy]))
+    [reagent.ratom :as ratom]))
 
 
 (defn slash-item-click
-  [state block item]
-  (let [id        (str "#editable-uid-" (:block/uid block))
+  [block item]
+  (let [block-uid (:block/uid block)
+        id        (str "#editable-uid-" block-uid)
         target    (.. js/document (querySelector id))]
-    (textarea-keydown/auto-complete-slash state target item)))
+    (textarea-keydown/auto-complete-slash block-uid target item)))
 
 
 (defn slash-menu-el
-  [_block state]
-  (let [ref (atom nil)
-        handle-click-outside (fn [e]
-                               (let [{:search/keys [type]} @state]
-                                 (when (and (= type :slash)
-                                            (not (.. @ref (contains (.. e -target)))))
-                                   (swap! state assoc :search/type false))))]
-    (r/create-class
-      {:display-name           "slash-menu"
-       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
-       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn [block state]
-                                 (let [{:search/keys [index results type] caret-position :caret-position} @state
-                                       {:keys [left top]} caret-position]
-                                   (when (= type :slash)
-                                     [:div (merge (stylefy/use-style dropdown/dropdown-style
-                                                                     {:ref           #(reset! ref %)
-                                                                      ;; don't blur textarea when clicking to auto-complete
-                                                                      :on-mouse-down (fn [e] (.. e preventDefault))})
-                                                  {:style {:position "absolute" :left (+ left 24) :top (+ top 24)}})
-                                      [:div#dropdown-menu (merge (stylefy/use-style dropdown/menu-style) {:style {:max-height "8em"}})
-                                       (doall
-                                         (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list results)]
-                                           [:> Button {:key      text
-                                                       :id       (str "dropdown-item-" i)
-                                                       :is-pressed (= i index)
-                                                       :on-click (fn [_] (slash-item-click state block item))}
-                                            [:<> [(r/adapt-react-class icon)] [:span text] (when kbd [:kbd kbd])]]))]])))})))
-
-
+  [block last-event]
+  (let [block-uid             (:block/uid block)
+        inline-search-type    (rf/subscribe [::inline-search.subs/type block-uid])
+        inline-search-index   (rf/subscribe [::inline-search.subs/index block-uid])
+        inline-search-results (rf/subscribe [::inline-search.subs/results block-uid])
+        open?                 (ratom/reaction (= @inline-search-type :slash))]
+    (fn [block _last-event _state]
+      [:> Autocomplete {:event   @last-event
+                        :isOpen  @open?
+                        :onClose #(rf/dispatch [::inline-search.events/close! block-uid])}
+       (when @open?
+         (doall
+           (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list @inline-search-results)]
+             [:> AutocompleteButton {:key      text
+                                     :id       (str "dropdown-item-" i)
+                                     :command  kbd
+                                     :isActive (when (= i @inline-search-index) "isActive")
+                                     :onClick  (fn [_] (slash-item-click block item))}
+              [:<>
+               [(r/adapt-react-class icon) {:boxSize 6 :mr 3 :ml 0}]
+               text]])))])))

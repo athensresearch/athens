@@ -1,82 +1,66 @@
 import React from 'react';
-import styled from 'styled-components';
-import { BubbleChart, ChevronLeft, ChevronRight, FileCopy, Help, Menu as MenuIcon, MergeType, Search, Settings, Storage, Today, ToggleOff, ToggleOn, VerticalSplit } from '@material-ui/icons';
 
-import { Button } from '@/Button';
+import {
+  RightSidebarIcon,
+  MenuIcon,
+  HelpIcon,
+  ChatFilledIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  SettingsIcon,
+  ContrastIcon,
+  EllipsisHorizontalCircleIcon,
+  ChatIcon,
+} from '@/Icons/Icons';
+
+import {
+  HTMLChakraProps,
+  Portal,
+  ThemingProps,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Tooltip,
+  Box,
+  Flex,
+  Spacer,
+  ButtonOptions,
+  IconButton,
+  ButtonGroup,
+  useColorMode,
+  useMediaQuery
+} from '@chakra-ui/react';
+
+import { AnimatePresence, motion } from 'framer-motion';
+import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "@/Layout/useLayoutState";
+import { FakeTrafficLights } from './components/FakeTrafficLights';
 import { WindowButtons } from './components/WindowButtons';
+import { LocationIndicator } from './components/LocationIndicator';
+interface ToolbarIconButtonProps extends ButtonOptions, HTMLChakraProps<'button'>, ThemingProps<"Button"> {
+  children: React.ReactChild;
+}
 
-const AppToolbarWrapper = styled.header`
-  background: var(--color-background);
-  grid-area: app-header;
-  justify-content: flex-start;
-  background-clip: padding-box;
-  background: var(--background-plus-1);
-  color: var(--body-text-color---opacity-high);
-  border-bottom: 1px solid transparent;
-  align-items: center;
-  display: grid;
-  height: 48px;
-  padding-left: 10px;
-  grid-template-columns: auto 1fr auto;
-  transition: border-color 1s ease;
-  z-index: var(--zindex-sticky);
-  grid-auto-flow: column;
-  -webkit-app-region: drag;
+const PAGE_TITLE_SHOW_HEIGHT = 24;
 
-  .is-fullscreen & {
-    height: 44px;
-  }
-
-  svg {
-    font-size: 20px;
-  }
-
-  &:hover {
-    transition: border-color 0.15s ease;
-    border-bottom-color: var(--body-text-color---opacity-lower);
-  }
-
-  button {
-    justify-self: flex-start;
-    -webkit-app-region: no-drag;
-  }
-
-  .os-windows & {
-    background: var(--background-minus-1);
-    padding-left: 10px;
-  }
-
-  .os-mac & {
-    background: var(--background-color---opacity-high);
-    color: var(--body-text-color---opacity-med);
-    padding-left: 88px;
-    padding-right: 22px;
-    height: 52px;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-    backdrop-filter: blur(20px);
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-
-    .is-fullscreen & {
-      padding-left: 22px;
+const toolbarIconButtonStyle = {
+  variant: "ghost",
+  colorScheme: "subtle",
+  sx: {
+    "svg": {
+      fontSize: "1.5em"
     }
   }
-`;
+}
 
-const AthenaButton = styled(Button)`
-  ${Button.Wrap} {
-    gap: 0;
-    
-    svg {
-      margin-right: 0;
-    }
-  }
-`;
+const ToolbarIconButton = React.forwardRef((props: ToolbarIconButtonProps, ref) => {
+  const { children } = props;
+  return <IconButton ref={ref as any} {...toolbarIconButtonStyle
+  } {...props}>{children}</IconButton>
+});
 
-export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, DatabaseMenuProps, PresenceDetailsProps {
+
+export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
   * The application's current route
   */
@@ -114,10 +98,6 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   */
   isCommandBarOpen: boolean;
   /**
-  * Whether the merge from roam dialog is open
-  */
-  isMergeDialogOpen: boolean;
-  /**
   * Whether the choose database dialog is open
   */
   isDatabaseDialogOpen: boolean;
@@ -129,6 +109,11 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   * Whether the theme is set to dark mode
   */
   isThemeDark: boolean;
+  /**
+  * Whether comments should be shown
+  */
+  isShowComments: boolean;
+  currentPageTitle?: string;
   // Electron only
   onPressMinimize?(): void;
   onPressClose?(): void;
@@ -136,6 +121,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   onPressFullscreen?(): void;
   onPressHistoryBack(): void;
   onPressHistoryForward(): void;
+  onClickComments(): void;
   // Main toolbar
   onPressCommandBar(): void;
   onPressDailyNotes(): void;
@@ -143,14 +129,46 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement>, D
   onPressGraph(): void;
   onPressHelp(): void;
   onPressThemeToggle(): void;
-  onPressMerge(): void;
   onPressSettings(): void;
   onPressHistoryBack(): void;
   onPressHistoryForward(): void;
   onPressLeftSidebarToggle(): void;
   onPressRightSidebarToggle(): void;
+  onPressNotification(): void;
   databaseMenu?: React.FC;
+  notificationPopover?: React.FC;
   presenceDetails?: React.FC;
+}
+
+const secondaryToolbarItems = (items) => {
+  return <ButtonGroup size="sm">
+    {items.filter(x => !!x).map((item) => <Tooltip closeOnMouseDown label={item.label} key={item.label}>
+      <ToolbarIconButton variant="ghost" colorScheme="subtle" key={item.label} aria-label={item.label} isActive={item.isActive} onClick={item.onClick}>
+        {item.icon}
+      </ToolbarIconButton>
+    </Tooltip>)}
+  </ButtonGroup>
+}
+
+const secondaryToolbarOverflowMenu = (items) => {
+  return <Menu>
+    {({ isOpen }) => <>
+      <ToolbarIconButton size="sm" as={MenuButton} isActive={isOpen}><EllipsisHorizontalCircleIcon /></ToolbarIconButton>
+      <Portal>
+        <MenuList>
+          {items.filter(x => !!x).map((item) => (<MenuItem
+            key={item.label}
+            onClick={item.onClick}
+            icon={item.icon}
+          >
+            {item.label}
+          </MenuItem>
+          ))}
+        </MenuList>
+      </Portal>
+    </>
+    }
+  </Menu>
 }
 
 export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
@@ -164,16 +182,10 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isHelpOpen,
     isThemeDark,
     isLeftSidebarOpen,
-    isRightSidebarOpen,
-    isCommandBarOpen,
-    isMergeDialogOpen,
-    onPressCommandBar: handlePressCommandBar,
-    onPressDailyNotes: handlePressDailyNotes,
-    onPressAllPages: handlePressAllPages,
-    onPressGraph: handlePressGraph,
+    isShowComments,
+    onClickComments: handleClickComments,
     onPressHelp: handlePressHelp,
     onPressThemeToggle: handlePressThemeToggle,
-    onPressMerge: handlePressMerge,
     onPressSettings: handlePressSettings,
     onPressHistoryBack: handlePressHistoryBack,
     onPressHistoryForward: handlePressHistoryForward,
@@ -183,81 +195,265 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressMaximizeRestore: handlePressMaximizeRestore,
     onPressClose: handlePressClose,
     databaseMenu,
+    notificationPopover,
+    currentPageTitle,
     presenceDetails,
-    ...rest
   } = props;
+  const { colorMode, toggleColorMode } = useColorMode();
+  const [canShowFullSecondaryMenu] = useMediaQuery('(min-width: 900px)');
+  const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState(null);
 
-  return (<AppToolbarWrapper {...rest}>
-    <AppToolbar.MainControls>
-      {databaseMenu}
-      <Button
-        onClick={handlePressLeftSidebarToggle}
-        isPressed={isLeftSidebarOpen}
-      >
-        <MenuIcon />
-      </Button>
-      {isElectron && (
-        <>
-          <AppToolbar.Separator />
-          <Button onClick={handlePressHistoryBack}><ChevronLeft /></Button>
-          <Button onClick={handlePressHistoryForward}><ChevronRight /></Button>
-        </>)
+  // add event listener to detect when the user scrolls past the title
+  React.useLayoutEffect(() => {
+    const scrollContainer = document.getElementById("main-layout") as HTMLElement;
+
+    const handleScroll = () => {
+      if (scrollContainer.scrollTop > PAGE_TITLE_SHOW_HEIGHT) {
+        setIsScrolledPastTitle(true);
+      } else {
+        setIsScrolledPastTitle(false);
       }
-      <Button isPressed={route === '/daily-notes'} onClick={handlePressDailyNotes}><Today /></Button>
-      <Button isPressed={route === '/all-pages'} onClick={handlePressAllPages}><FileCopy /></Button>
-      <Button isPressed={route === '/graph'} onClick={handlePressGraph}><BubbleChart /></Button>
-      <AthenaButton isPressed={isCommandBarOpen} onClick={handlePressCommandBar}><Search /> <span>Find or create a page</span></AthenaButton>
-    </AppToolbar.MainControls>
-    <AppToolbar.SecondaryControls>
-      {presenceDetails}
-      <Button isPressed={isMergeDialogOpen} onClick={handlePressMerge}><MergeType /></Button>
-      <Button isPressed={route === '/settings'} onClick={handlePressSettings}><Settings /></Button>
-      <Button
-        onClick={handlePressThemeToggle}>
-        {isThemeDark ? <ToggleOff /> : <ToggleOn />}
-      </Button>
-      <Button isPressed={isHelpOpen} onClick={handlePressHelp}><Help /></Button>
-      <AppToolbar.Separator />
-      <Button
-        isPressed={isRightSidebarOpen}
-        onClick={handlePressRightSidebarToggle}
+    }
+    handleScroll();
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // If the database color mode doesn't match
+  // the chakra color mode, update the chakra color mode
+  React.useEffect(() => {
+    if (isThemeDark && colorMode !== 'dark') {
+      toggleColorMode()
+    } else if (!isThemeDark && colorMode !== 'light') {
+      toggleColorMode()
+    }
+  }, [isThemeDark, toggleColorMode]);
+
+  const {
+    toolbarRef,
+    toolbarHeight,
+    mainSidebarWidth
+  } = React.useContext(LayoutContext);
+
+  const secondaryTools = [
+    handleClickComments && {
+      label: isShowComments ? "Hide comments" : "Show comments",
+      onClick: handleClickComments,
+      icon: isShowComments ? <ChatFilledIcon /> : <ChatIcon />
+    },
+    {
+      label: "Help",
+      onClick: handlePressHelp,
+      icon: <HelpIcon />
+    },
+    {
+      label: "Toggle theme",
+      onClick: handlePressThemeToggle,
+      icon: <ContrastIcon />
+    },
+    {
+      label: "Settings",
+      isActive: route === '/settings',
+      onClick: handlePressSettings,
+      icon: <SettingsIcon />
+    },
+    {
+      label: 'Show right sidebar',
+      onClick: handlePressRightSidebarToggle,
+      icon: <RightSidebarIcon />
+    }
+  ];
+
+
+  const leftSidebarControls = (
+    <>
+      <Flex
+        as={motion.div}
+        key="leftSidebar tools"
+        {...layoutAnimationProps(isLeftSidebarOpen ? mainSidebarWidth + "px" : "auto")}
+        justifyContent="space-between"
+        flexShrink={0}
       >
-        <VerticalSplit />
-      </Button>
-    </AppToolbar.SecondaryControls>
-    {isElectron && (os === 'windows' || os === 'linux') && (
-      <WindowButtons
-        os={os}
-        isWinMaximized={isWinMaximized}
-        isWinFullscreen={isWinFullscreen}
-        isWinFocused={isWinFocused}
-        handlePressMinimize={handlePressMinimize}
-        handlePressMaximizeRestore={handlePressMaximizeRestore}
-        handlePressClose={handlePressClose}
-      />)}
-  </AppToolbarWrapper>);
-};
 
-AppToolbar.Separator = styled.hr`
-  border: 0;
-  margin-inline: 0.125rem;
-  margin-block: 0;
-  block-size: auto;
-`;
+        {/* Left side */}
+        <ButtonGroup
+          size="sm"
+          pr={3}
+          pl={4}
+          alignItems="center"
+          justifyContent="flex-start"
+        >
 
-AppToolbar.MainControls = styled.div`
-  display: grid;
-  grid-auto-flow: column;
-  grid-gap: 0.25rem;
-  align-items: center;
-`;
+          {isElectron && os === "mac" && (
+            <FakeTrafficLights opacity={isWinFocused ? 1 : 0} />
+          )}
 
-AppToolbar.SecondaryControls = styled(AppToolbar.MainControls)`
-  justify-self: flex-end;
-  margin-left: auto;
+          <ToolbarIconButton
+            aria-label="Show navigation"
+            onClick={handlePressLeftSidebarToggle}
+          >
+            <MenuIcon />
+          </ToolbarIconButton>
+          {databaseMenu}
+        </ButtonGroup>
+        {/* Right side */}
+        {isElectron && (
+          <ButtonGroup isAttached
+            alignItems="center"
+            justifyContent="flex-end"
+            pr={3}
+            size="sm">
+            <Tooltip
+              label="Go back">
+              <ToolbarIconButton
+                aria-label="Go back"
+                onClick={handlePressHistoryBack}
+              >
+                <ChevronLeftIcon />
+              </ToolbarIconButton>
+            </Tooltip>
+            <Tooltip label="Go forward">
+              <ToolbarIconButton
+                aria-label="Go forward"
+                onClick={handlePressHistoryForward}>
+                <ChevronRightIcon />
+              </ToolbarIconButton>
+            </Tooltip>
+          </ButtonGroup>)
+        }
+      </Flex>
+    </>
+  );
 
-  button {
-    color: inherit;
-    background: inherit;
+  const rightToolbarControls = (
+    <ButtonGroup
+      alignItems="center"
+      justifySelf="flex-end"
+      as={motion.div}
+      key="extras"
+      pr={3}
+      size="sm"
+      flex={`0 0 auto`}
+      display="flex"
+      justifyContent="flex-end"
+    >
+      {presenceDetails}
+      {notificationPopover}
+      {canShowFullSecondaryMenu
+        ? secondaryToolbarItems(secondaryTools)
+        : secondaryToolbarOverflowMenu(secondaryTools)}
+    </ButtonGroup>
+  );
+
+  const currentLocationTools = (
+    <ButtonGroup
+      as={motion.div}
+      key="location tools"
+      alignItems="center"
+      px={2}
+      size="sm"
+      flex="0 0 auto"
+      display="flex"
+      justifyContent="flex-start"
+    >
+      {currentPageTitle && (
+        <LocationIndicator
+          isVisible={isScrolledPastTitle}
+          type="node"
+          uid="123"
+          title={currentPageTitle}
+        />
+      )}
+    </ButtonGroup>
+  )
+
+  const contentControls = (
+    <ButtonGroup
+      alignItems="center"
+      as={motion.div}
+      key="content tools"
+      px={1}
+      size="sm"
+      flex={`1 1 100%`}
+      display="flex"
+      justifyContent="center"
+    />
+  )
+
+  const variants = {
+    visible: {
+      opacity: 1,
+      transition: layoutAnimationTransition
+    },
+    isLeftSidebarOpen: {
+      left: mainSidebarWidth,
+      transition: layoutAnimationTransition
+    },
   }
-`;
+
+  return (
+    <Flex
+      flex={1}
+      width="100vw"
+      ref={toolbarRef}
+      height={toolbarHeight}
+      alignItems="center"
+      position="fixed"
+      inset={0}
+      zIndex={2}
+      bottom="auto"
+      className="toolbar"
+      sx={{
+        WebkitAppRegion: "drag",
+        "button, a": {
+          WebkitAppRegion: "no-drag"
+        }
+      }}
+    >
+      <AnimatePresence initial={false}>
+        {leftSidebarControls}
+        {currentLocationTools}
+        {contentControls || <Spacer />}
+        {rightToolbarControls}
+
+        {(isScrolledPastTitle && (
+          <Box
+            as={motion.div}
+            key="header-backdrop"
+            className="header-content-backdrop"
+            backdropFilter={`blur(10px)`}
+            _after={{
+              content: "''",
+              position: "absolute",
+              inset: 0,
+              bg: "background.floor",
+              opacity: 0.7,
+            }}
+            position="absolute"
+            zIndex={-1}
+            borderBottom="1px solid"
+            borderColor="separator.divider"
+            height={toolbarHeight}
+            right={0}
+            initial={{ opacity: 0, left: isLeftSidebarOpen ? mainSidebarWidth : 0 }}
+            variants={variants}
+            animate={[
+              isLeftSidebarOpen && "isLeftSidebarOpen",
+              isScrolledPastTitle && "visible"
+            ].filter(Boolean)}
+            exit={{ opacity: 0 }}
+          />
+        ))}
+      </AnimatePresence>
+
+      {isElectron && (os === 'windows' || os === 'linux') && (
+        <WindowButtons
+          isWinMaximized={isWinMaximized}
+          isWinFullscreen={isWinFullscreen}
+          isWinFocused={isWinFocused}
+          handlePressMinimize={handlePressMinimize}
+          handlePressMaximizeRestore={handlePressMaximizeRestore}
+          handlePressClose={handlePressClose}
+        />)}
+    </Flex>);
+};
