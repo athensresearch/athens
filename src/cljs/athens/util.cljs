@@ -19,14 +19,6 @@
 (def toast (createStandaloneToast (clj->js {:theme theme})))
 
 
-;; Electron ipcMain Channels
-
-(def ipcMainChannels
-  {:toggle-max-or-min-win-channel "toggle-max-or-min-active-win"
-   :close-win-channel "close-win"
-   :exit-fullscreen-win-channel "exit-fullscreen-win"})
-
-
 ;; embed block
 
 (declare specter-recursive-path)
@@ -187,21 +179,6 @@
   (.. event -target -value))
 
 
-;; -- Regex -----------------------------------------------------------
-
-;; https://stackoverflow.com/a/11672480
-(def regex-esc-char-map
-  (let [esc-chars "()*&^%$#![]"]
-    (zipmap esc-chars
-            (map #(str "\\" %) esc-chars))))
-
-
-(defn escape-str
-  "Take a string and escape all regex special characters in it"
-  [str]
-  (string/escape str regex-esc-char-map))
-
-
 ;; -- specter --------------------------------------------------------
 
 
@@ -236,7 +213,8 @@
    [(case os
       :windows "os-windows"
       :mac "os-mac"
-      :linux "os-linux")
+      :linux "os-linux"
+      "os-linux")
     (if electron? "is-electron" "is-web")
     (if theme-dark? "is-theme-dark" "is-theme-light")
     (when win-focused? "is-focused")

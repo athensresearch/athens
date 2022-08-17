@@ -1,9 +1,7 @@
 (ns athens.electron.db-menu.status-indicator
   (:require
-    ["@chakra-ui/react" :refer [Box Tooltip]]
-    ["@material-ui/icons/CheckCircle" :default CheckCircle]
-    ["@material-ui/icons/Error" :default Error]
-    ["@material-ui/icons/Sync" :default Sync]))
+    ["/components/Icons/Icons" :refer [CheckmarkCircleFillIcon ExclamationCircleFillIcon]]
+    ["@chakra-ui/react" :refer [Box Tooltip Spinner]]))
 
 
 (defn status-indicator
@@ -28,10 +26,10 @@
    (cond
      (= status :closed) [:> Tooltip
                          {:label "Disconnected"}
-                         [:> Error]]
+                         [:> ExclamationCircleFillIcon]]
      (= status :running) [:> Tooltip
                           {:label "Synced"}
-                          [:> CheckCircle]]
+                          [:> CheckmarkCircleFillIcon]]
      :else [:> Tooltip
             {:label "Synchronizing..."}
-            [:> Sync]])])
+            [:> Spinner {:emptyColor "background.vibrancy" :speed "2s" :size "xs"}]])])

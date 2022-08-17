@@ -726,3 +726,47 @@
       (fixture/teardown! setup-repr))))
 
 
+(t/deftest child-to-prop
+  (fixture/setup! [{:page/title "title"
+                    :block/children
+                    [#:block{:uid    "uid"
+                             :string ""}]}])
+  (fixture/op-resolve-transact!
+    (graph-ops/build-block-move-op @@fixture/connection "uid" {:page/title "title"
+                                                               :relation   {:page/title "key"}}))
+  (fixture/is #{{:page/title "key"}
+                {:page/title "title"
+                 :block/properties
+                 {"key" #:block{:uid    "uid"
+                                :string ""}}}}))
+
+
+(t/deftest prop-to-child
+  (fixture/setup! [{:page/title "title"
+                    :block/properties
+                    {"key" #:block{:uid    "uid"
+                                   :string ""}}}])
+  (fixture/op-resolve-transact!
+    (graph-ops/build-block-move-op @@fixture/connection "uid" {:page/title "title"
+                                                               :relation   :first}))
+  (fixture/is #{{:page/title "key"}
+                {:page/title "title"
+                 :block/children
+                 [#:block{:uid    "uid"
+                          :string ""}]}}))
+
+
+(t/deftest prop-to-prop
+  (fixture/setup! [{:page/title "title"
+                    :block/properties
+                    {"key" #:block{:uid    "uid"
+                                   :string ""}}}])
+  (fixture/op-resolve-transact!
+    (graph-ops/build-block-move-op @@fixture/connection "uid" {:page/title "title"
+                                                               :relation   {:page/title "key2"}}))
+  (fixture/is #{{:page/title "key"}
+                {:page/title "key2"}
+                {:page/title "title"
+                 :block/properties
+                 {"key2" #:block{:uid    "uid"
+                                 :string ""}}}}))

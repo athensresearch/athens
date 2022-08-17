@@ -19,7 +19,9 @@
                          (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
                               (string/join "")))]
     (.. js/navigator -clipboard (writeText data))
-    (toast (clj->js {:title "Copied ref to clipboard"}))))
+    (toast (clj->js {:title (if (> (count selected-items) 1)
+                              "Copied refs to clipboard"
+                              "Copied ref to clipboard")}))))
 
 
 (defn handle-copy-unformatted
@@ -35,3 +37,11 @@
                       (apply str))]
         (.. js/navigator -clipboard (writeText data)))))
   (toast (clj->js {:title "Copied content to clipboard" :status "success"})))
+
+
+(defn handle-click-comment
+  [e uid]
+  (rf/dispatch [:comment/show-editor uid])
+  (.. e preventDefault))
+
+

@@ -1,9 +1,10 @@
 (ns athens.views.athena
   (:require
-    ["/components/Icons/Icons" :refer [XmarkIcon]]
+    ["/components/Icons/Icons" :refer [PageAddIcon XmarkIcon ArrowRightIcon]]
     ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
     [athens.common.utils :as utils]
-    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
+    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title]]
+    [athens.patterns     :as patterns]
     [athens.router       :as router]
     [athens.subs]
     [athens.util         :refer [scroll-into-view]]
@@ -22,14 +23,18 @@
 
 (defn highlight-match
   [query txt]
-  (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
-    (doall
-      (map-indexed (fn [i part]
-                     (if (re-find query-pattern part)
-                       [:> Text {:class "result-highlight"
-                                 :key i} part]
-                       part))
-                   (str/split txt query-pattern)))))
+  (if-not query
+    txt
+    (map-indexed (fn [i part]
+                   (if (= part query)
+                     [:> Text {:as           "span"
+                               :background   "highlight"
+                               :color        "highlightContrast"
+                               :borderRadius "0.1rem"
+                               :padding      "0 0.125em"
+                               :key i} part]
+                     part))
+                 (patterns/split-on txt query))))
 
 
 (defn create-search-handler
@@ -53,7 +58,9 @@
   (let [key                           (.. e -keyCode)
         shift?                        (.. e -shiftKey)
         {:keys [index query results]} @state
-        item                          (get results index)]
+        item                          (get results index)
+        navigate-uid                  (or (:block-search/navigate-uid item)
+                                          (:block/uid item))]
     (cond
       (= KeyCodes.ENTER key) (cond
                                ;; if page doesn't exist, create and open
@@ -74,14 +81,16 @@
                                ;; if shift: open in right-sidebar
                                shift?
                                (do (dispatch [:athena/toggle])
-                                   (dispatch [:right-sidebar/open-page (:node/title item)])
+                                   (let [title (:node/title item)]
+                                     (dispatch [:right-sidebar/open-item (if title
+                                                                           [:node/title title]
+                                                                           [:block/uid navigate-uid])]))
                                    (dispatch [:reporting/navigation {:source :athena
                                                                      :target :page
                                                                      :pane   :right-pane}]))
                                ;; else open in main view
                                :else
-                               (let [title (:node/title item)
-                                     uid   (:block/uid item)]
+                               (let [title (:node/title item)]
                                  (dispatch [:athena/toggle])
                                  (dispatch [:reporting/navigation {:source :athena
                                                                    :target (if title
@@ -90,8 +99,8 @@
                                                                    :pane   :main-pane}])
                                  (if title
                                    (router/navigate-page title)
-                                   (router/navigate-uid uid))
-                                 (dispatch [:editing/uid uid])))
+                                   (router/navigate-uid navigate-uid))
+                                 (dispatch [:editing/uid navigate-uid])))
 
       (= key KeyCodes.UP)
       (do
@@ -123,6 +132,7 @@
 
 ;; Components
 
+
 (defn result-el
   [{:keys [title preview prefix icon query on-click active?]}]
   [:> Button {:justifyContent "flex-start"
@@ -131,21 +141,35 @@
               :height "auto"
               :textAlign "start"
               :flexDirection "row"
+              :rightIcon icon
               :bg "transparent"
               :px 3
               :py 3
               :isActive active?
-              :onClick on-click}
+              :onClick on-click
+              :sx {"span[class*='icon']:last-child" {:ml "auto"
+                                                     :mr "1rem"
+                                                     :marginBlock "-0.2rem"
+                                                     :alignItems "center"
+                                                     :fontSize "1.5em"
+                                                     :alignSelf "center"}}}
    [:> VStack {:align "stretch"
                :spacing 1
                :overflow "hidden"}
     [:> Heading {:as "h4"
-                 :size "sm"} prefix (highlight-match query title)]
+                 :size "sm"}
+     (when prefix
+       [:> Text {:as "span"
+                 :textTransform "uppercase"
+                 :color "foreground.secondary"
+                 :fontSize "xs"
+                 :letterSpacing "0.1ch"
+                 :mr "1ch"} prefix])
+     (highlight-match query title)]
     (when preview
       [:> Text {:color "foreground.secondary"
                 :textOverflow "ellipsis"
-                :overflow "hidden"} (highlight-match query preview)])]
-   icon])
+                :overflow "hidden"} (highlight-match query preview)])]])
 
 
 (defn results-el
@@ -171,10 +195,9 @@
                    :borderTopWidth "1px"
                    :borderTopStyle "solid"
                    :borderColor "separator.divider"
-                   :pt 4
-                   :mb 4
-                   :px 4
-                   :overflowY "overlay"
+                   :p 4
+                   :overflowY "auto"
+                   :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}}
                    :_empty {:display "none"}}
         (doall
           (for [[i x] (map-indexed list recent-items)]
@@ -198,25 +221,28 @@
               :borderTopStyle "solid"
               :borderColor "separator.divider"
               :spacing 1
-              :pt 4
-              :mb 4
-              :px 4
-              :overflowY "overlay"
+              :p 4
+              :overflowY "auto"
+              :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}}
               :_empty {:display "none"}}
    (doall
      (for [[i x] (map-indexed list results)
-           :let  [block-uid (:block/uid x)
-                  parent    (:block/parent x)
-                  title     (or (:node/title parent) (:node/title x))
-                  uid       (or (:block/uid parent) (:block/uid x))
-                  string    (:block/string x)]]
+           :let  [parent          (:block/parent x)
+                  type            (if parent :block :node)
+                  title           (or (:node/title parent) (:node/title x) (:block/string parent))
+                  uid             (or (:block/uid parent) (:block/uid x))
+                  navigate-to-uid (or (:block-search/navigate-uid x)
+                                      (:block/uid x))
+                  string          (:block/string x)]]
        (if (nil? x)
          ^{:key i}
          [result-el {:key      i
                      :title    query
-                     :prefix   "Create page: "
+                     :prefix   "Create page"
                      :preview  nil
-                     :query    query
+                     :type     :page
+                     :query    nil
+                     :icon     (r/as-element [:> PageAddIcon])
                      :active?  (= i index)
                      :on-click (fn [e]
                                  (let [block-uid (utils/gen-block-uid)
@@ -235,6 +261,8 @@
          [result-el {:key i
                      :title title
                      :query query
+                     :type type
+                     :icon (when (= i index) (r/as-element [:> ArrowRightIcon]))
                      :preview string
                      :active? (= i index)
                      :on-click (fn [e]
@@ -253,7 +281,7 @@
                                                                                :right-pane
                                                                                :main-pane)}])
                                    (if parent
-                                     (router/navigate-uid block-uid)
+                                     (router/navigate-uid navigate-to-uid)
                                      (router/navigate-page title e))))}])))])
 
 
@@ -274,7 +302,7 @@
                  :isOpen @athena-open?
                  :onClose #(dispatch [:athena/toggle])}
        [:> ModalOverlay]
-       [:> ModalContent {:width "49rem"
+       [:> ModalContent {:width "45rem"
                          :class "athena-modal"
                          :overflow "hidden"
                          :backdropFilter "blur(20px)"
@@ -282,6 +310,7 @@
                          :maxWidth "calc(100vw - 4rem)"}
         [:> Input
          {:type "search"
+          :autoComplete "off"
           :width "100%"
           :border 0
           :fontSize "2.375rem"

@@ -4,7 +4,26 @@
     [athens.common-db                     :as common-db]
     [athens.common-events.graph.atomic    :as atomic]
     [athens.common-events.graph.composite :as composite]
+    [athens.common.utils                  :as common.utils]
+    [athens.parser.structure              :as structure]
     [clojure.set                          :as set]))
+
+
+(defn build-location-op
+  "Creates composite op with `:page/new` for any missing page in location.
+  If no page creation is needed, returns original op."
+  [db location original-op]
+  (let [parent-page-title (-> location :page/title)
+        prop-page-title   (-> location :relation :page/title)
+        create-parent?    (and parent-page-title (not (common-db/e-by-av db :node/title parent-page-title)))
+        create-prop?      (and prop-page-title (not (common-db/e-by-av db :node/title prop-page-title)))]
+    (if (or create-parent? create-prop?)
+      (composite/make-consequence-op {:op/type (:op/type original-op)}
+                                     (cond-> []
+                                       create-parent? (conj (atomic/make-page-new-op parent-page-title))
+                                       create-prop?   (conj (atomic/make-page-new-op prop-page-title))
+                                       true           (conj original-op)))
+      original-op)))
 
 
 (defn build-page-new-op
@@ -16,11 +35,41 @@
   ([db page-title block-uid]
    (let [location (common-db/compat-position db {:page/title page-title
                                                  :relation  :first})]
-     (if (common-db/e-by-av db :node/title page-title)
-       (atomic/make-block-new-op block-uid location)
-       (composite/make-consequence-op {:op/type :page/new}
-                                      [(atomic/make-page-new-op page-title)
-                                       (atomic/make-block-new-op block-uid location)])))))
+     (->> (atomic/make-block-new-op block-uid location)
+          (build-location-op db location)))))
+
+
+(defn build-page-rename-op
+  "Creates `:page/rename` & optionally `:page/new` ops."
+  [db title-from title-to]
+  (let [links-old      (common-db/find-page-links title-from)
+        links-new      (common-db/find-page-links title-to)
+        just-new       (set/difference links-new links-old)
+        new-titles     (remove #(seq (common-db/get-page-uid db %))
+                               just-new)
+        atomic-pages   (when-not (empty? new-titles)
+                         (into []
+                               (for [title new-titles]
+                                 (build-page-new-op db title))))
+        atomic-rename  (atomic/make-page-rename-op title-from title-to)
+        page-rename-op (if (empty? atomic-pages)
+                         atomic-rename
+                         (composite/make-consequence-op {:op/type :page/rename}
+                                                        (conj atomic-pages
+                                                              atomic-rename)))]
+    page-rename-op))
+
+
+(defn build-block-new-op
+  [db block-uid location]
+  (->> (atomic/make-block-new-op block-uid location)
+       (build-location-op db location)))
+
+
+(defn build-block-move-op
+  [db block-uid position]
+  (->> (atomic/make-block-move-op block-uid position)
+       (build-location-op db position)))
 
 
 (defn build-block-save-op
@@ -136,14 +185,28 @@
     (seq filtered)))
 
 
+(defn- split-props-from-blocks
+  [db uids]
+  (let [group-f #(if (common-db/property-key db [:block/uid %])
+                   :props
+                   :blocks)
+        {:keys [props blocks]} (group-by group-f uids)]
+    [props blocks]))
+
+
 (defn block-move-chain
-  [target-uid source-uids first-rel]
-  (composite/make-consequence-op {:op/type :block/move-chain}
-                                 (concat [(atomic/make-block-move-op (first source-uids)
-                                                                     {:block/uid target-uid
-                                                                      :relation first-rel})]
-                                         (doall
-                                           (for [[one two] (partition 2 1 source-uids)]
+  [db target-uid source-uids first-rel]
+  (let [[prop-uids block-uids] (split-props-from-blocks db source-uids)]
+    (composite/make-consequence-op {:op/type :block/move-chain}
+                                   (concat (for [uid prop-uids]
+                                             (->> (common-db/drop-prop-position db uid target-uid first-rel)
+                                                  (atomic/make-block-move-op uid)))
+
+                                           (when (seq block-uids)
+                                             [(atomic/make-block-move-op (first block-uids)
+                                                                         {:block/uid target-uid
+                                                                          :relation first-rel})])
+                                           (for [[one two] (partition 2 1 block-uids)]
                                              (atomic/make-block-move-op two
                                                                         {:block/uid one
                                                                          :relation :after}))))))
@@ -152,18 +215,20 @@
 (defn build-block-split-op
   "Creates `:block/split` composite op, taking into account context.
   If old-block has children, pass them on to new-block.
-  If old-block is open or closed, pass that state on to new-block."
+  If old-block is open or closed, pass that state on to new-block.
+  Ignores both behaviours above if old-block is a property."
   [db {:keys [old-block-uid new-block-uid
               string index relation]}]
   (let [save-block-op      (build-block-save-op db old-block-uid (subs string 0 index))
         new-block-op       (atomic/make-block-new-op new-block-uid {:block/uid old-block-uid
                                                                     :relation  relation})
         new-block-save-op  (build-block-save-op db new-block-uid (subs string index))
-        {:block/keys [open]} (common-db/get-block db [:block/uid old-block-uid])
-        children           (common-db/get-children-uids db [:block/uid old-block-uid])
+        {:block/keys [open key]} (common-db/get-block db [:block/uid old-block-uid])
+        children           (when-not key
+                             (common-db/get-children-uids db [:block/uid old-block-uid]))
         children?          (seq children)
         move-children-op   (when children?
-                             (block-move-chain new-block-uid children :first))
+                             (block-move-chain db new-block-uid children :first))
         close-new-block-op (when children?
                              (atomic/make-block-open-op new-block-uid open))
         split-block-op     (composite/make-consequence-op {:op/type :block/split}
@@ -195,3 +260,84 @@
                            (map :block/new)
                            set)]
     new-uids))
+
+
+(defn structural-diff
+  "Calculates removed and added links (block refs & page links)"
+  [db ops]
+  (let [block-save-ops       (contains-op? ops :block/save)
+        page-new-ops         (contains-op? ops :page/new)
+        page-rename-ops      (contains-op? ops :page/rename)
+        new-blocks           (->> block-save-ops
+                                  (map #(select-keys (:op/args %)
+                                                     [:block/uid :block/string])))
+        new-block-uids       (->> new-blocks
+                                  (map :block/uid)
+                                  set)
+        new-page-titles      (->> (concat page-new-ops page-rename-ops)
+                                  (map #(or (get-in (:op/args %) [:target :page/title])
+                                            (get-in (:op/args %) [:page/title]))))
+        old-page-titles      (->> page-rename-ops
+                                  (map :page/title)
+                                  set)
+        new-block-structures (->> new-blocks
+                                  (map :block/string)
+                                  (map structure/structure-parser->ast))
+        new-title-structures (->> new-page-titles
+                                  (map structure/structure-parser->ast))
+        old-block-strings    (->> new-block-uids
+                                  (map #(common-db/get-block-string db %)))
+        old-title-structures (->> old-page-titles
+                                  (map structure/structure-parser->ast))
+        old-structures       (->> old-block-strings
+                                  (map structure/structure-parser->ast))
+        links                (fn [structs names renames]
+                               (->> structs
+                                    (mapcat (partial tree-seq vector? identity))
+                                    (filter #(and (vector? %)
+                                                  (contains? names (first %))))
+                                    (map #(vector (get renames (first %) (first %))
+                                                  (-> % second :string)))
+                                    set))
+        old-links            (links (concat old-structures old-title-structures)
+                                    #{:page-link :hashtag :block-ref}
+                                    {:hashtag :page-link})
+        new-links            (links (concat new-block-structures new-title-structures)
+                                    #{:page-link :hashtag :block-ref}
+                                    {:hashtag :page-link})
+        removed-links        (set/difference old-links new-links)
+        added-links          (set/difference new-links old-links)]
+    [removed-links added-links]))
+
+
+(defn- new-prop
+  [db [a v :as uid-or-eid] prop-uid k]
+  (let [uid?     (-> uid-or-eid vector? not)
+        uid      (if uid?
+                   uid-or-eid
+                   (common-db/get-block-uid db uid-or-eid))
+        title    (or (common-db/get-page-title db uid)
+                     (and (= a :node/title) v))
+        position (merge {:relation {:page/title k}}
+                        (if title
+                          {:page/title title}
+                          {:block/uid uid}))]
+    (build-block-new-op db prop-uid position)))
+
+
+(defn build-property-path
+  ([db uid ks]
+   (build-property-path db uid ks []))
+  ([db uid-or-eid [k & ks] ops]
+   (if-not k
+     [uid-or-eid ops]
+     (let [uid?       (-> uid-or-eid vector? not)
+           block      (common-db/get-block db (if uid?
+                                                [:block/uid uid-or-eid]
+                                                uid-or-eid))
+           prop-block (-> block :block/properties (get k))
+           prop-uid   (or (:block/uid prop-block)
+                          (common.utils/gen-block-uid))
+           ops'       (cond-> ops
+                        (not prop-block) (conj (new-prop db uid-or-eid prop-uid k)))]
+       (recur db prop-uid ks ops')))))

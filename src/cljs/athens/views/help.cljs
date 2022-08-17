@@ -158,6 +158,17 @@
              :shortcut    "mod+shift+v"}
             {:description "Convert to checkbox"
              :shortcut    "mod+enter"}]}
+   {:name  "Navigation"
+    :items [{:description "Zoom into current block"
+             :shortcut    "mod+o"}
+            {:description "Zoom out of current block"
+             :shortcut    "mod+alt+o"}
+            {:description "Open page or block link"
+             :shortcut    "mod+o"}
+            {:description "Fold block"
+             :shortcut    "mod+up"}
+            {:description "Unfold block"
+             :shortcut    "mod+down"}]}
    {:name  "Selection"
     :items [{:description "Select previous block"
              :shortcut    "shift+up"}
@@ -290,7 +301,7 @@
            :gap "1rem"
            :gridTemplateColumns "12rem 1fr"
            :padding "0.25rem 0.5rem"
-           :sx {"&:nth-child(odd)"
+           :sx {"&:nth-of-type(odd)"
                 {:bg "background.floor"}}}
    [:> Text {:display "flex"
              :justify-content "space-between"}

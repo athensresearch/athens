@@ -1,7 +1,7 @@
 {
   "name": "Athens",
   "author": "athensresearch",
-  "version": "2.0.0-beta.24",
+  "version": "2.1.0-beta.2",
   "description": "An open-source knowledege graph for research and notetaking",
   "repository": {
     "type": "git",
@@ -51,7 +51,8 @@
     "server:fluree:wipe": "rm -rf athens-data/fluree",
     "server:compile": "clojure -M -e \"(compile 'athens.self-hosted.core)\"",
     "server:uberjar": "clojure -M:uberdeps --aliases compiled-classes --main-class athens.self-hosted.core --target target/athens-lan-party-standalone.jar",
-    "server:test": "clojure -X:test",
+    "server:test": "clojure -X:test :excludes [:fluree]",
+    "server:test:fluree": "clojure -X:test :includes [:fluree]",
     "server:test:only": "clojure -M:test --var",
     "server:repl": "clojure -A:repl",
     "server:wipe": "rimraf athens-data/fluree athens-data/datascript",
@@ -101,14 +102,14 @@
   "dependencies": {
     "@babel/runtime": "^7.15.4",
     "@chakra-ui/react": "^1.8.6",
+    "@dnd-kit/core": "^6.0.5",
+    "@dnd-kit/sortable": "^7.0.1",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@geometricpanda/storybook-addon-badges": "^0.0.4",
     "@js-joda/core": "1.12.0",
     "@js-joda/locale_en-us": "3.1.1",
     "@js-joda/timezone": "2.2.0",
-    "@material-ui/core": "^4.10.1",
-    "@material-ui/icons": "^4.9.1",
     "@sentry/integrations": "^6.17.3",
     "@sentry/react": "^6.17.3",
     "@sentry/tracing": "^6.17.3",
@@ -119,7 +120,7 @@
     "electron-window-state": "^5.0.3",
     "emoji-picker-element": "^1.8.2",
     "framer-motion": "^6",
-    "highlight.js": "^11.1.0",
+    "highlight.js": "^11.5.1",
     "katex": "^0.12.0",
     "luxon": "^2.0.2",
     "nedb": "^1.8.0",
@@ -134,6 +135,7 @@
     "react-force-graph-2d": "^1.19.0",
     "react-highlight.js": "1.0.7",
     "react-intersection-observer": "^8.32.1",
+    "react-window": "^1.8.6",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
@@ -169,13 +171,13 @@
     "playwright": "^1.17.1",
     "rimraf": "^3.0.2",
     "serve": "^13.0.2",
-    "shadow-cljs": "^2.15.3",
+    "shadow-cljs": "2.19.5",
     "source-map-support": "^0.5.19",
     "standard-version": "^9.3.1",
     "storybook-dark-mode": "^1.0.8",
     "tsconfig-paths-webpack-plugin": "^3.5.1",
     "typescript": "^4.3.5",
-    "vercel": "^23.1.2",
+    "vercel": "^24.2.3",
     "xvfb-maybe": "^0.2.1"
   },
   "resolutions-comments": {

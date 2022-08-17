@@ -1,9 +1,10 @@
 (ns athens.views.pages.page
   (:require
-    ["/components/Page/Page" :refer [PageContainer]]
+    ["/components/Page/Page" :refer [PageContainer PageNotFound]]
     [athens.common-db              :as common-db]
     [athens.db                     :as db]
     [athens.reactive               :as reactive]
+    [athens.router                 :as router]
     [athens.views.pages.block-page :as block-page]
     [athens.views.pages.node-page  :as node-page]
     [re-frame.core                 :as rf]))
@@ -13,10 +14,11 @@
   []
   (let [title    (rf/subscribe [:current-route/page-title])
         page-eid (common-db/e-by-av @db/dsdb :node/title @title)]
-    (if (int? page-eid)
-      [:> PageContainer {:uid page-eid :type "node"}
-       [node-page/page page-eid]]
-      [:h3 (str "404: Page with title '" @title "' doesn't exist")])))
+    [:> PageContainer {:uid page-eid :type "node"}
+     (if (int? page-eid)
+       [node-page/page page-eid]
+       [:> PageNotFound {:title @title
+                         :onClickHome #(router/navigate :pages)}])]))
 
 
 (defn page
@@ -28,4 +30,4 @@
      (cond
        title [node-page/page id]
        string [block-page/page id]
-       :else [:h3 "404: This page doesn't exist"])]))
+       :else [:> PageNotFound {:onClickHome #(router/navigate :pages)}])]))

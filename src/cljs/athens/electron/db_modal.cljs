@@ -148,8 +148,7 @@
   [form-container
    [:> FormControl
     [:> FormLabel "Name"]
-    [:> Input {:value (:input @state)
-               :onChange  #(swap! state assoc :input (js-event->val %))}]]
+    [:> Input {:onChange  #(swap! state assoc :input (js-event->val %))}]]
    [:> ButtonGroup
     [:> Button {:value (:input @state)
                 :isDisabled (clojure.string/blank? (:input @state))
@@ -168,15 +167,15 @@
          [:> VStack {:spacing 4}
           [:> FormControl
            [:> FormLabel "Database name"]
-           [:> Input {:value @name
+           [:> Input {:defaultValue @name
                       :onChange #(reset! name (js-event->val %))}]]
           [:> FormControl
            [:> FormLabel "Remote address"]
-           [:> Input {:value @address
+           [:> Input {:defaultValue @address
                       :onChange #(reset! address (js-event->val %))}]]
           [:> FormControl {:flexDirection "row"}
            [:> FormLabel "Password"]
-           [:> Input {:value @password
+           [:> Input {:defaultValue @password
                       :type "password"
                       :onChange #(reset! password (js-event->val %))}]]]
          doall)
@@ -214,7 +213,7 @@
          ;; redesigned DB picker.
          [:> Tabs {:isFitted true
                    :display "contents"
-                   :defaultIndex (if utils/electron? 0 2)}
+                   :defaultIndex (if utils/electron? 0 1)}
           (when utils/electron?
             [:> TabList
              [:> Tab "Open Local"]

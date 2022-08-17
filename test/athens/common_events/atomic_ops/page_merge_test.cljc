@@ -199,3 +199,55 @@
       (t/is (= (common-db/get-sidebar-titles @@fixture/connection)
                ["target-title"])
             "Redo removed shortcut"))))
+
+
+(t/deftest merge-props
+  (fixture/setup! [{:page/title "title"
+                    :block/properties
+                    {"key" #:block{:uid    "uid"
+                                   :string ""}}}
+                   {:page/title "another-title"
+                    :block/properties
+                    {"another-key" #:block{:uid    "another-uid"
+                                           :string ""}}}])
+  (fixture/op-resolve-transact! (atomic-graph-ops/make-page-merge-op "title" "another-title"))
+  (fixture/is #{{:page/title "key"}
+                {:page/title "another-key"}
+                {:page/title "another-title"
+                 :block/properties
+                 {"key"         #:block{:uid    "uid"
+                                        :string ""}
+                  "another-key" #:block{:uid    "another-uid"
+                                        :string ""}}}}))
+
+
+(t/deftest merge-conflict-page-props
+  (fixture/setup! [{:page/title "title"
+                    :block/properties
+                    {"key" #:block{:uid    "uid"
+                                   :string ""}}}
+                   {:page/title "another-title"
+                    :block/properties
+                    {"key" #:block{:uid    "another-uid"
+                                   :string ""}}}])
+  (fixture/op-resolve-transact! (atomic-graph-ops/make-page-merge-op "title" "another-title"))
+  (fixture/is #{{:page/title "key"}
+                {:page/title "another-title"
+                 :block/properties
+                 {"key" #:block{:uid    "another-uid"
+                                :string ""}}}}))
+
+
+(t/deftest merge-conflict-linked-props
+  (fixture/setup! [{:page/title "title"
+                    :block/properties
+                    {"key"         #:block{:uid    "uid"
+                                           :string ""}
+                     "another-key" #:block{:uid    "another-uid"
+                                           :string ""}}}])
+  (fixture/op-resolve-transact! (atomic-graph-ops/make-page-merge-op "key" "another-key"))
+  (fixture/is #{{:page/title "another-key"}
+                {:page/title "title"
+                 :block/properties
+                 {"another-key" #:block{:uid    "another-uid"
+                                        :string ""}}}}))

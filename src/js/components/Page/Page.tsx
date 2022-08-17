@@ -1,14 +1,23 @@
-import { Box } from '@chakra-ui/react';
+import React from 'react';
+import {
+  Button, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
+  Tooltip, FormLabel
+} from '@chakra-ui/react';
+import { useInView } from "react-intersection-observer";
+import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import { withErrorBoundary } from "react-error-boundary";
+import { motion } from 'framer-motion';
+
 
 const PAGE_PROPS = {
   as: "article",
   display: "grid",
   flexBasis: "100%",
+  alignSelf: "stretch",
   gridTemplateAreas: "'header' 'content' 'footer'",
   gridTemplateRows: "auto 1fr auto",
   sx: {
-    "--page-padding-v": "6rem",
-    "--page-padding-h": "4rem"
+    "--page-padding": "3rem",
   }
 }
 
@@ -24,128 +33,216 @@ const TITLE_PROPS = {
   fontWeight: "bold",
 }
 
+export const PageNotFound = ({ title, onClickHome, children }) => {
+  return <Center height="100vh" gap="1rem" flexDirection="column">
+    <Heading>404: {title ? `${title} not found`
+      : `Page not found`}</Heading>
+    {onClickHome
+      ? <Button onClick={onClickHome}>Return home</Button>
+      : <Button as="a" href="/">Return home</Button>}
+    {children && (<><Divider /> children</>)}
+  </Center>
+}
+
 export const PageContainer = ({ children, uid, type }) => <Box
   {...PAGE_PROPS}
-  maxWidth="70em"
-  minHeight="100vh"
+  flexGrow={1}
+  pt={2}
   data-ui={uid}
   className={type + '-page'}
   flexDirection="column"
-  marginInline="auto"
-  pb="calc(var(--page-padding-v) / 2)"
 >{children}</Box>
 
-export const HeaderImage = ({ src }) => <Box
-  as="img"
+export const HeaderImage = ({ src }) => <Image
   src={src}
-  position="absolute"
-  left="0"
-  right="0"
-  top="0"
+  marginTop="1rem"
+  gridArea="image"
+  borderRadius="md"
   width="100%"
   overflow="hidden"
-  opacity="0.125"
-  pointerEvents="none"
   objectFit="cover"
-  height="20em"
-  sx={{
-    maskImage: "linear-gradient(to bottom, black, black calc(100% - 4rem), transparent)"
-  }}
 />
 
-export const PageHeader = ({ children, image }) => <Box
-  as="header"
-  pr="var(--page-padding-h)"
-  pt="var(--page-padding-v)"
-  pb={4}
-  gridArea="header"
-  display="grid"
-  gridTemplateColumns="max(var(--page-padding-h), 3rem) 1fr auto"
-  gridTemplateRows="auto auto"
-  alignItems="center"
-  gridTemplateAreas="'empty breadcrumb breadcrumb' 
-  'menu title extras'"
-  className="page-header"
-  borderBottom="1px solid transparent"
+export const PageHeader = ({
+  children,
+  onChangeHeaderImageUrl,
+  headerImageUrl,
+  onClickOpenInSidebar,
+  onClickOpenInMainView,
+  headerImageEnabled }
+) => {
+  const [isPropertiesOpen, setIsPropertiesOpen] = React.useState(false)
 
-  // Page headers without images get a nice border...
-  {...!image && ({
-    borderBottomColor: "separator.divider"
-  })}
-  // unless they're in the sidebar
-  sx={{
-    ".right-sidebar &": {
-      // borderBottomColor: "transparent"
+  return (<Box
+    as="header"
+    className="page-header"
+    pt="var(--page-padding)"
+    px="var(--page-padding)"
+    pb={4}
+    gridArea="header"
+    display="grid"
+    gridTemplateColumns="1fr auto"
+    gridTemplateRows="auto auto auto"
+    alignItems="center"
+    gridTemplateAreas="'breadcrumb breadcrumb' 
+  'title extras'
+  'properties properties'
+  'image image'"
+  >
+    {children}
+
+    <ButtonGroup gridArea="extras" size="sm">
+      {headerImageEnabled && <Button onClick={() => setIsPropertiesOpen(!isPropertiesOpen)}>Properties</Button>}
+      {onClickOpenInMainView && <Tooltip label="Open in main view">
+        <IconButton
+          aria-label='Open in main view'
+          color="foreground.secondary"
+          variant="ghost"
+          colorScheme="subtle"
+          onClick={onClickOpenInMainView}
+        >
+          <ArrowLeftOnBoxIcon boxSize="1.5em" />
+        </IconButton></Tooltip>}
+      {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
+        <IconButton
+          aria-label='Open in right sidebar'
+          color="foreground.secondary"
+          variant="ghost"
+          colorScheme="subtle"
+          onClick={onClickOpenInSidebar}
+        >
+          <ArrowRightOnBoxIcon boxSize="1.5em" />
+        </IconButton></Tooltip>}
+    </ButtonGroup>
+
+    {isPropertiesOpen && <Box gridArea="properties">
+      <FormControl>
+        <FormLabel>Header image url</FormLabel>
+        <Input defaultValue={headerImageUrl} onBlur={(e) => onChangeHeaderImageUrl(e.target.value)} />
+      </FormControl>
+    </Box>
     }
-  }}
->
-  {image && <HeaderImage src={image} />}
-  {children}
-</Box>
+
+
+    {headerImageUrl && <HeaderImage src={headerImageUrl} />}
+  </Box>)
+}
 
 export const PageBody = ({ children }) => <Box
   as="main"
-  pt={4}
-  // inset the left margin to account for block toggles
-  px="calc(var(--page-padding-h) - 1em)"
+  className="page-body"
+  // outset slightly for block toggles
+  pl="calc(var(--page-padding) - 1em)"
+  pr="var(--page-padding)"
   gridArea="content"
->{children}</Box>
+>
+  {children}</Box>
 
 export const PageFooter = ({ children }) => <Box
   as="footer"
-  pt={4}
+  className="page-footer"
+  p="var(--page-padding)"
+  pb="var(--page-padding)"
   gridArea="footer"
-  p={4}
 >{children}</Box>
 
-export const TitleContainer = ({ children }) => <Box
-  {...TITLE_PROPS}
->{children}</Box>
 
-export const DailyNotesPage = ({ isReal, children }) => <Box
-  {...PAGE_PROPS}
-  className="node-page daily-notes"
-  boxShadow="page"
-  bg="background.floor"
-  alignSelf="stretch"
-  justifySelf="stretch"
-  opacity={isReal ? 1 : 0.5}
-  borderWidth="1px"
-  borderStyle="solid"
-  borderColor="separator.divider"
-  transitionDuration="0s"
-  borderRadius="0.5rem"
-  minHeight="calc(100vh - 10rem)"
-  sx={{
-    "--page-padding-v": "1rem",
-    "--page-padding-h": "4rem"
-  }}
->{children}</Box>
+const DailyNotePageError = () => {
+  return (
+    <Box
+      {...PAGE_PROPS}
+      className="node-page daily-notes"
+      boxShadow="page"
+      bg="background.floor"
+      alignSelf="stretch"
+      display="flex"
+      borderWidth="1px"
+      borderStyle="solid"
+      borderColor="separator.divider"
+      transitionDuration="0s"
+      borderRadius="0.5rem"
+      minHeight="calc(100vh - 10rem)"
+      textAlign="center"
+      p={12}
+      color="foreground.secondary"
+      placeItems="center"
+      placeContent="center"
+    >
+      Couldn't load page
+    </Box>)
+}
 
-export const EditableTitleContainer = ({ children, isEditing, props }) => <Box
+
+export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...rest }) => {
+  const hasAppeared = React.useRef(false);
+  const { ref, inView } = useInView({ threshold: 1, triggerOnce: true, delay: 50 });
+
+  if (!hasAppeared.current) {
+    if (inView) {
+      onFirstAppear();
+      hasAppeared.current = true;
+    }
+  }
+
+  return (
+    <Box
+      {...PAGE_PROPS}
+      {...rest}
+      as={motion.div}
+      initial={{
+        opacity: 0,
+      }}
+      animate={{
+        opacity: 1,
+        transition: {
+          duration: 0.5,
+        }
+      }}
+      exit={{
+        opacity: 0,
+      }}
+      ref={ref}
+      className="node-page daily-notes"
+      boxShadow="page"
+      bg="background.floor"
+      borderWidth="1px"
+      borderStyle="solid"
+      borderColor="separator.divider"
+      transitionDuration="0s"
+      borderRadius="0.5rem"
+      minHeight="calc(100vh - 10rem)"
+    >
+      {children}
+    </Box>)
+}, {
+  fallback: <DailyNotePageError />
+});
+
+
+export const TitleContainer = ({ children, isEditing, props }) => <Box
   {...TITLE_PROPS}
   as="h1"
   className={[
     'page-title',
     isEditing && 'is-editing',
   ].filter(Boolean).join(' ')}
-  gridArea="title"
-  maxWidth="max-content"
-  display="grid"
   background="var(--block-surface-color)"
-  color="foreground.primary"
+  display="grid"
   gridTemplateAreas="'main'"
+  color="foreground.primary"
   alignItems="stretch"
   justifyContent="stretch"
+  lineHeight="1.3"
   position="relative"
   overflow="visible"
   zIndex={2}
   flexGrow={1}
   wordBreak="break-word"
   sx={{
-    "textarea": {
+    "textarea, .textarea": {
       display: "block",
-      lineHeight: 0,
+      lineHeight: "inherit",
+      fontWeight: "normal",
       appearance: "none",
       cursor: "text",
       resize: "none",
@@ -160,14 +257,15 @@ export const EditableTitleContainer = ({ children, isEditing, props }) => <Box
       margin: "0",
       caretColor: "var(--chakra-colors-link)",
       fontSize: "inherit",
-      fontWeight: "inherit",
       borderRadius: "0.25rem",
       border: "0",
       opacity: "0",
-      fontFamily: "inherit"
+      fontFamily: "inherit",
     },
-    "&:hover: textarea:not:(.is-editing)": { lineHeight: "2" },
-    "textarea.is-editing + *": {
+    "textarea:focus, .textarea:focus": {
+      opacity: 1,
+    },
+    "textarea:focus + *, .textarea:focus + *": {
       opacity: "0",
     },
     ".is-editing": {
@@ -186,15 +284,11 @@ export const EditableTitleContainer = ({ children, isEditing, props }) => <Box
     "span": {
       gridArea: "main",
       pointerEvents: "none",
-      "a, button": {
+      "a, button, .link": {
         position: "relative",
         zIndex: 2,
         pointerEvents: "all",
       },
-      "& > span": {
-        position: "relative",
-        zIndex: 2,
-      }
     },
     "abbr": {
       gridArea: "main",

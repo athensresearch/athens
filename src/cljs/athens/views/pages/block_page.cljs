@@ -1,13 +1,17 @@
 (ns athens.views.pages.block-page
   (:require
-    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
-    ["@chakra-ui/react" :refer [Breadcrumb BreadcrumbItem BreadcrumbLink VStack AccordionIcon Accordion AccordionItem AccordionButton AccordionPanel]]
+    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
+    ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
+    ["@chakra-ui/react" :refer [Breadcrumb Box BreadcrumbItem BreadcrumbLink]]
+    [athens.common-db :as common-db]
+    [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.views.blocks.core :as blocks]
+    [athens.views.comments.core :as comments]
+    [athens.views.comments.inline :as inline-comments]
     [athens.views.pages.node-page :as node-page]
-    [athens.views.references :refer [reference-group reference-block]]
     [komponentit.autosize :as autosize]
     [re-frame.core :as rf :refer [dispatch subscribe]]
     [reagent.core :as r]))
@@ -36,7 +40,7 @@
 
 (defn breadcrumb-handle-click
   "If block is in main, navigate to page. If in right sidebar, replace right sidebar item."
-  [e uid breadcrumb-uid]
+  [e uid breadcrumb-uid breadcrumb-node-title]
   (let [right-sidebar? (.. e -target (closest ".right-sidebar"))]
     (rf/dispatch [:reporting/navigation {:source :block-page-breadcrumb
                                          :target :block
@@ -44,7 +48,10 @@
                                                    :right-pane
                                                    :main-pane)}])
     (if right-sidebar?
-      (dispatch [:right-sidebar/navigate-item uid breadcrumb-uid])
+      (let [eid (if breadcrumb-node-title
+                  [:node/title breadcrumb-node-title]
+                  [:block/uid breadcrumb-uid])]
+        (dispatch [:right-sidebar/navigate-item uid eid]))
       (router/navigate-uid breadcrumb-uid e))))
 
 
@@ -52,32 +59,25 @@
   [id]
   (let [linked-refs (reactive/get-reactive-linked-references id)]
     (when (seq linked-refs)
-      [:> Accordion
-       [:> AccordionItem
-        [:h2
-         [:> AccordionButton
-          [:> AccordionIcon "LinkedReferences"]]]
-        [:> AccordionPanel {:px 0}
-         [:> VStack {:spacing 6
-                     :pl 6
-                     :align "stretch"}
-          (doall
-            (for [[group-title group] linked-refs]
-              [reference-group {:key (str "group-" group-title)
-                                :title group-title
-                                :on-click-title (fn [e]
-                                                  (let [shift?       (.-shiftKey e)
-                                                        parsed-title (parse-renderer/parse-title group-title)]
-                                                    (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
-                                                                                         :target :page
-                                                                                         :pane   (if shift?
-                                                                                                   :right-pane
-                                                                                                   :main-pane)}])
-                                                    (router/navigate-page parsed-title)))}
-               (doall
-                 (for [block group]
-                   [reference-block {:key (str "ref-" (:block/uid block))}
-                    [node-page/ref-comp block]]))]))]]]])))
+      [:> PageReferences {:title "Linked References"
+                          :count (count linked-refs)}
+       (doall
+         (for [[group-title group] linked-refs]
+           [:> ReferenceGroup {:key (str "group-" group-title)
+                               :title group-title
+                               :onClickTitle (fn [e]
+                                               (let [shift?       (.-shiftKey e)
+                                                     parsed-title (parse-renderer/parse-title group-title)]
+                                                 (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
+                                                                                      :target :page
+                                                                                      :pane   (if shift?
+                                                                                                :right-pane
+                                                                                                :main-pane)}])
+                                                 (router/navigate-page parsed-title)))}
+            (doall
+              (for [block group]
+                [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
+                 [node-page/ref-comp block]]))]))])))
 
 
 (defn parents-el
@@ -85,41 +85,44 @@
   (let [parents (reactive/get-reactive-parents-recursively id)]
     [:> Breadcrumb {:gridArea "breadcrumb" :opacity 0.75}
      (doall
-       (for [{:keys [node/title block/string] breadcrumb-uid :block/uid} parents]
+       (for [{breadcrumb-uid :block/uid breadcrumb-node-title :node/title} parents]
          ^{:key breadcrumb-uid}
          [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
-          [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid)}
+          [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid breadcrumb-node-title)}
            [:span {:style {:pointer-events "none"}}
-            [parse-renderer/parse-and-render (or title string)]]]]))]))
+            [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb breadcrumb-uid)]]]]))]))
 
 
 (defn block-page-el
   [_block]
   (let [state (r/atom {:string/local    nil
-                       :string/previous nil})]
+                       :string/previous nil})
+        properties-enabled? (rf/subscribe [:feature-flags/enabled? :properties])]
+
     (fn [block]
-      (let [{:block/keys [string children uid] :db/keys [id]} block]
+      (let [{:block/keys [string children uid properties] :db/keys [id]} block]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:<>
+        [:> Box
 
          ;; Header
-         [:> PageHeader
+         [:> PageHeader {:onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:block/uid uid]])
+                                                  #(dispatch [:right-sidebar/open-item [:block/uid uid]]))}
 
           ;; Parent Context
           [parents-el uid id]
-          [:> EditableTitleContainer {:isEditing @(subscribe [:editing/is-editing uid])
-                                      :onClick (fn [e]
-                                                 (.. e preventDefault)
-                                                 (if (.. e -shiftKey)
-                                                   (do
-                                                     (dispatch [:reporting/navigation {:source :block-page
-                                                                                       :target :block
-                                                                                       :pane   :right-pane}])
-                                                     (router/navigate-uid uid e))
+          [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])
+                              :onClick (fn [e]
+                                         (.. e preventDefault)
+                                         (if (.. e -shiftKey)
+                                           (do
+                                             (dispatch [:reporting/navigation {:source :block-page
+                                                                               :target :block
+                                                                               :pane   :right-pane}])
+                                             (router/navigate-uid uid e))
 
-                                                   (dispatch [:editing/uid uid])))}
+                                           (dispatch [:editing/uid uid])))}
            [autosize/textarea
             {:value       (:string/local @state)
              :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
@@ -134,6 +137,22 @@
            (if (clojure.string/blank? (:string/local @state))
              [:span [:wbr]]
              [parse-renderer/parse-and-render (:string/local @state) uid])]]
+
+         ;; Show comments when the toggle is on
+         [:> Box {:ml "4%"
+                  :w "100%"}
+          (when (or @(rf/subscribe [:comment/show-editor? uid])
+                    (and @(rf/subscribe [:comment/show-comments?])
+                         (comments/get-comment-thread-uid @db/dsdb uid)))
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])]
+
+         ;; Properties
+         (when (and @properties-enabled?
+                    (seq properties))
+           [:> PageBody
+            (for [prop (common-db/sort-block-properties properties)]
+              ^{:key (:db/id prop)}
+              [blocks/block-el prop])])
 
          ;; Children
          [:> PageBody

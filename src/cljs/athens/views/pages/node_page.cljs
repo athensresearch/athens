@@ -1,27 +1,27 @@
 (ns athens.views.pages.node-page
   (:require
-    ["/components/Block/components/Anchor" :refer [Anchor]]
+    ["/components/Block/Anchor" :refer [Anchor]]
+    ["/components/Block/Container" :refer [Container]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter EditableTitleContainer]]
-    ["@chakra-ui/react" :refer [Text Box Button Portal IconButton AccordionIcon AccordionItem AccordionPanel MenuDivider MenuButton Menu MenuList MenuItem Accordion AccordionButton Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
-    ["@material-ui/icons/Bookmark" :default Bookmark]
-    ["@material-ui/icons/BookmarkBorder" :default BookmarkBorder]
-    ["@material-ui/icons/BubbleChart" :default BubbleChart]
-    ["@material-ui/icons/Delete" :default Delete]
-    ["@material-ui/icons/MoreHoriz" :default MoreHoriz]
+    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon #_GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
+    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
+    ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
+    ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
+    [athens.common-events.graph.ops :as graph-ops]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
     [athens.common.utils :as utils]
     [athens.dates :as dates]
     [athens.db :as db :refer [get-unlinked-references]]
     [athens.parse-renderer :as parse-renderer :refer [parse-and-render]]
+    [athens.patterns :as patterns]
     [athens.reactive :as reactive]
     [athens.router :as router]
-    [athens.util :refer [escape-str get-caret-position recursively-modify-block-for-embed]]
+    [athens.time-controls :as time-controls]
+    [athens.util :refer [get-caret-position recursively-modify-block-for-embed]]
     [athens.views.blocks.core :as blocks]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
     [athens.views.hoc.perf-mon :as perf-mon]
-    [athens.views.references :refer [reference-group reference-block]]
     [clojure.string :as str]
     [datascript.core :as d]
     [komponentit.autosize :as autosize]
@@ -162,7 +162,8 @@
             ;; NOTE: alert should be global reusable component, not local to node_page
             (swap! state assoc
                    :alert/show true
-                   :alert/message (str "\"" local "\"" " already exists, merge pages?")
+                   :alert/message (str "\"" local "\"" " already exists. Merge pages?")
+                   :alert/confirm-text "Merge"
                    :alert/confirm-fn confirm-fn
                    :alert/cancel-fn cancel-fn)))))))
 
@@ -171,17 +172,21 @@
 
 (defn placeholder-block-el
   [parent-uid]
-  [:> Box {:class "block-container"
-           :pl "1em"
-           :display "flex"}
-   [:> Anchor]
-   [:> Button {:variant "link"
-               :flex "1 1 100%"
-               :pl 1
-               :textAlign "left"
-               :justifyContent "flex-start"
-               :onClick #(handle-new-first-child-block-click parent-uid)}
-    "Click here to add content..."]])
+  [:> Container
+   [:div.block-body
+    [:> Anchor]
+    [:> Button {:flex "1 1 100%"
+                :py 0
+                :height "100%"
+                :px 2
+                :textAlign "left"
+                :gridArea "content"
+                :color "foreground.secondary"
+                :justifyContent "flex-start"
+                :cursor "text"
+                :fontWeight "normal"
+                :onClick #(handle-new-first-child-block-click parent-uid)}
+     "Type to begin..."]]])
 
 
 (defn sync-title
@@ -203,58 +208,79 @@
    :alert/message        nil
    :alert/confirm-fn     nil
    :alert/cancel-fn      nil
+   :alert/confirm-text   nil
    "Linked References"   true
    "Unlinked References" false})
 
 
 (defn menu-dropdown
-  [node daily-note?]
-  (let [{:block/keys [uid] sidebar
-         :page/sidebar title
-         :node/title} node]
-    [:> Menu
-     [:> MenuButton {:as IconButton
-                     :gridArea "menu"
-                     :justifySelf "flex-end"
-                     :alignSelf "center"
-                     :bg "transparent"
-                     :height "2.25em"
-                     :width "2.25em"
-                     :mr "0.5em"
-                     :borderRadius "full"
-                     :sx {"span" {:display "contents"}
-                          "button svg:first-of-type" {:marginRight "0.25rem"}}}
-      [:> MoreHoriz]]
-     [:> Portal
-      [:> MenuList {:sx {"button svg:first-of-type" {:marginRight "0.25rem"}}}
-       [:<>
-        (if sidebar
-          [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])}
-           [:> BookmarkBorder]
-           "Remove Shortcut"]
-          [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])}
-           [:> Bookmark]
-           [:span "Add Shortcut"]])
-        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])}
-         [:> BubbleChart]
-         "Show Local Graph"]]
-       [:> MenuDivider]
-       [:> MenuItem {:onClick (fn []
-                                ;; if page being deleted is in right sidebar, remove from right sidebar
-                                (when (contains? @(subscribe [:right-sidebar/items]) uid)
-                                  (dispatch [:right-sidebar/close-item uid]))
-                                ;; if page being deleted is open, navigate to all pages
-                                (when (or (= @(subscribe [:current-route/page-title]) title)
-                                          (= @(subscribe [:current-route/uid]) uid))
-                                  (rf/dispatch [:reporting/navigation {:source :page-title-delete
-                                                                       :target :all-pages
-                                                                       :pane   :main-pane}])
-                                  (router/navigate :pages))
-                                ;; if daily note, delete page and remove from daily notes, otherwise just delete page
-                                (if daily-note?
-                                  (dispatch [:daily-note/delete uid title])
-                                  (dispatch [:page/delete title])))}
-        [:> Delete] "Delete Page"]]]]))
+  [node _daily-note? _on-daily-notes?]
+  (let [contains-item? (subscribe [:right-sidebar/contains-item? [:node/title (:node/title node)]])]
+    (fn [node daily-note? on-daily-notes?]
+      (let [{:block/keys [uid]
+             sidebar :page/sidebar
+             title :node/title} node]
+        [:> Menu {:isLazy true :size "sm"}
+         [:> MenuButton {:as           IconButton
+                         "aria-label"  "Page menu"
+                         :gridArea     "menu"
+                         :justifySelf  "flex-end"
+                         :size         "sm"
+                         :alignSelf    "center"
+                         :fontSize     "70%"
+                         :color        "foreground.secondary"
+                         :bg           "transparent"
+                         :borderRadius "full"
+                         :sx           {"span" {:display "contents"}}}
+          [:> EllipsisHorizontalIcon]]
+         [:> Portal
+          [:> MenuList
+           [:<>
+            (if sidebar
+              [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])
+                            :icon    (r/as-element [:> BookmarkFillIcon])}
+               "Remove Shortcut"]
+              [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])
+                            :icon    (r/as-element [:> BookmarkIcon])}
+               [:span "Add Shortcut"]])
+            #_[:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item [:node/title title] true])
+                            :icon    (r/as-element [:> GraphIcon])}
+               "Show Local Graph"]
+            [:> MenuItem {:onClick    #(dispatch [:right-sidebar/open-item [:node/title title]])
+                          :isDisabled @contains-item?
+                          :icon       (r/as-element [:> ArrowRightOnBoxIcon])}
+             "Open in Sidebar"]]
+           (when (and (not on-daily-notes?)
+                      (time-controls/enabled?))
+             [:<>
+              [:> MenuItem {:onClick (fn []
+                                       (dispatch [:time/set-page-range title])
+                                       (dispatch [:time/toggle-slider]))
+                            :icon    (r/as-element [:> TimeNowIcon])}
+               "Toggle Time Slider"]
+              [:> MenuItem {:onClick (fn []
+                                       (dispatch [:time/set-page-range title])
+                                       (dispatch [:time/toggle-heatmap]))
+                            :icon    (r/as-element [:> TimeNowIcon])}
+               "Toggle Time Heatmap"]])
+           [:> MenuDivider]
+           [:> MenuItem {:icon    (r/as-element [:> TrashIcon])
+                         :onClick (fn []
+                                    ;; if page being deleted is in right sidebar, remove from right sidebar
+                                    (when @contains-item?
+                                      (dispatch [:right-sidebar/close-item [:node/title title]]))
+                                    ;; if page being deleted is open, navigate to back
+                                    (when (or (= @(subscribe [:current-route/page-title]) title)
+                                              (= @(subscribe [:current-route/uid]) uid))
+                                      (rf/dispatch [:reporting/navigation {:source :page-title-delete
+                                                                           :target :back
+                                                                           :pane   :main-pane}])
+                                      (.back js/window.history))
+                                    ;; if daily note, delete page and remove from daily notes, otherwise just delete page
+                                    (if daily-note?
+                                      (dispatch [:daily-note/delete uid title])
+                                      (dispatch [:page/delete title])))}
+            "Delete Page"]]]]))))
 
 
 (defn ref-comp
@@ -269,16 +295,19 @@
     (fn [_]
       (let [{:keys [block parents embed-id]} @state
             block (reactive/get-reactive-block-document (:db/id block))]
-        [:<>
-         [:> Breadcrumb {:fontSize "0.7em" :pl 6 :opacity 0.75}
+        [:> VStack {:spacing 0
+                    :align "stretch"}
+         [:> Breadcrumb {:fontSize "sm"
+                         :variant "strict"
+                         :color "foreground.secondary"}
           (doall
-            (for [{:keys [node/title block/string block/uid]} parents]
+            (for [{:keys [block/uid]} parents]
               [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
                [:> BreadcrumbLink
                 {:onClick #(let [new-B (db/get-block [:block/uid uid])
                                  new-P (drop-last parents)]
                              (swap! state assoc :block new-B :parents new-P))}
-                [parse-and-render (or title string) uid]]]))]
+                [parse-and-render (common-db/breadcrumb-string @db/dsdb uid) uid]]]))]
          [:> Box {:class "block-embed"}
           [blocks/block-el
            (recursively-modify-block-for-embed block embed-id)
@@ -286,120 +315,113 @@
            {:block-embed? true}]]]))))
 
 
-(defn linked-ref-el
-  [state daily-notes? title]
-  (let [linked?     "Linked References"
-        linked-refs (wrap-span-no-new-tx "get-reactive-linked-references"
-                                         (reactive/get-reactive-linked-references [:node/title title]))]
-    (when (or (and daily-notes? (not-empty linked-refs))
-              (not daily-notes?))
-      [:> Accordion {:index (if (get @state linked?) 0 nil)}
-       [:> AccordionItem
-        [:h2
-         [:> AccordionButton {:onClick (fn [] (swap! state update linked? not))}
-          [:> AccordionIcon]
-          linked?
-          [:> Text {:ml "auto"
-                    :fontWeight "medium"
-                    :color "foreground.secondary"
-                    :borderRadius "full"}
-           (count linked-refs)]]]
-        [:> AccordionPanel {:p 0}
-         [:> VStack {:spacing 6
-                     :pl 9
-                     :align "stretch"}
+(defn linked-blocks
+  [header groups start-closed?]
+  (when (not-empty groups)
+    [:> PageReferences {:count (count groups)
+                        :title header
+                        :defaultIsOpen (and (> 10 (count groups))
+                                            (not start-closed?))}
+     (doall
+       (for [[group-title group] groups]
+         [:> ReferenceGroup {:key (str "group-" group-title)
+                             :title group-title
+                             :onClickTitle (fn [e]
+                                             (let [shift?       (.-shiftKey e)
+                                                   parsed-title (parse-renderer/parse-title group-title)]
+                                               (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
+                                                                                    :target :page
+                                                                                    :pane   (if shift?
+                                                                                              :right-pane
+                                                                                              :main-pane)}])
+                                               (router/navigate-page parsed-title e)))}
           (doall
-            (for [[group-title group] linked-refs]
-              [reference-group {:key (str "group-" group-title)
-                                :title group-title
-                                :on-click-title (fn [e]
-                                                  (let [shift?       (.-shiftKey e)
-                                                        parsed-title (parse-renderer/parse-title group-title)]
-                                                    (rf/dispatch [:reporting/navigation {:source :main-page-linked-refs ; NOTE: this might be also used in right-pane situation
-                                                                                         :target :page
-                                                                                         :pane   (if shift?
-                                                                                                   :right-pane
-                                                                                                   :main-pane)}])
-                                                    (router/navigate-page parsed-title e)))}
-               (doall
-                 (for [block group]
-                   [reference-block {:key (str "ref-" (:block/uid block))}
-                    [ref-comp block]]))]))]]]])))
+            (for [block group]
+              [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
+               [ref-comp block]]))]))]))
+
+
+(defn linked-ref-el
+  [title]
+  (let [linked-refs (wrap-span-no-new-tx "get-reactive-linked-references"
+                                         (reactive/get-reactive-linked-references [:node/title title]))]
+
+    (linked-blocks "Linked References" linked-refs false)))
+
+
+(defn linked-prop-el
+  [title]
+  (let [linked-props (wrap-span-no-new-tx "get-reactive-linked-properties"
+                                          (reactive/get-reactive-linked-properties [:node/title title]))]
+    (linked-blocks "Linked Properties" linked-props false)))
+
+
+(defn edited-on-el
+  [title]
+  (let [edited-blocks (wrap-span-no-new-tx "get-reactive-linked-properties"
+                                           (reactive/get-reactive-edited-on-day-blocks title))]
+    (linked-blocks "Edited on this day" edited-blocks true)))
 
 
 (defn unlinked-ref-el
-  [state daily-notes? unlinked-refs title]
-  (let [unlinked? "Unlinked References"]
-    (when (not daily-notes?)
-      [:> Accordion {:index (if (get @state unlinked?) 0 nil)}
-       [:> AccordionItem {:isDisabled (empty @unlinked-refs)}
-        [:> Box {:as "h2" :position "relative"}
-         [:> AccordionButton {:onClick (fn []
-                                         (if (get @state unlinked?)
-                                           (swap! state assoc unlinked? false)
-                                           (let [un-refs (get-unlinked-references (escape-str title))]
-                                             (swap! state assoc unlinked? true)
-                                             (reset! unlinked-refs un-refs))))}
-          [:> AccordionIcon]
-          unlinked?
-          [:> Text {:ml "auto"
-                    :fontWeight "medium"
-                    :color "foreground.secondary"
-                    :borderRadius "full"}
-           (count @unlinked-refs)]]
-         (when (and unlinked? (not-empty @unlinked-refs))
-           [:> Button {:position "absolute"
-                       :size "xs"
-                       :top 1
-                       :right 1
-                       :onClick (fn []
-                                  (let [unlinked-str-ids (->> @unlinked-refs
-                                                              (mapcat second)
-                                                              (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
-                                    (dispatch [:unlinked-references/link-all unlinked-str-ids title]))
-
-                                  (swap! state assoc unlinked? false)
-
-                                  (reset! unlinked-refs []))}
-            "Link All"])]
-        [:> AccordionPanel {:p 0}
-         [:> VStack {:spacing 6
-                     :pl 1
-                     :align "stretch"}
+  [state unlinked-refs title]
+  (let [unlinked? "Unlinked References"
+        link-all-unlinked (fn []
+                            (let [unlinked-str-ids
+                                  (->> @unlinked-refs
+                                       (mapcat second)
+                                       (map #(select-keys % [:block/string :block/uid])))] ; to remove the unnecessary data before dispatching the event
+                              (dispatch [:unlinked-references/link-all unlinked-str-ids title]))
+                            (swap! state assoc unlinked? false)
+                            (reset! unlinked-refs []))]
+    [:> PageReferences {:defaultIsOpen false
+                        :count (count @unlinked-refs)
+                        :showIfEmpty true
+                        :refs @unlinked-refs
+                        :title "Unlinked References"
+                        :extras (r/as-element [:> Button {:variant "link"
+                                                          :size "sm"
+                                                          :flexShrink 0
+                                                          :onClick link-all-unlinked}
+                                               "Link all"])
+                        :onOpen  #(let [un-refs (get-unlinked-references (patterns/escape-str title))]
+                                    (swap! state assoc unlinked? true)
+                                    (reset! unlinked-refs un-refs))
+                        :onClose #(swap! state assoc unlinked? false)}
+     (doall
+       (for [[[group-title] group] @unlinked-refs]
+         [:> ReferenceGroup
+          {:title group-title
+           :onClickTitle (fn [e]
+                           (let [shift?       (.-shiftKey e)
+                                 parsed-title (parse-renderer/parse-title group-title)]
+                             (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
+                                                                  :target :page
+                                                                  :pane   (if shift?
+                                                                            :right-pane
+                                                                            :main-pane)}])
+                             (router/navigate-page parsed-title e)))}
           (doall
-            (for [[[group-title] group] @unlinked-refs]
-              [reference-group
-               {:title group-title
-                :on-click-title (fn [e]
-                                  (let [shift?       (.-shiftKey e)
-                                        parsed-title (parse-renderer/parse-title group-title)]
-                                    (rf/dispatch [:reporting/navigation {:source :main-unlinked-refs ; NOTE: this isn't always `:main-unlinked-refs` it can also be `:right-pane-unlinked-refs`
-                                                                         :target :page
-                                                                         :pane   (if shift?
-                                                                                   :right-pane
-                                                                                   :main-pane)}])
-                                    (router/navigate-page parsed-title e)))}
-               (doall
-                 (for [block group]
-                   [reference-block
-                    {:key (str "ref-" (:block/uid block))
-                     :actions (when unlinked?
-                                [:> Button {:marginTop "1.5em"
-                                            :size "xs"
-                                            :flex "0 0"
-                                            :float "right"
-                                            :variant "link"
-                                            :onClick (fn []
-                                                       (let [hm                (into (hash-map) @unlinked-refs)
-                                                             new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
-                                                                                                                           (= uid (:block/uid block)))
-                                                                                                                         %))
-                                                                                    seq)]
-                                                         ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
-                                                         (reset! unlinked-refs new-unlinked-refs)
-                                                         (dispatch [:unlinked-references/link block title])))}
-                                 "Link"])}
-                    [ref-comp block]]))]))]]]])))
+            (for [block group]
+              [:> ReferenceBlock
+               {:key (str "ref-" (:block/uid block))
+                :actions (when unlinked?
+                           (r/as-element [:> Button {:marginTop "1.5em"
+                                                     :size "xs"
+                                                     :flex "0 0"
+                                                     :float "right"
+                                                     :variant "link"
+                                                     :onClick (fn []
+                                                                (let [hm                (into (hash-map) @unlinked-refs)
+                                                                      new-unlinked-refs (->> (update-in hm [group-title] #(filter (fn [{:keys [block/uid]}]
+                                                                                                                                    (= uid (:block/uid block)))
+                                                                                                                                  %))
+                                                                                             seq)]
+                                                                  ;; ctrl-z doesn't work though, because Unlinked Refs aren't reactive to datascript.
+                                                                  (reset! unlinked-refs new-unlinked-refs)
+                                                                  (dispatch [:unlinked-references/link block title])))}
+                                          "Link"]))}
+               [ref-comp block]]))]))]))
 
 
 ;; TODO: where to put page-level link filters?
@@ -411,14 +433,16 @@
   [_]
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
-        block-uid     (r/atom nil)]
+        block-uid     (r/atom nil)
+        properties-enabled? (rf/subscribe [:feature-flags/enabled? :properties])
+        cover-photo-enabled? (rf/subscribe [:feature-flags/enabled? :cover-photo])]
     (fn [node]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
         (reset! unlinked-refs [])
         (reset! block-uid (:block/uid node)))
-      (let [{:block/keys [children uid] title :node/title}                      node
-            {:alert/keys [message confirm-fn cancel-fn] alert-show :alert/show} @state
+      (let [{:block/keys [children uid properties] title :node/title}           node
+            {:alert/keys [message confirm-fn cancel-fn confirm-text] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
             on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))]
 
@@ -426,19 +450,25 @@
 
         [:<>
 
-         [:> Confirmation {:isOpen    alert-show
-                           :title     message
-                           :onConfirm confirm-fn
-                           :onClose   cancel-fn}]
-
+         [:> Confirmation {:isOpen      alert-show
+                           :title       message
+                           :confirmText confirm-text
+                           :onConfirm   confirm-fn
+                           :onClose     cancel-fn}]
          ;; Header
-         [:> PageHeader
+         [:> PageHeader (merge
+                          {:onClickOpenInMainView  (when on-daily-notes?
+                                                     (fn [e] (router/navigate-page title e)))
+                           :onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:node/title title]])
+                                                    #(dispatch [:right-sidebar/open-item [:node/title title]]))}
+                          (when @cover-photo-enabled?
+                            {:headerImageEnabled     @cover-photo-enabled?
+                             :headerImageUrl         (-> properties (get ":header/url") :block/string)
+                             :onChangeHeaderImageUrl (fn [url]
+                                                       (dispatch [:properties/update-in [:node/title title] [":header/url"]
+                                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))}))
 
-          ;; Dropdown
-          [menu-dropdown node daily-note?]
-
-          [:> EditableTitleContainer
-           {:isEditing @(subscribe [:editing/is-editing uid])}
+          [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
            ;; Prevent editable textarea if a node/title is a date
            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 
@@ -454,29 +484,55 @@
                               (handle-blur node state))
                :on-key-down (fn [e] (handle-key-down e uid state children))
                :on-change   (fn [e] (handle-change e state))}])
-           ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
-           (if (str/blank? (:title/local @state))
-             [:wbr]
-             [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
-              [parse-renderer/parse-and-render (:title/local @state) uid]])]]
+
+           [:> HStack {:width "fit-content" :gridArea "main"}
+            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
+            (if (str/blank? (:title/local @state))
+              [:wbr]
+              [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
+               [parse-renderer/parse-and-render (:title/local @state) uid]])
+
+            ;; Dropdown
+            [menu-dropdown node daily-note? on-daily-notes?]]]]
 
          [:> PageBody
 
+          (when-not on-daily-notes?
+            [time-controls/slider title])
+
+          (when (and (empty? properties)
+                     (empty? children))
+            [placeholder-block-el uid])
+
+          ;; Properties
+          [:div
+           (when (and @properties-enabled?
+                      (seq properties))
+             (for [prop (common-db/sort-block-properties properties)]
+               ^{:key (:db/id prop)}
+               [blocks/block-el prop]))]
+
           ;; Children
-          (if (empty? children)
-            [placeholder-block-el uid]
-            [:div
-             (for [{:block/keys [uid] :as child} children]
-               ^{:key uid}
-               [perf-mon/hoc-perfmon {:span-name "block-el"}
-                [blocks/block-el child]])])]
+          [:div
+           (for [{:block/keys [uid] :as child} children]
+             ^{:key uid}
+             [perf-mon/hoc-perfmon {:span-name "block-el"}
+              [blocks/block-el child]])]]
 
          ;; References
          [:> PageFooter
-          [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
-           [linked-ref-el state on-daily-notes? title]]
-          [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
-           [unlinked-ref-el state on-daily-notes? unlinked-refs title]]]]))))
+          [:> VStack {:spacing 2 :py 4 :align "stretch"}
+           [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
+            [linked-ref-el title]]
+           [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-prop-el"}
+            [linked-prop-el title]]
+           (when (and daily-note?
+                      (not on-daily-notes?))
+             [perf-mon/hoc-perfmon-no-new-tx {:span-name "edited-on-el"}
+              [edited-on-el title]])
+           (when-not on-daily-notes?
+             [perf-mon/hoc-perfmon-no-new-tx {:span-name "unlinked-ref-el"}
+              [unlinked-ref-el state unlinked-refs title]])]]]))))
 
 
 (defn page

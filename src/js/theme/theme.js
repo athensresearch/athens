@@ -1,4 +1,4 @@
-import { extendTheme, cssVar } from '@chakra-ui/react'
+import { extendTheme, cssVar, Tooltip } from '@chakra-ui/react'
 import { readableColor } from 'polished';
 import { spacing } from './spacing'
 
@@ -15,9 +15,9 @@ const shadows = {
 }
 
 const fonts = {
-  body: '"IBM Plex Serif", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"',
-  default: '"IBM Plex Sans", BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",system-ui,ui-sans-serif,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"',
-  code: '"IBM Plex Mono", BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, ui-sans-serif, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+  body: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+  default: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+  code: 'ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro","Fira Mono", "Droid Sans Mono", "Courier New", monospace;',
 }
 
 const radii = {
@@ -26,47 +26,6 @@ const radii = {
   md: '0.5rem',
   lg: '1rem',
   full: '9999px',
-}
-
-const colors = {
-  // light theme
-  linkLight: "#0071DB",
-  linkContrastLight: '#fff',
-  highlightLight: "#F9A132",
-  textHighlightLight: "#ffdb8a",
-  highlightContrastLight: "#000",
-  warningLight: "#D20000",
-
-  backgroundPlus2Light: "#fff",
-  backgroundPlus1Light: "#fbfbfb",
-  backgroundColorLight: "#F6F6F6",
-  backgroundMinus1Light: "#FAF8F6",
-  backgroundMinus2Light: "#EFEDEB",
-  backgroundVibrancyLight: "#ffffff99",
-
-  errorLight: "#fd5243",
-  shadowLight: "#000",
-
-  // dark theme
-  backgroundMinu2Dark: "#151515",
-  backgroundMinus1Dark: "#111",
-  backgroundColorDark: "#1A1A1A",
-  backgroundPlus1Dark: "#222",
-  backgroundPlus2Dark: "#333",
-  backgroundVibrancyDark: "#222222aa",
-
-  linkDark: "#498eda",
-  linkContrastDark: '#fff',
-  highlightDark: "#FBBE63",
-  textHighlightDark: "#FBBE63",
-  highlightContrastDark: "#000",
-  warningDark: "#DE3C21",
-
-  errorDark: "#fd5243",
-  shadowDark: "#000",
-
-  // interactives
-
 }
 
 const semanticTokens = {
@@ -90,13 +49,14 @@ const semanticTokens = {
       _dark: "0 0.25rem 1rem #00000055",
     },
     menu: {
-      default: "0 0.25rem 1rem #00000055",
+      default: "0 0.25rem 1rem #00000022",
+      _dark: "0 0.25rem 1rem #00000022",
     },
     popover: {
       default: "0 0.25rem 1rem #00000055",
     },
     tooltip: {
-      default: "0 0.25rem 1rem #00000055",
+      default: "0 0.125rem 0.5rem #00000055",
     },
     dialog: {
       default: "0 0.25rem 1rem #00000022",
@@ -104,51 +64,59 @@ const semanticTokens = {
   },
   colors: {
     brand: {
-      default: 'linkLight',
-      _dark: 'linkDark'
+      default: '#0071DB',
+      _dark: '#498eda'
     },
     // separator colors
     "separator.border": {
-      default: '00000011',
-      _dark: '#ffffff55'
+      default: '#00000033',
+      _dark: '#ffffff22'
     },
     "separator.divider": {
-      default: '#00000011',
+      default: '#00000022',
       _dark: '#ffffff11'
     },
     // background colors
     "background.floor": {
-      default: 'backgroundColorLight',
-      _dark: 'backgroundColorDark'
+      default: '#F6F6F6',
+      _dark: '#1A1A1A'
     },
     "background.basement": {
-      default: 'backgroundMinus1Light',
-      _dark: 'backgroundMinus1Dark'
+      default: '#fff',
+      _dark: '#111'
     },
     "background.upper": {
-      default: 'backgroundPlus1Light',
-      _dark: 'backgroundPlus1Dark'
+      default: '#fbfbfb',
+      _dark: '#222'
     },
     "background.attic": {
-      default: 'backgroundPlus2Light',
-      _dark: 'backgroundPlus2Dark'
+      default: '#fff',
+      _dark: '#333'
     },
     "background.vibrancy": {
-      default: 'backgroundVibrancyLight',
-      _dark: 'backgroundVibrancyDark'
+      default: '#ffffffaa',
+      _dark: '#222222aa'
     },
     // foreground colors
     "foreground.primary": {
       default: 'hsla(0, 0%, 0%, 0.87)',
-      _dark: 'hsla(0, 0%, 100%, 0.8)'
+      _dark: 'hsla(0, 0%, 100%, 0.83)'
     },
     "foreground.secondary": {
       default: 'hsla(0, 0%, 0%, 0.57)',
-      _dark: 'hsla(0, 0%, 100%, 0.57)'
+      _dark: 'hsla(0, 0%, 100%, 0.5)'
+    },
+    "foreground.tertiary": {
+      default: 'hsla(0, 0%, 0%, 0.2)',
+      _dark: 'hsla(0, 0%, 100%, 0.2)'
     },
     // interactions
-    "interaction.surface.hover": {
+    "interaction.surface": {
       default: 'hsla(0, 0%, 0%, 0.04)',
+      _dark: 'hsla(0, 0%, 100%, 0.04)',
+    },
+    "interaction.surface.hover": {
+      default: 'hsla(0, 0%, 0%, 0.08)',
       _dark: 'hsla(0, 0%, 100%, 0.08)',
     },
     "interaction.surface.active": {
@@ -156,42 +124,42 @@ const semanticTokens = {
       _dark: 'hsla(0, 0%, 100%, 0.16)',
     },
     // status colors
-    danger: {
-      default: 'warningLight',
-      _dark: 'warningDark'
+    error: {
+      default: '#D20000',
+      _dark: '#DE3C21'
     },
     info: {
-      default: 'linkLight',
-      _dark: 'linkDark'
+      default: '#0071DB',
+      _dark: '#498eda'
     },
     warning: {
-      default: 'warningLight',
-      _dark: 'warningDark'
+      default: '#D20000',
+      _dark: '#DE3C21'
     },
     success: {
-      default: 'confirmationLight',
-      _dark: 'confirmationDark'
+      default: '#4CBB17',
+      _dark: '#498eda'
     },
     // other colors
     textHighlight: {
-      default: 'textHighlightLight',
-      _dark: 'textHighlightDark'
+      default: '#ffdb8a',
+      _dark: '#FBBE63'
     },
     highlight: {
-      default: 'highlightLight',
-      _dark: 'highlightDark'
+      default: '#F9A132',
+      _dark: '#FBBE63'
     },
     highlightContrast: {
-      default: 'highlightContrastLight',
-      _dark: 'highlightContrastDark'
+      default: '#000',
+      _dark: '#000'
     },
     link: {
-      default: 'linkLight',
-      _dark: 'linkDark'
+      default: '#0071DB',
+      _dark: '#498eda'
     },
     linkContrast: {
-      default: 'linkContrastLight',
-      _dark: 'linkContrastDark'
+      default: '#fff',
+      _dark: '#fff'
     },
     // block content colors
     "ref.foreground": {
@@ -228,36 +196,58 @@ const components = {
   Alert: {
     variants: {
       // variant used by toasts
-      solid: ({ colorScheme }) => ({
-        container: {
-          bg: 'background.vibrancy',
-          backdropFilter: "blur(20px)",
-          color: "foreground.primary",
-          _after: {
-            content: "''",
-            position: "absolute",
-            inset: 0,
-            borderRadius: "inherit",
-            background: colorScheme,
-            opacity: 0.1,
-            zIndex: -1,
+      solid: ({ theme, status = "info" }) => {
+
+        // Toasts don't recieve the current color mode
+        // as a prop, so we get both colors and use one or
+        // the other based on the CSS context
+        const toastColorDefault = theme.semanticTokens.colors[status]?.default;
+        const toastColorDark = theme.semanticTokens.colors[status]?.dark;
+
+        return ({
+          container: {
+            bg: 'background.vibrancy',
+            backdropFilter: "blur(20px)",
+            color: "foreground.primary",
+            "--toast-color": toastColorDefault,
+            ".is-theme-dark &": {
+              "--toast-color": toastColorDark,
+            },
+            _after: {
+              content: "''",
+              position: "absolute",
+              inset: 0,
+              borderRadius: "inherit",
+              background: "var(--toast-color)",
+              opacity: 0.1,
+              zIndex: -1,
+            }
+          },
+          title: {
+            fontWeight: "normal"
+          },
+          icon: {
+            color: "var(--toast-color)",
           }
-        },
-        title: {
-          fontWeight: "normal"
-        },
-        icon: {
-          color: colorScheme || "info"
-        }
-      })
+        })
+      }
     }
   },
   Avatar: {
-    baseStyle: ({ bg, color }) => {
+    baseStyle: (props) => {
+      const { bg, color, size } = props;
+      const exessLabelFontSize = theme.fontSizes[size || 'md'];
+
       return {
         container: {
           borderColor: "background.floor",
           ...makeAvatarColor(bg, color)
+        },
+        excessLabel: {
+          background: "background.attic",
+          fontSize: exessLabelFontSize,
+          border: "2px solid transparent",
+          backgroundClip: "padding-box",
         },
       }
     },
@@ -292,16 +282,38 @@ const components = {
       separator: {
         color: 'separator.border'
       },
+      item: {
+        overflow: 'hidden',
+        ".fmt": {
+          display: 'none',
+        }
+      },
+    },
+    variants: {
+      strict: {
+        link: {
+          overflow: 'hidden !important',
+          textOverflow: 'ellipsis !important',
+          // Complicated selector applies to everything
+          // except descendants of TODO checkboxes
+          "*:not([data-checked] *):not([data-unchecked] *):not([class*='checkbox'])": {
+            fontSize: 'inherit !important',
+            fontWeight: 'inherit !important',
+            lineHeight: 'inherit !important',
+            fontFamily: 'inherit !important',
+            color: 'inherit !important',
+            background: 'none !important',
+            textDecoration: 'none !important',
+            display: "inline !important",
+          }
+        }
+      }
     }
   },
   Button: {
     baseStyle: {
       transitionProperty: 'common',
       transitionTimingFunction: 'ease-in-out',
-      "& > .chakra-button__icon svg": {
-        height: "1.5em",
-        width: "1.5em",
-      },
       _active: {
         transitionDuration: "0s",
       },
@@ -317,9 +329,46 @@ const components = {
     variants: {
       link: {
         color: "link",
-        borderRadius: "1px"
+        borderRadius: "1px",
+        _active: {
+          color: "link",
+          opacity: 0.8,
+        }
       },
-      solid: {
+      solid: ({ colorScheme, colorMode }) => {
+
+        const highlightColor = (colorMode === 'dark')
+          ? theme.semanticTokens.colors["link"]._dark
+          : theme.semanticTokens.colors["link"].default;
+
+        if (colorScheme === 'highlight') {
+          return ({
+            color: highlightColor,
+            bg: "interaction.surface",
+            _hover: {
+              bg: "interaction.surface.hover"
+            },
+            _active: {
+              color: 'foreground.primary',
+              bg: 'interaction.surface.active',
+            },
+          })
+        } else {
+          return ({
+            bg: "interaction.surface",
+            _hover: {
+              bg: "interaction.surface.hover"
+            },
+            _active: {
+              color: 'foreground.primary',
+              bg: 'interaction.surface.active',
+            },
+          })
+        }
+      },
+      ghost: ({ colorScheme }) => ({
+        bg: "transparent",
+        color: (colorScheme === 'subtle') ? "foreground.secondary" : "foreground.primary",
         _hover: {
           bg: "interaction.surface.hover"
         },
@@ -327,7 +376,7 @@ const components = {
           color: 'foreground.primary',
           bg: 'interaction.surface.active',
         },
-      },
+      }),
       outline: {
         bg: "transparent",
         borderWidth: "1px",
@@ -345,8 +394,8 @@ const components = {
       }
     },
     colorSchemes: {
-      danger: {
-        color: "danger"
+      error: {
+        color: "error"
       }
     }
   },
@@ -386,6 +435,7 @@ const components = {
         overflow: 'hidden',
         p: 0,
         bg: 'background.vibrancy',
+        borderColor: 'separator.divider',
         backdropFilter: "blur(20px)",
         minWidth: '0',
         width: 'max-content',
@@ -393,9 +443,8 @@ const components = {
       },
       groupTitle: {
         color: "foreground.secondary",
-        textTransform: "uppercase",
         fontSize: "0.75em",
-        fontWeight: "bold",
+        fontWeight: "700",
       },
       item: {
         "&.isActive": {
@@ -405,19 +454,39 @@ const components = {
           flexShrink: 0,
           fontSize: "1.5em",
         },
-        // additional selector to catch icons not using the icon prop
-        "&& > svg:first-of-type, svg:not(span > svg)": {
-          marginInlineEnd: "0.75rem"
+        _focus: {
+          background: "interaction.surface.hover",
+        },
+        _focusVisible: {
+          background: "interaction.surface.hover",
+        },
+        _hover: {
+          background: "interaction.surface.hover",
+        },
+        _active: {
+          background: "interaction.surface.active",
+        },
+        _expanded: {
+          background: "interaction.surface.active",
         },
       }
     },
     sizes: {
       sm: {
         item: {
-          padding: '0.5rem 1rem',
+          padding: '0.35rem 0.5rem',
           fontSize: "sm"
+        },
+        icon: {
+          marginInlineEnd: "0.25rem",
+        },
+        groupTitle: {
+          margin: '0.35rem 0.5rem',
         }
       }
+    },
+    defaultProps: {
+      size: 'sm',
     }
   },
   Modal: {
@@ -437,12 +506,12 @@ const components = {
     }
   },
   Popover: {
-    parts: [ "arrow", "content" ],
+    parts: ["arrow", "content"],
     baseStyle: {
       content: {
         bg: "background.upper",
         shadow: "popover",
-        [ $arrowBg.variable ]: "colors.background.upper",
+        [$arrowBg.variable]: "colors.background.upper",
       }
     }
   },
@@ -454,6 +523,16 @@ const components = {
     }),
     defaultProps: {
       thickness: '1.5px',
+    }
+  },
+  Switch: {
+    baseStyle: {
+      track: {
+        background: "foreground.tertiary",
+        _checked: {
+          background: "link",
+        }
+      }
     }
   },
   Table: {
@@ -472,7 +551,15 @@ const components = {
         },
         tbody: {
           tr: {
+            // Reset the default striped background so we can
+            // set it more robustly below, including support
+            // for virtualized tables.
             "&:nth-of-type(odd)": {
+              td: {
+                background: 'none'
+              }
+            },
+            "&:nth-of-type(odd):not(.index-even), &.index-odd": {
               td: {
                 background: "background.upper",
                 "&:first-of-type": {
@@ -527,13 +614,16 @@ const components = {
       boxShadow: "md",
       maxW: "320px",
       zIndex: "tooltip",
-    }
+    },
   },
 }
 
+// Default prop overrides
+Tooltip.defaultProps = { ...Tooltip.defaultProps, openDelay: 500 }
+
 const config = {
-  initialColorMode: 'dark',
-  useSystemColorMode: true,
+  initialColorMode: 'system',
+  colorModeManager: 'localStorage',
 }
 
 const styles = {
@@ -544,6 +634,27 @@ const styles = {
       lineHeight: '1.5',
       height: '100vh',
       fontFamily: 'default',
+      sx: {
+        "::WebkitScrollbar": {
+          background: "background.basement",
+          width: "0.5rem",
+          height: "0.5rem"
+        },
+        "::WebkitScrollbar-corner": { bg: "background.basement" },
+        "::WebkitScrollbar-thumb": {
+          bg: "background.upper",
+          borderRadius: "full"
+        }
+      }
+    },
+    "#chakra-toast-manager-top-right, #chakra-toast-manager-top, #chakra-toast-manager-top-left": {
+      margin: "3rem 1rem"
+    },
+    mark: {
+      background: "highlight",
+      color: "highlightContrast",
+      padding: '0 0.2em',
+      borderRadius: "sm",
     }
   }
 }
@@ -552,4 +663,4 @@ const sizes = {
   ...spacing
 }
 
-export const theme = extendTheme({ config, radii, fonts, colors, shadows, semanticTokens, spacing, sizes, components, styles });
+export const theme = extendTheme({ config, radii, fonts, shadows, semanticTokens, spacing, sizes, components, styles });
