@@ -1,2 +1,2 @@
-import { PresenceDetails, PresenceDetailsProps } from "./PresenceDetails";
-export { PresenceDetails, PresenceDetailsProps };
+import { PresenceDetails } from "./PresenceDetails";
+export { PresenceDetails };

@@ -6,7 +6,6 @@
     [athens.db                            :as db]
     [athens.electron.utils                :as utils]
     [athens.interceptors                  :as interceptors]
-    [datascript.core                      :as d]
     [datascript.transit                   :as dt]
     [goog.functions                       :refer [debounce]]
     [re-frame.core                        :as rf]))
@@ -24,6 +23,9 @@
         newer?     (< prev-mtime curr-mtime)]
     (when (and prev-mtime curr-mtime newer?)
       (let [block-text js/document.activeElement.value
+            ;; TODO we should not interact with clipboard without clear user interaction,
+            ;;      this is most common error we see right now in Sentry
+            ;;      It would be better to store below information in re-frame
             _          (.. js/navigator -clipboard (writeText block-text))
             _          (write-bkp)
             confirm    (js/window.confirm (str "New file found. Copying your current block to the clipboard, and saving your current db."
@@ -63,7 +65,7 @@
 (rf/reg-event-fx
   :fs/create-and-watch
   (fn [_ [_ {:keys [base-dir images-dir db-path] :as local-db}]]
-    (let [conn (d/create-conn common-db/schema)]
+    (let [conn (common-db/create-conn)]
       (doseq [[_id data] athens-datoms/welcome-events]
         (atomic-resolver/resolve-transact! conn data))
       (utils/create-dir-if-needed! base-dir)
@@ -74,7 +76,7 @@
 
 (rf/reg-event-fx
   :fs/read-and-watch
-  [(interceptors/sentry-span "fs/read-and-watch")]
+  [(interceptors/sentry-span-no-new-tx "fs/read-and-watch")]
   (fn [_ [_ {:keys [db-path]}]]
     (let [datoms (-> (.readFileSync (utils/fs) db-path)
                      dt/read-transit-str)]

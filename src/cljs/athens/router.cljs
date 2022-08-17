@@ -2,10 +2,11 @@
   (:require
     [athens.common-db            :as common-db]
     [athens.common.logging       :as log]
-    [athens.common.sentry        :refer-macros [wrap-span]]
+    [athens.common.sentry        :refer-macros [wrap-span-no-new-tx]]
     [athens.dates                :as dates]
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
+    [athens.electron.utils       :as electron.utils]
     [athens.interceptors         :as interceptors]
     [athens.utils.sentry         :as sentry]
     [day8.re-frame.tracing       :refer-macros [fn-traced]]
@@ -36,6 +37,16 @@
 
 
 (reg-sub
+  :current-route/uid-compat
+  :<- [:current-route/uid]
+  :<- [:current-route/page-title]
+  (fn [[uid title]]
+    (or uid
+        (when title
+          (common-db/get-page-uid @db/dsdb title)))))
+
+
+(reg-sub
   :current-route/name
   (fn [db]
     (-> db :current-route :data :name)))
@@ -44,7 +55,7 @@
 ;; events
 (rf/reg-event-fx
   :navigate
-  [(interceptors/sentry-span "navigate")]
+  [(interceptors/sentry-span-no-new-tx "navigate")]
   (fn [{:keys [db]} [_ & route]]
     (log/debug ":navigate route:" (pr-str route))
     (let [db-id       (-> db db-picker/selected-db :id)
@@ -76,54 +87,52 @@
           nav-page?      (= :page-by-title route-name)
           controllers    (rfc/apply-controllers (:controllers old-match) new-match)
           loading?       (:loading? db)]
-      (when-not loading?
-        (if nav-page?
-          (let [page-title (-> new-match :path-params :title)
-                page-block (common-db/get-block @db/dsdb [:node/title page-title])
-                html-title (str page-title " | Athens")]
-            (set! (.-title js/document) html-title)
-            {:db         (-> db
-                             (assoc :current-route (assoc new-match :controllers controllers))
-                             (dissoc :merge-prompt))
-             :timeout    {:action :clear
-                          :id     :merge-prompt}
-             :dispatch-n [[:editing/first-child (:block/uid page-block)]
-                          (when (= "router/navigate" sentry-tx-name)
-                            [:sentry/end-tx sentry-tx])]})
-          (let [uid               (-> new-match :path-params :id)
-                ;; TODO make the page title query work when zoomed in on a block
-                node-title        (common-db/get-page-title @db/dsdb uid)
-                home?             (= route-name :home)
-                html-title-prefix (cond
-                                    node-title            node-title
-                                    (= route-name :pages) "All Pages"
-                                    home?                 "Daily Notes")
-                html-title        (if html-title-prefix
-                                    (str html-title-prefix " | Athens")
-                                    "Athens")
-                today             (dates/get-day)]
-            (set! (.-title js/document) html-title)
-            {:db         (-> db
-                             (assoc :current-route (assoc new-match :controllers controllers))
-                             (dissoc :merge-prompt))
-             :timeout    {:action :clear
-                          :id     :merge-prompt}
-             :dispatch-n [(when (and (not loading?)
-                                     home?)
-                            [:daily-note/ensure-day today])
-                          (when-let [parent-uid (and (not loading?)
-                                                     (or uid
-                                                         (and home?
-                                                              (:uid today))))]
-                            [:editing/first-child parent-uid])
-                          (when (= "router/navigate" sentry-tx-name)
-                            [:sentry/end-tx sentry-tx])]}))))))
+      (if nav-page?
+        (let [page-title (-> new-match :path-params :title)
+              page-block (common-db/get-block @db/dsdb [:node/title page-title])
+              html-title (str page-title " | Athens")]
+          (set! (.-title js/document) html-title)
+          {:db         (-> db
+                           (assoc :current-route (assoc new-match :controllers controllers))
+                           (dissoc :merge-prompt))
+           :timeout    {:action :clear
+                        :id     :merge-prompt}
+           :dispatch-n [[:editing/first-child (:block/uid page-block)]
+                        (when (= "router/navigate" sentry-tx-name)
+                          [:sentry/end-tx sentry-tx])]})
+        (let [uid               (-> new-match :path-params :id)
+              ;; TODO make the page title query work when zoomed in on a block
+              node-title        (common-db/get-page-title @db/dsdb uid)
+              home?             (= route-name :home)
+              html-title-prefix (cond
+                                  node-title            node-title
+                                  (= route-name :pages) "All Pages"
+                                  home?                 "Daily Notes")
+              html-title        (if html-title-prefix
+                                  (str html-title-prefix " | Athens")
+                                  "Athens")
+              today             (dates/get-day)]
+          (set! (.-title js/document) html-title)
+          {:db         (-> db
+                           (assoc :current-route (assoc new-match :controllers controllers))
+                           (dissoc :merge-prompt))
+           :timeout    {:action :clear
+                        :id     :merge-prompt}
+           :dispatch-n [(when home?
+                          [:daily-note/ensure-day today])
+                        (when-let [parent-uid (and (not loading?)
+                                                   (or uid
+                                                       (and home?
+                                                            (:uid today))))]
+                          [:editing/first-child parent-uid])
+                        (when (= "router/navigate" sentry-tx-name)
+                          [:sentry/end-tx sentry-tx])]})))))
 
 
 ;; doesn't reliably work. notably, Daily Notes are often not remembered as last open page, leading to incorrect restore
 (reg-event-fx
   :restore-navigation
-  [(interceptors/sentry-span "restore-navigation")]
+  [(interceptors/sentry-span-no-new-tx "restore-navigation")]
   (fn [{:keys [db]} _]
     (let [prev-title (-> db db-picker/selected-db :current-route/title)
           prev-uid   (-> db db-picker/selected-db :current-route/uid)]
@@ -138,8 +147,8 @@
 (rf/reg-fx
   :navigate!
   (fn-traced [route]
-             (wrap-span "push-state"
-                        (apply rfee/push-state route))))
+             (wrap-span-no-new-tx "push-state"
+                                  (apply rfee/push-state route))))
 
 
 ;; router definition
@@ -201,7 +210,7 @@
        (do
          (.. js/window getSelection empty)
          (.. e preventDefault)
-         (rf/dispatch [:right-sidebar/open-page title]))
+         (rf/dispatch [:right-sidebar/open-item [:node/title title]]))
        (navigate-page title)))))
 
 
@@ -222,7 +231,7 @@
        (do
          (.. js/window getSelection empty)
          (.. e preventDefault)
-         (rf/dispatch [:right-sidebar/open-item uid]))
+         (rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))
        (navigate-uid uid)))))
 
 
@@ -233,3 +242,49 @@
     router
     on-navigate
     {:use-fragment true}))
+
+
+(rf/reg-event-fx
+  :init-routes!
+  (fn [_ _]
+    (init-routes!)
+    {}))
+
+
+;; Permalink param processing
+
+(def graph-name-param-key "graph-name")
+(def graph-url-param-key "graph-url")
+(def graph-password-param-key "graph-password")
+
+
+(defn consume-graph-params
+  "Removes and returns the graph params in the current URL, if any."
+  []
+  ;; Note: don't use the reitit.frontend functions here, as the router
+  ;; it not yet initialized during boot.
+  (let [window-url (js/URL. js/window.location)
+        name       (.. window-url -searchParams (get graph-name-param-key))
+        url        (.. window-url -searchParams (get graph-url-param-key))
+        password   (js/atob (.. window-url -searchParams (get graph-password-param-key)))]
+    (when url
+      ;; Replace history with a version without the graph params.
+      (.. window-url -searchParams (delete graph-name-param-key))
+      (.. window-url -searchParams (delete graph-url-param-key))
+      (.. window-url -searchParams (delete graph-password-param-key))
+      (js/history.replaceState js/history.state nil window-url)
+      [(or name url) url password])))
+
+
+(defn create-url-with-graph-params
+  "Create a URL containing graph-id."
+  [name url password]
+  (let [created-url (js/URL. (if electron.utils/electron?
+                               ;; Use live web client + page route on electron.
+                               (str "https://web.athensresearch.org/"
+                                    js/window.location.hash)
+                               js/window.location))]
+    (.. created-url -searchParams (set graph-name-param-key name))
+    (.. created-url -searchParams (set graph-url-param-key url))
+    (.. created-url -searchParams (set graph-password-param-key (js/btoa password)))
+    (.toString created-url)))

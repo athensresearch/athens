@@ -1,43 +1,25 @@
 (ns athens.views
   (:require
-    ["/components/Spinner/Spinner" :refer [Spinner]]
-    ["/components/utils/style/style" :refer [GlobalStyles]]
-    ["@material-ui/core/Snackbar" :as Snackbar]
-    ["@react-aria/overlays" :refer [OverlayProvider]]
+    ["/components/Layout/MainContent" :refer [MainContent]]
+    ["/components/Layout/RightSidebarResizeControl" :refer [RightSidebarResizeControl]]
+    ["/components/Layout/useLayoutState" :refer [LayoutProvider]]
+    ["/theme/theme" :refer [theme]]
+    ["@chakra-ui/react" :refer [ChakraProvider Flex VStack HStack Spinner Center]]
     [athens.config]
     [athens.electron.db-modal :as db-modal]
-    [athens.electron.utils :as electron.utils]
     [athens.style :refer [zoom]]
     [athens.subs]
-    [athens.util :refer [get-os]]
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
-    [athens.views.devtool :refer [devtool-component]]
     [athens.views.help :refer [help-popup]]
     [athens.views.left-sidebar :as left-sidebar]
     [athens.views.pages.core :as pages]
-    [athens.views.right-sidebar :as right-sidebar]
-    [re-frame.core :as rf]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy :refer [use-style]]))
-
-
-;; Styles
-
-
-(def app-wrapper-style
-  {:display "grid"
-   :grid-template-areas
-   "'app-header app-header app-header'
-    'left-sidebar main-content secondary-content'
-   'devtool devtool devtool'"
-   :grid-template-columns "auto 1fr auto"
-   :grid-template-rows "auto 1fr auto"
-   :height "100vh"})
+    [athens.views.pages.settings :as settings]
+    [athens.views.right-sidebar.core :as right-sidebar]
+    [re-frame.core :as rf]))
 
 
 ;; Components
-
 
 (defn alert
   []
@@ -47,64 +29,59 @@
       (rf/dispatch [:alert/unset]))))
 
 
-;; Snackbar
-
-(def m-snackbar (r/adapt-react-class (.-default Snackbar)))
-
-
-(rf/reg-sub
-  :db/snack-msg
-  (fn [db]
-    (:db/snack-msg db)))
-
-
-(rf/reg-event-db
-  :show-snack-msg
-  (fn [db [_ msg-opts]]
-    (js/setTimeout #(rf/dispatch [:show-snack-msg {}]) 4000)
-    (assoc db :db/snack-msg msg-opts)))
-
-
 (defn main
   []
-  (let [loading    (rf/subscribe [:loading?])
-        os         (get-os)
-        electron?  electron.utils/electron?
-        modal      (rf/subscribe [:modal])]
+  (let [loading        (rf/subscribe [:loading?])
+        modal          (rf/subscribe [:modal])
+        right-sidebar-open? (rf/subscribe [:right-sidebar/open])
+        right-sidebar-width (rf/subscribe [:right-sidebar/width])
+        settings-open? (rf/subscribe [:settings/open?])]
     (fn []
-      [:> OverlayProvider
-       [:div (merge {:style {:display "contents"}}
-                    (zoom))
-        [:> GlobalStyles]
-        [help-popup]
-        [alert]
-        (let [{:keys [msg type]} @(rf/subscribe [:db/snack-msg])]
-          [m-snackbar
-           {:message msg
-            :open (boolean msg)}
-           [:span
-            {:style {:background-color (case type
-                                         :success "green"
-                                         "red")
-                     :padding "10px 20px"
-                     :color "white"}}
-            msg]])
-        [athena-component]
-        (cond
-          (and @loading @modal) [db-modal/window]
+      [:div (merge {:style {:display "contents"}}
+                   (zoom))
+       [:> ChakraProvider {:theme theme,
+                           :bg "background.basement"}
+        [:> LayoutProvider
+         [help-popup]
+         [alert]
+         [athena-component]
+         (cond
+           (and @loading @modal) [db-modal/window]
 
-          @loading [:> Spinner]
+           @loading
+           [:> Center {:height "100vh"}
+            [:> Flex {:width 28
+                      :flexDirection "column"
+                      :gap 2
+                      :color "foreground.secondary"
+                      :borderRadius "lg"
+                      :placeItems "center"
+                      :placeContent "center"
+                      :height 28}
+             [:> Spinner {:size "xl"}]]]
 
-          :else [:<>
-                 (when @modal [db-modal/window])
-                 [:div (use-style app-wrapper-style
-                                  {:class [(case os
-                                             :windows "os-windows"
-                                             :mac "os-mac"
-                                             :linux "os-linux")
-                                           (when electron? "is-electron")]})
-                  [app-toolbar/app-toolbar]
-                  [left-sidebar/left-sidebar]
-                  [pages/view]
-                  [right-sidebar/right-sidebar]
-                  [devtool-component]]])]])))
+           :else [:<>
+                  (when @modal
+                    [db-modal/window])
+                  (when @settings-open?
+                    [settings/page])
+                  [:> VStack {:overscrollBehavior "contain"
+                              :id "main-layout"
+                              :spacing 0
+                              :overflowY "auto"
+                              :height "100vh"
+                              :align "stretch"
+                              :position "relative"}
+                   [app-toolbar/app-toolbar]
+                   [:> HStack {:overscrollBehavior "contain"
+                               :align "stretch"
+                               :spacing 0
+                               :flex 1}
+                    [left-sidebar/left-sidebar]
+                    [:> MainContent {:rightSidebarWidth @right-sidebar-width
+                                     :isRightSidebarOpen @right-sidebar-open?}
+                     [pages/view]]
+                    [:> RightSidebarResizeControl {:sidebarWidth @right-sidebar-width
+                                                   :isSidebarOpen @right-sidebar-open?
+                                                   :onResizeSidebar #(rf/dispatch [:right-sidebar/set-width %])}]
+                    [right-sidebar/right-sidebar]]]])]]])))

@@ -1,4 +1,5 @@
 (ns athens.views.blocks.internal-representation
+  (:refer-clojure :exclude [descendants])
   (:require
     [athens.common-db :as common-db]
     [athens.common.utils :as utils]
@@ -9,11 +10,16 @@
     [datascript.core :as d]))
 
 
+(defn descendants
+  [{:block/keys [children properties]}]
+  (concat children (vals properties)))
+
+
 (defn new-uids-map
   "From Athens representation, extract the uids and create a mapping to new uids."
   [tree]
   (let [all-old-uids (mapcat #(->> %
-                                   (tree-seq :block/children :block/children)
+                                   (tree-seq common-db/has-descendants? descendants)
                                    (mapv :block/uid))
                              tree)
         mapped-uids (reduce #(assoc %1 %2 (utils/gen-block-uid)) {} all-old-uids)] ; Replace with zipmap
@@ -184,7 +190,7 @@
 
 (defn text-to-internal-representation
   [text]
-  (let [cpdb                  (d/create-conn common-db/schema)
+  (let [cpdb                  (common-db/create-conn)
         copy-paste-block      [{:db/id          -1
                                 :block/uid      "copy-paste-uid"
                                 :block/children []

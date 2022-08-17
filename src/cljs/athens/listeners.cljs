@@ -9,7 +9,7 @@
     [athens.util :as util]
     [clojure.string :as string]
     [goog.events :as events]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]])
+    [re-frame.core :as rf :refer [dispatch dispatch-sync subscribe]])
   (:import
     (goog.events
       EventType
@@ -87,9 +87,22 @@
                 meta
                 shift
                 alt]
-         :as destruct-keys}    (util/destruct-key-down e)
-        editing-uid            @(subscribe [:editing/uid])]
+         :as   destruct-keys} (util/destruct-key-down e)
+        editing-uid           @(subscribe [:editing/uid])
+        window-uid            (or @(subscribe [:current-route/uid-compat])
+                                  (when (= @(subscribe [:current-route/name]) :home)
+                                    ;; On daily notes, assume you're on the first note.
+                                    (-> @(subscribe [:daily-notes/items])
+                                        first)))]
     (cond
+      (and (nil? editing-uid)
+           window-uid
+           (= key-code KeyCodes.UP))     (dispatch [:editing/last-child window-uid])
+
+      (and (nil? editing-uid)
+           window-uid
+           (= key-code KeyCodes.DOWN))   (dispatch [:editing/first-child window-uid])
+
       (util/navigate-key? destruct-keys) (condp = key-code
                                            KeyCodes.LEFT  (when (nil? editing-uid)
                                                             (.back js/window.history))
@@ -101,8 +114,9 @@
                                            KeyCodes.EQUALS    (dispatch [:zoom/in])
                                            KeyCodes.DASH      (dispatch [:zoom/out])
                                            KeyCodes.ZERO      (dispatch [:zoom/reset])
-                                           KeyCodes.K         (dispatch [:athena/toggle])
-                                           KeyCodes.G         (dispatch [:devtool/toggle])
+                                           KeyCodes.K         (do
+                                                                (dispatch [:athena/toggle])
+                                                                (.. e preventDefault))
                                            KeyCodes.Z         (do
                                                                 ;; Disable the default undo behaviour.
                                                                 ;; Chrome has a textarea undo that does not behave like
@@ -112,18 +126,50 @@
                                                                 (if shift
                                                                   (dispatch [:redo])
                                                                   (dispatch [:undo])))
+                                           KeyCodes.O         (do
+                                                                ;; Disable the default "Open file..." behaviour.
+                                                                ;; We use this for navigation instead.
+                                                                (.. e preventDefault)
+                                                                (when alt
+                                                                  ;; When alt is also pressed, zoom out of current block page
+                                                                  (when-let [parent-uid (->> [:block/uid @(subscribe [:current-route/uid])]
+                                                                                             (common-db/get-parent-eid @db/dsdb)
+                                                                                             second)]
+                                                                    (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-alt-o
+                                                                                                         :target :block
+                                                                                                         :pane   (if shift
+                                                                                                                   :right-pane
+                                                                                                                   :main-pane)}])
+                                                                    (router/navigate-uid parent-uid e))))
                                            KeyCodes.BACKSLASH (if shift
                                                                 (dispatch [:right-sidebar/toggle])
                                                                 (dispatch [:left-sidebar/toggle]))
-                                           KeyCodes.COMMA     (router/navigate :settings)
+                                           KeyCodes.COMMA     (do
+                                                                (rf/dispatch [:reporting/navigation {:source :kbd-ctrl-comma
+                                                                                                     :target :settings
+                                                                                                     :pane   :main-pane}])
+                                                                (router/navigate :settings))
                                            KeyCodes.T         (util/toggle-10x)
                                            nil)
-      alt                               (condp = key-code
-                                          KeyCodes.D     (router/nav-daily-notes)
-                                          KeyCodes.G     (router/navigate :graph)
-                                          KeyCodes.A     (router/navigate :pages)
-                                          KeyCodes.T     (dispatch [:theme/toggle])
-                                          nil))))
+      alt                                (condp = key-code
+                                           KeyCodes.D (do
+                                                        (rf/dispatch [:reporting/navigation {:source :kbd-alt-d
+                                                                                             :target :home
+                                                                                             :pane   :main-pane}])
+                                                        (router/nav-daily-notes)
+                                                        (.. e preventDefault))
+                                           KeyCodes.G (do
+                                                        (rf/dispatch [:reporting/navigation {:source :kbd-alt-g
+                                                                                             :target :graph
+                                                                                             :pane   :main-pane}])
+                                                        (router/navigate :graph))
+                                           KeyCodes.A (do
+                                                        (rf/dispatch [:reporting/navigation {:source :kbd-alt-a
+                                                                                             :target :all-pages
+                                                                                             :pane   :main-pane}])
+                                                        (router/navigate :pages))
+                                           KeyCodes.T (dispatch [:theme/toggle])
+                                           nil))))
 
 
 ;; -- Clipboard ----------------------------------------------------------
@@ -185,7 +231,8 @@
   [^js e]
   (let [uids @(subscribe [::select-subs/items])]
     (when (not-empty uids)
-      (let [copy-data      (->> uids
+      (let [uids           (mapv (comp first db/uid-and-embed-id) uids)
+            copy-data      (->> uids
                                 (map #(common-db/get-block-document @db/dsdb [:block/uid %]))
                                 (map #(blocks-to-clipboard-data 0 %))
                                 (apply str))

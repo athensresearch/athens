@@ -1,37 +1,35 @@
 (ns athens.electron.db-menu.status-indicator
   (:require
-    ["@material-ui/icons/CheckCircle" :default CheckCircle]
-    ["@material-ui/icons/Error" :default Error]
-    ["@material-ui/icons/Sync" :default Sync]
-    [athens.style :refer [color]]
-    [stylefy.core :as stylefy :refer [use-style]]))
-
-
-(def status-icon-style
-  {:background (color :background-minus-2)
-   :border-radius "100%"
-   :padding 0
-   :margin "0 !important"
-   :height "12px !important"
-   :width "12px !important"
-   :position "absolute"
-   :bottom "0"
-   :right "0"
-   ::stylefy/manual [[".:running"]]})
+    ["/components/Icons/Icons" :refer [CheckmarkCircleFillIcon ExclamationCircleFillIcon]]
+    ["@chakra-ui/react" :refer [Box Tooltip Spinner]]))
 
 
 (defn status-indicator
   [{:keys [status]}]
-  [:div.status-indicator (use-style status-icon-style
-                                    {:class (str status)})
+  [:> Box {:p 0
+           :m 0
+           :color (cond
+                    (:closed status) "error"
+                    (:running status) "foreground.primary"
+                    :else "foreground.secondary")
+           :fontSize "1em"
+           :height "1em"
+           :width "1em"
+           :transform "translate(25%, 25%)"
+           :position "absolute"
+           :bottom 0
+           :right 0
+           :borderRadius "full"
+           :sx {"svg" {:fontSize "1em"
+                       :background "background.floor"
+                       :borderRadius "full"}}}
    (cond
-     (= status :closed)
-     [:> Error (merge {:style {:color (color :error-color)}
-                       :title "Disconnected"})]
-     (= status :running)
-     [:> CheckCircle (merge (use-style status-icon-style)
-                            {:style {:color (color :confirmation-color)}
-                             :title "Synced"})]
-     :else [:> Sync (merge (use-style status-icon-style)
-                           {:style {:color (color :highlight-color)}
-                            :title "Synchronizing..."})])])
+     (= status :closed) [:> Tooltip
+                         {:label "Disconnected"}
+                         [:> ExclamationCircleFillIcon]]
+     (= status :running) [:> Tooltip
+                          {:label "Synced"}
+                          [:> CheckmarkCircleFillIcon]]
+     :else [:> Tooltip
+            {:label "Synchronizing..."}
+            [:> Spinner {:emptyColor "background.vibrancy" :speed "2s" :size "xs"}]])])

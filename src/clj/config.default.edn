@@ -1,6 +1,7 @@
 {:http       {:port 3010}
- ;; Default fluree address on Docker Compose setup.
+ ;; Default fluree address and datascript path on docker compose setup.
  :fluree     {:servers ["http://fluree:8090"]}
+ :datascript {:persist-base-path "/srv/athens/datascript/persist/"}
  :in-memory? false
  ;; :password   "SuchWow"
  ;; :nrepl      {:port 8877}

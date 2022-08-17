@@ -4,7 +4,6 @@
     [athens.common.logging :as log]
     [athens.self-hosted.components.fluree :as fluree-comp]
     [athens.self-hosted.event-log :as event-log]
-    [clojure.core.async :as async]
     [clojure.edn :as edn]
     [clojure.string :as string]
     [clojure.tools.cli :refer [parse-opts]]
@@ -35,35 +34,66 @@
     (-> comp :conn-atom deref fdb/close)))
 
 
+(defn- load-events
+  [comp previous-events progress total]
+  (event-log/init! comp [])
+  (doseq [[id data] previous-events]
+    (swap! progress inc)
+    (log/info "Processing" id (str "#" @progress "/" total))
+    (event-log/add-event! comp id data)))
+
+
 (defn load-log
   [args]
   (let [{:keys [fluree-address
-                filename]}     args
+                filename
+                resume]}       args
         comp                   (fluree-comp/create-fluree-comp fluree-address)
         conn                    (-> comp
                                     :conn-atom
                                     deref)
         previous-events        (edn/read-string (slurp filename))
-        ledger-exists?         (seq  @(fdb/ledger-info conn event-log/ledger))
-        progress               (atom 0)]
+        total                  (count previous-events)
+        ledger-exists?         (seq  @(fdb/ledger-info conn event-log/default-ledger))
+        progress               (atom 0)
+        last-added-event-id    (when resume
+                                 (event-log/last-event-id comp))
+        previous-events-since-last-added-event
+        (when last-added-event-id
+          (drop-while (fn [[id]] (not= id last-added-event-id))
+                      previous-events))]
 
-    ;; Delete the current ledger
-    (if ledger-exists?
+    (cond
+      (and ledger-exists? (not resume))
       (do
+        (log/info "Deleting the current ledger before loading data....")
         @(fdb/delete-ledger conn
-                            event-log/ledger)
+                            event-log/default-ledger)
         (log/warn "Please restart the fluree docker."))
-      ;; Create the ledger again
+
+      (and (not ledger-exists?) resume)
+      (log/warn "Cannot resume because there's no ledger")
+
+      (and ledger-exists? resume (nil? last-added-event-id))
+      (log/warn "Cannot resume because there are no events in the ledger to resume from")
+
+      (and ledger-exists? resume last-added-event-id (empty? previous-events-since-last-added-event))
+      (log/warn "Cannot resume because the last ledger event (" last-added-event-id ") is not in the backup")
+
+      (and ledger-exists? resume last-added-event-id previous-events-since-last-added-event)
       (do
-        (event-log/ensure-ledger! comp [])
-        (doseq [[id data] previous-events]
-          (swap! progress inc)
-          (log/info "Processing" (str "#" @progress) id)
-          (event-log/add-event! comp id data 5000 10000)
-          (if (= 0 (rem @progress 1000))
-            (do (log/info "Pausing for 15s after 1000 events")
-                (async/<!! (async/timeout 15000)))
-            (async/<!! (async/timeout 50))))))))
+        (log/info "Resuming load from event" last-added-event-id)
+        ;; The first item is the event we already added, drop it.
+        (let [previous-events-after-last-added-event (rest previous-events-since-last-added-event)]
+          (reset! progress (- total (count previous-events-after-last-added-event)))
+          (load-events comp previous-events-after-last-added-event progress total)))
+
+      :else
+      (do
+        (log/info "Recreating ledger...")
+        (event-log/init! comp [])
+        (log/info "Loading all events...")
+        (load-events comp previous-events progress total)))))
 
 
 (def cli-options
@@ -72,6 +102,8 @@
     :default "http://localhost:8090"]
    ["-f" "--filename FILENAME" "Name of the file to be saved or loaded"
     :default []]
+   ["-r" "--resume" "Attempt to resume a load attempt from the last saved event."
+    :default false]
    ["-h" "--help"]])
 
 

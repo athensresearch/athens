@@ -1,63 +1,50 @@
 (ns athens.views.blocks.autocomplete-search
   (:require
-    ["/components/Button/Button" :refer [Button]]
-    [athens.style :as style]
+    ["/components/Block/Autocomplete" :refer [Autocomplete AutocompleteButton]]
+    ["@chakra-ui/react" :refer [Text]]
+    [athens.events.inline-search :as inline-search.events]
+    [athens.subs.inline-search :as inline-search.subs]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
-    [athens.views.dropdown :as dropdown]
     [clojure.string :as string]
-    [goog.events :as events]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy]))
+    [re-frame.core :as rf]))
 
 
 (defn inline-item-click
-  [state uid expansion]
+  [state-hooks uid expansion]
   (let [id     (str "#editable-uid-" uid)
         target (.. js/document (querySelector id))
-        f      (case (:search/type @state)
+        type   (rf/subscribe [::inline-search.subs/type uid])
+        f      (case @type
                  :hashtag  textarea-keydown/auto-complete-hashtag
                  :template textarea-keydown/auto-complete-template
+                 :property textarea-keydown/auto-complete-property
                  textarea-keydown/auto-complete-inline)]
-    (f state target expansion)))
+    (f uid state-hooks target expansion)))
 
 
 (defn inline-search-el
-  [_block state]
-  (let [ref                  (atom nil)
-        handle-click-outside (fn [e]
-                               (let [{:search/keys [type]} @state]
-                                 (when (and (#{:page :block :hashtag :template} type)
-                                            (not (.. @ref (contains (.. e -target)))))
-                                   (swap! state assoc :search/type false))))]
-    (r/create-class
-      {:display-name           "inline-search"
-       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
-       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn [block state]
-                                 (let [{:search/keys [query results index type] caret-position :caret-position} @state
-                                       {:keys [left top]} caret-position]
-                                   (when (some #(= % type) [:page :block :hashtag :template])
-                                     [:div (merge (stylefy/use-style dropdown/dropdown-style
-                                                                     {:ref           #(reset! ref %)
-                                                                      ;; don't blur textarea when clicking to auto-complete
-                                                                      :on-mouse-down (fn [e] (.. e preventDefault))})
-                                                  {:style {:position   "absolute"
-                                                           :max-height "20rem"
-                                                           :z-index    (:zindex-popover style/ZINDICES)
-                                                           :top        (+ 24 top)
-                                                           :left       (+ 24 left)}})
-                                      [:div#dropdown-menu (stylefy/use-style dropdown/menu-style)
-                                       (if (or (string/blank? query)
-                                               (empty? results))
-                                         ;; Just using button for styling
-                                         [:> Button (stylefy/use-style {:opacity (style/OPACITIES :opacity-low)}) (str "Search for a " (symbol type))]
-                                         (doall
-                                           (for [[i {:keys [node/title block/string block/uid]}] (map-indexed list results)]
-                                             [:> Button {:key      (str "inline-search-item" uid)
-                                                         :id       (str "dropdown-item-" i)
-                                                         :is-pressed   (= index i)
-                                                         ;; if page link, expand to title. otherwise expand to uid for a block ref
-                                                         :on-click (fn [_] (inline-item-click state (:block/uid block) (or title uid)))
-                                                         :style    {:text-align "left"}}
-                                              (or title string)])))]])))})))
-
+  [block {:as state-hooks} last-event]
+  (let [block-uid             (:block/uid block)
+        inline-search-type    (rf/subscribe [::inline-search.subs/type block-uid])
+        inline-search-index   (rf/subscribe [::inline-search.subs/index block-uid])
+        inline-search-results (rf/subscribe [::inline-search.subs/results block-uid])
+        inline-search-query   (rf/subscribe [::inline-search.subs/query block-uid])]
+    (fn [block {:as _state-hooks} _last-event _state]
+      (let [is-open (some #(= % @inline-search-type) [:page :block :hashtag :template :property])]
+        [:> Autocomplete {:event   @last-event
+                          :isOpen  is-open
+                          :onClose #(rf/dispatch [::inline-search.events/close! block-uid])}
+         (when is-open
+           (if (or (string/blank? @inline-search-query)
+                   (empty? @inline-search-results))
+             [:> Text {:py        "0.4rem"
+                       :px        "0.8rem"
+                       :fontStyle "italics"}
+              (str "Search for a " (symbol @inline-search-type))]
+             (doall
+               (for [[i {:keys [node/title block/string block/uid text]}] (map-indexed list @inline-search-results)]
+                 [:> AutocompleteButton {:key      (str "inline-search-item" uid)
+                                         :isActive (= i @inline-search-index)
+                                         :onClick  (fn [_] (inline-item-click state-hooks (:block/uid block) (or title uid)))
+                                         :id       (str "inline-search-item" uid)}
+                  (or text title string)]))))]))))

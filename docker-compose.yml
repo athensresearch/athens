@@ -21,6 +21,7 @@ services:
       - 3010:3010 # Change this according to CONFIG_EDN.
     volumes:
       - ./athens-data/logs:/srv/athens/logs
+      - ./athens-data/datascript:/srv/athens/datascript
     environment:
       # Uses system env vars for settings if available.
       # CONFIG_EDN is deep merged with the default config file.

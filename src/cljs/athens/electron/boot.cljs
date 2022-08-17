@@ -1,9 +1,10 @@
 (ns athens.electron.boot
   (:require
-    [athens.common.sentry      :refer-macros [wrap-span]]
+    [athens.common.sentry      :refer-macros [wrap-span-no-new-tx]]
     [athens.db                 :as db]
     [athens.electron.db-picker :as db-picker]
     [athens.electron.utils     :as utils]
+    [athens.router             :as router]
     [athens.utils.sentry       :as sentry]
     [re-frame.core             :as rf]))
 
@@ -11,10 +12,15 @@
 (rf/reg-event-fx
   :boot
   [(rf/inject-cofx :local-storage :athens/persist)]
-  (fn [{:keys [local-storage]} _]
+  (fn [{:keys [local-storage]} [_ first-boot?]]
     (let [boot-tx             (sentry/transaction-start "boot-sequence")
-          init-app-db         (wrap-span "db/init-app-db"
-                                         (db/init-app-db local-storage))
+          param-db            (when-let [graph-params (router/consume-graph-params)]
+                                (apply utils/self-hosted-db graph-params))
+          init-app-db         (cond->
+                                ;; Init it from local storage.
+                                (wrap-span-no-new-tx "db/init-app-db" (db/init-app-db local-storage))
+                                ;; Select the db in id-param if there.
+                                param-db (db-picker/add-and-select param-db))
           all-dbs             (db-picker/all-dbs init-app-db)
           selected-db         (db-picker/selected-db init-app-db)
           default-db          (utils/get-default-db)
@@ -67,8 +73,7 @@
                     :rules          [;; if first time, go to Daily Pages and open left-sidebar
                                      {:when       :seen?
                                       :events     :fs/create-and-watch
-                                      :dispatch-n [[:navigate :home]
-                                                   [:left-sidebar/toggle]]}
+                                      :dispatch-n [[:left-sidebar/toggle]]}
 
                                      ;; if nth time, remember dark/light theme
                                      {:when       :seen?
@@ -76,14 +81,22 @@
                                       :dispatch-n [[:fs/update-write-db]
                                                    [:db/sync]
                                                    ;; [:restore-navigation]  ; This functionality is there but unreliable we can use it once we make it reliable
-                                                   [:navigate :home]
                                                    [:reset-undo-redo]
+                                                   ;; Only init the router after the db
+                                                   ;; is loaded, otherwise we can't check
+                                                   ;; if titles/uids in the URL exist.
+                                                   [:init-routes!]
+                                                   (when-not first-boot?
+                                                     ;; Go to home on graph change, but not
+                                                     ;; on the first boot.
+                                                     ;; We might have a permalink to follow
+                                                     ;; on first boot.
+                                                     [:navigate :home])
                                                    [:posthog/set-super-properties]
                                                    [:loading/unset]]}
                                      {:when     :seen-all-of?
                                       :events   [[:fs/update-write-db]
                                                  [:db/sync]
-                                                 [:navigate :home]
                                                  [:reset-undo-redo]
                                                  [:posthog/set-super-properties]
                                                  [:loading/unset]]
