@@ -465,7 +465,7 @@
                             {:headerImageEnabled     @cover-photo-enabled?
                              :headerImageUrl         (-> properties (get ":header/url") :block/string)
                              :onChangeHeaderImageUrl (fn [url]
-                                                       (dispatch [:properties/update-in [:node/title title] [":header/url"]
+                                                       (dispatch [:graph/update-in [:node/title title] [":header/url"]
                                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))}))
 
           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}

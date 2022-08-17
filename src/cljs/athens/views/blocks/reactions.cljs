@@ -21,7 +21,7 @@
   "Toggle reaction on block uid. Cleans up when toggling the last one off.
   Stores emojis in the [:reactions/emojis reaction user-id] property path."
   [id reaction user-id]
-  (rf/dispatch [:properties/update-in id [":reactions" reaction user-id]
+  (rf/dispatch [:graph/update-in id [":reactions" reaction user-id]
                 (fn [db user-reaction-uid]
                   (let [user-reacted?       (common-db/block-exists? db [:block/uid user-reaction-uid])
                         reaction            (when user-reacted?

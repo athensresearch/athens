@@ -17,7 +17,7 @@
   [(interceptors/sentry-span-no-new-tx "right-sidebar/toggle")]
   (fn [_ _]
     (let [user-page @(rf/subscribe [:presence/user-page])]
-      {:fx [[:dispatch [:properties/update-in [:node/title user-page] [(shared/ns-str "/open?")]
+      {:fx [[:dispatch [:graph/update-in [:node/title user-page] [(shared/ns-str "/open?")]
                         (fn [db uid]
                           (let [exists? (common-db/block-exists? db [:block/uid uid])]
                             [(if exists?
@@ -58,11 +58,11 @@
                                 (shared/ns-str "/items/open?") {:block/string ""}}}]]
 
       {:dispatch-n [;; add item
-                    [:properties/update-in [:node/title user-page] [(shared/ns-str "/items")]
+                    [:graph/update-in [:node/title user-page] [(shared/ns-str "/items")]
                      (fn [db uid]
                        (bfs/internal-representation->atomic-ops db new-item-ir {:block/uid uid :relation :first}))]
                     ;; if athens right sidebar is not open, open
-                    [:properties/update-in [:node/title user-page] [(shared/ns-str "/open?")]
+                    [:graph/update-in [:node/title user-page] [(shared/ns-str "/open?")]
                      (fn [db uid]
                        (when-not (common-db/block-exists? db [:block/uid uid])
                          [(graph-ops/build-block-save-op db uid "")]))]
@@ -87,7 +87,7 @@
   :right-sidebar/toggle-item
   [(interceptors/sentry-span-no-new-tx "right-sidebar/toggle-item")]
   (fn [_ [_ uid]]
-    {:fx [[:dispatch [:properties/update-in [:block/uid uid] ["athens/right-sidebar/items/open?"]
+    {:fx [[:dispatch [:graph/update-in [:block/uid uid] ["athens/right-sidebar/items/open?"]
                       (fn [db uid]
                         (if (common-db/block-exists? db [:block/uid uid])
                           [(graph-ops/build-block-remove-op db uid)]
@@ -105,7 +105,7 @@
                           (filter #(= (:name %) block-page-uid))
                           first
                           :source-uid)]
-      {:fx [[:dispatch [:properties/update-in [:block/uid update-uid] [(shared/ns-str "/items/type")]
+      {:fx [[:dispatch [:graph/update-in [:block/uid update-uid] [(shared/ns-str "/items/type")]
                         (fn [db uid]
                           ;; update type
                           [(graph-ops/build-block-save-op db uid type)

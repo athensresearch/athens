@@ -1575,14 +1575,14 @@
 ;; Calls (f db uid), where uid is the existing block uid, or a uid that will be created in ks property path.
 ;; (f db uid) should return a seq of operations to perform. If no operations are returned, nothing is transacted.
 (reg-event-fx
-  :properties/update-in
+  :graph/update-in
   (fn [_ [_ eid ks f]]
-    (log/debug ":properties/update-in args" eid ks)
+    (log/debug ":graph/update-in args" eid ks)
     (when (seq ks)
       (let [db                  @db/dsdb
-            [prop-uid path-ops] (graph-ops/build-property-path db eid ks)
+            [prop-uid path-ops] (graph-ops/build-path db eid ks)
             f-ops               (f db prop-uid)]
         (when (seq f-ops)
           {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
-                                                              (composite-ops/make-consequence-op {:op/type :properties/update})
+                                                              (composite-ops/make-consequence-op {:op/type :graph/update-in})
                                                               common-events/build-atomic-event)]]]]})))))
