@@ -357,13 +357,14 @@
 (defn task-el
   []
   (fn [props]
-    (let [{:keys [title assignee priority description due-date created-date creator opts]} props
+    (let [{:keys [title assignee priority description due-date created-date creator opts status]} props
           {:keys [show-description?
                   show-assignee?
                   show-due-date?
                   show-creator?
                   show-created-date?
-                  show-priority?]} opts]
+                  show-priority?
+                  show-status?]} opts]
       [:> VStack {:align "stretch" :flex 1}
        [:> HStack {:alignSelf "flex-start"}
         [:> Checkbox {:size "lg"}]
@@ -399,29 +400,48 @@
     [_this block-data _callbacks]
     (let [block-uid (:block/uid block-data)]
       (fn [_this _block-data _callbacks]
-        (let [props (-> [:block/uid block-uid] reactive/get-reactive-block-document :block/properties)
+        (let [block           (-> [:block/uid block-uid] reactive/get-reactive-block-document)
+              props           (-> block :block/properties)
               title-uid       (-> props (get ":task/title") :block/uid)
               assignee-uid    (-> props (get ":task/assignee") :block/uid)
               priority-uid    (-> props (get ":task/priority") :block/uid)
               description-uid (-> props (get ":task/description") :block/uid)
-              creator-uid (-> props (get ":task/creator") :block/uid)
+              creator-uid     (-> props (get ":task/creator") :block/uid)
               due-date-uid    (-> props (get ":task/due-date") :block/uid)
               ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
-              status-uid      (-> props (get ":task/status") :block/uid)]
+              status-uid      (-> props (get ":task/status") :block/uid)
+              creator         (-> (:block/create block) :event/auth :presence/id)
+              time            (-> (:block/create block) :event/time :time/ts)]
           [:> ModalInput {:placement "bottom"}
            [:> ModalInputTrigger
             [:> Box {:as Button :gridArea "content" :mr 4 :alignSelf "stretch" :whiteSpace "normal" :justifyContent "flexStart" :textAlign "start" :fontWeight "normal" :height "auto" :p 2 :mb 1 :variant "outline"}
-             [task-el {:title "task title"
-                       :assignee "Alex Iwaniuk"
-                       :priority "[[P1]]"
-                       :creator "Stuart"
+             [task-el {:title       (-> props (get ":task/title") :block/string)
+                       :assignee    (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
+                       :priority    (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
+                                                                                       (get ":task/priority")
+                                                                                       :block/string
+                                                                                       (common-db/strip-markup "((" "))"))])
+                                        :block/string)
+                       :status      (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
+                                                                                       (get ":task/status")
+                                                                                       :block/string
+                                                                                       (common-db/strip-markup "((" "))"))])
+                                        :block/string)
+                       :creator      creator
+                       ;; Convert edit time to real time
                        :created-date "July 22, 1941"
-                       :description "Lorem ipsum dolor sit amet donec consectetur ipsum dolor sit amet donec consectetur ipsum dolor sit amet donec consectetur"
-                       :opts {:show-assignee? true
-                              :show-description? true
-                              :show-priority? true
-                              :show-creator? true
-                              :show-created-date? true}}]]]
+                       :description  (-> props (get ":task/description") :block/string)
+                       :due-date     (-> props
+                                         (get ":task/due-date")
+                                         :block/string
+                                         (common-db/strip-markup "[[" "]]"))
+                       :opts         {:show-assignee?     true
+                                      :show-description?  true
+                                      :show-priority?     true
+                                      :show-creator?      true
+                                      :show-created-date? true
+                                      :show-status?       true
+                                      :show-due-date?     true}}]]]
            [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
             [:> VStack {:spacing "0.5rem"
                         :p 4
