@@ -34,5 +34,7 @@
 
 (rf/reg-sub
   :right-sidebar/width
-  (fn [db _]
-    (:right-sidebar/width db)))
+  (fn [_db _]
+    ;; todo: some value initialization like athens/persist
+    ;; (:right-sidebar/width db)
+    (shared/get-width)))
