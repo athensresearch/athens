@@ -1,19 +1,15 @@
 (ns athens.views.blocks.context-menu
   (:require
-    ["/components/Button/Button" :refer [Button]]
     [athens.db :as db]
     [athens.listeners :as listeners]
     [athens.subs.selection :as select-subs]
-    [athens.views.dropdown :refer [menu-style dropdown-style]]
+    [athens.util :refer [toast]]
     [clojure.string :as string]
-    [goog.events :as events]
-    [re-frame.core :as rf]
-    [reagent.core :as r]
-    [stylefy.core :as stylefy]))
+    [re-frame.core :as rf]))
 
 
-(defn copy-refs-mouse-down
-  [_ uid state]
+(defn handle-copy-refs
+  [_ uid]
   (let [selected-items @(rf/subscribe [::select-subs/items])
         ;; use this when using datascript-transit
         ;; uids (map (fn [x] [:block/uid x]) selected-items)
@@ -23,62 +19,29 @@
                          (->> (map (fn [uid] (str "((" uid "))\n")) selected-items)
                               (string/join "")))]
     (.. js/navigator -clipboard (writeText data))
-    (swap! state assoc :context-menu/show false)))
-
-
-(defn bullet-context-menu
-  "Handle right click. If no blocks are selected, just give option for copying current block's uid."
-  [e _uid state]
-  (.. e preventDefault)
-  (let [rect (.. e -target getBoundingClientRect)]
-    (swap! state assoc
-           :context-menu/x (.. rect -left)
-           :context-menu/y (.. rect -bottom)
-           :context-menu/show true)))
+    (toast (clj->js {:title (if (> (count selected-items) 1)
+                              "Copied refs to clipboard"
+                              "Copied ref to clipboard")}))))
 
 
 (defn handle-copy-unformatted
   "If copying only a single block, dissoc children to not copy subtree."
-  [^js e uid state]
+  [^js uid]
   (let [uids @(rf/subscribe [::select-subs/items])]
     (if (empty? uids)
-      (let [block (dissoc (db/get-block-document [:block/uid uid]) :block/children)
+      (let [block (dissoc (db/get-block [:block/uid uid]) :block/children)
             data  (listeners/blocks-to-clipboard-data 0 block true)]
         (.. js/navigator -clipboard (writeText data)))
-      (let [data (->> (map #(db/get-block-document [:block/uid %]) uids)
+      (let [data (->> (map #(db/get-block [:block/uid %]) uids)
                       (map #(listeners/blocks-to-clipboard-data 0 % true))
                       (apply str))]
         (.. js/navigator -clipboard (writeText data)))))
-  (.. e preventDefault)
-  (swap! state assoc :context-menu/show false))
+  (toast (clj->js {:title "Copied content to clipboard" :status "success"})))
 
 
-(defn context-menu-el
-  "Only option in context menu right now is copy block ref(s)."
-  [_block state]
-  (let [ref                  (atom nil)
-        handle-click-outside (fn [e]
-                               (when (and (:context-menu/show @state)
-                                          (not (.. @ref (contains (.. e -target)))))
-                                 (swap! state assoc :context-menu/show false)))]
-    (r/create-class
-      {:display-name           "context-menu"
-       :component-did-mount    (fn [_this] (events/listen js/document "mousedown" handle-click-outside))
-       :component-will-unmount (fn [_this] (events/unlisten js/document "mousedown" handle-click-outside))
-       :reagent-render         (fn [block state]
-                                 (let [{:block/keys [uid]} block
-                                       {:context-menu/keys [x y show]} @state
-                                       selected-items @(rf/subscribe [::select-subs/items])]
-                                   (when show
-                                     [:div (merge (stylefy/use-style dropdown-style
-                                                                     {:ref #(reset! ref %)})
-                                                  {:style {:position "fixed"
-                                                           :left     (str x "px")
-                                                           :top      (str y "px")}})
-                                      [:div (stylefy/use-style menu-style)
-                                       [:> Button {:on-mouse-down (fn [e] (copy-refs-mouse-down e uid state))}
-                                        (if (empty? selected-items)
-                                          "Copy block ref"
-                                          "Copy block refs")]
-                                       [:> Button {:on-mouse-down (fn [e] (handle-copy-unformatted e uid state))}
-                                        "Copy unformatted"]]])))})))
+(defn handle-click-comment
+  [e uid]
+  (rf/dispatch [:comment/show-editor uid])
+  (.. e preventDefault))
+
+

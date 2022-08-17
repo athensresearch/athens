@@ -24,6 +24,13 @@ module.exports = {
       })
     );
 
+    // Support mjs modules included with Chakra-UI
+    // https://github.com/storybookjs/storybook/issues/16690#issuecomment-971579785
+    config.module.rules.push({
+      test: /\.mjs$/,
+      include: /node_modules/,
+      type: "javascript/auto",
+    })
     // Return the altered config.
     return config;
   }

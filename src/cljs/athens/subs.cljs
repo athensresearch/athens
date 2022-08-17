@@ -60,33 +60,9 @@
 
 
 (rf/reg-sub
-  :devtool/open
-  (fn-traced [db _]
-             (:devtool/open db)))
-
-
-(rf/reg-sub
   :left-sidebar/open
   (fn-traced [db _]
              (:left-sidebar/open db)))
-
-
-(rf/reg-sub
-  :right-sidebar/open
-  (fn-traced [db _]
-             (:right-sidebar/open db)))
-
-
-(rf/reg-sub
-  :right-sidebar/items
-  (fn-traced [db _]
-             (:right-sidebar/items db)))
-
-
-(rf/reg-sub
-  :right-sidebar/width
-  (fn [db _]
-    (:right-sidebar/width db)))
 
 
 (rf/reg-sub
@@ -101,6 +77,10 @@
     (:merge-prompt db)))
 
 
+;; Note: always prefer a subscription to :editing/is-editing over
+;; :editing/uid with a manual check.
+;; If you check manually, the component around the subscription will
+;; re-render every time :editing/uid changes (aka very often.)
 (rf/reg-sub
   :editing/uid
   (fn-traced [db _]
@@ -137,6 +117,13 @@
   :settings
   (fn [db _]
     (-> db :athens/persist :settings)))
+
+
+(rf/reg-sub
+  :feature-flags
+  :<- [:settings]
+  (fn [settings _]
+    (:feature-flags settings)))
 
 
 (rf/reg-sub

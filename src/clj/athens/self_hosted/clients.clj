@@ -4,32 +4,12 @@
     [athens.common-events        :as common-events]
     [athens.common-events.schema :as schema]
     [athens.common.logging       :as log]
-    [cognitect.transit           :as transit]
-    [org.httpkit.server          :as http])
-  (:import
-    (java.io
-      ByteArrayInputStream
-      ByteArrayOutputStream)))
+    [org.httpkit.server          :as http]))
 
 
 ;; Internal state
 ;; channel -> session info
 (defonce clients (atom {}))
-
-
-(defn ->transit
-  [data]
-  (let [out    (ByteArrayOutputStream. 4096)
-        writer (transit/writer out :json)]
-    (transit/write writer data)
-    (.toString out)))
-
-
-(defn <-transit
-  [transit-str]
-  (let [in (ByteArrayInputStream. (.getBytes transit-str))
-        reader (transit/reader in :json)]
-    (transit/read reader)))
 
 
 ;; Client management API
@@ -71,14 +51,24 @@
         valid-server-event?   (schema/valid-server-event? data)]
     (if (or valid-event-response?
             valid-server-event?)
-      (let [type   (common-events/find-event-or-atomic-op-type data)
-            status (:event/status data)]
-        (log/debug "Sending to username:" username
-                   ", event-id:" (:event/id data)
-                   (if type
-                     (str ", type: " type)
-                     (str ", status: " status)))
-        (http/send! channel (->transit data)))
+      (let [type             (common-events/find-event-or-atomic-op-type data)
+            status           (:event/status data)
+            serialized-event (common-events/serialize data)
+            errors           (when-not (common-events/ignore-serialized-event-validation? data)
+                               (common-events/validate-serialized-event serialized-event))]
+        (if errors
+          (log/error "Not sending invalid event to username:" username
+                     ", event-id:" (:event/id data)
+                     ", type:" (common-events/find-event-or-atomic-op-type data)
+                     ", invalid serialized event:"
+                     "event-response take:" (str errors))
+          (do
+            (log/debug "Sending to username:" username
+                       ", event-id:" (:event/id data)
+                       (if type
+                         (str ", type: " type)
+                         (str ", status: " status)))
+            (http/send! channel serialized-event))))
       ;; TODO internal failure mode, collect in reporting
       (log/error "Not sending invalid event to username:" username
                  ", event-id:" (:event/id data)

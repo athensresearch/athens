@@ -1,14 +1,15 @@
 (ns athens.db
   (:require
     [athens.common-db :as common-db]
+    [athens.common-events.resolver.order :as order]
     [athens.common.logging :as log]
+    [athens.common.sentry :refer-macros [defntrace]]
+    [athens.electron.utils :as electron.utils]
     [athens.patterns :as patterns]
-    [athens.util :refer [escape-str]]
     [clojure.edn :as edn]
     [clojure.string :as string]
     [datascript.core :as d]
-    [posh.reagent :refer [posh! pull q]]
-    [re-frame.core :refer [dispatch]]))
+    [re-frame.core :as rf]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -105,6 +106,22 @@
       (assoc :persist/version 2)))
 
 
+(defn- recreate-self-hosted-dbs
+  [dbs]
+  (into {} (map (fn [[k {:keys [name url password] :as db}]]
+                  [k (if (electron.utils/remote-db? db)
+                       (electron.utils/self-hosted-db name url password)
+                       db)])
+                dbs)))
+
+
+(defn update-v2-to-v3
+  [persisted]
+  (-> persisted
+      (update :db-picker/all-dbs recreate-self-hosted-dbs)
+      (assoc :persist/version 3)))
+
+
 (defn update-persisted
   "Updates persisted to the latest format."
   [{:keys [:persist/version] :as persisted}]
@@ -119,8 +136,7 @@
       (cond-> persisted
         ;; Update persisted by applying each update fn incrementally.
         (v< 2) update-v1-to-v2
-        ;; (v< 3) update-v2-to-v3
-        ))))
+        (v< 3) update-v2-to-v3))))
 
 
 ;; -- re-frame -----------------------------------------------------------
@@ -136,11 +152,8 @@
                :win-focused?        true
                :athena/open         false
                :athena/recent-items '()
-               :devtool/open        false
                :left-sidebar/open   false
-               :right-sidebar/open  false
-               :right-sidebar/items {}
-               :right-sidebar/width 32
+               :right-sidebar/width 300
                :mouse-down          false
                :daily-notes/items   []
                :selection           {:items []}
@@ -148,7 +161,8 @@
                :zoom-level          0
                :fs/watcher          nil
                :presence            {}
-               :connection-status   :disconnected})
+               :connection-status   :disconnected
+               :comment/show-comments? true})
 
 
 (defn init-app-db
@@ -224,11 +238,7 @@
 
 ;; -- Datascript and Posh ------------------------------------------------
 
-(defonce dsdb (d/create-conn common-db/schema))
-
-
-;; todo: turn into an effect
-(posh! dsdb)
+(defonce dsdb (common-db/create-conn))
 
 
 (defn e-by-av
@@ -295,7 +305,7 @@
 
 
 (def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order :block/header {:block/children ...} :block/refs :block/_refs])
+  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs])
 
 
 (def node-document-pull-vector
@@ -307,35 +317,20 @@
   '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
-(defn get-block-document
-  [id]
-  (->> @(pull dsdb block-document-pull-vector id)
-       sort-block-children))
+(defntrace get-node-document
+  [id db]
+  (when (d/entity db id)
+    (->> (d/pull db node-document-pull-vector id)
+         sort-block-children)))
 
 
-(defn get-node-document
-  ([id]
-   (->> @(pull dsdb node-document-pull-vector id)
-        sort-block-children))
-  ([id db]
-   (->> (d/pull db node-document-pull-vector id)
-        sort-block-children)))
-
-
-(defn get-roam-node-document
+(defntrace get-roam-node-document
   [id db]
   (->> (d/pull db roam-node-document-pull-vector id)
        sort-block-children))
 
 
-(defn get-athens-datoms
-  "Copy REPL output to athens-datoms.cljs"
-  [id]
-  (->> @(pull dsdb (filter #(not (or (= % :db/id) (= % :block/_refs))) node-document-pull-vector) id)
-       sort-block-children))
-
-
-(defn shape-parent-query
+(defntrace shape-parent-query
   "Normalize path from deeply nested block to root node."
   [pull-results]
   (->> (loop [b   pull-results
@@ -348,20 +343,26 @@
            ;; Found the page.
            (:node/title b) (conj res b)
            ;; Recur with the parent.
-           :else           (recur (first (:block/_children b))
-                                  (conj res (dissoc b :block/_children)))))
+           :else           (recur (or (first (:block/_children b))
+                                      (:block/property-of b))
+                                  (conj res (dissoc b :block/_children :block/property-of)))))
        (rest)
        (reverse)
        vec))
 
 
-(defn get-parents-recursively
+(defntrace get-parents-recursively
   [id]
-  (->> @(pull dsdb '[:db/id :node/title :block/uid :block/string :edit/time {:block/_children ...}] id)
-       shape-parent-query))
+  (when (d/entity @dsdb id)
+    (->> (d/pull @dsdb '[:db/id :node/title :block/uid :block/string
+                         {:block/edits [{:event/time [:time/ts]}]}
+                         {:block/property-of ...}
+                         {:block/_children ...}]
+                 id)
+         shape-parent-query)))
 
 
-(defn get-root-parent-page
+(defntrace get-root-parent-page
   "Returns the root parent page or returns the block because this block is a page."
   [uid]
   ;; make sure block first exists
@@ -370,40 +371,31 @@
       (or opt1 block))))
 
 
-(defn get-block
+(defntrace get-block
   [id]
-  @(pull dsdb '[:db/id :node/title :block/uid :block/order :block/string {:block/children [:block/uid :block/order]} :block/open] id))
+  (common-db/get-block @dsdb id))
 
 
-(defn get-parent
+(defntrace get-parent
   [id]
-  (-> (d/entity @dsdb id)
-      :block/_children
-      first
-      :db/id
+  (-> (common-db/get-parent-eid @dsdb id)
       get-block))
 
 
-(defn deepest-child-block
+(defntrace deepest-child-block
   [id]
-  (let [document (->> (d/pull @dsdb '[:block/order :block/uid :block/open {:block/children ...}] id)
-                      sort-block-children)]
-    (loop [block document]
-      (let [{:block/keys [children open]} block
-            n (count children)]
-        (if (or (zero? n)
+  (let [db @dsdb]
+    (loop [uid (common-db/get-block-uid db id)]
+      (let [eid [:block/uid uid]
+            open (-> db (d/entity eid) :block/open)
+            children (common-db/sorted-prop+children-uids db eid)]
+        (if (or (zero? (count children))
                 (not open))
-          block
-          (recur (get children (dec n))))))))
+          (common-db/get-block db eid)
+          (recur (last children)))))))
 
 
-(defn re-case-insensitive
-  "More options here https://clojuredocs.org/clojure.core/re-pattern"
-  [query]
-  (re-pattern (str "(?i)" (escape-str query))))
-
-
-(defn search-exact-node-title
+(defntrace search-exact-node-title
   [query]
   (d/entity @dsdb [:node/title query]))
 
@@ -415,7 +407,7 @@
    (if (string/blank? query)
      (vector)
      (let [exact-match            (when exclude-exact-match? query)
-           case-insensitive-query (re-case-insensitive query)]
+           case-insensitive-query (patterns/re-case-insensitive query)]
        (sequence
          (comp
            (filter (every-pred
@@ -427,13 +419,28 @@
 
 
 (defn get-root-parent-node-from-block
-  [block]
-  (loop [b block]
-    (cond
-      (:node/title b)       (assoc block :block/parent b)
-      (:block/_children b)  (recur (first (:block/_children b)))
-      ;; protect against orphaned nodes
-      :else                 nil)))
+  [db {:keys [block/uid] :as block}]
+  (cond
+    (= "[[athens/comment]]" (common-db/get-entity-type db [:block/uid uid]))
+    (let [commented-block (-> block
+                              ;; comments are a child of :comments/threads
+                              :block/_children first
+                              ;; :comments/threads is a prop on the commented block
+                              :block/property-of
+                              ;; get rid of the extra ascendant data on it though
+                              (dissoc :block/_children :block/property-of))]
+      (assoc block
+             :block/parent commented-block
+             :block-search/navigate-uid (:block/uid commented-block)))
+
+    :else
+    (loop [b block]
+      (cond
+        (:node/title b)        (assoc block :block/parent b)
+        (:block/_children b)   (recur (first (:block/_children b)))
+        (:block/property-of b) (recur (:block/property-of b))
+        ;; protect against orphaned nodes
+        :else                  nil))))
 
 
 (defn search-in-block-content
@@ -441,62 +448,70 @@
   ([query n]
    (if (string/blank? query)
      (vector)
-     (let [case-insensitive-query (re-case-insensitive query)]
-       (->>
-         (d/datoms @dsdb :aevt :block/string)
-         (sequence
-           (comp
-             (filter #(re-find case-insensitive-query (:v %)))
-             (take n)
-             (map #(:e %))))
-         (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
-         (sequence
-           (comp
-             (keep get-root-parent-node-from-block)
-             (map #(dissoc % :block/_children)))))))))
+     (let [db                     @dsdb
+           case-insensitive-query (patterns/re-case-insensitive query)
+           block-search-result    (->>
+                                    (d/datoms db :aevt :block/string)
+                                    (sequence
+                                      (comp
+                                        (filter #(re-find case-insensitive-query (:v %)))
+                                        (take n)
+                                        (map #(:e %))))
+                                    (d/pull-many db '[:db/id :block/uid :block/string :node/title
+                                                      {:block/_children ...} {:block/property-of ...}])
+                                    (sequence
+                                      (comp
+                                        (keep (partial get-root-parent-node-from-block db))
+                                        (map #(dissoc % :block/_children :block/property-of)))))]
+       block-search-result))))
+
+
+(defn sibling-uids
+  [uid]
+  (->> [:block/uid uid]
+       get-parent
+       :block/uid
+       (vector :block/uid)
+       (common-db/sorted-prop+children-uids @dsdb)))
 
 
 (defn nth-sibling
-  "Find sibling that has order+n of current block.
-  Negative n means previous sibling.
-  Positive n means next sibling."
-  [uid n]
-  (let [block      (get-block [:block/uid uid])
-        {:block/keys [order]} block
-        find-order (+ n order)]
-    (d/q '[:find (pull ?sibs [*]) .
-           :in $ % ?curr-uid ?find-order
-           :where
-           (siblings ?curr-uid ?sibs)
-           [?sibs :block/order ?find-order]]
-         @dsdb rules uid find-order)))
+  "Find sibling that has relation to current block.
+  Relation can be :before or :after."
+  [uid relation]
+  (-> (sibling-uids uid)
+      (order/get relation uid)
+      (->> (vector :block/uid))
+      get-block))
 
 
-(defn prev-block-uid
-  "If order 0, go to parent.
-   If order n but block is closed, go to prev sibling.
-   If order n and block is OPEN, go to prev sibling's deepest child."
+(defntrace prev-block-uid
+  "If first sibling, go to parent (if not a page).
+   If block is closed, go to prev sibling.
+   If block is OPEN, go to prev sibling's deepest child."
   [uid]
   (let [[uid embed-id]                (uid-and-embed-id uid)
-        block                         (get-block [:block/uid uid])
-        parent                        (get-parent [:block/uid uid])
-        prev-sibling                  (nth-sibling uid -1)
+        siblings                      (sibling-uids uid)
+        prev-sibling                  (nth-sibling uid :before)
         {:block/keys      [open]
          prev-sibling-uid :block/uid} prev-sibling
         prev-block                    (cond
-                                        (zero? (:block/order block)) parent
-                                        (false? open)                prev-sibling
-                                        (true? open)                 (deepest-child-block [:block/uid prev-sibling-uid]))]
-    (cond-> (:block/uid prev-block)
-      embed-id (str "-embed-" embed-id))))
+                                        (= uid (first siblings)) (get-parent [:block/uid uid])
+                                        (false? open)            prev-sibling
+                                        (true? open)             (deepest-child-block [:block/uid prev-sibling-uid]))
+        prev-block-uid                (:block/uid prev-block)]
+    (when (and prev-block-uid
+               (not (:node/title prev-block)))
+      (cond-> prev-block-uid
+        embed-id (str "-embed-" embed-id)))))
 
 
-(defn next-sibling-recursively
+(defntrace next-sibling-recursively
   "Search for next sibling. If not there (i.e. is last child), find sibling of parent.
   If parent is root, go to next sibling."
   [uid]
   (loop [uid uid]
-    (let [sib    (nth-sibling uid +1)
+    (let [sib    (nth-sibling uid :after)
           parent (get-parent [:block/uid uid])
           {node :node/title}   (get-block [:block/uid uid])]
       (if (or sib (:node/title parent) node)
@@ -506,19 +521,20 @@
 
 (defn next-block-uid
   "1-arity:
-    if open and children, go to child 0
+    if open and children, go to first sibling
     else recursively find next sibling of parent
   2-arity:
     used for multi-block-selection; ignores child blocks"
   ([uid]
    (let [[uid embed-id]       (uid-and-embed-id uid)
-         block                (->> (get-block [:block/uid uid])
-                                   sort-block-children)
-         {:block/keys [children open] node :node/title} block
+         props+children       (common-db/sorted-prop+children-uids @dsdb [:block/uid uid])
+         {:block/keys [open]
+          node :node/title}   (get-block [:block/uid uid])
          next-block-recursive (next-sibling-recursively uid)
          next-block           (cond
-                                (and (or open node) children) (first children)
-                                next-block-recursive          next-block-recursive)]
+                                (and (or open node)
+                                     (seq props+children)) (get-block [:block/uid (first props+children)])
+                                next-block-recursive       next-block-recursive)]
      (cond-> (:block/uid next-block)
 
        ;; only go to next block if it's part of current embed scheme
@@ -536,56 +552,43 @@
      (next-block-uid uid))))
 
 
-(defn get-first-child-uid
+(defntrace get-sorted-children
   [uid db]
   (when uid
     (try
-      (->> (d/pull db [{:block/children [:block/uid :block/order]}] [:block/uid uid])
+      (->> (d/pull db [{:block/children [:block/uid :block/order :block/open]}] [:block/uid uid])
            sort-block-children
-           :block/children
-           first
-           :block/uid)
+           :block/children)
       (catch :default _))))
 
 
-;; history
+(defn get-first-child-uid
+  [uid db]
+  (-> (get-sorted-children uid db)
+      first
+      :block/uid))
 
-(defonce history (atom '()))
-#_(def ^:const history-limit 10)
 
-
-;; this gives us customization options
-;; now if there is a pattern for a tx then the datoms can be
-;; easily modified(mind the order of datoms) to add a custom undo/redo strategy
-;; Not seeing a use case now, but there is an option to do it
-(d/listen! dsdb :history
-           (fn [tx-report]
-             (when-not (or (->> tx-report :tx-data (some (fn [datom]
-                                                           (= (nth datom 1)
-                                                              :from-undo-redo))))
-                           (->> tx-report :tx-data empty?))
-               (swap! history (fn [buff]
-                                (->> buff (remove (fn [[_ applied? _]]
-                                                    (not applied?)))
-                                     doall)))
-               (swap! history (fn [cur-his]
-                                (cons [(-> tx-report :tx-data first vec (nth 3))
-                                       true
-                                       (:tx-data tx-report)]
-                                      cur-his))))))
+(defn get-last-child-uid
+  [parent-uid db]
+  (let [{:block/keys [uid open]} (-> (get-sorted-children parent-uid db) last)]
+    (cond
+      (not uid) parent-uid
+      open      (recur uid db)
+      :else     uid)))
 
 
 ;; -- Linked & Unlinked References ----------
 
-(defn get-ref-ids
-  [pattern]
-  @(q '[:find [?e ...]
-        :in $ ?regex
-        :where
-        [?e :block/string ?s]
-        [(re-find ?regex ?s)]]
-      dsdb
-      pattern))
+(defntrace get-ref-ids
+  [unlinked-f]
+  (d/q '[:find [?e ...]
+         :in $ ?unlinked-f
+         :where
+         [?e :block/string ?s]
+         [(?unlinked-f ?s)]]
+       @dsdb
+       unlinked-f))
 
 
 (defn merge-parents-and-block
@@ -593,7 +596,7 @@
   (let [parents (reduce-kv (fn [m _ v] (assoc m v (get-parents-recursively v)))
                            {}
                            ref-ids)
-        blocks (map (fn [id] (get-block-document id)) ref-ids)]
+        blocks (map (fn [id] (get-block id)) ref-ids)]
     (mapv
       (fn [block]
         (merge block {:block/parents (get parents (:db/id block))}))
@@ -606,21 +609,13 @@
               (let [parent (-> x
                                :block/parents
                                first)]
-                [(:node/title parent) (:edit/time parent 0)]))
+                [(:node/title parent) (->> parent :block/edits (map (comp :time/ts :event/time)) sort last (or 0))]))
             blocks))
 
 
-(defn get-data
-  [pattern]
-  (-> pattern get-ref-ids merge-parents-and-block group-by-parent seq))
-
-
-(defn get-linked-references
-  "For node-page references UI."
-  [title]
-  (->> @(pull dsdb '[* :block/_refs] [:node/title title])
-       :block/_refs
-       (mapv :db/id)
+(defn eids->groups
+  [eids]
+  (->> eids
        merge-parents-and-block
        group-by-parent
        (sort-by #(-> % first second))
@@ -629,22 +624,10 @@
        rseq))
 
 
-(defn get-linked-block-references
-  "For block-page references UI."
-  [block]
-  (->> (:block/_refs block)
-       (mapv :db/id)
-       merge-parents-and-block
-       group-by-parent
-       (sort-by #(-> % first second))
-       (map #(vector (ffirst %) (second %)))
-       vec))
-
-
-(defn get-unlinked-references
+(defntrace get-unlinked-references
   "For node-page references UI."
   [title]
-  (-> title patterns/unlinked get-data))
+  (-> (partial patterns/contains-unlinked? title) get-ref-ids merge-parents-and-block group-by-parent seq))
 
 
 ;; -- save ------------------------------------------------------------
@@ -652,8 +635,9 @@
 
 (defn transact-state-for-uid
   "uid -> Current block
-   state -> Look at state atom in block-el"
-  [uid state]
-  (let [{:string/keys [local]} @state]
-    (dispatch [:block/save {:uid      uid
-                            :string   local}])))
+   new-string -> new `:block/string` value
+   source -> reporting source"
+  [uid new-string source]
+  (rf/dispatch [:block/save {:uid    uid
+                             :string new-string
+                             :source source}]))

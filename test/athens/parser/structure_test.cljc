@@ -11,13 +11,15 @@
     (utils/parses-to sut/structure-parser->ast
                      "[[Page Title]]"
                      [:paragraph
-                      [:page-link {:from "[[Page Title]]"}
+                      [:page-link {:from   "[[Page Title]]"
+                                   :string "Page Title"}
                        "Page Title"]]
 
                      "In a middle [[Page Title]] of text"
                      [:paragraph
                       [:text-run "In a middle "]
-                      [:page-link {:from "[[Page Title]]"}
+                      [:page-link {:from   "[[Page Title]]"
+                                   :string "Page Title"}
                        "Page Title"]
                       [:text-run " of text"]]
 
@@ -25,7 +27,9 @@
                      "abc[[def]]ghi"
                      [:paragraph
                       [:text-run "abc"]
-                      [:page-link {:from "[[def]]"} "def"]
+                      [:page-link {:from   "[[def]]"
+                                   :string "def"}
+                       "def"]
                       [:text-run "ghi"]]
 
                      ;; also can't span newline
@@ -36,18 +40,22 @@
                      ;; apparently nesting page links is a thing
                      "[[nesting [[nested]]]]"
                      [:paragraph
-                      [:page-link {:from "[[nesting [[nested]]]]"}
+                      [:page-link {:from   "[[nesting [[nested]]]]"
+                                   :string "nesting [[nested]]"}
                        "nesting "
-                       [:page-link {:from "[[nested]]"}
+                       [:page-link {:from   "[[nested]]"
+                                    :string "nested"}
                         "nested"]]]
 
                      ;; Multiple page links in one blok
                      "[[one]] and [[two]]"
                      [:paragraph
-                      [:page-link {:from "[[one]]"}
+                      [:page-link {:from   "[[one]]"
+                                   :string "one"}
                        "one"]
                       [:text-run " and "]
-                      [:page-link {:from "[[two]]"}
+                      [:page-link {:from   "[[two]]"
+                                   :string "two"}
                        "two"]]
 
                      ;; empty links should not be links
@@ -60,23 +68,30 @@
     (utils/parses-to sut/structure-parser->ast
                      "[[[[topic]] subtopic]]"
                      [:paragraph
-                      [:page-link {:from "[[[[topic]] subtopic]]"}
-                       [:page-link {:from "[[topic]]"}
+                      [:page-link {:from   "[[[[topic]] subtopic]]"
+                                   :string "[[topic]] subtopic"}
+                       [:page-link {:from   "[[topic]]"
+                                    :string "topic"}
                         "topic"]
                        " subtopic"]]
 
                      "[[abc #hashtag def]]"
                      [:paragraph
-                      [:page-link
-                       {:from "[[abc #hashtag def]]"}
+                      [:page-link {:from   "[[abc #hashtag def]]"
+                                   :string "abc #hashtag def"}
                        "abc "
-                       [:hashtag {:from "#hashtag"} "hashtag"]
+                       [:hashtag {:from   "#hashtag"
+                                  :string "hashtag"}
+                        "hashtag"]
                        " def"]]
 
                      "[[#[[topic]] subtopic]]"
                      [:paragraph
-                      [:page-link {:from "[[#[[topic]] subtopic]]"}
-                       [:hashtag {:from "#[[topic]]"} "topic"]
+                      [:page-link {:from   "[[#[[topic]] subtopic]]"
+                                   :string "#[[topic]] subtopic"}
+                       [:hashtag {:from   "#[[topic]]"
+                                  :string "topic"}
+                        "topic"]
                        " subtopic"]])))
 
 
@@ -86,50 +101,80 @@
     (utils/parses-to sut/structure-parser->ast
                      "#hashtag"
                      [:paragraph
-                      [:hashtag {:from "#hashtag"}
+                      [:hashtag {:from   "#hashtag"
+                                 :string "hashtag"}
                        "hashtag"]]
 
                      "#can#do#without#spaces#between"
                      [:paragraph
-                      [:hashtag {:from "#can"} "can"]
-                      [:hashtag {:from "#do"} "do"]
-                      [:hashtag {:from "#without"} "without"]
-                      [:hashtag {:from "#spaces"} "spaces"]
-                      [:hashtag {:from "#between"} "between"]]
+                      [:hashtag {:from   "#can"
+                                 :string "can"}
+                       "can"]
+                      [:hashtag {:from   "#do"
+                                 :string "do"}
+                       "do"]
+                      [:hashtag {:from   "#without"
+                                 :string "without"}
+                       "without"]
+                      [:hashtag {:from   "#spaces"
+                                 :string "spaces"}
+                       "spaces"]
+                      [:hashtag {:from   "#between"
+                                 :string "between"}
+                       "between"]]
 
                      "#hash #tags"
                      [:paragraph
-                      [:hashtag {:from "#hash"} "hash"]
+                      [:hashtag {:from   "#hash"
+                                 :string "hash"}
+                       "hash"]
                       [:text-run " "]
-                      [:hashtag {:from "#tags"} "tags"]]))
+                      [:hashtag {:from   "#tags"
+                                 :string "tags"}
+                       "tags"]]))
 
   (t/testing "braced hashtags"
     (utils/parses-to sut/structure-parser->ast
                      "#[[hashtag]]"
                      [:paragraph
-                      [:hashtag {:from "#[[hashtag]]"}
+                      [:hashtag {:from   "#[[hashtag]]"
+                                 :string "hashtag"}
                        "hashtag"]]
 
                      "#[[hashtag]]#[[without]]#[[spaces]]#[[between]]"
                      [:paragraph
-                      [:hashtag {:from "#[[hashtag]]"} "hashtag"]
-                      [:hashtag {:from "#[[without]]"} "without"]
-                      [:hashtag {:from "#[[spaces]]"} "spaces"]
-                      [:hashtag {:from "#[[between]]"} "between"]]
+                      [:hashtag {:from   "#[[hashtag]]"
+                                 :string "hashtag"}
+                       "hashtag"]
+                      [:hashtag {:from   "#[[without]]"
+                                 :string "without"}
+                       "without"]
+                      [:hashtag {:from   "#[[spaces]]"
+                                 :string "spaces"}
+                       "spaces"]
+                      [:hashtag {:from   "#[[between]]"
+                                 :string "between"}
+                       "between"]]
 
                      "#[[hash]] #[[tags]]"
                      [:paragraph
-                      [:hashtag {:from "#[[hash]]"} "hash"]
+                      [:hashtag {:from   "#[[hash]]"
+                                 :string "hash"}
+                       "hash"]
                       [:text-run " "]
-                      [:hashtag {:from "#[[tags]]"} "tags"]]))
+                      [:hashtag {:from   "#[[tags]]"
+                                 :string "tags"}
+                       "tags"]]))
 
   (t/testing "mixed hashtags"
     (utils/parses-to sut/structure-parser->ast
                      "#[[hashtag #nested-bare]]"
                      [:paragraph
-                      [:hashtag {:from "#[[hashtag #nested-bare]]"}
+                      [:hashtag {:from   "#[[hashtag #nested-bare]]"
+                                 :string "hashtag #nested-bare"}
                        "hashtag "
-                       [:hashtag {:from "#nested-bare"}
+                       [:hashtag {:from   "#nested-bare"
+                                  :string "nested-bare"}
                         "nested-bare"]]]))
 
   (t/testing "unicode"
@@ -137,7 +182,9 @@
                      "learn #官话?"
                      [:paragraph
                       [:text-run "learn "]
-                      [:hashtag {:from "#官话"} "官话"]
+                      [:hashtag {:from   "#官话"
+                                 :string "官话"}
+                       "官话"]
                       [:text-run "?"]])))
 
 
@@ -145,7 +192,8 @@
   (utils/parses-to sut/structure-parser->ast
                    "((abc))"
                    [:paragraph
-                    [:block-ref {:from "((abc))"}
+                    [:block-ref {:from   "((abc))"
+                                 :string "abc"}
                      "abc"]]
 
                    "((a b c))" ; no spaces in block refs
@@ -158,10 +206,12 @@
   (utils/parses-to sut/structure-parser->ast
                    "{{embed: ((yeah))}}"
                    [:paragraph
-                    [:typed-block-ref
-                     {:from "{{embed: ((yeah))}}"}
+                    [:typed-block-ref {:from   "{{embed: ((yeah))}}"
+                                       :string "embed: ((yeah))"}
                      [:ref-type "embed"]
-                     [:block-ref {:from "((yeah))"} "yeah"]]]
+                     [:block-ref {:from   "((yeah))"
+                                  :string "yeah"}
+                      "yeah"]]]
 
                    "{{but not this}}"
                    [:paragraph [:text-run "{{but not this}}"]]
@@ -197,3 +247,12 @@
 ```"
                    [:paragraph
                     [:code-block]]))
+
+
+(t/deftest string-representations-of-refs
+  (utils/parses-to sut/structure-parser->ast
+                   "((abc))"
+                   [:paragraph
+                    [:block-ref {:from "((abc))"
+                                 :string "abc"}
+                     "abc"]]))

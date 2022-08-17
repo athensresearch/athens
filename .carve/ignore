@@ -1,6 +1,5 @@
 athens.db/help-url
 athens.db/ego-url
-athens.db/get-athens-datoms
 athens.events/shared-blocks-excl-date-pages
 athens.views.right-sidebar/sidebar-section-heading-style
 athens.core/init
@@ -8,7 +7,6 @@ athens.main.core/main
 athens.patterns/date
 athens.util/common-ancestor
 athens.events/pages
-athens.views.blocks.core/block-component
 athens.self-hosted.presence.utils/MEMBERS
 athens.common-events.schema/datascript-indent-multi
 athens.common-events.schema/datascript-unindent-multi
@@ -41,3 +39,7 @@ athens.common-events.graph.atomic/make-shortcut-move-op
 athens.common-events.graph.schema/valid-atomic-op?
 athens.common-events.graph.schema/explain-atomic-op
 athens.style/unzoom
+athens.self-hosted.fluree.test-helpers/query
+athens.views.jetsam/jetsam-component
+athens.types.tasks.view/new-task
+athens.types.tasks.view/update-task-properties

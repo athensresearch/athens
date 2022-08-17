@@ -57,44 +57,59 @@
   (t/testing "Remove page with references"
     (let [test-page-1-title "test page 1 title"
           test-page-1-uid   "test-page-1-uid"
+          test-block-1-text "test block 1 uid"
+          test-block-1-uid  "test-block-1-uid"
           test-page-2-title "test page 2 title"
           test-page-2-uid   "test-page-2-uid"
-          block-text        (str "[[" test-page-1-title "]]")
-          block-uid         "test-block-uid"
+          page-ref-text     (str "[[" test-page-1-title "]]")
+          block-ref-text    (str "((" test-block-1-uid "))")
+          page-ref-uid      "page-ref-uid"
+          block-ref-uid     "block-ref-uid"
           setup-txs         [{:db/id          -1
                               :node/title     test-page-1-title
                               :block/uid      test-page-1-uid
                               :block/children [{:db/id          -2
-                                                :block/uid      "test-block-1-uid"
-                                                :block/string   ""
+                                                :block/uid      test-block-1-uid
+                                                :block/string   test-block-1-text
                                                 :block/children []}]}
                              {:db/id          -3
                               :node/title     test-page-2-title
                               :block/uid      test-page-2-uid
                               :block/children [{:db/id        -4
-                                                :block/uid    block-uid
-                                                :block/string block-text}]}]
+                                                :block/uid    page-ref-uid
+                                                :block/string page-ref-text}
+                                               {:db/id        -5
+                                                :block/uid    block-ref-uid
+                                                :block/string block-ref-text}]}]
           query             '[:find ?text
                               :where
                               [?e :block/string ?text]
                               [?e :block/uid ?uid]
                               :in $ ?uid]]
       (fixture/transact-with-middleware setup-txs)
-      (t/is (= #{[block-text]}
+      (t/is (= #{[page-ref-text]}
                (d/q query
                     @@fixture/connection
-                    block-uid)))
+                    page-ref-uid)))
+      (t/is (= #{[block-ref-text]}
+               (d/q query
+                    @@fixture/connection
+                    block-ref-uid)))
 
       ;; remove page 1
       (d/transact! @fixture/connection
                    (->> test-page-1-title
                         (atomic-graph-ops/make-page-remove-op)
                         (atomic-resolver/resolve-to-tx @@fixture/connection)))
-      ;; check if page reference was cleaned
+      ;; check if page and block references were cleaned
       (t/is (= #{[test-page-1-title]}
                (d/q query
                     @@fixture/connection
-                    block-uid))))))
+                    page-ref-uid)))
+      (t/is (= #{[test-block-1-text]}
+               (d/q query
+                    @@fixture/connection
+                    block-ref-uid))))))
 
 
 (t/deftest undo-page-remove-with-reference
@@ -170,3 +185,45 @@
         (t/is (= (common-db/get-sidebar-titles @@fixture/connection)
                  [test-page-1-title])
               "Undo restored shortcuts")))))
+
+
+(t/deftest nested-page-link-delete-snafu
+  (let [page-title       "page title"
+        page-link        (str "[[" page-title "]]")
+        page-double-link (str "[[" page-link "]]")
+        block-1-uid      "block-uid-1-1"
+        block-1-txt      "## header2"
+        block-2-uid      "block-uid-1-2"
+        block-3-uid      "block-uid-1-3"
+        setup-repr       [{:page/title     page-title
+                           :block/children [{:block/uid    "random-block"
+                                             :block/string "with text"}]}
+                          {:page/title     page-link
+                           :block/children [{:block/uid    "block-uid-1"
+                                             :block/string "some meaningless text"}]}
+                          {:page/title     "some other page"
+                           :block/children [{:block/uid    block-1-uid
+                                             :block/string block-1-txt}
+                                            {:block/uid    block-2-uid
+                                             :block/string page-double-link}
+                                            {:block/uid    block-3-uid
+                                             :block/string page-link}]}]]
+    (t/testing "remove the page with nested page link"
+      (fixture/setup! setup-repr)
+      (fixture/op-resolve-transact! (atomic-graph-ops/make-page-remove-op page-link))
+      ;; we didn't modify random shit
+      (t/is (= block-1-txt (:block/string (common-db/get-block @@fixture/connection [:block/uid block-1-uid]))))
+      ;; normal link stays intact
+      (t/is page-link (:block/string (common-db/get-block @@fixture/connection [:block/uid block-3-uid])))
+      ;; wrong link was stripped of `[[]]`
+      (t/is page-link (:block/string (common-db/get-block @@fixture/connection [:block/uid block-2-uid])))
+      (fixture/teardown! setup-repr))))
+
+
+(t/deftest remove-prop-k
+  (fixture/setup! [{:page/title "title"
+                    :block/properties
+                    {"key" #:block{:uid    "uid"
+                                   :string ""}}}])
+  (fixture/op-resolve-transact! (atomic-graph-ops/make-page-remove-op "key"))
+  (fixture/is #{{:page/title "title"}}))

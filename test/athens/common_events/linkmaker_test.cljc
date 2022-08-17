@@ -5,7 +5,6 @@
     [athens.common-events.fixture         :as fixture]
     [athens.common-events.graph.atomic    :as atomic-graph-ops]
     [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common-events.resolver        :as resolver]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging :as log]
     [clojure.test                         :as t]
@@ -99,7 +98,7 @@
   (let [page      [{:db/id 101 :block/uid "page" :node/title "the page"}]
         block     [{:db/id 102 :block/uid "block" :block/string "the block"}]
         pageblock [{:db/id 103 :block/uid "pageblock" :node/title "the pageblock" :block/string "the pageblock"}]
-        neither   [{:db/id 104 :create/time 1}]
+        neither   [{:db/id 104 :foo/bar 1}]
         _         (d/transact! @fixture/connection (concat page block pageblock neither))
         db        @@fixture/connection]
     (t/testing "Returns nil if the entity doesn't exist"
@@ -247,7 +246,7 @@
       (let [{original-block-refs :block/refs} (get-block test-block-uid)
             {original-page-refs :block/refs}  (get-page test-page-uid)
             target-page-new-title             "Target page new"
-            rename-page-event                 (atomic-graph-ops/make-page-rename-op target-page-title target-page-new-title)
+            rename-page-event                 (graph-ops/build-page-rename-op @@fixture/connection target-page-title target-page-new-title)
             rename-page-txs                   (atomic-resolver/resolve-to-tx @@fixture/connection rename-page-event)]
 
         ;; Page should have refs to it.
@@ -279,7 +278,7 @@
       (let [{block-backrefs :block/_refs} (get-block test-block-uid)
             {page-backrefs :block/_refs}  (get-page test-page-uid)
             target-page-new-title         (str "ref to ((" test-block-uid "))")
-            rename-page-event             (atomic-graph-ops/make-page-rename-op target-page-title target-page-new-title)
+            rename-page-event             (graph-ops/build-page-rename-op @@fixture/connection target-page-title target-page-new-title)
             rename-page-txs               (atomic-resolver/resolve-to-tx @@fixture/connection rename-page-event)]
 
         ;; Page should have ref to block, but not to page.
@@ -383,7 +382,7 @@
 
           ;; apply split-block
           (doseq [atomic-op block-split-atomics
-                  :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
+                  :let      [atomic-txs (atomic-resolver/resolve-to-tx @@fixture/connection atomic-op)]]
             (transact-with-linkmaker atomic-txs))
 
           (let [{testing-block-2-eid :db/id}      (get-block testing-block-2-uid)

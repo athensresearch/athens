@@ -1,6 +1,8 @@
 (ns athens.common.utils
   "Athens Common Utilities.
   Shared between CLJ and CLJS."
+  (:require
+    [clojure.pprint :as pprint])
   #?(:cljs
      (:require-macros
        [athens.common.utils]))
@@ -9,8 +11,7 @@
        (java.time
          LocalDateTime)
        (java.util
-         Date
-         UUID))))
+         Date))))
 
 
 (defn now-ts
@@ -23,13 +24,6 @@
   []
   #?(:clj  (/ (.getNano (LocalDateTime/now)) 1000000)
      :cljs (js/performance.now)))
-
-
-#?(:clj
-   (defn random-uuid
-     "CLJ shim for CLJS `random-uuid`."
-     []
-     (UUID/randomUUID)))
 
 
 (defn uuid->string
@@ -57,7 +51,7 @@
   [prefix expr]
   `(let [start# (now-ms)
          ret# ~expr]
-     (log/info ~prefix (- (now-ms) start#) "ms")
+     (log/info ~prefix (double (- (now-ms) start#)) "ms")
      ret#))
 
 
@@ -69,18 +63,9 @@
      ~@tests))
 
 
-;; Resources on lazy clojure ops.
-;; https://clojuredocs.org/clojure.core/lazy-seq
-;; https://clojuredocs.org/clojure.core/lazy-cat
-;; http://clojure-doc.org/articles/language/laziness.html
-;; https://stackoverflow.com/a/44102122/2116927
-;; The lazy-* fns aren't explicitly used here, but all fns used here are lazy,
-;; so the end result is lazy as well.
-(defn range-mapcat-while
-  "Returns a lazy concatenation of (f i), where i starts at 0 and increases by 1 each iteration.
-   Continues while (stop? (f i)) is false."
-  [f stop?]
-  ;; Concat the result,
-  (apply concat (->> (range)
-                     (map f)
-                     (take-while (complement stop?)))))
+(defn spy
+  "Pretty print and return x.
+  Useful for debugging and logging."
+  [x]
+  (pprint/pprint x)
+  x)

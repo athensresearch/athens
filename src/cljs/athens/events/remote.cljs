@@ -1,13 +1,16 @@
 (ns athens.events.remote
   "`re-frame` events related to `:remote/*`."
   (:require
+    [athens.common-db                     :as common-db]
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common-events.resolver.atomic :as atomic-resolver]
     [athens.common.logging                :as log]
     [athens.common.utils                  :as utils]
     [athens.db                            :as db]
+    [athens.interceptors                  :as interceptors]
     [athens.undo                          :as undo]
     [clojure.pprint                       :as pp]
+    [clojure.string                       :as string]
     [datascript.core                      :as d]
     [event-sync.core                      :as event-sync]
     [re-frame.core                        :as rf]))
@@ -159,7 +162,7 @@
           [db' conn])))))
 
 
-(defn- add-memory-event!
+(defn add-memory-event!
   "Add an event to the memory stage."
   [[db conn] {:event/keys [id] :as event}]
   ;; Apply the new event, store it in the memory stage, and save the tx-data for rollback.
@@ -219,6 +222,7 @@
 
 (rf/reg-event-db
   :remote/start-event-sync
+  [(interceptors/sentry-span-no-new-tx ":remote/start-event-sync")]
   (fn [db _]
     (assoc db
            :remote/event-sync (event-sync/create-state :athens [:memory :server])
@@ -227,18 +231,21 @@
 
 (rf/reg-event-db
   :remote/stop-event-sync
+  [(interceptors/sentry-span-no-new-tx ":remote/stop-event-sync")]
   (fn [db _]
     (dissoc db :remote/event-sync :remote/rollback-tx-data)))
 
 
 (rf/reg-event-fx
   :remote/clear-server-event
+  [(interceptors/sentry-span-no-new-tx ":remote/clear-server-event")]
   (fn [{db :db} [_ event]]
     {:db (update db :remote/event-sync #(event-sync/remove % :server (:event/id event) event))}))
 
 
 (rf/reg-event-fx
   :remote/reject-forwarded-event
+  [(interceptors/sentry-span ":remote/reject-forwarded-event")]
   (fn [{db :db} [_ event]]
     (log/debug ":remote/reject-forwarded-event event:" (pr-str event))
     (let [[db']      (-> [db db/dsdb]
@@ -253,35 +260,50 @@
                            [[:db/sync]])]]})))
 
 
+(defn current-page-removed?
+  [db title]
+  (let [route-template     (get-in db [:current-route :template])
+        page-title?        (string/starts-with? route-template "/page-t/")
+        current-page-title (if page-title?
+                             (get-in db [:current-route :path-params :title])
+                             (when-let [block-uid (get-in db [:current-route :path-params :id])]
+                               (loop [block (common-db/get-block @db/dsdb [:block/uid block-uid])]
+                                 (cond
+                                   (nil? block)        nil
+                                   (:node/title block) (:node/title block)
+                                   :else               (recur (common-db/get-parent @db/dsdb [:block/uid (:block/uid block)]))))))]
+    (= current-page-title title)))
+
+
 (rf/reg-event-fx
   :remote/apply-forwarded-event
+  [(interceptors/sentry-span ":remote/apply-forwarded-event")]
   (fn [{db :db} [_ event]]
     (log/debug ":remote/apply-forwarded-event event:" (pr-str event))
-    (let [[db']        (or (promote-event! [db db/dsdb] event)
+    (let [;; Check if the current page will be removed before processing the event.
+          page-removed (graph-ops/contains-op? (:event/op event) :page/remove)
+          page-title   (when page-removed
+                         (-> page-removed first :op/args :page/title))
+          removed?     (when page-title
+                         (current-page-removed? db page-title))
+          ;; Process events.
+          [db']        (or (promote-event! [db db/dsdb] event)
                            (-> [db db/dsdb]
                                rollback!
                                (add-server-event! event)
                                rollforward!))
-          memory-log   (event-sync/stage-log (:remote/event-sync db') :memory)
-          page-removes (graph-ops/contains-op? (:event/op event) :page/remove)]
+          memory-log   (event-sync/stage-log (:remote/event-sync db') :memory)]
       {:db db'
        :fx [[:dispatch-n (cond-> []
                            ;; Mark as synced if there's no events left in memory.
-                           (empty? memory-log) (into [[:db/sync]])
-                           ;; when it was remove op
-                           page-removes        (into [[:page/removed (-> page-removes
-                                                                         first
-                                                                         :op/args
-                                                                         :page/title)]])
+                           (empty? memory-log)
+                           (into [[:db/sync]])
+
+                           ;; When the current page was removed
+                           removed?
+                           (into [[:alert/js (str "This page \"" page-title "\" has being deleted by other player.")]
+                                  [:navigate :home]])
+
                            ;; Remove the server event after everything is done.
-                           true                (into [[:remote/clear-server-event event]]))]]})))
-
-
-(rf/reg-event-fx
-  :remote/forward-event
-  (fn [{db :db} [_ event]]
-    (log/debug ":remote/forwarded-event event:" (pr-str event))
-    (let [[db'] (add-memory-event! [db db/dsdb] event)]
-      {:db db'
-       :fx [[:dispatch [:db/not-synced]]]
-       :remote/send-event-fx! event})))
+                           true
+                           (into [[:remote/clear-server-event event]]))]]})))

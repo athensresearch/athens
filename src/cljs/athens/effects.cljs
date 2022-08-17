@@ -4,19 +4,19 @@
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
     [athens.common.logging       :as log]
+    [athens.common.sentry        :refer-macros [wrap-span wrap-span-no-new-tx]]
     [athens.db                   :as db]
+    [athens.reactive             :as reactive]
     [athens.self-hosted.client   :as client]
     [cljs-http.client            :as http]
     [cljs.core.async             :refer [go <!]]
     [cljs.core.async.interop     :refer [<p!]]
     [com.stuartsierra.component  :as component]
-    [datascript.core             :as d]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection          :refer [setCursorPosition]]
     [malli.core                  :as m]
     [malli.error                 :as me]
-    [re-frame.core               :as rf]
-    [stylefy.core                :as stylefy]))
+    [re-frame.core               :as rf]))
 
 
 ;; Effects
@@ -26,14 +26,24 @@
 (rf/reg-fx
   :transact!
   (fn [tx-data]
-    (common-db/transact-with-middleware! db/dsdb tx-data)))
+    (wrap-span "fx/transact!"
+               (common-db/transact-with-middleware! db/dsdb tx-data))
+    (rf/dispatch [:success-transact])))
 
 
 (rf/reg-fx
   :reset-conn!
-  (fn [new-db]
-    (d/reset-conn! db/dsdb new-db)
-    (common-db/health-check db/dsdb)))
+  (fn [[new-db skip-health-check?]]
+    ;; Remove the reactive watchers will resetting the conn to prevent
+    ;; the watchers from processing a massive tx-report.
+    (reactive/unwatch!)
+    (wrap-span-no-new-tx "ds/reset-conn"
+                         (common-db/reset-conn! db/dsdb new-db))
+    (when-not skip-health-check?
+      (wrap-span-no-new-tx "db/health-check"
+                           (common-db/health-check db/dsdb)))
+    (reactive/watch!)
+    (rf/dispatch [:success-reset-conn])))
 
 
 (rf/reg-fx
@@ -122,12 +132,6 @@
 
 
 (rf/reg-fx
-  :stylefy/tag
-  (fn [[tag properties]]
-    (stylefy/tag tag properties)))
-
-
-(rf/reg-fx
   :alert/js!
   (fn [message]
     (js/alert message)))
@@ -154,8 +158,8 @@
 
 
 (defn self-hosted-health-check
-  [url success-cb failure-cb]
-  (go (let [ch  (go (<p! (.. (js/fetch (str "http://" url "/health-check"))
+  [http-url success-cb failure-cb]
+  (go (let [ch  (go (<p! (.. (js/fetch (str http-url "/health-check"))
                              (then (fn [response]
                                      (if (.-ok response)
                                        :success
@@ -169,14 +173,14 @@
 
 (rf/reg-fx
   :remote/client-connect!
-  (fn [{:keys [url ws-url] :as remote-db}]
-    (log/debug ":remote/client-connect!" (pr-str (:url remote-db)))
+  (fn [{:keys [url http-url ws-url]}]
+    (log/debug ":remote/client-connect!" (pr-str url))
     (when @self-hosted-client
       (log/info ":remote/client-connect! already connected, restarting")
       (component/stop @self-hosted-client))
     (log/info ":remote/client-connect! health-check")
     (self-hosted-health-check
-      url
+      http-url
       (fn []
         (log/info ":remote/client-connect! health-check success")
         (log/info ":remote/client-connect! connecting")
@@ -185,7 +189,8 @@
                                        component/start)))
       (fn []
         (log/warn ":remote/client-connect! health-check failure")
-        (rf/dispatch [:remote/connection-failed])))))
+        (rf/dispatch [:remote/connection-failed])
+        (rf/dispatch [:stage/fail-db-load])))))
 
 
 (rf/reg-fx
@@ -204,7 +209,10 @@
       ;; valid event let's send it
       (do
         (log/debug "Sending event:" (pr-str event))
-        (client/send! event))
+        (let [ret (client/send! event)]
+          (when (= :rejected (:result ret))
+            (rf/dispatch [:remote/reject-forwarded-event event])
+            (log/warn "Tried to send invalid event. Error:" (pr-str (:reason ret))))))
       (let [explanation (-> schema/event
                             (m/explain event)
                             (me/humanize))]
@@ -214,4 +222,5 @@
 (rf/reg-fx
   :invoke-callback
   (fn [callback]
+    (log/debug "Invoking callback")
     (callback)))
