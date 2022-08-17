@@ -183,13 +183,6 @@
       (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/members" userpage))
       (empty? user-subscriber?) (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/subscribers" userpage)))))
 
-(defn add-block-author-as-member-and-subscriber
-  [db thread-uid userpage]
-  (let [user-member?       (user-in-thread-as? db "athens/comment-thread/members" thread-uid userpage)
-        user-subscriber?   (user-in-thread-as? db "athens/comment-thread/subscribers" thread-uid userpage)]
-    (cond-> []
-            (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/members" userpage))
-            (empty? user-subscriber?) (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/subscribers" userpage)))))
 
 ;; Notifications
 
