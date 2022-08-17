@@ -183,6 +183,13 @@
       (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/members" userpage))
       (empty? user-subscriber?) (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/subscribers" userpage)))))
 
+(defn add-block-author-as-member-and-subscriber
+  [db thread-uid userpage]
+  (let [user-member?       (user-in-thread-as? db "athens/comment-thread/members" thread-uid userpage)
+        user-subscriber?   (user-in-thread-as? db "athens/comment-thread/subscribers" thread-uid userpage)]
+    (cond-> []
+            (empty? user-member?)     (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/members" userpage))
+            (empty? user-subscriber?) (concat (add-new-member-or-subscriber-to-thread db thread-uid "athens/comment-thread/subscribers" userpage)))))
 
 ;; Notifications
 
@@ -271,7 +278,7 @@
   :comment/write-comment
   ;; There is a sequence for how the operations are to be executed because for some ops, information
   ;; related to prior op is needed. The sequence is:
-  ;; - Create a thread if it does not exist with the author as member and subscriber to the thread.
+  ;; - Create a thread if it does not exist with the block and the comment author as member and subscriber to the thread.
   ;; - Add comment to the thread.
   ;; - If the comment contains mentions to users not subscribed to the thread, then add them as subscribers and members.
   ;; - If this is not the first comment on the thread then add the author of comment as subscriber and member to the thread.
@@ -281,7 +288,10 @@
     (let [thread-exists?                             (get-comment-thread-uid @db/dsdb uid)
           thread-uid                                 (or thread-exists?
                                                          (common.utils/gen-block-uid))
-
+          block-author                               (-> (common-db/get-block-document @db/dsdb [:block/uid uid])
+                                                         :block/create
+                                                         :event/auth
+                                                         :presence/id)
           {thread-members-uid :members-prop-uid
            thread-subs-uid    :subscribers-prop-uid
            new-thread-op      :new-thread-op}        (when (not thread-exists?)
@@ -296,7 +306,10 @@
           add-mentions-in-str-as-mem-subs-op         (add-mentioned-users-as-member-and-subscriber @db/dsdb thread-members-uid thread-subs-uid comment-string thread-uid thread-exists? author)
           add-author-as-mem-or-subs                  (when thread-exists?
                                                        (add-user-as-member-or-subscriber? @db/dsdb thread-uid (str "[[@" author "]]")))
-
+          add-block-author-as-sub-and-mem             (when (not thread-exists?)
+                                                        (concat []
+                                                                (add-new-member-or-subscriber-to-prop-uid @db/dsdb thread-members-uid (str "[[@" block-author "]]"))
+                                                                (add-new-member-or-subscriber-to-prop-uid @db/dsdb thread-subs-uid (str "[[@" block-author "]]"))))
           notification-message                       (str "**((" uid "))**" "\n"
                                                           "*[[@" author "]] commented: "  comment-string "*")
           notification-op                            (create-notification-op-for-comment @db/dsdb uid thread-uid author comment-string notification-message comment-uid)
@@ -304,6 +317,7 @@
                                                              new-thread-op
                                                              [comment-op]
                                                              add-mentions-in-str-as-mem-subs-op
+                                                             add-block-author-as-sub-and-mem
                                                              notification-op)
 
           comment-notif-op                           (composite/make-consequence-op {:op/type :comment-notif-op}
