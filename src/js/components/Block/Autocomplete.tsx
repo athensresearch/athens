@@ -118,7 +118,7 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
           bg="red"
           visibility="hidden"
           position="fixed"
-          width="1px"
+          width="px"
           height="1.5em"
           zIndex="100"
           left={menuPosition.left + 'px'}
