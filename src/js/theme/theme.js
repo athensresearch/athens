@@ -331,7 +331,7 @@ const components = {
         outline: 'none',
         boxShadow: 'focus'
       },
-      "svg": {
+      "> .chakra-button__icon, > .chakra-icon": {
         fontSize: buttonIconFontSize[size],
       }
     }),

@@ -7,18 +7,21 @@ import {
   PopoverTrigger,
   useOutsideClick,
   PopoverContent,
-  Portal
+  Portal,
+  ButtonProps
 } from '@chakra-ui/react';
-import getCaretCoordinates from '@/../textarea'
+import getCaretCoordinates from 'textarea-caret';
 
 const getCaretPositionFromKeyDownEvent = (event) => {
   if (event?.target) {
-    const localCaretCoordinates = getCaretCoordinates(event?.target);
+    const target = event.target;
+    const selectionStart = target.selectionStart;
+    const { left: caretLeft, top: caretTop, height: caretHeight } = getCaretCoordinates(event.target, selectionStart);
     const { x: targetLeft, y: targetTop } = event?.target.getBoundingClientRect();
     const position = {
-      left: localCaretCoordinates.left + targetLeft,
-      top: localCaretCoordinates.top + targetTop,
-      height: localCaretCoordinates.height + targetLeft,
+      left: caretLeft + targetLeft,
+      top: caretTop + targetTop,
+      height: caretHeight + targetTop,
     }
     return position;
   }
@@ -34,11 +37,12 @@ const scrollToEl = (el) => {
   }
 }
 
-export const AutocompleteButton = ({ children, onClick, isActive, ...props }) => {
+export const AutocompleteButton = (props: ButtonProps) => {
+  const { children, isActive, ...buttonProps } = props;
   const buttonRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (isActive) {
+    if (isActive && buttonRef.current) {
       scrollToEl(buttonRef.current);
     }
   }, [isActive]);
@@ -47,6 +51,7 @@ export const AutocompleteButton = ({ children, onClick, isActive, ...props }) =>
     <Button
       ref={buttonRef}
       variant="ghost"
+      size="sm"
       borderRadius={0}
       flexShrink={0}
       maxWidth="100%"
@@ -65,8 +70,7 @@ export const AutocompleteButton = ({ children, onClick, isActive, ...props }) =>
       _last={{
         borderBottomRadius: "inherit",
       }}
-      {...props}
-      onClick={onClick}
+      {...buttonProps}
     >
       {children}
     </Button>
@@ -74,56 +78,56 @@ export const AutocompleteButton = ({ children, onClick, isActive, ...props }) =>
 }
 
 export const Autocomplete = ({ isOpen, onClose, event, children }) => {
-  // Early return with nothing, to avoid rendering all
-  // the juicy portaling goodness.
-  if (!isOpen) {
-    return null;
-  }
-
   const menuRef = React.useRef(null);
-  const lastEventTargetValue = React.useRef(null);
-  const currentEventPosition = React.useRef({ left: null, top: null });
-  const newEventTargetValue = event?.target?.value;
-  const isNewEvent = newEventTargetValue !== lastEventTargetValue.current;
+  const [menuPosition, setMenuPosition] = React.useState({ left: null, top: null });
 
   useOutsideClick({
     ref: menuRef,
     handler: () => onClose(),
   })
 
-  if (isOpen && isNewEvent) {
-    currentEventPosition.current = getCaretPositionFromKeyDownEvent(event)
-  };
+  React.useEffect(() => {
+    const target = event?.target;
+    if (isOpen && target) {
+      const position = getCaretPositionFromKeyDownEvent(event);
+      if (position.left && position.top) {
+        setMenuPosition(position);
+      } else {
+        onClose();
+      }
+    }
+  }, [isOpen]);
 
-  lastEventTargetValue.current = newEventTargetValue;
+  if (!isOpen) {
+    return false;
+  }
 
   return (
     <Popover
       isOpen={isOpen}
       placement="bottom-start"
-      isLazy={true}
+      isLazy
+      offset={[0, 0]}
+      size="sm"
       returnFocusOnClose={false}
-      closeOnBlur={true}
-      closeOnEsc={true}
-      onClose={onClose}
+      closeOnBlur={false}
       autoFocus={false}
     >
       <PopoverTrigger>
         <Box
-          visibility="hidden"
           bg="red"
+          visibility="hidden"
           position="fixed"
-          width="1px"
+          width="px"
           height="1.5em"
           zIndex="100"
-          left={currentEventPosition.current.left + 'px'}
-          top={currentEventPosition.current.top + "px"}
+          left={menuPosition.left + 'px'}
+          top={menuPosition.top + "px"}
         >
         </Box>
       </PopoverTrigger>
       <Portal>
         <PopoverContent
-          borderRadius="md"
           shadow="menu"
           bg="background.vibrancy"
           borderColor="separator.divider"
@@ -132,7 +136,7 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
           ref={menuRef}
           p={0}
           overflow="auto"
-          maxHeight={`calc(100vh - 2rem - 2rem - ${currentEventPosition.current.top}px)`}
+          maxHeight={`calc(100vh - 2rem - 2rem - ${menuPosition?.top || 0}px)`}
         >
           {children}
         </PopoverContent>

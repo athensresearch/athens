@@ -1,6 +1,6 @@
 (ns athens.views.left-sidebar
   (:require
-    ["/components/Icons/Icons" :refer [DailyNotesIcon AllPagesIcon ContrastIcon SearchIcon #_ GraphIcon SettingsIcon]]
+    ["/components/Icons/Icons" :refer [CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
     ["/components/Layout/MainSidebar" :refer [MainSidebar SidebarSection SidebarSectionHeading]]
     ["/components/SidebarShortcuts/List" :refer [List]]
     ["/components/Widgets/Widgets" :refer [TasksWidget]]
@@ -52,13 +52,11 @@
                    :justifyContent "start"
                    :leftIcon (r/as-element [:> SearchIcon])}
         "Find or Create a Page"]
-       [route-button (= route-name :home) "Daily Notes" (r/as-element [:> DailyNotesIcon]) (fn [_]
-                                                                                             (rf/dispatch [:reporting/navigation {:source :main-sidebar
-                                                                                                                                  :target :home
-                                                                                                                                  :pane   :main-pane}])
-                                                                                             (router/nav-daily-notes))]
-       ;; [:> DailyNotesWidget {:isOpen true}]
-
+       [route-button (= route-name :home) "Daily Notes" (r/as-element [:> CalendarEditFillIcon]) (fn [_]
+                                                                                                   (rf/dispatch [:reporting/navigation {:source :main-sidebar
+                                                                                                                                        :target :home
+                                                                                                                                        :pane   :main-pane}])
+                                                                                                   (router/nav-daily-notes))]
        [route-button (= route-name :pages) "All Pages" (r/as-element [:> AllPagesIcon]) (fn [_]
                                                                                           (rf/dispatch [:reporting/navigation {:source :main-sidebar
                                                                                                                                :target :all-pages

@@ -15,8 +15,6 @@ interface RightSidebarProps extends BoxProps {
 export const RightSidebar = (props: RightSidebarProps) => {
   const { children, rightSidebarWidth, isOpen } = props;
 
-  console.log(rightSidebarWidth)
-
   const {
     toolbarHeight
   } = React.useContext(LayoutContext);
@@ -157,6 +155,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
         unmountOnExit
         zIndex={1}
         px={4}
+        onPointerDown={(e) => {e.stopPropagation()}}
       >
         {children}
       </Box>
