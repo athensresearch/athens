@@ -81,7 +81,7 @@
     (t/testing "new page link in page rename"
       (fixture/setup! setup-repr)
       (let [new-title       (str "[[" test-t-1 "]] " test-t-2)
-            save-op         (atomic-ops/make-page-rename-op test-t-2 new-title)
+            save-op         (ops/build-page-rename-op @@fixture/connection test-t-2 new-title)
             [removed added] (ops/structural-diff @@fixture/connection save-op)]
         (t/is (= #{} removed))
         (t/is (= #{[:page-link test-t-1]} added)))

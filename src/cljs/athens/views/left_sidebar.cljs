@@ -1,7 +1,9 @@
 (ns athens.views.left-sidebar
   (:require
-    ["@chakra-ui/react" :refer [VStack Flex Heading Button Link Flex]]
-    ["framer-motion" :refer [AnimatePresence motion]]
+    ["/components/Icons/Icons" :refer [DailyNotesIcon AllPagesIcon SearchIcon GraphIcon]]
+    ["/components/Layout/MainSidebar" :refer [MainSidebar]]
+    ["/components/SidebarShortcuts/List" :refer [List]]
+    ["@chakra-ui/react" :refer [Button VStack Flex Heading ButtonGroup Link Flex]]
     [athens.reactive :as reactive]
     [athens.router   :as router]
     [athens.util     :as util]
@@ -14,130 +16,96 @@
 (def expanded-sidebar-width "clamp(12rem, 25vw, 18rem)")
 
 
-(defn shortcut-component
-  [_]
-  (let [drag (r/atom nil)]
-    (fn [[order title]]
-      [:> Flex {:as "li"
-                :align "stretch"
-                :border "1px solid transparent"
-                :borderTopColor (when (:above @drag) "brand")
-                :borderBottomColor (when (:below @drag) "brand")}
-       [:> Button {:variant "ghost"
-                   :mx "1.25rem"
-                   :size "sm"
-                   :display "inline-block"
-                   :textAlign "left"
-                   :justifyContent "flex-start"
-                   :overflow "hidden"
-                   :fontWeight "normal"
-                   :whiteSpace "nowrap"
-                   :textOverflow "ellipsis"
-                   :flex "1"
-                   :boxShadow "0 0 0 0.25rem transparent"
-                   :_focus {:outline "none"}
-                   :_active {:transitionDuration "0s"}
-                   :on-click (fn [e]
+(defn route-button
+  []
+  (fn [is-active? label icon on-click]
+    [:> Button {:isActive is-active?
+                :textAlign "start"
+                :justifyContent "flex-start"
+                :variant "ghost"
+                :leftIcon icon
+                :onClick on-click}
+     label]))
+
+
+(defn left-sidebar
+  []
+  (let [current-route-name (rf/subscribe [:current-route/name])
+        on-athena              #(rf/dispatch [:athena/toggle])
+        route-name @current-route-name
+        is-open? (rf/subscribe [:left-sidebar/open])
+        shortcuts (reactive/get-reactive-shortcuts)]
+    [:> MainSidebar {:isMainSidebarOpen @is-open?}
+
+     [:> VStack {:spacing 4 :align "stretch" :height "100%"}
+
+      [:> VStack {:spacing 0.5 :role "nav" :alignSelf "stretch" :as ButtonGroup :size "sm" :align "stretch" :p 4}
+       [:> Button {:onClick on-athena
+                   :variant "outline"
+                   :justifyContent "start"
+                   :leftIcon (r/as-element [:> SearchIcon])}
+        "Find or Create a Page"]
+       [route-button (= route-name :home) "Daily Notes" (r/as-element [:> DailyNotesIcon]) (fn [_]
+                                                                                             (rf/dispatch [:reporting/navigation {:source :main-sidebar
+                                                                                                                                  :target :home
+                                                                                                                                  :pane   :main-pane}])
+                                                                                             (router/nav-daily-notes))]
+       [route-button (= route-name :pages) "All Pages" (r/as-element [:> AllPagesIcon]) (fn [_]
+                                                                                          (rf/dispatch [:reporting/navigation {:source :main-sidebar
+                                                                                                                               :target :all-pages
+                                                                                                                               :pane   :main-pane}])
+                                                                                          (router/navigate :pages))]
+       [route-button (= route-name :graph) "Graph" (r/as-element [:> GraphIcon]) (fn [_]
+                                                                                   (rf/dispatch [:reporting/navigation {:source :main-sidebar
+                                                                                                                        :target :graph
+                                                                                                                        :pane   :main-pane}])
+                                                                                   (router/navigate :graph))]]
+
+      ;; SHORTCUTS
+      [:> VStack {:as "ol"
+                  :align "stretch"
+                  :flex 1
+                  :spacing 2
+                  :overflowY "auto"
+                  :backdropFilter "blur(1em)"
+                  :borderRadius "lg"
+                  :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}
+                       :listStyle "none"
+                       :WebkitAppRegion "no-drag"}}
+       [:> Heading {:as "h2"
+                    :px 7
+                    :size "xs"
+                    :color "foreground.secondary"}
+        "Shortcuts"]
+       [:> List {:items shortcuts
+                 :onOpenItem (fn [e [_order page]]
                                (let [shift? (.-shiftKey e)]
                                  (rf/dispatch [:reporting/navigation {:source :left-sidebar
                                                                       :target :page
                                                                       :pane   (if shift?
                                                                                 :right-pane
                                                                                 :main-pane)}])
-                                 (router/navigate-page title e)))
-                   :draggable     true
-                   :on-drag-over  (fn [e]
-                                    (.. e preventDefault)
-                                    (let [offset       (util/mouse-offset e)
-                                          middle-y     (util/vertical-center (.. e -target))
-                                          ;; find closest li because sometimes event.target is anchor tag
-                                          ;; if nextSibling is null, then target is last li and therefore end of list
-                                          closest-li   (.. e -target (closest "li"))
-                                          next-sibling (.. closest-li -nextElementSibling)
-                                          last-child?  (nil? next-sibling)]
-                                      (cond
-                                        (> middle-y (:y offset))                   (reset! drag :above)
-                                        (and (< middle-y (:y offset)) last-child?) (reset! drag :below))))
-                   :on-drag-start (fn [e]
-                                    (set! (.. e -dataTransfer -dropEffect) "move")
-                                    (.. e -dataTransfer (setData "text/plain" order)))
-                   :on-drag-end   (fn [_])
-                   :on-drag-leave (fn [_] (reset! drag nil))
-                   :on-drop       (fn [e]
-                                    (let [source-order (js/parseInt (.. e -dataTransfer (getData "text/plain")))]
-                                      (prn source-order order)
-                                      (cond
-                                        (= source-order order) nil
-                                        (and (= source-order
-                                                (dec order))
-                                             (= @drag :above)) nil
-                                        (= @drag :below)       (rf/dispatch [:left-sidebar/drop source-order order :after])
-                                        :else                  (rf/dispatch [:left-sidebar/drop source-order order :before])))
-                                    (reset! drag nil))}
-        title]])))
+                                 (router/navigate-page page e)))
+                 :onUpdateItemsOrder (fn [oldIndex newIndex]
+                                       (cond
+                                         (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
+                                         (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])))}]]
 
-
-(defn left-sidebar
-  []
-  (let [open?     (rf/subscribe [:left-sidebar/open])
-        shortcuts (reactive/get-reactive-shortcuts)]
-    [:> AnimatePresence {:initial false}
-     (when @open?
-       [:> (.-div motion)
-        {:style {:display "flex"
-                 :flex-direction "column"
-                 :height "100%"
-                 :zIndex 1
-                 :alignItems "stretch"
-                 :gridArea "left-sidebar"
-                 :position "relative"
-                 :overflow "hidden"}
-         :initial {:width 0
-                   :opacity 0}
-         :animate {:width expanded-sidebar-width
-                   :opacity 1}
-         :exit {:width 0
-                :opacity 0}}
-
-        ;; SHORTCUTS
-        [:> VStack {:as "ol"
-                    :align "stretch"
-                    :width expanded-sidebar-width
-                    :py "1rem"
-                    :marginTop "7rem"
-                    :spacing "0.25rem"
-                    :overflowY "auto"
-                    :backdropFilter "blur(1em)"
-                    :borderRadius "lg"
-                    :sx {"@supports (overflow-y: overlay)" {:overflowY "overlay"}
-                         :listStyle "none"
-                         :WebkitAppRegion "no-drag"}}
-         [:> Heading {:as "h2"
-                      :px "2rem"
-                      :pb "0.5rem"
-                      :size "sm"
-                      :color "foreground.secondary"}
-          "Shortcuts"]
-         (doall
-           (for [sh shortcuts]
-             ^{:key (str "left-sidebar-" (second sh))}
-             [shortcut-component sh]))]
-
-        ;; LOGO + BOTTOM BUTTONS
-        [:> Flex {:as "footer"
-                  :width expanded-sidebar-width
-                  :flexWrap "wrap"
-                  :gap "0.25em 0.5em"
-                  :fontSize "sm"
-                  :p "2rem"
-                  :mt "auto"}
-         [:> Link {:fontWeight "bold"
-                   :display "inline-block"
-                   :href "https://github.com/athensresearch/athens/issues/new/choose"
-                   :target "_blank"}
-          "Athens"]
-         [:> Link {:color "foreground.secondary"
-                   :display "inline-block"
-                   :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
-                   :target "_blank"}
-          (athens.util/athens-version)]]])]))
+      ;; LOGO + BOTTOM BUTTONS
+      [:> Flex {:as "footer"
+                :width expanded-sidebar-width
+                :flexWrap "wrap"
+                :gap "0.25em 0.5em"
+                :fontSize "sm"
+                :p "2rem"
+                :mt "auto"}
+       [:> Link {:fontWeight "bold"
+                 :display "inline-block"
+                 :href "https://github.com/athensresearch/athens/issues/new/choose"
+                 :target "_blank"}
+        "Athens"]
+       [:> Link {:color "foreground.secondary"
+                 :display "inline-block"
+                 :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
+                 :target "_blank"}
+        (util/athens-version)]]]]))

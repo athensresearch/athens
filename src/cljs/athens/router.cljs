@@ -6,6 +6,7 @@
     [athens.dates                :as dates]
     [athens.db                   :as db]
     [athens.electron.db-picker   :as db-picker]
+    [athens.electron.utils       :as electron.utils]
     [athens.interceptors         :as interceptors]
     [athens.utils.sentry         :as sentry]
     [day8.re-frame.tracing       :refer-macros [fn-traced]]
@@ -33,6 +34,16 @@
   :current-route/page-title
   (fn [db]
     (-> db :current-route :path-params :title)))
+
+
+(reg-sub
+  :current-route/uid-compat
+  :<- [:current-route/uid]
+  :<- [:current-route/page-title]
+  (fn [[uid title]]
+    (or uid
+        (when title
+          (common-db/get-page-uid @db/dsdb title)))))
 
 
 (reg-sub
@@ -199,7 +210,7 @@
        (do
          (.. js/window getSelection empty)
          (.. e preventDefault)
-         (rf/dispatch [:right-sidebar/open-page title]))
+         (rf/dispatch [:right-sidebar/open-item [:node/title title]]))
        (navigate-page title)))))
 
 
@@ -220,7 +231,7 @@
        (do
          (.. js/window getSelection empty)
          (.. e preventDefault)
-         (rf/dispatch [:right-sidebar/open-item uid]))
+         (rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))
        (navigate-uid uid)))))
 
 
@@ -242,26 +253,38 @@
 
 ;; Permalink param processing
 
-(def graph-param-key "graph")
+(def graph-name-param-key "graph-name")
+(def graph-url-param-key "graph-url")
+(def graph-password-param-key "graph-password")
 
 
-(defn consume-graph-param
-  "Removes and returns the graph-id in the current URL, if any."
+(defn consume-graph-params
+  "Removes and returns the graph params in the current URL, if any."
   []
   ;; Note: don't use the reitit.frontend functions here, as the router
   ;; it not yet initialized during boot.
-  (let [url       (js/URL. js/window.location)
-        graph-id  (.. url -searchParams (get graph-param-key))]
-    ;; Replace history with a version without the graph param.
-    (.. url -searchParams (delete graph-param-key))
-    (js/history.replaceState js/history.state nil url)
-    graph-id))
+  (let [window-url (js/URL. js/window.location)
+        name       (.. window-url -searchParams (get graph-name-param-key))
+        url        (.. window-url -searchParams (get graph-url-param-key))
+        password   (js/atob (.. window-url -searchParams (get graph-password-param-key)))]
+    (when url
+      ;; Replace history with a version without the graph params.
+      (.. window-url -searchParams (delete graph-name-param-key))
+      (.. window-url -searchParams (delete graph-url-param-key))
+      (.. window-url -searchParams (delete graph-password-param-key))
+      (js/history.replaceState js/history.state nil window-url)
+      [(or name url) url password])))
 
 
-(defn create-url-with-graph-param
+(defn create-url-with-graph-params
   "Create a URL containing graph-id."
-  [graph-id]
-  (let [url (js/URL. js/window.location)]
-    (.. url -searchParams (set graph-param-key graph-id))
-    (.toString url)))
-
+  [name url password]
+  (let [created-url (js/URL. (if electron.utils/electron?
+                               ;; Use live web client + page route on electron.
+                               (str "https://web.athensresearch.org/"
+                                    js/window.location.hash)
+                               js/window.location))]
+    (.. created-url -searchParams (set graph-name-param-key name))
+    (.. created-url -searchParams (set graph-url-param-key url))
+    (.. created-url -searchParams (set graph-password-param-key (js/btoa password)))
+    (.toString created-url)))

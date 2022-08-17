@@ -37,3 +37,11 @@
                       (apply str))]
         (.. js/navigator -clipboard (writeText data)))))
   (toast (clj->js {:title "Copied content to clipboard" :status "success"})))
+
+
+(defn handle-click-comment
+  [e uid]
+  (rf/dispatch [:comment/show-editor uid])
+  (.. e preventDefault))
+
+

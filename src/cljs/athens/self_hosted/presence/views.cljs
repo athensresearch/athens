@@ -2,7 +2,6 @@
   (:require
     ["/components/PresenceDetails/PresenceDetails" :refer [PresenceDetails]]
     ["@chakra-ui/react" :refer [Avatar AvatarGroup Tooltip]]
-    [athens.electron.utils :as electron.utils]
     [athens.router :as router]
     [athens.self-hosted.presence.events]
     [athens.self-hosted.presence.fx]
@@ -33,9 +32,9 @@
 
 (defn copy-permalink
   []
-  (let [selected-db @(rf/subscribe [:db-picker/selected-db])
-        url (router/create-url-with-graph-param (:id selected-db))]
-    (.. js/navigator -clipboard (writeText url))
+  (let [{:keys [name url password]} @(rf/subscribe [:db-picker/selected-db])
+        created-url (router/create-url-with-graph-params name url password)]
+    (.. js/navigator -clipboard (writeText created-url))
     (util/toast (clj->js {:status "info"
                           :position "top-right"
                           :title "Copied permalink to clipboard"}))))
@@ -82,18 +81,16 @@
                 (let [current-user'          (user->person @current-user)
                       current-page-members   (others-seq @same-page)
                       different-page-members (others-seq @diff-page)]
-                  [:> PresenceDetails (merge
-                                        {:current-user             current-user'
-                                         :current-page-members     current-page-members
-                                         :different-page-members   different-page-members
-                                         :host-address             (:url @selected-db)
-                                         :handle-copy-host-address copy-host-address-to-clipboard
-                                         :handle-press-member      #(go-to-user-block @all-users %)
-                                         :handle-update-profile    #(edit-current-user %)
-                                         ;; TODO: show other states when we support them.
-                                         :connection-status        "connected"}
-                                        (when-not electron.utils/electron?
-                                          {:handle-copy-permalink copy-permalink}))]))))
+                  [:> PresenceDetails {:current-user             current-user'
+                                       :current-page-members     current-page-members
+                                       :different-page-members   different-page-members
+                                       :host-address             (:url @selected-db)
+                                       :handle-copy-host-address copy-host-address-to-clipboard
+                                       :handle-copy-permalink    copy-permalink
+                                       :handle-press-member      #(go-to-user-block @all-users %)
+                                       :handle-update-profile    #(edit-current-user %)
+                                       ;; TODO: show other states when we support them.
+                                       :connection-status        "connected"}]))))
 
 
 ;; inline

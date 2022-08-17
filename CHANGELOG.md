@@ -2,6 +2,280 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0-beta.2](https://github.com/athensresearch/athens/compare/v2.1.0-beta.1...v2.1.0-beta.2) (2022-07-15)
+
+
+### Features
+
+* :time/edits supports multiple edits ([e79c003](https://github.com/athensresearch/athens/commit/e79c00385e6a78e859572b2435471725b4b55d1e))
+* `block-ref` rendering via protocol ([203f0b6](https://github.com/athensresearch/athens/commit/203f0b67be4a9658d2ff9381e0a595b51a0da656))
+* add :properties/update-in event ([45cfaf4](https://github.com/athensresearch/athens/commit/45cfaf4fd307ba179f8888d6e42a18f622a135bd))
+* add order/get ([b66bb78](https://github.com/athensresearch/athens/commit/b66bb78bc934ed0c87ec3290d1a2896805608005))
+* allow creation of new prop on lookup ([8d38bd5](https://github.com/athensresearch/athens/commit/8d38bd57a5126f79cd0203dc8b1f2821927e82a3))
+* backspace at the start of a property will move it to first child ([8871058](https://github.com/athensresearch/athens/commit/88710583ad623f2613ef42d1aaeb4a96d5dc5351))
+* Block embeds ported to `BlockTypeProtocol` ([5972d67](https://github.com/athensresearch/athens/commit/5972d6761367bddd7f7c212cc1478b286dc20f91))
+* block in reactions components ([83fa29d](https://github.com/athensresearch/athens/commit/83fa29db9af3a32f8f3f19f25c50ce00e3d1d25e))
+* block properties ([8393bdb](https://github.com/athensresearch/athens/commit/8393bdbed0cd11f6401baf7f69eb40eceab8553f))
+* Communicate supported transclusions and breadcrumbs ([77d8723](https://github.com/athensresearch/athens/commit/77d87232d8b82168f2e0c9f831c0cb91fe31ad47))
+* create properties via :: ([0ae7683](https://github.com/athensresearch/athens/commit/0ae7683e0c3068822ab6d95d36ffceeec8ccc372))
+* handle enter on props ([3d1fd99](https://github.com/athensresearch/athens/commit/3d1fd99d6a7ac0682e8f95831835cfd2f36210de))
+* handle up/down for properties ([eec6161](https://github.com/athensresearch/athens/commit/eec616112eee7edf59274f96cf382c75b5c53355))
+* hide comment functionality behind feature flag ([39dc2be](https://github.com/athensresearch/athens/commit/39dc2be76ab3c1642adb6ee851368d00c2de3980))
+* hide reactions and cover photo behind feature flags ([d441816](https://github.com/athensresearch/athens/commit/d4418165228172f132a324bb3570dd1b2a4a4224))
+* migrate datascript dbs ([b119f33](https://github.com/athensresearch/athens/commit/b119f33415c633828ee01cf19da81ba83733af79))
+* migrate datascript v2 times to v3 times ([5441a04](https://github.com/athensresearch/athens/commit/5441a04fbf7a8997dc3b3673fde324e3a78e9abf))
+* pages and blocks get full properties reactively ([0a810ff](https://github.com/athensresearch/athens/commit/0a810ff04620a0c7d581e5a04450e2fa024acb43))
+* pages have rough header image UX ([e24818e](https://github.com/athensresearch/athens/commit/e24818e9374f2777290cb370afc9b3c6caa554c5))
+* Placeholder for reusable editor. ([0431e98](https://github.com/athensresearch/athens/commit/0431e987d00dcc903fb13109282fc6bea81daa2c))
+* render properties in outliner ([2192272](https://github.com/athensresearch/athens/commit/21922724f87ee694481b0b9e43881a89c8f13ee8))
+* rework anchor functionality ([62c8144](https://github.com/athensresearch/athens/commit/62c8144172a16fd56c623efb252c7a2533ce7b39))
+* saving props. ([2eaf93d](https://github.com/athensresearch/athens/commit/2eaf93d2895ba4e3ca986c315d2129768707cba5))
+* show all blocks edited on a daily note ([2d772d1](https://github.com/athensresearch/athens/commit/2d772d177918a389ed25e8ac662022c47a8cd538))
+* show linked props on page ([c0517e2](https://github.com/athensresearch/athens/commit/c0517e2aa3c9ad2fa9040e12c9d0ba081c05c007))
+* show page name for users on other pages, indicate self user ([c211cae](https://github.com/athensresearch/athens/commit/c211caeed39109291bab78fd90711f320b062ed0))
+* show properties in breadcrumbs ([18d2842](https://github.com/athensresearch/athens/commit/18d284266c708069da236b61582317b43737c63f))
+* support event creation and log time in protocol ([d997730](https://github.com/athensresearch/athens/commit/d9977302faaae6ad86e5c73d042877bb8b86dcf2))
+* support feature flags ([3e64560](https://github.com/athensresearch/athens/commit/3e645601236986c8485e2044e3d028eea0408776))
+* support indent/unindent in properties ([5afc80d](https://github.com/athensresearch/athens/commit/5afc80ddb000703c7981d2554d22d6246ad0effd))
+* support presence-id on events ([3ba9d18](https://github.com/athensresearch/athens/commit/3ba9d18e5d00e82c2e2c43bd735a5c5fad5d9d96))
+* time control under feature flag ([36c9538](https://github.com/athensresearch/athens/commit/36c9538727a90dac9d501ffe9b92df619cf8b1c8))
+* update datascript schema with first-class time ([c7566a8](https://github.com/athensresearch/athens/commit/c7566a89361eda618f0f49acd8487c95c44532b5))
+* use first-class time in atomic resolvers ([770c68c](https://github.com/athensresearch/athens/commit/770c68c10f8cbbc3029e32851527ca63c0d52d18))
+* working reactions from block menu ([b418f9d](https://github.com/athensresearch/athens/commit/b418f9d7479d7fc59bf8d7b12fc21c306902bbd0))
+
+
+### Bug Fixes
+
+* :after/:before prop is not a valid location ([364129d](https://github.com/athensresearch/athens/commit/364129d1d9d2ac6159da42a5783c56765855cdfc))
+* add-property-map should recur on children too ([57650a3](https://github.com/athensresearch/athens/commit/57650a395673c474bad493e2563c89cf51d5a50c))
+* block children are reactive, again ([8c2124c](https://github.com/athensresearch/athens/commit/8c2124c16de355298a2a09cfadf459635117973a))
+* block move should save before moving ([d5b6fdc](https://github.com/athensresearch/athens/commit/d5b6fdc9a13c073847d8def2d59ff340e6704af7))
+* children toggle should show/hide props ([05190e3](https://github.com/athensresearch/athens/commit/05190e325f7b2f90017e8d4b5734ff7e53642407))
+* clean up reaction props when removing one ([d083dbd](https://github.com/athensresearch/athens/commit/d083dbd4410b22f0a47a50245d635aab6dc025e3))
+* code style ([c70a68a](https://github.com/athensresearch/athens/commit/c70a68a38a3e0f3091b437f89a0866714da94979))
+* correct reagent args ([ea04181](https://github.com/athensresearch/athens/commit/ea0418100c85a7f4e70b24fa0e5d5c53bba8dfd9))
+* create new props that start with colon ([e74babd](https://github.com/athensresearch/athens/commit/e74babd11dea9e9124d70ddfccd7477df287ac80))
+* don't create empty prop ([c1e653b](https://github.com/athensresearch/athens/commit/c1e653b823ec65a313ccf8bc167cccb77cd44a0e))
+* don't make up time if there's no create time ([3f2155d](https://github.com/athensresearch/athens/commit/3f2155d03e71efa3a33645126ee84d0e5af60797))
+* don't show cover image when disabled ([6b9afa2](https://github.com/athensresearch/athens/commit/6b9afa2c341c9b2e02d4593a419179d83616b364))
+* don't show placeholder block when there's props ([72850aa](https://github.com/athensresearch/athens/commit/72850aab8b5aa2291f39742fcf8ed2851c571289))
+* don't try to create prop if there's an exact match ([075b6ca](https://github.com/athensresearch/athens/commit/075b6ca8bf193ddf876730d3142edff36b21ce86))
+* emoji picker popover el needs key ([9b967d5](https://github.com/athensresearch/athens/commit/9b967d5223d4a47ef8afeedb14e7690e48a9273f))
+* ignore IDB errors from emoji-picker-element ([255ef6c](https://github.com/athensresearch/athens/commit/255ef6c19caf2fc01c4b88d824a24bbab7011557))
+* make keyboard navigation optional ([94da28f](https://github.com/athensresearch/athens/commit/94da28fd1eafb7cca607c31a08c722f90d8cb5a7))
+* new-uids-map should work with props ([61c0f80](https://github.com/athensresearch/athens/commit/61c0f8002e5b1ceb6dd13786dfe5a7167e9084e2))
+* page delete should delete blocks like block delete ([50c0a07](https://github.com/athensresearch/athens/commit/50c0a07a05ee88b9716b464a74db39e27fd103a1))
+* pprint event and explanation on failed resolve ([909d1d8](https://github.com/athensresearch/athens/commit/909d1d87e1b1fc636c0da8484811841390782f6f))
+* property-position should support page-id ([accdc99](https://github.com/athensresearch/athens/commit/accdc99ed5881cbe6390b4f497f1c5f6ccb76354))
+* remove comments debug spam ([c159a3f](https://github.com/athensresearch/athens/commit/c159a3f8e54f05861cc2b19e6420b26dc20ee4ec))
+* remove unused binding ([bc0e57e](https://github.com/athensresearch/athens/commit/bc0e57ea0999e0e3b4c8e22dff6204a9bb2b0b53))
+* remove unused fn ([e139200](https://github.com/athensresearch/athens/commit/e13920046ed748e7522589c0b97f4938dfc97a9f))
+* remove unused require ([8879b43](https://github.com/athensresearch/athens/commit/8879b43dcd6e0f701970929322d4950308635e11))
+* removing a child should remove the order number ([c500a66](https://github.com/athensresearch/athens/commit/c500a66803e214548b4e6fdfce687686a58abe9b))
+* restore cover photo and reactions feature flags ([8b08162](https://github.com/athensresearch/athens/commit/8b08162754f6af0d13ef5b3f3d6cc61c6a23c767))
+* some react errors that keep showing up ([dff269c](https://github.com/athensresearch/athens/commit/dff269c8a82e0a357bab1583d3d64b73b3d86144))
+* support new time format in all pages, etc ([9c8b626](https://github.com/athensresearch/athens/commit/9c8b62667fc550aac8ad28e50e070d1288b1bf1a))
+* test and fix get-block-property-document ([3cd0ef5](https://github.com/athensresearch/athens/commit/3cd0ef56c39aebae68df78b07da7a158ff8e5df0))
+* use children? binding on toggle ([13c8057](https://github.com/athensresearch/athens/commit/13c8057283a07dc17eedf2b50a4c3cc1b55b1f3a))
+* use db/get-block and get-parent should use common-db helpers ([05a29ed](https://github.com/athensresearch/athens/commit/05a29edf078b7324a92adec16dd5661b742c18f6))
+* use time and author from block creation ([84fe37a](https://github.com/athensresearch/athens/commit/84fe37a85cae853bf2f2862b47754d9449b7d5e7))
+* wrap time in event to allow for author lookup ([ddca8ef](https://github.com/athensresearch/athens/commit/ddca8efa3547b096ee2a1ed1f89e09a1f08d75a3))
+
+
+### Refactors
+
+* `:caret-position` out of block local `state` ([9708f65](https://github.com/athensresearch/athens/commit/9708f654cb7c62b19a9a7c9c2d7f42b087dc03b4))
+* `:inline-ref/states` replaced with re-frame ([8524c61](https://github.com/athensresearch/athens/commit/8524c61879f5d06a45c2d8558480e9e7d7abc22e))
+* `:inline-refs/open` replaced with re-frame ([89c2d31](https://github.com/athensresearch/athens/commit/89c2d31477c5ff3eeac54803e3e6b67dc6f7157f))
+* `:linked-ref/open` replaced with re-frame ([907786d](https://github.com/athensresearch/athens/commit/907786d75cfff7348c3002f3b5c486aee3696d14))
+* `:search/index` migrated to re-frame ([2a4a863](https://github.com/athensresearch/athens/commit/2a4a863184912d5a2e5a97b901031b18dd939632))
+* `:search/query` replaced with re-frame and unused state removed. ([23befb7](https://github.com/athensresearch/athens/commit/23befb70db793d7fb070356db68d71e84f522d59))
+* `:search/results` moved to re-frame ([5bc2a84](https://github.com/athensresearch/athens/commit/5bc2a846c798a09f7555ed4b060f502017ea9c45))
+* `:search/type` replaced with `re-frame` model ([c6a2e18](https://github.com/athensresearch/athens/commit/c6a2e184e46bf2077cca45cd1a302b66d8bff17b))
+* add position helpers in new ns ([a587aee](https://github.com/athensresearch/athens/commit/a587aee5ebb320c83e6f5a8359104b0c9e78d5aa))
+* add sub for feature flags ([a7b7c6d](https://github.com/athensresearch/athens/commit/a7b7c6d23fc3b70d4a5170d3e576c35932f35372))
+* block local `state` cleanup start ([50cdb1f](https://github.com/athensresearch/athens/commit/50cdb1fb5465edfd301e1e0d3f909c4433a956c8))
+* cleanup `inline-refs` & `linked-refs` ([4595e8a](https://github.com/athensresearch/athens/commit/4595e8a65d32e4960d276c0faa1c9134ff9c57e4))
+* cleanup debugs code ([0c8d213](https://github.com/athensresearch/athens/commit/0c8d213ee2113ed6ca989ad8c91e3b76ce041517))
+* dragging support out of local block state. ([9d75481](https://github.com/athensresearch/athens/commit/9d754817591b71f798982c77239038561ce59381))
+* keyboard interactions in editor w/o block on a graph. ([ce6d38c](https://github.com/athensresearch/athens/commit/ce6d38c26e451e81499f62fcab4c5818fa1953e7))
+* localized `last-event` state ([7aa0a58](https://github.com/athensresearch/athens/commit/7aa0a58c2c4ed52e82219289e02514411ead2b68))
+* log level and binding name ([ec7e24a](https://github.com/athensresearch/athens/commit/ec7e24ac3c510639186b715de747521ad88b50c7))
+* make `:block/uid` fn arg, don't need `state` for it. ([d8b6daf](https://github.com/athensresearch/athens/commit/d8b6dafd695c27cf6c027553f45adb2484f211ca))
+* make migration runner generic and cljc ([829b078](https://github.com/athensresearch/athens/commit/829b0781b1acc3075f0c13a1c328348271eb9dde))
+* move descendants fns to common-db ([b608fb2](https://github.com/athensresearch/athens/commit/b608fb275edbe622d5b2b563d2f28263461c4579))
+* move event-tx resolution into own fn ([7b242b7](https://github.com/athensresearch/athens/commit/7b242b7e32ab5d732c54d482f776929e8c56e82b))
+* move property sorting into own fn ([6a9248f](https://github.com/athensresearch/athens/commit/6a9248f1eb1d3a357df98bc2d17273e0da14b9c3))
+* move reactions up to default renderer ([c22e087](https://github.com/athensresearch/athens/commit/c22e0873f86c88753705975dbe56f10c8fe1a008))
+* paste verbatim by default as configuration option to editor. ([b505129](https://github.com/athensresearch/athens/commit/b5051295f3fd3cdf7a8ded06db21a6d6be70d3a3))
+* remove changes to unrelated files ([5fe4063](https://github.com/athensresearch/athens/commit/5fe4063ebc7ee8db2142dd416fadb93d2c012b93))
+* remove duplicated prev-block-uid code ([10f96b1](https://github.com/athensresearch/athens/commit/10f96b1f45e6edf94501c21b6cd7bfbb4d8a2ac9))
+* remove unused rules ([2482da4](https://github.com/athensresearch/athens/commit/2482da4c993e09cfa38ba7612d9548e959edfbce))
+* removed `:last-keydown` from block local `state`. ([ec0e19a](https://github.com/athensresearch/athens/commit/ec0e19ae3da453ddaa730821204eee4f31870dc0))
+* Removed `:show-editable-dom` from block `state` map. ([c8ea851](https://github.com/athensresearch/athens/commit/c8ea8512b664f317fe48eba047e4ffa32d1caed9))
+* Removed `:string/local` & `:string/idle-fn` from `state`. ([3866e49](https://github.com/athensresearch/athens/commit/3866e49352db605ecace2f626a7792451f79e97e))
+* removed `:string/previous` from block `state` map. ([b9235b1](https://github.com/athensresearch/athens/commit/b9235b139b9db0fc35e109db52bd82e212a65581))
+* removed `embed-id` from `BlockTypeProtocol` ([5fa4a35](https://github.com/athensresearch/athens/commit/5fa4a35744e9db1d621d220aaadd78ab05ac430c))
+* removed unused code ([4729b91](https://github.com/athensresearch/athens/commit/4729b91846473e6163172fdd59863410703e1d5f))
+* resolve-transact! passes event time to resolver ([eed73bf](https://github.com/athensresearch/athens/commit/eed73bfa96c4586fdf193fcd3071e476ed9dc81e))
+* take one of editor component ([a8c0944](https://github.com/athensresearch/athens/commit/a8c0944361e317e895a385e4e1ea33c78447b63d))
+* we have editor with chrome and editor with search & slash. ([8e9ff19](https://github.com/athensresearch/athens/commit/8e9ff197beb66e8783b0a758f02f4986c61e341a))
+
+
+* add deep remove prop test ([80d555b](https://github.com/athensresearch/athens/commit/80d555be6385f5f55cded20d9baea58a27eeb0c0))
+* bust nodes cache ([aeef8ca](https://github.com/athensresearch/athens/commit/aeef8cafe306f250c74a4d3b929bb30e853b5c9e))
+* disable e2e on CI ([afc9bff](https://github.com/athensresearch/athens/commit/afc9bff70c85dd8df68d08de3ac8db61b36f3b1d))
+* file cleanup ([d7ab5a5](https://github.com/athensresearch/athens/commit/d7ab5a59e1fbb4301d5145f1d464126975a803d6))
+* fix ([9f44475](https://github.com/athensresearch/athens/commit/9f44475aa7da140997c3da6cdf1932e24edad031))
+* fix e2e test, removed modifications done only for testing ([cf9df07](https://github.com/athensresearch/athens/commit/cf9df07533b1f2fc7f291add5931ac5a101dc26d))
+* fix lint errors ([4b1cd2b](https://github.com/athensresearch/athens/commit/4b1cd2b5c1476139bf8d0cfd16a2e9b988d4bc11))
+* get-block-property-document now returns create and edit data ([9f5dbf5](https://github.com/athensresearch/athens/commit/9f5dbf5e2d2120c6173e494f0652ca86bddbb5ce))
+* ignore redef errors ([7c2bce9](https://github.com/athensresearch/athens/commit/7c2bce9d60d6accc723298d5bfde4d9a41c1774d))
+* prerelease comparison should be to a string ([f8a6bf0](https://github.com/athensresearch/athens/commit/f8a6bf06ed12dc4f9b0f5d158669b1c4c9aa68c6))
+* remove unused types ([c5586a7](https://github.com/athensresearch/athens/commit/c5586a7126a53ef9253a876f69cd270b688e17de))
+* run style:fix and carve:interactive ([1dedb60](https://github.com/athensresearch/athens/commit/1dedb60556ff0e51f5312aed73775a3edccb9cab))
+* saving progress ([fd02a1d](https://github.com/athensresearch/athens/commit/fd02a1d5e4897393d1266a61ae355e1ef5a4265b))
+* style:fix ([fcef334](https://github.com/athensresearch/athens/commit/fcef3341154f81dfd287b87c34221ff825ed4ce4))
+* update shadow-cljs and cljs ([00bf824](https://github.com/athensresearch/athens/commit/00bf824465225dc0e1f688f6cdeee56bfe182ce2))
+* update shadow-cljs and highlight.js ([5c66731](https://github.com/athensresearch/athens/commit/5c6673109d8f69562579ba4a08cc8677ce204c21))
+* update to clojurescript 1.11.51 ([5b4073f](https://github.com/athensresearch/athens/commit/5b4073f869d75bd4417eca10cd3547b1b367adbd))
+* use java 17 ([df3be8c](https://github.com/athensresearch/athens/commit/df3be8c66d85d32e7bfb0a00af0f68a2b1ac87de))
+
+## [2.1.0-beta.1](https://github.com/athensresearch/athens/compare/v2.0.0-beta.37...v2.1.0-beta.1) (2022-06-16)
+
+
+### Features
+
+* add context menu hook ([5c0b549](https://github.com/athensresearch/athens/commit/5c0b549e6ec49d7f6548f70c55a0b13b374d9a85))
+* anchor uses new context menu hook ([8c5423e](https://github.com/athensresearch/athens/commit/8c5423effb31d3708ce0bd1173c23001257f4300))
+* context menu also works on block container ([7c16441](https://github.com/athensresearch/athens/commit/7c164417b6e579936784c085bea8e58302fd0c4c))
+
+
+### Bug Fixes
+
+* defaultIsOpen state for linked refs ([59fbb60](https://github.com/athensresearch/athens/commit/59fbb6088471eda9f5915cd2729fdfd5c4c2fc03))
+
+
+### Enhancements
+
+* if a block open in right sidebar is not in main view, ([0ef8836](https://github.com/athensresearch/athens/commit/0ef8836f57e052b9e1be1c7f2292911e0b0b4290))
+
+
+### Refactors
+
+* **block:** use new contextmenu for blocks ([66a9d33](https://github.com/athensresearch/athens/commit/66a9d339b1701853885e403dde6edd0e536f46ca))
+
+
+### Documentation
+
+* add versioning ADR ([1c75e5f](https://github.com/athensresearch/athens/commit/1c75e5f53d266597baf409311092567a0710be2a))
+
+
+* bump to 2.1.0 range ([0b081e8](https://github.com/athensresearch/athens/commit/0b081e89e65c033c0332a2c9a82bb1016494876f))
+* deploy prerelease to beta domain ([f348a99](https://github.com/athensresearch/athens/commit/f348a99498411a09c70148a37885af74159fbbde))
+* docstrings ([ffca46a](https://github.com/athensresearch/athens/commit/ffca46aa42e9ec38a1f7df53b0ff2bc946a132ac))
+* docstrings ([15176d9](https://github.com/athensresearch/athens/commit/15176d93909e0c477873609b5bcf67beff8bdc66))
+* don't build macos in parallel ([6d987e4](https://github.com/athensresearch/athens/commit/6d987e4b7977da3fe81a867b67b55cb0dbc72dab))
+* fix ([492c362](https://github.com/athensresearch/athens/commit/492c362e00e226ea5ea027e5fbb96524c4e7beb3))
+* re-enable auto updates for electron ([ee29f33](https://github.com/athensresearch/athens/commit/ee29f3325f09801acd9b9cae3fb4af3cea6d5d4c))
+
+## [2.0.0-beta.37](https://github.com/athensresearch/athens/compare/v2.0.0-beta.36...v2.0.0-beta.37) (2022-05-27)
+
+
+### Features
+
+* remove safari unsupported warning ([e39d530](https://github.com/athensresearch/athens/commit/e39d530f561172591af4c02d80d29a123a12c6fc))
+
+
+### Bug Fixes
+
+* athena should highlight results ([ea5abe5](https://github.com/athensresearch/athens/commit/ea5abe5d6bdeb77b5849645f3eb32962305e9a9a))
+
+
+### Refactors
+
+* don't use lookbehind in replace-roam-date ([3f4066a](https://github.com/athensresearch/athens/commit/3f4066a0029e995b7c7a8c293b5a8b3f2be17755))
+* move regex fns into athens.patterns cljc ([ded5f2a](https://github.com/athensresearch/athens/commit/ded5f2aafe0a46ae3aaec05e6ad044b1a6d0a9d9))
+* refactor highlight to not use lookbehind ([c4d386c](https://github.com/athensresearch/athens/commit/c4d386cff7d11f741b64cab2da28f48ad95fb3c4))
+* refactor unlinked to not use lookbehind ([870e39e](https://github.com/athensresearch/athens/commit/870e39ef8bed67bfe22c1a76da5cc58d59c8c6de))
+* remove lookbehind from instaparse ([c8bfa5b](https://github.com/athensresearch/athens/commit/c8bfa5bc47303a545b8a58ba3ce8004fe976eb33))
+* remove unused backtick token ([d3e1877](https://github.com/athensresearch/athens/commit/d3e18775d594ccff3ea965a33be0af5742d47eea))
+* use same file for clj and cljs parser tests ([2575222](https://github.com/athensresearch/athens/commit/2575222d2e178885d3221ad0083380037439826a))
+* use word boundary instead of positive lookbehind in parser ([6a4f3cd](https://github.com/athensresearch/athens/commit/6a4f3cd971b0bc1f36834ef6e64a16aa6fc5aad2))
+
+
+* add boundary tests ([4e66a13](https://github.com/athensresearch/athens/commit/4e66a1306df013595a3d3d8f32462f45fb9f38fb))
+* add hashtag test for unlinked ([6405bdc](https://github.com/athensresearch/athens/commit/6405bdc582ac355e7f63561cc2f5c2d24ca89709))
+* add tests for athens.patterns ([bab8d71](https://github.com/athensresearch/athens/commit/bab8d71ad62abaa9b78c77027b7098355862b653))
+* disable failing lookbehind tests ([6a406a0](https://github.com/athensresearch/athens/commit/6a406a0b8e629735417ebcaf01e0886944eeb0ff))
+* more tests for roam-date ([7ea9d3f](https://github.com/athensresearch/athens/commit/7ea9d3f9c107274aee12fa13d41f8a454056575f))
+* remove unused vars ([e14e53d](https://github.com/athensresearch/athens/commit/e14e53da0afc7ea0a1f76e740a6e32006cfa8495))
+* update backslash escapes test for cljs output ([be1e5df](https://github.com/athensresearch/athens/commit/be1e5dfa13ad8677076e74367e522e105df4dae5))
+
+## [2.0.0-beta.36](https://github.com/athensresearch/athens/compare/v2.0.0-beta.35...v2.0.0-beta.36) (2022-05-24)
+
+
+### Features
+
+* serve web client from athens server ([775c981](https://github.com/athensresearch/athens/commit/775c98102bf4797d8111015b54a7885e51eee44a))
+
+
+* release web to vercel ([e52f6e2](https://github.com/athensresearch/athens/commit/e52f6e258919e0eba066192520746174e2d77c88))
+* release-server now requires build-app ([1b3ef1d](https://github.com/athensresearch/athens/commit/1b3ef1d1b3236705237bd5cca7e560144694d57b))
+
+## [2.0.0-beta.35](https://github.com/athensresearch/athens/compare/v2.0.0-beta.34...v2.0.0-beta.35) (2022-05-18)
+
+
+### Features
+
+* permalink includes graph name and password ([5424b05](https://github.com/athensresearch/athens/commit/5424b0558b73aea7a0d67d8448e7844e914ffa48))
+
+
+### Bug Fixes
+
+* don't control dialog inputs ([7c59bbd](https://github.com/athensresearch/athens/commit/7c59bbdfed4c28910b449a787e758590ae4326fe))
+* don't show plaintext password on permalink ([6351d1d](https://github.com/athensresearch/athens/commit/6351d1d53c7ff10b94eabf5e7665fd6280ae14bb))
+* show own user on presence if there are no other users ([de5aead](https://github.com/athensresearch/athens/commit/de5aeada02f0f11eb178914d5b3d5d29ea772b85))
+
+## [2.0.0-beta.34](https://github.com/athensresearch/athens/compare/v2.0.0-beta.33...v2.0.0-beta.34) (2022-05-04)
+
+
+### Features
+
+* add navigation section to help ([590a275](https://github.com/athensresearch/athens/commit/590a275c50d3acca47e03b0d6f8a9bd6e22d49e8))
+* mod+alt+o zooms out of current block ([e446f0c](https://github.com/athensresearch/athens/commit/e446f0c1517476ce350cb2c10418b8226341d55f))
+* Permalink creates db if needed, and works on electron ([#2175](https://github.com/athensresearch/athens/issues/2175)) ([13b5241](https://github.com/athensresearch/athens/commit/13b5241d10082dc68fb79c28d10194477f853cd2))
+* pressing up/down with no focus takes you to last/first block ([c6f7806](https://github.com/athensresearch/athens/commit/c6f7806e6f3847ab45cd740a5f42178ebb8ec1fc))
+
+
+### Bug Fixes
+
+* :daily-notes/items should always be a vector ([d06a359](https://github.com/athensresearch/athens/commit/d06a359f841dac83e0e1355aa12f4dea99a3f26b))
+* `:page/rename` & `:page/merge` w/o regex injection. ([4a817bb](https://github.com/athensresearch/athens/commit/4a817bb01b13dc44b8433206b6f7593056ff3fff))
+* also handle naked hashtag in nested page renames ([206d34c](https://github.com/athensresearch/athens/commit/206d34c9ccbc861684b0cc0e8b2682fd505c1757))
+* disable "open file..." dialog on cmd/ctrl+o ([18a818a](https://github.com/athensresearch/athens/commit/18a818a083c9f18cdc2aa57b6a062cb573591155))
+* fold shortcut should use shortcut key on mac ([79f7ad7](https://github.com/athensresearch/athens/commit/79f7ad701bfbd77b1a61efb3063a3c6ad53ea828))
+* page linked refs start closed when 10+ ([ce77fa9](https://github.com/athensresearch/athens/commit/ce77fa96cc7e48d8c444fa002a50c6293599b072))
+* prev-block-uid should not try to go to pages ([1ede064](https://github.com/athensresearch/athens/commit/1ede0641b30e6f24425348302390ccacf7f56d85))
+* prevent browser defaults that focus URL ([c94b162](https://github.com/athensresearch/athens/commit/c94b16229a76c1f36866aa18cc1fd9c59e7334ee))
+* restore the alert/js event ([f34b69c](https://github.com/athensresearch/athens/commit/f34b69cd9edc8bde2158650e209956cb4286a296))
+* unfold block is mod+down ([e42c5c7](https://github.com/athensresearch/athens/commit/e42c5c7a83977314e75be0b73569de7d2f58e7f8))
+* up on first window child should not lose block focus ([805065e](https://github.com/athensresearch/athens/commit/805065e301701a0485e85b496da9ec03ffc51044))
+
+
+### Refactors
+
+* also not used anymore ([c2c9ae7](https://github.com/athensresearch/athens/commit/c2c9ae76d9e65f8e67212e45b8f68526a4560c67))
+* remove devtool ([b24bad6](https://github.com/athensresearch/athens/commit/b24bad69ca92596a58bec4bb479c740c7943d932))
+* removed now dead `patterns/linked` ([0dfe2d0](https://github.com/athensresearch/athens/commit/0dfe2d0dbf3b193de89123b0df37239bf24e8820))
+
+## [2.0.0-beta.33](https://github.com/athensresearch/athens/compare/v2.0.0-beta.32...v2.0.0-beta.33) (2022-04-27)
+
+
+### Bug Fixes
+
+* row title is addressed by full name ([70ac275](https://github.com/athensresearch/athens/commit/70ac2758d44829bec57a4f4be977f7c5568bb806))
+
 ## [2.0.0-beta.32](https://github.com/athensresearch/athens/compare/v2.0.0-beta.31...v2.0.0-beta.32) (2022-04-27)
 
 

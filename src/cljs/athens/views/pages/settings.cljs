@@ -5,7 +5,7 @@
     [athens.util :refer [toast]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
-    [re-frame.core :refer [subscribe dispatch reg-event-fx]]
+    [re-frame.core :as rf :refer [subscribe dispatch reg-event-fx]]
     [reagent.core :as r])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
@@ -70,6 +70,46 @@
   (if monitoring
     (monitoring-off (partial update-fn false))
     (monitoring-on (partial update-fn true))))
+
+
+;; re-frame
+
+(rf/reg-sub
+  :feature-flags/enabled?
+  :<- [:feature-flags]
+  (fn [a [_ flag]]
+    (get a flag)))
+
+
+(reg-event-fx
+  :settings/update
+  (fn [{:keys [db]} [_ k v]]
+    {:db (assoc-in db [:athens/persist :settings k] v)}))
+
+
+(reg-event-fx
+  :settings/update-in
+  (fn [{:keys [db]} [_ ks v]]
+    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
+
+
+(reg-event-fx
+  :settings/reset
+  (fn [{:keys [db]} _]
+    {:db (assoc db :athens/persist default-athens-persist)
+     :dispatch [:boot]}))
+
+
+(rf/reg-event-db
+  :settings/toggle-open
+  (fn [db _]
+    (update db :settings/open? not)))
+
+
+(rf/reg-sub
+  :settings/open?
+  (fn [db _]
+    (:settings/open? db)))
 
 
 ;; Components
@@ -191,6 +231,48 @@
       [:> Text (str "Athens will save a new backup " backup-time " seconds after your last edit.")]]]]])
 
 
+(defn feature-flags-comp
+  [{:keys [comments reactions notifications properties cover-photo time-controls tasks]} update-fn]
+  [setting-wrapper
+   [:<>
+    [header
+     [title "Experimental Feature Flags"]]
+    [form
+     [:<>
+      [:> FormControl
+       [:> Switch {:isChecked comments
+                   :onChange #(update-fn :comments %)}
+        "Comments"]]
+      [:> FormControl
+       [:> Switch {:isChecked reactions
+                   :onChange #(update-fn :reactions %)}
+        "Reactions"]]
+      [:> FormControl
+       [:> Switch {:isChecked notifications
+                   :onChange #(update-fn :notifications %)}
+        "Notifications"]]
+      [:> FormControl
+       [:> Switch {:isChecked properties
+                   :onChange #(update-fn :properties %)}
+        "Properties"]]
+      [:> FormControl
+       [:> Switch {:isChecked cover-photo
+                   :onChange #(update-fn :cover-photo %)}
+        "Cover Photo"]]
+      [:> FormControl
+       [:> Switch {:isChecked time-controls
+                   :onChange #(update-fn :time-controls %)}
+        "Time Controls"]]
+      [:> FormControl
+       [:> Switch {:isChecked tasks
+                   :onChange #(update-fn :tasks %)}
+        "Tasks"]]]]
+    [help
+     [:<>
+      [:p "Optional experimental features that aren't ready for prime time, but that you can still enable to try out."]
+      [:p "We can't guarantee these will continue working or be supported in the future."]]]]])
+
+
 (defn remote-backups-comp
   []
   [setting-wrapper
@@ -222,25 +304,12 @@
       [:> Text "Athens will restart after reset and open the default database path."]]]]])
 
 
-(reg-event-fx
-  :settings/update
-  (fn [{:keys [db]} [_ k v]]
-    {:db (assoc-in db [:athens/persist :settings k] v)}))
-
-
-(reg-event-fx
-  :settings/reset
-  (fn [{:keys [db]} _]
-    {:db (assoc db :athens/persist default-athens-persist)
-     :dispatch [:boot]}))
-
-
 (defn page
   []
-  (let [{:keys [email monitoring backup-time]} @(subscribe [:settings])]
+  (let [{:keys [email monitoring backup-time feature-flags]} @(subscribe [:settings])]
     [:> Modal {:isOpen true
                :scrollBehavior "inside"
-               :onClose #(.back js/window.history)
+               :onClose #(rf/dispatch [:settings/toggle-open])
                :size "xl"}
      [:> ModalOverlay]
      [:> ModalContent {:maxWidth "calc(100% - 8rem)"
@@ -257,5 +326,6 @@
         [backup-comp backup-time (fn [x]
                                    (dispatch [:settings/update :backup-time x])
                                    (dispatch [:fs/update-write-db]))]
+        [feature-flags-comp feature-flags (fn [k e] (dispatch [:settings/update-in [:feature-flags k] (.. e -target -checked)]))]
         [remote-backups-comp]
         [reset-settings-comp #(dispatch [:settings/reset])]]]]]))

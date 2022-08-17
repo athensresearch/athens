@@ -69,8 +69,8 @@ const semanticTokens = {
     },
     // separator colors
     "separator.border": {
-      default: '00000022',
-      _dark: '#ffffff55'
+      default: '#00000033',
+      _dark: '#ffffff22'
     },
     "separator.divider": {
       default: '#00000022',
@@ -100,11 +100,11 @@ const semanticTokens = {
     // foreground colors
     "foreground.primary": {
       default: 'hsla(0, 0%, 0%, 0.87)',
-      _dark: 'hsla(0, 0%, 100%, 0.8)'
+      _dark: 'hsla(0, 0%, 100%, 0.83)'
     },
     "foreground.secondary": {
       default: 'hsla(0, 0%, 0%, 0.57)',
-      _dark: 'hsla(0, 0%, 100%, 0.57)'
+      _dark: 'hsla(0, 0%, 100%, 0.5)'
     },
     "foreground.tertiary": {
       default: 'hsla(0, 0%, 0%, 0.2)',
@@ -366,15 +366,9 @@ const components = {
           })
         }
       },
-      ghost: {
+      ghost: ({ colorScheme }) => ({
         bg: "transparent",
-        color: (colorScheme) => {
-          if (colorScheme === 'subtle') {
-            return "foreground.secondary"
-          } else {
-            return "foreground.primary"
-          }
-        },
+        color: (colorScheme === 'subtle') ? "foreground.secondary" : "foreground.primary",
         _hover: {
           bg: "interaction.surface.hover"
         },
@@ -382,7 +376,7 @@ const components = {
           color: 'foreground.primary',
           bg: 'interaction.surface.active',
         },
-      },
+      }),
       outline: {
         bg: "transparent",
         borderWidth: "1px",
@@ -449,9 +443,8 @@ const components = {
       },
       groupTitle: {
         color: "foreground.secondary",
-        textTransform: "uppercase",
         fontSize: "0.75em",
-        fontWeight: "bold",
+        fontWeight: "700",
       },
       item: {
         "&.isActive": {
@@ -491,6 +484,9 @@ const components = {
           margin: '0.35rem 0.5rem',
         }
       }
+    },
+    defaultProps: {
+      size: 'sm',
     }
   },
   Modal: {
@@ -638,6 +634,18 @@ const styles = {
       lineHeight: '1.5',
       height: '100vh',
       fontFamily: 'default',
+      sx: {
+        "::WebkitScrollbar": {
+          background: "background.basement",
+          width: "0.5rem",
+          height: "0.5rem"
+        },
+        "::WebkitScrollbar-corner": { bg: "background.basement" },
+        "::WebkitScrollbar-thumb": {
+          bg: "background.upper",
+          borderRadius: "full"
+        }
+      }
     },
     "#chakra-toast-manager-top-right, #chakra-toast-manager-top, #chakra-toast-manager-top-left": {
       margin: "3rem 1rem"

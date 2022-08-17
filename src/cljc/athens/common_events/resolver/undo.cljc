@@ -95,10 +95,10 @@
 
 
 (defmethod resolve-atomic-op-to-undo-ops :page/rename
-  [_db _event-db {:op/keys [args]}]
+  [db _event-db {:op/keys [args]}]
   (let [from-title (:page/title args)
         to-title   (get-in args [:target :page/title])
-        reverse-op (atomic-graph-ops/make-page-rename-op to-title from-title)]
+        reverse-op (graph-ops/build-page-rename-op db to-title from-title)]
     [reverse-op]))
 
 

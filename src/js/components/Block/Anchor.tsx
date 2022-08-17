@@ -1,13 +1,12 @@
 import React, { ReactNode } from 'react';
-import { Menu, MenuList, MenuItem, MenuGroup, MenuDivider, MenuButton, IconButton, Portal, Box, Text } from '@chakra-ui/react';
+import { IconButton, Text, MenuList, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
+import { ColonIcon, BulletIcon, DashIcon, ArrowRightIcon } from '@/Icons/Icons';
+import { useContextMenu } from '@/utils/useContextMenu';
 
 const ANCHORS = {
-  CIRCLE: <svg viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="4" />
-  </svg>,
-  DASH: <svg viewBox="0 0 1 1">
-    <line x1="-1" y1="0" x2="1" y2="0" />
-  </svg>
+  "bullet": <BulletIcon />,
+  "colon": <ColonIcon />,
+  "dash": <DashIcon />
 }
 
 const showValue = (value) => {
@@ -56,40 +55,36 @@ const propertiesList = (block) => {
   })
 }
 
+type Anchors = typeof ANCHORS;
+type AnchorImage = keyof Anchors;
+
 export interface AnchorProps {
-  /**
-   * What style of anchor to display
-   */
-  anchorElement?: 'circle' | 'dash' | number;
-  /**
-   * Whether block is closed and has children
-   */
+  anchorElement?: AnchorImage | React.ReactNode | number;
   isClosedWithChildren: boolean;
   block: any;
   uidSanitizedBlock: any;
   shouldShowDebugDetails: boolean;
   as: ReactNode;
-  onContextMenu: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
   onCopyRef: () => void;
   onCopyUnformatted: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
   onClick: () => void;
-  menuActions: any;
+  menu?: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
-const anchorButtonStyleProps = (isClosedWithChildren) => {
+const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotification : boolean) => {
   return ({
     bg: "transparent",
     "aria-label": "Block anchor",
     className: ['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' '),
-    draggable: true,
-    gridArea: "bullet",
+    gridArea: "anchor",
     flexShrink: 0,
     position: 'relative',
     appearance: "none",
     border: "0",
     color: "foreground.secondary",
+    ...unreadNotification && ({color: "green"}),
     display: "flex",
     placeItems: "center",
     placeContent: "center",
@@ -113,7 +108,7 @@ const anchorButtonStyleProps = (isClosedWithChildren) => {
           vectorEffect: "non-scaling-stroke"
         }
       },
-      "circle": {
+      "svg path": {
         transformOrigin: 'center',
         transition: 'all 0.15s ease-in-out',
         stroke: "transparent",
@@ -133,8 +128,7 @@ const anchorButtonStyleProps = (isClosedWithChildren) => {
 /**
  * A handle and indicator of a block's position in the document
 */
-export const Anchor = (props: AnchorProps) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
 
   const { isClosedWithChildren,
     anchorElement,
@@ -143,69 +137,55 @@ export const Anchor = (props: AnchorProps) => {
     onDragEnd,
     onClick,
     uidSanitizedBlock,
-    menuActions,
+    menu,
+    unreadNotification,
+    ...rest
   } = props;
+  const innerRef = React.useRef(null);
+  const refs = useMergeRefs(innerRef, ref);
 
-  // Early return with just the button, to avoid rendering the menu
-  // with all its juicy portaling goodness.
-  if (!isOpen) {
-    return <IconButton
+  const {
+    menuSourceProps,
+    ContextMenu,
+    isOpen: isContextMenuOpen
+  } = useContextMenu({
+    ref: innerRef,
+    menuProps: {
+      size: "sm"
+    },
+    source: "box"
+  });
+
+  return <>
+    <IconButton
+      ref={refs}
       aria-label="Block anchor"
-      {...anchorButtonStyleProps(isClosedWithChildren)}
+      {...anchorButtonStyleProps(isClosedWithChildren, unreadNotification)}
+      {...menuSourceProps}
+      draggable={onDragStart ? true : undefined}
       onDragStart={onDragStart}
       onClick={onClick}
       onDragEnd={onDragEnd}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsOpen(true);
-      }}
+      isActive={isContextMenuOpen}
+      {...rest}
     >
-      {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
+      {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}
     </IconButton>
-  }
+    {(menu || shouldShowDebugDetails) && <ContextMenu>
+      {shouldShowDebugDetails ? (
+        <MenuList>
+          {menu}
+          <MenuGroup title="Debug details">
+            <Box px={4} pb={3}>
+              {propertiesList(uidSanitizedBlock)}
+            </Box>
+          </MenuGroup>
+        </MenuList>) : menu}
+    </ContextMenu>}
+  </>
 
-  return (
-    <Menu
-      isOpen={true}
-      isLazy={true}
-      onClose={() => setIsOpen(false)}
-    >
-      <IconButton
-        aria-label="Block anchor"
-        {...anchorButtonStyleProps(isClosedWithChildren)}
-        onDragStart={onDragStart}
-        onClick={onClick}
-        onDragEnd={onDragEnd}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsOpen(true);
-        }}
-        as={MenuButton}
-      >
-        {ANCHORS[anchorElement] || ANCHORS.CIRCLE}
-      </IconButton>
-      <Portal
-      >
-        <MenuList
-          // prevent changing selection when clicking on the menu
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          {menuActions.map((action) => {
-            return <MenuItem {...action} />
-          })}
-          {shouldShowDebugDetails && (
-            <>
-              {menuActions && <MenuDivider />}
-              <MenuGroup title="Debug details">
-                <Box px={4} pb={3}>
-                  {propertiesList(uidSanitizedBlock)}
-                </Box>
-              </MenuGroup>
-            </>)}
-        </MenuList>
-      </Portal>
-    </Menu >
-  )
-};
+});
+
+Anchor.defaultProps = {
+  anchorElement: "bullet"
+}
