@@ -116,8 +116,9 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
       <PopoverTrigger>
         <Box
           bg="red"
+          visibility="hidden"
           position="fixed"
-          width="2px"
+          width="1px"
           height="1.5em"
           zIndex="100"
           left={menuPosition.left + 'px'}
