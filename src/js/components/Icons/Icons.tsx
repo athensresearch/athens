@@ -138,14 +138,6 @@ export const BookmarkIcon = createIcon({
   ),
 });
 
-export const BookmarkFill-1Icon = createIcon({
-  displayName: 'BookmarkFill-1Icon',
-  viewBox: '0 0 14 14',
-  path: (
-    <><path d="M3 2.25C3 1.55964 3.55964 1 4.25 1H9.75C10.4404 1 11 1.55964 11 2.25V12.7212C11 13.1763 10.4413 13.3948 10.1326 13.0603L7.3674 10.0647C7.16942 9.85021 6.83058 9.85021 6.6326 10.0647L3.8674 13.0603C3.55868 13.3948 3 13.1763 3 12.7212V2.25Z" fill="currentColor" /></>
-  ),
-});
-
 export const BookmarkFillIcon = createIcon({
   displayName: 'BookmarkFillIcon',
   viewBox: '0 0 14 14',
