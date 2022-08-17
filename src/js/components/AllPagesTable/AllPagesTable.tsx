@@ -31,6 +31,17 @@ const renderDate = (date) => {
   }
 }
 
+const RowTd = ({ children, ...props }) => {
+  return (
+    <Td {...props}
+      transitionProperty="background"
+      transitionTimingFunction="ease-in-out"
+      transitionDuration="fast"
+    >
+      {children}
+    </Td>
+  )
+}
 
 const Row = ({ index, data, style }) => {
 
@@ -46,7 +57,7 @@ const Row = ({ index, data, style }) => {
       display="flex"
       className={index % 2 ? 'index-even' : 'index-odd'}
     >
-      <Td
+      <RowTd
         overflow="hidden"
       >
         <Button
@@ -64,10 +75,10 @@ const Row = ({ index, data, style }) => {
         >
           {DISPLAY_TITLES[item[":node/title"]] || item[":node/title"]}
         </Button>
-      </Td>
-      <Td>{item[":block/_refs"]?.length || 0}</Td>
-      <Td>{renderDate(item[":time/modified"])}</Td>
-      <Td>{renderDate(item[":time/created"])}</Td>
+      </RowTd>
+      <RowTd>{item[":block/_refs"]?.length || 0}</RowTd>
+      <RowTd>{renderDate(item[":time/modified"])}</RowTd>
+      <RowTd>{renderDate(item[":time/created"])}</RowTd>
     </Tr>
   )
 };

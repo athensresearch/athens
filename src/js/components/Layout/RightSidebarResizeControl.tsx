@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@chakra-ui/react';
+import { Box, BoxProps } from '@chakra-ui/react';
 
 const MIN_VW = 20;
 const MAX_VW = 80;
@@ -13,8 +13,14 @@ const getVW = (e, window) => {
   return calcVW;
 }
 
-export const RightSidebarResizeControl = (props) => {
-  const { onResizeSidebar, isSidebarOpen, sidebarWidth, ...rest } = props;
+interface RightSidebarResizeControlProps extends BoxProps {
+  onResizeSidebar: (size: number) => void;
+  isRightSidebarOpen: boolean;
+  rightSidebarWidth: number;
+}
+
+export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps) => {
+  const { onResizeSidebar, isRightSidebarOpen, rightSidebarWidth, ...rest } = props;
   const [isDragging, setIsDragging] = React.useState(false);
 
   const moveHandler = (e) => {
@@ -26,8 +32,7 @@ export const RightSidebarResizeControl = (props) => {
     }
   }
 
-  // todo: set graph property block to this value on mouse up
-  const mouseUpHandler = (e) => {
+  const mouseUpHandler = () => {
     setIsDragging(false);
   }
 
@@ -40,7 +45,7 @@ export const RightSidebarResizeControl = (props) => {
     }
   });
 
-  if (!isSidebarOpen) {
+  if (!isRightSidebarOpen) {
     return null;
   }
 
@@ -52,7 +57,7 @@ export const RightSidebarResizeControl = (props) => {
       position="fixed"
       zIndex={100}
       opacity={0}
-      right={sidebarWidth + "vw"}
+      right={rightSidebarWidth + "vw"}
       height="100%"
       cursor="col-resize"
       onMouseDown={() => setIsDragging(true)}
@@ -62,6 +67,7 @@ export const RightSidebarResizeControl = (props) => {
       transition="opacity 0.2s ease-in-out"
       _hover={{ opacity: 1 }}
       {...isDragging && { opacity: 1 }}
+      {...rest}
     >
     </Box>
   );

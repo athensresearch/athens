@@ -5,7 +5,7 @@
     ["/components/Block/PropertyName"          :refer [PropertyName]]
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
-    ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatIcon ArchiveIcon]]
+    ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatBubbleIcon ArchiveIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react"                        :refer [Box Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
     [athens.common-db                          :as common-db]
@@ -375,7 +375,7 @@
                                           (when comments-enabled?
                                             [:> MenuItem {:children "Add comment"
                                                           :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                          :icon     (r/as-element [:> ChatIcon])}])
+                                                          :icon     (r/as-element [:> ChatBubbleIcon])}])
                                           (when reactions-enabled?
                                             [:<>
                                              [:> MenuDivider]
