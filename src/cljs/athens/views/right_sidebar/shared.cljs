@@ -33,6 +33,18 @@
     open?))
 
 
+(defn get-width
+  []
+  (let [user-page  @(rf/subscribe [:presence/user-page])
+        props      (-> (reactive/get-reactive-node-document [:node/title user-page])
+                       :block/properties)
+        default-vw (str 32)
+        width      (-> (get props (ns-str "/width"))
+                       :block/string)]
+    ;; can also use the clamp function in RightSidebarResizeControl.tsx to make sure the width is always bounded
+    (or width default-vw)))
+
+
 (defn get-eid
   [item-block]
   (let [{:keys [type name]} item-block]
