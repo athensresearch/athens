@@ -4,6 +4,13 @@ import { spacing } from './spacing'
 
 const $arrowBg = cssVar("popper-arrow-bg");
 
+const buttonIconFontSize = {
+  xs: "16px",
+  sm: "20px",
+  md: "24px",
+  lg: "32px",
+}
+
 const shadows = {
   focusLight: '0 0 0 3px #0071DB',
   focusDark: '0 0 0 3px #498eda',
@@ -319,8 +326,7 @@ const components = {
     }
   },
   Button: {
-    baseStyle: {
-      transitionProperty: 'common',
+    baseStyle: ({ size }) => ({
       transitionTimingFunction: 'ease-in-out',
       _active: {
         transitionDuration: "0s",
@@ -332,8 +338,11 @@ const components = {
       _focusVisible: {
         outline: 'none',
         boxShadow: 'focus'
+      },
+      "> .chakra-button__icon, > .chakra-icon": {
+        fontSize: buttonIconFontSize[size],
       }
-    },
+    }),
     variants: {
       link: {
         color: "link",
@@ -405,36 +414,12 @@ const components = {
       error: {
         color: "error"
       }
-    }
+    },
   },
   FormLabel: {
     baseStyle: {
       fontSize: "sm",
       color: "foreground.secondary",
-    }
-  },
-  IconButton: {
-    baseStyle: {
-      fontSize: "1em",
-      _active: {
-        transitionDuration: "0s",
-      },
-      _focus: {
-        outline: 'none',
-        boxShadow: 'none'
-      },
-      _focusVisible: {
-        outline: 'none',
-        boxShadow: 'focus'
-      }
-    },
-    variants: {
-      solid: {
-        _active: {
-          color: 'linkContrast',
-          bg: 'link',
-        },
-      }
     }
   },
   Menu: {
@@ -520,6 +505,13 @@ const components = {
       content: {
         bg: "background.upper",
         shadow: "popover",
+        _focus: {
+          outline: 'none',
+          shadow: "popover",
+        },
+        _focusVisible: {
+          shadow: "popover",
+        },
         [$arrowBg.variable]: "colors.background.upper",
       }
     }
@@ -628,7 +620,11 @@ const components = {
 }
 
 // Default prop overrides
-Tooltip.defaultProps = { ...Tooltip.defaultProps, openDelay: 500 }
+Tooltip.defaultProps = {
+  ...Tooltip.defaultProps,
+  closeOnMouseDown: true,
+  openDelay: 500
+}
 
 const config = {
   initialColorMode: 'system',
