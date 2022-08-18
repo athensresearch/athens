@@ -30,7 +30,7 @@ export const MainContent = ({ children, isRightSidebarOpen, rightSidebarWidth })
           "--app-header-height": toolbarHeight,
         }}
         animate={{
-          paddingRight: isRightSidebarOpen ? rightSidebarWidth : 0,
+          paddingRight: isRightSidebarOpen ? rightSidebarWidth + "vw" : 0,
           transition: layoutAnimationTransition
         }}
       >
