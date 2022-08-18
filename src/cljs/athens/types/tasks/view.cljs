@@ -1,11 +1,23 @@
 (ns athens.types.tasks.view
   "Views for Athens Tasks"
   (:require
-    ["@chakra-ui/react"                   :refer [Box,
-                                                  FormControl,
-                                                  FormLabel,
-                                                  FormErrorMessage,
-                                                  FormHelperText,
+    ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
+    ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
+    ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
+    ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
+    ["@chakra-ui/react"                   :refer [FormControl
+                                                  FormLabel
+                                                  Text
+                                                  AvatarGroup
+                                                  Avatar
+                                                  Divider
+                                                  Checkbox
+                                                  Checkbox
+                                                  Box
+                                                  Button
+                                                  Badge
+                                                  FormErrorMessage
+                                                  FormHelperText
                                                   Select
                                                   HStack
                                                   VStack]]
@@ -37,6 +49,7 @@
    {:block/string "Blocked"}
    {:block/string "Done"}
    {:block/string "Cancelled"}])
+
 
 
 (defn- internal-representation-allowed-priorities
@@ -72,12 +85,11 @@
                                ":task/status"
                                {:block/string status}
                                ;; NOTE Task belonging to a Project is maintained on side of a Project
-                               #_#_
-                               ":task/projects"
-                               #:block{:string   ""
-                                       :children (for [project projects]
-                                                   #:block{:string project
-                                                           :uid    (common.utils/gen-block-uid)})}}}]
+                               #_#_":task/projects"
+                                #:block{:string   ""
+                                        :children (for [project projects]
+                                                    #:block{:string project
+                                                            :uid    (common.utils/gen-block-uid)})}}}]
          {:block/uid block-uid
           :relation  position})
        (composite/make-consequence-op {:op/type :new-type})))
@@ -101,7 +113,6 @@
 
 
 ;; View
-
 
 (defn generic-textarea-view-for-task-props
   [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
@@ -159,13 +170,82 @@
                          :is-invalid  invalid-prop-str?}
          [:> FormLabel {:html-for prop-id}
           prop-title]
-         [:> Box {:px           2
-                  :mt           2
-                  :minHeight    "2.125em"
-                  :borderRadius "sm"
-                  :bg           "background.attic"
-                  :cursor       "text"
-                  :_focusWithin {:shadow "focus"}}
+         [:> BlockFormInput
+          ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
+          [editor/block-editor {:block/uid (or prop-block-uid
+                                               ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                               (str "tmp-" (subs prop-name
+                                                                 (inc (.indexOf prop-name "/")))
+                                                    "-uid-" (common.utils/gen-block-uid)))}
+           state-hooks]
+          [presence/inline-presence-el prop-block-uid]]
+
+         (if invalid-prop-str?
+           [:> FormErrorMessage
+            (str prop-title " is " (if required?
+                                     "required"
+                                     "empty"))]
+           [:> FormHelperText
+            (str "Please provide " prop-title)])]))))
+
+
+(defn inline-task-title
+  [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
+  (let [prop-id (str (random-uuid))]
+    (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
+      (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
+            prop-str            (or (:block/string prop-block) "")
+            local-value         (r/atom prop-str)
+            invalid-prop-str?   (and (str/blank? prop-str)
+                                     (not (nil? prop-str)))
+            save-fn             (fn
+                                  ([]
+                                   (log/debug prop-name "save-fn" (pr-str @local-value))
+                                   (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
+                                     (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
+                                  ([e]
+                                   (let [new-value (-> e .-target .-value)]
+                                     (log/debug prop-name "save-fn" (pr-str new-value))
+                                     (reset! local-value new-value)
+                                     (when (#{":task/title"
+                                              ":task/assignee"
+                                              ":task/description"
+                                              ":task/due-date"} prop-name)
+                                       (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                                     (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
+            update-fn           #(do
+                                   (when-not (= prop-str %)
+                                     (log/debug prop-name "update-fn:" (pr-str %))
+                                     (reset! local-value %)))
+            idle-fn             (gfns/debounce #(do
+                                                  (log/debug prop-name "idle-fn" (pr-str @local-value))
+                                                  (save-fn))
+                                               2000)
+            read-value          local-value
+            show-edit?          (r/atom false)
+            custom-key-handlers {:enter-handler (if multiline?
+                                                  editor/enter-handler-new-line
+                                                  (fn [_uid _d-key-down]
+                                                    ;; TODO dispatch save and jump to next input
+                                                    (println "TODO dispatch save and jump to next input")
+                                                    (update-fn @local-value)))
+                                 :tab-handler   (fn [_uid _embed-id _d-key-down]
+                                                  ;; TODO implement focus on next input
+                                                  (update-fn @local-value))}
+            state-hooks         (merge {:save-fn                 save-fn
+                                        :idle-fn                 idle-fn
+                                        :update-fn               update-fn
+                                        :read-value              read-value
+                                        :show-edit?              show-edit?
+                                        :default-verbatim-paste? true
+                                        :keyboard-navigation?    false}
+                                       custom-key-handlers)]
+        [:> FormControl {:is-required required?
+                         :is-invalid  invalid-prop-str?}
+         [:> FormLabel {:html-for prop-id}
+          prop-title]
+         [:> BlockFormInput
           ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
           [editor/block-editor {:block/uid (or prop-block-uid
                                                ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
@@ -220,6 +300,7 @@
       allowed-statuses)))
 
 
+
 (defn task-priority-view
   [parent-block-uid priority-block-uid]
   (let [priority-id        (str (random-uuid))
@@ -228,12 +309,13 @@
         priority-string    (:block/string priority-block "(())")
         priority-uid       (subs priority-string 2 (- (count priority-string) 2))]
     [:> FormControl {:is-required true}
-     [:> HStack {:spacing "2rem"}
+     [:> HStack {:spacing 4}
       [:> FormLabel {:html-for priority-id
                      :w        "9rem"}
        "Task priority"]
       [:> Select {:id          priority-id
                   :value       priority-uid
+                  :size "sm"
                   :placeholder "Select a priority"
                   :on-change   (fn [e]
                                  (let [new-priority (-> e .-target .-value)
@@ -255,7 +337,7 @@
         status-string    (:block/string status-block "(())")
         status-uid       (subs  status-string 2 (- (count status-string) 2))]
     [:> FormControl {:is-required true}
-     [:> HStack {:spacing "2rem"}
+     [:> HStack {:spacing 4}
       [:> FormLabel {:html-for status-id
                      :w        "9rem"}
        "Task Status"]
@@ -273,6 +355,63 @@
            [:option {:value uid}
             string]))]]]))
 
+(defn find-status-uid
+  [status]
+  (->> (filter (fn [allowed-status]
+                 (= status (:block/string allowed-status)))
+               (find-allowed-statuses))
+       first
+       :block/uid))
+
+
+(defn on-update-checkbox
+  [parent-block-uid is-checked]
+  (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+                (fn [db uid]
+                  (if is-checked
+                    [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "To Do") "))"))]
+                    [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "Done") "))"))]))]))
+
+
+(defn is-checked-fn
+  [status]
+  (contains? #{"Done" "Cancelled"} status))
+
+
+(defn task-el
+  []
+  (fn [props]
+    (let [{:keys [parent-block-uid title assignee priority description due-date created-date creator opts status]} props
+          {:keys [show-description?
+                  show-assignee?
+                  show-due-date?
+                  show-creator?
+                  show-created-date?
+                  show-priority?
+                  show-status?]} opts
+          isChecked (is-checked-fn status)]
+
+      [:> VStack {:align "stretch" :flex 1}
+       [:> HStack {:alignSelf "flex-start"}
+        [:> Checkbox {:size "lg" :onChange #(on-update-checkbox parent-block-uid isChecked) :isChecked isChecked}]
+        [:> Text title]
+        (when (and show-priority? priority)
+          [:> Badge {:size "sm" :variant "primary"}
+           priority])
+        (when (and show-assignee? assignee)
+          [:> AvatarGroup {:size "xs"}
+           [:> Avatar {:name assignee}]])
+        (when (and show-creator? creator)
+          [:> AvatarGroup {:size "xs"}
+           [:> Avatar {:name creator}]])
+        (when (and show-created-date? created-date)
+          [:> Text {:fontSize "xs"} created-date])]
+       (when (and show-due-date? due-date)
+         [:> Text {:fontSize "xs"} due-date])
+       (when (and show-description? description)
+         [:> Text {:fontSize "sm"  :color "foreground.secondary"}
+          description])])))
+
 
 (defrecord TaskView
   []
@@ -287,23 +426,61 @@
     [_this block-data _callbacks]
     (let [block-uid (:block/uid block-data)]
       (fn [_this _block-data _callbacks]
-        (let [props (-> [:block/uid block-uid] reactive/get-reactive-block-document :block/properties)
+        (let [block           (-> [:block/uid block-uid] reactive/get-reactive-block-document)
+              props           (-> block :block/properties)
               title-uid       (-> props (get ":task/title") :block/uid)
               assignee-uid    (-> props (get ":task/assignee") :block/uid)
               priority-uid    (-> props (get ":task/priority") :block/uid)
               description-uid (-> props (get ":task/description") :block/uid)
+              creator-uid     (-> props (get ":task/creator") :block/uid)
               due-date-uid    (-> props (get ":task/due-date") :block/uid)
               ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
-              status-uid      (-> props (get ":task/status") :block/uid)]
-          [:> VStack {:spacing "0.5rem"
-                      :class   "task_container"}
-           [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]
-           [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]
-           [task-priority-view block-uid priority-uid]
-           [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
-           ;; Making assumption that for now we can add due date manually without date-picker.
-           [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
-           [task-status-view block-uid status-uid]]))))
+              status-uid      (-> props (get ":task/status") :block/uid)
+              creator         (-> (:block/create block) :event/auth :presence/id)
+              time            (-> (:block/create block) :event/time :time/ts)]
+          [:> ModalInput {:placement "bottom"}
+           [:> ModalInputTrigger
+            [:> Box {:as Button :gridArea "content" :mr 4 :alignSelf "stretch" :whiteSpace "normal" :justifyContent "flexStart" :textAlign "start" :fontWeight "normal" :height "auto" :p 2 :mb 1 :variant "outline"}
+             [task-el {:parent-block-uid block-uid
+                       :title       (-> props (get ":task/title") :block/string)
+                       :assignee    (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
+                       :priority    (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
+                                                                                       (get ":task/priority")
+                                                                                       :block/string
+                                                                                       (common-db/strip-markup "((" "))"))])
+                                        :block/string)
+                       :status      (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
+                                                                                       (get ":task/status")
+                                                                                       :block/string
+                                                                                       (common-db/strip-markup "((" "))"))])
+                                        :block/string)
+                       :creator      creator
+                       ;; Convert edit time to real time
+                       :created-date "July 22, 1941"
+                       :description  (-> props (get ":task/description") :block/string)
+                       :due-date     (-> props
+                                         (get ":task/due-date")
+                                         :block/string
+                                         (common-db/strip-markup "[[" "]]"))
+                       :opts         {:show-assignee?     true
+                                      :show-description?  true
+                                      :show-priority?     true
+                                      :show-creator?      true
+                                      :show-created-date? true
+                                      :show-status?       true
+                                      :show-due-date?     true}}]]]
+           [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
+            [:> VStack {:spacing 4
+                        :px 4
+                        :pt 2}
+             [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]
+             [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]
+             [task-priority-view block-uid priority-uid]
+             [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
+             ;; Making assumption that for now we can add due date manually without date-picker.
+             [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
+             [task-status-view block-uid status-uid]
+             [:> Text creator-uid]]]]))))
 
 
   (supported-transclusion-scopes
