@@ -1,10 +1,17 @@
 import React from 'react';
 import { Box, BoxProps } from '@chakra-ui/react';
 
-const MIN_SIZE = 200;
-const MAX_SIZE = 800;
+const MIN_VW = 20;
+const MAX_VW = 80;
+
 
 const clamp = (value: number, min: number, max: number) => Math.max(Math.min(value, max), min);
+const getVW = (e, window) => {
+  const innerWidth = window.innerWidth;
+  const clientX = e.clientX;
+  const calcVW = (innerWidth - clientX) / innerWidth * 100;
+  return calcVW;
+}
 
 interface RightSidebarResizeControlProps extends BoxProps {
   onResizeSidebar: (size: number) => void;
@@ -19,7 +26,9 @@ export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps)
   const moveHandler = (e) => {
     if (isDragging) {
       e.preventDefault();
-      onResizeSidebar(clamp(window.innerWidth - e.clientX, MIN_SIZE, MAX_SIZE));
+      const calcVW = getVW(e, window);
+      const clampVW = clamp(calcVW, MIN_VW, MAX_VW);
+      onResizeSidebar(clampVW);
     }
   }
 
@@ -48,8 +57,7 @@ export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps)
       position="fixed"
       zIndex={100}
       opacity={0}
-      outline="none"
-      right={rightSidebarWidth + "px"}
+      right={rightSidebarWidth + "vw"}
       height="100%"
       cursor="col-resize"
       onMouseDown={() => setIsDragging(true)}

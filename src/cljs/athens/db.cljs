@@ -153,7 +153,8 @@
                :athena/open         false
                :athena/recent-items '()
                :left-sidebar/open   false
-               :right-sidebar/width 300
+               ;; todo: some value initialization like athens/persist
+               ;; :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
                :selection           {:items []}

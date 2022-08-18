@@ -130,7 +130,7 @@
                                               (when (.. e -shiftKey)
                                                 (rf/dispatch [:right-sidebar/open-item [:node/title user-page-title]])))
                              :icon          (r/as-element [:> BellFillIcon])}]
-             (when (> 0 num-notifications)
+             (when (> num-notifications 0)
                [:> Badge {:position "absolute"
                           :bg "highlight"
                           :color "highlightContrast"
