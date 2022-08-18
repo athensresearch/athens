@@ -303,8 +303,8 @@
                                                           "*[[@" author "]] commented: "  comment-string "*")
           [add-block-author-as-sub-and-mem
            block-author-notification-op]             (when (and
-                                                              (not= author block-author)
-                                                              (not thread-exists?))
+                                                             (not= author block-author)
+                                                             (not thread-exists?))
                                                        [(concat []
                                                                 (add-new-member-or-subscriber-to-prop-uid @db/dsdb thread-members-uid (str "[[@" block-author "]]"))
                                                                 (add-new-member-or-subscriber-to-prop-uid @db/dsdb thread-subs-uid (str "[[@" block-author "]]")))
