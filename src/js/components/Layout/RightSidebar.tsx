@@ -24,7 +24,7 @@ export const RightSidebar = (props: RightSidebarProps) => {
       {isOpen && (
         <Box
           as={motion.div}
-          {...layoutAnimationProps(rightSidebarWidth + "px")}
+          {...layoutAnimationProps(rightSidebarWidth + "vw")}
           zIndex={1}
           bg="background.floor"
           transitionProperty="background"
@@ -39,7 +39,7 @@ export const RightSidebar = (props: RightSidebarProps) => {
           pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
-          <Box overflow="hidden" width={rightSidebarWidth + "px"}>
+          <Box overflow="hidden" width={rightSidebarWidth + "vw"}>
             {children}
           </Box>
         </Box>
