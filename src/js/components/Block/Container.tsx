@@ -52,7 +52,6 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
         isHoveredNotChild && "is-hovered-not-child",
         hasPresence ? "is-presence" : "",
       ].filter(Boolean).join(' ')}
-      display="flex"
       lineHeight="2em"
       position="relative"
       borderRadius="0.125rem"
@@ -107,9 +106,6 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
           borderRadius: "0.5rem",
           minHeight: '2em',
           position: "relative",
-        },
-        ".block-content": {
-          gridArea: "content",
         },
         "&:hover > .block-toggle, &:focus-within > .block-toggle": { opacity: "1" },
         "button.block-edit-toggle": {
