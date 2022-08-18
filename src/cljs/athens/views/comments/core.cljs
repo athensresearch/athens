@@ -299,18 +299,23 @@
           add-mentions-in-str-as-mem-subs-op         (add-mentioned-users-as-member-and-subscriber @db/dsdb thread-members-uid thread-subs-uid comment-string thread-uid thread-exists? author)
           add-author-as-mem-or-subs                  (when thread-exists?
                                                        (add-user-as-member-or-subscriber? @db/dsdb thread-uid (str "[[@" author "]]")))
-          add-block-author-as-sub-and-mem             (when (not thread-exists?)
-                                                        (concat []
-                                                                (add-new-member-or-subscriber-to-prop-uid @db/dsdb thread-members-uid (str "[[@" block-author "]]"))
-                                                                (add-new-member-or-subscriber-to-prop-uid @db/dsdb thread-subs-uid (str "[[@" block-author "]]"))))
           notification-message                       (str "**((" uid "))**" "\n"
                                                           "*[[@" author "]] commented: "  comment-string "*")
+          [add-block-author-as-sub-and-mem
+           block-author-notification-op]             (when (and
+                                                              (not= author block-author)
+                                                              (not thread-exists?))
+                                                       [(concat []
+                                                                (add-new-member-or-subscriber-to-prop-uid @db/dsdb thread-members-uid (str "[[@" block-author "]]"))
+                                                                (add-new-member-or-subscriber-to-prop-uid @db/dsdb thread-subs-uid (str "[[@" block-author "]]")))
+                                                        (create-notification-op-for-users @db/dsdb uid [(str "[[@" block-author "]]")] author notification-message comment-uid "athens/notification/type/comment")                                                 ()])
           notification-op                            (create-notification-op-for-comment @db/dsdb uid thread-uid author comment-string notification-message comment-uid)
           ops                                        (concat add-author-as-mem-or-subs
                                                              new-thread-op
                                                              [comment-op]
                                                              add-mentions-in-str-as-mem-subs-op
                                                              add-block-author-as-sub-and-mem
+                                                             block-author-notification-op
                                                              notification-op)
 
           comment-notif-op                           (composite/make-consequence-op {:op/type :comment-notif-op}
