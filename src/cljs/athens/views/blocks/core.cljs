@@ -8,7 +8,7 @@
     ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatBubbleIcon ArchiveIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react"                        :refer [MenuDivider Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuItem MenuList VStack]]
-    ["react"             :as react]
+    ["react"                                   :as react]
     ["react-intersection-observer"             :refer [useInView]]
     [athens.common-db                          :as common-db]
     [athens.common.logging                     :as log]
@@ -374,7 +374,7 @@
                                        (when comments-enabled?
                                          [:> MenuItem {:children "Add comment"
                                                        :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                       :icon     (r/as-element [:> ChatIcon])}])
+                                                       :icon     (r/as-element [:> ChatBubbleIcon])}])
                                        (when reactions-enabled?
                                          [:<>
                                           [:> MenuDivider]
