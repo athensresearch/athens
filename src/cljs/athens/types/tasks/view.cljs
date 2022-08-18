@@ -51,6 +51,7 @@
    {:block/string "Cancelled"}])
 
 
+
 (defn- internal-representation-allowed-priorities
   []
   [{:block/string "Expedite"}
@@ -299,6 +300,7 @@
       allowed-statuses)))
 
 
+
 (defn task-priority-view
   [parent-block-uid priority-block-uid]
   (let [priority-id        (str (random-uuid))
@@ -353,21 +355,45 @@
            [:option {:value uid}
             string]))]]]))
 
+(defn find-status-uid
+  [status]
+  (->> (filter (fn [allowed-status]
+                 (= status (:block/string allowed-status)))
+               (find-allowed-statuses))
+       first
+       :block/uid))
+
+
+(defn on-update-checkbox
+  [parent-block-uid is-checked]
+  (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+                (fn [db uid]
+                  (if is-checked
+                    [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "To Do") "))"))]
+                    [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "Done") "))"))]))]))
+
+
+(defn is-checked-fn
+  [status]
+  (contains? #{"Done" "Cancelled"} status))
+
 
 (defn task-el
   []
   (fn [props]
-    (let [{:keys [title assignee priority description due-date created-date creator opts status]} props
+    (let [{:keys [parent-block-uid title assignee priority description due-date created-date creator opts status]} props
           {:keys [show-description?
                   show-assignee?
                   show-due-date?
                   show-creator?
                   show-created-date?
                   show-priority?
-                  show-status?]} opts]
+                  show-status?]} opts
+          isChecked (is-checked-fn status)]
+
       [:> VStack {:align "stretch" :flex 1}
        [:> HStack {:alignSelf "flex-start"}
-        [:> Checkbox {:size "lg"}]
+        [:> Checkbox {:size "lg" :onChange #(on-update-checkbox parent-block-uid isChecked) :isChecked isChecked}]
         [:> Text title]
         (when (and show-priority? priority)
           [:> Badge {:size "sm" :variant "primary"}
@@ -415,7 +441,8 @@
           [:> ModalInput {:placement "bottom"}
            [:> ModalInputTrigger
             [:> Box {:as Button :gridArea "content" :mr 4 :alignSelf "stretch" :whiteSpace "normal" :justifyContent "flexStart" :textAlign "start" :fontWeight "normal" :height "auto" :p 2 :mb 1 :variant "outline"}
-             [task-el {:title       (-> props (get ":task/title") :block/string)
+             [task-el {:parent-block-uid block-uid
+                       :title       (-> props (get ":task/title") :block/string)
                        :assignee    (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
                        :priority    (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
                                                                                        (get ":task/priority")
