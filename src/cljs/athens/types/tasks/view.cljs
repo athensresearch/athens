@@ -307,7 +307,7 @@
         priority-string    (:block/string priority-block "(())")
         priority-uid       (subs priority-string 2 (- (count priority-string) 2))]
     [:> FormControl {:is-required true}
-     [:> HStack {:spacing "2rem"}
+     [:> HStack {:spacing 4}
       [:> FormLabel {:html-for priority-id
                      :w        "9rem"}
        "Task priority"]
@@ -335,7 +335,7 @@
         status-string    (:block/string status-block "(())")
         status-uid       (subs  status-string 2 (- (count status-string) 2))]
     [:> FormControl {:is-required true}
-     [:> HStack {:spacing "2rem"}
+     [:> HStack {:spacing 4}
       [:> FormLabel {:html-for status-id
                      :w        "9rem"}
        "Task Status"]
@@ -443,8 +443,8 @@
                                       :show-status?       true
                                       :show-due-date?     true}}]]]
            [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
-            [:> VStack {:spacing "0.5rem"
-                        :p 4
+            [:> VStack {:spacing 4
+                        :px 4
                         :pt 2}
              [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]
              [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]
@@ -453,7 +453,6 @@
              ;; Making assumption that for now we can add due date manually without date-picker.
              [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
              [task-status-view block-uid status-uid]
-             [:> Divider]
              [:> Text creator-uid]]]]))))
 
 
