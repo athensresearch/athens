@@ -395,30 +395,6 @@
 
 ;; Datascript
 
-
-
-;; TODO: remove this event and also :transact! when the following are converted to events:
-;; - athens.electron.images/dnd-image (needs file upload)
-;; No other reframe events should be calling this event.
-(reg-event-fx
-  :transact
-  [(interceptors/sentry-span "transact")]
-  (fn-traced [_ [_ tx-data]]
-             (let [synced?   @(subscribe [:db/synced])
-                   electron? electron.utils/electron?]
-               (if (and synced? electron?)
-                 {:fx [[:transact! tx-data]
-                       [:dispatch [:db/not-synced]]
-                       [:dispatch [:save]]]}
-                 {:fx [[:transact! tx-data]]}))))
-
-
-(rf/reg-event-fx
-  :success-transact
-  (fn [_ _]
-    {}))
-
-
 ;; These events are used for async flows, so we know when changes are in the
 ;; datascript db.
 ;; If you need to know which event was resolved, check the arg as
