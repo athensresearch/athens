@@ -87,7 +87,7 @@
             renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
             renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]
         ^{:key renderer-k}
-        [types/transclusion-view renderer blocks/block-el block-uid  {} :embed])
+        [:f> types/transclusion-view renderer blocks/block-el block-uid  {} :embed])
       ;; roam actually hides the brackets around [[embed]]
       [:span "{{" content "}}"])))
 

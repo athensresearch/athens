@@ -150,7 +150,7 @@
                                                     :pr        "1.3rem"
                                                     "textarea" {:background "transparent"}}}}
            [:<>
-            [block-el
+            [:f> block-el
              (util/recursively-modify-block-for-embed block embed-id)
              {:linked-ref false}
              {:block-embed? true}]
