@@ -54,7 +54,7 @@ const typeIcon = (type, isOpen) => {
 };
 
 export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigate, children, ...props }) => {
-  const canToggle = type !== 'graph';
+  const className = { "page": "node-page", "block": "block-page", "graph": "graph-page" }[type];
   return (
     <VStack
       align="stretch"
@@ -77,13 +77,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
         justifyContent="center"
       >
         <Button
-          onClick={canToggle ? onToggle : undefined}
-          as={canToggle ? undefined : 'div'}
-          {...(!canToggle && {
-            _hover: {},
-            _focus: {},
-            _active: {},
-          })}
+          onClick={onToggle}
           display="flex"
           bg="transparent"
           borderRadius="0"
@@ -97,14 +91,12 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
           whiteSpace="nowrap"
           sx={{ maskImage: "linear-gradient(to right, black, black calc(100% - 1rem), transparent calc(100%))" }}
         >
-          {canToggle && (
-            <ChevronRightIcon
+          {<ChevronRightIcon
               transform={isOpen ? "rotate(90deg)" : null}
               transitionProperty="common"
               transitionDuration="0.15s"
               transitionTimingFunction="ease-in-out"
-              justifySelf="center" />
-          )}
+              justifySelf="center" />}
           {typeIcon(type, isOpen)}
           <Box
             flex="1 1 100%"
@@ -150,7 +142,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
       <Box
         as={Collapse}
         in={isOpen}
-        className={`${type}-page`}
+        className={className}
         animateOpacity
         unmountOnExit
         zIndex={1}

@@ -3,7 +3,7 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Block/Container" :refer [Container]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon #_GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
+    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
@@ -243,9 +243,9 @@
               [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])
                             :icon    (r/as-element [:> BookmarkIcon])}
                [:span "Add Shortcut"]])
-            #_[:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item [:node/title title] true])
-                            :icon    (r/as-element [:> GraphIcon])}
-               "Show Local Graph"]
+            [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item [:node/title title] true])
+                          :icon    (r/as-element [:> GraphIcon])}
+             "Show Local Graph"]
             [:> MenuItem {:onClick    #(dispatch [:right-sidebar/open-item [:node/title title]])
                           :isDisabled @contains-item?
                           :icon       (r/as-element [:> ArrowRightOnBoxIcon])}
