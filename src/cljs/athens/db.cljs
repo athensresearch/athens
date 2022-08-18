@@ -304,22 +304,6 @@
     block))
 
 
-(def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs])
-
-
-(def node-document-pull-vector
-  (-> block-document-pull-vector
-      (conj :node/title :page/sidebar)))
-
-
-(defntrace get-node-document
-  [id db]
-  (when (d/entity db id)
-    (->> (d/pull db node-document-pull-vector id)
-         sort-block-children)))
-
-
 (defntrace shape-parent-query
   "Normalize path from deeply nested block to root node."
   [pull-results]

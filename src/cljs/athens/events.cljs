@@ -399,7 +399,6 @@
 
 ;; TODO: remove this event and also :transact! when the following are converted to events:
 ;; - athens.electron.images/dnd-image (needs file upload)
-;; - :upload/roam-edn (needs internal representation)
 ;; No other reframe events should be calling this event.
 (reg-event-fx
   :transact
@@ -1576,6 +1575,7 @@
 ;; (f db uid) should return a seq of operations to perform. If no operations are returned, nothing is transacted.
 (reg-event-fx
   :graph/update-in
+  [(interceptors/sentry-span-no-new-tx "graph/update-in")]
   (fn [_ [_ eid ks f]]
     (log/debug ":graph/update-in args" eid ks)
     (when (seq ks)
@@ -1586,3 +1586,15 @@
           {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
                                                               (composite-ops/make-consequence-op {:op/type :graph/update-in})
                                                               common-events/build-atomic-event)]]]]})))))
+
+
+;; Add internal representation to graph, using default-position for blocks without pages.
+(reg-event-fx
+  :graph/add-internal-representation
+  [(interceptors/sentry-span-no-new-tx "graph/add-internal-representation")]
+  (fn [_ [_ internal-representation default-position]]
+    (log/debug ":graph/add-internal-representation args" internal-representation default-position)
+    (when (seq internal-representation)
+      {:fx [[:dispatch-n [[:resolve-transact-forward (->> (bfs/internal-representation->atomic-ops @db/dsdb internal-representation default-position)
+                                                          (composite-ops/make-consequence-op {:op/type :graph/add-internal-representation})
+                                                          common-events/build-atomic-event)]]]]})))

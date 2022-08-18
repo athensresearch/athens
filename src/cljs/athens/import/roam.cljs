@@ -1,15 +1,16 @@
 (ns athens.import.roam
   (:require
     ["@chakra-ui/react" :refer [VStack Button Box Text Modal ModalOverlay Divider VStack Heading ModalContent ModalHeader ModalFooter ModalBody ModalCloseButton ButtonGroup]]
-    ;; [athens.events :as events]
-    [athens.common.utils :as common.utils]
+    [athens.common-db :as common-db]
+    [athens.common-events.graph.ops :as graph-ops]
     [athens.dates :as dates]
     [athens.db :as db]
-    [athens.interceptors :as interceptors]
     [athens.patterns :as patterns]
+    [clojure.data :as data]
     [clojure.edn :as edn]
+    [clojure.walk :as walk]
     [datascript.core :as d]
-    [re-frame.core :refer [dispatch reg-event-fx]]
+    [re-frame.core :refer [dispatch]]
     [reagent.core :as r]))
 
 
@@ -60,94 +61,84 @@
     (.readAsText fr file)))
 
 
-(defn roam-pages
-  [roam-db]
-  (d/q '[:find [?pages ...]
-         :in $
-         :where
-         [_ :node/title ?pages]]
-       roam-db))
-
-
 (def roam-node-document-pull-vector
   '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
 
 
 (defn get-roam-node-document
-  [id db]
-  (->> (d/pull db roam-node-document-pull-vector id)
+  [db eid]
+  (->> (d/pull db roam-node-document-pull-vector eid)
        db/sort-block-children))
 
 
-(defn merge-shared-page
-  "If page exists in both databases, but roam-db's page has no children, then do not add the merge block"
-  [shared-page roam-db roam-db-filename]
-  (let [page-athens              (db/get-node-document shared-page db/dsdb)
-        page-roam                (get-roam-node-document shared-page roam-db)
-        athens-child-count       (-> page-athens :block/children count)
-        roam-child-count         (-> page-roam :block/children count)
-        new-uid                  (common.utils/gen-block-uid)
-        today-date-page          (:title (dates/get-day))
-        new-children             (conj (:block/children page-athens)
-                                       {:block/string   (str "[[Roam Import]] "
-                                                             "[[" today-date-page "]] "
-                                                             "[[" roam-db-filename "]]")
-                                        :block/uid      new-uid
-                                        :block/children (:block/children page-roam)
-                                        :block/order    athens-child-count
-                                        :block/open     true})
-        merge-pages              (merge page-roam page-athens)
-        final-page-with-children (assoc merge-pages :block/children new-children)]
-    (if (zero? roam-child-count)
-      merge-pages
-      final-page-with-children)))
+;; roam page -> IR
+;; shared/unshared -> loc
+;; IR+loc -> bfs/internal-representation->atomic-ops
+;; ops -> consequence op (might need to segment into 1mb parts here)
+;; consequence op -> event
+;; event-> :resolve-transact-forward
+;; for each page, in a fn that is calling dispatch for each, and tracking progress
 
 
-(defn get-shared-pages
-  [roam-db]
-  (->> (d/q '[:find [?pages ...]
-              :in $athens $roam
-              :where
-              [$athens _ :node/title ?pages]
-              [$roam _ :node/title ?pages]]
-            @athens.db/dsdb
-            roam-db)
-       sort))
+(defn get-roam-internal-representation
+  "Like common-db/get-internal representation but for roam dbs."
+  [db eid]
+  (when (d/entity db eid)
+    (let [rename-ks          {:block/open :block/open?
+                              :node/title :page/title}
+          remove-ks          [:db/id :block/order]
+          remove-ks-on-match [[:block/open? :block/open?]
+                              [:block/uid   :page/title]]]
+      (->> (get-roam-node-document db eid)
+           (walk/postwalk-replace rename-ks)
+           (walk/prewalk (fn [node]
+                           (if (map? node)
+                             (as-> node n
+                                   (apply dissoc n remove-ks)
+                                   (reduce common-db/dissoc-on-match n remove-ks-on-match))
+                             node)))))))
 
 
-(defn pages
-  [roam-db]
-  (->> (d/q '[:find [?pages ...]
-              :in $
-              :where
-              [_ :node/title ?pages]]
-            roam-db)
-       sort))
+(defn get-page-titles
+  [db]
+  (->> (d/datoms db :avet :node/title)
+       (map #(nth % 2))
+       set))
 
 
-(defn gett
-  [s x]
-  (not ((set s) x)))
+(defn shared-and-non-shared-pages
+  [athens-db roam-db]
+  (let [athens-pages (get-page-titles athens-db)
+        roam-pages (get-page-titles roam-db)
+        [non-shared _ shared] (data/diff roam-pages athens-pages)]
+    [shared non-shared]))
 
 
-(defn not-shared-pages
-  [roam-db shared-pages]
-  (->> (d/q '[:find [?pages ...]
-              :in $ ?fn ?shared
-              :where
-              [_ :node/title ?pages]
-              [(?fn ?shared ?pages)]]
-            roam-db
-            gett
-            shared-pages)
-       sort))
+(defn process-import
+  [athens-db roam-db roam-db-filename _progress]
+  (doseq [title (get-page-titles roam-db)]
+    (let [default-position {:page/title title :relation :last}
+          internal-repr    (get-roam-internal-representation roam-db [:node/title title])
+          internal-repr    (cond-> internal-repr
+
+                             ;; Page exists and has blocks in both athens-db and roam-db.
+                             ;; Wrap IR in a new block that mentions the import.
+                             (and (:block/children internal-repr)
+                                  (graph-ops/get-path athens-db [:node/title title] [::graph-ops/last]))
+                             (-> (select-keys [:block/children])
+                                 (merge {:block/string (str "[[Roam Import]] "
+                                                            "[[" (:title (dates/get-day)) "]] "
+                                                            "[[" roam-db-filename "]]")})))]
+      (dispatch [:graph/add-internal-representation [internal-repr] default-position]))))
 
 
 (defn merge-modal
   [open?]
   (let [close-modal         #(reset! open? false)
         transformed-roam-db (r/atom nil)
-        roam-db-filename    (r/atom "")]
+        roam-db-filename    (r/atom "")
+        progress            (r/atom 0) ; TODO
+        ]
     (fn []
       [:> Modal {:isOpen @open?
                  :onClose close-modal
@@ -189,8 +180,9 @@
                [:> Button
                 {:onClick #(.click @inputRef)}
                 "Upload database"]]]])
-          (let [roam-pages   (roam-pages @transformed-roam-db)
-                shared-pages (get-shared-pages @transformed-roam-db)]
+          (let [athens-db @athens.db/dsdb
+                roam-db @transformed-roam-db
+                [shared-pages roam-pages] (shared-and-non-shared-pages athens-db roam-db)]
             [:> ModalBody
              [:> Text {:size "md"} (str "Your Roam DB had " (count roam-pages)) " pages. " (count shared-pages) " of these pages were also found in your Athens DB. Press Merge to continue merging your DB."]
              [:> Divider {:my 4}]
@@ -205,22 +197,9 @@
              [:> ModalFooter
               [:> ButtonGroup
                [:> Button {:onClick (fn []
-                                      (dispatch [:import.roam/edn @transformed-roam-db @roam-db-filename])
+                                      (process-import athens-db roam-db @roam-db-filename progress)
+                                      #_(dispatch [:import.roam/edn @transformed-roam-db @roam-db-filename])
                                       (close-modal))}
 
                 "Merge"]]]]))]])))
 
-
-(reg-event-fx
-  :import.roam/edn
-  [(interceptors/sentry-span-no-new-tx "upload/roam-edn")]
-  (fn [_ [_ transformed-dates-roam-db roam-db-filename]]
-    (let [shared-pages   (get-shared-pages transformed-dates-roam-db)
-          merge-shared   (mapv (fn [x] (merge-shared-page [:node/title x] transformed-dates-roam-db roam-db-filename))
-                               shared-pages)
-          merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
-                              (map (fn [x] (get-roam-node-document [:node/title x] transformed-dates-roam-db))))
-          tx-data        (concat merge-shared merge-unshared)]
-      ;; TODO: this functionality needs to create a internal representation event instead.
-      ;; That will cause it to work in RTC and remove the need to transact directly to the in-memory db.
-      {:dispatch [:transact tx-data]})))

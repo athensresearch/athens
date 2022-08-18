@@ -358,3 +358,21 @@
            ops'       (cond-> ops
                         (not next-block) (conj (new-prop db uid-or-eid next-uid k)))]
        (recur db next-uid ks ops')))))
+
+
+(defn get-path
+  "Return uid at ks path."
+  [db uid-or-eid [k & ks]]
+  (if-not (and uid-or-eid k)
+    uid-or-eid
+    (let [uid?       (-> uid-or-eid vector? not)
+          block      (common-db/get-block db (if uid?
+                                               [:block/uid uid-or-eid]
+                                               uid-or-eid))
+          next-block (cond
+                       (= ::first k) (-> block :block/children first)
+                       (= ::last k)  (-> block :block/children last)
+                       (string? k)   (-> block :block/properties (get k))
+                       :else         (throw-unknown-k k))
+          next-uid   (:block/uid next-block)]
+      (recur db next-uid ks))))

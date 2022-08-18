@@ -642,7 +642,7 @@
     txs))
 
 
-(defn- dissoc-on-match
+(defn dissoc-on-match
   [m [k f]]
   (if (f m)
     (dissoc m k)
