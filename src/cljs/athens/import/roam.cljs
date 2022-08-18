@@ -198,7 +198,6 @@
               [:> ButtonGroup
                [:> Button {:onClick (fn []
                                       (process-import athens-db roam-db @roam-db-filename progress)
-                                      #_(dispatch [:import.roam/edn @transformed-roam-db @roam-db-filename])
                                       (close-modal))}
 
                 "Merge"]]]]))]])))
