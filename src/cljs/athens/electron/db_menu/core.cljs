@@ -5,6 +5,7 @@
     [athens.electron.db-menu.db-list-item :refer [db-list-item]]
     [athens.electron.db-modal :as db-modal]
     [athens.electron.dialogs :as dialogs]
+    [athens.electron.utils               :as electron.utils]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]))
 
@@ -13,14 +14,23 @@
 
 (defn current-db-tools
   ([{:keys [db]} all-dbs merge-open?]
+   (prn db all-dbs)
    (when-not (:is-remote db)
-     [:> ButtonGroup {:size "xs" :pr 4 :pl 10 :ml "auto" :width "100%"}
-      [:> Button {:onClick #(dialogs/move-dialog!)} "Move"]
-      [:> Button {:mr "auto" :onClick #(reset! merge-open? true)} "Merge from Roam"]
-      [:> Tooltip {:label "Can't remove last database" :placement "right" :isDisabled (< 1 (count all-dbs))}
-       [:> Button {:isDisabled (= 1 (count all-dbs))
-                   :onClick #(dialogs/delete-dialog! db)}
-        "Remove"]]])))
+     [:> ButtonGroup {:size "xs"
+                      :pr 4
+                      :pl 10
+                      :ml "auto"
+                      :width "100%"}
+      (when electron.utils/electron? [:> Button {:onClick #(dialogs/move-dialog!)} "Move"])
+      [:> Button {:mr "auto"
+                  :onClick #(reset! merge-open? true)} "Merge from Roam"]
+      (when-not (= :in-memory (:type db))
+        [:> Tooltip {:label "Can't remove last database"
+                     :placement "right"
+                     :isDisabled (< 1 (count all-dbs))}
+         [:> Button {:isDisabled (= 1 (count all-dbs))
+                     :onClick #(dialogs/delete-dialog! db)}
+          "Remove"]])])))
 
 
 (defn db-menu
@@ -34,7 +44,8 @@
                            :synchronising)]
     [:<>
      [db-modal/merge-modal merge-open?]
-     [:> Popover {:placement "bottom-start" :isLazy true}
+     [:> Popover {:placement "bottom-start"
+                  :isLazy true}
       [:> PopoverTrigger
        [:> IconButton {:p 0
                        :variant "ghost"
@@ -61,7 +72,6 @@
                        :pb 3
                        :borderTop "1px solid"
                        :borderTopColor "separator.divider"
-                       ;;  :bg "background.floor"
                        :px 10
                        :letterSpacing "wide"
                        :textTransform "uppercase"
@@ -82,10 +92,20 @@
              [:> VStack {:align "center"
                          :background "background.vibrancy"
                          :backdropFilter "blur(0.25ch)"
-                         :justify "center" :position "absolute" :inset 0}
+                         :justify "center"
+                         :position "absolute"
+                         :inset 0}
               [:> Spinner]
               [:> Text "Syncing..."]])]
           ;; Add DB control
-          [:> ButtonGroup {:borderTop "1px solid" :borderTopColor "separator.divider" :p 2 :pt 0 :pl 10 :size "sm" :width "100%" :ml 10 :justifyContent "flex-start"}
+          [:> ButtonGroup {:borderTop "1px solid"
+                           :borderTopColor "separator.divider"
+                           :p 2
+                           :pt 0
+                           :pl 10
+                           :size "sm"
+                           :width "100%"
+                           :ml 10
+                           :justifyContent "flex-start"}
            [:> Button {:onClick #(dispatch [:modal/toggle])}
             "Add Database"]]]]]]]))
