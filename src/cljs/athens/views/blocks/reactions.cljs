@@ -14,7 +14,7 @@
     [reagent.core :as r]))
 
 
-(def common-reactions ["❤️" "💔" "😐" "😕" "😡"])
+(def common-reactions ["👍" "👎" "❤️" "🔥" "😂" "😲" "😢" "😡"])
 
 
 (defn toggle-reaction

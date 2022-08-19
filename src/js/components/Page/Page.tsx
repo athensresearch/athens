@@ -1,21 +1,22 @@
 import React from 'react';
 import {
-  Button, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
-  Tooltip, FormLabel
+  Button, VStack, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
+  Tooltip, FormLabel, BoxProps
 } from '@chakra-ui/react';
-import { useInView } from "react-intersection-observer";
 import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import { useInView } from 'react-intersection-observer';
 import { withErrorBoundary } from "react-error-boundary";
-import { motion } from 'framer-motion';
 
 
 const PAGE_PROPS = {
   as: "article",
   display: "grid",
-  flexBasis: "100%",
   alignSelf: "stretch",
   gridTemplateAreas: "'header' 'content' 'footer'",
   gridTemplateRows: "auto 1fr auto",
+  transitionProperty: "background",
+  transitionTimingFunction: "ease-in-out",
+  transitionDuration: "fast",
   sx: {
     "--page-padding": "3rem",
   }
@@ -91,28 +92,25 @@ export const PageHeader = ({
   >
     {children}
 
-    <ButtonGroup gridArea="extras" size="sm">
+    <ButtonGroup
+      gridArea="extras"
+      size="sm"
+      variant="ghost"
+      colorScheme="subtle"
+    >
       {headerImageEnabled && <Button onClick={() => setIsPropertiesOpen(!isPropertiesOpen)}>Properties</Button>}
       {onClickOpenInMainView && <Tooltip label="Open in main view">
         <IconButton
           aria-label='Open in main view'
-          color="foreground.secondary"
-          variant="ghost"
-          colorScheme="subtle"
           onClick={onClickOpenInMainView}
-        >
-          <ArrowLeftOnBoxIcon boxSize="1.5em" />
-        </IconButton></Tooltip>}
+          icon={<ArrowLeftOnBoxIcon />}
+        /></Tooltip>}
       {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
         <IconButton
           aria-label='Open in right sidebar'
-          color="foreground.secondary"
-          variant="ghost"
-          colorScheme="subtle"
           onClick={onClickOpenInSidebar}
-        >
-          <ArrowRightOnBoxIcon boxSize="1.5em" />
-        </IconButton></Tooltip>}
+          icon={<ArrowRightOnBoxIcon />}
+        /></Tooltip>}
     </ButtonGroup>
 
     {isPropertiesOpen && <Box gridArea="properties">
@@ -122,7 +120,6 @@ export const PageHeader = ({
       </FormControl>
     </Box>
     }
-
 
     {headerImageUrl && <HeaderImage src={headerImageUrl} />}
   </Box>)
@@ -154,14 +151,11 @@ const DailyNotePageError = () => {
       className="node-page daily-notes"
       boxShadow="page"
       bg="background.floor"
-      alignSelf="stretch"
       display="flex"
       borderWidth="1px"
       borderStyle="solid"
       borderColor="separator.divider"
-      transitionDuration="0s"
       borderRadius="0.5rem"
-      minHeight="calc(100vh - 10rem)"
       textAlign="center"
       p={12}
       color="foreground.secondary"
@@ -172,48 +166,54 @@ const DailyNotePageError = () => {
     </Box>)
 }
 
+interface DailyNotesListProps extends BoxProps {
+  onGetAnotherNote: () => void;
+}
 
-export const DailyNotesPage = withErrorBoundary(({ children, onFirstAppear, ...rest }) => {
-  const hasAppeared = React.useRef(false);
-  const { ref, inView } = useInView({ threshold: 1, triggerOnce: true, delay: 50 });
+export const DailyNotesList = (props: DailyNotesListProps) => {
+  const { onGetAnotherNote, ...boxProps } = props;
+  const listRef = React.useRef<HTMLDivElement>(null)
+  const { ref, inView } = useInView({ threshold: 0 });
 
-  if (!hasAppeared.current) {
+  React.useLayoutEffect(() => {
     if (inView) {
-      onFirstAppear();
-      hasAppeared.current = true;
+      onGetAnotherNote();
     }
-  }
+  });
+
+  return <VStack py={16} align="stretch" pb={4} width="100%" ref={listRef} {...boxProps}>
+    {boxProps.children}
+    <DailyNotesPage isReal={false}>
+      <Box ref={ref} />
+      <PageHeader>
+        <TitleContainer isEditing="false">Earlier</TitleContainer>
+      </PageHeader>
+    </DailyNotesPage>
+  </VStack>
+
+}
+
+
+interface DailyNotesPageProps extends BoxProps {
+  isReal: boolean;
+}
+
+export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => {
+  const { isReal, ...boxProps } = props
 
   return (
     <Box
       {...PAGE_PROPS}
-      {...rest}
-      as={motion.div}
-      initial={{
-        opacity: 0,
-      }}
-      animate={{
-        opacity: 1,
-        transition: {
-          duration: 0.5,
-        }
-      }}
-      exit={{
-        opacity: 0,
-      }}
-      ref={ref}
+      {...boxProps}
       className="node-page daily-notes"
+      minHeight="calc(100vh - 4rem)"
       boxShadow="page"
       bg="background.floor"
       borderWidth="1px"
       borderStyle="solid"
       borderColor="separator.divider"
-      transitionDuration="0s"
       borderRadius="0.5rem"
-      minHeight="calc(100vh - 10rem)"
-    >
-      {children}
-    </Box>)
+    />)
 }, {
   fallback: <DailyNotePageError />
 });

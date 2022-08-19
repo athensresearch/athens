@@ -7,7 +7,7 @@
     [athens.db :as db]
     [athens.interceptors :as interceptors]
     [athens.views.right-sidebar.shared :as shared]
-    [re-frame.core :as rf :refer [reg-event-fx reg-event-db]]))
+    [re-frame.core :as rf :refer [reg-event-fx]]))
 
 
 ;; UI
@@ -26,11 +26,15 @@
             [:dispatch [:posthog/report-feature :right-sidebar true]]]})))
 
 
-(reg-event-db
+(reg-event-fx
   :right-sidebar/set-width
   [(interceptors/sentry-span-no-new-tx "right-sidebar/set-width")]
-  (fn [db [_ width]]
-    (assoc db :right-sidebar/width width)))
+  (fn [_ [_ width]]
+    (let [user-page @(rf/subscribe [:presence/user-page])]
+      {:fx [[:dispatch [:properties/update-in [:node/title user-page] [(shared/ns-str "/width")]
+                        (fn [db uid]
+                          ;; todo: good place to be using a number primitive type
+                          [(graph-ops/build-block-save-op db uid (str width))])]]]})))
 
 
 (reg-event-fx

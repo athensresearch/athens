@@ -4,7 +4,6 @@ import {
   DndContext,
   useSensors,
   closestCenter,
-  KeyboardSensor,
   PointerSensor,
   DragOverlay,
   useSensor
@@ -12,7 +11,6 @@ import {
 import {
   SortableContext,
   verticalListSortingStrategy,
-  sortableKeyboardCoordinates,
   arrayMove
 } from "@dnd-kit/sortable";
 import { Item, ItemDragOverlay } from "./Item";
@@ -53,9 +51,6 @@ export const List = (props) => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates
-    })
   );
 
   const handleDragStart = (e) => {

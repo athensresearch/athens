@@ -1,12 +1,20 @@
 import * as React from "react";
 import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
 import { AnimatePresence, motion } from 'framer-motion';
-import { DragIcon, XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
-import { Button, IconButton, Box, Collapse, VStack } from '@chakra-ui/react';
+import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import { Button, IconButton, Box, Collapse, VStack, BoxProps } from '@chakra-ui/react';
 
 /** Right Sidebar */
-export const RightSidebar = (props) => {
+
+
+interface RightSidebarProps extends BoxProps {
+  isOpen: boolean;
+  rightSidebarWidth: number;
+}
+
+export const RightSidebar = (props: RightSidebarProps) => {
   const { children, rightSidebarWidth, isOpen } = props;
+
   const {
     toolbarHeight
   } = React.useContext(LayoutContext);
@@ -16,9 +24,12 @@ export const RightSidebar = (props) => {
       {isOpen && (
         <Box
           as={motion.div}
-          {...layoutAnimationProps(rightSidebarWidth + "px")}
+          {...layoutAnimationProps(rightSidebarWidth + "vw")}
           zIndex={1}
           bg="background.floor"
+          transitionProperty="background"
+          transitionTimingFunction="ease-in-out"
+          transitionDuration="fast"
           overflowY="auto"
           borderLeft="1px solid"
           borderColor="separator.divider"
@@ -28,7 +39,7 @@ export const RightSidebar = (props) => {
           pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
-          <Box overflow="hidden" width={rightSidebarWidth + "px"}>
+          <Box overflow="hidden" width={rightSidebarWidth + "vw"}>
             {children}
           </Box>
         </Box>
@@ -43,7 +54,7 @@ const typeIcon = (type, isOpen) => {
 };
 
 export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigate, children, ...props }) => {
-  const canToggle = type !== 'graph';
+  const className = { "page": "node-page", "block": "block-page", "graph": "graph-page" }[type];
   return (
     <VStack
       align="stretch"
@@ -66,13 +77,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
         justifyContent="center"
       >
         <Button
-          onClick={canToggle ? onToggle : undefined}
-          as={canToggle ? undefined : 'div'}
-          {...(!canToggle && {
-            _hover: {},
-            _focus: {},
-            _active: {},
-          })}
+          onClick={onToggle}
           display="flex"
           bg="transparent"
           borderRadius="0"
@@ -86,14 +91,12 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
           whiteSpace="nowrap"
           sx={{ maskImage: "linear-gradient(to right, black, black calc(100% - 1rem), transparent calc(100%))" }}
         >
-          {canToggle && (
-            <ChevronRightIcon
+          {<ChevronRightIcon
               transform={isOpen ? "rotate(90deg)" : null}
               transitionProperty="common"
               transitionDuration="0.15s"
               transitionTimingFunction="ease-in-out"
-              justifySelf="center" />
-          )}
+              justifySelf="center" />}
           {typeIcon(type, isOpen)}
           <Box
             flex="1 1 100%"
@@ -139,14 +142,15 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
       <Box
         as={Collapse}
         in={isOpen}
-        className={`${type}-page`}
+        className={className}
         animateOpacity
         unmountOnExit
         zIndex={1}
         px={4}
+        onPointerDown={(e) => {e.stopPropagation()}}
       >
         {children}
       </Box>
     </VStack>
-    );
+  );
 };

@@ -7,7 +7,7 @@
     [athens.views.right-sidebar.events]
     [athens.views.right-sidebar.shared :as shared]
     [athens.views.right-sidebar.subs]
-    [re-frame.core :as rf :refer [dispatch]]))
+    [re-frame.core :as rf]))
 
 
 ;; Components
@@ -37,8 +37,7 @@
   [open? items rf-width]
   [:> RightSidebar
    {:isOpen open?
-    :rightSidebarWidth rf-width
-    :onResizeSidebar #(dispatch [:right-sidebar/set-width %])}
+    :rightSidebarWidth rf-width}
    (if (empty? items)
      [empty-message]
      [:> List {:items              (shared/create-sidebar-list items)
