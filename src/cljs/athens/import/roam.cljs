@@ -178,7 +178,7 @@
         ;; This op still fits on the payload, add it and
         ;; go look at the next one.
         :else
-        (recur ops (conj payload op) (+ payload-size op-size))))))
+        (recur ops (conj payload op) payload-size-with-op)))))
 
 
 (defn merge-modal
