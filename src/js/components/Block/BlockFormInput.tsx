@@ -5,6 +5,7 @@ export const BlockFormInput = ({ children }) => {
     <Input
       as={Box}
       position="relative"
+      py={1}
       size="sm"
       _focusWithin={{
         shadow: "focus"
