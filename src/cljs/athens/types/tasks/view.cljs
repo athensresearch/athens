@@ -581,7 +581,8 @@
                             :rightIcon (r/as-element [:> ChevronDownIcon {:boxSize 4 :color "foreground.secondary"}])}
              ;; Checkbox will need to be something fancier that can show the status more precisely
              ;; e.g. "X" for cancelled status
-             [:> Checkbox {:size "md"
+             [:> Checkbox {:size "lg"
+                           :mx -1
                            :onClick #(.. % stopPropagation)
                            :onMouseDown #(.. % stopPropagation)
                            :onChange #(on-update-checkbox block-uid isChecked) :isChecked isChecked}]]
@@ -595,8 +596,6 @@
                          :justifyContent "flex-start"
                          :textAlign "start"
                          :fontWeight "normal"}
-              ;; [:> HStack {:alignSelf "flex-start"}
-              #_ [:> Text {:flex "1 1 100%"} title]
               [inline-task-title-2 block-uid title-uid title-uid _callbacks]
               (when (and show-priority? priority)
                 [:> Badge {:size "sm" :variant "primary"}
