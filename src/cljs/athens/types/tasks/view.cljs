@@ -10,7 +10,7 @@
                                                   Text
                                                   AvatarGroup
                                                   Avatar
-                                                  Divider
+                                                  #_Divider
                                                   Checkbox
                                                   Checkbox
                                                   Box
@@ -28,6 +28,7 @@
     [athens.common-events.graph.ops       :as graph-ops]
     [athens.common.logging                :as log]
     [athens.common.utils                  :as common.utils]
+    [athens.dates                         :as dates]
     [athens.db                            :as db]
     [athens.reactive                      :as reactive]
     [athens.self-hosted.presence.views    :as presence]
@@ -49,7 +50,6 @@
    {:block/string "Blocked"}
    {:block/string "Done"}
    {:block/string "Cancelled"}])
-
 
 
 (defn- internal-representation-allowed-priorities
@@ -189,7 +189,8 @@
             (str "Please provide " prop-title)])]))))
 
 
-(defn inline-task-title
+;; Will need this in future, see Stuart's comment for better understanding here https://discord.com/channels/708122962422792194/1008156785791742002/1009102458695450654
+#_(defn inline-task-title
   [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
   (let [prop-id (str (random-uuid))]
     (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
@@ -300,7 +301,6 @@
       allowed-statuses)))
 
 
-
 (defn task-priority-view
   [parent-block-uid priority-block-uid]
   (let [priority-id        (str (random-uuid))
@@ -355,6 +355,7 @@
            [:option {:value uid}
             string]))]]]))
 
+
 (defn find-status-uid
   [status]
   (->> (filter (fn [allowed-status]
@@ -388,7 +389,7 @@
                   show-creator?
                   show-created-date?
                   show-priority?
-                  show-status?]} opts
+                  #_show-status?]} opts
           isChecked (is-checked-fn status)]
 
       [:> VStack {:align "stretch" :flex 1}
@@ -455,8 +456,7 @@
                                                                                        (common-db/strip-markup "((" "))"))])
                                         :block/string)
                        :creator      creator
-                       ;; Convert edit time to real time
-                       :created-date "July 22, 1941"
+                       :created-date (dates/get-day time 0)
                        :description  (-> props (get ":task/description") :block/string)
                        :due-date     (-> props
                                          (get ":task/due-date")
