@@ -2,6 +2,9 @@
   (:require
     ["@chakra-ui/react" :refer [VStack Button Box Text Modal ModalOverlay Divider VStack Heading ModalContent ModalHeader ModalFooter ModalBody ModalCloseButton ButtonGroup]]
     [athens.common-db :as common-db]
+    [athens.common-events :as common-events]
+    [athens.common-events.bfs :as bfs]
+    [athens.common-events.graph.composite :as composite-ops]
     [athens.common-events.graph.ops :as graph-ops]
     [athens.dates :as dates]
     [athens.db :as db]
@@ -114,22 +117,68 @@
     [shared non-shared]))
 
 
-(defn process-import
-  [athens-db roam-db roam-db-filename _progress]
-  (doseq [title (get-page-titles roam-db)]
-    (let [default-position {:page/title title :relation :last}
-          internal-repr    (get-roam-internal-representation roam-db [:node/title title])
-          internal-repr    (cond-> internal-repr
+(defn page->ops
+  [athens-db roam-db roam-db-filename title]
+  (let [default-position {:page/title title :relation :last}
+        internal-repr    (get-roam-internal-representation roam-db [:node/title title])
+        internal-repr    (cond-> internal-repr
 
-                             ;; Page exists and has blocks in both athens-db and roam-db.
-                             ;; Wrap IR in a new block that mentions the import.
-                             (and (:block/children internal-repr)
-                                  (graph-ops/get-path athens-db [:node/title title] [::graph-ops/last]))
-                             (-> (select-keys [:block/children])
-                                 (merge {:block/string (str "[[Roam Import]] "
-                                                            "[[" (:title (dates/get-day)) "]] "
-                                                            "[[" roam-db-filename "]]")})))]
-      (dispatch [:graph/add-internal-representation [internal-repr] default-position]))))
+                           ;; Page exists and has blocks in both athens-db and roam-db.
+                           ;; Wrap IR in a new block that mentions the import.
+                           (and (:block/children internal-repr)
+                                (graph-ops/get-path athens-db [:node/title title] [::graph-ops/last]))
+                           (-> (select-keys [:block/children])
+                               (merge {:block/string (str "[[Roam Import]] "
+                                                          "[[" (:title (dates/get-day)) "]] "
+                                                          "[[" roam-db-filename "]]")})))]
+    (bfs/internal-representation->atomic-ops @db/dsdb [internal-repr] default-position)))
+
+
+;; 90% of max, enough for some wiggle roam with the consequence op.
+(def max-payload-size (* 0.9 common-events/max-event-size-in-bytes))
+
+
+(defn dispatch-payload
+  [payload]
+  (dispatch [:resolve-transact-forward (->> payload
+                                            (composite-ops/make-consequence-op {:op/type :import/roam})
+                                            common-events/build-atomic-event)]))
+
+
+(defn process-import
+  "Import roam pages as events under the common-events/max-event-size-in-bytes limit."
+  [athens-db roam-db roam-db-filename _progress]
+  (loop [[op & ops]   (->> (get-page-titles roam-db)
+                           (mapcat (partial page->ops athens-db roam-db roam-db-filename)))
+         payload      []
+         payload-size 0]
+    (let [op-size              (-> op common-events/serialize count)
+          payload-size-with-op (+ payload-size op-size)]
+
+      (cond
+        ;; There's no more operations to process.
+        ;; Send the last payload, if any.
+        (nil? op)
+        (when (seq payload)
+          (dispatch-payload payload))
+
+        ;; This single op is too big, likely a >1mb string.
+        ;; We don't really support this, so ignore the op.
+        ;; TODO: maybe report that we ignored it?
+        (> op-size max-payload-size)
+        (recur ops payload payload-size)
+
+        ;; This op can't fit in the current payload.
+        ;; Dispatch current payload, and add op to next payload.
+        (> payload-size-with-op max-payload-size)
+        (do
+          (dispatch-payload payload)
+          (recur ops [op] op-size))
+
+        ;; This op still fits on the payload, add it and
+        ;; go look at the next one.
+        :else
+        (recur ops (conj payload op) (+ payload-size op-size))))))
 
 
 (defn merge-modal
