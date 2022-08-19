@@ -1,7 +1,6 @@
 (ns athens.electron.db-menu.core
   (:require
     ["@chakra-ui/react" :refer [Box IconButton Spinner Text Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button]]
-    ["react-focus-lock" :default FocusLock]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
     [athens.electron.db-menu.db-list-item :refer [db-list-item]]
     [athens.electron.db-modal :as db-modal]
@@ -46,7 +45,6 @@
       ;; Dropdown menu
       [:> Portal
        [:> PopoverContent {:overflow-y "auto"}
-        [:> FocusLock
          [:> VStack {:align "stretch"
                      :overflow "hidden"
                      :spacing 0}
@@ -90,4 +88,4 @@
           ;; Add DB control
           [:> ButtonGroup {:borderTop "1px solid" :borderTopColor "separator.divider" :p 2 :pt 0 :pl 10 :size "sm" :width "100%" :ml 10 :justifyContent "flex-start"}
            [:> Button {:onClick #(dispatch [:modal/toggle])}
-            "Add Database"]]]]]]]]))
+            "Add Database"]]]]]]]))
