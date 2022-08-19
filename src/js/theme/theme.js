@@ -4,6 +4,13 @@ import { spacing } from './spacing'
 
 const $arrowBg = cssVar("popper-arrow-bg");
 
+const buttonIconFontSize = {
+  xs: "16px",
+  sm: "20px",
+  md: "24px",
+  lg: "32px",
+}
+
 const shadows = {
   focusLight: '0 0 0 3px #0071DB',
   focusDark: '0 0 0 3px #498eda',
@@ -69,8 +76,8 @@ const semanticTokens = {
     },
     // separator colors
     "separator.border": {
-      default: '00000022',
-      _dark: '#ffffff55'
+      default: '#00000033',
+      _dark: '#ffffff22'
     },
     "separator.divider": {
       default: '#00000022',
@@ -319,8 +326,7 @@ const components = {
     }
   },
   Button: {
-    baseStyle: {
-      transitionProperty: 'common',
+    baseStyle: ({ size }) => ({
       transitionTimingFunction: 'ease-in-out',
       _active: {
         transitionDuration: "0s",
@@ -332,8 +338,11 @@ const components = {
       _focusVisible: {
         outline: 'none',
         boxShadow: 'focus'
+      },
+      "> .chakra-button__icon, > .chakra-icon": {
+        fontSize: buttonIconFontSize[size],
       }
-    },
+    }),
     variants: {
       link: {
         color: "link",
@@ -374,15 +383,9 @@ const components = {
           })
         }
       },
-      ghost: {
+      ghost: ({ colorScheme }) => ({
         bg: "transparent",
-        color: (colorScheme) => {
-          if (colorScheme === 'subtle') {
-            return "foreground.secondary"
-          } else {
-            return "foreground.primary"
-          }
-        },
+        color: (colorScheme === 'subtle') ? "foreground.secondary" : "foreground.primary",
         _hover: {
           bg: "interaction.surface.hover"
         },
@@ -390,7 +393,7 @@ const components = {
           color: 'foreground.primary',
           bg: 'interaction.surface.active',
         },
-      },
+      }),
       outline: {
         bg: "transparent",
         borderWidth: "1px",
@@ -411,35 +414,11 @@ const components = {
       error: {
         color: "error"
       }
-    }
+    },
   },
   FormLabel: {
     baseStyle: {
       color: "foreground.secondary",
-    }
-  },
-  IconButton: {
-    baseStyle: {
-      fontSize: "1em",
-      _active: {
-        transitionDuration: "0s",
-      },
-      _focus: {
-        outline: 'none',
-        boxShadow: 'none'
-      },
-      _focusVisible: {
-        outline: 'none',
-        boxShadow: 'focus'
-      }
-    },
-    variants: {
-      solid: {
-        _active: {
-          color: 'linkContrast',
-          bg: 'link',
-        },
-      }
     }
   },
   Menu: {
@@ -525,6 +504,13 @@ const components = {
       content: {
         bg: "background.upper",
         shadow: "popover",
+        _focus: {
+          outline: 'none',
+          shadow: "popover",
+        },
+        _focusVisible: {
+          shadow: "popover",
+        },
         [$arrowBg.variable]: "colors.background.upper",
       }
     }
@@ -633,7 +619,11 @@ const components = {
 }
 
 // Default prop overrides
-Tooltip.defaultProps = { ...Tooltip.defaultProps, openDelay: 500 }
+Tooltip.defaultProps = {
+  ...Tooltip.defaultProps,
+  closeOnMouseDown: true,
+  openDelay: 500
+}
 
 const config = {
   initialColorMode: 'system',
@@ -648,6 +638,18 @@ const styles = {
       lineHeight: '1.5',
       height: '100vh',
       fontFamily: 'default',
+      sx: {
+        "::WebkitScrollbar": {
+          background: "background.basement",
+          width: "0.5rem",
+          height: "0.5rem"
+        },
+        "::WebkitScrollbar-corner": { bg: "background.basement" },
+        "::WebkitScrollbar-thumb": {
+          bg: "background.upper",
+          borderRadius: "full"
+        }
+      }
     },
     "#chakra-toast-manager-top-right, #chakra-toast-manager-top, #chakra-toast-manager-top-left": {
       margin: "3rem 1rem"

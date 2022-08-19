@@ -120,23 +120,24 @@
               notification-list  (get-inbox-items-for-popover @db/dsdb user-page-title)
               navigate-user-page #(router/navigate-page user-page-title)
               num-notifications  (count notification-list)]
-          [:> Popover {:closeOnBlur true}
+          [:> Popover {:closeOnBlur true :size "md"}
 
            [:> PopoverTrigger
             [:> Box {:position "relative"}
              [:> IconButton {"aria-label"   "Notifications"
-                             :variant       "ghost"
-                             :fontSize      "1.3em"
                              :onDoubleClick navigate-user-page
                              :onClick       (fn [e]
                                               (when (.. e -shiftKey)
-                                                (rf/dispatch [:right-sidebar/open-page user-page-title])))
+                                                (rf/dispatch [:right-sidebar/open-item [:node/title user-page-title]])))
                              :icon          (r/as-element [:> BellFillIcon])}]
-             [:> Badge {:position "absolute" :right "-3px" :bottom "-1px" :variant "ghost" :z-index -1} num-notifications]]]
+             (when (> num-notifications 0)
+               [:> Badge {:position "absolute"
+                          :bg "highlight"
+                          :color "highlightContrast"
+                          :right "-3px" :bottom "-1px" :variant "ghost" :zIndex 1} num-notifications])]]
 
 
-           [:> PopoverContent {:maxWidth  "max-content"
-                               :maxHeight "calc(100vh - 4rem)"}
+           [:> PopoverContent {:maxHeight "calc(100vh - 4rem)"}
             [:> PopoverCloseButton]
             [:> PopoverHeader [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])} "Notifications"]]
             [:> Flex {:p             0

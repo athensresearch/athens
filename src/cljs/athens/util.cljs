@@ -1,8 +1,8 @@
 (ns athens.util
   (:require
-    ["/textarea" :as getCaretCoordinates]
     ["/theme/theme" :refer [theme]]
     ["@chakra-ui/react" :refer [createStandaloneToast]]
+    ["textarea-caret" :as getCaretCoordinates]
     [athens.config :as config]
     [athens.electron.utils :as electron.utils]
     [clojure.string :as string]
