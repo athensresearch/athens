@@ -397,7 +397,7 @@
              ff @(rf/subscribe [:feature-flags])
              renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
              renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
-             [ref in-view?]         (useInView {:delay 250})
+             [ref in-view?]         (useInView {:delay 50})
              _ (react/useEffect (fn []
                                   #(on-block-mount)
                                   on-unmount-block)
