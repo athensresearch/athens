@@ -374,7 +374,7 @@
                                        (when comments-enabled?
                                          [:> MenuItem {:children "Add comment"
                                                        :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                       :icon     (r/as-element [:> ChatIcon])}])
+                                                       :icon     (r/as-element [:> ChatBubbleIcon])}])
                                        (when reactions-enabled?
                                          [:<>
                                           [:> MenuDivider]
