@@ -31,6 +31,7 @@
    [athens.common-events.graph.ops       :as graph-ops]
    [athens.common.logging                :as log]
    [athens.common.utils                  :as common.utils]
+   [athens.dates                         :as dates]
    [athens.db                            :as db]
    [athens.reactive                      :as reactive]
    [athens.self-hosted.presence.views    :as presence]
@@ -40,7 +41,8 @@
    [clojure.string                       :as str]
    [goog.functions                       :as gfns]
    [re-frame.core                        :as rf]
-   [reagent.core                         :as r]))
+   [reagent.core                         :as r]
+   [tick.core :as t]))
 
 
 ;; Create default task statuses configuration
@@ -52,7 +54,6 @@
    {:block/string "Blocked"}
    {:block/string "Done"}
    {:block/string "Cancelled"}])
-
 
 
 (defn- internal-representation-allowed-priorities
@@ -192,7 +193,8 @@
             (str "Please provide " prop-title)])]))))
 
 
-(defn inline-task-title
+;; Will need this in future, see Stuart's comment for better understanding here https://discord.com/channels/708122962422792194/1008156785791742002/1009102458695450654
+#_(defn inline-task-title
   [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
   (let [prop-id (str (random-uuid))]
     (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
@@ -303,7 +305,6 @@
       allowed-statuses)))
 
 
-
 (defn task-priority-view
   [parent-block-uid priority-block-uid]
   (let [priority-id        (str (random-uuid))
@@ -357,6 +358,7 @@
          [:option {:value uid}
           string]))]]))
 
+
 (defn find-status-uid
   [status]
   (->> (filter (fn [allowed-status]
@@ -383,12 +385,12 @@
 (defn task-el
   []
   (fn [props]
-    (let [{:keys [parent-block-uid title assignee priority description due-date created-time creator opts status]} props
+    (let [{:keys [parent-block-uid title assignee priority description due-date created-date creator opts status]} props
           {:keys [show-description?
                   show-assignee?
                   show-due-date?
                   show-creator?
-                  show-created-time?
+                  show-created-date?
                   show-priority?
                   show-status?]} opts]
 
@@ -404,8 +406,8 @@
         (when (and show-creator? creator)
           [:> AvatarGroup {:size "xs"}
            [:> Avatar {:name creator}]])
-        (when (and show-created-time? created-time)
-          [:> Text {:fontSize "xs"} created-time])]
+        (when (and show-created-date? created-date)
+          [:> Text {:fontSize "xs"} created-date])]
        (when (and show-due-date? due-date)
          [:> Text {:fontSize "xs"} due-date])
        (when (and show-description? description)
@@ -437,7 +439,12 @@
               ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
               status-uid      (-> props (get ":task/status") :block/uid)
               creator         (-> (:block/create block) :event/auth :presence/id)
-              create-time     (-> (:block/create block) :event/time :time/ts)
+              time            (-> (:block/create block) :event/time :time/ts)
+              created-date    (-> time
+                                  t/instant
+                                  t/date
+                                  (dates/get-day 0)
+                                  :title)
               status (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
                                                                         (get ":task/status")
                                                                         :block/string
@@ -474,7 +481,7 @@
                         :creator      creator
                        ;; Convert edit time to real time
                         :description  (-> props (get ":task/description") :block/string)
-                        :create-time  create-time
+                        :created-date created-date
                         :status       status
                         :due-date     (-> props
                                           (get ":task/due-date")
@@ -484,7 +491,7 @@
                                        :show-description?  true
                                        :show-priority?     true
                                        :show-creator?      true
-                                       :show-created-time? true
+                                       :show-created-date? true
                                        :show-status?       true
                                        :show-due-date?     true}}]]]
             [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}

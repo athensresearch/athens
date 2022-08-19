@@ -1,53 +1,56 @@
 (ns athens.views.blocks.core
-  (:require ["/components/Block/Anchor"                :refer [Anchor]]
-            ["/components/Block/Container"             :refer [Container]]
-            ["/components/Block/PropertyName"          :refer [PropertyName]]
-            ["/components/Block/Reactions"             :refer [Reactions]]
-            ["/components/Block/Toggle"                :refer [Toggle]]
-            ["/components/Icons/Icons"                 :refer [ArchiveIcon
-                                                               BlockEmbedIcon
-                                                               ChatBubbleIcon TextIcon]]
-            ["/components/References/InlineReferences" :refer [ReferenceBlock
-                                                               ReferenceGroup]]
-            ["@chakra-ui/react"                        :refer [Breadcrumb
-                                                               BreadcrumbItem
-                                                               BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
-            ["react"                                   :as react]
-            ["react-intersection-observer"             :refer [useInView]]
-            [athens.common-db                          :as common-db]
-            [athens.common-events.graph.ops            :as graph-ops]
-            [athens.common.logging                     :as log]
-            [athens.db                                 :as db]
-            [athens.electron.images                    :as images]
-            [athens.electron.utils                     :as electron.utils]
-            [athens.events.dragging                    :as drag.events]
-            [athens.events.inline-refs                 :as inline-refs.events]
-            [athens.events.linked-refs                 :as linked-ref.events]
-            [athens.events.selection                   :as select-events]
-            [athens.parse-renderer                     :as parse-renderer]
-            [athens.reactive                           :as reactive]
-            [athens.router                             :as router]
-            [athens.self-hosted.presence.views         :as presence]
-            [athens.subs.dragging                      :as drag.subs]
-            [athens.subs.inline-refs                   :as inline-refs.subs]
-            [athens.subs.linked-refs                   :as linked-ref.subs]
-            [athens.subs.selection                     :as select-subs]
-            [athens.time-controls                      :as time-controls]
-            [athens.types.core                         :as types] ;; need to require it for multimethod participation
-            [athens.types.default.view]
-            [athens.types.dispatcher                   :as block-type-dispatcher] ;; need to require it for multimethod participation
-            [athens.types.tasks.view]
-            [athens.util                               :as util]
-            [athens.views.blocks.bullet                :as block-bullet]
-            [athens.views.blocks.context-menu          :as ctx-menu]
-            [athens.views.blocks.drop-area-indicator   :as drop-area-indicator]
-            [athens.views.blocks.reactions             :as block-reaction]
-            [athens.views.comments.core                :as comments]
-            [athens.views.comments.inline              :as inline-comments]
-            [athens.views.notifications.actions        :as actions]
-            [com.rpl.specter                           :as s]
-            [re-frame.core                             :as rf]
-            [reagent.core                              :as r]))
+  (:require
+   ["/components/Block/Anchor"                :refer [Anchor]]
+   ["/components/Block/Container"             :refer [Container]]
+   ["/components/Block/PropertyName"          :refer [PropertyName]]
+   ["/components/Block/Reactions"             :refer [Reactions]]
+   ["/components/Block/Toggle"                :refer [Toggle]]
+   ["/components/Icons/Icons"                 :refer [ArchiveIcon
+                                                      BlockEmbedIcon
+                                                      ChatBubbleIcon TextIcon]]
+   ["/components/References/InlineReferences" :refer [ReferenceBlock
+                                                      ReferenceGroup]]
+   ["@chakra-ui/react"                        :refer [Breadcrumb
+                                                      BreadcrumbItem
+                                                      BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
+   ["react"                                   :as react]
+   ["react-intersection-observer"             :refer [useInView]]
+   [athens.common-db                          :as common-db]
+   [athens.common-events.graph.ops            :as graph-ops]
+   [athens.common.logging                     :as log]
+   [athens.db                                 :as db]
+   [athens.electron.images                    :as images]
+   [athens.electron.utils                     :as electron.utils]
+   [athens.events.dragging                    :as drag.events]
+   [athens.events.inline-refs                 :as inline-refs.events]
+   [athens.events.linked-refs                 :as linked-ref.events]
+   [athens.events.selection                   :as select-events]
+   [athens.parse-renderer                     :as parse-renderer]
+   [athens.reactive                           :as reactive]
+   [athens.router                             :as router]
+   [athens.self-hosted.presence.views         :as presence]
+   [athens.subs.dragging                      :as drag.subs]
+   [athens.subs.inline-refs                   :as inline-refs.subs]
+   [athens.subs.linked-refs                   :as linked-ref.subs]
+   [athens.subs.selection                     :as select-subs]
+   [athens.time-controls                      :as time-controls]
+   [athens.types.core                         :as types]
+    ;; need to require it for multimethod participation
+   [athens.types.default.view]
+   [athens.types.dispatcher                   :as block-type-dispatcher]
+    ;; need to require it for multimethod participation
+   [athens.types.tasks.view]
+   [athens.util                               :as util]
+   [athens.views.blocks.bullet                :as block-bullet]
+   [athens.views.blocks.context-menu          :as ctx-menu]
+   [athens.views.blocks.drop-area-indicator   :as drop-area-indicator]
+   [athens.views.blocks.reactions             :as block-reaction]
+   [athens.views.comments.core                :as comments]
+   [athens.views.comments.inline              :as inline-comments]
+   [athens.views.notifications.actions        :as actions]
+   [com.rpl.specter                           :as s]
+   [re-frame.core                             :as rf]
+   [reagent.core                              :as r]))
 
 
 ;; Components
