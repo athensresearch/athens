@@ -1,50 +1,53 @@
 (ns athens.views.blocks.core
-  (:require
-    ["/components/Block/Anchor"                :refer [Anchor]]
-    ["/components/Block/Container"             :refer [Container]]
-    ["/components/Block/PropertyName"          :refer [PropertyName]]
-    ["/components/Block/Reactions"             :refer [Reactions]]
-    ["/components/Block/Toggle"                :refer [Toggle]]
-    ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatBubbleIcon ArchiveIcon]]
-    ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [MenuDivider Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuItem MenuList VStack]]
-    ["react"                                   :as react]
-    ["react-intersection-observer"             :refer [useInView]]
-    [athens.common-db                          :as common-db]
-    [athens.common.logging                     :as log]
-    [athens.db                                 :as db]
-    [athens.electron.images                    :as images]
-    [athens.electron.utils                     :as electron.utils]
-    [athens.events.dragging                    :as drag.events]
-    [athens.events.inline-refs                 :as inline-refs.events]
-    [athens.events.linked-refs                 :as linked-ref.events]
-    [athens.events.selection                   :as select-events]
-    [athens.parse-renderer                     :as parse-renderer]
-    [athens.reactive                           :as reactive]
-    [athens.router                             :as router]
-    [athens.self-hosted.presence.views         :as presence]
-    [athens.subs.dragging                      :as drag.subs]
-    [athens.subs.inline-refs                   :as inline-refs.subs]
-    [athens.subs.linked-refs                   :as linked-ref.subs]
-    [athens.subs.selection                     :as select-subs]
-    [athens.time-controls                      :as time-controls]
-    [athens.types.core                         :as types]
-    ;; need to require it for multimethod participation
-    [athens.types.default.view]
-    [athens.types.dispatcher                   :as block-type-dispatcher]
-    ;; need to require it for multimethod participation
-    [athens.types.tasks.view]
-    [athens.util                               :as util]
-    [athens.views.blocks.bullet                :as block-bullet]
-    [athens.views.blocks.context-menu          :as ctx-menu]
-    [athens.views.blocks.drop-area-indicator   :as drop-area-indicator]
-    [athens.views.blocks.reactions             :as block-reaction]
-    [athens.views.comments.core                :as comments]
-    [athens.views.comments.inline              :as inline-comments]
-    [athens.views.notifications.actions        :as actions]
-    [com.rpl.specter                           :as s]
-    [re-frame.core                             :as rf]
-    [reagent.core                              :as r]))
+  (:require ["/components/Block/Anchor"                :refer [Anchor]]
+            ["/components/Block/Container"             :refer [Container]]
+            ["/components/Block/PropertyName"          :refer [PropertyName]]
+            ["/components/Block/Reactions"             :refer [Reactions]]
+            ["/components/Block/Toggle"                :refer [Toggle]]
+            ["/components/Icons/Icons"                 :refer [ArchiveIcon
+                                                               BlockEmbedIcon
+                                                               ChatBubbleIcon TextIcon]]
+            ["/components/References/InlineReferences" :refer [ReferenceBlock
+                                                               ReferenceGroup]]
+            ["@chakra-ui/react"                        :refer [Breadcrumb
+                                                               BreadcrumbItem
+                                                               BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
+            ["react"                                   :as react]
+            ["react-intersection-observer"             :refer [useInView]]
+            [athens.common-db                          :as common-db]
+            [athens.common-events.graph.ops            :as graph-ops]
+            [athens.common.logging                     :as log]
+            [athens.db                                 :as db]
+            [athens.electron.images                    :as images]
+            [athens.electron.utils                     :as electron.utils]
+            [athens.events.dragging                    :as drag.events]
+            [athens.events.inline-refs                 :as inline-refs.events]
+            [athens.events.linked-refs                 :as linked-ref.events]
+            [athens.events.selection                   :as select-events]
+            [athens.parse-renderer                     :as parse-renderer]
+            [athens.reactive                           :as reactive]
+            [athens.router                             :as router]
+            [athens.self-hosted.presence.views         :as presence]
+            [athens.subs.dragging                      :as drag.subs]
+            [athens.subs.inline-refs                   :as inline-refs.subs]
+            [athens.subs.linked-refs                   :as linked-ref.subs]
+            [athens.subs.selection                     :as select-subs]
+            [athens.time-controls                      :as time-controls]
+            [athens.types.core                         :as types] ;; need to require it for multimethod participation
+            [athens.types.default.view]
+            [athens.types.dispatcher                   :as block-type-dispatcher] ;; need to require it for multimethod participation
+            [athens.types.tasks.view]
+            [athens.util                               :as util]
+            [athens.views.blocks.bullet                :as block-bullet]
+            [athens.views.blocks.context-menu          :as ctx-menu]
+            [athens.views.blocks.drop-area-indicator   :as drop-area-indicator]
+            [athens.views.blocks.reactions             :as block-reaction]
+            [athens.views.comments.core                :as comments]
+            [athens.views.comments.inline              :as inline-comments]
+            [athens.views.notifications.actions        :as actions]
+            [com.rpl.specter                           :as s]
+            [re-frame.core                             :as rf]
+            [reagent.core                              :as r]))
 
 
 ;; Components
@@ -300,6 +303,15 @@
                  [ref-comp block-el block']]))]))])))
 
 
+(defn convert-anon-block-to-task
+  [block]
+  (prn block)
+  (let [{:keys [uid]} block]
+    (rf/dispatch [:properties/update-in [:block/uid uid] [":entity/type"]
+                  (fn [db uid]
+                    [(graph-ops/build-block-save-op db uid "[[athens/task]]")])])))
+
+
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([block]
@@ -321,6 +333,7 @@
          drag-target              (rf/subscribe [::drag.subs/drag-target block-uid])
          selected?                (rf/subscribe [::select-subs/selected? block-uid])
          present-user             (rf/subscribe [:presence/has-presence block-uid])
+         convert-to-task          #(convert-anon-block-to-task block)
          selected-items           (rf/subscribe [::select-subs/items])
          feature-flags            (rf/subscribe [:feature-flags])
          current-user             (rf/subscribe [:presence/current-user])
@@ -363,6 +376,9 @@
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
                                       [:> MenuList
+                                       [:> MenuItem {:children "convert to task"
+                                                     :icon     (r/as-element [:> BlockEmbedIcon])
+                                                     :onClick  convert-to-task}]
                                        [:> MenuItem {:children (if (> (count @selected-items) 1)
                                                                  "Copy selected block refs"
                                                                  "Copy block ref")
