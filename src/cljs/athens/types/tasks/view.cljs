@@ -1,43 +1,46 @@
 (ns athens.types.tasks.view
   "Views for Athens Tasks"
   (:require
-    ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
-    ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
-    ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
-    ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
-    ["@chakra-ui/react"                   :refer [FormControl
-                                                  FormLabel
-                                                  Text
-                                                  AvatarGroup
-                                                  Avatar
-                                                  Divider
-                                                  Checkbox
-                                                  Checkbox
-                                                  Box
-                                                  Button
-                                                  Badge
-                                                  FormErrorMessage
-                                                  FormHelperText
-                                                  Select
-                                                  HStack
-                                                  VStack]]
-    [athens.common-db                     :as common-db]
-    [athens.common-events                 :as common-events]
-    [athens.common-events.bfs             :as bfs]
-    [athens.common-events.graph.composite :as composite]
-    [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common.logging                :as log]
-    [athens.common.utils                  :as common.utils]
-    [athens.db                            :as db]
-    [athens.reactive                      :as reactive]
-    [athens.self-hosted.presence.views    :as presence]
-    [athens.types.core                    :as types]
-    [athens.types.dispatcher              :as dispatcher]
-    [athens.views.blocks.editor           :as editor]
-    [clojure.string                       :as str]
-    [goog.functions                       :as gfns]
-    [re-frame.core                        :as rf]
-    [reagent.core                         :as r]))
+   ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
+   ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
+   ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
+   ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
+   ["/components/Icons/Icons" :refer [ChevronDownIcon]]
+   ["@chakra-ui/react"                   :refer [FormControl
+                                                 FormLabel
+                                                 Text
+                                                 AvatarGroup
+                                                 Avatar
+                                                 Checkbox
+                                                 Menu
+                                                 MenuButton
+                                                 MenuList
+                                                 MenuItem
+                                                 Box
+                                                 Button
+                                                 Badge
+                                                 FormErrorMessage
+                                                 FormHelperText
+                                                 Select
+                                                 HStack
+                                                 VStack]]
+   [athens.common-db                     :as common-db]
+   [athens.common-events                 :as common-events]
+   [athens.common-events.bfs             :as bfs]
+   [athens.common-events.graph.composite :as composite]
+   [athens.common-events.graph.ops       :as graph-ops]
+   [athens.common.logging                :as log]
+   [athens.common.utils                  :as common.utils]
+   [athens.db                            :as db]
+   [athens.reactive                      :as reactive]
+   [athens.self-hosted.presence.views    :as presence]
+   [athens.types.core                    :as types]
+   [athens.types.dispatcher              :as dispatcher]
+   [athens.views.blocks.editor           :as editor]
+   [clojure.string                       :as str]
+   [goog.functions                       :as gfns]
+   [re-frame.core                        :as rf]
+   [reagent.core                         :as r]))
 
 
 ;; Create default task statuses configuration
@@ -309,7 +312,6 @@
         priority-string    (:block/string priority-block "(())")
         priority-uid       (subs priority-string 2 (- (count priority-string) 2))]
     [:> FormControl {:is-required true}
-     [:> HStack {:spacing 4}
       [:> FormLabel {:html-for priority-id
                      :w        "9rem"}
        "Task priority"]
@@ -323,10 +325,10 @@
                                    (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
        (doall
-         (for [{:block/keys [uid string]} allowed-priorities]
-           ^{:key uid}
-           [:option {:value uid}
-            string]))]]]))
+        (for [{:block/keys [uid string]} allowed-priorities]
+          ^{:key uid}
+          [:option {:value uid}
+           string]))]]))
 
 
 (defn task-status-view
@@ -337,23 +339,23 @@
         status-string    (:block/string status-block "(())")
         status-uid       (subs  status-string 2 (- (count status-string) 2))]
     [:> FormControl {:is-required true}
-     [:> HStack {:spacing 4}
-      [:> FormLabel {:html-for status-id
-                     :w        "9rem"}
-       "Task Status"]
-      [:> Select {:id          status-id
-                  :value       status-uid
-                  :placeholder "Select a status"
-                  :on-change   (fn [e]
-                                 (let [new-status (-> e .-target .-value)
-                                       status-ref (str "((" new-status "))")]
-                                   (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
-                                                 (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}
-       (doall
-         (for [{:block/keys [uid string]} allowed-statuses]
-           ^{:key uid}
-           [:option {:value uid}
-            string]))]]]))
+     [:> FormLabel {:html-for status-id
+                    :w        "9rem"}
+      "Task Status"]
+     [:> Select {:id          status-id
+                 :value       status-uid
+                 :placeholder "Select a status"
+                 :size "sm"
+                 :on-change   (fn [e]
+                                (let [new-status (-> e .-target .-value)
+                                      status-ref (str "((" new-status "))")]
+                                  (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+                                                (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}
+      (doall
+       (for [{:block/keys [uid string]} allowed-statuses]
+         ^{:key uid}
+         [:option {:value uid}
+          string]))]]))
 
 (defn find-status-uid
   [status]
@@ -381,19 +383,17 @@
 (defn task-el
   []
   (fn [props]
-    (let [{:keys [parent-block-uid title assignee priority description due-date created-date creator opts status]} props
+    (let [{:keys [parent-block-uid title assignee priority description due-date created-time creator opts status]} props
           {:keys [show-description?
                   show-assignee?
                   show-due-date?
                   show-creator?
-                  show-created-date?
+                  show-created-time?
                   show-priority?
-                  show-status?]} opts
-          isChecked (is-checked-fn status)]
+                  show-status?]} opts]
 
       [:> VStack {:align "stretch" :flex 1}
        [:> HStack {:alignSelf "flex-start"}
-        [:> Checkbox {:size "lg" :onChange #(on-update-checkbox parent-block-uid isChecked) :isChecked isChecked}]
         [:> Text title]
         (when (and show-priority? priority)
           [:> Badge {:size "sm" :variant "primary"}
@@ -404,8 +404,8 @@
         (when (and show-creator? creator)
           [:> AvatarGroup {:size "xs"}
            [:> Avatar {:name creator}]])
-        (when (and show-created-date? created-date)
-          [:> Text {:fontSize "xs"} created-date])]
+        (when (and show-created-time? created-time)
+          [:> Text {:fontSize "xs"} created-time])]
        (when (and show-due-date? due-date)
          [:> Text {:fontSize "xs"} due-date])
        (when (and show-description? description)
@@ -437,70 +437,89 @@
               ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
               status-uid      (-> props (get ":task/status") :block/uid)
               creator         (-> (:block/create block) :event/auth :presence/id)
-              time            (-> (:block/create block) :event/time :time/ts)]
-          [:> ModalInput {:placement "bottom"}
-           [:> ModalInputTrigger
-            [:> Box {:as Button :gridArea "content" :mr 4 :alignSelf "stretch" :whiteSpace "normal" :justifyContent "flexStart" :textAlign "start" :fontWeight "normal" :height "auto" :p 2 :mb 1 :variant "outline"}
-             [task-el {:parent-block-uid block-uid
-                       :title       (-> props (get ":task/title") :block/string)
-                       :assignee    (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
-                       :priority    (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
-                                                                                       (get ":task/priority")
-                                                                                       :block/string
-                                                                                       (common-db/strip-markup "((" "))"))])
-                                        :block/string)
-                       :status      (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
-                                                                                       (get ":task/status")
-                                                                                       :block/string
-                                                                                       (common-db/strip-markup "((" "))"))])
-                                        :block/string)
-                       :creator      creator
+              create-time     (-> (:block/create block) :event/time :time/ts)
+              status (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
+                                                                        (get ":task/status")
+                                                                        :block/string
+                                                                        (common-db/strip-markup "((" "))"))])
+                         :block/string)
+              isChecked (is-checked-fn status)]
+          [:> HStack {:alignSelf "stretch"
+                      :gridArea "content"
+                      :spacing 0}
+           [:> Menu
+            [:> Button {:as MenuButton
+                        :onClick #(.. % stopPropagation) :variant "ghost" :display "flex" :size "md" :alignItems "center"
+                        :rightIcon (r/as-element [:> ChevronDownIcon {:color "foreground.secondary"}])}
+             [:> Checkbox {:size "md"
+                           :onClick #(.. % stopPropagation)
+                           :onChange #(on-update-checkbox block-uid isChecked) :isChecked isChecked}]]
+            [:> MenuList {:onMouseDown #(.. % stopPropagation)
+                          :onClick #(.. % stopPropagation)}
+             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "To Do"]
+             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "Done"]]]
+           [:> ModalInput {:placement "bottom"}
+            [:> ModalInputTrigger
+             [:> Box {:as Button
+                      :flex "1 1 100%"
+                      :mr 4 :whiteSpace "normal" :justifyContent "flexStart" :textAlign "start" :fontWeight "normal" :height "auto" :p 2 :mb 1 :variant "outline"}
+              [task-el {:parent-block-uid block-uid
+                        :title            (-> props (get ":task/title") :block/string)
+                        :assignee         (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
+                        :priority         (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
+                                                                                             (get ":task/priority")
+                                                                                             :block/string
+                                                                                             (common-db/strip-markup "((" "))"))])
+                                              :block/string)
+                        :creator      creator
                        ;; Convert edit time to real time
-                       :created-date "July 22, 1941"
-                       :description  (-> props (get ":task/description") :block/string)
-                       :due-date     (-> props
-                                         (get ":task/due-date")
-                                         :block/string
-                                         (common-db/strip-markup "[[" "]]"))
-                       :opts         {:show-assignee?     true
-                                      :show-description?  true
-                                      :show-priority?     true
-                                      :show-creator?      true
-                                      :show-created-date? true
-                                      :show-status?       true
-                                      :show-due-date?     true}}]]]
-           [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
-            [:> VStack {:spacing 4
-                        :px 4
-                        :pt 2}
-             [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]
-             [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]
-             [task-priority-view block-uid priority-uid]
-             [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
+                        :description  (-> props (get ":task/description") :block/string)
+                        :create-time  create-time
+                        :status       status
+                        :due-date     (-> props
+                                          (get ":task/due-date")
+                                          :block/string
+                                          (common-db/strip-markup "[[" "]]"))
+                        :opts         {:show-assignee?     true
+                                       :show-description?  true
+                                       :show-priority?     true
+                                       :show-creator?      true
+                                       :show-created-time? true
+                                       :show-status?       true
+                                       :show-due-date?     true}}]]]
+            [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
+             [:> VStack {:spacing 4 :px 4 :pt 2}
+              [:> HStack
+               [task-status-view block-uid status-uid]
+               [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]]
+              [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
+              [:> HStack
+               [task-priority-view block-uid priority-uid]
+               [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]]
              ;; Making assumption that for now we can add due date manually without date-picker.
-             [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
-             [task-status-view block-uid status-uid]
-             [:> Text creator-uid]]]]))))
+              [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
+
+              [:> Text creator-uid]]]]]))))
 
 
-  (supported-transclusion-scopes
-    [_this])
+          (supported-transclusion-scopes
+           [_this])
 
 
-  (transclusion-view
-    [_this _block-el _block-uid _callback _transclusion-scope])
+          (transclusion-view
+           [_this _block-el _block-uid _callback _transclusion-scope])
 
 
-  (zoomed-in-view
-    [_this _block-data _callbacks])
+          (zoomed-in-view
+           [_this _block-data _callbacks])
 
 
-  (supported-breadcrumb-styles
-    [_this])
+          (supported-breadcrumb-styles
+           [_this])
 
 
-  (breadcrumbs-view
-    [_this _block-data _callbacks _breadcrumb-style]))
+          (breadcrumbs-view
+           [_this _block-data _callbacks _breadcrumb-style]))
 
 
 (defmethod dispatcher/block-type->protocol "[[athens/task]]" [_k _args-map]
