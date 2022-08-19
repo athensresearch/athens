@@ -95,5 +95,5 @@
       [db-item {:db db
                 :is-disabled is-disabled
                 :on-click #(dispatch [:db-picker/select-db db])
-                :on-remove remove-db-click-handler}])))
+                :on-remove (when-not (= :in-memory (:type db)) remove-db-click-handler)}])))
 
