@@ -12,7 +12,10 @@
                                                  AvatarGroup
                                                  Avatar
                                                  Checkbox
+                                                 ButtonGroup
                                                  Menu
+                                                 MenuOptionGroup
+                                                 MenuItemOption
                                                  MenuDivider
                                                  MenuButton
                                                  MenuList
@@ -269,6 +272,81 @@
            [:> FormHelperText
             (str "Please provide " prop-title)])]))))
 
+(defn inline-task-title-2
+  [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
+  (let [prop-id (str (random-uuid))]
+    (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
+      (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
+            prop-str            (or (:block/string prop-block) "")
+            local-value         (r/atom prop-str)
+            invalid-prop-str?   (and (str/blank? prop-str)
+                                     (not (nil? prop-str)))
+            save-fn             (fn
+                                  ([]
+                                   (log/debug prop-name "save-fn" (pr-str @local-value))
+                                   (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
+                                     (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
+                                  ([e]
+                                   (let [new-value (-> e .-target .-value)]
+                                     (log/debug prop-name "save-fn" (pr-str new-value))
+                                     (reset! local-value new-value)
+                                     (when (#{":task/title"
+                                              ":task/assignee"
+                                              ":task/description"
+                                              ":task/due-date"} prop-name)
+                                       (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                                     (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
+            update-fn           #(do
+                                   (when-not (= prop-str %)
+                                     (log/debug prop-name "update-fn:" (pr-str %))
+                                     (reset! local-value %)))
+            idle-fn             (gfns/debounce #(do
+                                                  (log/debug prop-name "idle-fn" (pr-str @local-value))
+                                                  (save-fn))
+                                               2000)
+            read-value          local-value
+            show-edit?          (r/atom false)
+            custom-key-handlers {:enter-handler (if multiline?
+                                                  editor/enter-handler-new-line
+                                                  (fn [_uid _d-key-down]
+                                                    ;; TODO dispatch save and jump to next input
+                                                    (println "TODO dispatch save and jump to next input")
+                                                    (update-fn @local-value)))
+                                 :tab-handler   (fn [_uid _embed-id _d-key-down]
+                                                  ;; TODO implement focus on next input
+                                                  (update-fn @local-value))}
+            state-hooks         (merge {:save-fn                 save-fn
+                                        :idle-fn                 idle-fn
+                                        :update-fn               update-fn
+                                        :read-value              read-value
+                                        :show-edit?              show-edit?
+                                        :default-verbatim-paste? true
+                                        :keyboard-navigation?    false}
+                                       custom-key-handlers)]
+        [editor/block-editor {:block/uid (or prop-block-uid
+                                               ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                             (str "tmp-" (subs prop-name
+                                                               (inc (.indexOf prop-name "/")))
+                                                  "-uid-" (common.utils/gen-block-uid)))}
+         state-hooks]
+        #_ [:> FormControl {:is-required required?
+                         :is-invalid  invalid-prop-str?}
+         [:> FormLabel {:html-for prop-id}
+          prop-title]
+         [:> BlockFormInput
+          ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
+
+          [presence/inline-presence-el prop-block-uid]]
+
+         (if invalid-prop-str?
+           [:> FormErrorMessage
+            (str prop-title " is " (if required?
+                                     "required"
+                                     "empty"))]
+           [:> FormHelperText
+            (str "Please provide " prop-title)])]))))
+
 
 (defn- find-allowed-priorities
   []
@@ -357,6 +435,30 @@
        (for [{:block/keys [uid string]} allowed-statuses]
          ^{:key uid}
          [:option {:value uid}
+          string]))]]))
+
+
+(defn task-status-menulist
+  [parent-block-uid status-block-uid]
+  (let [; status-id        (str (random-uuid))
+        status-block     (reactive/get-reactive-block-document [:block/uid status-block-uid])
+        allowed-statuses (find-allowed-statuses)
+        status-string    (:block/string status-block "(())")
+        status-uid       (subs  status-string 2 (- (count status-string) 2))
+        on-choose-item   (fn [status]
+                           (let [new-status status
+                                 status-ref (str "((" new-status "))")]
+                             (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+                                           (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))]
+    (prn status-string)
+    [:> MenuList
+     [:> MenuOptionGroup {:defaultValue (str "((" status-uid "))")
+                          :type "radio"
+                          :onChange on-choose-item}
+      (doall
+       (for [{:block/keys [uid string]} allowed-statuses]
+         ^{:key uid}
+         [:> MenuItemOption {:value uid}
           string]))]]))
 
 
@@ -460,76 +562,73 @@
 
               isChecked (is-checked-fn status)]
           [:> HStack {:alignSelf "stretch"
+                      :as ButtonGroup
+                      :borderRadius "md"
+                      :borderWidth "1px"
+                      :borderStyle "solid"
+                      :borderColor "separator.divider"
+                      :variant "ghost"
+                      :isAttached true
                       :gridArea "content"
+                      :size "sm"
+                      :mb 1
                       :spacing 0}
            [:> Menu {:size "sm"}
-            [:> Button {:as MenuButton
-                        :onClick #(.. % stopPropagation)
-                        :variant "ghost"
-                        :display "flex"
-                        :size "sm"
-                        :alignItems "center"
-                        :rightIcon (r/as-element [:> ChevronDownIcon {:color "foreground.secondary"}])}
+            [:> MenuButton {:as Button
+                            :onClick #(.. % stopPropagation)
+                            :pr 1
+                            :variant "ghost"
+                            :rightIcon (r/as-element [:> ChevronDownIcon {:boxSize 4 :color "foreground.secondary"}])}
              ;; Checkbox will need to be something fancier that can show the status more precisely
              ;; e.g. "X" for cancelled status
              [:> Checkbox {:size "md"
                            :onClick #(.. % stopPropagation)
                            :onMouseDown #(.. % stopPropagation)
                            :onChange #(on-update-checkbox block-uid isChecked) :isChecked isChecked}]]
-            [:> MenuList {:onMouseDown #(.. % stopPropagation)
-                          :onClick #(.. % stopPropagation)}
-             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "Blocked"]
-             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "To Do"]
-             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "Doing"]
-             [:> MenuDivider]
-             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "Done"]
-             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "Cancelled"]]]
-           [:> ModalInput {:placement "bottom"}
+            [task-status-menulist block-uid status-uid]]
+           [:> ModalInput {:placement "bottom" :isLazy true}
             [:> ModalInputTrigger
-             [:> Box {:as Button
-                      :flex "1 1 100%"
-                      :mr 4
-                      :whiteSpace "normal"
-                      :alignItems "center"
-                      :justifyContent "flexStart"
-                      :textAlign "start"
-                      :fontWeight "normal"
-                      :height "auto"
-                      :mb 1
-                      :variant "outline"}
-              [:> HStack {:alignSelf "flex-start"}
-               [:> Text title]
-               (when (and show-priority? priority)
-                 [:> Badge {:size "sm" :variant "primary"}
-                  priority])
-               (when (and show-assignee? assignee)
-                 [:> AvatarGroup {:size "xs"}
-                  [:> Avatar {:name assignee}]])
-               (when (and show-creator? creator)
-                 [:> AvatarGroup {:size "xs"}
-                  [:> Avatar {:name creator}]])
-               (when (and show-created-date? created-date)
-                 [:> Text {:fontSize "xs"} created-date])]
+             [:> Button {:flex "1 1 100%"
+                         :whiteSpace "normal"
+                         :alignItems "center"
+                         :pl 1
+                         :justifyContent "flex-start"
+                         :textAlign "start"
+                         :fontWeight "normal"}
+              ;; [:> HStack {:alignSelf "flex-start"}
+              #_ [:> Text {:flex "1 1 100%"} title]
+              [inline-task-title-2 block-uid title-uid title-uid _callbacks]
+              (when (and show-priority? priority)
+                [:> Badge {:size "sm" :variant "primary"}
+                 priority])
+              (when (and show-assignee? assignee)
+                [:> AvatarGroup {:size "xs"}
+                 [:> Avatar {:name assignee}]])
+              (when (and show-creator? creator)
+                [:> AvatarGroup {:size "xs"}
+                 [:> Avatar {:name creator}]])
+              (when (and show-created-date? created-date)
+                [:> Text {:fontSize "xs"} created-date])
               (when (and show-due-date? due-date)
                 [:> Text {:fontSize "xs"} due-date])
               (when (and show-description? description)
                 [:> Text {:fontSize "sm"  :color "foreground.secondary"}
                  description])]]
-             [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
-              [:> VStack {:spacing 4
-                          :px 4
-                          :pt 2}
-               [:> HStack
-                [task-status-view block-uid status-uid]
-                [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]]
-               [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
-               [:> HStack
-                [task-priority-view block-uid priority-uid]
-                [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]]
+            [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
+             [:> VStack {:spacing 4
+                         :px 4
+                         :pt 2}
+              [:> HStack
+               [task-status-view block-uid status-uid]
+               [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]]
+              [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
+              [:> HStack
+               [task-priority-view block-uid priority-uid]
+               [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]]
              ;; Making assumption that for now we can add due date manually without date-picker.
-               [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
+              [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
 
-               [:> Text creator-uid]]]]]))))
+              [:> Text creator-uid]]]]]))))
 
 
           (supported-transclusion-scopes
