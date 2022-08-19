@@ -5,7 +5,7 @@
     [athens.electron.db-menu.db-list-item :refer [db-list-item]]
     [athens.electron.db-modal :as db-modal]
     [athens.electron.dialogs :as dialogs]
-    [athens.electron.utils               :as electron.utils]
+    [athens.electron.utils :as electron.utils]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]))
 
@@ -14,7 +14,6 @@
 
 (defn current-db-tools
   ([{:keys [db]} all-dbs merge-open?]
-   (prn db all-dbs)
    (when-not (:is-remote db)
      [:> ButtonGroup {:size "xs"
                       :pr 4
