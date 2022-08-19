@@ -38,7 +38,8 @@
     [clojure.string                       :as str]
     [goog.functions                       :as gfns]
     [re-frame.core                        :as rf]
-    [reagent.core                         :as r]))
+    [reagent.core                         :as r]
+    [tick.core :as t]))
 
 
 ;; Create default task statuses configuration
@@ -456,7 +457,11 @@
                                                                                        (common-db/strip-markup "((" "))"))])
                                         :block/string)
                        :creator      creator
-                       :created-date (dates/get-day time 0)
+                       :created-date (-> time
+                                         t/instant
+                                         t/date
+                                         (dates/get-day 0)
+                                         :title)
                        :description  (-> props (get ":task/description") :block/string)
                        :due-date     (-> props
                                          (get ":task/due-date")
