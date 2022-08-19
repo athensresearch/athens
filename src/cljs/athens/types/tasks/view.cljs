@@ -13,6 +13,7 @@
                                                  Avatar
                                                  Checkbox
                                                  Menu
+                                                 MenuDivider
                                                  MenuButton
                                                  MenuList
                                                  MenuItem
@@ -382,37 +383,20 @@
   (contains? #{"Done" "Cancelled"} status))
 
 
-(defn task-el
-  []
-  (fn [props]
-    (let [{:keys [parent-block-uid title assignee priority description due-date created-date creator opts status]} props
-          {:keys [show-description?
-                  show-assignee?
-                  show-due-date?
-                  show-creator?
-                  show-created-date?
-                  show-priority?
-                  show-status?]} opts]
-
-      [:> VStack {:align "stretch" :flex 1}
-       [:> HStack {:alignSelf "flex-start"}
-        [:> Text title]
-        (when (and show-priority? priority)
-          [:> Badge {:size "sm" :variant "primary"}
-           priority])
-        (when (and show-assignee? assignee)
-          [:> AvatarGroup {:size "xs"}
-           [:> Avatar {:name assignee}]])
-        (when (and show-creator? creator)
-          [:> AvatarGroup {:size "xs"}
-           [:> Avatar {:name creator}]])
-        (when (and show-created-date? created-date)
-          [:> Text {:fontSize "xs"} created-date])]
-       (when (and show-due-date? due-date)
-         [:> Text {:fontSize "xs"} due-date])
-       (when (and show-description? description)
-         [:> Text {:fontSize "sm"  :color "foreground.secondary"}
-          description])])))
+;; (defn task-el
+;;   []
+;;   (fn [props]
+;;     (let [{:keys [parent-block-uid title assignee priority description due-date created-date creator opts status]} props
+;;           {:keys [show-description?
+;;                   show-assignee?
+;;                   show-due-date?
+;;                   show-creator?
+;;                   show-created-date?
+;;                   show-priority?
+;;                   show-status?]} opts]
+;; 
+;;       [:<>
+;;        )))
 
 
 (defrecord TaskView
@@ -450,63 +434,102 @@
                                                                         :block/string
                                                                         (common-db/strip-markup "((" "))"))])
                          :block/string)
+              title            (-> props (get ":task/title") :block/string)
+              assignee         (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
+              priority         (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
+                                                                                  (get ":task/priority")
+                                                                                  :block/string
+                                                                                  (common-db/strip-markup "((" "))"))])
+                                   :block/string)
+              creator      creator
+              description  (-> props (get ":task/description") :block/string)
+              created-date created-date
+              status       status
+              due-date     (-> props
+                               (get ":task/due-date")
+                               :block/string
+                               (common-db/strip-markup "[[" "]]"))
+
+              show-assignee?     true
+              show-description?  true
+              show-priority?     true
+              show-creator?      true
+              show-created-date? true
+              show-status?       true
+              show-due-date?     true
+
               isChecked (is-checked-fn status)]
           [:> HStack {:alignSelf "stretch"
                       :gridArea "content"
                       :spacing 0}
-           [:> Menu
+           [:> Menu {:size "sm"}
             [:> Button {:as MenuButton
-                        :onClick #(.. % stopPropagation) :variant "ghost" :display "flex" :size "md" :alignItems "center"
+                        :onClick #(.. % stopPropagation)
+                        :variant "ghost"
+                        :display "flex"
+                        :size "sm"
+                        :alignItems "center"
                         :rightIcon (r/as-element [:> ChevronDownIcon {:color "foreground.secondary"}])}
+             ;; Checkbox will need to be something fancier that can show the status more precisely
+             ;; e.g. "X" for cancelled status
              [:> Checkbox {:size "md"
                            :onClick #(.. % stopPropagation)
+                           :onMouseDown #(.. % stopPropagation)
                            :onChange #(on-update-checkbox block-uid isChecked) :isChecked isChecked}]]
             [:> MenuList {:onMouseDown #(.. % stopPropagation)
                           :onClick #(.. % stopPropagation)}
+             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "Blocked"]
              [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "To Do"]
-             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "Done"]]]
+             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "Doing"]
+             [:> MenuDivider]
+             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "Done"]
+             [:> MenuItem {:onClick #(on-update-checkbox block-uid isChecked)} "Cancelled"]]]
            [:> ModalInput {:placement "bottom"}
             [:> ModalInputTrigger
              [:> Box {:as Button
                       :flex "1 1 100%"
-                      :mr 4 :whiteSpace "normal" :justifyContent "flexStart" :textAlign "start" :fontWeight "normal" :height "auto" :p 2 :mb 1 :variant "outline"}
-              [task-el {:parent-block-uid block-uid
-                        :title            (-> props (get ":task/title") :block/string)
-                        :assignee         (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
-                        :priority         (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
-                                                                                             (get ":task/priority")
-                                                                                             :block/string
-                                                                                             (common-db/strip-markup "((" "))"))])
-                                              :block/string)
-                        :creator      creator
-                       ;; Convert edit time to real time
-                        :description  (-> props (get ":task/description") :block/string)
-                        :created-date created-date
-                        :status       status
-                        :due-date     (-> props
-                                          (get ":task/due-date")
-                                          :block/string
-                                          (common-db/strip-markup "[[" "]]"))
-                        :opts         {:show-assignee?     true
-                                       :show-description?  true
-                                       :show-priority?     true
-                                       :show-creator?      true
-                                       :show-created-date? true
-                                       :show-status?       true
-                                       :show-due-date?     true}}]]]
-            [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
-             [:> VStack {:spacing 4 :px 4 :pt 2}
-              [:> HStack
-               [task-status-view block-uid status-uid]
-               [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]]
-              [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
-              [:> HStack
-               [task-priority-view block-uid priority-uid]
-               [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]]
+                      :mr 4
+                      :whiteSpace "normal"
+                      :alignItems "center"
+                      :justifyContent "flexStart"
+                      :textAlign "start"
+                      :fontWeight "normal"
+                      :height "auto"
+                      :mb 1
+                      :variant "outline"}
+              [:> HStack {:alignSelf "flex-start"}
+               [:> Text title]
+               (when (and show-priority? priority)
+                 [:> Badge {:size "sm" :variant "primary"}
+                  priority])
+               (when (and show-assignee? assignee)
+                 [:> AvatarGroup {:size "xs"}
+                  [:> Avatar {:name assignee}]])
+               (when (and show-creator? creator)
+                 [:> AvatarGroup {:size "xs"}
+                  [:> Avatar {:name creator}]])
+               (when (and show-created-date? created-date)
+                 [:> Text {:fontSize "xs"} created-date])]
+              (when (and show-due-date? due-date)
+                [:> Text {:fontSize "xs"} due-date])
+              (when (and show-description? description)
+                [:> Text {:fontSize "sm"  :color "foreground.secondary"}
+                 description])]]
+             [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
+              [:> VStack {:spacing 4
+                          :px 4
+                          :pt 2}
+               [:> HStack
+                [task-status-view block-uid status-uid]
+                [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]]
+               [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
+               [:> HStack
+                [task-priority-view block-uid priority-uid]
+                [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]]
              ;; Making assumption that for now we can add due date manually without date-picker.
-              [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
+               [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
 
-              [:> Text creator-uid]]]]]))))
+               [:> Text creator-uid]]]]]))))
 
 
           (supported-transclusion-scopes
