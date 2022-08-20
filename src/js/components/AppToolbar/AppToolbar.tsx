@@ -187,6 +187,15 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState(null);
 
   const toast = useToast();
+  const commentsToggleToastRef = React.useRef(null);
+
+  const createOrUpdateToast = (ref, props) => {
+    if (ref.current) {
+      toast.update(ref.current, props);
+    } else {
+      ref.current = toast(props);
+    }
+  }
 
   // add event listener to detect when the user scrolls past the title
   React.useLayoutEffect(() => {
@@ -226,7 +235,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       onClick: () => {
         if (isShowComments) {
           handleClickComments();
-          toast({
+          createOrUpdateToast(commentsToggleToastRef, {
             title: "Comments hidden",
             status: "info",
             duration: 5000,
@@ -235,9 +244,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
         } else {
           handleClickComments();
-          toast({
+          createOrUpdateToast(commentsToggleToastRef, {
             title: "Comments shown",
-            status: "info",
             duration: 5000,
             position: "top-right"
           });
