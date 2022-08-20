@@ -139,6 +139,10 @@ const semanticTokens = {
       default: '#0071DB',
       _dark: '#498eda'
     },
+    infoText: {
+      default: '#fff',
+      _dark: '#fff'
+    },
     warning: {
       default: '#D20000',
       _dark: '#DE3C21'
@@ -147,12 +151,13 @@ const semanticTokens = {
       default: '#4CBB17',
       _dark: '#498eda'
     },
+
     // other colors
     textHighlight: {
       default: '#ffdb8a',
       _dark: '#FBBE63'
     },
-    highlight: {
+    "highlight": {
       default: '#F9A132',
       _dark: '#FBBE63'
     },
