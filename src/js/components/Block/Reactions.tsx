@@ -37,7 +37,7 @@ const ReactionItem = ({ reaction, onToggleReaction, currentUser }: ReactionItemP
       onClick={() => onToggleReaction(reactionItem, currentUser)}
     >
       <Box position="absolute" inset={0} />
-      <Text transform="scale(1.35)" fontSize="md">{reactionItem}</Text>
+      <Text transform="scale(1.125)" fontSize="md">{reactionItem}</Text>
       <Text fontSize="xs" color="foreground.secondary">{usersCount < 10 ? usersCount : "9+"}</Text>
     </Button>
   </Tooltip>
