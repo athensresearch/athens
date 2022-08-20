@@ -14,6 +14,7 @@
                                                  Checkbox
                                                  ButtonGroup
                                                  Menu
+                                                 Divider
                                                  MenuOptionGroup
                                                  MenuItemOption
                                                  MenuDivider
@@ -570,23 +571,33 @@
                       :variant "ghost"
                       :isAttached true
                       :gridArea "content"
+                      :overflow "hidden"
                       :size "sm"
                       :mb 1
                       :spacing 0}
+           [:> Button {:as Checkbox
+                       :p 2
+                       :spacing 0
+                       :minWidth "unset"
+                       :pr 0
+                       :onClick #(.. % stopPropagation)
+                       :borderRadius 0
+                       :onMouseDown #(.. % stopPropagation)
+                       :onChange #(on-update-checkbox block-uid isChecked) :isChecked isChecked}]
+           [:> Divider {:orientation "vertical" :height "calc(100% - 1rem)"}]
            [:> Menu {:size "sm"}
             [:> MenuButton {:as Button
                             :onClick #(.. % stopPropagation)
-                            :pr 1
-                            :variant "ghost"
-                            :rightIcon (r/as-element [:> ChevronDownIcon {:boxSize 4 :color "foreground.secondary"}])}
+                            :px 2
+                            :minWidth 4
+                            :borderLeftRadius 0
+                            :variant "ghost"}
+             [:> ChevronDownIcon {:color "foreground.secondary"}]
              ;; Checkbox will need to be something fancier that can show the status more precisely
              ;; e.g. "X" for cancelled status
-             [:> Checkbox {:size "lg"
-                           :mx -1
-                           :onClick #(.. % stopPropagation)
-                           :onMouseDown #(.. % stopPropagation)
-                           :onChange #(on-update-checkbox block-uid isChecked) :isChecked isChecked}]]
+             ]
             [task-status-menulist block-uid status-uid]]
+           [:> Divider {:orientation "vertical"}]
            [:> ModalInput {:placement "bottom" :isLazy true}
             [:> ModalInputTrigger
              [:> Button {:flex "1 1 100%"
