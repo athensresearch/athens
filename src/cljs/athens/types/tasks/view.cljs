@@ -3,8 +3,7 @@
   (:require
     ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
     ["/components/Icons/Icons"            :refer [ChevronDownIcon
-                                                  CheckmarkIcon
-                                                  PencilIcon]]
+                                                  CheckmarkIcon]]
     ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
     ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
     ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
@@ -27,7 +26,6 @@
                                                   Button
                                                   Badge
                                                   FormErrorMessage
-                                                  FormHelperText
                                                   Select
                                                   HStack
                                                   VStack]]
@@ -178,27 +176,28 @@
                                         :keyboard-navigation?    false}
                                        custom-key-handlers)]
         [:> FormControl {:is-required required?
+                         :display "contents"
                          :is-invalid  invalid-prop-str?}
          [:> FormLabel {:html-for prop-id}
           prop-title]
-         [:> BlockFormInput
-          {:isMultiline multiline?}
+         [:> Box [:> BlockFormInput
+                  {:isMultiline multiline?}
           ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
-          [editor/block-editor {:block/uid (or prop-block-uid
+                  [editor/block-editor {:block/uid (or prop-block-uid
                                                ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
-                                               (str "tmp-" (subs prop-name
-                                                                 (inc (.indexOf prop-name "/")))
-                                                    "-uid-" (common.utils/gen-block-uid)))}
-           state-hooks]
-          [presence/inline-presence-el prop-block-uid]]
+                                                       (str "tmp-" (subs prop-name
+                                                                         (inc (.indexOf prop-name "/")))
+                                                            "-uid-" (common.utils/gen-block-uid)))}
+                   state-hooks]
+                  [presence/inline-presence-el prop-block-uid]]
 
-         (if invalid-prop-str?
-           [:> FormErrorMessage
-            (str prop-title " is " (if required?
-                                     "required"
-                                     "empty"))]
-           [:> FormHelperText
-            (str "Please provide " prop-title)])]))))
+          (if invalid-prop-str?
+            [:> FormErrorMessage {:gridColumn 2}
+             (str prop-title " is " (if required?
+                                      "required"
+                                      "empty"))]
+            #_ [:> FormHelperText {:gridColumn 2}
+             (str "Please provide " prop-title)])]]))))
 
 
 ;; Will need this in future, see Stuart's comment for better understanding here https://discord.com/channels/708122962422792194/1008156785791742002/1009102458695450654
@@ -396,11 +395,11 @@
         allowed-priorities (find-allowed-priorities)
         priority-string    (:block/string priority-block "(())")
         priority-uid       (subs priority-string 2 (- (count priority-string) 2))]
-    [:> FormControl {:is-required true}
-     [:> FormLabel {:html-for priority-id
-                    :w        "9rem"}
+    [:> FormControl {:is-required true
+                     :display "contents"}
+     [:> FormLabel {:html-for priority-id}
       "Task priority"]
-     [:> Select {:id          priority-id
+     [:> Box [:> Select {:id          priority-id
                  :value       priority-uid
                  :size "sm"
                  :placeholder "Select a priority"
@@ -410,10 +409,10 @@
                                   (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
                                                 (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
       (doall
-        (for [{:block/keys [uid string]} allowed-priorities]
-          ^{:key uid}
-          [:option {:value uid}
-           string]))]]))
+       (for [{:block/keys [uid string]} allowed-priorities]
+         ^{:key uid}
+         [:option {:value uid}
+          string]))]]]))
 
 
 (defn task-status-view
@@ -423,24 +422,24 @@
         allowed-statuses (find-allowed-statuses)
         status-string    (:block/string status-block "(())")
         status-uid       (subs  status-string 2 (- (count status-string) 2))]
-    [:> FormControl {:is-required true}
-     [:> FormLabel {:html-for status-id
-                    :w        "9rem"}
+    [:> FormControl {:is-required true
+                     :display "contents"}
+     [:> FormLabel {:html-for status-id}
       "Task Status"]
-     [:> Select {:id          status-id
-                 :value       status-uid
-                 :placeholder "Select a status"
-                 :size "sm"
-                 :on-change   (fn [e]
-                                (let [new-status (-> e .-target .-value)
-                                      status-ref (str "((" new-status "))")]
-                                  (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
-                                                (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}
-      (doall
-        (for [{:block/keys [uid string]} allowed-statuses]
-          ^{:key uid}
-          [:option {:value uid}
-           string]))]]))
+     [:> Box [:> Select {:id          status-id
+                         :value       status-uid
+                         :placeholder "Select a status"
+                         :size "sm"
+                         :on-change   (fn [e]
+                                        (let [new-status (-> e .-target .-value)
+                                              status-ref (str "((" new-status "))")]
+                                          (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+                                                        (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}
+              (doall
+               (for [{:block/keys [uid string]} allowed-statuses]
+                 ^{:key uid}
+                 [:option {:value uid}
+                  string]))]]]))
 
 
 (defn task-status-menulist
@@ -459,7 +458,6 @@
     [:> MenuList
      [:> MenuOptionGroup {:defaultValue status-uid
                           :type "radio"
-
                           :onChange on-choose-item}
       (doall
         (for [{:block/keys [uid string]} allowed-statuses]
@@ -550,12 +548,11 @@
                     :borderStyle "solid"
                     :borderWidth "1px"
                     :transitionProperty "colors"
-                    :borderLeftColor (if is-ref? "green" "separator.border")
+                    :borderColor "separator.border"
                     :transitionDuration "fast"
                     :transitionTimingFunction "ease-in-out"
                     :overflow "hidden"
                     :mb 1
-                    :borderColor "separator.border"
                     :align "stretch"}
          [:> HStack {:alignSelf "stretch"
                      :as ButtonGroup
@@ -591,21 +588,20 @@
            [:> Button {:whiteSpace "normal"
                        :fontSize "unset"
                        :size "sm"
+                       :onClick #(.. % stopPropagation)
                        :lineHeight "unset"
                        :flexWrap "wrap"
                        :borderRadius 0
-                       :pl 1
-                       :pr 1.5
+                       :px 2
                        :textAlign "start"
                        :justifyContent "space-between"
-                       :gap "0 0.5em"
                        :height "auto"
                        :fontWeight "normal"}
-                             ;; description
+            ;; description
             (when (and show-description? description)
-              [:> Text {:fontSize "sm" :flexGrow 1 :flexBasis "100%" :m 0 :py 1 :px 1 :lineHeight 1.4 :color "foreground.secondary"}
+              [:> Text {:fontSize "sm" :flexGrow 1 :flexBasis "100%" :m 0 :py 1 :lineHeight 1.4 :color "foreground.secondary"}
                description])
-                  ;; tasking/assignment
+            ;; tasking/assignment
             (when (and show-priority? priority)
               [:> Badge {:size "sm" :variant "primary"}
                priority])
@@ -617,7 +613,7 @@
              (when (and show-due-date? due-date)
                [:> Text {:fontSize "xs"} due-date])]
             [:> Spacer]
-                  ;; provenance
+            ;; provenance
             [:> Flex {:gap 1}
              [:> Text {:fontSize "xs"} "Created"]
              (when (and show-creator? creator)
@@ -625,17 +621,18 @@
                 [:> Avatar {:name creator}]])
              (when (and show-created-date? created-date)
                [:> Text {:fontSize "xs"} created-date])]]]
-          [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
-           [:> VStack {:spacing 4
-                       :px 4
-                       :pt 2}
-            [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
-            [:> HStack
-             [task-priority-view block-uid priority-uid]
-             [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]]
+          [:> ModalInputPopover {:popoverContentProps {:display "grid"
+                                                       :gridTemplateColumns "max-content 1fr"
+                                                       :gap 2
+                                                       :p 4
+                                                       :maxWidth "20em"}}
+           [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Description" false true]
+           [:> Divider {:gridColumn "1 / -1"}]
+           [task-priority-view block-uid priority-uid]
+           [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Assignee" false false]
                   ;; Making assumption that for now we can add due date manually without date-picker.
-            [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
-            [:> Text creator-uid]]]]]))))
+           [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Due Date" false false]
+           [:> Text creator-uid]]]]))))
 
 
 
@@ -646,7 +643,9 @@
 
   (inline-ref-view
    [_this _block-data _attr _ref-uid _uid _callbacks _with-breadcrumb?]
-   #_ [task-el _this _block-data _callbacks true])
+   (prn ["from ref" _block-data _attr _ref-uid _uid _callbacks _with-breadcrumb?])
+   (let [block    (reactive/get-reactive-block-document [:block/uid _ref-uid])]
+     [task-el _this block _callbacks true]))
 
 
   (outline-view

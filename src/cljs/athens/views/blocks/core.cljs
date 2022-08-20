@@ -308,7 +308,6 @@
 
 (defn convert-anon-block-to-task
   [block]
-  (prn block)
   (let [{:keys [uid]} block]
     (rf/dispatch [:properties/update-in [:block/uid uid] [":entity/type"]
                   (fn [db uid]
@@ -368,51 +367,51 @@
              reactions-enabled?     (:reactions @feature-flags)
              notifications-enabled? (:notifications @feature-flags)
              uid-sanitized-block    (s/transform
-                                      (util/specter-recursive-path #(contains? % :block/uid))
-                                      (fn [{:block/keys [original-uid uid] :as block}]
-                                        (assoc block :block/uid (or original-uid uid)))
-                                      block)
+                                     (util/specter-recursive-path #(contains? % :block/uid))
+                                     (fn [{:block/keys [original-uid uid] :as block}]
+                                       (assoc block :block/uid (or original-uid uid)))
+                                     block)
              user-id                (or (:username @current-user)
                                         ;; We use empty string for when there is no user information, like in PKM.
                                         "")
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
-                                      [:> MenuList
-                                       (when-not (= block-type "[[athens/task]]") [:> MenuItem {:children "convert to task"
-                                                                                                :icon     (r/as-element [:> BlockEmbedIcon])
-                                                                                                :onClick  convert-to-task}])
-                                       [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                 "Copy selected block refs"
-                                                                 "Copy block ref")
-                                                     :icon     (r/as-element [:> BlockEmbedIcon])
-                                                     :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                       [:> MenuItem {:children "Copy unformatted text"
-                                                     :icon     (r/as-element [:> TextIcon])
-                                                     :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
-                                       (when comments-enabled?
-                                         [:> MenuItem {:children "Add comment"
-                                                       :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                       :icon     (r/as-element [:> ChatBubbleIcon])}])
-                                       (when reactions-enabled?
-                                         [:<>
-                                          [:> MenuDivider]
-                                          [block-reaction/reactions-menu-list uid user-id]])
+                                     [:> MenuList
+                                      (when-not (= block-type "[[athens/task]]") [:> MenuItem {:children "convert to task"
+                                                                                               :icon     (r/as-element [:> BlockEmbedIcon])
+                                                                                               :onClick  convert-to-task}])
+                                      [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                "Copy selected block refs"
+                                                                "Copy block ref")
+                                                    :icon     (r/as-element [:> BlockEmbedIcon])
+                                                    :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                      [:> MenuItem {:children "Copy unformatted text"
+                                                    :icon     (r/as-element [:> TextIcon])
+                                                    :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                      (when comments-enabled?
+                                        [:> MenuItem {:children "Add comment"
+                                                      :onClick  #(ctx-menu/handle-click-comment % uid)
+                                                      :icon     (r/as-element [:> ChatBubbleIcon])}])
+                                      (when reactions-enabled?
+                                        [:<>
+                                         [:> MenuDivider]
+                                         [block-reaction/reactions-menu-list uid user-id]])
 
-                                       (when (and notifications-enabled? (actions/is-block-inbox? properties))
-                                         [:<>
-                                          [:> Divider]
-                                          [:> MenuItem {:children "Archive all notifications"
-                                                        :icon     (r/as-element [:> ArchiveIcon])
-                                                        :onClick  #(actions/archive-all-notifications uid)}]
-                                          [:> MenuItem {:children "Unarchive all notifications"
-                                                        :icon     (r/as-element [:> ArchiveIcon])
-                                                        :onClick  #(actions/unarchive-all-notifications uid)}]])
-
-                                       (when (and notifications-enabled? (actions/is-block-notification? properties))
-                                         [:> MenuItem {:children "Archive"
+                                      (when (and notifications-enabled? (actions/is-block-inbox? properties))
+                                        [:<>
+                                         [:> Divider]
+                                         [:> MenuItem {:children "Archive all notifications"
                                                        :icon     (r/as-element [:> ArchiveIcon])
-                                                       :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
+                                                       :onClick  #(actions/archive-all-notifications uid)}]
+                                         [:> MenuItem {:children "Unarchive all notifications"
+                                                       :icon     (r/as-element [:> ArchiveIcon])
+                                                       :onClick  #(actions/unarchive-all-notifications uid)}]])
+
+                                      (when (and notifications-enabled? (actions/is-block-notification? properties))
+                                        [:> MenuItem {:children "Archive"
+                                                      :icon     (r/as-element [:> ArchiveIcon])
+                                                      :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
              ff @(rf/subscribe [:feature-flags])
              renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
              renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
@@ -483,7 +482,6 @@
                                 :on-drag-stop  (fn [e]
                                                  (block-bullet/bullet-drag-end e uid))}])
 
-
             [:> Anchor {:isClosedWithChildren   (when (and (seq children)
                                                            (or (and (true? linked-ref) (not @linked-ref-open?))
                                                                (and (false? linked-ref) (not open))))
@@ -515,12 +513,12 @@
                              :onToggleReaction (partial block-reaction/toggle-reaction [:block/uid uid])}])
 
                ;; Show comments when the toggle is on
-               (when (and @show-comments?
-                          (or @show-textarea?
-                              (comments/get-comment-thread-uid @db/dsdb uid)))
-                 (cond
-                   @show-textarea? [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false]
-                   :else           [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid true]))
+            (when (and @show-comments?
+                       (or @show-textarea?
+                           (comments/get-comment-thread-uid @db/dsdb uid)))
+              (cond
+                @show-textarea? [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false]
+                :else           [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid true]))
 
             (when in-view?
               [presence/inline-presence-el uid])
