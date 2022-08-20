@@ -138,14 +138,6 @@
              [:span [:wbr]]
              [parse-renderer/parse-and-render (:string/local @state) uid])]]
 
-         ;; Show comments when the toggle is on
-         [:> Box {:ml "4%"
-                  :w "100%"}
-          (when (or @(rf/subscribe [:comment/show-editor? uid])
-                    (and @(rf/subscribe [:comment/show-comments?])
-                         (comments/get-comment-thread-uid @db/dsdb uid)))
-            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])]
-
          ;; Properties
          (when (and @properties-enabled?
                     (seq properties))
@@ -153,6 +145,15 @@
             (for [prop (common-db/sort-block-properties properties)]
               ^{:key (:db/id prop)}
               [:f> blocks/block-el prop])])
+
+
+
+         ;; Show comments when the toggle is on
+         (when (or @(rf/subscribe [:comment/show-editor? uid])
+                   (and @(rf/subscribe [:comment/show-comments?])
+                        (comments/get-comment-thread-uid @db/dsdb uid)))
+           [:> PageBody
+            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false]])
 
          ;; Children
          [:> PageBody

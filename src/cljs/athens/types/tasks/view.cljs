@@ -15,6 +15,7 @@
                                                  Avatar
                                                  Checkbox
                                                  ButtonGroup
+                                                 Box
                                                  Menu
                                                  MenuOptionGroup
                                                  MenuItemOption
@@ -553,6 +554,9 @@
                       :borderWidth "1px"
                       :borderStyle "solid"
                       :borderColor "transparent"
+                      :transitionProperty "colors"
+                      :transitionDuration "fast"
+                      :transitionTimingFunction "ease-in-out"
                       :_hover {:borderColor "separator.divider"}
                       :variant "ghost"
                       :isAttached true
@@ -582,19 +586,15 @@
                             :variant "ghost"}
              [:> ChevronDownIcon {:color "foreground.secondary"}]]
             [task-status-menulist block-uid status-uid]]
+           [:> Box {:flex "1 1"} [inline-task-title-2 block-uid title-uid title-uid _callbacks]]
            [:> ModalInput {:placement "bottom" :isLazy true}
             [:> ModalInputTrigger
-             [:> Button {:flex "1 1 100%"
-                         :pl 0
-                         :whiteSpace "normal"
+             [:> Button {:whiteSpace "normal"
                          :fontSize "unset"
                          :lineHeight "unset"
                          :textAlign "start"
                          :height "auto"
-                         :fontWeight "normal"
-                         :sx {".block-content" {:cursor "text"
-                                                :flexGrow 1}}}
-              [inline-task-title-2 block-uid title-uid title-uid _callbacks]
+                         :fontWeight "normal"}
               (when (and show-priority? priority)
                 [:> Badge {:size "sm" :variant "primary"}
                  priority])
@@ -611,10 +611,7 @@
               (when (and show-description? description)
                 [:> Text {:fontSize "sm"  :color "foreground.secondary"}
                  description])
-              [:> PencilIcon]]
-
-
-             ]
+              [:> PencilIcon]]]
             [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
              [:> VStack {:spacing 4
                          :px 4
