@@ -1,52 +1,52 @@
 (ns athens.types.tasks.view
   "Views for Athens Tasks"
   (:require
-   ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
-   ["/components/Icons/Icons"            :refer [ChevronDownIcon
-                                                 CheckmarkIcon
-                                                 PencilIcon]]
-   ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
-   ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
-   ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
-   ["@chakra-ui/react"                   :refer [FormControl
-                                                 FormLabel
-                                                 Text
-                                                 AvatarGroup
-                                                 Avatar
-                                                 Checkbox
-                                                 ButtonGroup
-                                                 Box
-                                                 Menu
-                                                 MenuOptionGroup
-                                                 MenuItemOption
-                                                 MenuButton
-                                                 MenuList
-                                                 Button
-                                                 Badge
-                                                 FormErrorMessage
-                                                 FormHelperText
-                                                 Select
-                                                 HStack
-                                                 VStack]]
-   [athens.common-db                     :as common-db]
-   [athens.common-events                 :as common-events]
-   [athens.common-events.bfs             :as bfs]
-   [athens.common-events.graph.composite :as composite]
-   [athens.common-events.graph.ops       :as graph-ops]
-   [athens.common.logging                :as log]
-   [athens.common.utils                  :as common.utils]
-   [athens.dates                         :as dates]
-   [athens.db                            :as db]
-   [athens.reactive                      :as reactive]
-   [athens.self-hosted.presence.views    :as presence]
-   [athens.types.core                    :as types]
-   [athens.types.dispatcher              :as dispatcher]
-   [athens.views.blocks.editor           :as editor]
-   [clojure.string                       :as str]
-   [goog.functions                       :as gfns]
-   [re-frame.core                        :as rf]
-   [reagent.core                         :as r]
-   [tick.core :as t]))
+    ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
+    ["/components/Icons/Icons"            :refer [ChevronDownIcon
+                                                  CheckmarkIcon
+                                                  PencilIcon]]
+    ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
+    ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
+    ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
+    ["@chakra-ui/react"                   :refer [FormControl
+                                                  FormLabel
+                                                  Text
+                                                  AvatarGroup
+                                                  Avatar
+                                                  Checkbox
+                                                  ButtonGroup
+                                                  Box
+                                                  Menu
+                                                  MenuOptionGroup
+                                                  MenuItemOption
+                                                  MenuButton
+                                                  MenuList
+                                                  Button
+                                                  Badge
+                                                  FormErrorMessage
+                                                  FormHelperText
+                                                  Select
+                                                  HStack
+                                                  VStack]]
+    [athens.common-db                     :as common-db]
+    [athens.common-events                 :as common-events]
+    [athens.common-events.bfs             :as bfs]
+    [athens.common-events.graph.composite :as composite]
+    [athens.common-events.graph.ops       :as graph-ops]
+    [athens.common.logging                :as log]
+    [athens.common.utils                  :as common.utils]
+    [athens.dates                         :as dates]
+    [athens.db                            :as db]
+    [athens.reactive                      :as reactive]
+    [athens.self-hosted.presence.views    :as presence]
+    [athens.types.core                    :as types]
+    [athens.types.dispatcher              :as dispatcher]
+    [athens.views.blocks.editor           :as editor]
+    [clojure.string                       :as str]
+    [goog.functions                       :as gfns]
+    [re-frame.core                        :as rf]
+    [reagent.core                         :as r]
+    [tick.core :as t]))
 
 
 ;; Create default task statuses configuration
@@ -272,6 +272,7 @@
            [:> FormHelperText
             (str "Please provide " prop-title)])]))))
 
+
 (defn inline-task-title-2
   [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
   (let [prop-id (str (random-uuid))]
@@ -325,7 +326,7 @@
                                         :keyboard-navigation?    false}
                                        custom-key-handlers)]
         [editor/block-editor {:block/uid (or prop-block-uid
-                                               ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                             ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
                                              (str "tmp-" (subs prop-name
                                                                (inc (.indexOf prop-name "/")))
                                                   "-uid-" (common.utils/gen-block-uid)))}
@@ -392,19 +393,19 @@
         priority-string    (:block/string priority-block "(())")
         priority-uid       (subs priority-string 2 (- (count priority-string) 2))]
     [:> FormControl {:is-required true}
-      [:> FormLabel {:html-for priority-id
-                     :w        "9rem"}
-       "Task priority"]
-      [:> Select {:id          priority-id
-                  :value       priority-uid
-                  :size "sm"
-                  :placeholder "Select a priority"
-                  :on-change   (fn [e]
-                                 (let [new-priority (-> e .-target .-value)
-                                       priority-ref (str "((" new-priority "))")]
-                                   (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
-                                                 (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
-       (doall
+     [:> FormLabel {:html-for priority-id
+                    :w        "9rem"}
+      "Task priority"]
+     [:> Select {:id          priority-id
+                 :value       priority-uid
+                 :size "sm"
+                 :placeholder "Select a priority"
+                 :on-change   (fn [e]
+                                (let [new-priority (-> e .-target .-value)
+                                      priority-ref (str "((" new-priority "))")]
+                                  (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
+                                                (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
+      (doall
         (for [{:block/keys [uid string]} allowed-priorities]
           ^{:key uid}
           [:option {:value uid}
@@ -432,15 +433,15 @@
                                   (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
                                                 (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}
       (doall
-       (for [{:block/keys [uid string]} allowed-statuses]
-         ^{:key uid}
-         [:option {:value uid}
-          string]))]]))
+        (for [{:block/keys [uid string]} allowed-statuses]
+          ^{:key uid}
+          [:option {:value uid}
+           string]))]]))
 
 
 (defn task-status-menulist
   [parent-block-uid status-block-uid]
-  (let [; status-id        (str (random-uuid))
+  (let [;; status-id        (str (random-uuid))
         status-block     (reactive/get-reactive-block-document [:block/uid status-block-uid])
         allowed-statuses (find-allowed-statuses)
         status-string    (:block/string status-block "(())")
@@ -454,15 +455,15 @@
     [:> MenuList
      [:> MenuOptionGroup {:defaultValue status-uid
                           :type "radio"
-                          
+
                           :onChange on-choose-item}
       (doall
-       (for [{:block/keys [uid string]} allowed-statuses]
-         ^{:key uid}
-         [:> MenuItemOption {:value uid
-                             :py 0
-                             :icon (r/as-element [:> CheckmarkIcon])}
-          string]))]]))
+        (for [{:block/keys [uid string]} allowed-statuses]
+          ^{:key uid}
+          [:> MenuItemOption {:value uid
+                              :py 0
+                              :icon (r/as-element [:> CheckmarkIcon])}
+           string]))]]))
 
 
 (defn find-status-uid
@@ -575,7 +576,7 @@
                        :borderRadius 0
                        :onMouseDown #(.. % stopPropagation)
                        :onChange #(on-update-checkbox block-uid isChecked) :isChecked isChecked}]
-          ;;  [:> Divider {:orientation "vertical" :height "calc(100% - 1rem)"}]
+           ;;  [:> Divider {:orientation "vertical" :height "calc(100% - 1rem)"}]
            [:> Menu {:size "sm" :offset [0 0] :isLazy true}
             [:> MenuButton {:as Button
                             :onClick #(.. % stopPropagation)
@@ -620,30 +621,30 @@
               [:> HStack
                [task-priority-view block-uid priority-uid]
                [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Task Assignee" false false]]
-             ;; Making assumption that for now we can add due date manually without date-picker.
+              ;; Making assumption that for now we can add due date manually without date-picker.
               [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Task Due Date" false false]
 
               [:> Text creator-uid]]]]]))))
 
 
-          (supported-transclusion-scopes
-           [_this])
+  (supported-transclusion-scopes
+    [_this])
 
 
-          (transclusion-view
-           [_this _block-el _block-uid _callback _transclusion-scope])
+  (transclusion-view
+    [_this _block-el _block-uid _callback _transclusion-scope])
 
 
-          (zoomed-in-view
-           [_this _block-data _callbacks])
+  (zoomed-in-view
+    [_this _block-data _callbacks])
 
 
-          (supported-breadcrumb-styles
-           [_this])
+  (supported-breadcrumb-styles
+    [_this])
 
 
-          (breadcrumbs-view
-           [_this _block-data _callbacks _breadcrumb-style]))
+  (breadcrumbs-view
+    [_this _block-data _callbacks _breadcrumb-style]))
 
 
 (defmethod dispatcher/block-type->protocol "[[athens/task]]" [_k _args-map]

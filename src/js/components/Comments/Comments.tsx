@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Text, HStack, Textarea, Button, MenuList, MenuItem } from '@chakra-ui/react'
-import { ChatBubbleFillIcon } from '@/Icons/Icons'
 import { useContextMenu } from '@/utils/useContextMenu';
 import { withErrorBoundary } from "react-error-boundary";
 
@@ -69,6 +68,9 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
     bg={isContextMenuOpen ? "interaction.surface.hover" : undefined}
     borderRadius={isContextMenuOpen ? "sm" : undefined}
     mb="-1px"
+    _first={{
+      borderTopWidth: 0
+    }}
     borderTop={isFollowUp ? null : "1px solid"}
     borderTopColor="separator.divider"
     alignItems="stretch"

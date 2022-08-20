@@ -103,7 +103,7 @@
                        :color    "foreground.secondary"}
               human-timestamp]]])
 
-         [:> Anchor {:ml "0.25em"
+         [:> Anchor {:ml 0.5
                      :height "2em"}]
          [:> Box {:flex "1 1 100%"
                   :gridArea "comment"
@@ -167,19 +167,29 @@
 (defn comments-disclosure
   [hide? num-comments]
   [:> Button (merge
-              {:justifyContent "flex-start"
-               :color          "foreground.secondary"
-               :variant        "ghost"
-               :size           "sm"
-               :gap            2
-               :flex           "1 0 auto"
-               :bg                 "background.upper"
-               
-               :borderBottomRadius 0
-               :onClick        #(reset! hide? (not @hide?))}
-              (when @hide?
-                {:bg "transparent"
-                 :borderColor        "transparent"}))
+               {:justifyContent "flex-start"
+                :color          "foreground.secondary"
+                :variant        "ghost"
+                :size           "sm"
+                :pl             2.5
+                :gap            2
+                :flex           "1 0 auto"
+                :bg             "background.upper"
+                :borderBottomRadius 0
+                :sx {":after" {:content "''"
+                               :opacity (if @hide? 0 1)
+                               :position "absolute"
+                               :bottom 0
+                               :transition "inherit"
+                               :left 9
+                               :right 0
+                               :borderBottom "1px solid"
+                               :borderBottomColor "separator.divider"}
+                     ":hover:after" {:opacity 0}}
+                :onClick        #(reset! hide? (not @hide?))}
+               (when @hide?
+                 {:bg "transparent"
+                  :borderColor        "transparent"}))
    (if @hide?
      [:<>
       [:> ChevronRightIcon]
@@ -205,28 +215,26 @@
                                                       (rf/dispatch [:editing/uid block-uid]))]
 
           [:> VStack (merge
-                      {:gridArea "comments"
-                       :color "foreground.secondary"
-                       :flex "1 0 auto"
-                       :bg "background.upper"
-                       :mb 4
-                       :borderWidth "1px"
-                       :borderStyle "solid"
-                       :borderColor "separator.border"
-                       :overflow "hidden"
-                       :spacing 0
-                       :borderRadius "md"
-                       :align "stretch"}
-                      (when @hide?
-                        {:bg "transparent"
-                         :borderColor "separator.divider"}))
+                       {:gridArea "comments"
+                        :color "foreground.secondary"
+                        :flex "1 0 auto"
+                        :bg "background.upper"
+                        :mb 2
+                        :borderWidth "1px"
+                        :borderStyle "solid"
+                        :borderColor "separator.border"
+                        :overflow "hidden"
+                        :spacing 0
+                        :borderRadius "md"
+                        :align "stretch"}
+                       (when @hide?
+                         {:bg "transparent"
+                          :borderColor "separator.divider"}))
 
            [comments-disclosure hide? num-comments]
 
            (when-not @hide?
-             [:> Box {:pl 8
-                      :pr 4
-                      :pb 4}
+             [:> Box {:p 2}
               (for [item data]
                 ^{:key item}
                 [comment-el item])
