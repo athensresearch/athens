@@ -2,10 +2,12 @@
   "Views for Athens Tasks"
   (:require
    ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
+   ["/components/Icons/Icons"            :refer [ChevronDownIcon
+                                                 CheckmarkIcon
+                                                 PencilIcon]]
    ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
    ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
    ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
-   ["/components/Icons/Icons" :refer [ChevronDownIcon]]
    ["@chakra-ui/react"                   :refer [FormControl
                                                  FormLabel
                                                  Text
@@ -14,14 +16,10 @@
                                                  Checkbox
                                                  ButtonGroup
                                                  Menu
-                                                 Divider
                                                  MenuOptionGroup
                                                  MenuItemOption
-                                                 MenuDivider
                                                  MenuButton
                                                  MenuList
-                                                 MenuItem
-                                                 Box
                                                  Button
                                                  Badge
                                                  FormErrorMessage
@@ -455,11 +453,14 @@
     [:> MenuList
      [:> MenuOptionGroup {:defaultValue status-uid
                           :type "radio"
+                          
                           :onChange on-choose-item}
       (doall
        (for [{:block/keys [uid string]} allowed-statuses]
          ^{:key uid}
-         [:> MenuItemOption {:value uid}
+         [:> MenuItemOption {:value uid
+                             :py 0
+                             :icon (r/as-element [:> CheckmarkIcon])}
           string]))]]))
 
 
@@ -551,7 +552,8 @@
                       :borderRadius "md"
                       :borderWidth "1px"
                       :borderStyle "solid"
-                      :borderColor "separator.divider"
+                      :borderColor "transparent"
+                      :_hover {:borderColor "separator.divider"}
                       :variant "ghost"
                       :isAttached true
                       :gridArea "content"
@@ -564,30 +566,34 @@
                        :spacing 0
                        :minWidth "unset"
                        :pr 0
+                       :mr -2
                        :onClick #(.. % stopPropagation)
                        :borderRadius 0
                        :onMouseDown #(.. % stopPropagation)
                        :onChange #(on-update-checkbox block-uid isChecked) :isChecked isChecked}]
-           [:> Divider {:orientation "vertical" :height "calc(100% - 1rem)"}]
-           [:> Menu {:size "sm"}
+          ;;  [:> Divider {:orientation "vertical" :height "calc(100% - 1rem)"}]
+           [:> Menu {:size "sm" :offset [0 0] :isLazy true}
             [:> MenuButton {:as Button
                             :onClick #(.. % stopPropagation)
                             :px 2
+                            :mr 2
                             :minWidth 4
                             :borderLeftRadius 0
                             :variant "ghost"}
              [:> ChevronDownIcon {:color "foreground.secondary"}]]
             [task-status-menulist block-uid status-uid]]
-           [:> Divider {:orientation "vertical"}]
            [:> ModalInput {:placement "bottom" :isLazy true}
             [:> ModalInputTrigger
              [:> Button {:flex "1 1 100%"
+                         :pl 0
                          :whiteSpace "normal"
-                         :alignItems "center"
-                         :pl 1
-                         :justifyContent "flex-start"
+                         :fontSize "unset"
+                         :lineHeight "unset"
                          :textAlign "start"
-                         :fontWeight "normal"}
+                         :height "auto"
+                         :fontWeight "normal"
+                         :sx {".block-content" {:cursor "text"
+                                                :flexGrow 1}}}
               [inline-task-title-2 block-uid title-uid title-uid _callbacks]
               (when (and show-priority? priority)
                 [:> Badge {:size "sm" :variant "primary"}
@@ -604,14 +610,15 @@
                 [:> Text {:fontSize "xs"} due-date])
               (when (and show-description? description)
                 [:> Text {:fontSize "sm"  :color "foreground.secondary"}
-                 description])]]
+                 description])
+              [:> PencilIcon]]
+
+
+             ]
             [:> ModalInputPopover {:popoverContentProps {:maxWidth "20em"}}
              [:> VStack {:spacing 4
                          :px 4
                          :pt 2}
-              [:> HStack
-               [task-status-view block-uid status-uid]
-               [generic-textarea-view-for-task-props block-uid title-uid ":task/title" "Task Title" true false]]
               [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Task Description" false true]
               [:> HStack
                [task-priority-view block-uid priority-uid]

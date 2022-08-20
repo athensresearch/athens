@@ -45,19 +45,6 @@ export const InlineCommentInput = ({ onSubmitComment }: InlineCommentInputProps)
   </HStack>)
 }
 
-const formatCount = (count: number): string => {
-  if (count > 9) return "9+"
-  else if (count === 0) return ""
-  else return count.toString()
-};
-
-export const CommentCounter = ({ count }) => {
-  return <Box display="grid" gridTemplateAreas="'main'">
-    <ChatBubbleFillIcon gridArea="main" zIndex={0} />
-    <Text zIndex={1} gridArea="main" transform="translateY(5%)" color="background.basement" fontSize="xs">{formatCount(count)}</Text>
-  </Box>
-}
-
 const CommentErrorMessage = () => <Text color="foreground.secondary" display="block" p={2} borderRadius="sm">Couldn't show this comment</Text>;
 
 export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp }) => {

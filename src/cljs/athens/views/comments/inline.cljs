@@ -167,26 +167,26 @@
 (defn comments-disclosure
   [hide? num-comments]
   [:> Button (merge
-               (when-not @hide?
-                 {:bg                 "background.upper"
-                  :borderColor        "transparent"
-                  :borderBottomRadius 0})
-               {:justifyContent "flex-start"
-                :color          "foreground.secondary"
-                :variant        "outline"
-                :size           "sm"
-                :gap            2
-                :flex           "1 0 auto"
-                :onClick        #(reset! hide? (not @hide?))})
+              {:justifyContent "flex-start"
+               :color          "foreground.secondary"
+               :variant        "ghost"
+               :size           "sm"
+               :gap            2
+               :flex           "1 0 auto"
+               :bg                 "background.upper"
+               
+               :borderBottomRadius 0
+               :onClick        #(reset! hide? (not @hide?))}
+              (when @hide?
+                {:bg "transparent"
+                 :borderColor        "transparent"}))
    (if @hide?
      [:<>
       [:> ChevronRightIcon]
-      [:> CommentCounter {:count num-comments}]
-      [:> Text {:pl 1.5} "Comments"]]
+      [:> Text (str num-comments " comments")]]
      [:<>
       [:> ChevronDownIcon]
-      [:> CommentCounter {:count num-comments}]
-      [:> Text {:pl 1.5} "Comments"]])])
+      [:> Text (str num-comments " comments")]])])
 
 
 (defn inline-comments
@@ -205,15 +205,21 @@
                                                       (rf/dispatch [:editing/uid block-uid]))]
 
           [:> VStack (merge
-                       (when-not @hide?
-                         {:bg "background.upper"
-                          :mb 4})
-                       {:gridArea "comments"
-                        :color "foreground.secondary"
-                        :flex "1 0 auto"
-                        :spacing 0
-                        :borderRadius "md"
-                        :align "stretch"})
+                      {:gridArea "comments"
+                       :color "foreground.secondary"
+                       :flex "1 0 auto"
+                       :bg "background.upper"
+                       :mb 4
+                       :borderWidth "1px"
+                       :borderStyle "solid"
+                       :borderColor "separator.border"
+                       :overflow "hidden"
+                       :spacing 0
+                       :borderRadius "md"
+                       :align "stretch"}
+                      (when @hide?
+                        {:bg "transparent"
+                         :borderColor "separator.divider"}))
 
            [comments-disclosure hide? num-comments]
 
