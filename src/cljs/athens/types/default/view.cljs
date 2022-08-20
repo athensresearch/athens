@@ -59,7 +59,33 @@
                     :borderBottomStyle "solid"
                     :borderBottomColor "ref.foreground"
                     :cursor            "alias"
-                    :sx                {"WebkitBoxDecorationBreak" "clone"}
+                    :sx                {"WebkitBoxDecorationBreak" "clone"
+                                        :h1 {:marginBlock 0
+                                             "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                             :fontSize "inherit"
+                                             :display "inline-block"}
+                                        :h2 {:marginBlock 0
+                                             "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                             :fontSize "inherit"
+                                             :display "inline-block"}
+                                        :h3 {:marginBlock 0
+                                             "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                             :fontSize "inherit"
+                                             :display "inline-block"}
+                                        :h4 {:marginBlock 0
+                                             "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                             :fontSize "inherit"
+                                             :display "inline-block"}
+                                        :h5 {:marginBlock 0
+                                             "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                             :fontSize "inherit"
+                                             :display "inline-block"}
+                                        :h6 {:marginBlock 0
+                                             "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                             :fontSize "inherit"
+                                             :display "inline-block"}
+                                        :p {:display "inline-block"
+                                            :marginBlock 0}}
                     :_hover            {:textDecoration    "none"
                                         :borderBottomColor "transparent"
                                         :bg                "ref.background"}

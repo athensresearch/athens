@@ -140,7 +140,28 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
         ".block-container": {
           marginLeft: "2em",
           gridArea: "body"
-        }
+        },
+        ".block-ref > .block > h2": {
+          margin: 0,
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h1)": {
+          mt: 3
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h2)": {
+          mt: 3
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h3)": {
+          mt: 2
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h4)": {
+          mt: 2
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h5)": {
+          mt: 1
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h6)": {
+          mt: 1
+        },
       }}
       {...menuSourceProps}
       onContextMenu={

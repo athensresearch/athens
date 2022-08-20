@@ -100,7 +100,9 @@
         properties-enabled? (rf/subscribe [:feature-flags/enabled? :properties])]
 
     (fn [block]
-      (let [{:block/keys [string children uid properties] :db/keys [id]} block]
+      (let [{:block/keys [string children uid properties] :db/keys [id]} block
+            show-comments?           (rf/subscribe [:comment/show-comments?])
+            show-textarea?           (rf/subscribe [:comment/show-editor? uid])]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
@@ -146,14 +148,13 @@
               ^{:key (:db/id prop)}
               [:f> blocks/block-el prop])])
 
-
-
          ;; Show comments when the toggle is on
-         (when (or @(rf/subscribe [:comment/show-editor? uid])
-                   (and @(rf/subscribe [:comment/show-comments?])
-                        (comments/get-comment-thread-uid @db/dsdb uid)))
+          (when (or @show-textarea?
+                    (and @show-comments?
+                         (comments/get-comment-thread-uid @db/dsdb uid)))
            [:> PageBody
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false]])
+
 
          ;; Children
          [:> PageBody

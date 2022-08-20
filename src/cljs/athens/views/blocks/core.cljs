@@ -514,12 +514,13 @@
                              :currentUser      user-id
                              :onToggleReaction (partial block-reaction/toggle-reaction [:block/uid uid])}])
 
-            ;; Show comments when the toggle is on
-            (when (and @show-comments?
-                       open
-                       (or @show-textarea?
-                           (comments/get-comment-thread-uid @db/dsdb uid)))
-              [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
+               ;; Show comments when the toggle is on
+               (when (and @show-comments?
+                          (or @show-textarea?
+                              (comments/get-comment-thread-uid @db/dsdb uid)))
+                 (cond
+                   @show-textarea? [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false]
+                   :else           [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid true]))
 
             (when in-view?
               [presence/inline-presence-el uid])
