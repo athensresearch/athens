@@ -51,7 +51,6 @@
    {:block/string "Cancelled"}])
 
 
-
 (defn- internal-representation-allowed-priorities
   []
   [{:block/string "Expedite"}
@@ -300,7 +299,6 @@
       allowed-statuses)))
 
 
-
 (defn task-priority-view
   [parent-block-uid priority-block-uid]
   (let [priority-id        (str (random-uuid))
@@ -354,6 +352,7 @@
            ^{:key uid}
            [:option {:value uid}
             string]))]]]))
+
 
 (defn find-status-uid
   [status]
