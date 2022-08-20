@@ -453,7 +453,7 @@
                                            (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))]
     (prn status-string)
     [:> MenuList
-     [:> MenuOptionGroup {:defaultValue (str "((" status-uid "))")
+     [:> MenuOptionGroup {:defaultValue status-uid
                           :type "radio"
                           :onChange on-choose-item}
       (doall
@@ -484,22 +484,6 @@
 (defn is-checked-fn
   [status]
   (contains? #{"Done" "Cancelled"} status))
-
-
-;; (defn task-el
-;;   []
-;;   (fn [props]
-;;     (let [{:keys [parent-block-uid title assignee priority description due-date created-date creator opts status]} props
-;;           {:keys [show-description?
-;;                   show-assignee?
-;;                   show-due-date?
-;;                   show-creator?
-;;                   show-created-date?
-;;                   show-priority?
-;;                   show-status?]} opts]
-;; 
-;;       [:<>
-;;        )))
 
 
 (defrecord TaskView
@@ -592,10 +576,7 @@
                             :minWidth 4
                             :borderLeftRadius 0
                             :variant "ghost"}
-             [:> ChevronDownIcon {:color "foreground.secondary"}]
-             ;; Checkbox will need to be something fancier that can show the status more precisely
-             ;; e.g. "X" for cancelled status
-             ]
+             [:> ChevronDownIcon {:color "foreground.secondary"}]]
             [task-status-menulist block-uid status-uid]]
            [:> Divider {:orientation "vertical"}]
            [:> ModalInput {:placement "bottom" :isLazy true}
