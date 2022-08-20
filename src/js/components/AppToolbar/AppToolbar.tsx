@@ -28,7 +28,7 @@ import {
   useColorMode,
   useMediaQuery,
   ButtonGroupProps,
-  useToast,
+  useToast
 } from '@chakra-ui/react';
 
 import { AnimatePresence, motion } from 'framer-motion';
