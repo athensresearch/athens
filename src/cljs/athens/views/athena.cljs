@@ -28,10 +28,11 @@
     (map-indexed (fn [i part]
                    (if (= part query)
                      [:> Text {:as           "span"
-                               :background   "highlight"
-                               :color        "highlightContrast"
-                               :borderRadius "0.1rem"
-                               :padding      "0 0.125em"
+                               :background   "interaction.surface.hover"
+                               :color        "foreground.primary"
+                               :borderRadius "sm"
+                               :py           0
+                               :px           0.25
                                :key i} part]
                      part))
                  (patterns/split-on txt query))))

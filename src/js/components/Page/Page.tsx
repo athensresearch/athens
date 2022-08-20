@@ -356,7 +356,8 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
     "mark.contents.highlight": {
       padding: "0 0.2em",
       borderRadius: "0.125rem",
-      background: "highlight",
+      background: "gold",
+      color: "goldContrast",
     }
   }}
   {...props}>
