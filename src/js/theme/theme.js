@@ -416,6 +416,11 @@ const components = {
       }
     },
   },
+  Divider: {
+    baseStyle: {
+      borderColor: "separator.divider",
+    }
+  },
   FormLabel: {
     baseStyle: {
       fontSize: "sm",
