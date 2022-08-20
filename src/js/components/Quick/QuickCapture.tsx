@@ -123,23 +123,7 @@ const SavedItem = (props) => {
   </VStack>);
 }
 
-const SAVES = [{
-  string: "This is a test",
-  timestamp: new Date(),
-  isSaved: true
-},
-{
-  string: "Here's a message for later",
-  timestamp: new Date(),
-  isSaved: true
-},
-{
-  string: "Occaecat cupidatat magna nostrud sit pariatur fugiat. Tempor deserunt excepteur nulla tempor est pariatur officia eu veniam eiusmod mollit id. Ut proident ipsum fugiat sit ea. Irure officia ea laboris reprehenderit ex sint minim quis nisi ullamco. Mollit cupidatat do sunt exercitation veniam non nulla sit pariatur culpa non eiusmod sint ad ex. Sunt cupidatat cillum adipisicing aute cillum. Lorem qui ullamco ullamco elit adipisicing. Do eiusmod mollit nostrud. Id voluptate deserunt dolor non dolore fugiat nisi tempor deserunt mollit aliqua consequat proident aliquip cillum. Commodo amet nulla amet ex enim id ad nostrud mollit consequat excepteur in aliqua id.",
-  timestamp: new Date(),
-  isSaved: false
-}];
-
-export const QuickCapture = ({ savedCaptures = SAVES }) => {
+export const QuickCapture = ({ savedCaptures }) => {
   const [captures, setCaptures] = React.useState(savedCaptures || []);
   const containerRef = React.useRef(null)
 
