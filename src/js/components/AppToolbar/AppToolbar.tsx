@@ -28,7 +28,7 @@ import {
   useColorMode,
   useMediaQuery,
   ButtonGroupProps,
-  useToast
+  useToast,
 } from '@chakra-ui/react';
 
 import { AnimatePresence, motion } from 'framer-motion';
@@ -36,6 +36,7 @@ import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "
 import { FakeTrafficLights } from './components/FakeTrafficLights';
 import { WindowButtons } from './components/WindowButtons';
 import { LocationIndicator } from './components/LocationIndicator';
+import { reusableToast } from '@/utils/reusableToast';
 
 const PAGE_TITLE_SHOW_HEIGHT = 24;
 
@@ -189,14 +190,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   const toast = useToast();
   const commentsToggleToastRef = React.useRef(null);
 
-  const createOrUpdateToast = (ref, props) => {
-    if (ref.current) {
-      toast.update(ref.current, props);
-    } else {
-      ref.current = toast(props);
-    }
-  }
-
   // add event listener to detect when the user scrolls past the title
   React.useLayoutEffect(() => {
     const scrollContainer = document.getElementById("main-layout") as HTMLElement;
@@ -235,7 +228,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       onClick: () => {
         if (isShowComments) {
           handleClickComments();
-          createOrUpdateToast(commentsToggleToastRef, {
+          reusableToast(toast, commentsToggleToastRef, {
             title: "Comments hidden",
             status: "info",
             duration: 5000,
@@ -244,7 +237,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
         } else {
           handleClickComments();
-          createOrUpdateToast(commentsToggleToastRef, {
+          reusableToast(toast, commentsToggleToastRef, {
             title: "Comments shown",
             duration: 5000,
             position: "top-right"
