@@ -4,6 +4,7 @@
     [athens.views.hoc.perf-mon :as perf-mon]
     [athens.views.pages.all-pages :as all-pages]
     [athens.views.pages.daily-notes :as daily-notes]
+    [athens.views.pages.quick-capture :as quick-capture]
     [athens.views.pages.graph :as graph]
     [athens.views.pages.page :as page]
     [re-frame.core :as rf]))
@@ -20,6 +21,8 @@
                        :title "Reconnecting to server..."})))
     [:<>
      (case @route-name
+       :quickcapture [perf-mon/hoc-perfmon-no-new-tx {:span-name "quick-capture"}
+                       [quick-capture/quick-capture]]
        :pages         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/all-pages"}
                        [all-pages/page]]
        :page          [perf-mon/hoc-perfmon {:span-name "pages/page"}
