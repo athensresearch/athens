@@ -5,4 +5,4 @@
 (defn quick-capture
   []
   (let []
-    [:> QuickCapture "hello this is quick capture"]))
+    [:> QuickCapture]))

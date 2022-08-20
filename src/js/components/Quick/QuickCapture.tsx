@@ -1,67 +1,188 @@
 import React from 'react'
-import { FormControl, Button, Box, HStack, Text, Textarea, VStack, Flex, FormLabel } from "@chakra-ui/react"
-import { LayoutContext } from '@/Layout/useLayoutState'
+import { FormControl, HStack, Text, Textarea, VStack } from "@chakra-ui/react"
+import { CheckmarkCircleFillIcon } from '@/Icons/Icons'
+import { AnimatePresence, motion } from 'framer-motion'
 
 const FloatingInput = (props) => {
   const { onSubmit } = props
   const [string, setString] = React.useState("")
   const inputRef = React.useRef(null)
 
+  const handleSubmit = (e) => {
+    if (string.length) {
+      e.preventDefault()
+      onSubmit(string)
+      setString("")
+      inputRef.current.focus()
+    }
+  }
+
   React.useEffect(() => {
     inputRef.current.focus()
   }, [])
 
-  return <HStack mt="auto" flex="0 0 auto">
+  return <HStack
+    mt="auto"
+    flex="0 0 auto"
+    position="sticky"
+    inset={0}
+    p={4}
+    top="auto"
+  >
     <FormControl>
-      {/* <FormLabel>Capture a thought</FormLabel> */}
       <Textarea
-        borderTopRadius="md"
-        placeholder="Capture a thought"
-        background="background.floor"
         ref={inputRef}
+        height="20vh"
+        borderRadius="lg"
+        resize="none"
+        placeholder="Tap to begin writing"
+        border="1px solid"
+        borderColor="separator.divider"
+        backgroundClip="border-box"
+        background="background.attic"
         enterkeyhint="send"
-        borderBottomRadius={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleSubmit(e)
+          }
+        }}
         value={string}
+        shadow="page"
+        _focus={{
+          shadow: "page"
+        }}
         onChange={e => setString(e.target.value)}
       />
     </FormControl>
   </HStack>
 }
 
-const SavedInput = (props) => {
-  const { string, timestamp, isSaved } = props;
-
-  return (<VStack
-    borderRadius="md"
-    align="stretch" background="background.floor">
-    <HStack justifyContent="space-between">
-      <Text>{isSaved ? "Saved" : "Waiting to save"}</Text>
-      <Text>{timestamp.toLocaleDateString()}</Text>
-    </HStack>
-    <Text>{string}</Text></VStack>)
-
+const Placeholder = () => {
+  return <VStack mt="auto" color="foreground.secondary">
+    <Text fontSize="sm">Save a message to today's Daily Note.</Text>
+  </VStack>
 }
 
-export const QuickCapture = ({ savedCaptures }) => {
+const SavedItem = (props) => {
+  const { string, timestamp, isSaved } = props;
+  const itemRef = React.useRef(null)
+
+  React.useLayoutEffect(() => {
+    if (itemRef.current) {
+      itemRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }, [])
+
+  return (<VStack
+    as={motion.div}
+    _first={{
+      marginTop: "auto"
+    }}
+    flex="0 0 auto"
+    ref={itemRef}
+    initial={{
+      opacity: 0,
+      y: 50,
+    }}
+    animate={{
+      opacity: 1,
+      y: 0,
+    }}
+    exit={{
+      opacity: 0,
+      y: 50,
+    }}
+    px={4}
+    spacing={0}
+    align="stretch"
+  >
+    <VStack
+      borderRadius="lg"
+      spacing={1}
+      align="stretch"
+      overflow="hidden"
+      background="background.upper"
+      px={4}
+      py={3}
+    >
+      <HStack
+        fontSize="xs"
+        color="foreground.secondary"
+        justifyContent="space-between"
+      >
+        <Text>{timestamp.toLocaleString()}</Text>
+        <Text
+          display="inline-flex"
+          gap={1}
+          alignItems="center"
+        >
+          {isSaved ? (
+            <>Saved <CheckmarkCircleFillIcon /></>) : "Waiting to save"}</Text>
+      </HStack>
+      <Text>{string}</Text></VStack>
+  </VStack>);
+}
+
+const SAVES = [{
+  string: "This is a test",
+  timestamp: new Date(),
+  isSaved: true
+},
+{
+  string: "Here's a message for later",
+  timestamp: new Date(),
+  isSaved: true
+},
+{
+  string: "Occaecat cupidatat magna nostrud sit pariatur fugiat. Tempor deserunt excepteur nulla tempor est pariatur officia eu veniam eiusmod mollit id. Ut proident ipsum fugiat sit ea. Irure officia ea laboris reprehenderit ex sint minim quis nisi ullamco. Mollit cupidatat do sunt exercitation veniam non nulla sit pariatur culpa non eiusmod sint ad ex. Sunt cupidatat cillum adipisicing aute cillum. Lorem qui ullamco ullamco elit adipisicing. Do eiusmod mollit nostrud. Id voluptate deserunt dolor non dolore fugiat nisi tempor deserunt mollit aliqua consequat proident aliquip cillum. Commodo amet nulla amet ex enim id ad nostrud mollit consequat excepteur in aliqua id.",
+  timestamp: new Date(),
+  isSaved: false
+}];
+
+export const QuickCapture = ({ savedCaptures = SAVES }) => {
   const [captures, setCaptures] = React.useState(savedCaptures || []);
-  const { toolbarHeight } = React.useContext(LayoutContext);
+  const containerRef = React.useRef(null)
 
   const onSaveCapture = (string) => {
-    setCaptures([...captures, { string, timestamp: new Date() }]);
+    setCaptures([...captures, { string, isSaved: false, timestamp: new Date() }]);
   }
 
   return <VStack
-    bg="background.basement"
     align="stretch"
-    width="100vw"
-    height="100svh"
-    border="1px solid"
-    pt={toolbarHeight}
+    bg="linear-gradient(to bottom, #00000000 50%, #00000055)"
+    backgroundAttachment="fixed"
+    pt={4}
     overflow="hidden"
+    height="100dvh"
+    width="100vw"
+    position="relative"
   >
-    <VStack flex={1}>
-      {captures.map((capture, index) => <SavedInput key={capture.timestamp} {...capture} />)}
+    <style>
+      {`
+        html, body {
+          height: 100%;
+          width: 100%;
+          position: fixed;
+          overflow: hidden;
+          margin: 0;
+          padding: 0;
+        }
+      `}
+
+    </style>
+    <VStack
+      flex={1}
+      minHeight="100%"
+      align="stretch"
+      ref={containerRef}
+      overflow="auto"
+      overscrollBehaviorY='contain'
+    >
+      <AnimatePresence initial={true}>
+        {captures.length ? captures.map((capture, index) => <SavedItem key={capture.timestamp} {...capture} />)
+          : <Placeholder />}
+      </AnimatePresence>
+      <FloatingInput onSubmit={onSaveCapture} />
     </VStack>
-    <FloatingInput onSubmit={onSaveCapture} />
   </VStack>
 }
