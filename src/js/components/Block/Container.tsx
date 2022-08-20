@@ -52,7 +52,6 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
         isHoveredNotChild && "is-hovered-not-child",
         hasPresence ? "is-presence" : "",
       ].filter(Boolean).join(' ')}
-      display="flex"
       lineHeight="2em"
       position="relative"
       borderRadius="0.125rem"
@@ -141,7 +140,28 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
         ".block-container": {
           marginLeft: "2em",
           gridArea: "body"
-        }
+        },
+        ".block-ref > .block > h2": {
+          margin: 0,
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h1)": {
+          mt: 4
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h2)": {
+          mt: 4
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h3)": {
+          mt: 3
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h4)": {
+          mt: 3
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h5)": {
+          mt: 2
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h6)": {
+          mt: 2
+        },
       }}
       {...menuSourceProps}
       onContextMenu={
