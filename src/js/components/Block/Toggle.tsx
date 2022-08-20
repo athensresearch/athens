@@ -17,7 +17,6 @@ export const Toggle = (props: ToggleProps) => {
       className="toggle"
       bg="transparent"
       aria-label="Block toggle"
-      draggable={true}
       gridArea="toggle"
       flexShrink={0}
       position='relative'
