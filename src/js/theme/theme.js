@@ -152,6 +152,16 @@ const semanticTokens = {
       _dark: '#498eda'
     },
 
+    // Notifications
+    notification: {
+      default: '#d70015',
+      _dark: '#ff6961'
+    },
+    notificationText: {
+      default: '#fff',
+      _dark: '#fff'
+    },
+
     // other colors
     textHighlight: {
       default: '#ffdb8a',
@@ -173,6 +183,16 @@ const semanticTokens = {
       default: '#fff',
       _dark: '#fff'
     },
+
+    gold: {
+      default: '#F9A132',
+      _dark: '#FBBE63'
+    },
+    goldContrast: {
+      default: '#000',
+      _dark: '#000'
+    },
+
     // block content colors
     "ref.foreground": {
       default: "#fbbe63bb",
@@ -652,8 +672,8 @@ const styles = {
       margin: "3rem 1rem"
     },
     mark: {
-      background: "highlight",
-      color: "highlightContrast",
+      background: "gold",
+      color: "goldContrast",
       padding: '0 0.2em',
       borderRadius: "sm",
     }

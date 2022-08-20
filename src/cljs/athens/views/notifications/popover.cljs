@@ -132,8 +132,8 @@
                              :icon          (r/as-element [:> BellFillIcon])}]
              (when (> num-notifications 0)
                [:> Badge {:position "absolute"
-                          :bg "info"
-                          :color "infoText"
+                          :bg "gold"
+                          :color "goldContrast"
                           :right "-3px"
                           :bottom "-1px"
                           :zIndex 1} num-notifications])]]
