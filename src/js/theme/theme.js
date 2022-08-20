@@ -469,6 +469,7 @@ const components = {
       sm: {
         item: {
           padding: '0.35rem 0.5rem',
+          lineHeight: '1.5',
           fontSize: "sm"
         },
         icon: {
