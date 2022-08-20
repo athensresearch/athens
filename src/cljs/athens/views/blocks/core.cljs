@@ -495,7 +495,9 @@
                (when (and @show-comments?
                           (or @show-textarea?
                               (comments/get-comment-thread-uid @db/dsdb uid)))
-                 [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])
+                 (cond
+                   @show-textarea? [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false]
+                   :else           [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid true]))
 
                [presence/inline-presence-el uid]
 
