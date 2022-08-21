@@ -1,6 +1,8 @@
+import { Box, Menu, MenuButton, MenuItem, MenuList, Portal, useOutsideClick } from "@chakra-ui/react";
 import * as React from "react";
 
 export const LayoutContext = React.createContext(null);
+export const ContextMenuContext = React.createContext(null);
 
 export const VIEW_MODES = ["regular", "compact"];
 
@@ -44,8 +46,95 @@ export const useLayoutState = () => {
   };
 };
 
-export const LayoutProvider = ({ children }) => {
-  const context = useLayoutState();
+/**
+ * Add items to the state, and add a target to each item
+ * @param items 
+ * @param target 
+ * @param setItems 
+ */
+const addItemsToState = (items, target, setItems) => {
+  const newItems = items.map((item) => ({ ...item, target: target }));
+  setItems(newItems);
+}
 
-  return <LayoutContext.Provider value={context}>{children}</LayoutContext.Provider>;
+const useContextMenuState = () => {
+  const [isContextMenuOpen, setIsContextMenuOpen] = React.useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = React.useState({ x: 0, y: 0 });
+  const [contextMenuTargets, setContextMenuTargets] = React.useState([]);
+  const [contextMenuItems, setContextMenuItems] = React.useState([]);
+  const [contextMenuChildren, setContextMenuChildren] = React.useState(null);
+
+  const onCloseMenu = () => {
+    setIsContextMenuOpen(false);
+    setContextMenuTargets([]);
+    setContextMenuItems([]);
+  }
+
+  // const onContextMenu = (e, target, items) => {
+  const onContextMenu = (e, target, children) => {
+    e.preventDefault();
+
+    console.log(e.clientX, e.clientY);
+
+    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    setContextMenuTargets([...contextMenuTargets, target]);
+    setContextMenuChildren(children);
+    // addItemsToState(items, target, setContextMenuItems);
+    setContextMenuPosition({
+      x: e.clientX,
+      y: e.clientY
+    });
+    setIsContextMenuOpen(true);
+  }
+
+  return {
+    contextMenuPosition,
+    onCloseMenu,
+    isContextMenuOpen,
+    contextMenuChildren,
+    setIsContextMenuOpen,
+    contextMenuItems,
+    onContextMenu
+  };
+
+}
+
+const MenuSource = ({ position }) => {
+  return <Box
+    as={MenuButton}
+    position="absolute"
+    top={position.y}
+    left={position.x}
+  />;
+}
+
+export const LayoutProvider = ({ children }) => {
+  const layoutState = useLayoutState();
+  const contextMenuState = useContextMenuState();
+
+  const {
+    contextMenuPosition,
+    isContextMenuOpen,
+    contextMenuChildren,
+    onCloseMenu
+  } = contextMenuState;
+
+  console.log(contextMenuPosition);
+
+  return <LayoutContext.Provider value={layoutState}>
+    <ContextMenuContext.Provider value={contextMenuState}>
+      {children}
+      <Menu
+        isOpen={isContextMenuOpen}
+        onClose={onCloseMenu}
+      >
+        <MenuSource position={contextMenuPosition} />
+        <Portal>
+          <MenuList>
+            {contextMenuChildren}
+          </MenuList>
+        </Portal>
+      </Menu>
+    </ContextMenuContext.Provider>
+  </LayoutContext.Provider>;
 }

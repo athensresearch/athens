@@ -28,11 +28,12 @@ import {
   useColorMode,
   useMediaQuery,
   ButtonGroupProps,
-  useToast
+  useToast,
+  MenuGroup
 } from '@chakra-ui/react';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "@/Layout/useLayoutState";
+import { LayoutContext, layoutAnimationProps, layoutAnimationTransition, ContextMenuContext } from "@/Layout/useLayoutState";
 import { FakeTrafficLights } from './components/FakeTrafficLights';
 import { WindowButtons } from './components/WindowButtons';
 import { LocationIndicator } from './components/LocationIndicator';
@@ -222,6 +223,12 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     mainSidebarWidth
   } = React.useContext(LayoutContext);
 
+  const {
+    onContextMenu,
+    isContextMenuOpen,
+    setIsContextMenuOpen,
+  } = React.useContext(ContextMenuContext);
+
   const secondaryTools = [
     handleClickComments && {
       label: isShowComments ? "Hide comments" : "Show comments",
@@ -390,11 +397,41 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     },
   }
 
+  const menuItems = [
+    {
+      label: "New",
+      onClick: e => console.log(e),
+      icon: <ContrastIcon />
+    },
+    {
+      label: "New 2",
+      onClick: e => console.log(e),
+      icon: <ContrastIcon />
+    },
+  ]
+
+  const MenuItems = () => {
+    return <MenuGroup title="New">
+      {menuItems.map(item => (
+        <MenuItem key={item.label}
+          icon={item.icon}
+          onClick={item.onClick}>
+          {item.label}
+        </MenuItem>
+      ))}
+    </MenuGroup>
+  }
+
+  const target = {
+    name: "App Toolbar"
+  }
+
   return (
     <Flex
       flex={1}
       width="100vw"
       ref={toolbarRef}
+      onContextMenu={(e) => onContextMenu(e, target, <MenuItems />)}
       height={toolbarHeight}
       alignItems="center"
       position="fixed"
