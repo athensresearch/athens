@@ -194,7 +194,7 @@ export const DailyNotesList = (props: DailyNotesListProps) => {
   const { onGetAnotherNote, ...boxProps } = props;
   const listRef = React.useRef<HTMLDivElement>(null)
   const { ref, inView } = useInView({ threshold: 0 });
-  const { onContextMenu, isMenuSource } = React.useContext(ContextMenuContext);
+  const { onContextMenu, onExclusiveContextMenu } = React.useContext(ContextMenuContext);
 
   const isMenuOpen = false;
 
@@ -232,7 +232,7 @@ export const DailyNotesList = (props: DailyNotesListProps) => {
   return <VStack py={16}
     border={isMenuOpen ? "10px solid red" : "none"}
     onContextMenu={e => {
-      onContextMenu(e, listRef, MenuItems);
+      onExclusiveContextMenu(e, listRef, MenuItems);
     }}
     align="stretch"
     pb={4}
@@ -257,7 +257,7 @@ interface DailyNotesPageProps extends BoxProps {
 
 export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => {
   const { isReal, ...boxProps } = props
-  const { onContextMenu } = React.useContext(ContextMenuContext);
+  const { onContextMenu, onExclusiveContextMenu } = React.useContext(ContextMenuContext);
   const pageRef = React.useRef<HTMLDivElement>(null)
 
   const MenuItems = () => {

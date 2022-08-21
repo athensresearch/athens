@@ -51,6 +51,7 @@ const useContextMenuState = () => {
   const [contextMenuPosition, setContextMenuPosition] = React.useState({ x: 0, y: 0 });
   const [contextMenuChildren, setContextMenuChildren] = React.useState([])
   const [contextMenuSources, setContextMenuSources] = React.useState([])
+  const [isExclusive, setIsExclusive] = React.useState(false)
   const eventSources = React.useRef([]);
   const eventChildren = React.useRef([]);
 
@@ -67,11 +68,28 @@ const useContextMenuState = () => {
   const onContextMenu = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
     targetRef: React.MutableRefObject<HTMLElement>,
-    child: JSX.Element
+    child: JSX.Element,
   ) => {
     e.preventDefault();
     eventSources.current = [...eventSources.current, targetRef.current]
     eventChildren.current = [...eventChildren.current, child]
+    setContextMenuPosition({
+      x: e.clientX,
+      y: e.clientY
+    });
+    setIsContextMenuOpen(true);
+  };
+
+  const onExclusiveContextMenu = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    targetRef: React.MutableRefObject<HTMLElement>,
+    child: JSX.Element
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    eventSources.current = [targetRef.current]
+    eventChildren.current = [child]
     setContextMenuPosition({
       x: e.clientX,
       y: e.clientY
@@ -94,13 +112,14 @@ const useContextMenuState = () => {
   }, [isContextMenuOpen])
 
   return {
-    contextMenuPosition,
     onCloseMenu,
+    onContextMenu,
+    onExclusiveContextMenu,
+    contextMenuPosition,
     contextMenuSources,
     isContextMenuOpen,
     contextMenuChildren,
     setIsContextMenuOpen,
-    onContextMenu
   };
 
 }
