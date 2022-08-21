@@ -224,7 +224,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   } = React.useContext(LayoutContext);
 
   const {
-    onContextMenu,
+    addToContextMenu,
     isContextMenuOpen,
     setIsContextMenuOpen,
   } = React.useContext(ContextMenuContext);
@@ -431,7 +431,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       flex={1}
       width="100vw"
       ref={toolbarRef}
-      onContextMenu={(e) => onContextMenu(e, target, MenuItems)}
+      onContextMenu={(e) => addToContextMenu(e, target, MenuItems)}
       height={toolbarHeight}
       alignItems="center"
       position="fixed"

@@ -51,21 +51,33 @@ const useContextMenuState = () => {
   const [contextMenuPosition, setContextMenuPosition] = React.useState({ x: 0, y: 0 });
   const [contextMenuChildren, setContextMenuChildren] = React.useState([])
   const [contextMenuSources, setContextMenuSources] = React.useState([])
-  const [isExclusive, setIsExclusive] = React.useState(false)
+  const [previewEl, setPreviewEl] = React.useState(null)
   const eventSources = React.useRef([]);
   const eventChildren = React.useRef([]);
 
+  /**
+   * Reset the context menu state
+   */
   const onCloseMenu = () => {
     setIsContextMenuOpen(false);
     setContextMenuSources([])
     setContextMenuChildren([])
+    setPreviewEl(null)
     eventChildren.current = [];
     eventSources.current = [];
   }
 
   // Multiple DOM elements may fire this event at the same time, so we need to
   // be careful with how the event, targets, and children are managed.
-  const onContextMenu = (
+
+  /**
+   * Reveals a menu for all contributing event sources
+   * To reveal a menu for only one source, use addToExclusiveContextMenu
+   * @param e 
+   * @param targetRef 
+   * @param child 
+   */
+  const addToContextMenu = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
     targetRef: React.MutableRefObject<HTMLElement>,
     child: JSX.Element,
@@ -80,7 +92,14 @@ const useContextMenuState = () => {
     setIsContextMenuOpen(true);
   };
 
-  const onExclusiveContextMenu = (
+  /**
+   * Reveal a menu only for the clicked element.
+   * To reveal a menu for all clicked menu sources, use onContextMenu instead.
+   * @param e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+   * @param targetRef: React.MutableRefObject<HTMLElement>,
+   * @param child: JSX.Element,
+   */
+  const addToExclusiveContextMenu = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
     targetRef: React.MutableRefObject<HTMLElement>,
     child: JSX.Element
@@ -97,31 +116,29 @@ const useContextMenuState = () => {
     setIsContextMenuOpen(true);
   };
 
+  // Store values and update state
   React.useEffect(() => {
     setContextMenuSources(eventSources.current);
     setContextMenuChildren(eventChildren.current);
 
     if (isContextMenuOpen) {
-      document.addEventListener("mousedown", onCloseMenu);
       window.addEventListener("wheel", onCloseMenu);
     }
     return () => {
-      document.removeEventListener("mousedown", onCloseMenu);
       window.removeEventListener("wheel", onCloseMenu);
     }
   }, [isContextMenuOpen])
 
   return {
     onCloseMenu,
-    onContextMenu,
-    onExclusiveContextMenu,
+    addToContextMenu,
+    addToExclusiveContextMenu,
     contextMenuPosition,
     contextMenuSources,
     isContextMenuOpen,
     contextMenuChildren,
     setIsContextMenuOpen,
   };
-
 }
 
 const MenuSource = ({ position }) => {
@@ -143,7 +160,7 @@ export const LayoutProvider = ({ children }) => {
     contextMenuPosition,
     isContextMenuOpen,
     contextMenuChildren,
-    onCloseMenu
+    onCloseMenu,
   } = contextMenuState;
 
   return <LayoutContext.Provider value={layoutState}>
