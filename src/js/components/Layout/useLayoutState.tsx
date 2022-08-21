@@ -57,29 +57,35 @@ const addItemsToState = (items, target, setItems) => {
   setItems(newItems);
 }
 
+
+
 const useContextMenuState = () => {
   const [isContextMenuOpen, setIsContextMenuOpen] = React.useState(false);
   const [contextMenuPosition, setContextMenuPosition] = React.useState({ x: 0, y: 0 });
   const [contextMenuTargets, setContextMenuTargets] = React.useState([]);
-  const [contextMenuItems, setContextMenuItems] = React.useState([]);
-  const [contextMenuChildren, setContextMenuChildren] = React.useState(null);
+  // const [contextMenuChildren, setContextMenuChildren] = React.useState([]);
+
+  const contextMenuChildren = React.useRef([])
 
   const onCloseMenu = () => {
     setIsContextMenuOpen(false);
     setContextMenuTargets([]);
-    setContextMenuItems([]);
+    // setContextMenuItems([]);
+    contextMenuChildren.current = [];
   }
 
   // const onContextMenu = (e, target, items) => {
-  const onContextMenu = (e, target, children) => {
+  const onContextMenu = (e, target, child) => {
     e.preventDefault();
 
-    console.log(e.clientX, e.clientY);
+    console.log(e, target, child);
+    console.log({ contextMenuChildren });
+    console.log({ child });
 
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
     setContextMenuTargets([...contextMenuTargets, target]);
-    setContextMenuChildren(children);
-    // addItemsToState(items, target, setContextMenuItems);
+    // setContextMenuChildren([child, ...contextMenuChildren]);
+    contextMenuChildren.current = [child, ...contextMenuChildren.current];
     setContextMenuPosition({
       x: e.clientX,
       y: e.clientY
@@ -93,7 +99,6 @@ const useContextMenuState = () => {
     isContextMenuOpen,
     contextMenuChildren,
     setIsContextMenuOpen,
-    contextMenuItems,
     onContextMenu
   };
 
@@ -119,7 +124,7 @@ export const LayoutProvider = ({ children }) => {
     onCloseMenu
   } = contextMenuState;
 
-  console.log(contextMenuPosition);
+  console.log({ contextMenuChildren });
 
   return <LayoutContext.Provider value={layoutState}>
     <ContextMenuContext.Provider value={contextMenuState}>
@@ -131,7 +136,9 @@ export const LayoutProvider = ({ children }) => {
         <MenuSource position={contextMenuPosition} />
         <Portal>
           <MenuList>
-            {contextMenuChildren}
+            {contextMenuChildren.current.map((Child, index) => {
+              return (<Child key={index} />)
+            })}
           </MenuList>
         </Portal>
       </Menu>
