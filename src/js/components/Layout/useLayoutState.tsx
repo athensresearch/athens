@@ -49,30 +49,40 @@ export const useLayoutState = () => {
 const useContextMenuState = () => {
   const [isContextMenuOpen, setIsContextMenuOpen] = React.useState(false);
   const [contextMenuPosition, setContextMenuPosition] = React.useState({ x: 0, y: 0 });
-  const contextMenuChildren = React.useRef([])
-  const contextMenuSources = React.useRef([])
+  const [contextMenuChildren, setContextMenuChildren] = React.useState([])
+  const [contextMenuSources, setContextMenuSources] = React.useState([])
+  const eventSources = React.useRef([]);
+  const eventChildren = React.useRef([]);
 
   const onCloseMenu = () => {
     setIsContextMenuOpen(false);
-    contextMenuSources.current = [];
-    contextMenuChildren.current = [];
+    setContextMenuSources([])
+    setContextMenuChildren([])
+    eventChildren.current = [];
+    eventSources.current = [];
   }
 
-  const onContextMenu = (e, targetRef, child) => {
+  // Multiple DOM elements may fire this event at the same time, so we need to
+  // be careful with how the event, targets, and children are managed.
+  const onContextMenu = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    targetRef: React.MutableRefObject<HTMLElement>,
+    child: JSX.Element
+  ) => {
     e.preventDefault();
-    setContextMenuPosition({ x: e.clientX, y: e.clientY });
-    contextMenuChildren.current = [child, ...contextMenuChildren.current];
-    contextMenuSources.current = [targetRef.current, ...contextMenuSources.current];
+    eventSources.current = [...eventSources.current, targetRef.current]
+    eventChildren.current = [...eventChildren.current, child]
     setContextMenuPosition({
       x: e.clientX,
       y: e.clientY
     });
     setIsContextMenuOpen(true);
-    console.log(contextMenuChildren.current);
-    console.log(contextMenuSources.current);
-  }
+  };
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
+    setContextMenuSources(eventSources.current);
+    setContextMenuChildren(eventChildren.current);
+
     if (isContextMenuOpen) {
       document.addEventListener("mousedown", onCloseMenu);
       window.addEventListener("wheel", onCloseMenu);
@@ -81,7 +91,7 @@ const useContextMenuState = () => {
       document.removeEventListener("mousedown", onCloseMenu);
       window.removeEventListener("wheel", onCloseMenu);
     }
-  }, [isContextMenuOpen]);
+  }, [isContextMenuOpen])
 
   return {
     contextMenuPosition,
@@ -128,7 +138,7 @@ export const LayoutProvider = ({ children }) => {
         <Portal>
           <MenuSource position={contextMenuPosition} />
           <MenuList>
-            {contextMenuChildren.current.map((Child, index) => {
+            {contextMenuChildren.map((Child, index) => {
               return (<Child key={index} />)
             })}
           </MenuList>
