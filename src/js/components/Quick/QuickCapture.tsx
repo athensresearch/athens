@@ -40,6 +40,9 @@ const FloatingInput = (props) => {
         borderColor="separator.divider"
         backgroundClip="border-box"
         background="background.attic"
+        _hover={{
+          shadow: "page"
+        }}
         enterkeyhint="send"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -58,7 +61,21 @@ const FloatingInput = (props) => {
 }
 
 const Placeholder = () => {
-  return <VStack mt="auto" color="foreground.secondary">
+  return <VStack
+    as={motion.div}
+    initial={{
+      opacity: 0,
+      y: 50,
+    }}
+    animate={{
+      opacity: 1,
+      y: 0,
+    }}
+    exit={{
+      opacity: -2,
+      y: -100,
+    }}
+    mt="auto" color="foreground.secondary">
     <Text fontSize="sm">Save a message to today's Daily Note.</Text>
   </VStack>
 }
@@ -74,12 +91,12 @@ const SavedItem = (props) => {
   }, [])
 
   return (<VStack
-    as={motion.div}
     _first={{
       marginTop: "auto"
     }}
     flex="0 0 auto"
     ref={itemRef}
+    as={motion.div}
     initial={{
       opacity: 0,
       y: 50,
@@ -90,7 +107,7 @@ const SavedItem = (props) => {
     }}
     exit={{
       opacity: 0,
-      y: 50,
+      y: 100,
     }}
     px={4}
     spacing={0}
@@ -133,7 +150,7 @@ export const QuickCapture = ({ savedCaptures }) => {
 
   return <VStack
     align="stretch"
-    bg="linear-gradient(to bottom, #00000000 50%, #00000055)"
+    bg="linear-gradient(to bottom, #00000000 50%, #00000011)"
     backgroundAttachment="fixed"
     pt={4}
     overflow="hidden"
@@ -164,7 +181,7 @@ export const QuickCapture = ({ savedCaptures }) => {
     >
       <AnimatePresence initial={true}>
         {captures.length ? captures.map((capture, index) => <SavedItem key={capture.timestamp} {...capture} />)
-          : <Placeholder />}
+          : <Placeholder key="placeholder" />}
       </AnimatePresence>
       <FloatingInput onSubmit={onSaveCapture} />
     </VStack>
