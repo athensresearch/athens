@@ -46,7 +46,7 @@
                            :bg "background.basement"}
         [:> LayoutProvider
          (if
-          (= @route-name :quickcapture)
+           (= @route-name :quickcapture)
            [perf-mon/hoc-perfmon-no-new-tx {:span-name "quick-capture"}
             [quick-capture/quick-capture]]
            [:<>
