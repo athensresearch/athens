@@ -67,20 +67,17 @@ const useContextMenuState = () => {
     eventSources.current = [];
   }
 
-  // Multiple DOM elements may fire this event at the same time, so we need to
-  // be careful with how the event, targets, and children are managed.
-
   /**
    * Reveals a menu for all contributing event sources
    * To reveal a menu for only one source, use addToExclusiveContextMenu
-   * @param e 
-   * @param targetRef 
-   * @param child 
+   * @param e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+   * @param targetRef: React.MutableRefObject<HTMLElement>,
+   * @param child: JSX.Element,
    */
   const addToContextMenu = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
     targetRef: React.MutableRefObject<HTMLElement>,
-    child: JSX.Element,
+    child: () => JSX.Element,
   ) => {
     e.preventDefault();
     eventSources.current = [...eventSources.current, targetRef.current]
@@ -102,7 +99,8 @@ const useContextMenuState = () => {
   const addToExclusiveContextMenu = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
     targetRef: React.MutableRefObject<HTMLElement>,
-    child: JSX.Element
+    child: () => JSX.Element,
+    onCloseCallbackFn: () => void,
   ) => {
     e.preventDefault();
     e.stopPropagation();

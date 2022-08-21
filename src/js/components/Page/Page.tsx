@@ -273,7 +273,7 @@ export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => 
       {...boxProps}
       ref={pageRef}
       onContextMenu={e => {
-        addToContextMenu(e, pageRef, MenuItems)
+        addToExclusiveContextMenu(e, pageRef, MenuItems)
       }}
       className="node-page daily-notes"
       minHeight="calc(100vh - 4rem)"
