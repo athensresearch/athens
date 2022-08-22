@@ -172,8 +172,10 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
       onDragStart={onDragStart}
       onContextMenu={
         (e) => {
-          setIsMenuOpen(true);
-          addToContextMenu(e, refs, MenuItems, () => setIsMenuOpen(false), innerRef)
+          if (menu) {
+            setIsMenuOpen(true);
+            addToContextMenu(e, refs, MenuItems, () => setIsMenuOpen(false), innerRef)
+          }
         }}
       onClick={onClick}
       onDragEnd={onDragEnd}
