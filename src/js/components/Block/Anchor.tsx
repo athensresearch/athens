@@ -169,7 +169,6 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
       aria-label="Block anchor"
       {...anchorButtonStyleProps(isClosedWithChildren, unreadNotification)}
       draggable={onDragStart ? true : undefined}
-      onDragStart={onDragStart}
       onContextMenu={
         (e) => {
           if (menu) {
@@ -182,7 +181,6 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
             addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef })
           }
         }}
-      onDragEnd={onDragEnd}
       isActive={isMenuOpen}
       {...rest}
     >

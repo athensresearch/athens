@@ -1,4 +1,4 @@
-import { Box, Menu, MenuButton, MenuList, Portal } from "@chakra-ui/react";
+import { Box, Menu, MenuButton, MenuList, Portal, useOutsideClick } from "@chakra-ui/react";
 import * as React from "react";
 
 export const ContextMenuContext = React.createContext(null);
@@ -93,16 +93,6 @@ const useContextMenuState = () => {
     });
   };
 
-  // Store values and update state
-  React.useEffect(() => {
-    if (menuState.isOpen) {
-      window.addEventListener("wheel", onCloseMenu);
-    }
-    return () => {
-      window.removeEventListener("wheel", onCloseMenu);
-    }
-  }, [menuState])
-
   /**
    * Returns true when the menu is open for this item
    * @param ref: React.MutableRefObject<HTMLElement>,
@@ -143,8 +133,21 @@ export const ContextMenuProvider = ({ children }) => {
     onCloseMenu,
   } = contextMenuState;
 
-  return (
+  const menuRef = React.useRef<HTMLDivElement>(null);
 
+  // Close when using mousewheel outside of the menu
+  React.useEffect(() => {
+    if (isContextMenuOpen) {
+      window.addEventListener("wheel", onCloseMenu);
+      window.addEventListener("dblclick", onCloseMenu);
+    }
+    return () => {
+      window.removeEventListener("wheel", onCloseMenu);
+      window.removeEventListener("dblclick", onCloseMenu);
+    }
+  }, [isContextMenuOpen])
+
+  return (
     <ContextMenuContext.Provider value={contextMenuState}>
       {children}
       <Menu
@@ -154,7 +157,7 @@ export const ContextMenuProvider = ({ children }) => {
       >
         <Portal>
           <MenuSource position={contextMenuPosition} />
-          <MenuList>
+          <MenuList ref={menuRef}>
             {contextMenucomponents.map((Child, index) => {
               return (<Child key={index} />)
             })}
