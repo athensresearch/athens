@@ -1,13 +1,11 @@
 import React from 'react';
 import {
   Button, VStack, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
-  Tooltip, FormLabel, BoxProps, MenuGroup, MenuItem
+  Tooltip, FormLabel, BoxProps, MenuGroup, MenuItem, MenuDivider
 } from '@chakra-ui/react';
-import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, ContrastIcon } from '@/Icons/Icons';
+import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, CalendarCircleFillIcon, CalendarTomorrowIcon, TemplateIcon, LinkedIcon } from '@/Icons/Icons';
 import { useInView } from 'react-intersection-observer';
 import { withErrorBoundary } from "react-error-boundary";
-import { ContextMenuContext } from '@/Layout/useLayoutState';
-
 
 const PAGE_PROPS = {
   as: "article",
@@ -194,34 +192,6 @@ export const DailyNotesList = (props: DailyNotesListProps) => {
   const { onGetAnotherNote, ...boxProps } = props;
   const listRef = React.useRef<HTMLDivElement>(null)
   const { ref, inView } = useInView({ threshold: 0 });
-  const { addToContextMenu } = React.useContext(ContextMenuContext);
-
-  const isMenuOpen = false;
-
-  const menuItems = [
-    {
-      label: "New Daily Note",
-      onClick: e => console.log(e),
-      icon: <ContrastIcon />
-    },
-    {
-      label: "Clear Daily Notes",
-      onClick: e => console.log(e),
-      icon: <ContrastIcon />
-    },
-  ]
-
-  const MenuItems = () => {
-    return <MenuGroup title="Daily Notes List">
-      {menuItems.map(item => (
-        <MenuItem key={item.label}
-          icon={item.icon}
-          onClick={item.onClick}>
-          {item.label}
-        </MenuItem>
-      ))}
-    </MenuGroup>
-  }
 
   React.useLayoutEffect(() => {
     if (inView) {
@@ -230,10 +200,6 @@ export const DailyNotesList = (props: DailyNotesListProps) => {
   });
 
   return <VStack py={16}
-    border={isMenuOpen ? "10px solid red" : "none"}
-    onContextMenu={e => {
-      addToContextMenu(e, listRef, MenuItems);
-    }}
     align="stretch"
     pb={4}
     width="100%"
@@ -257,24 +223,13 @@ interface DailyNotesPageProps extends BoxProps {
 
 export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => {
   const { isReal, ...boxProps } = props
-  const { addToContextMenu } = React.useContext(ContextMenuContext);
   const pageRef = React.useRef<HTMLDivElement>(null)
-
-  const MenuItems = () => {
-    return <MenuGroup title="Daily Note">
-      <MenuItem icon={<ContrastIcon />} onClick={() => console.log("New Daily Note")}>New Daily Note</MenuItem>
-      <MenuItem icon={<ContrastIcon />} onClick={() => console.log("Clear Daily Notes")}>Clear Daily Notes</MenuItem>
-    </MenuGroup>
-  }
 
   return (
     <Box
       {...PAGE_PROPS}
       {...boxProps}
       ref={pageRef}
-      onContextMenu={e => {
-        addToContextMenu(e, pageRef, MenuItems);
-      }}
       className="node-page daily-notes"
       minHeight="calc(100vh - 4rem)"
       boxShadow="page"

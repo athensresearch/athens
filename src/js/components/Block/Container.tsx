@@ -25,9 +25,8 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
 
   const handleMouseOver = (e) => setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
   const handleMouseLeave = () => isHoveredNotChild && setIsHoveredNotChild(false);
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-
-  const { addToContextMenu } = React.useContext(ContextMenuContext);
+  const { addToContextMenu, contextMenuSources } = React.useContext(ContextMenuContext);
+  const isMenuOpen = contextMenuSources?.includes(internalRef.current);
 
   const MenuItems = () => {
     return menu
@@ -164,8 +163,9 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
           const target = e.target as HTMLElement;
           // Don't open the context menu on these e.target as HTMLElement;
           if (!CONTAINER_CONTEXT_MENU_FILTERED_TAGS.includes(target.tagName)) {
-            setIsMenuOpen(true);
-            addToContextMenu(e, internalRef, MenuItems, () => setIsMenuOpen(false));
+            addToContextMenu(e, internalRef, MenuItems, null, null, true);
+          } else {
+            e.stopPropagation();
           }
         }
       }

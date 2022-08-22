@@ -51,8 +51,8 @@ const NULL_STATE = {
   position: { x: 0, y: 0 },
   children: [],
   sources: [],
-  previewEl: null,
   onCloseFn: null,
+  isExclusive: false,
 }
 
 const useContextMenuState = () => {
@@ -82,12 +82,21 @@ const useContextMenuState = () => {
     child: () => JSX.Element,
     onCloseFn: () => void,
     anchorEl?: React.MutableRefObject<HTMLElement>,
+    isExclusive?: boolean
   ) => {
     e.preventDefault();
+
+    // When exclusive, don't add to or update the menu
+    if (menuState.isExclusive && menuState.isOpen) {
+      return;
+    }
+
+    // Store the children and sources for this state's menu
+    // These are updated by the event bubbling through the DOM
     children = [...children, child];
     sources = [...sources, targetRef.current];
-    let position;
 
+    let position;
     if (anchorEl) {
       const { left, top, width, height } = anchorEl.current.getBoundingClientRect();
       position = {
@@ -102,16 +111,31 @@ const useContextMenuState = () => {
       }
     }
 
+    // Exclusive menus set state immediately and then
+    // stop the event from creating more menus
+    if (isExclusive && !menuState.isExclusive) {
+      e.stopPropagation();
+      setMenuState({
+        isOpen: true,
+        position,
+        sources: [targetRef.current],
+        children: [child],
+        onCloseFn: onCloseFn,
+        isExclusive: true,
+      });
+      return;
+    }
+
+    // Normal menus set state after all the
+    // event handlers have been run
     setMenuState({
       isOpen: true,
       position,
       sources,
       children,
-      previewEl: null,
       onCloseFn: onCloseFn,
+      isExclusive: menuState.isExclusive,
     });
-
-    // }
   };
 
   // Store values and update state
