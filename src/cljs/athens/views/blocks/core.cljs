@@ -7,7 +7,7 @@
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatBubbleIcon ArchiveIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [Box Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
+    ["@chakra-ui/react"                        :refer [Box Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuDivider MenuItem VStack]]
     [athens.common-db                          :as common-db]
     [athens.common.logging                     :as log]
     [athens.db                                 :as db]
