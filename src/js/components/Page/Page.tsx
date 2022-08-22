@@ -257,7 +257,7 @@ interface DailyNotesPageProps extends BoxProps {
 
 export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => {
   const { isReal, ...boxProps } = props
-  const { addToContextMenu, addToExclusiveContextMenu } = React.useContext(ContextMenuContext);
+  const { addToContextMenu } = React.useContext(ContextMenuContext);
   const pageRef = React.useRef<HTMLDivElement>(null)
 
   const MenuItems = () => {
@@ -273,7 +273,7 @@ export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => 
       {...boxProps}
       ref={pageRef}
       onContextMenu={e => {
-        addToExclusiveContextMenu(e, pageRef, MenuItems)
+        addToContextMenu(e, pageRef, MenuItems);
       }}
       className="node-page daily-notes"
       minHeight="calc(100vh - 4rem)"

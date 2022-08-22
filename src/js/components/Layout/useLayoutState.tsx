@@ -46,47 +46,24 @@ export const useLayoutState = () => {
   };
 };
 
+const NULL_STATE = {
+  isOpen: false,
+  position: { x: 0, y: 0 },
+  children: [],
+  sources: [],
+  previewEl: null,
+  onCloseFn: null,
+}
+
 const useContextMenuState = () => {
-  const [isContextMenuOpen, setIsContextMenuOpen] = React.useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = React.useState({ x: 0, y: 0 });
-  const [contextMenuChildren, setContextMenuChildren] = React.useState([])
-  const [contextMenuSources, setContextMenuSources] = React.useState([])
-  const [previewEl, setPreviewEl] = React.useState(null)
-  const eventSources = React.useRef([]);
-  const eventChildren = React.useRef([]);
+  const [menuState, setMenuState] = React.useState(NULL_STATE);
 
   /**
    * Reset the context menu state
    */
   const onCloseMenu = () => {
-    setIsContextMenuOpen(false);
-    setContextMenuSources([])
-    setContextMenuChildren([])
-    setPreviewEl(null)
-    eventChildren.current = [];
-    eventSources.current = [];
-  }
-
-  /**
-   * Reveals a menu for all contributing event sources
-   * To reveal a menu for only one source, use addToExclusiveContextMenu
-   * @param e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-   * @param targetRef: React.MutableRefObject<HTMLElement>,
-   * @param child: JSX.Element,
-   */
-  const addToContextMenu = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    targetRef: React.MutableRefObject<HTMLElement>,
-    child: () => JSX.Element,
-  ) => {
-    e.preventDefault();
-    eventSources.current = [...eventSources.current, targetRef.current]
-    eventChildren.current = [...eventChildren.current, child]
-    setContextMenuPosition({
-      x: e.clientX,
-      y: e.clientY
-    });
-    setIsContextMenuOpen(true);
+    if (menuState.onCloseFn) menuState.onCloseFn();
+    setMenuState(NULL_STATE);
   };
 
   /**
@@ -96,46 +73,44 @@ const useContextMenuState = () => {
    * @param targetRef: React.MutableRefObject<HTMLElement>,
    * @param child: JSX.Element,
    */
-  const addToExclusiveContextMenu = (
+  const addToContextMenu = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
     targetRef: React.MutableRefObject<HTMLElement>,
     child: () => JSX.Element,
-    onCloseCallbackFn: () => void,
+    onCloseFn: () => void,
   ) => {
     e.preventDefault();
     e.stopPropagation();
 
-    eventSources.current = [targetRef.current]
-    eventChildren.current = [child]
-    setContextMenuPosition({
-      x: e.clientX,
-      y: e.clientY
+    console.log(onCloseFn);
+
+    setMenuState({
+      isOpen: true,
+      position: { x: e.clientX, y: e.clientY },
+      sources: [targetRef.current],
+      children: [child],
+      previewEl: null,
+      onCloseFn: onCloseFn,
     });
-    setIsContextMenuOpen(true);
   };
 
   // Store values and update state
   React.useEffect(() => {
-    setContextMenuSources(eventSources.current);
-    setContextMenuChildren(eventChildren.current);
-
-    if (isContextMenuOpen) {
+    if (menuState.isOpen) {
       window.addEventListener("wheel", onCloseMenu);
     }
     return () => {
       window.removeEventListener("wheel", onCloseMenu);
     }
-  }, [isContextMenuOpen])
+  }, [menuState])
 
   return {
     onCloseMenu,
     addToContextMenu,
-    addToExclusiveContextMenu,
-    contextMenuPosition,
-    contextMenuSources,
-    isContextMenuOpen,
-    contextMenuChildren,
-    setIsContextMenuOpen,
+    contextMenuPosition: menuState.position,
+    contextMenuSources: menuState.sources,
+    isContextMenuOpen: menuState.isOpen,
+    contextMenuChildren: menuState.children,
   };
 }
 
