@@ -75,7 +75,7 @@
 
 
 (def SCHEMA
-  {"[[athens/task]]"           (concat base-schema ["title" "status" "assignee" "project" "due date"])
+  {"[[athens/task]]"           (concat base-schema [":task/title" ":task/status" ":task/assignee" ":task/due-date"])
    "[[athens/comment-thread]]" (concat base-schema [])})
 
 (def AUTHORS
@@ -461,8 +461,9 @@
 ;; and then if there are block/children, it is no bueno
 
 (defn query-block
-  [block-data properties]
+  [block-data]
   (let [block-uid         (:block/uid block-data)
+        properties        (:block/properties block-data)
         parsed-properties (get-query-props properties)
         [select] (get* parsed-properties ["select"])
         schema            (get-schema select)
@@ -471,8 +472,8 @@
 
     (if (invalid-query? parsed-properties)
       [:> Box {:color "red"} "invalid query"]
-      [:> Box {:width        "100%" :borderColor "gray"
-               :padding-left 38 :padding-top 15}
+      [:> Box {:gridArea "content" :borderColor "gray"}
+
        [options-el {:parsed-properties parsed-properties
                     :properties        properties
                     :schema            schema
@@ -482,8 +483,6 @@
                   :uid               block-uid
                   :schema            schema
                   :parsed-properties parsed-properties}]])))
-
-
 
 
 (defrecord QueryView
@@ -497,27 +496,10 @@
 
   (outline-view
     [_this block-data _callbacks]
-    (let [block-uid         (:block/uid block-data)
-          properties (:block/properties block-data)
-          parsed-properties (get-query-props properties)
-          [select] (get* parsed-properties ["select"])
-          schema            (get-schema select)
-          query-data        (->> (reactive/get-reactive-instances-of-key-value ":entity/type" select)
-                                 (map block-to-flat-map))]
-
-       (if (invalid-query? parsed-properties)
-         [:> Box {:color "red"} "invalid query"]
-         [:> Box {:borderColor "gray"
-                  :gridArea "content"}
-          [options-el {:parsed-properties parsed-properties
-                       :properties        properties
-                       :schema            schema
-                       :query-data        query-data
-                       :uid               block-uid}]
-          [query-el {:query-data        query-data
-                     :uid               block-uid
-                     :schema            schema
-                     :parsed-properties parsed-properties}]])))
+    (let [block-uid (:block/uid block-data)]
+      (fn [_block-data _callbacks]
+        (let [block (-> [:block/uid block-uid] reactive/get-reactive-block-document)]
+          [query-block block]))))
 
 
   (supported-transclusion-scopes
