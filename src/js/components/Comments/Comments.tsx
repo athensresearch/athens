@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Text, HStack, Textarea, Button, MenuList, MenuItem } from '@chakra-ui/react'
 import { ChatBubbleFillIcon } from '@/Icons/Icons'
 // import { useOldContextMenu } from '@/utils/useContextMenu';
+import { ContextMenuContext } from '@/Layout/useLayoutState';
 import { withErrorBoundary } from "react-error-boundary";
 
 interface InlineCommentInputProps {
@@ -62,25 +63,20 @@ const CommentErrorMessage = () => <Text color="foreground.secondary" display="bl
 
 export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp }) => {
   const commentRef = React.useRef();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const { addToContextMenu } = React.useContext(ContextMenuContext);
 
-  // const {
-  //   menuSourceProps,
-  //   ContextMenu,
-  //   isOpen: isContextMenuOpen
-  // } = useContextMenu({
-  //   ref: commentRef,
-  //   source: "cursor",
-  // });
-
-  const menuList = React.useMemo(() => {
-    return <MenuList>{menu.map((action) => <MenuItem key={action.children} {...action} />)}</MenuList>
-  }, [menu])
+  const MenuList = () => {
+    return <>{menu.map((action) => <MenuItem key={action.children} {...action} />)}</>
+  }
 
   return <Box
     ref={commentRef}
-    // {...menuSourceProps}
-    // bg={isContextMenuOpen ? "interaction.surface.hover" : undefined}
-    // borderRadius={isContextMenuOpen ? "sm" : undefined}
+    bg={isMenuOpen ? "interaction.surface.hover" : undefined}
+    onContextMenu={(e) => {
+      setIsMenuOpen(true);
+      addToContextMenu(e, commentRef, MenuList, () => setIsMenuOpen(false))
+    }}
     mb="-1px"
     borderTop={isFollowUp ? null : "1px solid"}
     borderTopColor="separator.divider"
@@ -102,9 +98,7 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
         color: "foreground.secondary"
       }
     }}
-  >{children}
-    {/* <ContextMenu>
-      {menuList}
-    </ContextMenu> */}
+  >
+    {children}
   </Box>
 }, { fallback: <CommentErrorMessage /> });
