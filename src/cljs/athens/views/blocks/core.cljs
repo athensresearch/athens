@@ -377,7 +377,7 @@
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
-                                     [:> MenuList
+                                     [:> MenuList {:class "anchor"}
                                       (when-not (= block-type "[[athens/task]]") [:> MenuItem {:children "convert to task"
                                                                                                :icon     (r/as-element [:> BlockEmbedIcon])
                                                                                                :onClick  convert-to-task}])
