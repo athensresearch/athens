@@ -362,7 +362,7 @@
                 reactions              (and reactions-enabled?
                                             (block-reaction/props->reactions properties))
                 menu                   (r/as-element
-                                         [:> MenuList {:class "anchor"}
+                                         [:<>
                                           [:> MenuItem {:children (if (> (count @selected-items) 1)
                                                                     "Copy selected block refs"
                                                                     "Copy block ref")

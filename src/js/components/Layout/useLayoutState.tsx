@@ -66,6 +66,9 @@ const useContextMenuState = () => {
     setMenuState(NULL_STATE);
   };
 
+  let children = [];
+  let sources = [];
+
   /**
    * Reveal a menu only for the clicked element.
    * To reveal a menu for all clicked menu sources, use onContextMenu instead.
@@ -78,13 +81,13 @@ const useContextMenuState = () => {
     targetRef: React.MutableRefObject<HTMLElement>,
     child: () => JSX.Element,
     onCloseFn: () => void,
-    anchorEl?: React.MutableRefObject<HTMLElement>
+    anchorEl?: React.MutableRefObject<HTMLElement>,
   ) => {
     e.preventDefault();
-    e.stopPropagation();
-
+    children = [...children, child];
+    sources = [...sources, targetRef.current];
     let position;
-    console.log(anchorEl, anchorEl?.current);
+
     if (anchorEl) {
       const { left, top, width, height } = anchorEl.current.getBoundingClientRect();
       position = {
@@ -102,11 +105,13 @@ const useContextMenuState = () => {
     setMenuState({
       isOpen: true,
       position,
-      sources: [targetRef.current],
-      children: [child],
+      sources,
+      children,
       previewEl: null,
       onCloseFn: onCloseFn,
     });
+
+    // }
   };
 
   // Store values and update state
