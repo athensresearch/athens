@@ -61,19 +61,19 @@ export const CommentCounter = ({ count }) => {
 const CommentErrorMessage = () => <Text color="foreground.secondary" display="block" p={2} borderRadius="sm">Couldn't show this comment</Text>;
 
 export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp }) => {
-  const commentRef = React.useRef();
+  const ref = React.useRef();
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
-  const isMenuOpen = getIsMenuOpen(commentRef);
+  const isMenuOpen = getIsMenuOpen(ref);
 
   const MenuList = () => {
     return <>{menu.map((action) => <MenuItem key={action.children} {...action} />)}</>
   }
 
   return <Box
-    ref={commentRef}
+    ref={ref}
     bg={isMenuOpen ? "interaction.surface.hover" : undefined}
-    onContextMenu={(e) => {
-      addToContextMenu(e, commentRef, MenuList)
+    onContextMenu={(event) => {
+      addToContextMenu({ event, ref, component: MenuList })
     }}
     mb="-1px"
     borderTop={isFollowUp ? null : "1px solid"}

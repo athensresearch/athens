@@ -173,10 +173,15 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
       onContextMenu={
         (e) => {
           if (menu) {
-            addToContextMenu(e, innerRef, MenuItems, null, innerRef)
+            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef })
           }
         }}
-      onClick={onClick}
+      onClick={
+        (e) => {
+          if (menu) {
+            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef })
+          }
+        }}
       onDragEnd={onDragEnd}
       isActive={isMenuOpen}
       {...rest}

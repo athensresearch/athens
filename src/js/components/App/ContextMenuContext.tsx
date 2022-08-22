@@ -6,52 +6,50 @@ export const ContextMenuContext = React.createContext(null);
 const NULL_STATE = {
   isOpen: false,
   position: { x: 0, y: 0 },
-  children: [],
+  components: [],
   sources: [],
   onCloseFn: null,
   isExclusive: false,
 }
 
+interface addToContextMenuProps {
+  event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ref: React.MutableRefObject<HTMLElement>,
+  component: () => JSX.Element,
+  onClose: () => void,
+  anchorEl?: React.MutableRefObject<HTMLElement>,
+  isExclusive?: boolean
+}
+
 const useContextMenuState = () => {
   const [menuState, setMenuState] = React.useState(NULL_STATE);
 
-  /**
-   * Reset the context menu state
-   */
+  // Reset the context menu state
   const onCloseMenu = () => {
     if (typeof menuState?.onCloseFn === "function") menuState.onCloseFn();
     setMenuState(NULL_STATE);
   };
 
-  let children = [];
+  let components = [];
   let sources = [];
 
   /**
    * Reveal a menu only for the clicked element.
    * To reveal a menu for all clicked menu sources, use onContextMenu instead.
-   * @param e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-   * @param targetRef: React.MutableRefObject<HTMLElement>,
-   * @param child: JSX.Element,
    */
-  const addToContextMenu = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    targetRef: React.MutableRefObject<HTMLElement>,
-    child: () => JSX.Element,
-    onCloseFn: () => void,
-    anchorEl?: React.MutableRefObject<HTMLElement>,
-    isExclusive?: boolean
-  ) => {
-    e.preventDefault();
+  const addToContextMenu = (props: addToContextMenuProps) => {
+    const { event, ref, component, onClose, anchorEl, isExclusive } = props;
+    event.preventDefault();
 
     // When exclusive, don't add to or update the menu
     if (menuState.isExclusive && menuState.isOpen) {
       return;
     }
 
-    // Store the children and sources for this state's menu
+    // Store the components and sources for this state's menu
     // These are updated by the event bubbling through the DOM
-    children = [...children, child];
-    sources = [...sources, targetRef.current];
+    components = [...components, component];
+    sources = [...sources, ref.current];
 
     let position;
     if (anchorEl) {
@@ -61,8 +59,8 @@ const useContextMenuState = () => {
       }
     } else {
       position = {
-        left: e.clientX,
-        top: e.clientY,
+        left: event.clientX,
+        top: event.clientY,
         width: 0,
         height: 0
       }
@@ -71,13 +69,13 @@ const useContextMenuState = () => {
     // Exclusive menus set state immediately and then
     // stop the event from creating more menus
     if (isExclusive && !menuState.isExclusive) {
-      e.stopPropagation();
+      event.stopPropagation();
       setMenuState({
         isOpen: true,
         position,
-        sources: [targetRef.current],
-        children: [child],
-        onCloseFn: onCloseFn,
+        sources: [ref.current],
+        components: [component],
+        onCloseFn: onClose,
         isExclusive: true,
       });
       return;
@@ -89,8 +87,8 @@ const useContextMenuState = () => {
       isOpen: true,
       position,
       sources,
-      children,
-      onCloseFn: onCloseFn,
+      components,
+      onCloseFn: onClose,
       isExclusive: menuState.isExclusive,
     });
   };
@@ -119,7 +117,7 @@ const useContextMenuState = () => {
     contextMenuPosition: menuState.position,
     contextMenuSources: menuState.sources,
     isContextMenuOpen: menuState.isOpen,
-    contextMenuChildren: menuState.children,
+    contextMenucomponents: menuState.components,
   };
 }
 
@@ -141,7 +139,7 @@ export const ContextMenuProvider = ({ children }) => {
   const {
     contextMenuPosition,
     isContextMenuOpen,
-    contextMenuChildren,
+    contextMenucomponents,
     onCloseMenu,
   } = contextMenuState;
 
@@ -157,7 +155,7 @@ export const ContextMenuProvider = ({ children }) => {
         <Portal>
           <MenuSource position={contextMenuPosition} />
           <MenuList>
-            {contextMenuChildren.map((Child, index) => {
+            {contextMenucomponents.map((Child, index) => {
               return (<Child key={index} />)
             })}
           </MenuList>
