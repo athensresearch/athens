@@ -1,9 +1,7 @@
 import React, { ReactNode } from 'react';
 import { IconButton, Text, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
 import { ColonIcon, BulletIcon, DashIcon } from '@/Icons/Icons';
-
-import { ContextMenuContext } from "@/Layout/useLayoutState";
-
+import { ContextMenuContext } from "@/App/ContextMenuContext";
 
 const ANCHORS = {
   "bullet": <BulletIcon />,
@@ -145,11 +143,13 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
   } = props;
   const innerRef = React.useRef(null);
   const refs = useMergeRefs(innerRef, ref);
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   const {
     addToContextMenu,
+    getIsMenuOpen,
   } = React.useContext(ContextMenuContext);
+
+  const isMenuOpen = getIsMenuOpen(innerRef);
 
   const MenuItems = () => {
     return shouldShowDebugDetails ? (
@@ -173,8 +173,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
       onContextMenu={
         (e) => {
           if (menu) {
-            setIsMenuOpen(true);
-            addToContextMenu(e, refs, MenuItems, () => setIsMenuOpen(false), innerRef)
+            addToContextMenu(e, innerRef, MenuItems, null, innerRef)
           }
         }}
       onClick={onClick}

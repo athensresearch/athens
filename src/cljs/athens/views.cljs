@@ -1,5 +1,6 @@
 (ns athens.views
   (:require
+    ["/components/App/ContextMenuContext" :refer [ContextMenuProvider]]
     ["/components/Layout/MainContent" :refer [MainContent]]
     ["/components/Layout/RightSidebarResizeControl" :refer [RightSidebarResizeControl]]
     ["/components/Layout/useLayoutState" :refer [LayoutProvider]]
@@ -41,51 +42,52 @@
                    (zoom))
        [:> ChakraProvider {:theme theme,
                            :bg "background.basement"}
-        [:> LayoutProvider
-         [help-popup]
-         [alert]
-         [athena-component]
-         (cond
-           (and @loading @modal) [db-modal/window]
+        [:> ContextMenuProvider
+         [:> LayoutProvider
+          [help-popup]
+          [alert]
+          [athena-component]
+          (cond
+            (and @loading @modal) [db-modal/window]
 
-           @loading
-           [:> Center {:height "100vh"}
-            [:> Flex {:width 28
-                      :flexDirection "column"
-                      :gap 2
-                      :color "foreground.secondary"
-                      :borderRadius "lg"
-                      :placeItems "center"
-                      :placeContent "center"
-                      :height 28}
-             [:> Spinner {:size "xl"}]]]
+            @loading
+            [:> Center {:height "100vh"}
+             [:> Flex {:width 28
+                       :flexDirection "column"
+                       :gap 2
+                       :color "foreground.secondary"
+                       :borderRadius "lg"
+                       :placeItems "center"
+                       :placeContent "center"
+                       :height 28}
+              [:> Spinner {:size "xl"}]]]
 
-           :else [:<>
-                  (when @modal
-                    [db-modal/window])
-                  (when @settings-open?
-                    [settings/page])
-                  [:> VStack {:overscrollBehavior "contain"
-                              :id "main-layout"
-                              :spacing 0
-                              :overflowY "auto"
-                              :height "100vh"
-                              :bg "background.floor"
-                              :transitionDuration "fast"
-                              :transitionProperty "background"
-                              :transitionTimingFunction "ease-in-out"
-                              :align "stretch"
-                              :position "relative"}
-                   [app-toolbar/app-toolbar]
-                   [:> HStack {:overscrollBehavior "contain"
-                               :align "stretch"
+            :else [:<>
+                   (when @modal
+                     [db-modal/window])
+                   (when @settings-open?
+                     [settings/page])
+                   [:> VStack {:overscrollBehavior "contain"
+                               :id "main-layout"
                                :spacing 0
-                               :flex 1}
-                    [left-sidebar/left-sidebar]
-                    [:> MainContent {:rightSidebarWidth @right-sidebar-width
-                                     :isRightSidebarOpen @right-sidebar-open?}
-                     [pages/view]]
-                    [:> RightSidebarResizeControl {:rightSidebarWidth @right-sidebar-width
-                                                   :isRightSidebarOpen @right-sidebar-open?
-                                                   :onResizeSidebar #(rf/dispatch [:right-sidebar/set-width %])}]
-                    [right-sidebar/right-sidebar]]]])]]])))
+                               :overflowY "auto"
+                               :height "100vh"
+                               :bg "background.floor"
+                               :transitionDuration "fast"
+                               :transitionProperty "background"
+                               :transitionTimingFunction "ease-in-out"
+                               :align "stretch"
+                               :position "relative"}
+                    [app-toolbar/app-toolbar]
+                    [:> HStack {:overscrollBehavior "contain"
+                                :align "stretch"
+                                :spacing 0
+                                :flex 1}
+                     [left-sidebar/left-sidebar]
+                     [:> MainContent {:rightSidebarWidth @right-sidebar-width
+                                      :isRightSidebarOpen @right-sidebar-open?}
+                      [pages/view]]
+                     [:> RightSidebarResizeControl {:rightSidebarWidth @right-sidebar-width
+                                                    :isRightSidebarOpen @right-sidebar-open?
+                                                    :onResizeSidebar #(rf/dispatch [:right-sidebar/set-width %])}]
+                     [right-sidebar/right-sidebar]]]])]]]])))

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, useMergeRefs } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
-import { ContextMenuContext } from "@/Layout/useLayoutState";
+import { ContextMenuContext } from "@/App/ContextMenuContext";
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
@@ -25,8 +25,8 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
 
   const handleMouseOver = (e) => setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
   const handleMouseLeave = () => isHoveredNotChild && setIsHoveredNotChild(false);
-  const { addToContextMenu, contextMenuSources } = React.useContext(ContextMenuContext);
-  const isMenuOpen = contextMenuSources?.includes(internalRef.current);
+  const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
+  const isMenuOpen = getIsMenuOpen(internalRef);
 
   const MenuItems = () => {
     return menu
