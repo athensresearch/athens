@@ -157,7 +157,7 @@ export const ContextMenuProvider = ({ children }) => {
       >
         <Portal>
           <MenuSource position={contextMenuPosition} />
-          <MenuList ref={menuRef}>
+          <MenuList className="app-context-menu" ref={menuRef}>
             {contextMenucomponents.map((Child, index) => {
               return (<Child key={index} />)
             })}
