@@ -140,7 +140,29 @@ const SavedItem = (props) => {
   </VStack>);
 }
 
-export const QuickCapture = ({ savedCaptures }) => {
+// add db-switcher
+// add switch to try to load full view?
+// 
+// id = eventID
+// newEventid = () => eventID
+
+// filipe will return items that have not been saved
+// and fn to get a new event id
+// and saveEvent fn (eventid, string) => null
+// 
+
+export const QuickCapture = ({ unsavedEventsIds, newEventId }) => {
+
+  // add the picker
+  // switch to full view
+
+  // on create new
+  // eventId = newEventId()
+  // add to local state
+
+  // on change of unsavedEventsIds
+  // refresh local state and compare to unsavedEventsIds  
+
   const [captures, setCaptures] = React.useState(savedCaptures || []);
   const containerRef = React.useRef(null)
 
