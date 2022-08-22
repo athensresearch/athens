@@ -32,7 +32,7 @@ export interface ContextMenuProps {
  * @param portalProps The props to pass to the inner Portal component
  * @returns An object containing the props for the menu target, the menu component, and the state of the menu
  */
-export const useContextMenu = ({
+export const useOldContextMenu = ({
   ref,
   source,
   placement,

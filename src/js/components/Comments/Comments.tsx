@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Text, HStack, Textarea, Button, MenuList, MenuItem } from '@chakra-ui/react'
 import { ChatBubbleFillIcon } from '@/Icons/Icons'
-import { useContextMenu } from '@/utils/useContextMenu';
+// import { useOldContextMenu } from '@/utils/useContextMenu';
 import { withErrorBoundary } from "react-error-boundary";
 
 interface InlineCommentInputProps {
@@ -63,14 +63,14 @@ const CommentErrorMessage = () => <Text color="foreground.secondary" display="bl
 export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp }) => {
   const commentRef = React.useRef();
 
-  const {
-    menuSourceProps,
-    ContextMenu,
-    isOpen: isContextMenuOpen
-  } = useContextMenu({
-    ref: commentRef,
-    source: "cursor",
-  });
+  // const {
+  //   menuSourceProps,
+  //   ContextMenu,
+  //   isOpen: isContextMenuOpen
+  // } = useContextMenu({
+  //   ref: commentRef,
+  //   source: "cursor",
+  // });
 
   const menuList = React.useMemo(() => {
     return <MenuList>{menu.map((action) => <MenuItem key={action.children} {...action} />)}</MenuList>
@@ -78,9 +78,9 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
 
   return <Box
     ref={commentRef}
-    {...menuSourceProps}
-    bg={isContextMenuOpen ? "interaction.surface.hover" : undefined}
-    borderRadius={isContextMenuOpen ? "sm" : undefined}
+    // {...menuSourceProps}
+    // bg={isContextMenuOpen ? "interaction.surface.hover" : undefined}
+    // borderRadius={isContextMenuOpen ? "sm" : undefined}
     mb="-1px"
     borderTop={isFollowUp ? null : "1px solid"}
     borderTopColor="separator.divider"
@@ -103,8 +103,8 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
       }
     }}
   >{children}
-    <ContextMenu>
+    {/* <ContextMenu>
       {menuList}
-    </ContextMenu>
+    </ContextMenu> */}
   </Box>
 }, { fallback: <CommentErrorMessage /> });

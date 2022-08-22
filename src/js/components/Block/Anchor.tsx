@@ -1,7 +1,9 @@
 import React, { ReactNode } from 'react';
-import { IconButton, Text, MenuList, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
-import { ColonIcon, BulletIcon, DashIcon, ArrowRightIcon } from '@/Icons/Icons';
-import { useContextMenu } from '@/utils/useContextMenu';
+import { IconButton, Text, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
+import { ColonIcon, BulletIcon, DashIcon } from '@/Icons/Icons';
+
+import { ContextMenuContext } from "@/Layout/useLayoutState";
+
 
 const ANCHORS = {
   "bullet": <BulletIcon />,
@@ -73,7 +75,7 @@ export interface AnchorProps {
   menu?: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
-const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotification : boolean) => {
+const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotification: boolean) => {
   return ({
     bg: "transparent",
     "aria-label": "Block anchor",
@@ -84,7 +86,7 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotificatio
     appearance: "none",
     border: "0",
     color: "foreground.secondary",
-    ...unreadNotification && ({color: "green"}),
+    ...unreadNotification && ({ color: "green" }),
     display: "flex",
     placeItems: "center",
     placeContent: "center",
@@ -143,45 +145,43 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
   } = props;
   const innerRef = React.useRef(null);
   const refs = useMergeRefs(innerRef, ref);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   const {
-    menuSourceProps,
-    ContextMenu,
-    isOpen: isContextMenuOpen
-  } = useContextMenu({
-    ref: innerRef,
-    menuProps: {
-      size: "sm"
-    },
-    source: "box"
-  });
+    addToContextMenu,
+  } = React.useContext(ContextMenuContext);
+
+  const MenuItems = () => {
+    return shouldShowDebugDetails ? (
+      <>
+        {menu}
+        <MenuGroup title="Debug details">
+          <Box px={4} pb={3}>
+            {propertiesList(uidSanitizedBlock)}
+          </Box>
+        </MenuGroup>
+      </>) : menu
+  }
 
   return <>
     <IconButton
       ref={refs}
       aria-label="Block anchor"
       {...anchorButtonStyleProps(isClosedWithChildren, unreadNotification)}
-      {...menuSourceProps}
       draggable={onDragStart ? true : undefined}
       onDragStart={onDragStart}
+      onContextMenu={
+        (e) => {
+          setIsMenuOpen(true);
+          addToContextMenu(e, refs, MenuItems, () => setIsMenuOpen(false), innerRef)
+        }}
       onClick={onClick}
       onDragEnd={onDragEnd}
-      isActive={isContextMenuOpen}
+      isActive={isMenuOpen}
       {...rest}
     >
       {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}
     </IconButton>
-    {(menu || shouldShowDebugDetails) && <ContextMenu>
-      {shouldShowDebugDetails ? (
-        <MenuList>
-          {menu}
-          <MenuGroup title="Debug details">
-            <Box px={4} pb={3}>
-              {propertiesList(uidSanitizedBlock)}
-            </Box>
-          </MenuGroup>
-        </MenuList>) : menu}
-    </ContextMenu>}
   </>
 
 });

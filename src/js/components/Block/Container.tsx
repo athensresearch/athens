@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, useMergeRefs } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
-import { useContextMenu } from '@/utils/useContextMenu';
+import { useOldContextMenu } from '@/utils/useContextMenu';
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
@@ -26,17 +26,17 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
   const handleMouseOver = (e) => setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
   const handleMouseLeave = () => isHoveredNotChild && setIsHoveredNotChild(false);
 
-  const {
-    menuSourceProps,
-    ContextMenu,
-    isOpen: isContextMenuOpen
-  } = useContextMenu({
-    ref: internalRef,
-    menuProps: {
-      size: "sm"
-    },
-    source: "cursor",
-  });
+  // const {
+  //   menuSourceProps,
+  //   ContextMenu,
+  //   isOpen: isContextMenuOpen
+  // } = useContextMenu({
+  //   ref: internalRef,
+  //   menuProps: {
+  //     size: "sm"
+  //   },
+  //   source: "cursor",
+  // });
 
   return <>
     <Box
@@ -46,7 +46,7 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
         isDragging ? "is-dragging" : "",
         isSelected ? "is-selected" : "",
         isOpen ? "is-open" : "",
-        isContextMenuOpen && 'isContextMenuOpen',
+        // isContextMenuOpen && 'isContextMenuOpen',
         (hasChildren && isOpen) ? "show-tree-indicator" : "",
         isLinkedRef ? "is-linked-ref" : "",
         isHoveredNotChild && "is-hovered-not-child",
@@ -163,16 +163,16 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
           mt: 1
         },
       }}
-      {...menuSourceProps}
-      onContextMenu={
-        (e) => {
-          const target = e.target as HTMLElement;
-          // Don't open the context menu on these e.target as HTMLElement;
-          if (!CONTAINER_CONTEXT_MENU_FILTERED_TAGS.includes(target.tagName)) {
-            menuSourceProps.onContextMenu(e);
-          }
-        }
-      }
+      // {...menuSourceProps}
+      // onContextMenu={
+      //   (e) => {
+      //     const target = e.target as HTMLElement;
+      //     // Don't open the context menu on these e.target as HTMLElement;
+      //     if (!CONTAINER_CONTEXT_MENU_FILTERED_TAGS.includes(target.tagName)) {
+      //       menuSourceProps.onContextMenu(e);
+      //     }
+      //   }
+      // }
       {...props}
       onMouseOver={handleMouseOver}
       onMouseLeave={(e) => {
@@ -182,9 +182,9 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
     >
       {children}
     </Box>
-    <ContextMenu>
+    {/* <ContextMenu>
       {menu}
-    </ContextMenu>
+    </ContextMenu> */}
   </>;
 })
 

@@ -225,8 +225,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
   const {
     addToContextMenu,
-    isContextMenuOpen,
-    setIsContextMenuOpen,
   } = React.useContext(ContextMenuContext);
 
   const secondaryTools = [

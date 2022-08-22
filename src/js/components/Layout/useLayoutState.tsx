@@ -62,7 +62,7 @@ const useContextMenuState = () => {
    * Reset the context menu state
    */
   const onCloseMenu = () => {
-    if (menuState.onCloseFn) menuState.onCloseFn();
+    if (typeof menuState?.onCloseFn === "function") menuState.onCloseFn();
     setMenuState(NULL_STATE);
   };
 
@@ -78,15 +78,30 @@ const useContextMenuState = () => {
     targetRef: React.MutableRefObject<HTMLElement>,
     child: () => JSX.Element,
     onCloseFn: () => void,
+    anchorEl?: React.MutableRefObject<HTMLElement>
   ) => {
     e.preventDefault();
     e.stopPropagation();
 
-    console.log(onCloseFn);
+    let position;
+    console.log(anchorEl, anchorEl?.current);
+    if (anchorEl) {
+      const { left, top, width, height } = anchorEl.current.getBoundingClientRect();
+      position = {
+        left, top, width, height
+      }
+    } else {
+      position = {
+        left: e.clientX,
+        top: e.clientY,
+        width: 0,
+        height: 0
+      }
+    }
 
     setMenuState({
       isOpen: true,
-      position: { x: e.clientX, y: e.clientY },
+      position,
       sources: [targetRef.current],
       children: [child],
       previewEl: null,
@@ -118,10 +133,11 @@ const MenuSource = ({ position }) => {
   return <Box
     as={MenuButton}
     position="fixed"
-    boxSize={0}
     visibility="hidden"
-    top={position.y + 'px'}
-    left={position.x + 'px'}
+    top={position.top + 'px'}
+    left={position.left + 'px'}
+    width={position.width + 'px'}
+    height={position.height + 'px'}
   />;
 }
 
