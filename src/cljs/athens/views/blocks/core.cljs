@@ -40,6 +40,7 @@
     [athens.types.dispatcher                   :as block-type-dispatcher]
     ;; need to require it for multimethod participation
     [athens.types.tasks.view]
+    [athens.types.query.view]
     [athens.util                               :as util]
     [athens.views.blocks.bullet                :as block-bullet]
     [athens.views.blocks.context-menu          :as ctx-menu]
