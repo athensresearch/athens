@@ -4,6 +4,13 @@ import { spacing } from './spacing'
 
 const $arrowBg = cssVar("popper-arrow-bg");
 
+const buttonIconFontSize = {
+  xs: "16px",
+  sm: "20px",
+  md: "24px",
+  lg: "32px",
+}
+
 const shadows = {
   focusLight: '0 0 0 3px #0071DB',
   focusDark: '0 0 0 3px #498eda',
@@ -69,8 +76,8 @@ const semanticTokens = {
     },
     // separator colors
     "separator.border": {
-      default: '00000022',
-      _dark: '#ffffff55'
+      default: '#00000033',
+      _dark: '#ffffff22'
     },
     "separator.divider": {
       default: '#00000022',
@@ -132,6 +139,10 @@ const semanticTokens = {
       default: '#0071DB',
       _dark: '#498eda'
     },
+    infoText: {
+      default: '#fff',
+      _dark: '#fff'
+    },
     warning: {
       default: '#D20000',
       _dark: '#DE3C21'
@@ -140,12 +151,23 @@ const semanticTokens = {
       default: '#4CBB17',
       _dark: '#498eda'
     },
+
+    // Notifications
+    notification: {
+      default: '#d70015',
+      _dark: '#ff6961'
+    },
+    notificationText: {
+      default: '#fff',
+      _dark: '#fff'
+    },
+
     // other colors
     textHighlight: {
       default: '#ffdb8a',
       _dark: '#FBBE63'
     },
-    highlight: {
+    "highlight": {
       default: '#F9A132',
       _dark: '#FBBE63'
     },
@@ -161,6 +183,16 @@ const semanticTokens = {
       default: '#fff',
       _dark: '#fff'
     },
+
+    gold: {
+      default: '#F9A132',
+      _dark: '#FBBE63'
+    },
+    goldContrast: {
+      default: '#000',
+      _dark: '#000'
+    },
+
     // block content colors
     "ref.foreground": {
       default: "#fbbe63bb",
@@ -311,8 +343,7 @@ const components = {
     }
   },
   Button: {
-    baseStyle: {
-      transitionProperty: 'common',
+    baseStyle: ({ size }) => ({
       transitionTimingFunction: 'ease-in-out',
       _active: {
         transitionDuration: "0s",
@@ -324,8 +355,11 @@ const components = {
       _focusVisible: {
         outline: 'none',
         boxShadow: 'focus'
+      },
+      "> .chakra-button__icon, > .chakra-icon": {
+        fontSize: buttonIconFontSize[size],
       }
-    },
+    }),
     variants: {
       link: {
         color: "link",
@@ -366,15 +400,9 @@ const components = {
           })
         }
       },
-      ghost: {
+      ghost: ({ colorScheme }) => ({
         bg: "transparent",
-        color: (colorScheme) => {
-          if (colorScheme === 'subtle') {
-            return "foreground.secondary"
-          } else {
-            return "foreground.primary"
-          }
-        },
+        color: (colorScheme === 'subtle') ? "foreground.secondary" : "foreground.primary",
         _hover: {
           bg: "interaction.surface.hover"
         },
@@ -382,7 +410,7 @@ const components = {
           color: 'foreground.primary',
           bg: 'interaction.surface.active',
         },
-      },
+      }),
       outline: {
         bg: "transparent",
         borderWidth: "1px",
@@ -403,35 +431,11 @@ const components = {
       error: {
         color: "error"
       }
-    }
+    },
   },
   FormLabel: {
     baseStyle: {
       color: "foreground.secondary",
-    }
-  },
-  IconButton: {
-    baseStyle: {
-      fontSize: "1em",
-      _active: {
-        transitionDuration: "0s",
-      },
-      _focus: {
-        outline: 'none',
-        boxShadow: 'none'
-      },
-      _focusVisible: {
-        outline: 'none',
-        boxShadow: 'focus'
-      }
-    },
-    variants: {
-      solid: {
-        _active: {
-          color: 'linkContrast',
-          bg: 'link',
-        },
-      }
     }
   },
   Menu: {
@@ -449,9 +453,8 @@ const components = {
       },
       groupTitle: {
         color: "foreground.secondary",
-        textTransform: "uppercase",
         fontSize: "0.75em",
-        fontWeight: "bold",
+        fontWeight: "700",
       },
       item: {
         "&.isActive": {
@@ -518,6 +521,13 @@ const components = {
       content: {
         bg: "background.upper",
         shadow: "popover",
+        _focus: {
+          outline: 'none',
+          shadow: "popover",
+        },
+        _focusVisible: {
+          shadow: "popover",
+        },
         [$arrowBg.variable]: "colors.background.upper",
       }
     }
@@ -626,7 +636,11 @@ const components = {
 }
 
 // Default prop overrides
-Tooltip.defaultProps = { ...Tooltip.defaultProps, openDelay: 500 }
+Tooltip.defaultProps = {
+  ...Tooltip.defaultProps,
+  closeOnMouseDown: true,
+  openDelay: 500
+}
 
 const config = {
   initialColorMode: 'system',
@@ -641,13 +655,25 @@ const styles = {
       lineHeight: '1.5',
       height: '100vh',
       fontFamily: 'default',
+      sx: {
+        "::WebkitScrollbar": {
+          background: "background.basement",
+          width: "0.5rem",
+          height: "0.5rem"
+        },
+        "::WebkitScrollbar-corner": { bg: "background.basement" },
+        "::WebkitScrollbar-thumb": {
+          bg: "background.upper",
+          borderRadius: "full"
+        }
+      }
     },
     "#chakra-toast-manager-top-right, #chakra-toast-manager-top, #chakra-toast-manager-top-left": {
       margin: "3rem 1rem"
     },
     mark: {
-      background: "highlight",
-      color: "highlightContrast",
+      background: "gold",
+      color: "goldContrast",
       padding: '0 0.2em',
       borderRadius: "sm",
     }

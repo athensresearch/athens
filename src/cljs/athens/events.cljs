@@ -247,30 +247,6 @@
      :dispatch [:posthog/report-feature :left-sidebar]}))
 
 
-(reg-event-fx
-  :right-sidebar/toggle
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/toggle")]
-  (fn [{:keys [db]} _]
-    (let [closing? (:right-sidebar/open db)]
-      {:db       (update db :right-sidebar/open not)
-       :dispatch [:posthog/report-feature :right-sidebar (not closing?)]})))
-
-
-(reg-event-fx
-  :right-sidebar/toggle-item
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/toggle-item")]
-  (fn [{:keys [db]} [_ item]]
-    {:db       (update-in db [:right-sidebar/items item :open] not)
-     :dispatch [:posthog/report-feature :right-sidebar true]}))
-
-
-(reg-event-db
-  :right-sidebar/set-width
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/set-width")]
-  (fn [db [_ width]]
-    (assoc db :right-sidebar/width width)))
-
-
 (reg-event-db
   :mouse-down/set
   (fn [db _]
@@ -290,92 +266,6 @@
   (fn [_ _]
     (log/warn "Called :no-op re-frame event, this shouldn't be happening.")
     {}))
-
-
-;; TODO: dec all indices > closed item
-(reg-event-fx
-  :right-sidebar/close-item
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/close-item")]
-  (fn [{:keys [db]} [_ uid]]
-    (let [{:right-sidebar/keys
-           [items]}  db
-          last-item? (= 1 (count items))
-          new-db     (cond-> (update db :right-sidebar/items dissoc uid)
-                       last-item? (assoc :right-sidebar/open false))]
-      {:db       new-db
-       :dispatch [:posthog/report-feature :right-sidebar (not last-item?)]})))
-
-
-(reg-event-fx
-  :right-sidebar/navigate-item
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/navigate-item")]
-  (fn [{:keys [db]} [_ uid breadcrumb-uid]]
-    (let [block      (d/pull @db/dsdb '[:node/title :block/string] [:block/uid breadcrumb-uid])
-          item-index (get-in db [:right-sidebar/items uid :index])
-          new-item   (merge block {:open true :index item-index})]
-      {:db       (-> db
-                     (update-in [:right-sidebar/items] dissoc uid)
-                     (update-in [:right-sidebar/items] assoc breadcrumb-uid new-item))
-       :dispatch [:posthog/report-feature :right-sidebar true]})))
-
-
-;; TODO: change right sidebar items from map to datascript
-(reg-event-fx
-  :right-sidebar/open-item
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/open-item")]
-  (fn [{:keys [db]} [_ uid is-graph?]]
-    (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
-          new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
-          ;; Avoid a memory leak by forgetting the comparison function
-          ;; that is stored in the sorted map
-          ;; `(assoc (:right-sidebar/items db) uid new-item)`
-          new-items (into {}
-                          (assoc (:right-sidebar/items db) uid new-item))
-          inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
-                               {}
-                               new-items)
-          sorted-items (into (sorted-map-by (fn [k1 k2]
-                                              (compare
-                                                [(get-in inc-items [k1 :index]) k2]
-                                                [(get-in inc-items [k2 :index]) k1]))) inc-items)]
-      {:db         (assoc db :right-sidebar/items sorted-items)
-       :dispatch-n [(when (not (:right-sidebar/open db))
-                      [:right-sidebar/toggle])
-                    [:right-sidebar/scroll-top]
-                    [:posthog/report-feature :right-sidebar true]]})))
-
-
-(reg-event-fx
-  :right-sidebar/open-page
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/open-page")]
-  (fn [{:keys [db]} [_ page-title is-graph?]]
-    (let [{:keys [:block/uid]
-           :as   block} (d/pull @db/dsdb '[:block/uid :node/title :block/string] [:node/title page-title])
-          new-item      (merge block {:open true :index -1 :is-graph? is-graph?})
-          ;; Avoid a memory leak by forgetting the comparison function
-          ;; that is stored in the sorted map
-          ;; `(assoc (:right-sidebar/items db) uid new-item)`
-          new-items     (into {}
-                              (assoc (:right-sidebar/items db) uid new-item))
-          inc-items     (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
-                                   {}
-                                   new-items)
-          sorted-items  (into (sorted-map-by (fn [k1 k2]
-                                               (compare
-                                                 [(get-in inc-items [k1 :index]) k2]
-                                                 [(get-in inc-items [k2 :index]) k1]))) inc-items)]
-      {:db         (assoc db :right-sidebar/items sorted-items)
-       :dispatch-n [(when (not (:right-sidebar/open db))
-                      [:right-sidebar/toggle])
-                    [:right-sidebar/scroll-top]
-                    [:posthog/report-feature :right-sidebar true]]})))
-
-
-(reg-event-fx
-  :right-sidebar/scroll-top
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/scroll-top")]
-  (fn []
-    {:right-sidebar/scroll-top nil}))
 
 
 (reg-event-fx
@@ -1174,7 +1064,7 @@
     (let [page-uid (common-db/get-page-uid @db/dsdb title)]
       {:fx [[:dispatch-n [(cond
                             shift?
-                            [:right-sidebar/open-item page-uid]
+                            [:right-sidebar/open-item [:node/title title]]
 
                             (not (dates/is-daily-note page-uid))
                             [:navigate :page {:id page-uid}])]]]})))
@@ -1341,9 +1231,12 @@
         {:keys [value start]} d-key-down
         event                 (cond
                                 (:block/key block)
-                                [:enter/open-block-add-child {:block    block
-                                                              :new-uid  new-uid
-                                                              :embed-id embed-id}]
+                                [:enter/split-block {:uid        uid
+                                                     :value      value
+                                                     :index      start
+                                                     :new-uid    new-uid
+                                                     :embed-id   embed-id
+                                                     :relation   :first}]
 
                                 (and (:block/open block)
                                      has-children?
@@ -1643,7 +1536,7 @@
   :drop-multi/child
   (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
     (log/debug ":drop-multi/child args" (pr-str args))
-    (let [atomic-op (graph-ops/block-move-chain target-uid source-uids :first)
+    (let [atomic-op (graph-ops/block-move-chain @db/dsdb target-uid source-uids :first)
           event     (common-events/build-atomic-event atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
@@ -1655,7 +1548,7 @@
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
     (log/debug ":drop-multi/sibling args" (pr-str args))
     (let [rel-position drag-target
-          atomic-op    (graph-ops/block-move-chain target-uid source-uids rel-position)
+          atomic-op    (graph-ops/block-move-chain @db/dsdb target-uid source-uids rel-position)
           event        (common-events/build-atomic-event atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
@@ -1805,16 +1698,16 @@
 
 ;; Works like clojure's update-in.
 ;; Calls (f db uid), where uid is the existing block uid, or a uid that will be created in ks property path.
-;; (f db uid) should return a seq of operations to perform. If no operations are return, nothing is transacted.
+;; (f db uid) should return a seq of operations to perform. If no operations are returned, nothing is transacted.
 (reg-event-fx
   :properties/update-in
-  (fn [_ [_ id ks f]]
-    (log/debug ":properties/update-in args" id ks)
-    (let [db                  @db/dsdb
-          uid                 (common-db/get-block-uid db id)
-          [prop-uid path-ops] (graph-ops/build-property-path db uid ks)
-          f-ops               (f db prop-uid)]
-      (when (seq f-ops)
-        {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
-                                                            (composite-ops/make-consequence-op {:op/type :properties/update})
-                                                            common-events/build-atomic-event)]]]]}))))
+  (fn [_ [_ eid ks f]]
+    (log/debug ":properties/update-in args" eid ks)
+    (when (seq ks)
+      (let [db                  @db/dsdb
+            [prop-uid path-ops] (graph-ops/build-property-path db eid ks)
+            f-ops               (f db prop-uid)]
+        (when (seq f-ops)
+          {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
+                                                              (composite-ops/make-consequence-op {:op/type :properties/update})
+                                                              common-events/build-atomic-event)]]]]})))))

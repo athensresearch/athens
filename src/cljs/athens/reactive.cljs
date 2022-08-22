@@ -145,6 +145,11 @@
        common-db/add-property-map))
 
 
+(defntrace get-reactive-right-sidebar-item
+  [id]
+  (->> @(p/pull db/dsdb '[:db/id :block/uid :block/string :node/title] id)))
+
+
 (defntrace get-reactive-parents-recursively
   [id]
   (->> @(p/pull db/dsdb '[:db/id :node/title :block/uid :block/string
@@ -168,6 +173,16 @@
 (defntrace get-reactive-block-or-page-by-uid
   [uid]
   @(p/pull db/dsdb '[:node/title :block/string :db/id] [:block/uid uid]))
+
+
+(defntrace reactive-get-entity-type
+  "Reactive version of athens.common-db/get-entity-type."
+  [eid]
+  (->> @(p/pull db/dsdb '[{:block/_property-of [:block/string {:block/key [:node/title]}]}] eid)
+       :block/_property-of
+       (some (fn [e]
+               (when (-> e :block/key :node/title (= ":entity/type"))
+                 (:block/string e))))))
 
 
 #_(defn get-reactive-instances-of-key-value

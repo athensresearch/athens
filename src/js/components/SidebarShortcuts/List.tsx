@@ -1,5 +1,5 @@
 import * as React from "react";
-import { VStack, Portal } from "@chakra-ui/react";
+import { VStack, Box, Portal, AvatarGroup, Avatar } from "@chakra-ui/react";
 import {
   DndContext,
   useSensors,
@@ -66,26 +66,28 @@ export const List = (props) => {
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-      onDragStart={handleDragStart}
-    >
-      <VStack align="stretch" {...rest}>
-        <SortableContext strategy={verticalListSortingStrategy} items={items}>
-          {items.map(item => <Item
-            onClick={(e) => onOpenItem(e, item)}
-            key={item}
-            id={item} />)}
-        </SortableContext>
-      </VStack>
+    <Box >
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        onDragStart={handleDragStart}
+      >
+        <VStack spacing={0.5} px={4} align="stretch" overflowX="hidden" {...rest}>
+          <SortableContext strategy={verticalListSortingStrategy} items={items}>
+            {items.map(item => <Item
+              onClick={(e) => onOpenItem(e, item)}
+              key={item}
+              id={item}></Item>)}
+          </SortableContext>
+        </VStack>
 
-      <Portal>
-        <DragOverlay>
-          {activeId ? <ItemDragOverlay key={activeId} id={activeId} /> : null}
-        </DragOverlay>
-      </Portal>
-    </DndContext>
+        <Portal>
+          <DragOverlay>
+            {activeId ? <ItemDragOverlay key={activeId} id={activeId} /> : null}
+          </DragOverlay>
+        </Portal>
+      </DndContext>
+    </Box>
   );
 };

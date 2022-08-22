@@ -28,10 +28,11 @@
     (map-indexed (fn [i part]
                    (if (= part query)
                      [:> Text {:as           "span"
-                               :background   "highlight"
-                               :color        "highlightContrast"
-                               :borderRadius "0.1rem"
-                               :padding      "0 0.125em"
+                               :background   "interaction.surface.hover"
+                               :color        "foreground.primary"
+                               :borderRadius "sm"
+                               :py           0
+                               :px           0.25
                                :key i} part]
                      part))
                  (patterns/split-on txt query))))
@@ -81,7 +82,10 @@
                                ;; if shift: open in right-sidebar
                                shift?
                                (do (dispatch [:athena/toggle])
-                                   (dispatch [:right-sidebar/open-item navigate-uid])
+                                   (let [title (:node/title item)]
+                                     (dispatch [:right-sidebar/open-item (if title
+                                                                           [:node/title title]
+                                                                           [:block/uid navigate-uid])]))
                                    (dispatch [:reporting/navigation {:source :athena
                                                                      :target :page
                                                                      :pane   :right-pane}]))

@@ -153,9 +153,8 @@
                :athena/open         false
                :athena/recent-items '()
                :left-sidebar/open   false
-               :right-sidebar/open  false
-               :right-sidebar/items {}
-               :right-sidebar/width 32
+               ;; todo: some value initialization like athens/persist
+               ;; :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
                :selection           {:items []}
@@ -420,20 +419,10 @@
          (d/datoms @dsdb :aevt :node/title))))))
 
 
-(defn get-entity-type
-  "Returns the value of eids `:entity/type` prop, if any"
-  [db eid]
-  (->> (d/entity db eid)
-       :block/_property-of
-       (some (fn [e]
-               (when (-> e :block/key :node/title (= ":entity/type"))
-                 (:block/string e))))))
-
-
 (defn get-root-parent-node-from-block
   [db {:keys [block/uid] :as block}]
   (cond
-    (= "[[athens/comment]]" (get-entity-type db [:block/uid uid]))
+    (= "[[athens/comment]]" (common-db/get-entity-type db [:block/uid uid]))
     (let [commented-block (-> block
                               ;; comments are a child of :comments/threads
                               :block/_children first
