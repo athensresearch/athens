@@ -7,7 +7,7 @@
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatBubbleIcon ArchiveIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [Box Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
+    ["@chakra-ui/react"                        :refer [Box Breadcrumb BreadcrumbItem MenuGroup BreadcrumbLink Button Divider HStack MenuDivider MenuItem VStack]]
     [athens.common-db                          :as common-db]
     [athens.common.logging                     :as log]
     [athens.db                                 :as db]
@@ -362,7 +362,18 @@
                 reactions              (and reactions-enabled?
                                             (block-reaction/props->reactions properties))
                 menu                   (r/as-element
-                                         [:> MenuList {:class "anchor"}
+                                         [:> MenuGroup
+                                          (when (< (count @selected-items) 2)
+                                            [:> MenuItem {:children "Open block"
+                                                          :icon     (r/as-element [:> TextIcon])
+                                                          :onClick  (fn [e]
+                                                                      (let [shift? (.-shiftKey e)]
+                                                                        (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                                             :target :block
+                                                                                                             :pane   (if shift?
+                                                                                                                       :right-pane
+                                                                                                                       :main-pane)}])
+                                                                        (router/navigate-uid uid e)))}])
                                           [:> MenuItem {:children (if (> (count @selected-items) 1)
                                                                     "Copy selected block refs"
                                                                     "Copy block ref")
@@ -371,6 +382,7 @@
                                           [:> MenuItem {:children "Copy unformatted text"
                                                         :icon     (r/as-element [:> TextIcon])
                                                         :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+
 
                                           (when comments-enabled?
                                             [:> MenuItem {:children "Add comment"
@@ -467,7 +479,7 @@
                            :uidSanitizedBlock      uid-sanitized-block
                            :shouldShowDebugDetails (util/re-frame-10x-open?)
                            :menu                   menu
-                           :onClick                (fn [e]
+                           :onDoubleClick          (fn [e]
                                                      (let [shift? (.-shiftKey e)]
                                                        (rf/dispatch [:reporting/navigation {:source :block-bullet
                                                                                             :target :block
