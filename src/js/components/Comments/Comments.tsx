@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Text, HStack, Textarea, Button, MenuList, MenuItem } from '@chakra-ui/react'
-import { ChatBubbleFillIcon } from '@/Icons/Icons'
 import { useContextMenu } from '@/utils/useContextMenu';
 import { withErrorBoundary } from "react-error-boundary";
 
@@ -45,19 +44,6 @@ export const InlineCommentInput = ({ onSubmitComment }: InlineCommentInputProps)
   </HStack>)
 }
 
-const formatCount = (count: number): string => {
-  if (count > 9) return "9+"
-  else if (count === 0) return ""
-  else return count.toString()
-};
-
-export const CommentCounter = ({ count }) => {
-  return <Box display="grid" gridTemplateAreas="'main'">
-    <ChatBubbleFillIcon gridArea="main" zIndex={0} />
-    <Text zIndex={1} gridArea="main" transform="translateY(5%)" color="background.basement" fontSize="xs">{formatCount(count)}</Text>
-  </Box>
-}
-
 const CommentErrorMessage = () => <Text color="foreground.secondary" display="block" p={2} borderRadius="sm">Couldn't show this comment</Text>;
 
 export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp }) => {
@@ -82,6 +68,9 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
     bg={isContextMenuOpen ? "interaction.surface.hover" : undefined}
     borderRadius={isContextMenuOpen ? "sm" : undefined}
     mb="-1px"
+    _first={{
+      borderTopWidth: 0
+    }}
     borderTop={isFollowUp ? null : "1px solid"}
     borderTopColor="separator.divider"
     alignItems="stretch"

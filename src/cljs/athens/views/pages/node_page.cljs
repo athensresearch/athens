@@ -3,10 +3,10 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Block/Container" :refer [Container]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
+    ["/components/Icons/Icons" :refer [CalendarIcon EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
-    ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+    ["@chakra-ui/react" :refer [Text Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
     [athens.common-events.graph.ops :as graph-ops]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
@@ -309,7 +309,7 @@
                              (swap! state assoc :block new-B :parents new-P))}
                 [parse-and-render (common-db/breadcrumb-string @db/dsdb uid) uid]]]))]
          [:> Box {:class "block-embed"}
-          [blocks/block-el
+          [:f> blocks/block-el
            (recursively-modify-block-for-embed block embed-id)
            linked-ref-data
            {:block-embed? true}]]]))))
@@ -457,6 +457,13 @@
                            :onClose     cancel-fn}]
          ;; Header
          [:> PageHeader (merge
+                          (when daily-note?
+                            {:overline
+                             (r/as-element [:> Text {:as "span"
+                                                     :display "flex"
+                                                     :gap 1
+                                                     :alignItems "center"}
+                                            [:> CalendarIcon] "Daily Note"])})
                           {:onClickOpenInMainView  (when on-daily-notes?
                                                      (fn [e] (router/navigate-page title e)))
                            :onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:node/title title]])
@@ -510,14 +517,14 @@
                       (seq properties))
              (for [prop (common-db/sort-block-properties properties)]
                ^{:key (:db/id prop)}
-               [blocks/block-el prop]))]
+               [:f> blocks/block-el prop]))]
 
           ;; Children
           [:div
            (for [{:block/keys [uid] :as child} children]
              ^{:key uid}
              [perf-mon/hoc-perfmon {:span-name "block-el"}
-              [blocks/block-el child]])]]
+              [:f> blocks/block-el child]])]]
 
          ;; References
          [:> PageFooter

@@ -5,10 +5,18 @@
     ["/components/Block/PropertyName"          :refer [PropertyName]]
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
-    ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatBubbleIcon ArchiveIcon]]
-    ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
-    ["@chakra-ui/react"                        :refer [Box Breadcrumb BreadcrumbItem BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
+    ["/components/Icons/Icons"                 :refer [ArchiveIcon
+                                                       BlockEmbedIcon
+                                                       ChatBubbleIcon TextIcon]]
+    ["/components/References/InlineReferences" :refer [ReferenceBlock
+                                                       ReferenceGroup]]
+    ["@chakra-ui/react"                        :refer [Breadcrumb
+                                                       BreadcrumbItem
+                                                       BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
+    ["react"                                   :as react]
+    ["react-intersection-observer"             :refer [useInView]]
     [athens.common-db                          :as common-db]
+    [athens.common-events.graph.ops            :as graph-ops]
     [athens.common.logging                     :as log]
     [athens.db                                 :as db]
     [athens.electron.images                    :as images]
@@ -259,7 +267,7 @@
              ;; Display the single child block only when focusing.
              ;; This is the default behaviour for a ref without children, for brevity.
              [:div.block-embed {:fontSize "0.7em"}
-              [block-el
+              [:f> block-el
                (util/recursively-modify-block-for-embed block @inline-ref-embed-id)
                linked-ref-data
                {:block-embed? true}]]
@@ -268,7 +276,7 @@
              ;; Otherwise display children of the parent directly.
              (for [child (:block/children block)]
                [:<> {:key (:db/id child)}
-                [block-el
+                [:f> block-el
                  (util/recursively-modify-block-for-embed child @inline-ref-embed-id)
                  linked-ref-data
                  {:block-embed? true}]])))]))))
@@ -298,12 +306,20 @@
                  [ref-comp block-el block']]))]))])))
 
 
+(defn convert-anon-block-to-task
+  [block]
+  (let [{:keys [uid]} block]
+    (rf/dispatch [:properties/update-in [:block/uid uid] [":entity/type"]
+                  (fn [db uid]
+                    [(graph-ops/build-block-save-op db uid "[[athens/task]]")])])))
+
+
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([block]
-   [block-el block {:linked-ref false} {}])
+   [:f> block-el block {:linked-ref false} {}])
   ([block linked-ref-data]
-   [block-el block linked-ref-data {}])
+   [:f> block-el block linked-ref-data {}])
   ([block linked-ref-data _opts]
    (let [block-uid                (:block/uid block)
          {:keys [initial-open
@@ -319,223 +335,232 @@
          drag-target              (rf/subscribe [::drag.subs/drag-target block-uid])
          selected?                (rf/subscribe [::select-subs/selected? block-uid])
          present-user             (rf/subscribe [:presence/has-presence block-uid])
+         convert-to-task          #(convert-anon-block-to-task block)
          selected-items           (rf/subscribe [::select-subs/items])
          feature-flags            (rf/subscribe [:feature-flags])
          current-user             (rf/subscribe [:presence/current-user])
          show-comments?           (rf/subscribe [:comment/show-comments?])
          show-textarea?           (rf/subscribe [:comment/show-editor? block-uid])
          inline-refs-open?        (rf/subscribe [::inline-refs.subs/open? block-uid])
-         enable-properties?       (rf/subscribe [:feature-flags/enabled? :properties])]
-     (rf/dispatch [::linked-ref.events/set-open! block-uid (or (false? linked-ref) initial-open)])
-     (rf/dispatch [::inline-refs.events/set-open! block-uid false])
-     (r/create-class
-       {:component-will-unmount
-        (fn will-unmount-block
-          [_]
-          (rf/dispatch [::linked-ref.events/cleanup! block-uid])
-          (rf/dispatch [::inline-refs.events/cleanup! block-uid]))
-        :reagent-render
-        (fn block-core-render
-          [block linked-ref-data opts]
-          (let [block-o                (reactive/get-reactive-block-document ident)
-                {:block/keys [uid
-                              open
-                              children
-                              key
-                              properties
-                              _refs]} (merge block block-o)
-                block-type             (reactive/reactive-get-entity-type [:block/uid block-uid])
-                children-uids          (set (map :block/uid children))
-                children?              (seq children-uids)
-                presence?              (seq @present-user)
-                comments-enabled?      (:comments @feature-flags)
-                reactions-enabled?     (:reactions @feature-flags)
-                notifications-enabled? (:notifications @feature-flags)
-                uid-sanitized-block    (s/transform
-                                         (util/specter-recursive-path #(contains? % :block/uid))
-                                         (fn [{:block/keys [original-uid uid] :as block}]
-                                           (assoc block :block/uid (or original-uid uid)))
-                                         block)
-                user-id                (or (:username @current-user)
-                                           ;; We use empty string for when there is no user information, like in PKM.
-                                           "")
-                reactions              (and reactions-enabled?
-                                            (block-reaction/props->reactions properties))
-                menu                   (r/as-element
-                                         [:> MenuList
-                                          [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                    "Copy selected block refs"
-                                                                    "Copy block ref")
-                                                        :icon     (r/as-element [:> BlockEmbedIcon])
-                                                        :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                          [:> MenuItem {:children "Copy unformatted text"
-                                                        :icon     (r/as-element [:> TextIcon])
-                                                        :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+         enable-properties?       (rf/subscribe [:feature-flags/enabled? :properties])
+         on-block-mount           (fn []
+                                    (rf/dispatch [::linked-ref.events/set-open! block-uid (or (false? linked-ref) initial-open)])
+                                    (rf/dispatch [::inline-refs.events/set-open! block-uid false]))
+         on-unmount-block         (fn []
+                                    (rf/dispatch [::linked-ref.events/cleanup! block-uid])
+                                    (rf/dispatch [::inline-refs.events/cleanup! block-uid]))]
 
-                                          (when comments-enabled?
-                                            [:> MenuItem {:children "Add comment"
-                                                          :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                          :icon     (r/as-element [:> ChatBubbleIcon])}])
-                                          (when reactions-enabled?
-                                            [:<>
-                                             [:> MenuDivider]
-                                             [block-reaction/reactions-menu-list uid user-id]])
+     (fn [opts]
+       [block linked-ref-data opts]
+       (let [block-o                (reactive/get-reactive-block-document ident)
+             {:block/keys [uid
+                           open
+                           children
+                           key
+                           properties
+                           _refs]}  (merge block block-o)
+             block-type             (reactive/reactive-get-entity-type [:block/uid block-uid])
+             children-uids          (set (map :block/uid children))
+             children?              (seq children-uids)
+             presence?              (seq @present-user)
+             comments-enabled?      (:comments @feature-flags)
+             reactions-enabled?     (:reactions @feature-flags)
+             notifications-enabled? (:notifications @feature-flags)
+             uid-sanitized-block    (s/transform
+                                     (util/specter-recursive-path #(contains? % :block/uid))
+                                     (fn [{:block/keys [original-uid uid] :as block}]
+                                       (assoc block :block/uid (or original-uid uid)))
+                                     block)
+             user-id                (or (:username @current-user)
+                                        ;; We use empty string for when there is no user information, like in PKM.
+                                        "")
+             reactions              (and reactions-enabled?
+                                         (block-reaction/props->reactions properties))
+             menu                   (r/as-element
+                                     [:> MenuList {:class "anchor"}
+                                      (when-not (= block-type "[[athens/task]]") [:> MenuItem {:children "convert to task"
+                                                                                               :icon     (r/as-element [:> BlockEmbedIcon])
+                                                                                               :onClick  convert-to-task}])
+                                      [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                "Copy selected block refs"
+                                                                "Copy block ref")
+                                                    :icon     (r/as-element [:> BlockEmbedIcon])
+                                                    :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                      [:> MenuItem {:children "Copy unformatted text"
+                                                    :icon     (r/as-element [:> TextIcon])
+                                                    :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                      (when comments-enabled?
+                                        [:> MenuItem {:children "Add comment"
+                                                      :onClick  #(ctx-menu/handle-click-comment % uid)
+                                                      :icon     (r/as-element [:> ChatBubbleIcon])}])
+                                      (when reactions-enabled?
+                                        [:<>
+                                         [:> MenuDivider]
+                                         [block-reaction/reactions-menu-list uid user-id]])
 
-                                          (when (and notifications-enabled? (actions/is-block-inbox? properties))
-                                            [:<>
-                                             [:> Divider]
-                                             [:> MenuItem {:children "Archive all notifications"
-                                                           :icon     (r/as-element [:> ArchiveIcon])
-                                                           :onClick  #(actions/archive-all-notifications uid)}]
-                                             [:> MenuItem {:children "Unarchive all notifications"
-                                                           :icon     (r/as-element [:> ArchiveIcon])
-                                                           :onClick  #(actions/unarchive-all-notifications uid)}]])
+                                      (when (and notifications-enabled? (actions/is-block-inbox? properties))
+                                        [:<>
+                                         [:> Divider]
+                                         [:> MenuItem {:children "Archive all notifications"
+                                                       :icon     (r/as-element [:> ArchiveIcon])
+                                                       :onClick  #(actions/archive-all-notifications uid)}]
+                                         [:> MenuItem {:children "Unarchive all notifications"
+                                                       :icon     (r/as-element [:> ArchiveIcon])
+                                                       :onClick  #(actions/unarchive-all-notifications uid)}]])
 
-                                          (when (and notifications-enabled? (actions/is-block-notification? properties))
-                                            [:> MenuItem {:children "Archive"
-                                                          :icon     (r/as-element [:> ArchiveIcon])
-                                                          :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
-                ff                     @(rf/subscribe [:feature-flags])
-                renderer-k             (block-type-dispatcher/block-type->protocol-k block-type ff)
-                renderer               (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})]
-            (log/debug "block open render: block-o:" (pr-str (:block/open block-o))
-                       "block:" (pr-str (:block/open block))
-                       "merge:" (pr-str (:block/open (merge block-o block))))
+                                      (when (and notifications-enabled? (actions/is-block-notification? properties))
+                                        [:> MenuItem {:children "Archive"
+                                                      :icon     (r/as-element [:> ArchiveIcon])
+                                                      :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
+             ff @(rf/subscribe [:feature-flags])
+             renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
+             renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
+             [ref in-view?]         (useInView {:delay 250})
+             _ (react/useEffect (fn []
+                                  #(on-block-mount)
+                                  on-unmount-block)
+                                #js [])]
+         (log/debug "block open render: block-o:" (pr-str (:block/open block-o))
+                    "block:" (pr-str (:block/open block))
+                    "merge:" (pr-str (:block/open (merge block-o block))))
 
-            [:> Container {:isHidden     (actions/archived-notification? properties)
-                           :isDragging   (and @dragging? (not @selected?))
-                           :isSelected   @selected?
-                           :hasChildren  (seq children)
-                           :isOpen       open
-                           :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
-                           :hasPresence  presence?
-                           :uid          uid
-                           ;; need to know children for selection resolution
-                           :childrenUids children-uids
-                           ;; show-edit? allows us to render the editing elements (like the textarea)
-                           ;; even when not editing this block. When true, clicking the block content will pass
-                           ;; the clicks down to the underlying textarea. The textarea is expensive to render,
-                           ;; so we avoid rendering it when it's not needed.
-                           :onMouseEnter show-edit-fn
-                           :onMouseLeave hide-edit-fn
-                           :onDragOver   (fn [e]
-                                           (block-drag-over e block))
-                           :onDragLeave  (fn [e]
-                                           (block-drag-leave e block))
-                           :onDrop       (fn [e]
-                                           (block-drop e block))
-                           :menu         menu
-                           :style        (merge {} (time-controls/block-styles block-o))}
+         [:> Container {:isHidden     (actions/archived-notification? properties)
+                        :isDragging   (and @dragging? (not @selected?))
+                        :isSelected   @selected?
+                        :hasChildren  (seq children)
+                        :isOpen       open
+                        :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
+                        :hasPresence  presence?
+                        :uid          uid
+                        ;; need to know children for selection resolution
+                        :childrenUids children-uids
+                        ;; show-edit? allows us to render the editing elements (like the textarea)
+                        ;; even when not editing this block. When true, clicking the block content will pass
+                        ;; the clicks down to the underlying textarea. The textarea is expensive to render,
+                        ;; so we avoid rendering it when it's not needed.
+                        :onMouseEnter show-edit-fn
+                        :onMouseLeave hide-edit-fn
+                        :onDragOver   (fn [e]
+                                        (block-drag-over e block))
+                        :onDragLeave  (fn [e]
+                                        (block-drag-leave e block))
+                        :onDrop       (fn [e]
+                                        (block-drop e block))
+                        :menu         menu
+                        :style        (merge {} (time-controls/block-styles block-o))}
 
-             (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
+          (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
-             [:<>
-              [:div.block-body
-               (when (and children?
-                          (or (seq children)
-                              (seq properties)))
-                 [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
-                                              (and (false? linked-ref) open))
-                                        true
-                                        false)
-                             :onClick (fn [e]
-                                        (.. e stopPropagation)
-                                        (if (true? linked-ref)
-                                          (rf/dispatch [::linked-ref.events/toggle-open! uid])
-                                          (block-open-toggle! uid (not open))))}])
+          [:<>
+           [:div.block-body {:ref ref}
+            (when (and children?
+                       (or (seq children)
+                           (seq properties)))
+              (when in-view?
+                [:> Toggle {:isOpen  (if (or (and (true? linked-ref) @linked-ref-open?)
+                                             (and (false? linked-ref) open))
+                                       true
+                                       false)
+                            :onClick (fn [e]
+                                       (.. e stopPropagation)
+                                       (if (true? linked-ref)
+                                         (rf/dispatch [::linked-ref.events/toggle-open! uid])
+                                         (block-open-toggle! uid (not open))))}]))
 
-               (when key
-                 [:> PropertyName {:name          (:node/title key)
-                                   :onClick       (fn [e]
-                                                    (let [shift? (.-shiftKey e)]
-                                                      (rf/dispatch [:reporting/navigation {:source :block-property
-                                                                                           :target :page
-                                                                                           :pane   (if shift?
-                                                                                                     :right-pane
-                                                                                                     :main-pane)}])
-                                                      (router/navigate-page (:node/title key) e)))
-                                   :on-drag-start (fn [e]
-                                                    (block-bullet/bullet-drag-start e uid))
-                                   :on-drag-stop  (fn [e]
-                                                    (block-bullet/bullet-drag-end e uid))}])
+            (when key
+              [:> PropertyName {:name          (:node/title key)
+                                :onClick       (fn [e]
+                                                 (let [shift? (.-shiftKey e)]
+                                                   (rf/dispatch [:reporting/navigation {:source :block-property
+                                                                                        :target :page
+                                                                                        :pane   (if shift?
+                                                                                                  :right-pane
+                                                                                                  :main-pane)}])
+                                                   (router/navigate-page (:node/title key) e)))
+                                :on-drag-start (fn [e]
+                                                 (block-bullet/bullet-drag-start e uid))
+                                :on-drag-stop  (fn [e]
+                                                 (block-bullet/bullet-drag-end e uid))}])
 
+            [:> Anchor {:isClosedWithChildren   (when (and (seq children)
+                                                           (or (and (true? linked-ref) (not @linked-ref-open?))
+                                                               (and (false? linked-ref) (not open))))
+                                                  "closed-with-children")
+                        :uidSanitizedBlock      uid-sanitized-block
+                        :shouldShowDebugDetails (util/re-frame-10x-open?)
+                        :menu                   menu
+                        :onClick                (fn [e]
+                                                  (let [shift? (.-shiftKey e)]
+                                                    (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                         :target :block
+                                                                                         :pane   (if shift?
+                                                                                                   :right-pane
+                                                                                                   :main-pane)}])
+                                                    (router/navigate-uid uid e)))
+                        :on-drag-start          (fn [e]
+                                                  (block-bullet/bullet-drag-start e uid))
+                        :on-drag-end            (fn [e]
+                                                  (block-bullet/bullet-drag-end e uid))
+                        :unreadNotification     (actions/unread-notification? properties)}]
 
-               [:> Anchor {:isClosedWithChildren   (when (and (seq children)
-                                                              (or (and (true? linked-ref) (not @linked-ref-open?))
-                                                                  (and (false? linked-ref) (not open))))
-                                                     "closed-with-children")
-                           :uidSanitizedBlock      uid-sanitized-block
-                           :shouldShowDebugDetails (util/re-frame-10x-open?)
-                           :menu                   menu
-                           :onClick                (fn [e]
-                                                     (let [shift? (.-shiftKey e)]
-                                                       (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                            :target :block
-                                                                                            :pane   (if shift?
-                                                                                                      :right-pane
-                                                                                                      :main-pane)}])
-                                                       (router/navigate-uid uid e)))
-                           :on-drag-start          (fn [e]
-                                                     (block-bullet/bullet-drag-start e uid))
-                           :on-drag-end            (fn [e]
-                                                     (block-bullet/bullet-drag-end e uid))
-                           :unreadNotification     (actions/unread-notification? properties)}]
+            ;; `BlockTypeProtocol` dispatch placement
+            ^{:key renderer-k}
+            [types/outline-view renderer block {:show-edit? show-edit?}]
 
-               ;; `BlockTypeProtocol` dispatch placement
-               [:> Box {:gridArea "content"}
-                ^{:key renderer-k}
-                [types/outline-view renderer block {:show-edit? show-edit?}]]
-
-               (when reactions
-                 [:> Reactions {:reactions        (clj->js reactions)
-                                :currentUser      user-id
-                                :onToggleReaction (partial block-reaction/toggle-reaction [:block/uid uid])}])
+            (when (and in-view? reactions-enabled? reactions)
+              [:> Reactions {:reactions        (clj->js reactions)
+                             :currentUser      user-id
+                             :onToggleReaction (partial block-reaction/toggle-reaction [:block/uid uid])}])
 
                ;; Show comments when the toggle is on
-               (when (and @show-comments?
-                          (or @show-textarea?
-                              (comments/get-comment-thread-uid @db/dsdb uid)))
-                 (cond
-                   @show-textarea? [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false]
-                   :else           [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid true]))
+            (when (and @show-comments?
+                       (or @show-textarea?
+                           (comments/get-comment-thread-uid @db/dsdb uid)))
+              (cond
+                @show-textarea? [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false]
+                :else           [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid true]))
 
-               [presence/inline-presence-el uid]
+            (when in-view?
+              [presence/inline-presence-el uid])
 
-               (when (and (> (count _refs) 0) (not= :block-embed? opts))
-                 [block-refs-count-el
-                  (count _refs)
-                  (fn [e]
-                    (if (.. e -shiftKey)
-                      (rf/dispatch [:right-sidebar/open-item [:block/uid uid]])
-                      (rf/dispatch [::inline-refs.events/toggle-open! uid])))
-                  @inline-refs-open?])]
+            (when (and in-view?
+                       (> (count _refs) 0)
+                       (not= :block-embed? opts))
+              [block-refs-count-el
+               (count _refs)
+               (fn [e]
+                 (if (.. e -shiftKey)
+                   (rf/dispatch [:right-sidebar/open-item [:block/uid uid]])
+                   (rf/dispatch [::inline-refs.events/toggle-open! uid])))
+               @inline-refs-open?])]
 
-              ;; Inline refs
-              (when (and (> (count _refs) 0)
-                         (not= :block-embed? opts)
-                         @inline-refs-open?)
-                [inline-linked-refs-el block-el uid])
+           ;; Inline refs
+           (when (and in-view?
+                      (> (count _refs) 0)
+                      (not= :block-embed? opts)
+                      @inline-refs-open?)
+             [inline-linked-refs-el block-el uid])
 
-              ;; Properties
-              (when (and @enable-properties?
-                         (or (and (true? linked-ref) @linked-ref-open?)
-                             (and (false? linked-ref) open)))
-                (for [prop (common-db/sort-block-properties properties)]
-                  ^{:key (:db/id prop)}
-                  [block-el prop
-                   (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid prop)))
-                   opts]))
+           ;; Properties
+           (when (and @enable-properties?
+                      (or (and (true? linked-ref) @linked-ref-open?)
+                          (and (false? linked-ref) open)))
+             (for [prop (common-db/sort-block-properties properties)]
+               ^{:key (:db/id prop)}
+               [:f> block-el prop
+                (assoc linked-ref-data :initial-open (contains? parent-uids (:block/uid prop)))
+                opts]))
 
-              ;; Children
-              (when (and (seq children)
-                         (or (and (true? linked-ref) @linked-ref-open?)
-                             (and (false? linked-ref) open)))
-                (for [child children
-                      :let [child-uid (:block/uid child)]]
-                  ^{:key (:db/id child)}
-                  [block-el child
-                   (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))
-                   opts]))]
+           ;; Children
+           (when (and (seq children)
+                      (or (and (true? linked-ref) @linked-ref-open?)
+                          (and (false? linked-ref) open)))
+             (for [child children
+                   :let  [child-uid (:block/uid child)]]
+               ^{:key (:db/id child)}
+               [:f> block-el child
+                (assoc linked-ref-data :initial-open (contains? parent-uids child-uid))
+                opts]))]
 
-             (when (= @drag-target :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
-             (when (= @drag-target :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])]))}))))
+          (when (= @drag-target :first) [drop-area-indicator/drop-area-indicator {:placement "below" :child? true}])
+          (when (= @drag-target :after) [drop-area-indicator/drop-area-indicator {:placement "below"}])])))))

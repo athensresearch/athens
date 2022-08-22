@@ -1,10 +1,10 @@
 (ns athens.views.comments.inline
   (:require
     ["/components/Block/Anchor"      :refer [Anchor]]
-    ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
+    ["/components/Comments/Comments" :refer [CommentContainer]]
     ["/components/Icons/Icons"       :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
     ["/timeAgo.js"                   :refer [timeAgo]]
-    ["@chakra-ui/react"              :refer [Button Box Text VStack Avatar HStack Badge]]
+    ["@chakra-ui/react"              :refer [AvatarGroup Button Box Text VStack Avatar HStack Badge]]
     [athens.common-events            :as common-events]
     [athens.common-events.graph.ops  :as graph-ops]
     [athens.common.logging           :as log]
@@ -103,7 +103,7 @@
                        :color    "foreground.secondary"}
               human-timestamp]]])
 
-         [:> Anchor {:ml "0.25em"
+         [:> Anchor {:ml 0.5
                      :height "2em"}]
          [:> Box {:flex "1 1 100%"
                   :gridArea "comment"
@@ -167,33 +167,36 @@
 (defn comments-disclosure
   [hide? num-comments last-comment]
   [:> Button (merge
-               (when-not @hide?
-                 {:bg                 "background.upper"
-                  :borderColor        "transparent"
-                  :borderBottomRadius 0})
-               {:justifyContent "flex-start"
-                :color          "foreground.secondary"
-                :variant        "outline"
-                :size           "sm"
-                :gap            2
-                :flex           "1 0 auto"
-                :onClick        #(reset! hide? (not @hide?))})
-   (if @hide?
-     [:<>
-      [:> ChevronRightIcon]
-      [:> CommentCounter {:count num-comments}]
-      [:> Text {:pl 1.5} "Comments"]
-      [:> HStack
-       [:> Box
-        (:author last-comment)]
-       [:> Box
-        (:string last-comment)]
-       [:> Box
-        (timeAgo (:time last-comment))]]]
-     [:<>
-      [:> ChevronDownIcon]
-      [:> CommentCounter {:count num-comments}]
-      [:> Text {:pl 1.5} "Comments"]])])
+              {:justifyContent "flex-start"
+               :color          "foreground.secondary"
+               :variant        "ghost"
+               :size           "xs"
+               :minHeight      7
+               :flex           "1 0 auto"
+               :bg             "background.upper"
+               :borderRadius "none"
+               :leftIcon      (if @hide?
+                                (r/as-element [:> ChevronRightIcon {:ml 1}])
+                                (r/as-element [:> ChevronDownIcon {:ml 1}]))
+               :sx {":after" {:content "''"
+                              :opacity (if @hide? 0 1)
+                              :position "absolute"
+                              :bottom 0
+                              :transition "inherit"
+                              :left 9
+                              :right 0
+                              :borderBottom "1px solid"
+                              :borderBottomColor "separator.divider"}
+                    ":hover:after" {:opacity 0}}
+               :onClick        #(reset! hide? (not @hide?))}
+              (when @hide?
+                {:bg "transparent"
+                 :borderColor        "transparent"}))
+   [:> HStack
+    [:> AvatarGroup [:> Avatar {:size "xs" :name (:author last-comment)}]]
+    [:> Text (str num-comments " comments")]
+    [:> Text {:color "foreground.tertiary"}
+     (timeAgo (:time last-comment))]]])
 
 
 (defn inline-comments
@@ -213,22 +216,26 @@
                                                       (rf/dispatch [:editing/uid block-uid]))]
 
           [:> VStack (merge
-                       (when-not @hide?
-                         {:bg "background.upper"
-                          :mb 4})
                        {:gridArea "comments"
                         :color "foreground.secondary"
                         :flex "1 0 auto"
+                        :bg "background.upper"
+                        :mb 2
+                        :borderWidth "1px"
+                        :borderStyle "solid"
+                        :borderColor "separator.border"
+                        :overflow "hidden"
                         :spacing 0
                         :borderRadius "md"
-                        :align "stretch"})
+                        :align "stretch"}
+                       (when @hide?
+                         {:bg "transparent"
+                          :borderColor "separator.divider"}))
 
            [comments-disclosure hide? num-comments last-comment]
 
            (when-not @hide?
-             [:> Box {:pl 8
-                      :pr 4
-                      :pb 4}
+             [:> Box {:p 2}
               (for [item data]
                 ^{:key item}
                 [comment-el item])

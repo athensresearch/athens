@@ -36,6 +36,7 @@ import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "
 import { FakeTrafficLights } from './components/FakeTrafficLights';
 import { WindowButtons } from './components/WindowButtons';
 import { LocationIndicator } from './components/LocationIndicator';
+import { reusableToast } from '@/utils/reusableToast';
 
 const PAGE_TITLE_SHOW_HEIGHT = 24;
 
@@ -187,6 +188,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState(null);
 
   const toast = useToast();
+  const commentsToggleToastRef = React.useRef(null);
 
   // add event listener to detect when the user scrolls past the title
   React.useLayoutEffect(() => {
@@ -226,7 +228,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       onClick: () => {
         if (isShowComments) {
           handleClickComments();
-          toast({
+          reusableToast(toast, commentsToggleToastRef, {
             title: "Comments hidden",
             status: "info",
             duration: 5000,
@@ -235,9 +237,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
 
         } else {
           handleClickComments();
-          toast({
+          reusableToast(toast, commentsToggleToastRef, {
             title: "Comments shown",
-            status: "info",
             duration: 5000,
             position: "top-right"
           });

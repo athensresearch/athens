@@ -32,12 +32,13 @@ const ReactionItem = ({ reaction, onToggleReaction, currentUser }: ReactionItemP
       key={reactionItem}
       display="flex"
       gap={1}
+      px={1}
       position="relative"
-      isActive={isFromCurrentUser}
+      variant={isFromCurrentUser ? "outline" : "ghost"}
       onClick={() => onToggleReaction(reactionItem, currentUser)}
     >
       <Box position="absolute" inset={0} />
-      <Text transform="scale(1.35)" fontSize="md">{reactionItem}</Text>
+      <Text transform="scale(1.125)" fontSize="md">{reactionItem}</Text>
       <Text fontSize="xs" color="foreground.secondary">{usersCount < 10 ? usersCount : "9+"}</Text>
     </Button>
   </Tooltip>
@@ -52,7 +53,8 @@ export const Reactions = ({ reactions, onToggleReaction, currentUser }: Reaction
       gridArea="reactions"
       size="xs"
       mb={1}
-      isAttached={true}
+      spacing="-1px"
+      // isAttached={true}
       borderRadius="md"
     >
       {reactions.map(reaction => (<ReactionItem
