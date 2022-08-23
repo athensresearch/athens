@@ -78,8 +78,8 @@
                                        (if same-parent?
                                          (position/move-child-within
                                            db old-parent-uid uid position event-ref)
-                                         (position/move-child-between
-                                           db old-parent-uid new-parent-uid uid position event-ref))
+                                         (concat (position/remove-child db uid old-parent-uid event-ref)
+                                                 (position/add-child db uid position event-ref)))
 
                                        [:child :property]
                                        (concat
