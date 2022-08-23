@@ -509,9 +509,12 @@ const components = {
       },
       dialog: {
         shadow: "dialog",
-        border: "1px solid",
-        borderColor: 'separator.divider',
-        bg: 'background.upper'
+        border: "none",
+        maxWidth: 'calc(100% - 2rem)',
+        maxHeight: 'calc(100% - 2rem)',
+        overflow: 'auto',
+        margin: "auto",
+        bg: 'background.upper',
       }
     }
   },

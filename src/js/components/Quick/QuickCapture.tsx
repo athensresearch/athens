@@ -1,5 +1,5 @@
 import React from 'react'
-import { FormControl, HStack, Text, Textarea, VStack } from "@chakra-ui/react"
+import { AlertDialog, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Box, Button, FormControl, HStack, Text, Textarea, VStack } from "@chakra-ui/react"
 import { CheckmarkCircleFillIcon } from '@/Icons/Icons'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -26,23 +26,29 @@ const FloatingInput = (props) => {
     flex="0 0 auto"
     position="sticky"
     inset={0}
-    p={4}
+    py={4}
     top="auto"
+    align="center"
+    justifyContent="center"
   >
-    <FormControl>
+    <FormControl
+      width="100%"
+      flex="0 1 auto"
+    >
       <Textarea
         ref={inputRef}
         height="20vh"
         borderRadius="lg"
         resize="none"
         placeholder="Tap to begin writing"
-        border="1px solid"
-        borderColor="separator.divider"
-        backgroundClip="border-box"
-        background="background.attic"
-        _hover={{
-          shadow: "page"
+        border="none"
+        outline="none"
+        shadow="page"
+        _focus={{
+          outline: "none",
+          shadow: "page",
         }}
+        background="background.attic"
         enterkeyhint="send"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -50,37 +56,13 @@ const FloatingInput = (props) => {
           }
         }}
         value={string}
-        shadow="page"
-        _focus={{
-          shadow: "page"
-        }}
         onChange={e => setString(e.target.value)}
       />
     </FormControl>
   </HStack>
 }
 
-const Placeholder = () => {
-  return <VStack
-    as={motion.div}
-    initial={{
-      opacity: 0,
-      y: 50,
-    }}
-    animate={{
-      opacity: 1,
-      y: 0,
-    }}
-    exit={{
-      opacity: -2,
-      y: -100,
-    }}
-    mt="auto" color="foreground.secondary">
-    <Text fontSize="sm">Save a message to today's Daily Note.</Text>
-  </VStack>
-}
-
-const SavedItem = (props) => {
+const QueuedNote = (props) => {
   const { string, timestamp, isSaved } = props;
   const itemRef = React.useRef(null)
 
@@ -91,31 +73,33 @@ const SavedItem = (props) => {
   }, [])
 
   return (<VStack
-    _first={{
-      marginTop: "auto"
-    }}
     flex="0 0 auto"
     ref={itemRef}
+    layout
     as={motion.div}
     initial={{
       opacity: 0,
-      y: 50,
+      height: 0,
+      y: "20vh",
     }}
     animate={{
       opacity: 1,
+      height: "auto",
       y: 0,
     }}
     exit={{
       opacity: 0,
-      y: 100,
+      height: 0,
+      y: -200,
+      scale: 0.5,
     }}
-    px={4}
     spacing={0}
-    align="stretch"
+    alignSelf="stretch"
   >
     <VStack
       borderRadius="lg"
       spacing={1}
+      alignSelf="stretch"
       align="stretch"
       overflow="hidden"
       background="background.upper"
@@ -127,7 +111,7 @@ const SavedItem = (props) => {
         color="foreground.secondary"
         justifyContent="space-between"
       >
-        <Text>{timestamp.toLocaleString()}</Text>
+        <Text>{new Date(timestamp).toLocaleDateString()}</Text>
         <Text
           display="inline-flex"
           gap={1}
@@ -140,46 +124,25 @@ const SavedItem = (props) => {
   </VStack>);
 }
 
-// add db-switcher
-// add switch to try to load full view?
-// 
-// id = eventID
-// newEventid = () => eventID
+const Message = ({ children, ...props }) => <Text
+  layout
+  as={motion.p}
+  fontSize="sm"
+  textAlign="center"
+  color="foreground.secondary"
+  exit={{
+    opacity: 0,
+    height: 0,
+  }}
+  {...props}
+>{children}</Text>;
 
-// filipe will return items that have not been saved
-// and fn to get a new event id
-// and saveEvent fn (eventid, string) => null
-// 
-
-export const QuickCapture = ({ unsavedEventsIds, newEventId }) => {
-
-  // add the picker
-  // switch to full view
-
-  // on create new
-  // eventId = newEventId()
-  // add to local state
-
-  // on change of unsavedEventsIds
-  // refresh local state and compare to unsavedEventsIds  
-
-  const [captures, setCaptures] = React.useState(savedCaptures || []);
+export const QuickCapture = ({ dbMenu, notes, onAddItem, lastSyncTime }) => {
+  const [isSwitchDialogOpen, setIsSwitchDialogOpen] = React.useState(false);
   const containerRef = React.useRef(null)
+  const confirmationCancelRef = React.useRef(null)
 
-  const onSaveCapture = (string) => {
-    setCaptures([...captures, { string, isSaved: false, timestamp: new Date() }]);
-  }
-
-  return <VStack
-    align="stretch"
-    bg="linear-gradient(to bottom, #00000000 50%, #00000011)"
-    backgroundAttachment="fixed"
-    pt={4}
-    overflow="hidden"
-    height="100dvh"
-    width="100vw"
-    position="relative"
-  >
+  return <>
     <style>
       {`
         html, body {
@@ -191,21 +154,68 @@ export const QuickCapture = ({ unsavedEventsIds, newEventId }) => {
           padding: 0;
         }
       `}
-
     </style>
     <VStack
-      flex={1}
-      minHeight="100%"
       align="stretch"
-      ref={containerRef}
-      overflow="auto"
-      overscrollBehaviorY='contain'
+      backgroundAttachment="fixed"
+      pt={4}
+      overflow="hidden"
+      height="100dvh"
+      width="100vw"
+      position="relative"
+      justifyContent="flex-end"
+      sx={{
+        maskImage: "linear-gradient(to bottom, #00000000 1rem, #000000ff 3rem, #000000ff 100%)"
+      }}
     >
-      <AnimatePresence initial={true}>
-        {captures.length ? captures.map((capture, index) => <SavedItem key={capture.timestamp} {...capture} />)
-          : <Placeholder key="placeholder" />}
-      </AnimatePresence>
-      <FloatingInput onSubmit={onSaveCapture} />
+      <VStack
+        align="stretch"
+        maxHeight="100%"
+        pt={10}
+        px={4}
+        bg="linear-gradient(to bottom, #00000000 50%, #00000011)"
+        ref={containerRef}
+        overflowY="scroll"
+        overscrollBehaviorY='contain'
+      >
+        <AnimatePresence initial={true}>
+          {(notes.length) && <Message key="today">Today</Message>}
+          {lastSyncTime && <Message key="lastsynced">Last synced: {new Date(lastSyncTime).toLocaleDateString()}</Message>}
+          {notes.length && notes.map((note, index) => <QueuedNote key={note.timestamp} {...note} />)}
+          {!(notes.length || lastSyncTime) && <Message key="placeholder">Save a message to today's Daily Notes</Message>}
+          <FloatingInput onSubmit={onAddItem} />
+        </AnimatePresence>
+      </VStack>
     </VStack>
-  </VStack>
+    <HStack position="fixed" justifyContent="space-between" inset={3} bottom="auto" as={motion.div}>
+      {dbMenu}
+      <Button
+        borderRadius="full"
+        onClick={() => setIsSwitchDialogOpen(true)}
+        size="sm"
+        sx={{
+          backdropFilter: "blur(10px)",
+        }}
+      >Switch to Athens</Button>
+    </HStack>
+    <AlertDialog
+      size="sm"
+      isOpen={isSwitchDialogOpen}
+      onClose={() => setIsSwitchDialogOpen(false)}
+      leastDestructiveRef={confirmationCancelRef}
+    >
+      <AlertDialogOverlay />
+      <AlertDialogContent py={3}>
+        <AlertDialogHeader py={1}>Switch to Athens?</AlertDialogHeader>
+        <AlertDialogBody py={1}>
+          <Text>Notes that have not been synced will be lost.</Text>
+        </AlertDialogBody>
+        <AlertDialogFooter py={1}>
+          <Button variant="secondary" ref={confirmationCancelRef} onClick={() => setIsSwitchDialogOpen(false)}>Go back</Button>
+          <Button variant="secondary" colorScheme="destructive" onClick={() => setIsSwitchDialogOpen(false)}>Switch to Athens</Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+
+    </AlertDialog>
+  </>
 }
