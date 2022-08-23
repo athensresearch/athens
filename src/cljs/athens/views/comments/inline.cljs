@@ -167,31 +167,31 @@
 (defn comments-disclosure
   [hide? num-comments last-comment]
   [:> Button (merge
-              {:justifyContent "flex-start"
-               :color          "foreground.secondary"
-               :variant        "ghost"
-               :size           "xs"
-               :minHeight      7
-               :flex           "1 0 auto"
-               :bg             "background.upper"
-               :borderRadius "none"
-               :leftIcon      (if @hide?
-                                (r/as-element [:> ChevronRightIcon {:ml 1}])
-                                (r/as-element [:> ChevronDownIcon {:ml 1}]))
-               :sx {":after" {:content "''"
-                              :opacity (if @hide? 0 1)
-                              :position "absolute"
-                              :bottom 0
-                              :transition "inherit"
-                              :left 9
-                              :right 0
-                              :borderBottom "1px solid"
-                              :borderBottomColor "separator.divider"}
-                    ":hover:after" {:opacity 0}}
-               :onClick        #(reset! hide? (not @hide?))}
-              (when @hide?
-                {:bg "transparent"
-                 :borderColor        "transparent"}))
+               {:justifyContent "flex-start"
+                :color          "foreground.secondary"
+                :variant        "ghost"
+                :size           "xs"
+                :minHeight      7
+                :flex           "1 0 auto"
+                :bg             "background.upper"
+                :borderRadius "none"
+                :leftIcon      (if @hide?
+                                 (r/as-element [:> ChevronRightIcon {:ml 1}])
+                                 (r/as-element [:> ChevronDownIcon {:ml 1}]))
+                :sx {":after" {:content "''"
+                               :opacity (if @hide? 0 1)
+                               :position "absolute"
+                               :bottom 0
+                               :transition "inherit"
+                               :left 9
+                               :right 0
+                               :borderBottom "1px solid"
+                               :borderBottomColor "separator.divider"}
+                     ":hover:after" {:opacity 0}}
+                :onClick        #(reset! hide? (not @hide?))}
+               (when @hide?
+                 {:bg "transparent"
+                  :borderColor        "transparent"}))
    [:> HStack
     [:> AvatarGroup [:> Avatar {:size "xs" :name (:author last-comment)}]]
     [:> Text (str num-comments " comments")]

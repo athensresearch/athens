@@ -149,9 +149,9 @@
               [:f> blocks/block-el prop])])
 
          ;; Show comments when the toggle is on
-          (when (or @show-textarea?
-                    (and @show-comments?
-                         (comments/get-comment-thread-uid @db/dsdb uid)))
+         (when (or @show-textarea?
+                   (and @show-comments?
+                        (comments/get-comment-thread-uid @db/dsdb uid)))
            [:> PageBody
             [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false]])
 
