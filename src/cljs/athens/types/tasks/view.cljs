@@ -183,16 +183,16 @@
           prop-title]
          [:> Box [:> BlockFormInput
                   {:isMultiline multiline?}
-          ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
+                  ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
                   [editor/block-editor {:block/uid (or prop-block-uid
-                                               ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                                       ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
                                                        (str "tmp-" (subs prop-name
                                                                          (inc (.indexOf prop-name "/")))
                                                             "-uid-" (common.utils/gen-block-uid)))}
                    state-hooks]
                   [presence/inline-presence-el prop-block-uid]]
 
-          (if invalid-prop-str?
+          (when invalid-prop-str?
             [:> FormErrorMessage {:gridColumn 2}
              (str prop-title " is " (if required?
                                       "required"
@@ -279,12 +279,12 @@
 
 (defn inline-task-title-2
   [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
-  (let [prop-id (str (random-uuid))]
-    (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
+  (let [_prop-id (str (random-uuid))]
+    (fn [parent-block-uid prop-block-uid prop-name _prop-title _required? multiline?]
       (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
             prop-str            (or (:block/string prop-block) "")
             local-value         (r/atom prop-str)
-            invalid-prop-str?   (and (str/blank? prop-str)
+            _invalid-prop-str?  (and (str/blank? prop-str)
                                      (not (nil? prop-str)))
             save-fn             (fn
                                   ([]
@@ -401,19 +401,19 @@
      [:> FormLabel {:html-for priority-id}
       "Task priority"]
      [:> Box [:> Select {:id          priority-id
-                 :value       priority-uid
-                 :size "sm"
-                 :placeholder "Select a priority"
-                 :on-change   (fn [e]
-                                (let [new-priority (-> e .-target .-value)
-                                      priority-ref (str "((" new-priority "))")]
-                                  (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
-                                                (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
-      (doall
-       (for [{:block/keys [uid string]} allowed-priorities]
-         ^{:key uid}
-         [:option {:value uid}
-          string]))]]]))
+                         :value       priority-uid
+                         :size "sm"
+                         :placeholder "Select a priority"
+                         :on-change   (fn [e]
+                                        (let [new-priority (-> e .-target .-value)
+                                              priority-ref (str "((" new-priority "))")]
+                                          (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
+                                                        (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
+              (doall
+                (for [{:block/keys [uid string]} allowed-priorities]
+                  ^{:key uid}
+                  [:option {:value uid}
+                   string]))]]]))
 
 
 (defn task-status-view
@@ -437,10 +437,10 @@
                                           (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
                                                         (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}
               (doall
-               (for [{:block/keys [uid string]} allowed-statuses]
-                 ^{:key uid}
-                 [:option {:value uid}
-                  string]))]]]))
+                (for [{:block/keys [uid string]} allowed-statuses]
+                  ^{:key uid}
+                  [:option {:value uid}
+                   string]))]]]))
 
 
 (defn task-status-menulist
@@ -457,17 +457,17 @@
                                            (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))]
     (prn status-string)
     [:> Portal
-    [:> MenuList
-     [:> MenuOptionGroup {:defaultValue status-uid
-                          :type "radio"
-                          :onChange on-choose-item}
-      (doall
-       (for [{:block/keys [uid string]} allowed-statuses]
-         ^{:key uid}
-         [:> MenuItemOption {:value uid
-                             :py 0
-                             :icon (r/as-element [:> CheckmarkIcon])}
-          string]))]]]))
+     [:> MenuList
+      [:> MenuOptionGroup {:defaultValue status-uid
+                           :type "radio"
+                           :onChange on-choose-item}
+       (doall
+         (for [{:block/keys [uid string]} allowed-statuses]
+           ^{:key uid}
+           [:> MenuItemOption {:value uid
+                               :py 0
+                               :icon (r/as-element [:> CheckmarkIcon])}
+            string]))]]]))
 
 
 (defn find-status-uid
@@ -494,7 +494,7 @@
 
 
 (defn task-el
-  [_this block-data _callbacks is-ref?]
+  [_this block-data _callbacks _is-ref?]
   (let [block-uid (:block/uid block-data)]
     (fn [_this _block-data _callbacks]
       (let [block           (-> [:block/uid block-uid] reactive/get-reactive-block-document)
@@ -505,7 +505,7 @@
             description-uid (-> props (get ":task/description") :block/uid)
             creator-uid     (-> props (get ":task/creator") :block/uid)
             due-date-uid    (-> props (get ":task/due-date") :block/uid)
-              ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
+            ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
             status-uid      (-> props (get ":task/status") :block/uid)
             creator         (-> (:block/create block) :event/auth :presence/id)
             time            (-> (:block/create block) :event/time :time/ts)
@@ -519,7 +519,7 @@
                                                                       :block/string
                                                                       (common-db/strip-markup "((" "))"))])
                        :block/string)
-            title            (-> props (get ":task/title") :block/string)
+            _title           (-> props (get ":task/title") :block/string)
             assignee         (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
             priority         (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
                                                                                 (get ":task/priority")
@@ -540,7 +540,7 @@
             show-priority?     true
             show-creator?      true
             show-created-date? true
-            show-status?       true
+            _show-status?      true
             show-due-date?     true
 
             isChecked (is-checked-fn status)]
@@ -559,8 +559,8 @@
          [:> HStack {:alignSelf "stretch"
                      :as ButtonGroup
                      :variant "ghost"
-                      :onClick #(.. % stopPropagation)
-                      :onMouseDown #(.. % stopPropagation)
+                     :onClick #(.. % stopPropagation)
+                     :onMouseDown #(.. % stopPropagation)
                      :alignItems "start"
                      :isAttached true
                      :size "sm"
@@ -640,9 +640,8 @@
            [:> Text creator-uid]]]]))))
 
 
-
 (defrecord TaskView
-           []
+  []
 
   types/BlockTypeProtocol
 
