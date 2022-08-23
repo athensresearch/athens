@@ -18,6 +18,7 @@
                                                        Divider
                                                        HStack
                                                        MenuDivider
+                                                       MenuGroup
                                                        MenuItem
                                                        VStack]]
     ["react"                                   :as react]
@@ -439,7 +440,7 @@
                                                (on-block-mount)
                                                on-unmount-block)
                                              #js [])]
-         (log/debug "block open render: block-o:" (pr-str (:block/open block-o))
+         #_(log/debug "block open render: block-o:" (pr-str (:block/open block-o))
                     "block:" (pr-str (:block/open block))
                     "merge:" (pr-str (:block/open (merge block-o block))))
 

@@ -27,7 +27,8 @@
     (fn [block _last-event _state]
       [:> Autocomplete {:event   @last-event
                         :isOpen  @open?
-                        :onClose #(rf/dispatch [::inline-search.events/close! block-uid])}
+                        :onClose #(when @open?
+                                    (rf/dispatch [::inline-search.events/close! block-uid]))}
        (when @open?
          (doall
            (for [[i [text icon _expansion kbd _pos :as item]] (map-indexed list @inline-search-results)]
