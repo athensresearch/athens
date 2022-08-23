@@ -75,7 +75,7 @@
 
 
 (def SCHEMA
-  {"[[athens/task]]"           (concat base-schema [":task/title" ":task/status" ":task/assignee" ":task/due-date"])
+  {"[[athens/task]]"           (concat [":task/title" ":task/page" ":task/status" ":task/assignee" ":task/priority" ":task/due-date" ] base-schema)
    "[[athens/comment-thread]]" (concat base-schema [])})
 
 (def AUTHORS
@@ -89,6 +89,9 @@
 
 (def SPECIAL_FILTERS
   ["None" "On this page"])
+
+(def GROUP_BY_OPTIONS
+  [":task/page" ":task/status" ":task/assignee" ":task/priority" ":create/auth"])
 
 (def DEFAULT-PROPS
   {":entity/type"                   "[[athens/query]]"
@@ -145,6 +148,12 @@
                                        create-auth-and-time
                                        last-edit-auth-and-time)]
     merged-map))
+
+
+(defn get-root-page
+  [x]
+  (merge x
+         {":task/page" (:node/title (db/get-root-parent-page (get x ":block/uid")))}))
 
 
 (defn nested-group-by
@@ -271,8 +280,7 @@
 
 (defn order-children
   [children]
-  (->> (sort-by :block/order children)
-       (mapv :block/string)))
+  (->> (sort-by :block/order children)))
 
 
 (defn get-query-props
@@ -296,9 +304,12 @@
   [eid property-key]
   (let [property-page (reactive/get-reactive-block-document eid)
         property      (get-in property-page [:block/properties property-key])
-        {:block/keys [children properties sting]} property]
+        {:block/keys [children properties string]} property]
     (cond
-      (seq children) (order-children children)
+      (seq children) (->> children
+                          order-children
+                          (mapv (fn [{:block/keys [uid string]}]
+                                  #:block{:uid uid :string string})))
       (seq properties) (keys properties))))
 
 (defn sort-dir-fn
@@ -323,6 +334,17 @@
         (clojure.string/blank? s) (throw "parse-for-title got an empty string")
         :else s))))
 
+(defn parse-for-uid
+  "should be able to pass in a plain string, a wikilink, or both?"
+  [s]
+  (when (seq s)
+    (let [re #"\(\((.*)\)\)"]
+      (cond
+        (re-find re s) (second (re-find re s))
+        (clojure.string/blank? s) (throw "parse-for-title got an empty string")
+        :else s))))
+
+
 
 (defn str-to-title
   [s]
@@ -342,7 +364,8 @@
 
 (defn options-el
   [{:keys [properties parsed-properties uid schema]}]
-  (let [[layout select p-order p-hide f-author f-special s-by s-direction] (get* parsed-properties ["layout" "select" "properties/order" "properties/hide" "filter/author" "filter/special" "sort/by" "sort/direction"])
+  (let [[layout select p-order p-hide f-author f-special s-by s-direction g-by g-s-by]
+        (get* parsed-properties ["layout" "select" "properties/order" "properties/hide" "filter/author" "filter/special" "sort/by" "sort/direction" "group/by" "group/subgroup/by"])
         s-by       (parse-for-title s-by)
         menus-data [{:heading  "Entity Type"
                      :options  ENTITY_TYPES
@@ -367,7 +390,15 @@
                     {:heading  "Sort Direction"
                      :options  SORT_DIRECTIONS
                      :onChange #(update-query-property uid "sort/direction" %)
-                     :value    s-direction}]]
+                     :value    s-direction}
+                    {:heading "Group By (Board)"
+                     :options GROUP_BY_OPTIONS
+                     :onChange #(update-query-property uid "group/by" %)
+                     :value g-by}
+                    {:heading "Subgroup By (Board)"
+                     :options GROUP_BY_OPTIONS
+                     :onChange #(update-query-property uid "group/subgroup/by" %)
+                     :value g-s-by}]]
     [:> Stack {:direction "row" :spacing 5}
      (for [menu menus-data]
        (let [{:keys [heading options onChange value]} menu]
@@ -385,7 +416,8 @@
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
-  (let [[select layout s-by s-direction f-author f-special p-order p-hide] (get* parsed-properties ["select" "layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
+  (let [[select layout s-by s-direction f-author f-special p-order p-hide]
+        (get* parsed-properties ["select" "layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
         s-by              (parse-for-title s-by)
         filter-author-fn  (fn [x]
                             (let [entity-author (get x ":create/auth")]
@@ -410,13 +442,15 @@
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case layout
        "board"
-       (let [[group-by subgroup-by] (get* parsed-properties ["group/by" "subgroup/by"])
-             query-group-by    (parse-for-title group-by)
-             query-subgroup-by (parse-for-title subgroup-by)
-             columns           (or (get-reactive-property [:node/title query-group-by] ":property/values") [])
+       (let [[g-by sg-by] (get* parsed-properties ["group/by" "group/subgroup/by"])
+             query-group-by    (parse-for-title g-by)
+             query-subgroup-by (parse-for-title sg-by)
+             columns           (get-reactive-property [:node/title query-group-by] ":property/enum")
              boardData         (if (and query-subgroup-by query-group-by)
                                  (group-stuff query-group-by query-subgroup-by query-data)
-                                 (group-by query-group-by query-data))]
+                                 (group-by #(get % query-group-by) query-data))]
+         (prn boardData)
+         (get-reactive-property [:node/title ":task/status"] ":property/enum")
          [:> QueryKanban {:boardData            boardData
                           ;; store column order here
                           :columns              columns
@@ -427,6 +461,10 @@
                           :groupBy              query-group-by
                           :subgroupBy           query-subgroup-by
                           :filter               nil
+                          :refToString    (fn [x]
+                                            (->> x
+                                                 parse-for-uid
+                                                 (common-db/get-block-string @athens.db/dsdb)))
                           :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
                           :onUpdateTaskTitle    update-task-title
                           :onUpdateKanbanColumn update-kanban-column
@@ -444,9 +482,19 @@
                        ;;:onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
                        :sortBy         s-by
                        :sortDirection  s-direction
+                       :onUidClick     #(rf/dispatch [:right-sidebar/open-item [:block/uid %]])
+                       :onPageClick    #(router/navigate-page %)
                        :rowCount       (count query-data)
                        :hideProperties p-hide
                        :dateFormatFn   #(dates/date-string %)}])]))
+
+
+
+
+
+
+{nil {nil [{":block/uid" "1f29dce5b", ":block/string" "test", ":entity/type" "[[athens/task]]", ":create/auth" "Sid", ":create/time" 1660894009080, ":last-edit/auth" nil, ":last-edit/time" 1661011262703, ":task/page" "August 19, 2022"} {":block/uid" "08-16-2022", ":block/string" nil, ":entity/type" "[[athens/task]]", ":create/auth" "Sid", ":create/time" 1660624243084, ":last-edit/auth" nil, ":last-edit/time" 1660624292449, ":task/page" "August 16, 2022"}]}, "" {nil [{":block/string" "", ":create/time" 1660904634520, ":create/auth" "Sid", ":last-edit/time" 1661013113312, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/page" "August 19, 2022", ":block/uid" "13f68a3b4", ":task/due-date" "asd", ":task/assignee" ""}]}, "[[@Filipe]]" {"((326893972))" [{":block/string" "", ":create/time" 1661245796014, ":create/auth" "Jeff", ":last-edit/time" 1661245843288, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((3ae3f4da9))", ":task/page" "Project: Tasks", ":block/uid" "6e2d0b69d", ":task/title" "design api", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Filipe]]", ":task/status" "((326893972))"}]}, "[[@Jeff]]" {"((5f282d535))" [{":block/string" "", ":create/time" 1661245784436, ":create/auth" "Jeff", ":last-edit/time" 1661245940745, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((c45df8496))", ":task/page" "Project: Tasks", ":block/uid" "37fcd71e9", ":task/title" "Design UIs", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Jeff]]", ":task/status" "((5f282d535))"}]}, "[[@Sid]]" {"((c09f1865b))" [{":block/string" "", ":create/time" 1661245808997, ":create/auth" "Jeff", ":last-edit/time" 1661269630733, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((abf97f9bc))", ":task/page" "Project: Tasks", ":block/uid" "c8c798cea", ":task/title" "announce the release on twitter", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Sid]]", ":task/status" "((c09f1865b))"}]}}
+
 
 
 
@@ -455,6 +503,12 @@
   (let [[layout group-by] (get* parsed-props ["layout" "group/by"])]
     (and (= layout "board")
          (nil? group-by))))
+
+(->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
+     (map block-to-flat-map)
+     (map get-root-page))
+
+
 
 ;; TODO: fix proeprties
 ;; clicking on them can add an SVG somehow
@@ -468,7 +522,8 @@
         [select] (get* parsed-properties ["select"])
         schema            (get-schema select)
         query-data        (->> (reactive/get-reactive-instances-of-key-value ":entity/type" select)
-                               (map block-to-flat-map))]
+                               (map block-to-flat-map)
+                               (map get-root-page))]
 
     (if (invalid-query? parsed-properties)
       [:> Box {:color "red"} "invalid query"]

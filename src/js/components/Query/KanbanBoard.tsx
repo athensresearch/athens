@@ -205,44 +205,43 @@ export const AddSwimlaneButton = (props) => {
   </Button>
 };
 
-export const QueryKanban = (props) => {
-  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties, onClickCard, groupBy, subgroupBy, onUpdateTaskTitle, onAddNewColumn, onUpdateKanbanColumn } = props;
-
-  if (hasSubGroup) {
-    return <KanbanBoard name={name}>
-      {Object.entries(boardData).map(([swimlane, y]) =>
-        <KanbanSwimlane name={swimlane}>
-        {columns.map(column =>
-          <KanbanColumn name={column} onUpdateKanbanColumn={onUpdateKanbanColumn} groupBy={groupBy} >
-          {y[column] &&  y[column].map((cardData) =>
-            <KanbanCard
-                columns={columns}
-                cardData={cardData}
-                onUpdateStatusClick={onUpdateStatusClick}
-                hideProperties={hideProperties}
-                onClickCard={onClickCard}
-                onUpdateTaskTitle={onUpdateTaskTitle}
-            />
-            )}
-          <AddCardButton context={{[groupBy]: column, [subgroupBy]: swimlane}} onAddNewCardClick={onAddNewCardClick} />
-          </KanbanColumn>
-          )}
-        <AddColumnButton onAddNewColumn={onAddNewColumn} />
-        </KanbanSwimlane>
-        )}
-    {/* <AddSwimlaneButton/> */}
-    </KanbanBoard>
-  } else {
-//    return <KanbanBoard name={name}>
-//      {Object.entries(boardData).map(([column, y]) =>
-//        <KanbanColumn name={column}>
-//        {y && y.map((cardData) =>
-//          <KanbanCard columns={columns} cardData={cardData} onUpdateStatusClick={onUpdateStatusClick} hideProperties={hideProperties} />
-//          )}
-//        <AddCardButton column={column} onAddNewCardClick={onAddNewCardClick} />
-//        </KanbanColumn>
-//        )}
-//    </KanbanBoard>
-  }
-
+export const renderCard = (columns, column, swimlaneColumn, onUpdateStatusClick, hideProperties, onClickCard, onUpdateTaskTitle) => {
+    const key = "((" + column.uid + "))"
+    const data = swimlaneColumn[key]
+    return data && data.map((cardData) =>
+      <KanbanCard
+          columns={columns}
+          cardData={cardData}
+          onUpdateStatusClick={onUpdateStatusClick}
+          hideProperties={hideProperties}
+          onClickCard={onClickCard}
+          onUpdateTaskTitle={onUpdateTaskTitle}
+      />
+      )
 }
+
+
+export const QueryKanban = (props) => {
+  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties,
+      onClickCard, groupBy, subgroupBy, onUpdateTaskTitle, onAddNewColumn, onUpdateKanbanColumn,
+      refToString,
+  } = props;
+
+  return (columns && columns.length > 0 &&  <KanbanBoard name={name}>
+    {Object.entries(boardData).map(([swimlane, swimlaneColumn]) =>
+      <KanbanSwimlane name={swimlane}>
+      {columns.map(column =>
+        <KanbanColumn name={column.string} onUpdateKanbanColumn={onUpdateKanbanColumn} groupBy={groupBy} >
+        {renderCard(columns, column, swimlaneColumn, onUpdateStatusClick, hideProperties, onClickCard, onUpdateTaskTitle)}
+        <AddCardButton context={{[groupBy]: column, [subgroupBy]: swimlane}} onAddNewCardClick={onAddNewCardClick} />
+        </KanbanColumn>
+        )}
+      <AddColumnButton onAddNewColumn={onAddNewColumn} />
+      </KanbanSwimlane>
+      )}
+  {/* <AddSwimlaneButton/> */}
+  </KanbanBoard>
+  )
+}
+
+

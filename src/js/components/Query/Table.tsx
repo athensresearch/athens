@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Box, Table, Thead, Tbody, Th, Td, Tr, Tfoot, textDecoration } from '@chakra-ui/react';
+import { Button, Box, Table, Thead, Tbody, Th, Td, Tr, Tfoot, textDecoration, Text, Link } from '@chakra-ui/react';
 import { AddCardButton } from '../KanbanBoard/KanbanBoard'
 import { ChevronDownIcon, ChevronUpIcon } from '@/Icons/Icons';
 
@@ -8,9 +8,30 @@ const isDateFn = (value) => {
     return (typeof value == "number") && (value > 1000000000000)
 }
 
+const cellValue = (column, record, hideProperties, dateFormatFn, onUidClick, onPageClick) => {
+    const value = record[column];
+    const isDate = isDateFn(value)
+    const uid = record[":block/uid"]
+    if (hideProperties[column]) {
+        return
+    }
+     else if (isDate) {
+        return dateFormatFn(value)
+    }
+    else if (column == ":task/page") {
+        return <Link onClick={() => onPageClick(value)} color="link">{value}</Link>
+    }
+    else if (column == ":block/uid") {
+        return <Link onClick={() => onUidClick(uid)} color="highlight">{value}</Link>
+    }
+    else {
+        return value
+    }
+}
+
 
 export const QueryTable = (props) => {
-    const { data, columns, dateFormatFn, onClickSort, sortBy, sortDirection, hideProperties, rowCount } = props;
+    const { data, columns, dateFormatFn, onClickSort, sortBy, sortDirection, hideProperties, rowCount, onUidClick, onPageClick} = props;
     return (columns && columns.length > 0 && <Box>
         <Table>
             <Thead>
@@ -36,11 +57,9 @@ export const QueryTable = (props) => {
             <Tbody>
             {data.map((record) => {
                 return <Tr>
-                {columns.map((column) => {
-                    const value = record[column];
-                    const isDate = isDateFn(value)
-                    return (!hideProperties[column] && <Td>{isDate ? dateFormatFn(value) : value}</Td>)
-                })}
+                    {columns.map((column) => {
+                        return <Td>{cellValue(column, record, hideProperties, dateFormatFn, onUidClick, onPageClick)}</Td>
+                    })}
                 </Tr>})}
             </Tbody>
             <Tfoot>
