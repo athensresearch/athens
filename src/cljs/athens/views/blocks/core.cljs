@@ -7,12 +7,19 @@
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/Icons/Icons"                 :refer [ArchiveIcon
                                                        BlockEmbedIcon
-                                                       ChatBubbleIcon TextIcon]]
+                                                       ChatBubbleIcon
+                                                       TextIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceBlock
                                                        ReferenceGroup]]
     ["@chakra-ui/react"                        :refer [Breadcrumb
                                                        BreadcrumbItem
-                                                       BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
+                                                       BreadcrumbLink
+                                                       Button
+                                                       Divider
+                                                       HStack
+                                                       MenuDivider
+                                                       MenuItem
+                                                       VStack]]
     ["react"                                   :as react]
     ["react-intersection-observer"             :refer [useInView]]
     [athens.common-db                          :as common-db]
@@ -377,10 +384,22 @@
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
-                                     [:> MenuList {:class "anchor"}
-                                      (when-not (= block-type "[[athens/task]]") [:> MenuItem {:children "convert to task"
-                                                                                               :icon     (r/as-element [:> BlockEmbedIcon])
-                                                                                               :onClick  convert-to-task}])
+                                     [:> MenuGroup
+                                      (when (< (count @selected-items) 2)
+                                        [:> MenuItem {:children "Open block"
+                                                      :icon     (r/as-element [:> TextIcon])
+                                                      :onClick  (fn [e]
+                                                                  (let [shift? (.-shiftKey e)]
+                                                                    (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                                         :target :block
+                                                                                                         :pane   (if shift?
+                                                                                                                   :right-pane
+                                                                                                                   :main-pane)}])
+                                                                    (router/navigate-uid uid e)))}])
+                                      (when-not (= block-type "[[athens/task]]")
+                                        [:> MenuItem {:children "convert to task"
+                                                      :icon     (r/as-element [:> BlockEmbedIcon])
+                                                      :onClick  convert-to-task}])
                                       [:> MenuItem {:children (if (> (count @selected-items) 1)
                                                                 "Copy selected block refs"
                                                                 "Copy block ref")
@@ -412,14 +431,14 @@
                                         [:> MenuItem {:children "Archive"
                                                       :icon     (r/as-element [:> ArchiveIcon])
                                                       :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
-             ff @(rf/subscribe [:feature-flags])
-             renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
-             renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
-             [ref in-view?]         (useInView {:delay 250})
-             _ (react/useEffect (fn []
-                                  #(on-block-mount)
-                                  on-unmount-block)
-                                #js [])]
+             ff             @(rf/subscribe [:feature-flags])
+             renderer-k     (block-type-dispatcher/block-type->protocol-k block-type ff)
+             renderer       (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
+             [ref in-view?] (useInView {:delay 250})
+             _              (react/useEffect (fn []
+                                               (on-block-mount)
+                                               on-unmount-block)
+                                             #js [])]
          (log/debug "block open render: block-o:" (pr-str (:block/open block-o))
                     "block:" (pr-str (:block/open block))
                     "merge:" (pr-str (:block/open (merge block-o block))))
