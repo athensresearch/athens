@@ -12,7 +12,7 @@
                                                        ReferenceGroup]]
     ["@chakra-ui/react"                        :refer [Breadcrumb
                                                        BreadcrumbItem
-                                                       BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
+                                                       BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuGroup VStack]]
     ["react"                                   :as react]
     ["react-intersection-observer"             :refer [useInView]]
     [athens.common-db                          :as common-db]
@@ -377,7 +377,7 @@
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
-                                     [:> MenuList {:class "anchor"}
+                                     [:> MenuGroup
                                       (when-not (= block-type "[[athens/task]]") [:> MenuItem {:children "convert to task"
                                                                                                :icon     (r/as-element [:> BlockEmbedIcon])
                                                                                                :onClick  convert-to-task}])
@@ -417,7 +417,7 @@
              renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
              [ref in-view?]         (useInView {:delay 250})
              _ (react/useEffect (fn []
-                                  #(on-block-mount)
+                                  (on-block-mount)
                                   on-unmount-block)
                                 #js [])]
          (log/debug "block open render: block-o:" (pr-str (:block/open block-o))
@@ -489,7 +489,7 @@
                         :uidSanitizedBlock      uid-sanitized-block
                         :shouldShowDebugDetails (util/re-frame-10x-open?)
                         :menu                   menu
-                        :onClick                (fn [e]
+                        :onDoubleClick          (fn [e]
                                                   (let [shift? (.-shiftKey e)]
                                                     (rf/dispatch [:reporting/navigation {:source :block-bullet
                                                                                          :target :block
