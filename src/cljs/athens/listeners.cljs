@@ -68,9 +68,10 @@
         closest-page-header  (.. e -target (closest ".page-header"))
         closest-bullet       (.. e -target (closest ".anchor"))
         closest-dropdown     (.. e -target (closest "#dropdown-menu"))
-        closest              (or closest-block closest-block-header closest-page-header closest-dropdown)]
+        closest-context-menu (.. e -target (closest ".app-context-menu"))
+        closest              (or closest-block closest-block-header closest-page-header closest-dropdown closest-context-menu)]
     (when (and selected-items?
-               (nil? closest-bullet))
+               (nil? (or closest-bullet closest-context-menu)))
       (dispatch [::select-events/clear]))
     (when (and (nil? closest)
                editing-uid)
