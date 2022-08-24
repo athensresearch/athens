@@ -1,13 +1,14 @@
 (ns athens.components
   (:require
-    ["@chakra-ui/react"                   :refer [Checkbox Button]]
-    [athens.db                            :as db]
-    [athens.parse-renderer                :refer [component]]
-    [athens.views.blocks.core             :as blocks]
-    [athens.views.blocks.types            :as types]
-    [athens.views.blocks.types.dispatcher :as block-type-dispatcher]
-    [clojure.string                       :as str]
-    [re-frame.core                        :as rf]))
+    ["@chakra-ui/react"       :refer [Checkbox Button]]
+    [athens.db                :as db]
+    [athens.parse-renderer    :refer [component]]
+    [athens.reactive          :as reactive]
+    [athens.types.core        :as types]
+    [athens.types.dispatcher  :as block-type-dispatcher]
+    [athens.views.blocks.core :as blocks]
+    [clojure.string           :as str]
+    [re-frame.core            :as rf]))
 
 
 (defn todo-on-click
@@ -74,17 +75,19 @@
 
 
 (defmethod component :block-embed
-  [content _uid]
+  [content uid]
   ;; bindings are eval only once in with-let
   ;; which is needed to keep embed integrity else it will update on
   ;; each re-render. Similar to ref-comp
   (let [block-uid (last (re-find #"\(\((.+)\)\)" content))
         block-eid (db/e-by-av :block/uid block-uid)]
     (if block-eid
-      (let [;; TODO: make real block type discovery
-            block-type nil
-            renderer   (block-type-dispatcher/block-type->protocol block-type {})]
-        [types/transclusion-view renderer blocks/block-el block-uid  {} :embed])
+      (let [block-type (reactive/reactive-get-entity-type [:block/uid block-uid])
+            ff         @(rf/subscribe [:feature-flags])
+            renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
+            renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]
+        ^{:key renderer-k}
+        [types/transclusion-view renderer blocks/block-el block-uid {:transcluding-block-uid uid} :embed])
       ;; roam actually hides the brackets around [[embed]]
       [:span "{{" content "}}"])))
 

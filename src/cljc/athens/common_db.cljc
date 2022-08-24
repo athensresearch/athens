@@ -329,7 +329,7 @@
 
 
 (defn get-parent-eid
-  "Find parent's `:db/id` of given `eid`."
+  "Find parent's eids of given `eid`."
   [db eid]
   (-> (d/entity db eid)
       child-of-or-property-of
@@ -342,6 +342,16 @@
   "Given `:db/id` find it's parent."
   [db eid]
   (get-block db (get-parent-eid db eid)))
+
+
+(defn get-parent-eids
+  "Return parent parent eids for `eid`."
+  [db eid]
+  (loop [block eid
+         acc []]
+    (if-let [parent (get-parent-eid db block)]
+      (recur parent (conj acc parent))
+      acc)))
 
 
 (defn get-children-uids
@@ -412,6 +422,16 @@
       (update :block/_property-of #(mapv (fn [{:db/keys [id]}] (get-block-document db id)) %))
       add-property-map
       :block/properties))
+
+
+(defn get-entity-type
+  "Returns the value of eids `:entity/type` prop, if any."
+  [db eid]
+  (->> (d/entity db eid)
+       :block/_property-of
+       (some (fn [e]
+               (when (-> e :block/key :node/title (= ":entity/type"))
+                 (:block/string e))))))
 
 
 (defn get-block-uid
@@ -622,7 +642,7 @@
     txs))
 
 
-(defn- dissoc-on-match
+(defn dissoc-on-match
   [m [k f]]
   (if (f m)
     (dissoc m k)
@@ -683,13 +703,15 @@
   "Build a position by coercing incompatible arguments into compatible ones.
   uid to a page will instead use that page's title.
   Integer relation will be converted to :first if 0, or :after (with matching uid) if not.
+  Relative positions to properties will be converted to :first on the parent.
   Accepts the `{:block/uid <parent-uid> :relation <integer>}` old format based on order number.
   Output position will be athens.common-events.graph.schema/child-position for the first block,
   and athens.common-events.graph.schema/sibling-position for others.
   It's safe to use a position that does not need coercing of any arguments, like the output formats."
   [db {:keys [relation block/uid page/title] :as pos}]
   (let [[coerced-ref-uid
-         coerced-relation] (when (integer? relation)
+         coerced-relation] (cond
+                             (integer? relation)
                              (if (= relation 0)
                                [nil :first]
                                (let [parent-uid (or uid (get-page-uid db title))
@@ -697,11 +719,13 @@
                                  (if prev-uid
                                    [prev-uid :after]
                                    ;; Can't find the previous block, just put it on last.
-                                   [nil :last]))))
-        coerced-title      (when (and (not title)
-                                      (not coerced-ref-uid)
-                                      uid)
-                             (get-page-title db uid))
+                                   [nil :last])))
+                             (and uid
+                                  (#{:before :after} relation)
+                                  (property-key db [:block/uid uid]))
+                             [(second (get-parent-eid db [:block/uid uid])) :first])
+        coerced-title      (when (not title)
+                             (get-page-title db (or coerced-ref-uid uid)))
         new-pos            (when (or coerced-ref-uid coerced-relation coerced-title)
                              (merge
                                {:relation (or coerced-relation relation)}
@@ -768,6 +792,16 @@
     [uid parent-uid]))
 
 
+(defn drop-prop-position
+  [db uid target-uid rel]
+  (let [target-uid' (if (#{:first :last} rel)
+                      target-uid
+                      (:block/uid (get-parent db [:block/uid target-uid])))
+        k           (property-key db [:block/uid uid])]
+    (compat-position db {:block/uid target-uid'
+                         :relation  {:page/title k}})))
+
+
 (defn orphan-block-uids
   [db]
   (d/q '[:find ?uid
@@ -825,7 +859,8 @@
   "Remove `start` and `end` from s if present.
    Returns nil if markup was not present."
   [s start end]
-  (when (and (string/starts-with? s start)
+  (when (and (string? s)
+             (string/starts-with? s start)
              (string/ends-with? s end))
     (subs s (count start) (- (count s) (count end)))))
 

@@ -3,10 +3,10 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Block/Container" :refer [Container]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
+    ["/components/Icons/Icons" :refer [CalendarIcon EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
-    ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+    ["@chakra-ui/react" :refer [Text Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
     [athens.common-events.graph.ops :as graph-ops]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
@@ -214,71 +214,73 @@
 
 
 (defn menu-dropdown
-  [node daily-note? on-daily-notes?]
-  (let [{:block/keys [uid] sidebar
-         :page/sidebar title
-         :node/title} node]
-    [:> Menu {:isLazy true :size "sm"}
-     [:> MenuButton {:as IconButton
-                     "aria-label" "Page menu"
-                     :gridArea "menu"
-                     :justifySelf "flex-end"
-                     :size "sm"
-                     :alignSelf "center"
-                     :fontSize "70%"
-                     :color "foreground.secondary"
-                     :bg "transparent"
-                     :borderRadius "full"
-                     :sx {"span" {:display "contents"}}}
-      [:> EllipsisHorizontalIcon]]
-     [:> Portal
-      [:> MenuList
-       [:<>
-        (if sidebar
-          [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])
-                        :icon (r/as-element [:> BookmarkFillIcon])}
-           "Remove Shortcut"]
-          [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])
-                        :icon (r/as-element [:> BookmarkIcon])}
-           [:span "Add Shortcut"]])
-        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid true])
-                      :icon (r/as-element [:> GraphIcon])}
-         "Show Local Graph"]
-        [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item uid])
-                      :isDisabled (contains? @(subscribe [:right-sidebar/items]) uid)
-                      :icon (r/as-element [:> ArrowRightOnBoxIcon])}
-         "Open in Sidebar"]]
-       (when (and (not on-daily-notes?)
-                  (time-controls/enabled?))
-         [:<>
-          [:> MenuItem {:onClick (fn []
-                                   (dispatch [:time/set-page-range title])
-                                   (dispatch [:time/toggle-slider]))
-                        :icon (r/as-element [:> TimeNowIcon])}
-           "Toggle Time Slider"]
-          [:> MenuItem {:onClick (fn []
-                                   (dispatch [:time/set-page-range title])
-                                   (dispatch [:time/toggle-heatmap]))
-                        :icon (r/as-element [:> TimeNowIcon])}
-           "Toggle Time Heatmap"]])
-       [:> MenuDivider]
-       [:> MenuItem {:icon (r/as-element [:> TrashIcon])
-                     :onClick (fn []
-                                ;; if page being deleted is in right sidebar, remove from right sidebar
-                                (when (contains? @(subscribe [:right-sidebar/items]) uid)
-                                  (dispatch [:right-sidebar/close-item uid]))
-                                ;; if page being deleted is open, navigate to back
-                                (when (or (= @(subscribe [:current-route/page-title]) title)
-                                          (= @(subscribe [:current-route/uid]) uid))
-                                  (rf/dispatch [:reporting/navigation {:source :page-title-delete
-                                                                       :target :back
-                                                                       :pane   :main-pane}])
-                                  (.back js/window.history))
-                                ;; if daily note, delete page and remove from daily notes, otherwise just delete page
-                                (if daily-note?
-                                  (dispatch [:daily-note/delete uid title])
-                                  (dispatch [:page/delete title])))}
-        "Delete Page"]]]]))
+  [node _daily-note? _on-daily-notes?]
+  (let [contains-item? (subscribe [:right-sidebar/contains-item? [:node/title (:node/title node)]])]
+    (fn [node daily-note? on-daily-notes?]
+      (let [{:block/keys [uid]
+             sidebar :page/sidebar
+             title :node/title} node]
+        [:> Menu {:isLazy true :size "sm"}
+         [:> MenuButton {:as           IconButton
+                         "aria-label"  "Page menu"
+                         :gridArea     "menu"
+                         :justifySelf  "flex-end"
+                         :size         "sm"
+                         :alignSelf    "center"
+                         :fontSize     "70%"
+                         :color        "foreground.secondary"
+                         :bg           "transparent"
+                         :borderRadius "full"
+                         :sx           {"span" {:display "contents"}}}
+          [:> EllipsisHorizontalIcon]]
+         [:> Portal
+          [:> MenuList
+           [:<>
+            (if sidebar
+              [:> MenuItem {:onClick #(dispatch [:left-sidebar/remove-shortcut title])
+                            :icon    (r/as-element [:> BookmarkFillIcon])}
+               "Remove Shortcut"]
+              [:> MenuItem {:onClick #(dispatch [:left-sidebar/add-shortcut title])
+                            :icon    (r/as-element [:> BookmarkIcon])}
+               [:span "Add Shortcut"]])
+            [:> MenuItem {:onClick #(dispatch [:right-sidebar/open-item [:node/title title] true])
+                          :icon    (r/as-element [:> GraphIcon])}
+             "Show Local Graph"]
+            [:> MenuItem {:onClick    #(dispatch [:right-sidebar/open-item [:node/title title]])
+                          :isDisabled @contains-item?
+                          :icon       (r/as-element [:> ArrowRightOnBoxIcon])}
+             "Open in Sidebar"]]
+           (when (and (not on-daily-notes?)
+                      (time-controls/enabled?))
+             [:<>
+              [:> MenuItem {:onClick (fn []
+                                       (dispatch [:time/set-page-range title])
+                                       (dispatch [:time/toggle-slider]))
+                            :icon    (r/as-element [:> TimeNowIcon])}
+               "Toggle Time Slider"]
+              [:> MenuItem {:onClick (fn []
+                                       (dispatch [:time/set-page-range title])
+                                       (dispatch [:time/toggle-heatmap]))
+                            :icon    (r/as-element [:> TimeNowIcon])}
+               "Toggle Time Heatmap"]])
+           [:> MenuDivider]
+           [:> MenuItem {:icon    (r/as-element [:> TrashIcon])
+                         :onClick (fn []
+                                    ;; if page being deleted is in right sidebar, remove from right sidebar
+                                    (when @contains-item?
+                                      (dispatch [:right-sidebar/close-item [:node/title title]]))
+                                    ;; if page being deleted is open, navigate to back
+                                    (when (or (= @(subscribe [:current-route/page-title]) title)
+                                              (= @(subscribe [:current-route/uid]) uid))
+                                      (rf/dispatch [:reporting/navigation {:source :page-title-delete
+                                                                           :target :back
+                                                                           :pane   :main-pane}])
+                                      (.back js/window.history))
+                                    ;; if daily note, delete page and remove from daily notes, otherwise just delete page
+                                    (if daily-note?
+                                      (dispatch [:daily-note/delete uid title])
+                                      (dispatch [:page/delete title])))}
+            "Delete Page"]]]]))))
 
 
 (defn ref-comp
@@ -432,7 +434,8 @@
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
         block-uid     (r/atom nil)
-        feature-flags (rf/subscribe [:feature-flags])]
+        properties-enabled? (rf/subscribe [:feature-flags/enabled? :properties])
+        cover-photo-enabled? (rf/subscribe [:feature-flags/enabled? :cover-photo])]
     (fn [node]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
@@ -441,10 +444,7 @@
       (let [{:block/keys [children uid properties] title :node/title}           node
             {:alert/keys [message confirm-fn cancel-fn confirm-text] alert-show :alert/show} @state
             daily-note?                                                         (dates/is-daily-note uid)
-            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))
-            is-current-route?                                                   (or (= @(subscribe [:current-route/uid]) uid)
-                                                                                    (= @(subscribe [:current-route/page-title]) title))
-            cover-photo-enabled?                                                (:cover-photo @feature-flags)]
+            on-daily-notes?                                                     (= :home @(subscribe [:current-route/name]))]
 
         (sync-title title state)
 
@@ -457,15 +457,22 @@
                            :onClose     cancel-fn}]
          ;; Header
          [:> PageHeader (merge
-                          {:onClickOpenInMainView  (when-not is-current-route?
+                          (when daily-note?
+                            {:overline
+                             (r/as-element [:> Text {:as "span"
+                                                     :display "flex"
+                                                     :gap 1
+                                                     :alignItems "center"}
+                                            [:> CalendarIcon] "Daily Note"])})
+                          {:onClickOpenInMainView  (when on-daily-notes?
                                                      (fn [e] (router/navigate-page title e)))
-                           :onClickOpenInSidebar   (when-not (contains? @(subscribe [:right-sidebar/items]) uid)
-                                                     #(dispatch [:right-sidebar/open-item uid]))}
-                          (when cover-photo-enabled?
-                            {:headerImageEnabled     cover-photo-enabled?
+                           :onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:node/title title]])
+                                                    #(dispatch [:right-sidebar/open-item [:node/title title]]))}
+                          (when @cover-photo-enabled?
+                            {:headerImageEnabled     @cover-photo-enabled?
                              :headerImageUrl         (-> properties (get ":header/url") :block/string)
                              :onChangeHeaderImageUrl (fn [url]
-                                                       (dispatch [:properties/update-in [:node/title title] [":header/url"]
+                                                       (dispatch [:graph/update-in [:node/title title] [":header/url"]
                                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))}))
 
           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
@@ -506,7 +513,8 @@
 
           ;; Properties
           [:div
-           (when (seq properties)
+           (when (and @properties-enabled?
+                      (seq properties))
              (for [prop (common-db/sort-block-properties properties)]
                ^{:key (:db/id prop)}
                [blocks/block-el prop]))]

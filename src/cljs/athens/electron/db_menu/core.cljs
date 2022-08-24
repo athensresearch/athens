@@ -1,11 +1,11 @@
 (ns athens.electron.db-menu.core
   (:require
     ["@chakra-ui/react" :refer [Box IconButton Spinner Text Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button]]
-    ["react-focus-lock" :default FocusLock]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
     [athens.electron.db-menu.db-list-item :refer [db-list-item]]
-    [athens.electron.db-modal :as db-modal]
     [athens.electron.dialogs :as dialogs]
+    [athens.electron.utils :as electron.utils]
+    [athens.import.roam :as import.roam]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]))
 
@@ -15,13 +15,21 @@
 (defn current-db-tools
   ([{:keys [db]} all-dbs merge-open?]
    (when-not (:is-remote db)
-     [:> ButtonGroup {:size "xs" :pr 4 :pl 10 :ml "auto" :width "100%"}
-      [:> Button {:onClick #(dialogs/move-dialog!)} "Move"]
-      [:> Button {:mr "auto" :onClick #(reset! merge-open? true)} "Merge from Roam"]
-      [:> Tooltip {:label "Can't remove last database" :placement "right" :isDisabled (< 1 (count all-dbs))}
-       [:> Button {:isDisabled (= 1 (count all-dbs))
-                   :onClick #(dialogs/delete-dialog! db)}
-        "Remove"]]])))
+     [:> ButtonGroup {:size "xs"
+                      :pr 4
+                      :pl 10
+                      :ml "auto"
+                      :width "100%"}
+      (when electron.utils/electron? [:> Button {:onClick #(dialogs/move-dialog!)} "Move"])
+      [:> Button {:mr "auto"
+                  :onClick #(reset! merge-open? true)} "Merge from Roam"]
+      (when-not (= :in-memory (:type db))
+        [:> Tooltip {:label "Can't remove last database"
+                     :placement "right"
+                     :isDisabled (< 1 (count all-dbs))}
+         [:> Button {:isDisabled (= 1 (count all-dbs))
+                     :onClick #(dialogs/delete-dialog! db)}
+          "Remove"]])])))
 
 
 (defn db-menu
@@ -34,12 +42,13 @@
                            :running
                            :synchronising)]
     [:<>
-     [db-modal/merge-modal merge-open?]
-     [:> Popover {:placement "bottom-start" :isLazy true}
+     [import.roam/merge-modal merge-open?]
+     [:> Popover {:placement "bottom-start"
+                  :isLazy true}
       [:> PopoverTrigger
        [:> IconButton {:p 0
-                       "aria-label" "Database menu"
-                       :bg "background.floor"}
+                       :variant "ghost"
+                       :aria-label "Database menu"}
         ;; DB Icon + Dropdown toggle
         [db-icon {:db     active-db
                   :status sync-status}]]]

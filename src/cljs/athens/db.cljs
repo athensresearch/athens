@@ -153,9 +153,8 @@
                :athena/open         false
                :athena/recent-items '()
                :left-sidebar/open   false
-               :right-sidebar/open  false
-               :right-sidebar/items {}
-               :right-sidebar/width 32
+               ;; todo: some value initialization like athens/persist
+               ;; :right-sidebar/width 32
                :mouse-down          false
                :daily-notes/items   []
                :selection           {:items []}
@@ -164,7 +163,7 @@
                :fs/watcher          nil
                :presence            {}
                :connection-status   :disconnected
-               :comment/show-inline-comments true})
+               :comment/show-comments? true})
 
 
 (defn init-app-db
@@ -253,43 +252,6 @@
   (-> (d/datoms @dsdb :eavt e a) first :v))
 
 
-(def rules
-  '[[(after ?p ?at ?ch ?o)
-     [?p :block/children ?ch]
-     [?ch :block/order ?o]
-     [(> ?o ?at)]]
-    [(between ?p ?lower-bound ?upper-bound ?ch ?o)
-     [?p :block/children ?ch]
-     [?ch :block/order ?o]
-     [(> ?o ?lower-bound)]
-     [(< ?o ?upper-bound)]]
-    [(inc-after ?p ?at ?ch ?new-o)
-     (after ?p ?at ?ch ?o)
-     [(inc ?o) ?new-o]]
-    [(dec-after ?p ?at ?ch ?new-o)
-     (after ?p ?at ?ch ?o)
-     [(dec ?o) ?new-o]]
-    [(plus-after ?p ?at ?ch ?new-o ?x)
-     (after ?p ?at ?ch ?o)
-     [(+ ?o ?x) ?new-o]]
-    [(minus-after ?p ?at ?ch ?new-o ?x)
-     (after ?p ?at ?ch ?o)
-     [(- ?o ?x) ?new-o]]
-    [(siblings ?uid ?sib-e)
-     [?e :block/uid ?uid]
-     [?p :block/children ?e]
-     [?p :block/children ?sib-e]]])
-
-
-(defn inc-after
-  [eid order]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at
-              :where (inc-after ?p ?at ?ch ?new-o)]
-            @dsdb rules eid order)))
-
-
 (defn uid-and-embed-id
   [uid]
   (or (some->> uid
@@ -304,32 +266,6 @@
     (assoc block :block/children
            (vec (sort-by :block/order (map sort-block-children children))))
     block))
-
-
-(def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs])
-
-
-(def node-document-pull-vector
-  (-> block-document-pull-vector
-      (conj :node/title :page/sidebar)))
-
-
-(def roam-node-document-pull-vector
-  '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
-
-
-(defntrace get-node-document
-  [id db]
-  (when (d/entity db id)
-    (->> (d/pull db node-document-pull-vector id)
-         sort-block-children)))
-
-
-(defntrace get-roam-node-document
-  [id db]
-  (->> (d/pull db roam-node-document-pull-vector id)
-       sort-block-children))
 
 
 (defntrace shape-parent-query
@@ -421,70 +357,28 @@
 
 
 (defn get-root-parent-node-from-block
-  [block]
-  (loop [b block]
-    (cond
-      (:node/title b)       (assoc block :block/parent b)
-      (:block/_children b)  (recur (first (:block/_children b)))
-      ;; protect against orphaned nodes
-      :else                 nil)))
+  [db {:keys [block/uid] :as block}]
+  (cond
+    (= "[[athens/comment]]" (common-db/get-entity-type db [:block/uid uid]))
+    (let [commented-block (-> block
+                              ;; comments are a child of :comments/threads
+                              :block/_children first
+                              ;; :comments/threads is a prop on the commented block
+                              :block/property-of
+                              ;; get rid of the extra ascendant data on it though
+                              (dissoc :block/_children :block/property-of))]
+      (assoc block
+             :block/parent commented-block
+             :block-search/navigate-uid (:block/uid commented-block)))
 
-
-(defn get-block-type
-  "Here making assumption that we represent `type` by key `:block/type`"
-  [block-ir]
-  (-> block-ir
-      :block/properties
-      (get ":block/type")
-      :block/string))
-
-
-(defn get-comment-parent-block
-  [comment-eid]
-  (let [thread-eid    (:db/id (common-db/get-parent @dsdb comment-eid))
-        thread-parent (common-db/get-parent @dsdb thread-eid)]
-    thread-parent))
-
-
-(defn remove-properties-add-type
-  [block-ir]
-  (let [removed  (dissoc block-ir :block/_property-of :block/properties)
-        add-type (assoc removed :block/type (get-block-type block-ir))]
-    add-type))
-
-
-(defn group-search-results-by-block-type
-  "- Find all the blocks for which the query matches and have properties.
-   - Get the eids of all the matched blocks.
-   - Massage the ir of block.
-   - Add the parent(where you want to navigate to when clicked on the search result)"
-  ([query] (group-search-results-by-block-type query 20))
-  ([query n]
-   (if (string/blank? query)
-     []
-     (let [case-insensitive-query         (patterns/re-case-insensitive query)
-           filtered-datoms                (d/filter @dsdb
-                                                    (fn [db datom]
-                                                      (let [entity (d/entity db (:e datom))
-                                                            block-has-property?  (:block/_property-of entity)]
-                                                        (when block-has-property?
-                                                          (re-find case-insensitive-query (:block/string (d/entity db (:e datom))))))))
-           match-strings                  (take n (d/datoms filtered-datoms :aevt :block/string))
-           eid-of-blocks-with-properties  (map #(:e %) match-strings)
-           result                         (map
-                                            #(let [enhanced-block     (-> (common-db/get-block-document @dsdb [:block/uid (common-db/get-block-uid @dsdb %)])
-                                                                          remove-properties-add-type)
-                                                   with-parent         (cond
-                                                                         ;; For comments
-                                                                         (= "comment" (:block/type enhanced-block))
-                                                                         (assoc enhanced-block :block/parent (get-comment-parent-block (:db/id enhanced-block)))
-
-                                                                         :else
-                                                                         enhanced-block)]
-                                               with-parent)
-                                            eid-of-blocks-with-properties)
-           grouped                        (group-by :block/type result)]
-       grouped))))
+    :else
+    (loop [b block]
+      (cond
+        (:node/title b)        (assoc block :block/parent b)
+        (:block/_children b)   (recur (first (:block/_children b)))
+        (:block/property-of b) (recur (:block/property-of b))
+        ;; protect against orphaned nodes
+        :else                  nil))))
 
 
 (defn search-in-block-content
@@ -492,23 +386,22 @@
   ([query n]
    (if (string/blank? query)
      (vector)
-     (let [case-insensitive-query   (patterns/re-case-insensitive query)
-           block-search-result      (->>
-                                      (d/datoms @dsdb :aevt :block/string)
-                                      (sequence
-                                        (comp
-                                          (filter #(re-find case-insensitive-query (:v %)))
-                                          (take n)
-                                          (map #(:e %))))
-                                      (d/pull-many @dsdb '[:db/id :block/uid :block/string :node/title {:block/_children ...}])
-                                      (sequence
-                                        (comp
-                                          (keep get-root-parent-node-from-block)
-                                          (map #(dissoc % :block/_children)))))
-           block-type-search-result (group-search-results-by-block-type query n)
-           search-comments          (get block-type-search-result "comment")
-           result                   (concat search-comments block-search-result)]
-       result))))
+     (let [db                     @dsdb
+           case-insensitive-query (patterns/re-case-insensitive query)
+           block-search-result    (->>
+                                    (d/datoms db :aevt :block/string)
+                                    (sequence
+                                      (comp
+                                        (filter #(re-find case-insensitive-query (:v %)))
+                                        (take n)
+                                        (map #(:e %))))
+                                    (d/pull-many db '[:db/id :block/uid :block/string :node/title
+                                                      {:block/_children ...} {:block/property-of ...}])
+                                    (sequence
+                                      (comp
+                                        (keep (partial get-root-parent-node-from-block db))
+                                        (map #(dissoc % :block/_children :block/property-of)))))]
+       block-search-result))))
 
 
 (defn sibling-uids
@@ -621,33 +514,6 @@
       (not uid) parent-uid
       open      (recur uid db)
       :else     uid)))
-
-
-;; history
-
-(defonce history (atom '()))
-#_(def ^:const history-limit 10)
-
-
-;; this gives us customization options
-;; now if there is a pattern for a tx then the datoms can be
-;; easily modified(mind the order of datoms) to add a custom undo/redo strategy
-;; Not seeing a use case now, but there is an option to do it
-(d/listen! dsdb :history
-           (fn [tx-report]
-             (when-not (or (->> tx-report :tx-data (some (fn [datom]
-                                                           (= (nth datom 1)
-                                                              :from-undo-redo))))
-                           (->> tx-report :tx-data empty?))
-               (swap! history (fn [buff]
-                                (->> buff (remove (fn [[_ applied? _]]
-                                                    (not applied?)))
-                                     doall)))
-               (swap! history (fn [cur-his]
-                                (cons [(-> tx-report :tx-data first vec (nth 3))
-                                       true
-                                       (:tx-data tx-report)]
-                                      cur-his))))))
 
 
 ;; -- Linked & Unlinked References ----------

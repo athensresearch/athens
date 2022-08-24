@@ -18,17 +18,22 @@
 
 (defmethod resolve-atomic-op-to-tx :block/new
   [db {:op/keys [args]} event-ref]
-  (let [{:block/keys [uid position]} args
-        new-block                    {:block/uid    uid
-                                      :block/string ""
-                                      :block/open   true
-                                      :block/create event-ref
-                                      :block/edits  event-ref}
-        position-tx                  (condp = (position/position-type position)
-                                       :child    (position/add-child db uid position event-ref)
-                                       :property (position/add-property db uid position event-ref))
-        tx-data                      (into [new-block] position-tx)]
-    tx-data))
+  (let [{:block/keys [uid position]} args]
+    (if (common-db/block-exists? db [:block/uid uid])
+      ;; Treast :block/new on an existing block as a :block/move instead.
+      (resolve-atomic-op-to-tx db {:op/type :block/move
+                                   :op/args args}
+                               event-ref)
+      (let [new-block   {:block/uid    uid
+                         :block/string ""
+                         :block/open   true
+                         :block/create event-ref
+                         :block/edits  event-ref}
+            position-tx (condp = (position/position-type position)
+                          :child    (position/add-child db uid position event-ref)
+                          :property (position/add-property db uid position event-ref))
+            tx-data     (into [new-block] position-tx)]
+        tx-data))))
 
 
 ;; This is Atomic Graph Op, there is also composite version of it
@@ -64,6 +69,9 @@
                                        (throw (ex-info "Block to be moved is a page, cannot move pages." args)))
         [_ new-parent-uid]           (common-db/position->uid+parent db position)
         {old-parent-uid :block/uid}  (common-db/get-parent db [:block/uid uid])
+        _move-parent-to-child        (when ((set (common-db/get-parent-eids db [:block/uid new-parent-uid]))
+                                            [:block/uid uid])
+                                       (throw (ex-info "Cannot move parent under own children." args)))
         same-parent?                 (= new-parent-uid old-parent-uid)
         old-position-type            (-> (common-db/get-position db uid)
                                          position/position-type)
@@ -75,8 +83,8 @@
                                        (if same-parent?
                                          (position/move-child-within
                                            db old-parent-uid uid position event-ref)
-                                         (position/move-child-between
-                                           db old-parent-uid new-parent-uid uid position event-ref))
+                                         (concat (position/remove-child db uid old-parent-uid event-ref)
+                                                 (position/add-child db uid position event-ref)))
 
                                        [:child :property]
                                        (concat

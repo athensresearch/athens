@@ -1,6 +1,8 @@
 import React from 'react';
-import { Box, Text, HStack, Textarea, Button } from '@chakra-ui/react'
-import { ChatFilledIcon } from '@/Icons/Icons'
+import { Box, Text, HStack, Textarea, Button, MenuItem } from '@chakra-ui/react'
+import { ChatBubbleFillIcon } from '@/Icons/Icons'
+import { ContextMenuContext } from '@/App/ContextMenuContext';
+import { withErrorBoundary } from "react-error-boundary";
 
 interface InlineCommentInputProps {
   onSubmitComment: (comment: string) => void
@@ -51,7 +53,50 @@ const formatCount = (count: number): string => {
 
 export const CommentCounter = ({ count }) => {
   return <Box display="grid" gridTemplateAreas="'main'">
-    <ChatFilledIcon gridArea="main" transform="scale(1.5) translateY(5%)" zIndex={0} />
-    <Text zIndex={1} gridArea="main" color="background.basement" fontSize="xs">{formatCount(count)}</Text>
+    <ChatBubbleFillIcon gridArea="main" zIndex={0} />
+    <Text zIndex={1} gridArea="main" transform="translateY(5%)" color="background.basement" fontSize="xs">{formatCount(count)}</Text>
   </Box>
 }
+
+const CommentErrorMessage = () => <Text color="foreground.secondary" display="block" p={2} borderRadius="sm">Couldn't show this comment</Text>;
+
+export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp }) => {
+  const ref = React.useRef();
+  const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
+  const isMenuOpen = getIsMenuOpen(ref);
+
+  const MenuList = () => {
+    return <>{menu.map((action) => <MenuItem key={action.children} {...action} />)}</>
+  }
+
+  return <Box
+    ref={ref}
+    bg={isMenuOpen ? "interaction.surface.hover" : undefined}
+    onContextMenu={(event) => {
+      addToContextMenu({ event, ref, component: MenuList })
+    }}
+    mb="-1px"
+    borderTop={isFollowUp ? null : "1px solid"}
+    borderTopColor="separator.divider"
+    alignItems="stretch"
+    justifyContent="stretch"
+    rowGap={0}
+    columnGap={2}
+    display="grid"
+    gridTemplateColumns="auto 1fr"
+    gridTemplateRows="auto auto"
+    gridTemplateAreas={`
+    'byline byline byline'
+    'anchor comment refs'`}
+    sx={{
+      "> button.anchor:not([data-active])": {
+        color: "foreground.tertiary"
+      },
+      ":hover > button.anchor": {
+        color: "foreground.secondary"
+      }
+    }}
+  >
+    {children}
+  </Box>
+}, { fallback: <CommentErrorMessage /> });

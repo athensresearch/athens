@@ -1,7 +1,7 @@
 import { Box } from '@chakra-ui/react';
 import { withErrorBoundary } from 'react-error-boundary';
 
-const _Content = ({ children, fontSize, ...props }) => {
+const _Content = ({ children, ...props }) => {
   return <Box
     className="block-content"
     display="grid"
@@ -17,7 +17,6 @@ const _Content = ({ children, fontSize, ...props }) => {
     zIndex={2}
     flexGrow={1}
     wordBreak="break-word"
-    fontSize={fontSize}
     sx={{
       // DANGER DANGER DANGER
       //
@@ -106,12 +105,12 @@ const _Content = ({ children, fontSize, ...props }) => {
         borderRadius: "0.25rem",
         maxWidth: "calc(100% - 0.25rem)",
       },
-      "h1": { fontSize: "xl" },
-      "h2": { fontSize: "lg" },
-      "h3": { fontSize: "md" },
-      "h4": { fontSize: "sm" },
-      "h5": { fontSize: "xs" },
-      "h6": { fontSize: "xs" },
+      "h1": { fontSize: "xl", fontWeight: "600", letterSpacing: "0.025ch", color: "foreground.secondary" },
+      "h2": { fontSize: "lg", fontWeight: "600", letterSpacing: "0.025ch", color: "foreground.secondary" },
+      "h3": { fontSize: "md", fontWeight: "600", letterSpacing: "0.025ch", color: "foreground.secondary" },
+      "h4": { fontSize: "sm", fontWeight: "600", letterSpacing: "0.025ch", color: "foreground.secondary" },
+      "h5": { fontSize: "xs", fontWeight: "600", letterSpacing: "0.025ch", color: "foreground.secondary" },
+      "h6": { fontSize: "xs", fontWeight: "600", letterSpacing: "0.025ch", color: "foreground.secondary" },
       "blockquote": {
         marginInline: "0.5em",
         marginBlock: "0.125rem",

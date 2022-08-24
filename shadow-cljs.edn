@@ -1,4 +1,4 @@
-{:deps   true
+{:deps   {:aliases [:shadow-cljs]}
  ;; Don't install npm-deps declared in dependencies.
  ;; If we need them, we install them manually.
  ;; https://github.com/thheller/shadow-cljs/issues/800#issuecomment-725716087
@@ -42,13 +42,16 @@
                                         ;; see https://shadow-cljs.github.io/docs/UsersGuide.html#_conditional_reading
                                         :reader-features  #{:electron}}
                      :dev              {:compiler-options {:closure-defines {re-frame.trace.trace-enabled?        true
-                                                                             day8.re-frame.tracing.trace-enabled? true}
+                                                                             day8.re-frame.tracing.trace-enabled? true
+                                                                             ;; To enable re-frame-10x set debug to `true`
+                                                                             goog.DEBUG                           false}
                                                            :warnings {:redef false}}}
                      :release          {:build-options {:ns-aliases {day8.re-frame.tracing day8.re-frame.tracing-stubs}}
                                         :compiler-options {:source-map true
                                                            :pseudo-names true}}
                      :devtools         {:preloads [devtools.preload
-                                                   day8.re-frame-10x.preload]}}
+                                                   ;; To enable re-frame-10x uncomment below preload
+                                                   #_day8.re-frame-10x.preload]}}
 
           ;; backend for electron (node.js)
           :main {:target           :node-script

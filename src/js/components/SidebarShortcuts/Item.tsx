@@ -1,11 +1,13 @@
-import { Button, Box } from "@chakra-ui/react";
+import React from 'react';
+import { Button, Text, Box } from "@chakra-ui/react";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 
 export const Item = (props) => {
   const { id, children, ...rest } = props;
+  const ref = React.useRef();
 
-  const [_order, name] = id;
+  const [_order, name, isUnread, isCurrent] = id;
 
   const {
     attributes,
@@ -23,11 +25,12 @@ export const Item = (props) => {
 
   return (
     <Button
-      as="li"
       size="sm"
+      flexShrink={0}
       variant="ghost"
-      width="14em"
+      isActive={isCurrent}
       justifyContent="flex-start"
+      overflow="hidden"
       ref={setNodeRef}
       style={style}
       opacity={isDragging ? 0.5 : 1}
@@ -35,7 +38,15 @@ export const Item = (props) => {
       {...listeners}
       {...rest}
     >
-      {name}
+      <Text
+        as="span"
+        textAlign="start"
+        flex="1 1 100%"
+        fontWeight={isUnread ? "bold" : "n"}
+        overflow="hidden"
+        textOverflow="ellipsis">
+        {name}
+      </Text>
       {children}
     </Button>
   );
