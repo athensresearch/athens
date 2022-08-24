@@ -53,14 +53,6 @@
       :else v)))
 
 
-(defn move-between
-  "Move x from origin to destination, to a position defined by relation to target.
-  See athens.common-events.graph.schema for position values.
-  Returns [modified-origin modified-destination]."
-  [origin destination x relation target]
-  [(remove origin x) (insert destination x relation target)])
-
-
 (defn move-within
   "Move x within v, to a position defined by relation to target.
   See athens.common-events.graph.schema for position values.

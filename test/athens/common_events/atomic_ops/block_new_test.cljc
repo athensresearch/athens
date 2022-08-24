@@ -373,3 +373,18 @@
           (fixture/op-resolve-transact!
             (graph-ops/build-block-new-op @@fixture/connection "uid" {:page/title "title"
                                                                       :relation   {:page/title "key"}})))))
+
+
+(t/deftest double-new
+  (fixture/setup! [{:page/title "title"}])
+  (-> (graph-ops/build-block-new-op @@fixture/connection "uid" {:page/title "title"
+                                                                :relation   {:page/title "key"}})
+      fixture/op-resolve-transact!)
+  (-> (graph-ops/build-block-new-op @@fixture/connection "uid" {:page/title "title"
+                                                                :relation   :first})
+      fixture/op-resolve-transact!)
+  (fixture/is #{{:page/title "key"}
+                {:page/title "title"
+                 :block/children
+                 [#:block{:uid    "uid"
+                          :string ""}]}}))
