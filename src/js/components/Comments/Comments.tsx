@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text, HStack, Textarea, Button, MenuList, MenuItem } from '@chakra-ui/react'
+import { Box, Text, HStack, Textarea, Button, MenuItem } from '@chakra-ui/react'
 import { ContextMenuContext } from '@/App/ContextMenuContext';
 import { withErrorBoundary } from "react-error-boundary";
 
