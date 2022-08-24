@@ -331,8 +331,8 @@
                                        custom-key-handlers)]
         [editor/block-editor {:block/uid (or prop-block-uid
                                              ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
-                                             (str "tmp-" (subs prop-name
-                                                               (inc (.indexOf prop-name "/")))
+                                             (str "tmp-" (subs (or prop-name "")
+                                                               (inc (.indexOf (or prop-name "") "/")))
                                                   "-uid-" (common.utils/gen-block-uid)))}
          state-hooks]
         #_ [:> FormControl {:is-required required?
@@ -586,7 +586,7 @@
             [:> ChevronDownIcon {:color "foreground.secondary"}]]
            [task-status-menulist block-uid status-uid]]
           [:> Box {:flex "1 1" :py 1 :cursor "text" :lineHeight 1.4}
-           [inline-task-title-2 block-uid title-uid title-uid _callbacks]]]
+           [inline-task-title-2 block-uid title-uid ":task/title" "Title" true false]]]
          [:> ModalInput {:placement "bottom" :isLazy true}
           [:> ModalInputTrigger
            [:> Button {:whiteSpace "normal"

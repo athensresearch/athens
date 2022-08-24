@@ -316,10 +316,20 @@
 
 (defn convert-anon-block-to-task
   [block]
-  (let [{:keys [uid]} block]
-    (rf/dispatch [:properties/update-in [:block/uid uid] [":entity/type"]
-                  (fn [db uid]
-                    [(graph-ops/build-block-save-op db uid "[[athens/task]]")])])))
+  (let [{:block/keys [uid string]} block
+        entity-type-event          [:properties/update-in [:block/uid uid] [":entity/type"]
+                                    (fn [db entity-type-uid]
+                                      [(graph-ops/build-block-save-op db entity-type-uid "[[athens/task]]")])]
+        task-title-event           [:properties/update-in [:block/uid uid] [":task/title"]
+                                    (fn [db task-title-uid]
+                                      [(graph-ops/build-block-save-op db task-title-uid string)])]]
+    (log/debug "convert to task"
+               (pr-str {:uid               uid
+                        :string            string
+                        :entity-type-event entity-type-event
+                        :task-title-event  task-title-event}))
+    (rf/dispatch entity-type-event)
+    (rf/dispatch task-title-event)))
 
 
 (defn block-el
@@ -343,7 +353,6 @@
          drag-target              (rf/subscribe [::drag.subs/drag-target block-uid])
          selected?                (rf/subscribe [::select-subs/selected? block-uid])
          present-user             (rf/subscribe [:presence/has-presence block-uid])
-         convert-to-task          #(convert-anon-block-to-task block)
          selected-items           (rf/subscribe [::select-subs/items])
          feature-flags            (rf/subscribe [:feature-flags])
          current-user             (rf/subscribe [:presence/current-user])
@@ -400,7 +409,7 @@
                                        (when-not (= block-type "[[athens/task]]")
                                          [:> MenuItem {:children "convert to task"
                                                        :icon     (r/as-element [:> BlockEmbedIcon])
-                                                       :onClick  convert-to-task}])
+                                                       :onClick  #(convert-anon-block-to-task block-o)}])
                                        [:> MenuItem {:children (if (> (count @selected-items) 1)
                                                                  "Copy selected block refs"
                                                                  "Copy block ref")
