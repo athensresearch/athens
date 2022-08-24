@@ -1,11 +1,12 @@
 import React from 'react';
 import {
   Button, VStack, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
-  Tooltip, FormLabel, BoxProps, MenuGroup, MenuItem, MenuDivider
+  Tooltip, FormLabel, BoxProps, MenuGroup, MenuItem, MenuDivider, Text
 } from '@chakra-ui/react';
-import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, CalendarCircleFillIcon, CalendarTomorrowIcon, TemplateIcon, LinkedIcon } from '@/Icons/Icons';
+import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, CalendarCircleFillIcon, CalendarTomorrowIcon, TemplateIcon, LinkedIcon, CalendarIcon } from '@/Icons/Icons';
 import { useInView } from 'react-intersection-observer';
 import { withErrorBoundary } from "react-error-boundary";
+
 
 const PAGE_PROPS = {
   as: "article",
@@ -208,7 +209,7 @@ export const DailyNotesList = (props: DailyNotesListProps) => {
     {boxProps.children}
     <DailyNotesPage isReal={false}>
       <Box ref={ref} />
-      <PageHeader overline="Daily Note">
+      <PageHeader overline={<Text as="span" display="flex" gap={1} alignItems="center"><CalendarIcon /> Daily Note</Text>}>
         <TitleContainer isEditing="false">Earlier</TitleContainer>
       </PageHeader>
     </DailyNotesPage>
@@ -230,6 +231,7 @@ export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => 
       {...PAGE_PROPS}
       {...boxProps}
       ref={pageRef}
+      flex="0 0 auto"
       className="node-page daily-notes"
       minHeight="calc(100vh - 4rem)"
       boxShadow="page"

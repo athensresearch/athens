@@ -95,46 +95,45 @@
     (t/is (false? (common-db/v-by-ea @@fixture/connection [:block/uid block-1-uid] :block/open)))))
 
 
-(t/deftest undo
-  (let [test-uid "test-uid"
-        setup-repr (fn [open?]
-                     [{:page/title     "test-page"
-                       :block/children [(merge
-                                          {:block/uid    test-uid
-                                           :block/string "test-str"}
-                                          ;; NB: internal representation does not contain
-                                          ;; a key for :block/open? if it's true, since
-                                          ;; that's the default.
-                                          (when (not open?)
-                                            {:block/open? open?}))]}])
-        get-open #(->> [:block/uid test-uid]
-                       (common-db/get-internal-representation @@fixture/connection)
-                       :block/open?)
-        save! (partial transact! test-uid)]
+(let [test-uid "test-uid"
+      setup-repr (fn [open?]
+                   [{:page/title     "test-page"
+                     :block/children [(merge
+                                        {:block/uid    test-uid
+                                         :block/string "test-str"}
+                                        ;; NB: internal representation does not contain
+                                        ;; a key for :block/open? if it's true, since
+                                        ;; that's the default.
+                                        (when (not open?)
+                                          {:block/open? open?}))]}])
+      get-open #(->> [:block/uid test-uid]
+                     (common-db/get-internal-representation @@fixture/connection)
+                     :block/open?)
+      save! (partial transact! test-uid)]
 
 
-    (t/testing "undo initializing block to open"
-      (fixture/setup! (setup-repr true))
-      (t/is (nil? (get-open)) "Setup initialized block to open")
-      (let [[db evt] (save! false)]
-        (t/is (false? (get-open)) "Changed block to close")
-        (fixture/undo! db evt)
-        (t/is (nil? (get-open)) "Undo block back to open")))
+  (t/deftest undo-init-open
+    (fixture/setup! (setup-repr true))
+    (t/is (nil? (get-open)) "Setup initialized block to open")
+    (let [[db evt] (save! false)]
+      (t/is (false? (get-open)) "Changed block to close")
+      (fixture/undo! db evt)
+      (t/is (nil? (get-open)) "Undo block back to open")))
 
-    (t/testing "undo initializing block to closed"
-      (fixture/setup! (setup-repr false))
-      (t/is (false? (get-open)) "Setup initialized block to closed")
-      (let [[db evt] (save! true)]
-        (t/is (nil? (get-open)) "Changed block to open")
-        (fixture/undo! db evt)
-        (t/is (false? (get-open)) "Undo block back to closed")))
+  (t/deftest undo-init-close
+    (fixture/setup! (setup-repr false))
+    (t/is (false? (get-open)) "Setup initialized block to closed")
+    (let [[db evt] (save! true)]
+      (t/is (nil? (get-open)) "Changed block to open")
+      (fixture/undo! db evt)
+      (t/is (false? (get-open)) "Undo block back to closed")))
 
-    (t/testing "redo"
-      (fixture/setup! (setup-repr true))
-      (t/is (nil? (get-open)) "Setup initialized block to open")
-      (let [[db evt] (save! false)]
-        (t/is (false? (get-open)) "Changed block to close")
-        (let [[db' evt'] (fixture/undo! db evt)]
-          (t/is (nil? (get-open)) "Undo block back to open")
-          (fixture/undo! db' evt')
-          (t/is (false? (get-open)) "Redo block back to closed"))))))
+  (t/deftest undo-redo
+    (fixture/setup! (setup-repr true))
+    (t/is (nil? (get-open)) "Setup initialized block to open")
+    (let [[db evt] (save! false)]
+      (t/is (false? (get-open)) "Changed block to close")
+      (let [[db' evt'] (fixture/undo! db evt)]
+        (t/is (nil? (get-open)) "Undo block back to open")
+        (fixture/undo! db' evt')
+        (t/is (false? (get-open)) "Redo block back to closed")))))
