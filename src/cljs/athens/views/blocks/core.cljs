@@ -5,7 +5,7 @@
     ["/components/Block/PropertyName"          :refer [PropertyName]]
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
-    ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatBubbleIcon ArchiveIcon]]
+    ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatBubbleIcon ArchiveIcon ArrowRightOnBoxIcon ArrowLeftOnBoxIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react"                        :refer [Box Breadcrumb BreadcrumbItem MenuGroup BreadcrumbLink Button Divider HStack MenuDivider MenuItem VStack]]
     [athens.common-db                          :as common-db]
@@ -363,17 +363,22 @@
                                             (block-reaction/props->reactions properties))
                 menu                   (r/as-element
                                          [:> MenuGroup
-                                          (when (< (count @selected-items) 2)
-                                            [:> MenuItem {:children "Open block"
-                                                          :icon     (r/as-element [:> TextIcon])
-                                                          :onClick  (fn [e]
-                                                                      (let [shift? (.-shiftKey e)]
-                                                                        (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                                             :target :block
-                                                                                                             :pane   (if shift?
-                                                                                                                       :right-pane
-                                                                                                                       :main-pane)}])
-                                                                        (router/navigate-uid uid e)))}])
+                                          (when (<= (count @selected-items) 1)
+                                            [:<>
+                                             [:> MenuItem {:children "Open block"
+                                                           :icon     (r/as-element [:> ArrowLeftOnBoxIcon])
+                                                           :onClick  (fn [_]
+                                                                       (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                                            :target :block
+                                                                                                            :pane   :main-pane}])
+                                                                       (router/navigate-uid uid))}]
+                                             [:> MenuItem {:children "Open block in right sidebar"
+                                                           :icon     (r/as-element [:> ArrowRightOnBoxIcon])
+                                                           :onClick  (fn [_]
+                                                                       (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                                            :target :block
+                                                                                                            :pane   :right-pane}])
+                                                                       (rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))}]])
                                           [:> MenuItem {:children (if (> (count @selected-items) 1)
                                                                     "Copy selected block refs"
                                                                     "Copy block ref")
