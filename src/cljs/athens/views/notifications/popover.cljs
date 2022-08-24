@@ -1,9 +1,10 @@
 (ns athens.views.notifications.popover
   (:require
     ["/components/Icons/Icons" :refer [BellFillIcon ArrowRightIcon]]
-    ["/components/Inbox/Inbox" :refer [InboxItemsList]]
+    ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
     ["/timeAgo.js" :refer [timeAgo]]
-    ["@chakra-ui/react" :refer [Badge Box IconButton Flex PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
+    ["framer-motion" :refer [AnimatePresence motion]]
+    ["@chakra-ui/react" :refer [Badge Box VStack Center Text IconButton Flex PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
     [athens.common-db :as common-db]
     [athens.db :as db]
     [athens.reactive :as reactive]
@@ -120,8 +121,8 @@
               notification-list  (get-inbox-items-for-popover @db/dsdb user-page-title)
               navigate-user-page #(router/navigate-page user-page-title)
               num-notifications  (count notification-list)]
-          [:> Popover {:closeOnBlur true :size "md"}
-
+          [:> Popover {:closeOnBlur true
+                       :size "md"}
            [:> PopoverTrigger
             [:> Box {:position "relative"}
              [:> IconButton {"aria-label"   "Notifications"
@@ -133,26 +134,34 @@
              (when (> num-notifications 0)
                [:> Badge {:position "absolute"
                           :bg "gold"
+                          :pointerEvents "none"
                           :color "goldContrast"
                           :right "-3px"
                           :bottom "-1px"
                           :zIndex 1} num-notifications])]]
 
-
            [:> PopoverContent {:maxHeight "calc(100vh - 4rem)"}
             [:> PopoverCloseButton]
-            [:> PopoverHeader [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])} "Notifications"]]
-            [:> Flex {:p             0
-                      :as            PopoverBody
-                      :flexDirection "column"
-                      :overflow      "hidden"}
-             [:> InboxItemsList
-
-              {:onOpenItem        on-click-notification-item
-               :onMarkAsRead      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
-               :onMarkAsUnread    #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-               :onArchive         (fn [e uid]
-                                    (.. e stopPropagation)
-                                    (rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true")))
-               ;; :onUnarchive       #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-               :notificationsList notification-list}]]]])))))
+            [:> PopoverHeader
+             [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])}
+              "Notifications"]]
+            [:> VStack {:as PopoverBody
+                        :flexDirection "column"
+                        :align "stretch"
+                        :overflowY "auto"
+                        :-webkit-overflow-scrolling "touch"
+                        :overscrollBehavior "contain"
+                        :p 2}
+             [:> AnimatePresence {:initial false}
+              (if (seq notification-list)
+                (for [notification notification-list]
+                  [:> NotificationItem
+                   {:notification   notification
+                    :onOpenItem     on-click-notification-item
+                    :onMarkAsRead   #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
+                    :onMarkAsUnread #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
+                    :onArchive      (fn [e uid]
+                                      (.. e stopPropagation)
+                                      (rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true")))}])
+                [:> Center
+                 [:> Text "Notifications you receive will appear here."]])]]]])))))

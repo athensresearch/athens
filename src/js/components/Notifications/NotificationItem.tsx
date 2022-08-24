@@ -1,7 +1,9 @@
-import { ArchiveIcon } from "@/Icons/Icons";
+import React from 'react';
+import { ArchiveIcon, ArrowLeftOnBoxIcon, ArrowRightIcon } from "@/Icons/Icons";
 import { mapActionsToButtons } from "@/utils/mapActionsToButtons";
-import { Box, ButtonGroup, HStack, Text, VStack } from "@chakra-ui/react";
+import { Box, ButtonGroup, HStack, MenuGroup, MenuItem, Text, VStack } from "@chakra-ui/react";
 import { motion } from "framer-motion";
+import { ContextMenuContext } from "@/App/ContextMenuContext";
 
 const messageForNotification = (notification: NOTIFICATION): React.ReactNode => {
   const { type, subject, object } = notification;
@@ -46,7 +48,9 @@ export const NotificationItem = (props) => {
   const { notification, ...otherProps } = props;
   const { id, isRead, type, isArchived, body, object, notificationTime } = notification;
   const { onOpenItem, onMarkAsRead, onMarkAsUnread, onArchive, onUnarchive, ...boxProps } = otherProps;
-  console.log(props);
+  const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const isMenuOpen = getIsMenuOpen(ref);
 
   const getActionsForNotification = (notification) => {
     const actions = [];
@@ -66,14 +70,21 @@ export const NotificationItem = (props) => {
     return actions;
   }
 
+  const ContextMenuItems = () => {
+    return <MenuGroup>
+      <MenuItem onClick={() => onOpenItem(object.parentUid, id)} icon={<ArrowLeftOnBoxIcon />}>Open {object.name ? "page" : "block"}</MenuItem>
+      <MenuItem onClick={() => onMarkAsRead(id)} icon={<ArchiveIcon />}>Mark as read</MenuItem>
+      <MenuItem onClick={() => onMarkAsUnread(id)} icon={<ArchiveIcon />}>Mark as unread</MenuItem>
+      <MenuItem onClick={() => onArchive(id)} icon={<ArchiveIcon />}>Archive</MenuItem>
+    </MenuGroup>
+  }
+
   return <VStack
     layout
     key={id}
+    ref={ref}
     as={motion.div}
-    initial={{
-      opacity: 0,
-      height: 0,
-    }}
+    initial={false}
     animate={{
       height: "auto",
       opacity: 1,
@@ -88,12 +99,19 @@ export const NotificationItem = (props) => {
     overflow="hidden"
     align="stretch"
     userSelect="none"
-    _hover={{
-      cursor: "pointer"
-    }}
+    boxShadow={isMenuOpen ? "focusInset" : "none"}
     borderRadius="md"
     bg={"interaction.surface"}
     color={isRead ? "foreground.secondary" : "foreground.primary"}
+    _hover={{
+      cursor: "pointer",
+      bg: "interaction.surface.hover"
+    }}
+    onClick={(e) => { if (e.button === 0) onOpenItem(object.parentUid, id) }}
+    onContextMenu={(e) => {
+      e.stopPropagation();
+      addToContextMenu({ event: e, component: ContextMenuItems, ref });
+    }}
     {...boxProps}
   >
     <HStack
