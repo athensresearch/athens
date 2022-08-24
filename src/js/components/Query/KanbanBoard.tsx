@@ -128,11 +128,13 @@ export const KanbanColumn = (props) => {
                     }}/>
                 : <Heading color="foreground.secondary" size="sm">{name}</Heading>
                 }
+            {/* for now, just read-only
             <IconButton icon={<EditIcon/>}
                 onClick={(e) => {
                     e.stopPropagation()
                     setIsEditing(!isEditing)
                 }} />
+            */}
     </HStack>
       {children}
       </VStack>

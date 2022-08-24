@@ -474,12 +474,33 @@
                     [:> KanbanColumn {:name string :key (random-uuid)}
                      ;;(prn "get" swimlane-columns wrapped-group-by-column-uid a-columns-cards)
                      (for [card a-columns-cards]
-                       (let [uid (get card ":block/uid")
-                             title (get card ":task/title")
-                             uid (get card ":block/uid")
-                             uid (get card ":block/uid")
-                             uid (get card ":block/uid")
-                             uid (get card ":block/uid")]
+                       (let [uid            (get card ":block/uid")
+                             title          (get card ":task/title")
+                             status         (get card ":task/status")
+                             priority       (get card ":task/priority")
+                             assignee       (get card ":task/assignee")
+                             page           (get card ":task/page")
+                             due-date       (get card ":task/due-date")
+
+                             assignee-value (parse-for-title assignee)
+
+                             status-uid     (parse-for-uid status)
+                             status-value   (common-db/get-block-string @db/dsdb status-uid)
+
+                             priority-uid   (parse-for-uid priority)
+                             priority-value (common-db/get-block-string @db/dsdb priority-uid)
+                             curr-idx       (.indexOf all-possible-group-by-columns
+                                                      #:block{:string status-value
+                                                              :uid    status-uid})
+                             first-column?  (zero? curr-idx)
+                             last-column?   (= curr-idx (- (count all-possible-group-by-columns) 1))
+                             on-arrow-click (fn [direction]
+                                              (let [f              (if (= direction :left) dec inc)
+                                                    new-idx        (f curr-idx)
+                                                    new-status     (nth all-possible-group-by-columns new-idx)
+                                                    new-status-uid (:block/uid new-status)
+                                                    new-status-ref (str "((" new-status-uid "))")]
+                                                (update-status uid new-status-ref)))]
                          [:> Box {:key           uid
                                   :borderRadius  "sm"
                                   :minHeight     "4rem"
@@ -492,8 +513,18 @@
                                                   :border      "1px solid",
                                                   :borderColor "background.floor"}}
 
-                          title]))]))])))
-
+                          [:> Stack
+                           [:> Text {:fontWeight "bold"} title]
+                           [:> HStack
+                            [:> Text assignee-value]
+                            [:> Text priority-value]]
+                           [:> HStack
+                            (when-not first-column?
+                              [:> Button {:onClick #(on-arrow-click :left)}
+                               "←"])
+                            (when-not last-column?
+                              [:> Button {:onClick #(on-arrow-click :right)}
+                               "→"])]]]))]))])))
 
 
 
@@ -545,11 +576,13 @@
                        :dateFormatFn   #(dates/date-string %)}])]))
 
 
-;;(for [x [{":block/string" "", ":create/time" 1661245784436, ":create/auth" "Jeff", ":last-edit/time" 1661245940745, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((c45df8496))", ":task/page" "Project: Tasks", ":block/uid" "37fcd71e9", ":task/title" "Design UIs", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Jeff]]", ":task/status" "((5f282d535))"}]]
-;;  (prn x))
 
-(for [x nil]
-  (prn x))
+;;(.indexOf [{:block/uid "326893972", :block/string "To Do"} {:block/uid "c09f1865b", :block/string "Doing"} {:block/uid "ea9294382", :block/string "Blocked"} {:block/uid "5f282d535", :block/string "Done"} {:block/uid "a12b38510", :block/string "Cancelled"} {:block/uid "3c626c1a2", :block/string "Stalled"}]
+;;          {:block/uid "326893972"
+;;           :block/string "To Do"})
+
+
+
 
 (comment "current shape of data for query kanban boards"
          ;; e.g.
