@@ -156,7 +156,7 @@
 
 
   (transclusion-view
-    [this block-el block-uid {:keys [transcluding-block-uid] :as _config} transclusion-scope]
+    [this block-el block-uid {:keys [transcluding-block-uid] :as config} transclusion-scope]
     (let [supported-trans (types/supported-transclusion-scopes this)]
       (if-not (contains? supported-trans transclusion-scope)
         (throw (ex-info (str "Invalid transclusion scope: " (pr-str transclusion-scope)
