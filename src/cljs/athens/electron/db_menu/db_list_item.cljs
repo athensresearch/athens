@@ -37,14 +37,14 @@
 
 
 (defn db-item
-  [{:keys [db on-click on-remove is-disabled]}]
+  [{:keys [db on-click on-remove is-syncing]}]
   [:> Box {:display "grid"
            :_notFirst {:borderTopWidth "1px"
                        :borderTopStyle "solid"
                        :borderTopColor "separator.divider"}
            :gridTemplateAreas "'main'"}
-   [:> Button {:onClick (when on-click on-click)
-               :isDisabled (or is-disabled (not on-click))
+   [:> Button {:onClick on-click
+               :isLoading is-syncing
                :gridArea "main"
                :whiteSpace "nowrap"
                :bg "transparent"

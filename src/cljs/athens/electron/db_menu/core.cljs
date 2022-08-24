@@ -55,7 +55,6 @@
       ;; Dropdown menu
       [:> Portal
        [:> PopoverContent {:overflow-y "auto"}
-        [:> FocusLock
          [:> VStack {:align "stretch"
                      :overflow "hidden"
                      :spacing 0}
@@ -87,7 +86,7 @@
               (doall
                 (for [[key db] inactive-dbs]
                   [db-list-item {:db db
-                                 :is-disabled (= sync-status :synchronising)
+                                 :is-syncing (= sync-status :synchronising)
                                  :is-current false
                                  :key key}]))
               (when (= :synchronising sync-status)
@@ -99,5 +98,6 @@
                  [:> Text "Syncing..."]])]])
           ;; Add DB control
           [:> ButtonGroup {:borderTop "1px solid" :borderTopColor "separator.divider" :p 2 :pt 0 :pl 10 :size "sm" :width "100%" :ml 10 :justifyContent "flex-start"}
-           [:> Button {:onClick #(dispatch [:modal/toggle])}
-            "Add Database"]]]]]]]]))
+           [:> Button {:isLoading (= :synchronising sync-status)
+                       :onClick #(dispatch [:modal/toggle])}
+            "Add Database"]]]]]]]))
