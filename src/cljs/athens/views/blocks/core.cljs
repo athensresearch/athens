@@ -305,7 +305,7 @@
   ([block linked-ref-data]
    [block-el block linked-ref-data {}])
   ([block linked-ref-data _opts]
-   (let [block-uid                (:block/uid block)
+   (let [[block-uid _embed-id]    (-> block :block/uid common-db/uid-and-embed-id)
          {:keys [initial-open
                  parent-uids
                  linked-ref
