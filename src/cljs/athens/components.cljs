@@ -75,7 +75,7 @@
 
 
 (defmethod component :block-embed
-  [content _uid]
+  [content uid]
   ;; bindings are eval only once in with-let
   ;; which is needed to keep embed integrity else it will update on
   ;; each re-render. Similar to ref-comp
@@ -87,7 +87,7 @@
             renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
             renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]
         ^{:key renderer-k}
-        [types/transclusion-view renderer blocks/block-el block-uid  {} :embed])
+        [types/transclusion-view renderer blocks/block-el block-uid {:transcluding-block-uid uid} :embed])
       ;; roam actually hides the brackets around [[embed]]
       [:span "{{" content "}}"])))
 
