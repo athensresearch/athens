@@ -128,7 +128,8 @@
   "Convert internal representation to the vector of atomic operations that would create it.
   :block/save operations are grouped at the end so that any ref'd entities are already created."
   [db internal-representation default-position]
-  (when-not (vector? internal-representation)
+  (when-not (or (vector? internal-representation)
+                (list? internal-representation))
     (throw "Internal representation must be a vector"))
   (->> internal-representation
        add-missing-block-uids
