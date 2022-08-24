@@ -1,14 +1,21 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
-    ["/components/Query/KanbanBoard" :refer [QueryKanban]]
+    ["/components/Query/KanbanBoard" :refer [QueryKanban
+                                             KanbanBoard
+                                             KanbanSwimlane
+                                             KanbanColumn
+                                             KanbanCard
+                                             AddCardButton
+                                             AddSwimlaneButton
+                                             AddColumnButton]]
     ["/components/Query/Query" :refer [Controls QueryRadioMenu]]
     ["/components/Query/Table" :refer [QueryTable]]
     ["@chakra-ui/react" :refer [Box,
-                                FormControl,
-                                FormLabel,
-                                FormErrorMessage,
-                                FormHelperText,
+                                FormControl
+                                FormLabel
+                                FormErrorMessage
+                                FormHelperText
                                 Select
                                 HStack
                                 VStack
@@ -39,10 +46,11 @@
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
     [clojure.string :refer [lower-case]]
-    [re-frame.core :as rf]))
+    [re-frame.core :as rf]
+    [reagent.core :as r]))
 
 
-;; KanBanBoard, KanbanSwimlane, KanbanColumn, KanbanCard, AddCardButton, AddSwimlaneButton, AddColumnButton
+;;
 
 
 ;; CONSTANTS
@@ -445,33 +453,79 @@
      (case layout
        "board"
        (let [[g-by sg-by] (get* parsed-properties ["group/by" "group/subgroup/by"])
-             query-group-by    (parse-for-title g-by)
-             query-subgroup-by (parse-for-title sg-by)
-             columns           (get-reactive-property [:node/title query-group-by] ":property/enum")
-             boardData         (if (and query-subgroup-by query-group-by)
-                                 (group-stuff query-group-by query-subgroup-by query-data)
-                                 (group-by #(get % query-group-by) query-data))]
-         (prn boardData)
+             query-group-by                (parse-for-title g-by)
+             query-subgroup-by             (parse-for-title sg-by)
+             all-possible-group-by-columns (get-reactive-property [:node/title query-group-by] ":property/enum")
+             boardData                     (if (and query-subgroup-by query-group-by)
+                                             (group-stuff query-group-by query-subgroup-by query-data)
+                                             (group-by #(get % query-group-by) query-data))]
+         ;;(prn boardData)
          (get-reactive-property [:node/title ":task/status"] ":property/enum")
-         [:> QueryKanban {:boardData            boardData
-                          ;; store column order here
-                          :columns              columns
-                          :hasSubGroup          (boolean query-subgroup-by)
-                          :onUpdateStatusClick  update-status
-                          :hideProperties       p-hide
-                          :onAddNewCardClick    new-card
-                          :groupBy              query-group-by
-                          :subgroupBy           query-subgroup-by
-                          :filter               nil
-                          :refToString    (fn [x]
-                                            (->> x
-                                                 parse-for-uid
-                                                 (common-db/get-block-string @athens.db/dsdb)))
-                          :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
-                          :onUpdateTaskTitle    update-task-title
-                          :onUpdateKanbanColumn update-kanban-column
-                          :onAddNewColumn       #(new-kanban-column query-group-by)
-                          :onAddNewProjectClick (fn [])}])
+
+         [:> KanbanBoard {:name "Hello world"}]
+         (doall
+           (for [swimlanes boardData]
+             (let [[swimlane-id swimlane-columns] swimlanes]
+               [:> KanbanSwimlane {:name swimlane-id :key swimlane-id}
+                (for [possible-group-by-columns all-possible-group-by-columns]
+                  (let [{:block/keys [string uid]} possible-group-by-columns
+                        wrapped-group-by-column-uid (str "((" uid "))")
+                        a-columns-cards             (get swimlane-columns wrapped-group-by-column-uid)]
+                    [:> KanbanColumn {:name string :key (random-uuid)}
+                     ;;(prn "get" swimlane-columns wrapped-group-by-column-uid a-columns-cards)
+                     (for [card a-columns-cards]
+                       (let [uid (get card ":block/uid")
+                             title (get card ":task/title")
+                             uid (get card ":block/uid")
+                             uid (get card ":block/uid")
+                             uid (get card ":block/uid")
+                             uid (get card ":block/uid")]
+                         [:> Box {:key           uid
+                                  :borderRadius  "sm"
+                                  :minHeight     "4rem"
+                                  :listStyleType "none"
+                                  :border        "1px solid transparent"
+                                  :p             2
+                                  :bg            "background.floor"
+                                  ;;:width         "300px"
+                                  :_hover        {:bg          "background.upper",
+                                                  :border      "1px solid",
+                                                  :borderColor "background.floor"}}
+
+                          title]))]))])))
+
+
+
+
+
+         #_[KanBanBoard
+            KanbanSwimlane
+            KanbanColumn
+            KanbanCard
+            AddCardButton
+            AddSwimlaneButton
+
+            AddColumnButton]
+
+         #_[:> QueryKanban {:boardData            boardData
+                            ;; store column order here
+                            :columns              columns
+                            :hasSubGroup          (boolean query-subgroup-by)
+                            :onUpdateStatusClick  update-status
+                            :hideProperties       p-hide
+                            :onAddNewCardClick    new-card
+                            :groupBy              query-group-by
+                            :subgroupBy           query-subgroup-by
+                            :filter               nil
+                            :refToString    (fn [x]
+                                              (->> x
+                                                   parse-for-uid
+                                                   (common-db/get-block-string @athens.db/dsdb)))
+                            :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
+                            :onUpdateTaskTitle    update-task-title
+                            :onUpdateKanbanColumn update-kanban-column
+                            :onAddNewColumn       #(new-kanban-column query-group-by)
+                            :onAddNewProjectClick (fn [])}])
 
        ;; what about groupBy page or something
 
@@ -491,11 +545,19 @@
                        :dateFormatFn   #(dates/date-string %)}])]))
 
 
+;;(for [x [{":block/string" "", ":create/time" 1661245784436, ":create/auth" "Jeff", ":last-edit/time" 1661245940745, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((c45df8496))", ":task/page" "Project: Tasks", ":block/uid" "37fcd71e9", ":task/title" "Design UIs", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Jeff]]", ":task/status" "((5f282d535))"}]]
+;;  (prn x))
+
+(for [x nil]
+  (prn x))
+
 (comment "current shape of data for query kanban boards"
          ;; e.g.
          {"person" {"status" [{"task 1" 1}]}}
          ;; aka
          {"subgroup" {"group" ["card 1"]}}
+
+         [:map [:map [:vector [:maps]]]]
 
          {nil {nil [{":block/uid" "1f29dce5b", ":block/string" "test", ":entity/type" "[[athens/task]]", ":create/auth" "Sid", ":create/time" 1660894009080, ":last-edit/auth" nil, ":last-edit/time" 1661011262703, ":task/page" "August 19, 2022"}
                     {":block/uid" "08-16-2022", ":block/string" nil, ":entity/type" "[[athens/task]]", ":create/auth" "Sid", ":create/time" 1660624243084, ":last-edit/auth" nil, ":last-edit/time" 1660624292449, ":task/page" "August 16, 2022"}]},
@@ -506,11 +568,19 @@
 
          ;; there are better data structs for this too that i want to try
          ;; like  more consistency of data structs. always use map or always use vector
+         [:map [:map [:map [:map [:vector [:maps]]]]]]
+         {"group-id-1" {"id" "group-id-1"
+                        "subgroups" {"subgroup-id-1" {"id" "subgroup-id-1"
+                                                      "cards" [{} {}]}}}}
+
+
          ;; or changing the order of group-by/subgroup-by
+         {"group-id" {"subgroup-id" [{:card 1} {:card 2}]}})
 
-
-         {})
-
+(comment "idk how to solve"
+         ["ordering of cards"
+          "ordering of columns"
+          "vectors vs maps"])
 
 (defn invalid-query?
   [parsed-props]
