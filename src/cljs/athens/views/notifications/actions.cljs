@@ -57,7 +57,7 @@
                            (is-block-notification? block-properties) prop-key)
         updated-prop    (cond
                           ;; Maybe for a block we need to update the prop of the children also
-                          (is-block-notification? block-properties) [:properties/update-in [:block/uid uid] [block-state-prop]
+                          (is-block-notification? block-properties) [:graph/update-in [:block/uid uid] [block-state-prop]
                                                                      (fn [db prop-uid]
                                                                        [(graph-ops/build-block-save-op db prop-uid new-state)])])]
     updated-prop))
@@ -66,7 +66,7 @@
 (defn multi-uids-prop-update
   [uids key new-val]
   (let [ops                  (into [] (map
-                                        #(let [[prop-uid] (graph-ops/build-property-path @db/dsdb  % [key])
+                                        #(let [[prop-uid] (graph-ops/build-path @db/dsdb  % [key])
                                                save-op    (graph-ops/build-block-save-op @db/dsdb prop-uid new-val)]
                                            save-op)
                                         uids))
