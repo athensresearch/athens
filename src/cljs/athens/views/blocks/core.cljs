@@ -5,7 +5,7 @@
     ["/components/Block/PropertyName"          :refer [PropertyName]]
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
-    ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatBubbleIcon ArchiveIcon ArrowRightOnBoxIcon ArrowLeftOnBoxIcon]]
+    ["/components/Icons/Icons"                 :refer [BlockEmbedIcon TextIcon ChatBubbleIcon ArchiveIcon ArrowRightOnBoxIcon ExpandIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceGroup ReferenceBlock]]
     ["@chakra-ui/react"                        :refer [Box Breadcrumb BreadcrumbItem MenuGroup BreadcrumbLink Button Divider HStack MenuDivider MenuItem VStack]]
     [athens.common-db                          :as common-db]
@@ -365,14 +365,14 @@
                                          [:> MenuGroup
                                           (when (<= (count @selected-items) 1)
                                             [:<>
-                                             [:> MenuItem {:children "Open block"
-                                                           :icon     (r/as-element [:> ArrowLeftOnBoxIcon])
+                                             [:> MenuItem {:children "Open"
+                                                           :icon     (r/as-element [:> ExpandIcon])
                                                            :onClick  (fn [_]
                                                                        (rf/dispatch [:reporting/navigation {:source :block-bullet
                                                                                                             :target :block
                                                                                                             :pane   :main-pane}])
                                                                        (router/navigate-uid uid))}]
-                                             [:> MenuItem {:children "Open block in right sidebar"
+                                             [:> MenuItem {:children "Open in right sidebar"
                                                            :icon     (r/as-element [:> ArrowRightOnBoxIcon])
                                                            :onClick  (fn [_]
                                                                        (rf/dispatch [:reporting/navigation {:source :block-bullet
