@@ -74,15 +74,6 @@
        db/sort-block-children))
 
 
-;; roam page -> IR
-;; shared/unshared -> loc
-;; IR+loc -> bfs/internal-representation->atomic-ops
-;; ops -> consequence op (might need to segment into 1mb parts here)
-;; consequence op -> event
-;; event-> :resolve-transact-forward
-;; for each page, in a fn that is calling dispatch for each, and tracking progress
-
-
 (defn get-roam-internal-representation
   "Like common-db/get-internal representation but for roam dbs."
   [db eid]
