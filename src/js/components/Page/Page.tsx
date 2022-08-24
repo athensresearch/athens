@@ -7,6 +7,7 @@ import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, CalendarCircleFillIcon, Calend
 import { useInView } from 'react-intersection-observer';
 import { withErrorBoundary } from "react-error-boundary";
 
+
 const PAGE_PROPS = {
   as: "article",
   display: "grid",
