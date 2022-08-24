@@ -19,6 +19,7 @@ const shadows = {
   focusInsetDark: 'inset 0 0 0 3px #498eda',
 
   page: '0 0.25rem 1rem #00000055',
+  // popover: '0 0.25rem 3rem #00000055',
 }
 
 const fonts = {
@@ -57,10 +58,11 @@ const semanticTokens = {
     },
     menu: {
       default: "0 0.25rem 1rem #00000022",
-      _dark: "0 0.25rem 1rem #00000022",
+      _dark: "0 0.25rem 1rem #00000088",
     },
     popover: {
       default: "0 0.25rem 1rem #00000055",
+      _dark: "0 0.25rem 1rem #00000088",
     },
     tooltip: {
       default: "0 0.125rem 0.5rem #00000055",
@@ -445,7 +447,7 @@ const components = {
         overflow: 'hidden',
         p: 0,
         bg: 'background.vibrancy',
-        borderColor: 'separator.divider',
+        borderColor: 'separator.border',
         backdropFilter: "blur(20px)",
         minWidth: '0',
         width: 'max-content',
