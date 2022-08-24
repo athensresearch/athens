@@ -154,13 +154,13 @@
            [:> PageBody
             (for [prop (common-db/sort-block-properties properties)]
               ^{:key (:db/id prop)}
-              [blocks/block-el prop])])
+              [:f> blocks/block-el prop])])
 
          ;; Children
          [:> PageBody
           (for [child children]
             (let [{:keys [db/id]} child]
-              ^{:key id} [blocks/block-el child]))]
+              ^{:key id} [:f> blocks/block-el child]))]
 
          ;; Refs
          [:> PageFooter

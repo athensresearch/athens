@@ -98,10 +98,6 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
     }
   }, [isOpen]);
 
-  if (!isOpen) {
-    return false;
-  }
-
   return (
     <Popover
       isOpen={isOpen}
