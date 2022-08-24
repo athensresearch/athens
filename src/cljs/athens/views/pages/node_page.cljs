@@ -3,10 +3,10 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Block/Container" :refer [Container]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Icons/Icons" :refer [EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
+    ["/components/Icons/Icons" :refer [CalendarIcon EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
     ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
-    ["@chakra-ui/react" :refer [Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+    ["@chakra-ui/react" :refer [Text Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
     [athens.common-events.graph.ops :as graph-ops]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
@@ -457,6 +457,13 @@
                            :onClose     cancel-fn}]
          ;; Header
          [:> PageHeader (merge
+                          (when daily-note?
+                            {:overline
+                             (r/as-element [:> Text {:as "span"
+                                                     :display "flex"
+                                                     :gap 1
+                                                     :alignItems "center"}
+                                            [:> CalendarIcon] "Daily Note"])})
                           {:onClickOpenInMainView  (when on-daily-notes?
                                                      (fn [e] (router/navigate-page title e)))
                            :onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:node/title title]])
@@ -465,7 +472,7 @@
                             {:headerImageEnabled     @cover-photo-enabled?
                              :headerImageUrl         (-> properties (get ":header/url") :block/string)
                              :onChangeHeaderImageUrl (fn [url]
-                                                       (dispatch [:properties/update-in [:node/title title] [":header/url"]
+                                                       (dispatch [:graph/update-in [:node/title title] [":header/url"]
                                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))}))
 
           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}

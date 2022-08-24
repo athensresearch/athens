@@ -252,43 +252,6 @@
   (-> (d/datoms @dsdb :eavt e a) first :v))
 
 
-(def rules
-  '[[(after ?p ?at ?ch ?o)
-     [?p :block/children ?ch]
-     [?ch :block/order ?o]
-     [(> ?o ?at)]]
-    [(between ?p ?lower-bound ?upper-bound ?ch ?o)
-     [?p :block/children ?ch]
-     [?ch :block/order ?o]
-     [(> ?o ?lower-bound)]
-     [(< ?o ?upper-bound)]]
-    [(inc-after ?p ?at ?ch ?new-o)
-     (after ?p ?at ?ch ?o)
-     [(inc ?o) ?new-o]]
-    [(dec-after ?p ?at ?ch ?new-o)
-     (after ?p ?at ?ch ?o)
-     [(dec ?o) ?new-o]]
-    [(plus-after ?p ?at ?ch ?new-o ?x)
-     (after ?p ?at ?ch ?o)
-     [(+ ?o ?x) ?new-o]]
-    [(minus-after ?p ?at ?ch ?new-o ?x)
-     (after ?p ?at ?ch ?o)
-     [(- ?o ?x) ?new-o]]
-    [(siblings ?uid ?sib-e)
-     [?e :block/uid ?uid]
-     [?p :block/children ?e]
-     [?p :block/children ?sib-e]]])
-
-
-(defn inc-after
-  [eid order]
-  (->> (d/q '[:find ?ch ?new-o
-              :keys db/id block/order
-              :in $ % ?p ?at
-              :where (inc-after ?p ?at ?ch ?new-o)]
-            @dsdb rules eid order)))
-
-
 (defn uid-and-embed-id
   [uid]
   (or (some->> uid
@@ -303,32 +266,6 @@
     (assoc block :block/children
            (vec (sort-by :block/order (map sort-block-children children))))
     block))
-
-
-(def block-document-pull-vector
-  '[:db/id :block/uid :block/string :block/open :block/order {:block/children ...} :block/refs :block/_refs])
-
-
-(def node-document-pull-vector
-  (-> block-document-pull-vector
-      (conj :node/title :page/sidebar)))
-
-
-(def roam-node-document-pull-vector
-  '[:node/title :block/uid :block/string :block/open :block/order {:block/children ...}])
-
-
-(defntrace get-node-document
-  [id db]
-  (when (d/entity db id)
-    (->> (d/pull db node-document-pull-vector id)
-         sort-block-children)))
-
-
-(defntrace get-roam-node-document
-  [id db]
-  (->> (d/pull db roam-node-document-pull-vector id)
-       sort-block-children))
 
 
 (defntrace shape-parent-query

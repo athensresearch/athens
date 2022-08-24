@@ -1,107 +1,12 @@
 (ns athens.electron.db-modal
   (:require
-    ["@chakra-ui/react" :refer [HStack VStack FormControl FormLabel Input Button Box Tabs Tab TabList TabPanel TabPanels Text Modal ModalOverlay Divider VStack Heading ModalContent ModalHeader ModalFooter ModalBody ModalCloseButton ButtonGroup]]
+    ["@chakra-ui/react" :refer [HStack VStack FormControl FormLabel Input Button Box Tabs Tab TabList TabPanel TabPanels Text Modal ModalOverlay VStack ModalContent ModalHeader ModalFooter ModalBody ModalCloseButton ButtonGroup]]
     [athens.electron.dialogs :as dialogs]
     [athens.electron.utils :as utils]
-    [athens.events :as events]
     [athens.subs]
     [athens.util :refer [js-event->val]]
-    [clojure.edn :as edn]
-    [datascript.core :as d]
     [re-frame.core :refer [subscribe dispatch] :as rf]
     [reagent.core :as r]))
-
-
-(defn file-cb
-  [e transformed-db roam-db-filename]
-  (let [fr   (js/FileReader.)
-        file (.. e -target -files (item 0))]
-    (set! (.-onload fr)
-          (fn [e]
-            (let [edn-data                  (.. e -target -result)
-                  filename                  (.-name file)
-                  db                        (edn/read-string {:readers datascript.core/data-readers} edn-data)
-                  transformed-dates-roam-db (athens.events/update-roam-db-dates db)]
-              (reset! roam-db-filename filename)
-              (reset! transformed-db transformed-dates-roam-db))))
-    (.readAsText fr file)))
-
-
-(defn roam-pages
-  [roam-db]
-  (d/q '[:find [?pages ...]
-         :in $
-         :where
-         [_ :node/title ?pages]]
-       roam-db))
-
-
-(defn merge-modal
-  [open?]
-  (let [close-modal         #(reset! open? false)
-        transformed-roam-db (r/atom nil)
-        roam-db-filename    (r/atom "")]
-    (fn []
-      [:> Modal {:isOpen @open?
-                 :onClose close-modal
-                 :closeOnOverlayClick false
-                 :size "lg"}
-       [:> ModalOverlay]
-       [:> ModalContent
-        [:> ModalHeader
-         "Merge from Roam"]
-        [:> ModalCloseButton]
-        (if (nil? @transformed-roam-db)
-          (let [inputRef (atom nil)]
-            [:> ModalBody
-             [:input {:ref #(reset! inputRef %)
-                      :style {:display "none"}
-                      :type "file"
-                      :accept ".edn"
-                      :on-change #(file-cb % transformed-roam-db roam-db-filename)}]
-             [:> Heading {:size "md" :as "h2"} "How to merge from Roam"]
-             [:> Box {:position "relative"
-                      :padding-bottom "56.25%"
-                      :margin         "1rem 0 0"
-                      :borderRadius  "8px"
-                      :overflow "hidden"
-                      :flex "1 1 100%"
-                      :width          "100%"}
-              [:iframe {:src                   "https://www.loom.com/embed/787ed48da52c4149b031efb8e17c0939?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
-                        :frameBorder           "0"
-                        :webkitallowfullscreen "true"
-                        :mozallowfullscreen    "true"
-                        :allowFullScreen       true
-                        :style                 {:position "absolute"
-                                                :top      0
-                                                :left     0
-                                                :width    "100%"
-                                                :height   "100%"}}]]
-             [:> ModalFooter
-              [:> ButtonGroup
-               [:> Button
-                {:onClick #(.click @inputRef)}
-                "Upload database"]]]])
-          (let [roam-pages   (roam-pages @transformed-roam-db)
-                shared-pages (events/get-shared-pages @transformed-roam-db)]
-            [:> ModalBody
-             [:> Text {:size "md"} (str "Your Roam DB had " (count roam-pages)) " pages. " (count shared-pages) " of these pages were also found in your Athens DB. Press Merge to continue merging your DB."]
-             [:> Divider {:my 4}]
-             [:> Heading {:size "md" :as "h3"} "Shared Pages"]
-             [:> VStack {:as "ol"
-                         :align "stretch"
-                         :maxHeight "400px"
-                         :overflowY "auto"}
-              (for [x shared-pages]
-                ^{:key x}
-                [:li [:> Text (str "[[" x "]]")]])]
-             [:> ModalFooter
-              [:> ButtonGroup
-               [:> Button {:onClick (fn []
-                                      (dispatch [:upload/roam-edn @transformed-roam-db @roam-db-filename])
-                                      (close-modal))}
-
-                "Merge"]]]]))]])))
 
 
 (defn form-container

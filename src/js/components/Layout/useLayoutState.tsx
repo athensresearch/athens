@@ -1,6 +1,7 @@
 import * as React from "react";
 
 export const LayoutContext = React.createContext(null);
+export const ContextMenuContext = React.createContext(null);
 
 export const VIEW_MODES = ["regular", "compact"];
 
@@ -45,7 +46,9 @@ export const useLayoutState = () => {
 };
 
 export const LayoutProvider = ({ children }) => {
-  const context = useLayoutState();
+  const layoutState = useLayoutState();
 
-  return <LayoutContext.Provider value={context}>{children}</LayoutContext.Provider>;
+  return <LayoutContext.Provider value={layoutState}>
+    {children}
+  </LayoutContext.Provider>;
 }

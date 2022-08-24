@@ -1,12 +1,11 @@
 import React from 'react';
 import {
   Button, VStack, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
-  Tooltip, FormLabel, BoxProps
+  Tooltip, FormLabel, BoxProps, MenuGroup, MenuItem, MenuDivider
 } from '@chakra-ui/react';
-import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, CalendarCircleFillIcon, CalendarTomorrowIcon, TemplateIcon, LinkedIcon } from '@/Icons/Icons';
 import { useInView } from 'react-intersection-observer';
 import { withErrorBoundary } from "react-error-boundary";
-
 
 const PAGE_PROPS = {
   as: "article",
@@ -64,14 +63,29 @@ export const HeaderImage = ({ src }) => <Image
   objectFit="cover"
 />
 
-export const PageHeader = ({
-  children,
-  onChangeHeaderImageUrl,
-  headerImageUrl,
-  onClickOpenInSidebar,
-  onClickOpenInMainView,
-  headerImageEnabled }
-) => {
+
+interface PageHeaderProps extends BoxProps {
+  overline?: React.ReactNode;
+  headerImageUrl?: string;
+  onChangeHeaderImageUrl?: (url: string) => void;
+  onClickOpenInSidebar?: () => void;
+  onClickOpenInMainView?: () => void;
+  headerImageEnabled?: boolean;
+}
+
+const PageHeaderOverline = ({ children }) => <Heading color="foreground.secondary" size="xs" gridArea="overline">{children}</Heading>
+
+export const PageHeader = (props: PageHeaderProps): React.ReactChild => {
+  const {
+    children,
+    overline,
+    onChangeHeaderImageUrl,
+    headerImageUrl,
+    onClickOpenInSidebar,
+    onClickOpenInMainView,
+    headerImageEnabled,
+    ...boxProps
+  } = props;
   const [isPropertiesOpen, setIsPropertiesOpen] = React.useState(false)
 
   return (<Box
@@ -85,11 +99,15 @@ export const PageHeader = ({
     gridTemplateColumns="1fr auto"
     gridTemplateRows="auto auto auto"
     alignItems="center"
-    gridTemplateAreas="'breadcrumb breadcrumb' 
-  'title extras'
-  'properties properties'
-  'image image'"
+    gridTemplateAreas={`'breadcrumb breadcrumb'
+                        'overline overline'
+                        'title extras'
+                        'properties properties'
+                        'image image'`}
+    {...boxProps}
   >
+    {overline && <PageHeaderOverline>{overline}</PageHeaderOverline>}
+
     {children}
 
     <ButtonGroup
@@ -181,11 +199,16 @@ export const DailyNotesList = (props: DailyNotesListProps) => {
     }
   });
 
-  return <VStack py={16} align="stretch" pb={4} width="100%" ref={listRef} {...boxProps}>
+  return <VStack py={16}
+    align="stretch"
+    pb={4}
+    width="100%"
+    ref={listRef}
+    {...boxProps}>
     {boxProps.children}
     <DailyNotesPage isReal={false}>
       <Box ref={ref} />
-      <PageHeader>
+      <PageHeader overline="Daily Note">
         <TitleContainer isEditing="false">Earlier</TitleContainer>
       </PageHeader>
     </DailyNotesPage>
@@ -200,11 +223,13 @@ interface DailyNotesPageProps extends BoxProps {
 
 export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => {
   const { isReal, ...boxProps } = props
+  const pageRef = React.useRef<HTMLDivElement>(null)
 
   return (
     <Box
       {...PAGE_PROPS}
       {...boxProps}
+      ref={pageRef}
       className="node-page daily-notes"
       minHeight="calc(100vh - 4rem)"
       boxShadow="page"
@@ -356,7 +381,8 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
     "mark.contents.highlight": {
       padding: "0 0.2em",
       borderRadius: "0.125rem",
-      background: "highlight",
+      background: "gold",
+      color: "goldContrast",
     }
   }}
   {...props}>
