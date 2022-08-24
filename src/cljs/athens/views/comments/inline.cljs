@@ -197,13 +197,13 @@
 
 
 (defn inline-comments
-  [_data _uid hide?]
+  [_data _comment-block-uid hide?]
   (when (comments.core/enabled?)
     (let [hide?           (r/atom hide?)
           block-uid       (common.utils/gen-block-uid)
           value-atom      (r/atom "")
           show-edit-atom? (r/atom true)]
-      (fn [data uid _hide?]
+      (fn [data comment-block-uid _hide?]
         (let [num-comments (count data)
               username     (rf/subscribe [:username])
               last-comment  (last data)
@@ -243,7 +243,7 @@
                                         [_uid _d-key-down]
                                         (when (not (str/blank? @value-atom))
                                           ;; Passing username because we need the username for other ops before the block is created.
-                                          (rf/dispatch [:comment/write-comment uid @value-atom @username])
+                                          (rf/dispatch [:comment/write-comment comment-block-uid @value-atom @username])
                                           (reset! value-atom "")
                                           (rf/dispatch [:editing/uid block-uid])))
                     tab-handler       (fn jetsam-tab-handler

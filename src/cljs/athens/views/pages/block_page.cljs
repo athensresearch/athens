@@ -94,27 +94,31 @@
 
 
 (defn block-page-el
-  [_block]
+  [block]
   (let [state (r/atom {:string/local    nil
                        :string/previous nil})
-        properties-enabled? (rf/subscribe [:feature-flags/enabled? :properties])]
+        {:block/keys [string children uid properties] :db/keys [id]} block
+        show-comments?                 (rf/subscribe [:comment/show-comments?])
+        show-textarea?                 (rf/subscribe [:comment/show-editor? uid])
+        is-editing?                    (subscribe [:editing/is-editing uid])
+        right-sidebar-contains-items?  (subscribe [:right-sidebar/contains-item? [:block/uid uid]])
+        properties-enabled?            (rf/subscribe [:feature-flags/enabled? :properties])]
 
-    (fn [block]
-      (let [{:block/keys [string children uid properties] :db/keys [id]} block
-            show-comments?           (rf/subscribe [:comment/show-comments?])
-            show-textarea?           (rf/subscribe [:comment/show-editor? uid])]
+    (fn [_block]
+      (let [thread-uid (comments/get-comment-thread-uid @db/dsdb uid)
+            comments-data (comments/get-comments-in-thread @db/dsdb thread-uid)]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
         [:> Box
 
          ;; Header
-         [:> PageHeader {:onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:block/uid uid]])
+         [:> PageHeader {:onClickOpenInSidebar  (when-not @right-sidebar-contains-items?
                                                   #(dispatch [:right-sidebar/open-item [:block/uid uid]]))}
 
           ;; Parent Context
           [parents-el uid id]
-          [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])
+          [:> TitleContainer {:isEditing @is-editing?
                               :onClick (fn [e]
                                          (.. e preventDefault)
                                          (if (.. e -shiftKey)
@@ -127,7 +131,7 @@
                                            (dispatch [:editing/uid uid])))}
            [autosize/textarea
             {:value       (:string/local @state)
-             :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
+             :class       (when @is-editing? "is-editing")
              :id          (str "editable-uid-" uid)
              ;; :auto-focus  true
              :on-blur     (fn [_]
@@ -145,8 +149,9 @@
                   :w "100%"}
           (when (or @show-textarea?
                     (and @show-comments?
-                         (comments/get-comment-thread-uid @db/dsdb uid)))
-            [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false])]
+                         thread-uid))
+              ^{:key uid}
+              [inline-comments/inline-comments comments-data  uid false])]
 
          ;; Properties
          (when (and @properties-enabled?
