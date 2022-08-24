@@ -1,18 +1,20 @@
 (ns athens.views.notifications.popover
   (:require
-    ["/components/Icons/Icons" :refer [BellFillIcon ArrowRightIcon]]
-    ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
-    ["/timeAgo.js" :refer [timeAgo]]
-    ["framer-motion" :refer [AnimatePresence motion]]
-    ["@chakra-ui/react" :refer [Badge Box VStack Center Text IconButton Flex PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
-    [athens.common-db :as common-db]
-    [athens.db :as db]
-    [athens.reactive :as reactive]
-    [athens.router :as router]
-    [athens.views.notifications.actions :as actions]
-    [athens.views.notifications.core :as notifications :refer [get-inbox-uid-for-user]]
-    [re-frame.core :as rf]
-    [reagent.core :as r]))
+   ["/components/Icons/Icons" :refer [BellIcon ArrowRightIcon]]
+   ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
+   ["/timeAgo.js" :refer [timeAgo]]
+   ["framer-motion" :refer [AnimatePresence motion]]
+   ["/components/App/ContextMenuContext" :refer [ContextMenuContext]]
+   ["@chakra-ui/react" :refer [Badge Box VStack Center Text IconButton Flex PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
+   ["react" :as react]
+   [athens.common-db :as common-db]
+   [athens.db :as db]
+   [athens.reactive :as reactive]
+   [athens.router :as router]
+   [athens.views.notifications.actions :as actions]
+   [athens.views.notifications.core :as notifications :refer [get-inbox-uid-for-user]]
+   [re-frame.core :as rf]
+   [reagent.core :as r]))
 
 
 (rf/reg-sub
@@ -116,12 +118,12 @@
   []
   (let [username (rf/subscribe [:username])]
     (fn []
-      (when (notifications/enabled?)
         (let [user-page-title    (str "@" @username)
               notification-list  (get-inbox-items-for-popover @db/dsdb user-page-title)
               navigate-user-page #(router/navigate-page user-page-title)
               num-notifications  (count notification-list)]
-          [:> Popover {:closeOnBlur true
+          [:> Popover {:closeOnBlur false
+                       :isLazy true
                        :size "md"}
            [:> PopoverTrigger
             [:> Box {:position "relative"}
@@ -130,7 +132,7 @@
                              :onClick       (fn [e]
                                               (when (.. e -shiftKey)
                                                 (rf/dispatch [:right-sidebar/open-item [:node/title user-page-title]])))
-                             :icon          (r/as-element [:> BellFillIcon])}]
+                             :icon          (r/as-element [:> BellIcon])}]
              (when (> num-notifications 0)
                [:> Badge {:position "absolute"
                           :bg "gold"
@@ -149,7 +151,6 @@
                         :flexDirection "column"
                         :align "stretch"
                         :overflowY "auto"
-                        :-webkit-overflow-scrolling "touch"
                         :overscrollBehavior "contain"
                         :p 2}
              [:> AnimatePresence {:initial false}
@@ -164,4 +165,4 @@
                                       (.. e stopPropagation)
                                       (rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true")))}])
                 [:> Center
-                 [:> Text "Notifications you receive will appear here."]])]]]])))))
+                 [:> Text "Notifications you receive will appear here."]])]]]]))))

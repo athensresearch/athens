@@ -49,7 +49,7 @@ export const NotificationItem = (props) => {
   const { id, isRead, type, isArchived, body, object, notificationTime } = notification;
   const { onOpenItem, onMarkAsRead, onMarkAsUnread, onArchive, onUnarchive, ...boxProps } = otherProps;
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
-  const ref = React.useRef<HTMLDivElement>(null);
+  const ref = React.useRef(null);
   const isMenuOpen = getIsMenuOpen(ref);
 
   const getActionsForNotification = (notification) => {
@@ -73,18 +73,20 @@ export const NotificationItem = (props) => {
   const ContextMenuItems = () => {
     return <MenuGroup>
       <MenuItem onClick={() => onOpenItem(object.parentUid, id)} icon={<ArrowLeftOnBoxIcon />}>Open {object.name ? "page" : "block"}</MenuItem>
-      <MenuItem onClick={() => onMarkAsRead(id)} icon={<ArchiveIcon />}>Mark as read</MenuItem>
-      <MenuItem onClick={() => onMarkAsUnread(id)} icon={<ArchiveIcon />}>Mark as unread</MenuItem>
+      {isRead
+        ? <MenuItem onClick={() => onMarkAsUnread(id)} icon={<ArchiveIcon />}>Mark as unread</MenuItem>
+        : <MenuItem onClick={() => onMarkAsRead(id)} icon={<ArchiveIcon />}>Mark as read</MenuItem>}
       <MenuItem onClick={() => onArchive(id)} icon={<ArchiveIcon />}>Archive</MenuItem>
     </MenuGroup>
   }
 
-  return <VStack
+  return <Box
+    key={id + notificationTime}
     layout
-    key={id}
-    ref={ref}
-    as={motion.div}
-    initial={false}
+    initial={{
+      height: 0,
+      opacity: 0,
+    }}
     animate={{
       height: "auto",
       opacity: 1,
@@ -93,10 +95,13 @@ export const NotificationItem = (props) => {
       height: 0,
       opacity: 0,
     }}
-    p={2}
-    spacing={1}
+    ref={ref}
     flexShrink={0}
     overflow="hidden"
+    as={motion.div}
+  ><VStack
+    p={2}
+    spacing={1}
     align="stretch"
     userSelect="none"
     boxShadow={isMenuOpen ? "focusInset" : "none"}
@@ -107,37 +112,37 @@ export const NotificationItem = (props) => {
       cursor: "pointer",
       bg: "interaction.surface.hover"
     }}
-    onClick={(e) => { if (e.button === 0) onOpenItem(object.parentUid, id) }}
+    // onClick={(e) => { if (e?.button === 0) onOpenItem(object.parentUid, id) }}
     onContextMenu={(e) => {
-      e.stopPropagation();
       addToContextMenu({ event: e, component: ContextMenuItems, ref });
     }}
     {...boxProps}
   >
-    <HStack
-      align="baseline"
-      textAlign="left"
-      spacing={1.5}
-    >
-      <NotificationStatusIndicator isRead={isRead} />
-      <VStack flexShrink={1} spacing={0} align="stretch">
-        <Text fontSize="sm">{messageForNotification(notification)}</Text>
-        {body && <Text fontSize="sm">{body}</Text>}
-      </VStack>
-    </HStack>
-    <HStack justifyContent="space-between">
-      <Text fontSize="sm"
-        marginLeft="14px"
-        color="gray">{notificationTime}</Text>
-      <ButtonGroup
-        flex="0 0 auto"
-        onDoubleClick={(e) => e.stopPropagation()}
-        size="xs"
-        alignSelf="flex-end"
+      <HStack
+        align="baseline"
+        textAlign="left"
+        spacing={1.5}
       >
-        {mapActionsToButtons(getActionsForNotification(notification), 1)}
-      </ButtonGroup>
-    </HStack>
-  </VStack>
+        <NotificationStatusIndicator isRead={isRead} />
+        <VStack flexShrink={1} spacing={0} align="stretch">
+          <Text fontSize="sm">{messageForNotification(notification)}</Text>
+          {body && <Text fontSize="sm">{body}</Text>}
+        </VStack>
+      </HStack>
+      <HStack justifyContent="space-between">
+        <Text fontSize="sm"
+          marginLeft="14px"
+          color="gray">{notificationTime}</Text>
+        <ButtonGroup
+          flex="0 0 auto"
+          onDoubleClick={(e) => e.stopPropagation()}
+          size="xs"
+          alignSelf="flex-end"
+        >
+          {mapActionsToButtons(getActionsForNotification(notification), 1)}
+        </ButtonGroup>
+      </HStack>
+    </VStack>
+  </Box>
 }
 
