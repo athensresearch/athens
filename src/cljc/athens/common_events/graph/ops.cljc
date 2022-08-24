@@ -310,24 +310,37 @@
     [removed-links added-links]))
 
 
+(defn throw-unknown-k
+  [k]
+  (throw (str "Key " k " must be either string or ::first/::last.")))
+
+
 (defn- new-prop
-  [db [a v :as uid-or-eid] prop-uid k]
+  [db [a v :as uid-or-eid] next-uid k]
   (let [uid?     (-> uid-or-eid vector? not)
         uid      (if uid?
                    uid-or-eid
                    (common-db/get-block-uid db uid-or-eid))
         title    (or (common-db/get-page-title db uid)
                      (and (= a :node/title) v))
-        position (merge {:relation {:page/title k}}
+        ;; here too
+        position (merge {:relation (cond
+                                     (= ::first k) :first
+                                     (= ::last k)  :last
+                                     (string? k)   {:page/title k}
+                                     :else         (throw-unknown-k k))}
                         (if title
                           {:page/title title}
                           {:block/uid uid}))]
-    (build-block-new-op db prop-uid position)))
+    (build-block-new-op db next-uid position)))
 
 
-(defn build-property-path
+(defn build-path
+  "Return uid at ks path and operations to create path, if needed, as [uid ops].
+  uid can be a string or a datascript eid.
+  ks can be properties names as strings, or ::first/::last for children."
   ([db uid ks]
-   (build-property-path db uid ks []))
+   (build-path db uid ks []))
   ([db uid-or-eid [k & ks] ops]
    (if-not k
      [uid-or-eid ops]
@@ -335,9 +348,31 @@
            block      (common-db/get-block db (if uid?
                                                 [:block/uid uid-or-eid]
                                                 uid-or-eid))
-           prop-block (-> block :block/properties (get k))
-           prop-uid   (or (:block/uid prop-block)
+           next-block (cond
+                        (= ::first k) (-> block :block/children first)
+                        (= ::last k)  (-> block :block/children last)
+                        (string? k)   (-> block :block/properties (get k))
+                        :else         (throw-unknown-k k))
+           next-uid   (or (:block/uid next-block)
                           (common.utils/gen-block-uid))
            ops'       (cond-> ops
-                        (not prop-block) (conj (new-prop db uid-or-eid prop-uid k)))]
-       (recur db prop-uid ks ops')))))
+                        (not next-block) (conj (new-prop db uid-or-eid next-uid k)))]
+       (recur db next-uid ks ops')))))
+
+
+(defn get-path
+  "Return uid at ks path."
+  [db uid-or-eid [k & ks]]
+  (if-not (and uid-or-eid k)
+    uid-or-eid
+    (let [uid?       (-> uid-or-eid vector? not)
+          block      (common-db/get-block db (if uid?
+                                               [:block/uid uid-or-eid]
+                                               uid-or-eid))
+          next-block (cond
+                       (= ::first k) (-> block :block/children first)
+                       (= ::last k)  (-> block :block/children last)
+                       (string? k)   (-> block :block/properties (get k))
+                       :else         (throw-unknown-k k))
+          next-uid   (:block/uid next-block)]
+      (recur db next-uid ks))))

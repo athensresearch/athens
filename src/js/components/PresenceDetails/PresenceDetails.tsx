@@ -122,21 +122,23 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
                 <>
                   <MenuDivider />
                   <MenuGroup title="On this page">
-                    {currentPageMembers.map((member) => (
-                      <MenuItem
-                        onClick={() => handlePressMember(member)}
-                        isDisabled={!member.pageTitle}
-                        key={member.personId}
-                        icon={<Avatar
-                          size="xs"
-                          marginBlock={-1}
-                          name={member.username}
-                          bg={member.color}
-                        />}
-                      >
-                        <Text isTruncated maxWidth="10em">{member.username}</Text>
-                      </MenuItem>
-                    ))}
+                    {currentPageMembers.map((member) => {
+                      console.log(member)
+                      return (
+                        <MenuItem
+                          onClick={() => handlePressMember(member)}
+                          key={member.personId}
+                          icon={<Avatar
+                            size="xs"
+                            marginBlock={-1}
+                            name={member.username}
+                            bg={member.color}
+                          />}
+                        >
+                          <Text isTruncated maxWidth="10em">{member.username}</Text>
+                        </MenuItem>
+                      )
+                    })}
                   </MenuGroup>
                 </>
               )}
@@ -144,10 +146,11 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
               {differentPageMembers.length > 0 && (
                 <>
                   <MenuDivider />
-                  <MenuGroup title="On other pages">
+                  <MenuGroup>
                     {differentPageMembers.map((member) => (
                       <MenuItem
                         onClick={() => handlePressMember(member)}
+                        isDisabled={!member.pageTitle}
                         key={member.personId}
                         icon={<Avatar
                           marginBlock={-1}
