@@ -44,25 +44,6 @@
     [1 2 3] [1 2 3] :x :before 4))
 
 
-(t/deftest move-between
-  (t/are [from to from' to' x rel target] (= [from' to'] (order/move-between from to x rel target))
-    [1 2 3 :x] [4 5 6]
-    [1 2 3] [:x 4 5 6]
-    :x :first nil
-
-    [:x 1 2 3] [4 5 6]
-    [1 2 3] [4 5 6 :x]
-    :x :last nil
-
-    [1 2 :x 3] [4 5 6]
-    [1 2 3] [4 :x 5 6]
-    :x :before 5
-
-    [1 :x 2 3] [4 5 6]
-    [1 2 3] [4 5 :x 6]
-    :x :after 5))
-
-
 (t/deftest move-within
   (t/are [before after x rel target] (= after (order/move-within before x rel target))
     [1 2 3 :x] [:x 1 2 3] :x :first nil

@@ -4,7 +4,7 @@
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
     [athens.common.logging       :as log]
-    [athens.common.sentry        :refer-macros [wrap-span wrap-span-no-new-tx]]
+    [athens.common.sentry        :refer-macros [wrap-span-no-new-tx]]
     [athens.db                   :as db]
     [athens.reactive             :as reactive]
     [athens.self-hosted.client   :as client]
@@ -20,16 +20,6 @@
 
 
 ;; Effects
-
-
-;; TODO: remove this effect when :transact is removed.
-(rf/reg-fx
-  :transact!
-  (fn [tx-data]
-    (wrap-span "fx/transact!"
-               (common-db/transact-with-middleware! db/dsdb tx-data))
-    (rf/dispatch [:success-transact])))
-
 
 (rf/reg-fx
   :reset-conn!

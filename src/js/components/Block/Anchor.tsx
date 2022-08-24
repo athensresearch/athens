@@ -59,7 +59,7 @@ type Anchors = typeof ANCHORS;
 type AnchorImage = keyof Anchors;
 
 export interface AnchorProps {
-  anchorElement?: AnchorImage | React.ReactNode | number;
+  anchorElement?: AnchorImage | number;
   isClosedWithChildren: boolean;
   block: any;
   uidSanitizedBlock: any;
@@ -133,13 +133,11 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
   const { isClosedWithChildren,
     anchorElement,
     shouldShowDebugDetails,
-    onDragStart,
-    onDragEnd,
     onClick,
     uidSanitizedBlock,
     menu,
     unreadNotification,
-    ...rest
+    ...buttonProps
   } = props;
   const innerRef = React.useRef(null);
   const refs = useMergeRefs(innerRef, ref);
@@ -168,7 +166,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
       ref={refs}
       aria-label="Block anchor"
       {...anchorButtonStyleProps(isClosedWithChildren, unreadNotification)}
-      draggable={onDragStart ? true : undefined}
+      draggable={buttonProps.onDragStart ? true : undefined}
       onContextMenu={
         (e) => {
           if (menu) {
@@ -182,7 +180,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
           }
         }}
       isActive={isMenuOpen}
-      {...rest}
+      {...buttonProps}
     >
       {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}
     </IconButton>
