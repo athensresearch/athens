@@ -61,8 +61,8 @@
 
 
 (def SCHEMA
-  {"[[athens/task]]"           (concat [":task/title" ":task/page" ":task/status" ":task/assignee" ":task/priority" ":task/due-date"] base-schema)
-   "[[athens/comment-thread]]" (concat base-schema [])})
+  {"[[athens/task]]"           (concat [":task/title" ":task/page" ":task/status" ":task/assignee" ":task/priority" ":task/due-date"] base-schema)})
+   ;;"[[athens/comment-thread]]" (concat base-schema [])})
 
 
 (def AUTHORS
@@ -524,7 +524,12 @@
                                "←"])
                             (when-not last-column?
                               [:> Button {:onClick #(on-arrow-click :right)}
-                               "→"])]]]))]))])))
+                               "→"])]]]))
+                     [:> Button {:onClick #(prn "new card with context")
+                                 :size              "sm"
+                                 :variant           "ghost"
+                                 :fontWeight        "light"}
+                      "+ New Card"]]))])))
 
 
 
