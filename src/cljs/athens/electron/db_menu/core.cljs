@@ -3,9 +3,9 @@
     ["@chakra-ui/react" :refer [Box IconButton Spinner Text Tooltip Heading VStack ButtonGroup PopoverTrigger ButtonGroup Popover PopoverContent Portal Button]]
     [athens.electron.db-menu.db-icon :refer [db-icon]]
     [athens.electron.db-menu.db-list-item :refer [db-list-item]]
-    [athens.electron.db-modal :as db-modal]
     [athens.electron.dialogs :as dialogs]
     [athens.electron.utils :as electron.utils]
+    [athens.import.roam :as import.roam]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]))
 
@@ -42,7 +42,7 @@
                            :running
                            :synchronising)]
     [:<>
-     [db-modal/merge-modal merge-open?]
+     [import.roam/merge-modal merge-open?]
      [:> Popover {:placement "bottom-start"
                   :isLazy true}
       [:> PopoverTrigger
