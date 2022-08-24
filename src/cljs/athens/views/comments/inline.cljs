@@ -165,7 +165,7 @@
 
 
 (defn comments-disclosure
-  [hide? num-comments]
+  [hide? num-comments last-comment]
   [:> Button (merge
                (when-not @hide?
                  {:bg                 "background.upper"
@@ -182,7 +182,14 @@
      [:<>
       [:> ChevronRightIcon]
       [:> CommentCounter {:count num-comments}]
-      [:> Text {:pl 1.5} "Comments"]]
+      [:> Text {:pl 1.5} "Comments"]
+      [:> HStack
+       [:> Box
+        (:author last-comment)]
+       [:> Box
+        (:string last-comment)]
+       [:> Box
+        (timeAgo (:time last-comment))]]]
      [:<>
       [:> ChevronDownIcon]
       [:> CommentCounter {:count num-comments}]
@@ -199,6 +206,7 @@
       (fn [data uid _hide?]
         (let [num-comments (count data)
               username     (rf/subscribe [:username])
+              last-comment  (last data)
               ;; hacky way to detect if user just wanted to start the first comment, but the block-uid of the textarea
               ;; isn't accessible globally
               focus-textarea-if-opening-first-time #(when (zero? num-comments)
@@ -215,7 +223,7 @@
                         :borderRadius "md"
                         :align "stretch"})
 
-           [comments-disclosure hide? num-comments]
+           [comments-disclosure hide? num-comments last-comment]
 
            (when-not @hide?
              [:> Box {:pl 8

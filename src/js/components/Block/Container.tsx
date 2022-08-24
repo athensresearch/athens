@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, useMergeRefs } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
-import { useContextMenu } from '@/utils/useContextMenu';
+import { ContextMenuContext } from "@/App/ContextMenuContext";
 
 const ERROR_MESSAGE = "An error occurred while rendering this block.";
 
@@ -25,18 +25,12 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
 
   const handleMouseOver = (e) => setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
   const handleMouseLeave = () => isHoveredNotChild && setIsHoveredNotChild(false);
+  const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
+  const isMenuOpen = getIsMenuOpen(internalRef);
 
-  const {
-    menuSourceProps,
-    ContextMenu,
-    isOpen: isContextMenuOpen
-  } = useContextMenu({
-    ref: internalRef,
-    menuProps: {
-      size: "sm"
-    },
-    source: "cursor",
-  });
+  const MenuItems = () => {
+    return menu
+  }
 
   return <>
     <Box
@@ -46,16 +40,16 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
         isDragging ? "is-dragging" : "",
         isSelected ? "is-selected" : "",
         isOpen ? "is-open" : "",
-        isContextMenuOpen && 'isContextMenuOpen',
+        isMenuOpen && 'isMenuOpen',
         (hasChildren && isOpen) ? "show-tree-indicator" : "",
         isLinkedRef ? "is-linked-ref" : "",
         isHoveredNotChild && "is-hovered-not-child",
         hasPresence ? "is-presence" : "",
       ].filter(Boolean).join(' ')}
-      display="flex"
       lineHeight="2em"
       position="relative"
       borderRadius="0.125rem"
+      bg={isMenuOpen ? "background.upper" : undefined}
       justifyContent="flex-start"
       flexDirection="column"
       display={isHidden ? "none" : "block"}
@@ -137,19 +131,41 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
           minHeight: "1.5em",
         },
         "&.is-linked-ref": { bg: "background-attic" },
-        "&.isContextMenuOpen": { bg: "background.attic" },
+        "&.isMenuOpen": { bg: "background.attic" },
         ".block-container": {
           marginLeft: "2em",
           gridArea: "body"
-        }
+        },
+        ".block-ref > .block > h2": {
+          margin: 0,
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h1)": {
+          mt: 3
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h2)": {
+          mt: 3
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h3)": {
+          mt: 2
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h4)": {
+          mt: 2
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h5)": {
+          mt: 1
+        },
+        "&:not(:first-of-type):has(> .block-body .block-content .block > h6)": {
+          mt: 1
+        },
       }}
-      {...menuSourceProps}
       onContextMenu={
         (e) => {
           const target = e.target as HTMLElement;
           // Don't open the context menu on these e.target as HTMLElement;
           if (!CONTAINER_CONTEXT_MENU_FILTERED_TAGS.includes(target.tagName)) {
-            menuSourceProps.onContextMenu(e);
+            addToContextMenu({ event: e, ref: internalRef, component: MenuItems, isExclusive: true });
+          } else {
+            e.stopPropagation();
           }
         }
       }
@@ -162,9 +178,6 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
     >
       {children}
     </Box>
-    <ContextMenu>
-      {menu}
-    </ContextMenu>
   </>;
 })
 

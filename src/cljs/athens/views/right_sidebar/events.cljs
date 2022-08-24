@@ -31,7 +31,7 @@
   [(interceptors/sentry-span-no-new-tx "right-sidebar/set-width")]
   (fn [_ [_ width]]
     (let [user-page @(rf/subscribe [:presence/user-page])]
-      {:fx [[:dispatch [:properties/update-in [:node/title user-page] [(shared/ns-str "/width")]
+      {:fx [[:dispatch [:graph/update-in [:node/title user-page] [(shared/ns-str "/width")]
                         (fn [db uid]
                           ;; todo: good place to be using a number primitive type
                           [(graph-ops/build-block-save-op db uid (str width))])]]]})))

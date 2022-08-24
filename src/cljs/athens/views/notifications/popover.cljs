@@ -132,9 +132,11 @@
                              :icon          (r/as-element [:> BellFillIcon])}]
              (when (> num-notifications 0)
                [:> Badge {:position "absolute"
-                          :bg "highlight"
-                          :color "highlightContrast"
-                          :right "-3px" :bottom "-1px" :variant "ghost" :zIndex 1} num-notifications])]]
+                          :bg "gold"
+                          :color "goldContrast"
+                          :right "-3px"
+                          :bottom "-1px"
+                          :zIndex 1} num-notifications])]]
 
 
            [:> PopoverContent {:maxHeight "calc(100vh - 4rem)"}
