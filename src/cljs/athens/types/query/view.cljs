@@ -1,37 +1,17 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
-    ["@chakra-ui/react"                   :refer [Box,
-                                                  FormControl,
-                                                  FormLabel,
-                                                  FormErrorMessage,
-                                                  FormHelperText,
-                                                  Select
-                                                  HStack
-                                                  VStack]]
-    [athens.common-db                     :as common-db]
-    [athens.common-events                 :as common-events]
-    [athens.common-events.bfs             :as bfs]
-    [athens.common-events.graph.composite :as composite]
-    [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common.logging                :as log]
-    [athens.common.utils                  :as common.utils]
-    [athens.db                            :as db]
-    [athens.reactive                      :as reactive]
-    [athens.self-hosted.presence.views    :as presence]
-    [athens.types.core                    :as types]
-    [athens.types.dispatcher              :as dispatcher]
-    [athens.views.blocks.editor           :as editor]
-    [clojure.string                       :as str]
-    [goog.functions                       :as gfns]
-    [re-frame.core                        :as rf]
-    [reagent.core                         :as r]
     ["/components/Query/KanbanBoard" :refer [QueryKanban]]
-    [com.rpl.specter :as s]
-    ["/components/Query/Table" :refer [QueryTable]]
     ["/components/Query/Query" :refer [Controls QueryRadioMenu]]
-    ["/components/References/References" :refer [ReferenceBlock ReferenceGroup]]
-    ["@chakra-ui/react" :refer [Box
+    ["/components/Query/Table" :refer [QueryTable]]
+    ["@chakra-ui/react" :refer [Box,
+                                FormControl,
+                                FormLabel,
+                                FormErrorMessage,
+                                FormHelperText,
+                                Select
+                                HStack
+                                VStack
                                 Button
                                 HStack
                                 VStack
@@ -48,23 +28,21 @@
                                 Checkbox
                                 CheckboxGroup
                                 Menu]]
-    [athens.db :as db]
     [athens.common-db :as common-db]
-    [athens.common-events.graph.ops :as graph-ops]
     [athens.common-events.graph.composite :as composite]
+    [athens.common-events.graph.ops :as graph-ops]
+    [athens.common.utils :as utils]
     [athens.dates :as dates]
+    [athens.db :as db]
     [athens.reactive :as reactive]
     [athens.router :as router]
+    [athens.types.core :as types]
+    [athens.types.dispatcher :as dispatcher]
     [clojure.string :refer [lower-case]]
-    [re-frame.core :as rf]
-    [athens.common-events.bfs :as bfs]
-    [athens.parse-renderer :as parse-renderer]
-    ;;[athens.views.pages.node-page :as node-page]
-    [athens.util :as util]
-    [athens.common.utils :as utils]
-    [reagent.core :as r]))
+    [re-frame.core :as rf]))
 
 
+;; KanBanBoard, KanbanSwimlane, KanbanColumn, KanbanCard, AddCardButton, AddSwimlaneButton, AddColumnButton
 
 
 ;; CONSTANTS
@@ -75,23 +53,29 @@
 
 
 (def SCHEMA
-  {"[[athens/task]]"           (concat [":task/title" ":task/page" ":task/status" ":task/assignee" ":task/priority" ":task/due-date" ] base-schema)
+  {"[[athens/task]]"           (concat [":task/title" ":task/page" ":task/status" ":task/assignee" ":task/priority" ":task/due-date"] base-schema)
    "[[athens/comment-thread]]" (concat base-schema [])})
+
 
 (def AUTHORS
   ["None" "Sid" "Jeff" "Stuart" "Filipe" "Alex"])
 
+
 (def LAYOUTS
   ["table" "board" "list"])
+
 
 (def SORT_DIRECTIONS
   ["asc" "desc"])
 
+
 (def SPECIAL_FILTERS
   ["None" "On this page"])
 
+
 (def GROUP_BY_OPTIONS
   [":task/page" ":task/status" ":task/assignee" ":task/priority" ":create/auth"])
+
 
 (def DEFAULT-PROPS
   {":entity/type"                   "[[athens/query]]"
@@ -106,6 +90,7 @@
    "athens/query/properties/hide"   {}
    "athens/query/properties/order"  nil})
 
+
 (defn get*
   [hm ks]
   (->> (map #(str "athens/query/" %) ks)
@@ -116,8 +101,10 @@
   [k]
   (or (get SCHEMA k) base-schema))
 
+
 (def ENTITY_TYPES
   (keys SCHEMA))
+
 
 ;; Helpers
 
@@ -126,11 +113,13 @@
   {":create/auth" (get-in create-event [:event/auth :presence/id])
    ":create/time" (get-in create-event [:event/time :time/ts])})
 
+
 (defn get-last-edit-auth-and-time
   [edit-events]
   (let [last-edit (last edit-events)]
     {":last-edit/auth" (get-in last-edit [:event/auth :presence/id])
      ":last-edit/time" (get-in last-edit [:event/time :time/ts])}))
+
 
 (defn block-to-flat-map
   [block]
@@ -164,11 +153,13 @@
                [k (group-by #(get % kw) v)])
              columns)))
 
+
 (defn group-stuff
   [g sg items]
   (->> items
        (group-by #(get % sg))
        (nested-group-by g)))
+
 
 (defn context-to-block-properties
   [context]
@@ -179,6 +170,7 @@
                                 :uid    (utils/gen-block-uid)}]))
 
               flatten)))
+
 
 (defn new-kanban-column
   "This creates a new block/child at the property/values key, but the kanban board doesn't trigger a re-render because it isn't aware of property/values yet."
@@ -198,7 +190,7 @@
   [context]
   (let [context             (js->clj context)
         new-block-props     (context-to-block-properties context)
-        parent-of-new-block (:title (dates/get-day))        ;; for now, just create a new block on today's daily notes
+        parent-of-new-block (:title (dates/get-day))        ; for now, just create a new block on today's daily notes
         evt                 (->> (athens.common-events.bfs/internal-representation->atomic-ops
                                    @athens.db/dsdb
                                    [#:block{:uid        (utils/gen-block-uid)
@@ -214,6 +206,7 @@
                                  athens.common-events/build-atomic-event)]
     (re-frame.core/dispatch [:resolve-transact-forward evt])))
 
+
 ;; UPDATE
 
 ;; update task stuff
@@ -225,12 +218,14 @@
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
+
 (defn update-many-properties
   [db key value new-value]
   (->> (common-db/get-instances-of-key-value db key value)
        (map #(get-in % [key :block/uid]))
        (map (fn [uid]
               (graph-ops/build-block-save-op db uid new-value)))))
+
 
 (defn update-kanban-column
   "Update the property page that is the source of values for a property.
@@ -250,11 +245,13 @@
                     (vec (concat [(graph-ops/build-block-save-op db update-uid new-value)]
                                  update-ops))))]))
 
+
 (defn update-task-title
   [id new-title]
   (rf/dispatch [:properties/update-in [:block/uid id] [":task/title"]
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-title)])]))
+
 
 ;; update properties
 
@@ -292,7 +289,7 @@
                           (and (seq children) (not (clojure.string/blank? string))) {:key string :values (order-children children)}
                           (seq children) (order-children children)
                           nested-properties (reduce-kv (fn [acc k v]
-                                                        (assoc acc k (:block/string v)))
+                                                         (assoc acc k (:block/string v)))
                                                        {}
                                                        nested-properties)
                           :else string)))
@@ -312,17 +309,20 @@
                                   #:block{:uid uid :string string})))
       (seq properties) (keys properties))))
 
+
 (defn sort-dir-fn
   [query-sort-direction]
   (if (= query-sort-direction "asc")
     compare
     (comp - compare)))
 
+
 (defn sort-table
   [query-data query-sort-by query-sort-direction]
   (->> query-data
        (sort-by #(get % query-sort-by)
                 (sort-dir-fn query-sort-direction))))
+
 
 (defn parse-for-title
   "should be able to pass in a plain string, a wikilink, or both?"
@@ -333,6 +333,7 @@
         (re-find re s) (second (re-find re s))
         (clojure.string/blank? s) (throw "parse-for-title got an empty string")
         :else s))))
+
 
 (defn parse-for-uid
   "should be able to pass in a plain string, a wikilink, or both?"
@@ -345,10 +346,10 @@
         :else s))))
 
 
-
 (defn str-to-title
   [s]
   (str "[[" s "]]"))
+
 
 (defn get-merged-breadcrumbs
   [uids]
@@ -413,6 +414,7 @@
                      :onChange             #(toggle-hidden-property uid %)}]
      #_[:> Button {:onClick #(prn parsed-properties) :disabled true}
         [:> Heading {:size "sm"} "Save View"]]]))
+
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
@@ -479,7 +481,7 @@
 
        [:> QueryTable {:data           query-data
                        :columns        schema
-                       ;;:onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
+                       ;; :onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
                        :sortBy         s-by
                        :sortDirection  s-direction
                        :onUidClick     #(rf/dispatch [:right-sidebar/open-item [:block/uid %]])
@@ -489,13 +491,25 @@
                        :dateFormatFn   #(dates/date-string %)}])]))
 
 
+(comment "current shape of data for query kanban boards"
+         ;; e.g.
+         {"person" {"status" [{"task 1" 1}]}}
+         ;; aka
+         {"subgroup" {"group" ["card 1"]}}
+
+         {nil {nil [{":block/uid" "1f29dce5b", ":block/string" "test", ":entity/type" "[[athens/task]]", ":create/auth" "Sid", ":create/time" 1660894009080, ":last-edit/auth" nil, ":last-edit/time" 1661011262703, ":task/page" "August 19, 2022"}
+                    {":block/uid" "08-16-2022", ":block/string" nil, ":entity/type" "[[athens/task]]", ":create/auth" "Sid", ":create/time" 1660624243084, ":last-edit/auth" nil, ":last-edit/time" 1660624292449, ":task/page" "August 16, 2022"}]},
+          "" {nil [{":block/string" "", ":create/time" 1660904634520, ":create/auth" "Sid", ":last-edit/time" 1661013113312, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/page" "August 19, 2022", ":block/uid" "13f68a3b4", ":task/due-date" "asd", ":task/assignee" ""}]},
+          "[[@Filipe]]" {"((326893972))" [{":block/string" "", ":create/time" 1661245796014, ":create/auth" "Jeff", ":last-edit/time" 1661245843288, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((3ae3f4da9))", ":task/page" "Project: Tasks", ":block/uid" "6e2d0b69d", ":task/title" "design api", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Filipe]]", ":task/status" "((326893972))"}]},
+          "[[@Jeff]]" {"((5f282d535))" [{":block/string" "", ":create/time" 1661245784436, ":create/auth" "Jeff", ":last-edit/time" 1661245940745, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((c45df8496))", ":task/page" "Project: Tasks", ":block/uid" "37fcd71e9", ":task/title" "Design UIs", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Jeff]]", ":task/status" "((5f282d535))"}]},
+          "[[@Sid]]" {"((c09f1865b))" [{":block/string" "", ":create/time" 1661245808997, ":create/auth" "Jeff", ":last-edit/time" 1661269630733, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((abf97f9bc))", ":task/page" "Project: Tasks", ":block/uid" "c8c798cea", ":task/title" "announce the release on twitter", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Sid]]", ":task/status" "((c09f1865b))"}]}}
+
+         ;; there are better data structs for this too that i want to try
+         ;; like  more consistency of data structs. always use map or always use vector
+         ;; or changing the order of group-by/subgroup-by
 
 
-
-
-{nil {nil [{":block/uid" "1f29dce5b", ":block/string" "test", ":entity/type" "[[athens/task]]", ":create/auth" "Sid", ":create/time" 1660894009080, ":last-edit/auth" nil, ":last-edit/time" 1661011262703, ":task/page" "August 19, 2022"} {":block/uid" "08-16-2022", ":block/string" nil, ":entity/type" "[[athens/task]]", ":create/auth" "Sid", ":create/time" 1660624243084, ":last-edit/auth" nil, ":last-edit/time" 1660624292449, ":task/page" "August 16, 2022"}]}, "" {nil [{":block/string" "", ":create/time" 1660904634520, ":create/auth" "Sid", ":last-edit/time" 1661013113312, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/page" "August 19, 2022", ":block/uid" "13f68a3b4", ":task/due-date" "asd", ":task/assignee" ""}]}, "[[@Filipe]]" {"((326893972))" [{":block/string" "", ":create/time" 1661245796014, ":create/auth" "Jeff", ":last-edit/time" 1661245843288, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((3ae3f4da9))", ":task/page" "Project: Tasks", ":block/uid" "6e2d0b69d", ":task/title" "design api", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Filipe]]", ":task/status" "((326893972))"}]}, "[[@Jeff]]" {"((5f282d535))" [{":block/string" "", ":create/time" 1661245784436, ":create/auth" "Jeff", ":last-edit/time" 1661245940745, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((c45df8496))", ":task/page" "Project: Tasks", ":block/uid" "37fcd71e9", ":task/title" "Design UIs", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Jeff]]", ":task/status" "((5f282d535))"}]}, "[[@Sid]]" {"((c09f1865b))" [{":block/string" "", ":create/time" 1661245808997, ":create/auth" "Jeff", ":last-edit/time" 1661269630733, ":entity/type" "[[athens/task]]", ":last-edit/auth" nil, ":task/priority" "((abf97f9bc))", ":task/page" "Project: Tasks", ":block/uid" "c8c798cea", ":task/title" "announce the release on twitter", ":task/due-date" "[[August 22, 2022]] ", ":task/assignee" "[[@Sid]]", ":task/status" "((c09f1865b))"}]}}
-
-
+         {})
 
 
 (defn invalid-query?
@@ -504,10 +518,10 @@
     (and (= layout "board")
          (nil? group-by))))
 
+
 (->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
      (map block-to-flat-map)
      (map get-root-page))
-
 
 
 ;; TODO: fix proeprties
