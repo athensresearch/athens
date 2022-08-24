@@ -150,8 +150,8 @@
           (when (or @show-textarea?
                     (and @show-comments?
                          thread-uid))
-              ^{:key uid}
-              [inline-comments/inline-comments comments-data  uid false])]
+            ^{:key uid}
+            [inline-comments/inline-comments comments-data  uid false])]
 
          ;; Properties
          (when (and @properties-enabled?
