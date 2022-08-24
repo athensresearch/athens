@@ -47,25 +47,6 @@
     (concat reorder edit)))
 
 
-(defn move-child-between
-  [db old-parent-uid new-parent-uid uid position event-ref]
-  (let [{:keys [relation]}      position
-        [ref-uid]               (common-db/position->uid+parent db position)
-        origin-children         (common-db/get-children-uids db [:block/uid old-parent-uid])
-        destination-children    (common-db/get-children-uids db [:block/uid new-parent-uid])
-        [origin-children'
-         destination-children'] (order/move-between origin-children destination-children uid relation ref-uid)
-        reorder-origin          (order/reorder origin-children origin-children' order/block-map-fn)
-        reorder-destination     (order/reorder destination-children destination-children' order/block-map-fn)
-        update-parent           [[:db/retract [:block/uid old-parent-uid] :block/children [:block/uid uid]]
-                                 {:block/uid   old-parent-uid
-                                  :block/edits event-ref}
-                                 {:block/uid      new-parent-uid
-                                  :block/children [{:block/uid uid}]
-                                  :block/edits    event-ref}]]
-    (concat reorder-origin reorder-destination update-parent)))
-
-
 (defn add-property
   "Add uid as property under position. Transaction will fail if a property for position already exists."
   [db uid position event-ref]
