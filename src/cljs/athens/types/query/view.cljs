@@ -62,7 +62,9 @@
 
 (def SCHEMA
   {"[[athens/task]]"           (concat [":task/title" ":task/page" ":task/status" ":task/assignee" ":task/priority" ":task/due-date"] base-schema)})
-   ;;"[[athens/comment-thread]]" (concat base-schema [])})
+
+
+;; "[[athens/comment-thread]]" (concat base-schema [])})
 
 
 (def AUTHORS
@@ -424,7 +426,6 @@
         [:> Heading {:size "sm"} "Save View"]]]))
 
 
-
 (defn render-cards
   [cards-from-a-column all-possible-group-by-columns]
   [:<>
@@ -463,7 +464,7 @@
                 :border        "1px solid transparent"
                 :p             2
                 :bg            "background.floor"
-                ;;:width         "300px"
+                ;; :width         "300px"
                 :_hover        {:bg          "background.upper",
                                 :border      "1px solid",
                                 :borderColor "background.floor"}}
@@ -480,6 +481,7 @@
           (when-not last-column?
             [:> Button {:onClick #(on-arrow-click :right)}
              "→"])]]]))])
+
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
@@ -523,7 +525,7 @@
              (let [[swimlane-id swimlane-columns] swimlanes
                    nil-swimlane-id? (nil? swimlane-id)
                    swimlane-key (if nil-swimlane-id? "None" swimlane-id)]
-               ;;(prn "SWIMLANE" swimlane-id)
+               ;; (prn "SWIMLANE" swimlane-id)
                [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
                 (for [possible-group-by-column all-possible-group-by-columns]
                   (let [{:block/keys [string uid]} possible-group-by-column
@@ -577,10 +579,6 @@
                        :dateFormatFn   #(dates/date-string %)}])]))
 
 
-
-
-
-
 (comment "current shape of data for query kanban boards"
          ;; e.g.
          {"person" {"status" [{"task 1" 1}]}}
@@ -607,10 +605,12 @@
          ;; or changing the order of group-by/subgroup-by
          {"group-id" {"subgroup-id" [{:card 1} {:card 2}]}})
 
+
 (comment "idk how to solve"
          ["ordering of cards"
           "ordering of columns"
           "vectors vs maps"])
+
 
 (defn invalid-query?
   [parsed-props]

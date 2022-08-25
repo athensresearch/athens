@@ -20,7 +20,6 @@
     [reagent.core :as r]))
 
 
-
 ;; Sort state and logic
 
 (defn- get-sorted-by

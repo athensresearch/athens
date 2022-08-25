@@ -580,6 +580,7 @@
                              :string new-string
                              :source source}]))
 
+
 (defn get-comment-threads-for-query
   [db uid]
   (->> (d/q '[:find ?p .

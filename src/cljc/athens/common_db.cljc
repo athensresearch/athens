@@ -441,6 +441,7 @@
       (d/entity eid)
       :block/uid))
 
+
 (defn get-instances-of-key-value
   "Find all blocks that have key-value matching where
   key is a string and value is a string, then find that property block's parent."
@@ -454,7 +455,6 @@
               [?eid :block/property-of ?parent]]
             db k v)
        (mapv #(get-block-property-document db %))))
-
 
 
 (defn get-page-uid
@@ -713,6 +713,7 @@
        (map first)
        (d/pull-many db all-pages-pull-vector)))
 
+
 (def all-blocks-pull-vector
   [:block/uid :block/string :edit/time :create/time [:block/_refs :limit nil] :block/_property-of])
 
@@ -729,9 +730,9 @@
   (->> (get-all-blocks db)
        (filter :block/_property-of)
        (map #(get-block-document db [:block/uid (:block/uid %)]))
-       (filter (fn [x] (= (get-in x [:block/properties "type" :block/string])
-                         block-type)))))
-
+       (filter (fn [x]
+                 (= (get-in x [:block/properties "type" :block/string])
+                    block-type)))))
 
 
 (defn compat-position
