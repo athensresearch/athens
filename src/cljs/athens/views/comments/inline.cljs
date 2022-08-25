@@ -49,8 +49,8 @@
     (log/debug ":comment/update-comment:" uid string)
     {:fx [[:dispatch-n [[:resolve-transact-forward (-> (graph-ops/build-block-save-op @db/dsdb uid string)
                                                        (common-events/build-atomic-event))]
-                        [:properties/update-in [:block/uid uid] ["athens/comment/edited"] (fn [db prop-uid]
-                                                                                            [(graph-ops/build-block-save-op db prop-uid "")])]
+                        [:graph/update-in [:block/uid uid] ["athens/comment/edited"] (fn [db prop-uid]
+                                                                                       [(graph-ops/build-block-save-op db prop-uid "")])]
                         [:editing/uid nil]]]]}))
 
 
@@ -200,13 +200,13 @@
 
 
 (defn inline-comments
-  [_data _uid hide?]
+  [_data _comment-block-uid hide?]
   (when (comments.core/enabled?)
     (let [hide?           (r/atom hide?)
           block-uid       (common.utils/gen-block-uid)
           value-atom      (r/atom "")
           show-edit-atom? (r/atom true)]
-      (fn [data uid _hide?]
+      (fn [data comment-block-uid _hide?]
         (let [num-comments (count data)
               username     (rf/subscribe [:username])
               last-comment  (last data)
@@ -250,7 +250,7 @@
                                         [_uid _d-key-down]
                                         (when (not (str/blank? @value-atom))
                                           ;; Passing username because we need the username for other ops before the block is created.
-                                          (rf/dispatch [:comment/write-comment uid @value-atom @username])
+                                          (rf/dispatch [:comment/write-comment comment-block-uid @value-atom @username])
                                           (reset! value-atom "")
                                           (rf/dispatch [:editing/uid block-uid])))
                     tab-handler       (fn jetsam-tab-handler

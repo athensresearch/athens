@@ -30,6 +30,7 @@ export const RightSidebar = (props: RightSidebarProps) => {
           transitionProperty="background"
           transitionTimingFunction="ease-in-out"
           transitionDuration="fast"
+          overflowX="hidden"
           overflowY="auto"
           borderLeft="1px solid"
           borderColor="separator.divider"
@@ -39,7 +40,7 @@ export const RightSidebar = (props: RightSidebarProps) => {
           pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
-          <Box overflow="hidden" width={rightSidebarWidth + "vw"}>
+          <Box width={rightSidebarWidth + "vw"}>
             {children}
           </Box>
         </Box>

@@ -6,12 +6,15 @@
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/Icons/Icons"                 :refer [ArchiveIcon
+                                                       ArrowRightOnBoxIcon
                                                        BlockEmbedIcon
                                                        ChatBubbleIcon
+                                                       ExpandIcon
                                                        TextIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceBlock
                                                        ReferenceGroup]]
-    ["@chakra-ui/react"                        :refer [Breadcrumb
+    ["@chakra-ui/react"                        :refer [Box
+                                                       Breadcrumb
                                                        BreadcrumbItem
                                                        BreadcrumbLink
                                                        Button
@@ -339,7 +342,7 @@
   ([block linked-ref-data]
    [:f> block-el block linked-ref-data {}])
   ([block linked-ref-data _opts]
-   (let [block-uid                (:block/uid block)
+   (let [[block-uid _embed-id]    (-> block :block/uid common-db/uid-and-embed-id)
          {:keys [initial-open
                  parent-uids
                  linked-ref
@@ -367,7 +370,7 @@
                                     (rf/dispatch [::linked-ref.events/cleanup! block-uid])
                                     (rf/dispatch [::inline-refs.events/cleanup! block-uid]))]
 
-     (fn [opts]
+     (fn block-core-render
        [block linked-ref-data opts]
        (let [block-o                (reactive/get-reactive-block-document ident)
              {:block/keys [uid
@@ -397,7 +400,7 @@
                                       [:> MenuGroup
                                        (when (< (count @selected-items) 2)
                                          [:> MenuItem {:children "Open block"
-                                                       :icon     (r/as-element [:> TextIcon])
+                                                       :icon     (r/as-element [:> ExpandIcon])
                                                        :onClick  (fn [e]
                                                                    (let [shift? (.-shiftKey e)]
                                                                      (rf/dispatch [:reporting/navigation {:source :block-bullet
@@ -406,8 +409,15 @@
                                                                                                                     :right-pane
                                                                                                                     :main-pane)}])
                                                                      (router/navigate-uid uid e)))}])
+                                       [:> MenuItem {:children "Open in right sidebar"
+                                                     :icon     (r/as-element [:> ArrowRightOnBoxIcon])
+                                                     :onClick  (fn [_]
+                                                                 (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                                      :target :block
+                                                                                                      :pane   :right-pane}])
+                                                                 (rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))}]
                                        (when-not (= block-type "[[athens/task]]")
-                                         [:> MenuItem {:children "convert to task"
+                                         [:> MenuItem {:children "Convert to Task"
                                                        :icon     (r/as-element [:> BlockEmbedIcon])
                                                        :onClick  #(convert-anon-block-to-task block-o)}])
                                        [:> MenuItem {:children (if (> (count @selected-items) 1)
@@ -518,7 +528,7 @@
                         :uidSanitizedBlock      uid-sanitized-block
                         :shouldShowDebugDetails (util/re-frame-10x-open?)
                         :menu                   menu
-                        :onClick                (fn [e]
+                        :onDoubleClick          (fn [e]
                                                   (let [shift? (.-shiftKey e)]
                                                     (rf/dispatch [:reporting/navigation {:source :block-bullet
                                                                                          :target :block
@@ -533,8 +543,9 @@
                         :unreadNotification     (actions/unread-notification? properties)}]
 
             ;; `BlockTypeProtocol` dispatch placement
-            ^{:key renderer-k}
-            [types/outline-view renderer block {:show-edit? show-edit?}]
+            [:> Box {:gridArea "content"}
+             ^{:key renderer-k}
+             [types/outline-view renderer block {:show-edit? show-edit?}]]
 
             (when (and in-view? reactions-enabled? reactions)
               [:> Reactions {:reactions        (clj->js reactions)

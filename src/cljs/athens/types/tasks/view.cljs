@@ -111,7 +111,7 @@
   (let [task-properties       (common-db/get-block-property-document @db/dsdb [:block/uid task-block-uid])
         ops                   (concat
                                 (for [[prop-name prop-value] new-properties-map]
-                                  (let [[new-uid prop-ops] (graph-ops/build-property-path db task-block-uid [prop-name])
+                                  (let [[new-uid prop-ops] (graph-ops/build-path db task-block-uid [prop-name])
                                         save-op            (graph-ops/build-block-save-op db new-uid prop-value)]
                                     (if-not (= (get task-properties prop-name) prop-value)
                                       (conj prop-ops save-op)
@@ -137,7 +137,7 @@
                                   ([]
                                    (log/debug prop-name "save-fn" (pr-str @local-value))
                                    (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
-                                     (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                     (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
                                   ([e]
                                    (let [new-value (-> e .-target .-value)]
@@ -147,7 +147,7 @@
                                               ":task/assignee"
                                               ":task/description"
                                               ":task/due-date"} prop-name)
-                                       (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                       (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                      (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
             update-fn           #(do
                                    (when-not (= prop-str %)
@@ -362,7 +362,7 @@
                                 :block/children)
         allowed-priorities  (map #(select-keys % [:block/uid :block/string]) allowed-prio-blocks)]
     (when-not allowed-prio-blocks
-      (rf/dispatch [:properties/update-in [:node/title ":task/priority"] [":property/enum"]
+      (rf/dispatch [:graph/update-in [:node/title ":task/priority"] [":property/enum"]
                     (fn [db uid]
                       (when-not (common-db/block-exists? db [:block/uid uid])
                         (bfs/internal-representation->atomic-ops db (internal-representation-allowed-priorities)
@@ -380,7 +380,7 @@
                                 :block/children)
         allowed-statuses    (map #(select-keys % [:block/uid :block/string]) allowed-stat-blocks)]
     (when-not allowed-stat-blocks
-      (rf/dispatch [:properties/update-in [:node/title ":task/status"] [":property/enum"]
+      (rf/dispatch [:graph/update-in [:node/title ":task/status"] [":property/enum"]
                     (fn [db uid]
                       (when-not (common-db/block-exists? db [:block/uid uid])
                         (bfs/internal-representation->atomic-ops db (internal-representation-allowed-stauses)
@@ -407,7 +407,7 @@
                          :on-change   (fn [e]
                                         (let [new-priority (-> e .-target .-value)
                                               priority-ref (str "((" new-priority "))")]
-                                          (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
+                                          (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/priority"]
                                                         (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
               (doall
                 (for [{:block/keys [uid string]} allowed-priorities]
@@ -434,7 +434,7 @@
                          :on-change   (fn [e]
                                         (let [new-status (-> e .-target .-value)
                                               status-ref (str "((" new-status "))")]
-                                          (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+                                          (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/status"]
                                                         (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}
               (doall
                 (for [{:block/keys [uid string]} allowed-statuses]

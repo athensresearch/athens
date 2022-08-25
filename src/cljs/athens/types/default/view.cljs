@@ -156,7 +156,7 @@
 
 
   (transclusion-view
-    [this block-el block-uid _callback transclusion-scope]
+    [this block-el block-uid {:keys [transcluding-block-uid] :as _config} transclusion-scope]
     (let [supported-trans (types/supported-transclusion-scopes this)]
       (if-not (contains? supported-trans transclusion-scope)
         (throw (ex-info (str "Invalid transclusion scope: " (pr-str transclusion-scope)
@@ -184,7 +184,7 @@
               [:> ButtonGroup {:height "2em" :size "xs" :flex "0 0 auto" :zIndex "5" :alignItems "center"}
                [:> IconButton {:on-click (fn [e]
                                            (.. e stopPropagation)
-                                           (rf/dispatch [:editing/uid block-uid]))}
+                                           (rf/dispatch [:editing/uid transcluding-block-uid]))}
                 [:> PencilIcon]]])]]))))
 
 
