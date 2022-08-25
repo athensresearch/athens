@@ -424,6 +424,64 @@
         [:> Heading {:size "sm"} "Save View"]]]))
 
 
+
+(defn render-cards
+  [cards-from-a-column all-possible-group-by-columns]
+  [:<>
+   (for [card cards-from-a-column]
+     (let [uid            (get card ":block/uid")
+           title          (get card ":task/title")
+           status         (get card ":task/status")
+           priority       (get card ":task/priority")
+           assignee       (get card ":task/assignee")
+           page           (get card ":task/page")
+           due-date       (get card ":task/due-date")
+
+           assignee-value (parse-for-title assignee)
+
+           status-uid     (parse-for-uid status)
+           status-value   (common-db/get-block-string @db/dsdb status-uid)
+
+           priority-uid   (parse-for-uid priority)
+           priority-value (common-db/get-block-string @db/dsdb priority-uid)
+           curr-idx       (.indexOf all-possible-group-by-columns
+                                    #:block{:string status-value
+                                            :uid    status-uid})
+           first-column?  (zero? curr-idx)
+           last-column?   (= curr-idx (- (count all-possible-group-by-columns) 1))
+           on-arrow-click (fn [direction]
+                            (let [f              (if (= direction :left) dec inc)
+                                  new-idx        (f curr-idx)
+                                  new-status     (nth all-possible-group-by-columns new-idx)
+                                  new-status-uid (:block/uid new-status)
+                                  new-status-ref (str "((" new-status-uid "))")]
+                              (prn "update" uid new-status-ref)
+                              (update-status uid new-status-ref)))]
+       [:> Box {:key           (str uid page title)
+                :borderRadius  "sm"
+                :minHeight     "4rem"
+                :listStyleType "none"
+                :border        "1px solid transparent"
+                :p             2
+                :bg            "background.floor"
+                ;;:width         "300px"
+                :_hover        {:bg          "background.upper",
+                                :border      "1px solid",
+                                :borderColor "background.floor"}}
+
+        [:> Stack
+         [:> Text {:fontWeight "bold"} title]
+         [:> HStack
+          [:> Text assignee-value]
+          [:> Text priority-value]]
+         [:> HStack
+          (when-not first-column?
+            [:> Button {:onClick #(on-arrow-click :left)}
+             "←"])
+          (when-not last-column?
+            [:> Button {:onClick #(on-arrow-click :right)}
+             "→"])]]]))])
+
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
   (let [[select layout s-by s-direction f-author f-special p-order p-hide]
@@ -459,89 +517,30 @@
              boardData                     (if (and query-subgroup-by query-group-by)
                                              (group-stuff query-group-by query-subgroup-by query-data)
                                              (group-by #(get % query-group-by) query-data))]
-         ;;(prn boardData)
-         (get-reactive-property [:node/title ":task/status"] ":property/enum")
 
-         [:> KanbanBoard {:name "Hello world"}]
+         [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
          (doall
            (for [swimlanes boardData]
-             (let [[swimlane-id swimlane-columns] swimlanes]
-               [:> KanbanSwimlane {:name swimlane-id :key swimlane-id}
-                (for [possible-group-by-columns all-possible-group-by-columns]
-                  (let [{:block/keys [string uid]} possible-group-by-columns
+             (let [[swimlane-id swimlane-columns] swimlanes
+                   nil-swimlane-id? (nil? swimlane-id)
+                   swimlane-key (if nil-swimlane-id? "None" swimlane-id)]
+               ;;(prn "SWIMLANE" swimlane-id)
+               [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
+                (for [possible-group-by-column all-possible-group-by-columns]
+                  (let [{:block/keys [string uid]} possible-group-by-column
                         wrapped-group-by-column-uid (str "((" uid "))")
-                        a-columns-cards             (get swimlane-columns wrapped-group-by-column-uid)]
-                    [:> KanbanColumn {:name string :key (random-uuid)}
-                     ;;(prn "get" swimlane-columns wrapped-group-by-column-uid a-columns-cards)
-                     (for [card a-columns-cards]
-                       (let [uid            (get card ":block/uid")
-                             title          (get card ":task/title")
-                             status         (get card ":task/status")
-                             priority       (get card ":task/priority")
-                             assignee       (get card ":task/assignee")
-                             page           (get card ":task/page")
-                             due-date       (get card ":task/due-date")
-
-                             assignee-value (parse-for-title assignee)
-
-                             status-uid     (parse-for-uid status)
-                             status-value   (common-db/get-block-string @db/dsdb status-uid)
-
-                             priority-uid   (parse-for-uid priority)
-                             priority-value (common-db/get-block-string @db/dsdb priority-uid)
-                             curr-idx       (.indexOf all-possible-group-by-columns
-                                                      #:block{:string status-value
-                                                              :uid    status-uid})
-                             first-column?  (zero? curr-idx)
-                             last-column?   (= curr-idx (- (count all-possible-group-by-columns) 1))
-                             on-arrow-click (fn [direction]
-                                              (let [f              (if (= direction :left) dec inc)
-                                                    new-idx        (f curr-idx)
-                                                    new-status     (nth all-possible-group-by-columns new-idx)
-                                                    new-status-uid (:block/uid new-status)
-                                                    new-status-ref (str "((" new-status-uid "))")]
-                                                (update-status uid new-status-ref)))]
-                         [:> Box {:key           uid
-                                  :borderRadius  "sm"
-                                  :minHeight     "4rem"
-                                  :listStyleType "none"
-                                  :border        "1px solid transparent"
-                                  :p             2
-                                  :bg            "background.floor"
-                                  ;;:width         "300px"
-                                  :_hover        {:bg          "background.upper",
-                                                  :border      "1px solid",
-                                                  :borderColor "background.floor"}}
-
-                          [:> Stack
-                           [:> Text {:fontWeight "bold"} title]
-                           [:> HStack
-                            [:> Text assignee-value]
-                            [:> Text priority-value]]
-                           [:> HStack
-                            (when-not first-column?
-                              [:> Button {:onClick #(on-arrow-click :left)}
-                               "←"])
-                            (when-not last-column?
-                              [:> Button {:onClick #(on-arrow-click :right)}
-                               "→"])]]]))
-                     [:> Button {:onClick #(prn "new card with context")
-                                 :size              "sm"
-                                 :variant           "ghost"
-                                 :fontWeight        "light"}
+                        cards-from-a-column         (get swimlane-columns wrapped-group-by-column-uid)
+                        ;; context-object assumes group-by is always status, because of the uid stuff
+                        context-object              (cond-> {}
+                                                      (= g-by ":task/status") (assoc g-by (str "((" uid "))"))
+                                                      (not nil-swimlane-id?) (assoc sg-by swimlane-id))]
+                    [:> KanbanColumn {:name string :key (str swimlane-id uid)}
+                     [render-cards cards-from-a-column all-possible-group-by-columns]
+                     [:> Button {:onClick    #(new-card context-object)
+                                 :size       "sm"
+                                 :variant    "ghost"
+                                 :fontWeight "light"}
                       "+ New Card"]]))])))
-
-
-
-
-         #_[KanBanBoard
-            KanbanSwimlane
-            KanbanColumn
-            KanbanCard
-            AddCardButton
-            AddSwimlaneButton
-
-            AddColumnButton]
 
          #_[:> QueryKanban {:boardData            boardData
                             ;; store column order here
