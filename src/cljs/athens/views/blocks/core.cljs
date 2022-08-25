@@ -6,13 +6,24 @@
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/Icons/Icons"                 :refer [ArchiveIcon
+                                                       ArrowRightOnBoxIcon
                                                        BlockEmbedIcon
-                                                       ChatBubbleIcon TextIcon]]
+                                                       ChatBubbleIcon
+                                                       ExpandIcon
+                                                       TextIcon]]
     ["/components/References/InlineReferences" :refer [ReferenceBlock
                                                        ReferenceGroup]]
-    ["@chakra-ui/react"                        :refer [Breadcrumb
+    ["@chakra-ui/react"                        :refer [Box
+                                                       Breadcrumb
                                                        BreadcrumbItem
-                                                       BreadcrumbLink Button Divider HStack MenuDivider MenuItem MenuList VStack]]
+                                                       BreadcrumbLink
+                                                       Button
+                                                       Divider
+                                                       HStack
+                                                       MenuDivider
+                                                       MenuGroup
+                                                       MenuItem
+                                                       VStack]]
     ["react"                                   :as react]
     ["react-intersection-observer"             :refer [useInView]]
     [athens.common-db                          :as common-db]
@@ -309,10 +320,20 @@
 
 (defn convert-anon-block-to-task
   [block]
-  (let [{:keys [uid]} block]
-    (rf/dispatch [:properties/update-in [:block/uid uid] [":entity/type"]
-                  (fn [db uid]
-                    [(graph-ops/build-block-save-op db uid "[[athens/task]]")])])))
+  (let [{:block/keys [uid string]} block
+        entity-type-event          [:properties/update-in [:block/uid uid] [":entity/type"]
+                                    (fn [db entity-type-uid]
+                                      [(graph-ops/build-block-save-op db entity-type-uid "[[athens/task]]")])]
+        task-title-event           [:properties/update-in [:block/uid uid] [":task/title"]
+                                    (fn [db task-title-uid]
+                                      [(graph-ops/build-block-save-op db task-title-uid string)])]]
+    (log/debug "convert to task"
+               (pr-str {:uid               uid
+                        :string            string
+                        :entity-type-event entity-type-event
+                        :task-title-event  task-title-event}))
+    (rf/dispatch entity-type-event)
+    (rf/dispatch task-title-event)))
 
 
 (defn block-el
@@ -322,7 +343,7 @@
   ([block linked-ref-data]
    [:f> block-el block linked-ref-data {}])
   ([block linked-ref-data _opts]
-   (let [block-uid                (:block/uid block)
+   (let [[block-uid _embed-id]    (-> block :block/uid common-db/uid-and-embed-id)
          {:keys [initial-open
                  parent-uids
                  linked-ref
@@ -336,7 +357,6 @@
          drag-target              (rf/subscribe [::drag.subs/drag-target block-uid])
          selected?                (rf/subscribe [::select-subs/selected? block-uid])
          present-user             (rf/subscribe [:presence/has-presence block-uid])
-         convert-to-task          #(convert-anon-block-to-task block)
          selected-items           (rf/subscribe [::select-subs/items])
          feature-flags            (rf/subscribe [:feature-flags])
          current-user             (rf/subscribe [:presence/current-user])
@@ -351,7 +371,7 @@
                                     (rf/dispatch [::linked-ref.events/cleanup! block-uid])
                                     (rf/dispatch [::inline-refs.events/cleanup! block-uid]))]
 
-     (fn [opts]
+     (fn block-core-render
        [block linked-ref-data opts]
        (let [block-o                (reactive/get-reactive-block-document ident)
              {:block/keys [uid
@@ -368,60 +388,79 @@
              reactions-enabled?     (:reactions @feature-flags)
              notifications-enabled? (:notifications @feature-flags)
              uid-sanitized-block    (s/transform
-                                     (util/specter-recursive-path #(contains? % :block/uid))
-                                     (fn [{:block/keys [original-uid uid] :as block}]
-                                       (assoc block :block/uid (or original-uid uid)))
-                                     block)
+                                      (util/specter-recursive-path #(contains? % :block/uid))
+                                      (fn [{:block/keys [original-uid uid] :as block}]
+                                        (assoc block :block/uid (or original-uid uid)))
+                                      block)
              user-id                (or (:username @current-user)
                                         ;; We use empty string for when there is no user information, like in PKM.
                                         "")
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
-                                     [:> MenuList {:class "anchor"}
-                                      (when-not (= block-type "[[athens/task]]") [:> MenuItem {:children "convert to task"
-                                                                                               :icon     (r/as-element [:> BlockEmbedIcon])
-                                                                                               :onClick  convert-to-task}])
-                                      [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                "Copy selected block refs"
-                                                                "Copy block ref")
-                                                    :icon     (r/as-element [:> BlockEmbedIcon])
-                                                    :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                      [:> MenuItem {:children "Copy unformatted text"
-                                                    :icon     (r/as-element [:> TextIcon])
-                                                    :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
-                                      (when comments-enabled?
-                                        [:> MenuItem {:children "Add comment"
-                                                      :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                      :icon     (r/as-element [:> ChatBubbleIcon])}])
-                                      (when reactions-enabled?
-                                        [:<>
-                                         [:> MenuDivider]
-                                         [block-reaction/reactions-menu-list uid user-id]])
+                                      [:> MenuGroup
+                                       (when (< (count @selected-items) 2)
+                                         [:> MenuItem {:children "Open block"
+                                                       :icon     (r/as-element [:> ExpandIcon])
+                                                       :onClick  (fn [e]
+                                                                   (let [shift? (.-shiftKey e)]
+                                                                     (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                                          :target :block
+                                                                                                          :pane   (if shift?
+                                                                                                                    :right-pane
+                                                                                                                    :main-pane)}])
+                                                                     (router/navigate-uid uid e)))}])
+                                       [:> MenuItem {:children "Open in right sidebar"
+                                                     :icon     (r/as-element [:> ArrowRightOnBoxIcon])
+                                                     :onClick  (fn [_]
+                                                                 (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                                      :target :block
+                                                                                                      :pane   :right-pane}])
+                                                                 (rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))}]
+                                       (when-not (= block-type "[[athens/task]]")
+                                         [:> MenuItem {:children "Convert to Task"
+                                                       :icon     (r/as-element [:> BlockEmbedIcon])
+                                                       :onClick  #(convert-anon-block-to-task block-o)}])
+                                       [:> MenuItem {:children (if (> (count @selected-items) 1)
+                                                                 "Copy selected block refs"
+                                                                 "Copy block ref")
+                                                     :icon     (r/as-element [:> BlockEmbedIcon])
+                                                     :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+                                       [:> MenuItem {:children "Copy unformatted text"
+                                                     :icon     (r/as-element [:> TextIcon])
+                                                     :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+                                       (when comments-enabled?
+                                         [:> MenuItem {:children "Add comment"
+                                                       :onClick  #(ctx-menu/handle-click-comment % uid)
+                                                       :icon     (r/as-element [:> ChatBubbleIcon])}])
+                                       (when reactions-enabled?
+                                         [:<>
+                                          [:> MenuDivider]
+                                          [block-reaction/reactions-menu-list uid user-id]])
 
-                                      (when (and notifications-enabled? (actions/is-block-inbox? properties))
-                                        [:<>
-                                         [:> Divider]
-                                         [:> MenuItem {:children "Archive all notifications"
-                                                       :icon     (r/as-element [:> ArchiveIcon])
-                                                       :onClick  #(actions/archive-all-notifications uid)}]
-                                         [:> MenuItem {:children "Unarchive all notifications"
-                                                       :icon     (r/as-element [:> ArchiveIcon])
-                                                       :onClick  #(actions/unarchive-all-notifications uid)}]])
+                                       (when (and notifications-enabled? (actions/is-block-inbox? properties))
+                                         [:<>
+                                          [:> Divider]
+                                          [:> MenuItem {:children "Archive all notifications"
+                                                        :icon     (r/as-element [:> ArchiveIcon])
+                                                        :onClick  #(actions/archive-all-notifications uid)}]
+                                          [:> MenuItem {:children "Unarchive all notifications"
+                                                        :icon     (r/as-element [:> ArchiveIcon])
+                                                        :onClick  #(actions/unarchive-all-notifications uid)}]])
 
-                                      (when (and notifications-enabled? (actions/is-block-notification? properties))
-                                        [:> MenuItem {:children "Archive"
-                                                      :icon     (r/as-element [:> ArchiveIcon])
-                                                      :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
-             ff @(rf/subscribe [:feature-flags])
-             renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
-             renderer (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
-             [ref in-view?]         (useInView {:delay 250})
-             _ (react/useEffect (fn []
-                                  #(on-block-mount)
-                                  on-unmount-block)
-                                #js [])]
-         (log/debug "block open render: block-o:" (pr-str (:block/open block-o))
+                                       (when (and notifications-enabled? (actions/is-block-notification? properties))
+                                         [:> MenuItem {:children "Archive"
+                                                       :icon     (r/as-element [:> ArchiveIcon])
+                                                       :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
+             ff             @(rf/subscribe [:feature-flags])
+             renderer-k     (block-type-dispatcher/block-type->protocol-k block-type ff)
+             renderer       (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
+             [ref in-view?] (useInView {:delay 250})
+             _              (react/useEffect (fn []
+                                               (on-block-mount)
+                                               on-unmount-block)
+                                             #js [])]
+         #_(log/debug "block open render: block-o:" (pr-str (:block/open block-o))
                     "block:" (pr-str (:block/open block))
                     "merge:" (pr-str (:block/open (merge block-o block))))
 
@@ -490,7 +529,7 @@
                         :uidSanitizedBlock      uid-sanitized-block
                         :shouldShowDebugDetails (util/re-frame-10x-open?)
                         :menu                   menu
-                        :onClick                (fn [e]
+                        :onDoubleClick          (fn [e]
                                                   (let [shift? (.-shiftKey e)]
                                                     (rf/dispatch [:reporting/navigation {:source :block-bullet
                                                                                          :target :block
@@ -505,15 +544,16 @@
                         :unreadNotification     (actions/unread-notification? properties)}]
 
             ;; `BlockTypeProtocol` dispatch placement
-            ^{:key renderer-k}
-            [types/outline-view renderer block {:show-edit? show-edit?}]
+            [:> Box {:gridArea "content"}
+             ^{:key renderer-k}
+             [types/outline-view renderer block {:show-edit? show-edit?}]]
 
             (when (and in-view? reactions-enabled? reactions)
               [:> Reactions {:reactions        (clj->js reactions)
                              :currentUser      user-id
                              :onToggleReaction (partial block-reaction/toggle-reaction [:block/uid uid])}])
 
-               ;; Show comments when the toggle is on
+            ;; Show comments when the toggle is on
             (when (and @show-comments?
                        (or @show-textarea?
                            (comments/get-comment-thread-uid @db/dsdb uid)))

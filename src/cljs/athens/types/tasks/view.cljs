@@ -111,7 +111,7 @@
   (let [task-properties       (common-db/get-block-property-document @db/dsdb [:block/uid task-block-uid])
         ops                   (concat
                                 (for [[prop-name prop-value] new-properties-map]
-                                  (let [[new-uid prop-ops] (graph-ops/build-property-path db task-block-uid [prop-name])
+                                  (let [[new-uid prop-ops] (graph-ops/build-path db task-block-uid [prop-name])
                                         save-op            (graph-ops/build-block-save-op db new-uid prop-value)]
                                     (if-not (= (get task-properties prop-name) prop-value)
                                       (conj prop-ops save-op)
@@ -137,7 +137,7 @@
                                   ([]
                                    (log/debug prop-name "save-fn" (pr-str @local-value))
                                    (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
-                                     (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                     (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
                                   ([e]
                                    (let [new-value (-> e .-target .-value)]
@@ -147,7 +147,7 @@
                                               ":task/assignee"
                                               ":task/description"
                                               ":task/due-date"} prop-name)
-                                       (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                       (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                      (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
             update-fn           #(do
                                    (when-not (= prop-str %)
@@ -183,16 +183,16 @@
           prop-title]
          [:> Box [:> BlockFormInput
                   {:isMultiline multiline?}
-          ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
+                  ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
                   [editor/block-editor {:block/uid (or prop-block-uid
-                                               ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                                       ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
                                                        (str "tmp-" (subs prop-name
                                                                          (inc (.indexOf prop-name "/")))
                                                             "-uid-" (common.utils/gen-block-uid)))}
                    state-hooks]
                   [presence/inline-presence-el prop-block-uid]]
 
-          (if invalid-prop-str?
+          (when invalid-prop-str?
             [:> FormErrorMessage {:gridColumn 2}
              (str prop-title " is " (if required?
                                       "required"
@@ -215,7 +215,7 @@
                                   ([]
                                    (log/debug prop-name "save-fn" (pr-str @local-value))
                                    (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
-                                     (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                     (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
                                   ([e]
                                    (let [new-value (-> e .-target .-value)]
@@ -225,7 +225,7 @@
                                               ":task/assignee"
                                               ":task/description"
                                               ":task/due-date"} prop-name)
-                                       (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                       (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                      (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
             update-fn           #(do
                                    (when-not (= prop-str %)
@@ -279,18 +279,18 @@
 
 (defn inline-task-title-2
   [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
-  (let [prop-id (str (random-uuid))]
-    (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
+  (let [_prop-id (str (random-uuid))]
+    (fn [parent-block-uid prop-block-uid prop-name _prop-title _required? multiline?]
       (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
             prop-str            (or (:block/string prop-block) "")
             local-value         (r/atom prop-str)
-            invalid-prop-str?   (and (str/blank? prop-str)
+            _invalid-prop-str?  (and (str/blank? prop-str)
                                      (not (nil? prop-str)))
             save-fn             (fn
                                   ([]
                                    (log/debug prop-name "save-fn" (pr-str @local-value))
                                    (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
-                                     (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                     (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
                                   ([e]
                                    (let [new-value (-> e .-target .-value)]
@@ -300,7 +300,7 @@
                                               ":task/assignee"
                                               ":task/description"
                                               ":task/due-date"} prop-name)
-                                       (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                       (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                      (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
             update-fn           #(do
                                    (when-not (= prop-str %)
@@ -331,8 +331,8 @@
                                        custom-key-handlers)]
         [editor/block-editor {:block/uid (or prop-block-uid
                                              ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
-                                             (str "tmp-" (subs prop-name
-                                                               (inc (.indexOf prop-name "/")))
+                                             (str "tmp-" (subs (or prop-name "")
+                                                               (inc (.indexOf (or prop-name "") "/")))
                                                   "-uid-" (common.utils/gen-block-uid)))}
          state-hooks]
         #_ [:> FormControl {:is-required required?
@@ -362,7 +362,7 @@
                                 :block/children)
         allowed-priorities  (map #(select-keys % [:block/uid :block/string]) allowed-prio-blocks)]
     (when-not allowed-prio-blocks
-      (rf/dispatch [:properties/update-in [:node/title ":task/priority"] [":property/enum"]
+      (rf/dispatch [:graph/update-in [:node/title ":task/priority"] [":property/enum"]
                     (fn [db uid]
                       (when-not (common-db/block-exists? db [:block/uid uid])
                         (bfs/internal-representation->atomic-ops db (internal-representation-allowed-priorities)
@@ -380,7 +380,7 @@
                                 :block/children)
         allowed-statuses    (map #(select-keys % [:block/uid :block/string]) allowed-stat-blocks)]
     (when-not allowed-stat-blocks
-      (rf/dispatch [:properties/update-in [:node/title ":task/status"] [":property/enum"]
+      (rf/dispatch [:graph/update-in [:node/title ":task/status"] [":property/enum"]
                     (fn [db uid]
                       (when-not (common-db/block-exists? db [:block/uid uid])
                         (bfs/internal-representation->atomic-ops db (internal-representation-allowed-stauses)
@@ -401,19 +401,19 @@
      [:> FormLabel {:html-for priority-id}
       "Task priority"]
      [:> Box [:> Select {:id          priority-id
-                 :value       priority-uid
-                 :size "sm"
-                 :placeholder "Select a priority"
-                 :on-change   (fn [e]
-                                (let [new-priority (-> e .-target .-value)
-                                      priority-ref (str "((" new-priority "))")]
-                                  (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/priority"]
-                                                (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
-      (doall
-       (for [{:block/keys [uid string]} allowed-priorities]
-         ^{:key uid}
-         [:option {:value uid}
-          string]))]]]))
+                         :value       priority-uid
+                         :size "sm"
+                         :placeholder "Select a priority"
+                         :on-change   (fn [e]
+                                        (let [new-priority (-> e .-target .-value)
+                                              priority-ref (str "((" new-priority "))")]
+                                          (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/priority"]
+                                                        (fn [db uid] [(graph-ops/build-block-save-op db uid priority-ref)])])))}
+              (doall
+                (for [{:block/keys [uid string]} allowed-priorities]
+                  ^{:key uid}
+                  [:option {:value uid}
+                   string]))]]]))
 
 
 (defn task-status-view
@@ -434,13 +434,13 @@
                          :on-change   (fn [e]
                                         (let [new-status (-> e .-target .-value)
                                               status-ref (str "((" new-status "))")]
-                                          (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+                                          (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/status"]
                                                         (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}
               (doall
-               (for [{:block/keys [uid string]} allowed-statuses]
-                 ^{:key uid}
-                 [:option {:value uid}
-                  string]))]]]))
+                (for [{:block/keys [uid string]} allowed-statuses]
+                  ^{:key uid}
+                  [:option {:value uid}
+                   string]))]]]))
 
 
 (defn task-status-menulist
@@ -453,21 +453,21 @@
         on-choose-item   (fn [status]
                            (let [new-status status
                                  status-ref (str "((" new-status "))")]
-                             (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+                             (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/status"]
                                            (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))]
     (prn status-string)
     [:> Portal
-    [:> MenuList
-     [:> MenuOptionGroup {:defaultValue status-uid
-                          :type "radio"
-                          :onChange on-choose-item}
-      (doall
-       (for [{:block/keys [uid string]} allowed-statuses]
-         ^{:key uid}
-         [:> MenuItemOption {:value uid
-                             :py 0
-                             :icon (r/as-element [:> CheckmarkIcon])}
-          string]))]]]))
+     [:> MenuList
+      [:> MenuOptionGroup {:defaultValue status-uid
+                           :type "radio"
+                           :onChange on-choose-item}
+       (doall
+         (for [{:block/keys [uid string]} allowed-statuses]
+           ^{:key uid}
+           [:> MenuItemOption {:value uid
+                               :py 0
+                               :icon (r/as-element [:> CheckmarkIcon])}
+            string]))]]]))
 
 
 (defn find-status-uid
@@ -481,7 +481,7 @@
 
 (defn on-update-checkbox
   [parent-block-uid is-checked]
-  (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+  (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/status"]
                 (fn [db uid]
                   (if is-checked
                     [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "To Do") "))"))]
@@ -494,7 +494,7 @@
 
 
 (defn task-el
-  [_this block-data _callbacks is-ref?]
+  [_this block-data _callbacks _is-ref?]
   (let [block-uid (:block/uid block-data)]
     (fn [_this _block-data _callbacks]
       (let [block           (-> [:block/uid block-uid] reactive/get-reactive-block-document)
@@ -505,7 +505,7 @@
             description-uid (-> props (get ":task/description") :block/uid)
             creator-uid     (-> props (get ":task/creator") :block/uid)
             due-date-uid    (-> props (get ":task/due-date") :block/uid)
-              ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
+            ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
             status-uid      (-> props (get ":task/status") :block/uid)
             creator         (-> (:block/create block) :event/auth :presence/id)
             time            (-> (:block/create block) :event/time :time/ts)
@@ -519,7 +519,7 @@
                                                                       :block/string
                                                                       (common-db/strip-markup "((" "))"))])
                        :block/string)
-            title            (-> props (get ":task/title") :block/string)
+            _title           (-> props (get ":task/title") :block/string)
             assignee         (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
             priority         (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
                                                                                 (get ":task/priority")
@@ -540,7 +540,7 @@
             show-priority?     true
             show-creator?      true
             show-created-date? true
-            show-status?       true
+            _show-status?      true
             show-due-date?     true
 
             isChecked (is-checked-fn status)]
@@ -559,8 +559,8 @@
          [:> HStack {:alignSelf "stretch"
                      :as ButtonGroup
                      :variant "ghost"
-                      :onClick #(.. % stopPropagation)
-                      :onMouseDown #(.. % stopPropagation)
+                     :onClick #(.. % stopPropagation)
+                     :onMouseDown #(.. % stopPropagation)
                      :alignItems "start"
                      :isAttached true
                      :size "sm"
@@ -586,7 +586,7 @@
             [:> ChevronDownIcon {:color "foreground.secondary"}]]
            [task-status-menulist block-uid status-uid]]
           [:> Box {:flex "1 1" :py 1 :cursor "text" :lineHeight 1.4}
-           [inline-task-title-2 block-uid title-uid title-uid _callbacks]]]
+           [inline-task-title-2 block-uid title-uid ":task/title" "Title" true false]]]
          [:> ModalInput {:placement "bottom" :isLazy true}
           [:> ModalInputTrigger
            [:> Button {:whiteSpace "normal"
@@ -640,9 +640,8 @@
            [:> Text creator-uid]]]]))))
 
 
-
 (defrecord TaskView
-           []
+  []
 
   types/BlockTypeProtocol
 

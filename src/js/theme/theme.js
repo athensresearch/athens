@@ -364,7 +364,7 @@ const components = {
         outline: 'none',
         boxShadow: 'focus'
       },
-      "> .chakra-button__icon, > .chakra-icon": {
+      "> .chakra-button__icon, > .chakra-icon, &.chakra-menu__menu-button > span > .chakra-icon": {
         fontSize: buttonIconFontSize[size],
       }
     }),
