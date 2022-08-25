@@ -70,7 +70,7 @@
 
 
 (def LAYOUTS
-  ["table" "board" "list"])
+  ["table" "board" #_"list"])
 
 
 (def SORT_DIRECTIONS
@@ -563,10 +563,8 @@
                             :onAddNewColumn       #(new-kanban-column query-group-by)
                             :onAddNewProjectClick (fn [])}])
 
-       ;; what about groupBy page or something
-
        "list"
-       [:div "hi"]
+       [:div "TODO"]
 
 
        [:> QueryTable {:data           query-data
