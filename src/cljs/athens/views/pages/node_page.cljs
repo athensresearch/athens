@@ -529,8 +529,6 @@
          ;; References
          [:> PageFooter
           [:> VStack {:spacing 2 :py 4 :align "stretch"}
-           #_[perf-mon/hoc-perfmon-no-new-tx {:span-name "query"}
-              [query-el title]]
            [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-ref-el"}
             [linked-ref-el title]]
            [perf-mon/hoc-perfmon-no-new-tx {:span-name "linked-prop-el"}

@@ -1,23 +1,12 @@
 (ns athens.views.pages.all-pages
   (:require
     ["/components/AllPagesTable/AllPagesTable" :refer [AllPagesTable]]
-    ["@chakra-ui/react" :refer [Table Thead Tbody Tfoot Tr Th Td TableContainer
-                                Box
-                                Button
-                                Stack
-                                Text
-                                Heading
-                                Radio RadioGroup
-                                SimpleGrid
-                                Checkbox CheckboxGroup]]
     [athens.common-db          :as common-db]
-    [athens.common-events.graph.ops            :as graph-ops]
     [athens.dates              :as dates]
     [athens.db                 :as db]
     [athens.router             :as router]
     [clojure.string            :refer [lower-case]]
-    [re-frame.core             :as rf]
-    [reagent.core :as r]))
+    [re-frame.core             :as rf]))
 
 
 ;; Sort state and logic
