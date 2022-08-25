@@ -442,21 +442,6 @@
       :block/uid))
 
 
-(defn get-instances-of-key-value
-  "Find all blocks that have key-value matching where
-  key is a string and value is a string, then find that property block's parent."
-  [db k v]
-  (->> (d/q '[:find [?parent ...]
-              :in $ ?key ?value
-              :where
-              [?eid :block/key ?k]
-              [?k :node/title ?key]
-              [?eid :block/string ?value]
-              [?eid :block/property-of ?parent]]
-            db k v)
-       (mapv #(get-block-property-document db %))))
-
-
 (defn get-page-uid
   "Finds page `:block/uid` by `page-title`."
   [db page-title]
@@ -712,17 +697,6 @@
   (->> (d/datoms db :aevt :node/title)
        (map first)
        (d/pull-many db all-pages-pull-vector)))
-
-
-(def all-blocks-pull-vector
-  [:block/uid :block/string :edit/time :create/time [:block/_refs :limit nil] :block/_property-of])
-
-
-(defn get-all-blocks
-  [db]
-  (->> (d/datoms db :aevt :block/string)
-       (map first)
-       (d/pull-many db all-blocks-pull-vector)))
 
 
 (defn compat-position

@@ -3,15 +3,13 @@
   (:require
     ["/components/Query/KanbanBoard" :refer [KanbanBoard
                                              KanbanSwimlane
-                                             KanbanColumn
-                                             AddCardButton]]
+                                             KanbanColumn]]
     ["/components/Query/Query" :refer [QueryRadioMenu]]
     ["/components/Query/Table" :refer [QueryTable]]
     ["@chakra-ui/react" :refer [Box,
                                 HStack
                                 Button
                                 HStack
-                                VStack
                                 Stack
                                 Text]]
     [athens.common-db :as common-db]
@@ -40,10 +38,10 @@
 
 
 (def SCHEMA
+  ;; "[[athens/comment-thread]]" (concat base-schema [])})
   {"[[athens/task]]"           (concat [":task/title" ":task/page" ":task/status" ":task/assignee" ":task/priority" ":task/due-date"] base-schema)})
 
 
-;; "[[athens/comment-thread]]" (concat base-schema [])})
 
 
 (def AUTHORS
@@ -161,14 +159,6 @@
               flatten)))
 
 
-(defn new-kanban-column
-  "This creates a new block/child at the property/values key, but the kanban board doesn't trigger a re-render because it isn't aware of property/values yet."
-  [group-by-id]
-  (rf/dispatch [:graph/update-in [:node/title group-by-id] [":property/values"]
-                (fn [db prop-uid]
-                  [(graph-ops/build-block-new-op db (utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
-
-
 (defn new-card
   "new-card needs to know the context of where it was pressed. For example, pressing it in a given column and swimlane
   would pass along those properties to the new card. Filter conditions would also be passed along. It doesn't matter if
@@ -208,31 +198,39 @@
                   [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
 
-(defn update-many-properties
-  [db key value new-value]
-  (->> (common-db/get-instances-of-key-value db key value)
-       (map #(get-in % [key :block/uid]))
-       (map (fn [uid]
-              (graph-ops/build-block-save-op db uid new-value)))))
+#_(defn new-kanban-column
+    "This creates a new block/child at the property/values key, but the kanban board doesn't trigger a re-render because it isn't aware of property/values yet."
+    [group-by-id]
+    (rf/dispatch [:graph/update-in [:node/title group-by-id] [":property/values"]
+                  (fn [db prop-uid]
+                    [(graph-ops/build-block-new-op db (utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
 
 
-(defn update-kanban-column
-  "Update the property page that is the source of values for a property.
+#_(defn update-many-properties
+    [db key value new-value]
+    (->> (common-db/get-instances-of-key-value db key value)
+         (map #(get-in % [key :block/uid]))
+         (map (fn [uid]
+                (graph-ops/build-block-save-op db uid new-value)))))
+
+
+#_(defn update-kanban-column
+    "Update the property page that is the source of values for a property.
   Also update all the blocks that are using that property."
-  [property-key property-value new-value]
-  (rf/dispatch [:graph/update-in [:node/title property-key] [":property/values"]
-                (fn [db prop-uid]
-                  (let [{:block/keys [children]} (common-db/get-block-document db [:block/uid prop-uid])
-                        update-uid (->> children
-                                        (map (fn [{:block/keys [string uid]}] [string uid]))
-                                        (filter #(= (first %) property-value))
-                                        (first)
-                                        second)
-                        ;; update all blocks that match key:value to key:new-value
-                        update-ops (update-many-properties db property-key property-value new-value)]
+    [property-key property-value new-value]
+    (rf/dispatch [:graph/update-in [:node/title property-key] [":property/values"]
+                  (fn [db prop-uid]
+                    (let [{:block/keys [children]} (common-db/get-block-document db [:block/uid prop-uid])
+                          update-uid (->> children
+                                          (map (fn [{:block/keys [string uid]}] [string uid]))
+                                          (filter #(= (first %) property-value))
+                                          (first)
+                                          second)
+                          ;; update all blocks that match key:value to key:new-value
+                          update-ops (update-many-properties db property-key property-value new-value)]
 
-                    (vec (concat [(graph-ops/build-block-save-op db update-uid new-value)]
-                                 update-ops))))]))
+                      (vec (concat [(graph-ops/build-block-save-op db update-uid new-value)]
+                                   update-ops))))]))
 
 
 ;; update properties
@@ -245,16 +243,16 @@
                     [(graph-ops/build-block-save-op db prop-uid new-value)])])))
 
 
-(defn toggle-hidden-property
-  "If property is hidden, remove key. Otherwise, add property key."
-  [id hidden-property-id]
-  (js/alert "not implemented")
-  #_(rf/dispatch [:graph/update-in [:block/uid id] ["athens/query/properties/hide" hidden-property-id]
-                  (fn [db hidden-prop-uid]
-                    (let [property-hidden? (common-db/block-exists? db [:block/uid hidden-prop-uid])]
-                      [(if property-hidden?
-                         (graph-ops/build-block-remove-op @db/dsdb hidden-prop-uid)
-                         (graph-ops/build-block-save-op db hidden-prop-uid ""))]))]))
+#_(defn toggle-hidden-property
+    "If property is hidden, remove key. Otherwise, add property key."
+    [id hidden-property-id]
+    (js/alert "not implemented")
+    #_(rf/dispatch [:graph/update-in [:block/uid id] ["athens/query/properties/hide" hidden-property-id]
+                    (fn [db hidden-prop-uid]
+                      (let [property-hidden? (common-db/block-exists? db [:block/uid hidden-prop-uid])]
+                        [(if property-hidden?
+                           (graph-ops/build-block-remove-op @db/dsdb hidden-prop-uid)
+                           (graph-ops/build-block-save-op db hidden-prop-uid ""))]))]))
 
 
 (defn order-children
@@ -328,9 +326,9 @@
         :else s))))
 
 
-(defn str-to-title
-  [s]
-  (str "[[" s "]]"))
+#_(defn str-to-title
+    [s]
+    (str "[[" s "]]"))
 
 
 ;; Views
