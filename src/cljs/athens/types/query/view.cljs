@@ -1,40 +1,19 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
-    ["/components/Query/KanbanBoard" :refer [QueryKanban
-                                             KanbanBoard
+    ["/components/Query/KanbanBoard" :refer [KanbanBoard
                                              KanbanSwimlane
                                              KanbanColumn
-                                             KanbanCard
-                                             AddCardButton
-                                             AddSwimlaneButton
-                                             AddColumnButton]]
-    ["/components/Query/Query" :refer [Controls QueryRadioMenu]]
+                                             AddCardButton]]
+    ["/components/Query/Query" :refer [QueryRadioMenu]]
     ["/components/Query/Table" :refer [QueryTable]]
     ["@chakra-ui/react" :refer [Box,
-                                FormControl
-                                FormLabel
-                                FormErrorMessage
-                                FormHelperText
-                                Select
                                 HStack
-                                VStack
                                 Button
                                 HStack
                                 VStack
-                                Toggle
-                                Breadcrumb
-                                BreadcrumbItem
-                                BreadcrumbLink
-                                ButtonGroup
-                                ListItem
-                                UnorderedList
                                 Stack
-                                Text
-                                Heading
-                                Checkbox
-                                CheckboxGroup
-                                Menu]]
+                                Text]]
     [athens.common-db :as common-db]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops :as graph-ops]
@@ -45,7 +24,7 @@
     [athens.router :as router]
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
-    [clojure.string :refer [lower-case]]
+    [clojure.string :refer []]
     [re-frame.core :as rf]
     [reagent.core :as r]))
 
@@ -256,13 +235,6 @@
                                  update-ops))))]))
 
 
-(defn update-task-title
-  [id new-title]
-  (rf/dispatch [:graph/update-in [:block/uid id] [":task/title"]
-                (fn [db prop-uid]
-                  [(graph-ops/build-block-save-op db prop-uid new-title)])]))
-
-
 ;; update properties
 
 (defn update-query-property
@@ -359,15 +331,6 @@
 (defn str-to-title
   [s]
   (str "[[" s "]]"))
-
-
-(defn get-merged-breadcrumbs
-  [uids]
-  (->> uids
-       (map #(datascript.core/entity @db/dsdb [:block/uid %]))
-       (mapv :db/id)
-       (db/eids->groups)
-       vec))
 
 
 ;; Views

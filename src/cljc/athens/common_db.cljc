@@ -725,16 +725,6 @@
        (d/pull-many db all-blocks-pull-vector)))
 
 
-(defn get-all-blocks-of-type
-  [db block-type]
-  (->> (get-all-blocks db)
-       (filter :block/_property-of)
-       (map #(get-block-document db [:block/uid (:block/uid %)]))
-       (filter (fn [x]
-                 (= (get-in x [:block/properties "type" :block/string])
-                    block-type)))))
-
-
 (defn compat-position
   "Build a position by coercing incompatible arguments into compatible ones.
   uid to a page will instead use that page's title.

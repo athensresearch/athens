@@ -579,15 +579,3 @@
   (rf/dispatch [:block/save {:uid    uid
                              :string new-string
                              :source source}]))
-
-
-(defn get-comment-threads-for-query
-  [db uid]
-  (->> (d/q '[:find ?p .
-              :in $ ?uid
-              :where
-              [?e :block/uid ?uid]
-              [?e :block/property-of ?p]]
-            db uid)
-       (common-db/get-block-document db)))
-
