@@ -100,8 +100,8 @@
         {:block/keys [string children uid properties] :db/keys [id]} block
         show-comments?                 (rf/subscribe [:comment/show-comments?])
         show-textarea?                 (rf/subscribe [:comment/show-editor? uid])
-        is-editing?                    (subscribe [:editing/is-editing uid])
-        right-sidebar-contains-items?  (subscribe [:right-sidebar/contains-item? [:block/uid uid]])
+        is-editing?                    (rf/subscribe [:editing/is-editing uid])
+        right-sidebar-contains-items?  (rf/subscribe [:right-sidebar/contains-item? [:block/uid uid]])
         properties-enabled?            (rf/subscribe [:feature-flags/enabled? :properties])]
 
     (fn [_block]
