@@ -13,6 +13,8 @@
                                 Stack
                                 Text]]
     [athens.common-db :as common-db]
+    [athens.common-events :as common-events]
+    [athens.common-events.bfs :as bfs]
     [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops :as graph-ops]
     [athens.common.utils :as utils]
@@ -23,8 +25,7 @@
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
     [clojure.string :refer []]
-    [re-frame.core :as rf]
-    [reagent.core :as r]))
+    [re-frame.core :as rf]))
 
 
 ;;
@@ -40,8 +41,6 @@
 (def SCHEMA
   ;; "[[athens/comment-thread]]" (concat base-schema [])})
   {"[[athens/task]]"           (concat [":task/title" ":task/page" ":task/status" ":task/assignee" ":task/priority" ":task/due-date"] base-schema)})
-
-
 
 
 (def AUTHORS
@@ -170,7 +169,7 @@
   (let [context             (js->clj context)
         new-block-props     (context-to-block-properties context)
         parent-of-new-block (:title (dates/get-day))        ; for now, just create a new block on today's daily notes
-        evt                 (->> (athens.common-events.bfs/internal-representation->atomic-ops
+        evt                 (->> (bfs/internal-representation->atomic-ops
                                    @athens.db/dsdb
                                    [#:block{:uid        (utils/gen-block-uid)
                                             :string     ""
@@ -182,7 +181,7 @@
                                    {:page/title parent-of-new-block
                                     :relation   :last})
                                  (composite/make-consequence-op {:op/type :new-type})
-                                 athens.common-events/build-atomic-event)]
+                                 common-events/build-atomic-event)]
     (re-frame.core/dispatch [:resolve-transact-forward evt])))
 
 
@@ -191,13 +190,13 @@
 ;; update task stuff
 
 (defn update-status
-  ""
   [id new-status]
   (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
 
+;; All commented out for when we modify kanban columns
 #_(defn new-kanban-column
     "This creates a new block/child at the property/values key, but the kanban board doesn't trigger a re-render because it isn't aware of property/values yet."
     [group-by-id]
@@ -264,7 +263,7 @@
   [properties]
   (->> properties
        (reduce-kv
-         (fn [acc k {:block/keys [children string] nested-properties :block/properties :as v}]
+         (fn [acc k {:block/keys [children string] nested-properties :block/properties :as _v}]
            (assoc acc k (cond
                           (and (seq children) (not (clojure.string/blank? string))) {:key string :values (order-children children)}
                           (seq children) (order-children children)
@@ -281,7 +280,7 @@
   [eid property-key]
   (let [property-page (reactive/get-reactive-block-document eid)
         property      (get-in property-page [:block/properties property-key])
-        {:block/keys [children properties string]} property]
+        {:block/keys [children properties _string]} property]
     (cond
       (seq children) (->> children
                           order-children
@@ -335,8 +334,8 @@
 
 
 (defn options-el
-  [{:keys [properties parsed-properties uid schema]}]
-  (let [[layout select p-order p-hide f-author f-special s-by s-direction g-by g-s-by]
+  [{:keys [_properties parsed-properties uid schema]}]
+  (let [[layout select _p-order _p-hide f-author f-special s-by s-direction g-by g-s-by]
         (get* parsed-properties ["layout" "select" "properties/order" "properties/hide" "filter/author" "filter/special" "sort/by" "sort/direction" "group/by" "group/subgroup/by"])
         s-by       (parse-for-title s-by)
         menus-data [{:heading  "Entity Type"
@@ -397,7 +396,7 @@
            priority       (get card ":task/priority")
            assignee       (get card ":task/assignee")
            page           (get card ":task/page")
-           due-date       (get card ":task/due-date")
+           _due-date       (get card ":task/due-date")
 
            assignee-value (parse-for-title assignee)
 
@@ -446,7 +445,7 @@
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
-  (let [[select layout s-by s-direction f-author f-special p-order p-hide]
+  (let [[_select layout s-by s-direction f-author f-special _p-order p-hide]
         (get* parsed-properties ["select" "layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
         s-by              (parse-for-title s-by)
         filter-author-fn  (fn [x]
@@ -578,11 +577,6 @@
   (let [[layout group-by] (get* parsed-props ["layout" "group/by"])]
     (and (= layout "board")
          (nil? group-by))))
-
-
-(->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
-     (map block-to-flat-map)
-     (map get-root-page))
 
 
 ;; TODO: fix properties
