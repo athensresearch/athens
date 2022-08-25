@@ -203,8 +203,8 @@
                                    @athens.db/dsdb
                                    [#:block{:uid        (utils/gen-block-uid)
                                             :string     ""
-                                            :properties (merge {":block/type" #:block{:string "[[athens/task]]"
-                                                                                      :uid    (utils/gen-block-uid)}
+                                            :properties (merge {":entity/type" #:block{:string "[[athens/task]]"
+                                                                                       :uid    (utils/gen-block-uid)}
                                                                 ":task/title" #:block{:string "Untitled task"
                                                                                       :uid    (utils/gen-block-uid)}}
                                                                new-block-props)}]
