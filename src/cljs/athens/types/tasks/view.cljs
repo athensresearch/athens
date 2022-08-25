@@ -215,7 +215,7 @@
                                   ([]
                                    (log/debug prop-name "save-fn" (pr-str @local-value))
                                    (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
-                                     (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                     (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
                                   ([e]
                                    (let [new-value (-> e .-target .-value)]
@@ -225,7 +225,7 @@
                                               ":task/assignee"
                                               ":task/description"
                                               ":task/due-date"} prop-name)
-                                       (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                       (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                      (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
             update-fn           #(do
                                    (when-not (= prop-str %)
@@ -290,7 +290,7 @@
                                   ([]
                                    (log/debug prop-name "save-fn" (pr-str @local-value))
                                    (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
-                                     (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                     (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
                                   ([e]
                                    (let [new-value (-> e .-target .-value)]
@@ -300,7 +300,7 @@
                                               ":task/assignee"
                                               ":task/description"
                                               ":task/due-date"} prop-name)
-                                       (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [prop-name]
+                                       (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                      (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
             update-fn           #(do
                                    (when-not (= prop-str %)
@@ -453,7 +453,7 @@
         on-choose-item   (fn [status]
                            (let [new-status status
                                  status-ref (str "((" new-status "))")]
-                             (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+                             (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/status"]
                                            (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))]
     (prn status-string)
     [:> Portal
@@ -481,7 +481,7 @@
 
 (defn on-update-checkbox
   [parent-block-uid is-checked]
-  (rf/dispatch [:properties/update-in [:block/uid parent-block-uid] [":task/status"]
+  (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/status"]
                 (fn [db uid]
                   (if is-checked
                     [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "To Do") "))"))]
