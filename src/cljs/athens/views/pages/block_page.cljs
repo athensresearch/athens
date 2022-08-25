@@ -13,7 +13,7 @@
     [athens.views.comments.inline :as inline-comments]
     [athens.views.pages.node-page :as node-page]
     [komponentit.autosize :as autosize]
-    [re-frame.core :as rf :refer [dispatch subscribe]]
+    [re-frame.core :as rf :refer [dispatch]]
     [reagent.core :as r]))
 
 
@@ -95,18 +95,23 @@
 
 (defn block-page-el
   [block]
-  (let [state (r/atom {:string/local    nil
-                       :string/previous nil})
-        {:block/keys [string children uid properties] :db/keys [id]} block
+  (let [state                          (r/atom {:string/local    nil
+                                                :string/previous nil})
+        uid                            (:block/uid block)
         show-comments?                 (rf/subscribe [:comment/show-comments?])
         show-textarea?                 (rf/subscribe [:comment/show-editor? uid])
         is-editing?                    (rf/subscribe [:editing/is-editing uid])
         right-sidebar-contains-items?  (rf/subscribe [:right-sidebar/contains-item? [:block/uid uid]])
         properties-enabled?            (rf/subscribe [:feature-flags/enabled? :properties])]
 
-    (fn [_block]
-      (let [thread-uid (comments/get-comment-thread-uid @db/dsdb uid)
-            comments-data (comments/get-comments-in-thread @db/dsdb thread-uid)]
+    (fn [block]
+      (let [{:block/keys [string
+                          children
+                          uid
+                          properties]
+             :db/keys [id]}            block
+            thread-uid                 (comments/get-comment-thread-uid @db/dsdb uid)
+            comments-data              (comments/get-comments-in-thread @db/dsdb thread-uid)]
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
