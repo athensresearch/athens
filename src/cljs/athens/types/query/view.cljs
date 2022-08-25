@@ -183,7 +183,7 @@
 (defn new-kanban-column
   "This creates a new block/child at the property/values key, but the kanban board doesn't trigger a re-render because it isn't aware of property/values yet."
   [group-by-id]
-  (rf/dispatch [:properties/update-in [:node/title group-by-id] [":property/values"]
+  (rf/dispatch [:graph/update-in [:node/title group-by-id] [":property/values"]
                 (fn [db prop-uid]
                   [(graph-ops/build-block-new-op db (utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
 
@@ -222,7 +222,7 @@
 (defn update-status
   ""
   [id new-status]
-  (rf/dispatch [:properties/update-in [:block/uid id] [":task/status"]
+  (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
@@ -239,7 +239,7 @@
   "Update the property page that is the source of values for a property.
   Also update all the blocks that are using that property."
   [property-key property-value new-value]
-  (rf/dispatch [:properties/update-in [:node/title property-key] [":property/values"]
+  (rf/dispatch [:graph/update-in [:node/title property-key] [":property/values"]
                 (fn [db prop-uid]
                   (let [{:block/keys [children]} (common-db/get-block-document db [:block/uid prop-uid])
                         update-uid (->> children
@@ -256,7 +256,7 @@
 
 (defn update-task-title
   [id new-title]
-  (rf/dispatch [:properties/update-in [:block/uid id] [":task/title"]
+  (rf/dispatch [:graph/update-in [:block/uid id] [":task/title"]
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-title)])]))
 
@@ -266,7 +266,7 @@
 (defn update-query-property
   [uid key new-value]
   (let [namespaced-key (str "athens/query/" key)]
-    (rf/dispatch [:properties/update-in [:block/uid uid] [namespaced-key]
+    (rf/dispatch [:graph/update-in [:block/uid uid] [namespaced-key]
                   (fn [db prop-uid]
                     [(graph-ops/build-block-save-op db prop-uid new-value)])])))
 
@@ -275,7 +275,7 @@
   "If property is hidden, remove key. Otherwise, add property key."
   [id hidden-property-id]
   (js/alert "not implemented")
-  #_(rf/dispatch [:properties/update-in [:block/uid id] ["athens/query/properties/hide" hidden-property-id]
+  #_(rf/dispatch [:graph/update-in [:block/uid id] ["athens/query/properties/hide" hidden-property-id]
                   (fn [db hidden-prop-uid]
                     (let [property-hidden? (common-db/block-exists? db [:block/uid hidden-prop-uid])]
                       [(if property-hidden?
@@ -455,7 +455,6 @@
                                   new-status     (nth all-possible-group-by-columns new-idx)
                                   new-status-uid (:block/uid new-status)
                                   new-status-ref (str "((" new-status-uid "))")]
-                              (prn "update" uid new-status-ref)
                               (update-status uid new-status-ref)))]
        [:> Box {:key           (str uid page title)
                 :borderRadius  "sm"
