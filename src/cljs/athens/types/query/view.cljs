@@ -580,10 +580,6 @@
 
 
 
-;;(.indexOf [{:block/uid "326893972", :block/string "To Do"} {:block/uid "c09f1865b", :block/string "Doing"} {:block/uid "ea9294382", :block/string "Blocked"} {:block/uid "5f282d535", :block/string "Done"} {:block/uid "a12b38510", :block/string "Cancelled"} {:block/uid "3c626c1a2", :block/string "Stalled"}]
-;;          {:block/uid "326893972"
-;;           :block/string "To Do"})
-
 
 
 
@@ -630,7 +626,7 @@
      (map get-root-page))
 
 
-;; TODO: fix proeprties
+;; TODO: fix properties
 ;; clicking on them can add an SVG somehow
 ;; and then if there are block/children, it is no bueno
 
