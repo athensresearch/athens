@@ -42,3 +42,4 @@ athens.self-hosted.fluree.test-helpers/query
 athens.views.jetsam/jetsam-component
 athens.types.tasks.view/new-task
 athens.types.tasks.view/update-task-properties
+athens.types.tasks.view/task-status-view
