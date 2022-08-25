@@ -320,10 +320,10 @@
 (defn convert-anon-block-to-task
   [block]
   (let [{:block/keys [uid string]} block
-        entity-type-event          [:properties/update-in [:block/uid uid] [":entity/type"]
+        entity-type-event          [:graph/update-in [:block/uid uid] [":entity/type"]
                                     (fn [db entity-type-uid]
                                       [(graph-ops/build-block-save-op db entity-type-uid "[[athens/task]]")])]
-        task-title-event           [:properties/update-in [:block/uid uid] [":task/title"]
+        task-title-event           [:graph/update-in [:block/uid uid] [":task/title"]
                                     (fn [db task-title-uid]
                                       [(graph-ops/build-block-save-op db task-title-uid string)])]]
     (log/debug "convert to task"
