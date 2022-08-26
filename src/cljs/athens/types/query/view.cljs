@@ -31,9 +31,6 @@
     [re-frame.core :as rf]))
 
 
-;;
-
-
 ;; CONSTANTS
 
 
@@ -519,6 +516,7 @@
                                  :fontWeight "light"}
                       "+ New Card"]]))])))
 
+         ;; this is when we were passing all data to one top-level Tsx component
          #_[:> QueryKanban {:boardData            boardData
                             ;; store column order here
                             :columns              columns

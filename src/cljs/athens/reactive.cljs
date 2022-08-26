@@ -185,21 +185,6 @@
                  (:block/string e))))))
 
 
-#_(defn get-reactive-instances-of-key-value
-    "Does lookups based on ref value, not string value"
-    [k v]
-    (->> @(p/q '[:find [?parent ...]
-                 :in $ ?key ?value
-                 :where
-                 [?eid :block/key ?k]
-                 [?eid :block/refs ?p]
-                 [?k :node/title ?key]
-                 [?p :node/title ?value]
-                 [?eid :block/property-of ?parent]]
-               athens.db/dsdb k v)
-         (mapv get-reactive-block-document)))
-
-
 (defn get-reactive-instances-of-key-value
   "Find all blocks that have key-value matching where
   key is a string and value is a string, then find that property block's parent."
@@ -213,21 +198,6 @@
                [?eid :block/property-of ?parent]]
              athens.db/dsdb k v)
        (mapv get-reactive-block-document)))
-
-
-;; (get-reactive-instances-of-key-value "type" "athens/task") ;; athens/task
-
-
-;; (d/q '[:find [ (pull ?parent [*]  ) ...]
-;;        :in $  ?key ?value
-;;        :where
-;;        [?eid :block/key ?k]
-;;        [?eid :block/refs ?p]
-;;        [?k :node/title ?key]
-;;        [?p :node/title ?value]
-;;        [?eid :block/property-of ?parent]]
-;;      @athens.db/dsdb "type" "athens/task")
-
 
 
 (comment
