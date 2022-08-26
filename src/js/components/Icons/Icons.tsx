@@ -523,6 +523,22 @@ export const PageIcon = createIcon({
   ),
 });
 
+export const PauseIcon = createIcon({
+  displayName: 'PauseIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fillRule="evenodd" clipRule="evenodd" d="M4.49581 2.5C4.49581 2.22385 4.71966 2 4.99581 2C5.27195 2 5.49581 2.22385 5.49581 2.5L5.49579 11.5C5.49579 11.7761 5.27193 12 4.99579 12C4.71965 12 4.49579 11.7761 4.49579 11.5L4.49581 2.5ZM9.49999 2.5C9.49999 2.22385 9.27614 2 8.99999 2C8.72385 2 8.49999 2.22385 8.49999 2.5V11.5C8.49999 11.7761 8.72385 12 8.99999 12C9.27614 12 9.49999 11.7761 9.49999 11.5V2.5Z" fill="currentColor" />
+  ),
+});
+
+export const SquareIcon = createIcon({
+  displayName: 'SquareIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fillRule="evenodd" clipRule="evenodd" d="M10 3H4C3.44772 3 3 3.44772 3 4V10C3 10.5523 3.44772 11 4 11H10C10.5523 11 11 10.5523 11 10V4C11 3.44772 10.5523 3 10 3ZM4 2C2.89543 2 2 2.89543 2 4V10C2 11.1046 2.89543 12 4 12H10C11.1046 12 12 11.1046 12 10V4C12 2.89543 11.1046 2 10 2H4Z" fill="currentColor" />
+  ),
+});
+
 export const PageAddIcon = createIcon({
   displayName: 'PageAddIcon',
   viewBox: '0 0 14 14',

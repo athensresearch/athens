@@ -1,54 +1,58 @@
 (ns athens.types.tasks.view
   "Views for Athens Tasks"
   (:require
-    ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
-    ["/components/Icons/Icons"            :refer [ChevronDownIcon
-                                                  CheckmarkIcon]]
-    ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
-    ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
-    ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
-    ["@chakra-ui/react"                   :refer [FormControl
-                                                  FormLabel
-                                                  Text
-                                                  Flex
-                                                  AvatarGroup
-                                                  Avatar
-                                                  Checkbox
-                                                  ButtonGroup
-                                                  Portal
-                                                  Box
-                                                  Divider
-                                                  Menu
-                                                  Spacer
-                                                  MenuOptionGroup
-                                                  MenuItemOption
-                                                  MenuButton
-                                                  MenuList
-                                                  Button
-                                                  Badge
-                                                  FormErrorMessage
-                                                  Select
-                                                  HStack
-                                                  VStack]]
-    [athens.common-db                     :as common-db]
-    [athens.common-events                 :as common-events]
-    [athens.common-events.bfs             :as bfs]
-    [athens.common-events.graph.composite :as composite]
-    [athens.common-events.graph.ops       :as graph-ops]
-    [athens.common.logging                :as log]
-    [athens.common.utils                  :as common.utils]
-    [athens.dates                         :as dates]
-    [athens.db                            :as db]
-    [athens.reactive                      :as reactive]
-    [athens.self-hosted.presence.views    :as presence]
-    [athens.types.core                    :as types]
-    [athens.types.dispatcher              :as dispatcher]
-    [athens.views.blocks.editor           :as editor]
-    [clojure.string                       :as str]
-    [goog.functions                       :as gfns]
-    [re-frame.core                        :as rf]
-    [reagent.core                         :as r]
-    [tick.core :as t]))
+   ["/components/App/ContextMenuContext" :refer [ContextMenuContext]]
+   ["/components/Block/BlockFormInput"   :refer [BlockFormInput]]
+   ["/components/Block/Taskbox"   :refer [Taskbox]]
+   ["/components/Icons/Icons"            :refer [ChevronDownIcon
+                                                 CheckmarkIcon]]
+   ["/components/ModalInput/ModalInput"   :refer [ModalInput]]
+   ["/components/ModalInput/ModalInputPopover"   :refer [ModalInputPopover]]
+   ["/components/ModalInput/ModalInputTrigger"   :refer [ModalInputTrigger]]
+   ["react" :as react]
+   ["@chakra-ui/react"                   :refer [FormControl
+                                                 FormLabel
+                                                 Text
+                                                 Flex
+                                                 MenuGroup
+                                                 AvatarGroup
+                                                 Avatar
+                                                 Checkbox
+                                                 ButtonGroup
+                                                 Portal
+                                                 Box
+                                                 Divider
+                                                 Menu
+                                                 Spacer
+                                                 MenuOptionGroup
+                                                 MenuItemOption
+                                                 MenuButton
+                                                 MenuList
+                                                 Button
+                                                 Badge
+                                                 FormErrorMessage
+                                                 Select
+                                                 HStack
+                                                 VStack]]
+   [athens.common-db                     :as common-db]
+   [athens.common-events                 :as common-events]
+   [athens.common-events.bfs             :as bfs]
+   [athens.common-events.graph.composite :as composite]
+   [athens.common-events.graph.ops       :as graph-ops]
+   [athens.common.logging                :as log]
+   [athens.common.utils                  :as common.utils]
+   [athens.dates                         :as dates]
+   [athens.db                            :as db]
+   [athens.reactive                      :as reactive]
+   [athens.self-hosted.presence.views    :as presence]
+   [athens.types.core                    :as types]
+   [athens.types.dispatcher              :as dispatcher]
+   [athens.views.blocks.editor           :as editor]
+   [clojure.string                       :as str]
+   [goog.functions                       :as gfns]
+   [re-frame.core                        :as rf]
+   [reagent.core                         :as r]
+   [tick.core :as t]))
 
 
 ;; Create default task statuses configuration
@@ -443,7 +447,7 @@
                    string]))]]]))
 
 
-(defn task-status-menulist
+(defn task-status-menugroup
   [parent-block-uid status-block-uid]
   (let [;; status-id        (str (random-uuid))
         status-block     (reactive/get-reactive-block-document [:block/uid status-block-uid])
@@ -455,9 +459,7 @@
                                  status-ref (str "((" new-status "))")]
                              (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/status"]
                                            (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))]
-    (prn status-string)
-    [:> Portal
-     [:> MenuList
+     [:> MenuGroup
       [:> MenuOptionGroup {:defaultValue status-uid
                            :type "radio"
                            :onChange on-choose-item}
@@ -467,7 +469,7 @@
            [:> MenuItemOption {:value uid
                                :py 0
                                :icon (r/as-element [:> CheckmarkIcon])}
-            string]))]]]))
+            string]))]]))
 
 
 (defn find-status-uid
@@ -507,6 +509,10 @@
             due-date-uid    (-> props (get ":task/due-date") :block/uid)
             ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
             status-uid      (-> props (get ":task/status") :block/uid)
+            ;; map the :string key of the return from (find-allowed-statuses) into a vector
+            status-options (->> (find-allowed-statuses)
+                                (map (fn [{:block/keys [string]}]
+                                       string)))
             creator         (-> (:block/create block) :event/auth :presence/id)
             time            (-> (:block/create block) :event/time :time/ts)
             created-date    (-> time
@@ -517,8 +523,12 @@
             status (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
                                                                       (get ":task/status")
                                                                       :block/string
-                                                                      (common-db/strip-markup "((" "))"))])
-                       :block/string)
+                                                                      #_ (common-db/strip-markup "((" "))"))])
+                       )
+            _ (prn "test" props) #_  (common-db/get-block @db/dsdb [:block/uid  (-> props
+                                                                      (get ":task/status")
+                                                                      :block/string
+                                                                      #_ (common-db/strip-markup "((" "))"))])
             _title           (-> props (get ":task/title") :block/string)
             assignee         (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
             priority         (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
@@ -544,100 +554,81 @@
             show-due-date?     true
 
             isChecked (is-checked-fn status)]
-        [:> VStack {:spacing 0
+        [:> HStack {:spacing 0
                     :gridArea "content"
                     :borderRadius "md"
-                    :borderStyle "solid"
-                    :borderWidth "1px"
                     :transitionProperty "colors"
-                    :borderColor "separator.border"
                     :transitionDuration "fast"
                     :transitionTimingFunction "ease-in-out"
                     :overflow "hidden"
                     :mb 1
                     :align "stretch"}
          [:> HStack {:alignSelf "stretch"
-                     :as ButtonGroup
+                     :flex "1 1 100%"
                      :variant "ghost"
                      :onClick #(.. % stopPropagation)
                      :onMouseDown #(.. % stopPropagation)
                      :alignItems "start"
-                     :isAttached true
                      :size "sm"
                      :spacing 0}
-          [:> Button {:as Checkbox
-                      :p 2
-                      :spacing 0
-                      :minWidth "unset"
-                      :pr 0
-                      :mr -2
-                      :onClick #(.. % stopPropagation)
-                      :onMouseDown #(.. % stopPropagation)
-                      :borderRadius 0
-                      :onChange #(on-update-checkbox block-uid isChecked) :isChecked isChecked}]
-          [:> Menu {:size "sm" :offset [0 0] :isLazy true}
-           [:> MenuButton {:as Button
-                           :onClick #(.. % stopPropagation)
-                           :px 2
-                           :mr 2
-                           :borderRadius 0
-                           :minWidth 4
-                           :variant "ghost"}
-            [:> ChevronDownIcon {:color "foreground.secondary"}]]
-           [task-status-menulist block-uid status-uid]]
-          [:> Box {:flex "1 1" :py 1 :cursor "text" :lineHeight 1.4}
-           [inline-task-title-2 block-uid title-uid ":task/title" "Title" true false]]]
-         [:> ModalInput {:placement "bottom" :isLazy true}
-          [:> ModalInputTrigger
-           [:> Button {:whiteSpace "normal"
-                       :fontSize "unset"
-                       :size "sm"
-                       :onClick #(.. % stopPropagation)
-                       :lineHeight "unset"
-                       :flexWrap "wrap"
-                       :borderRadius 0
-                       :px 2
-                       :textAlign "start"
-                       :justifyContent "space-between"
-                       :height "auto"
-                       :fontWeight "normal"}
+          [:> Taskbox {:status status
+                       :options status-options
+                       :onChange (fn [status]
+                                   (let [new-status status
+                                         status-ref (str "((" new-status "))")]
+                                     (rf/dispatch [:graph/update-in [:block/uid block-uid] [":task/status"]
+                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}]]
+          [:> Box {:flex "1 1 100%"
+                   :py 1
+                   :cursor "text"
+                   :lineHeight 1.4}
+           [inline-task-title-2 block-uid title-uid ":task/title" "Title" true false]]
+          [:> ModalInput {:placement "right-start"
+                          :isLazy true}
+           [:> ModalInputTrigger
+            [:> Button {:size "sm"
+                        :flex "1 0 auto"
+                        :variant "ghost"
+                        :onClick #(.. % stopPropagation)
+                        :lineHeight "unset"
+                        :px 2
+                        :borderRadius "inherit"}
             ;; description
-            (when (and show-description? description)
-              [:> Text {:fontSize "sm" :flexGrow 1 :flexBasis "100%" :m 0 :py 1 :lineHeight 1.4 :color "foreground.secondary"}
-               description])
+             #_(when (and show-description? description)
+                 [:> Text {:fontSize "sm" :flexGrow 1 :flexBasis "100%" :m 0 :py 1 :lineHeight 1.4 :color "foreground.secondary"}
+                  description])
             ;; tasking/assignment
-            (when (and show-priority? priority)
-              [:> Badge {:size "sm" :variant "primary"}
-               priority])
-            [:> Flex {:gap 1}
-             [:> Text {:fontSize "xs"} "Due"]
-             (when (and show-assignee? assignee)
-               [:> AvatarGroup {:size "xs"}
-                [:> Avatar {:name assignee}]])
-             (when (and show-due-date? due-date)
-               [:> Text {:fontSize "xs"} due-date])]
-            [:> Spacer]
+             (when (and show-priority? priority)
+               [:> Badge {:size "sm" :variant "primary"}
+                priority])
+             (when (or due-date assignee)
+               [:> Flex {:gap 1 :align "center"}
+                [:> Text {:fontSize "xs"} "Due"]
+                (when (and show-assignee? assignee)
+                  [:> AvatarGroup {:size "xs"}
+                   [:> Avatar {:name assignee}]])
+                (when (and show-due-date? due-date)
+                  [:> Text {:fontSize "xs"} due-date])])
             ;; provenance
-            [:> Flex {:gap 1}
-             [:> Text {:fontSize "xs"} "Created"]
-             (when (and show-creator? creator)
-               [:> AvatarGroup {:size "xs"}
-                [:> Avatar {:name creator}]])
-             (when (and show-created-date? created-date)
-               [:> Text {:fontSize "xs"} created-date])]]]
-          [:> ModalInputPopover {:popoverContentProps {:display "grid"
-                                                       :onClick #(.. % stopPropagation)
-                                                       :gridTemplateColumns "max-content 1fr"
-                                                       :gap 2
-                                                       :p 4
-                                                       :maxWidth "20em"}}
-           [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Description" false true]
-           [:> Divider {:gridColumn "1 / -1"}]
-           [task-priority-view block-uid priority-uid]
-           [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Assignee" false false]
+             [:> Flex {:gap 1 :align "center"}
+              (when (and show-creator? creator)
+                [:> AvatarGroup {:size "xs"}
+                 [:> Avatar {:name creator}]])
+              (when (and show-created-date? created-date)
+                [:> Text {:fontSize "xs"} created-date])]]]
+           [:> ModalInputPopover {:popoverContentProps {:display "grid"
+                                                        :onClick #(.. % stopPropagation)
+                                                        :gridTemplateColumns "max-content 1fr"
+                                                        :gap 2
+                                                        :p 4
+                                                        :maxWidth "20em"}}
+            [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Description" false true]
+            [:> Divider {:gridColumn "1 / -1"}]
+            [task-priority-view block-uid priority-uid]
+            [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Assignee" false false]
            ;; Making assumption that for now we can add due date manually without date-picker.
-           [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Due Date" false false]
-           [:> Text creator-uid]]]]))))
+            [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Due Date" false false]
+            [:> Text creator-uid]]]]))))
 
 
 (defrecord TaskView
