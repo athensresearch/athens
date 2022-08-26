@@ -7,7 +7,7 @@
     [athens.common-events.graph.ops :as graph-ops]
     [athens.common.utils :as common.utils]
     [athens.db :as db]
-    [athens.views.notifications.core  :refer [get-subscriber-data new-notification]]
+    [athens.views.notifications.core  :refer [get-userpage-data new-notification]]
     [re-frame.core :as rf]))
 
 
@@ -198,10 +198,10 @@
   ;; If the user does not have a userpage or inbox we create it
   ;; Find the uid of the inbox for these notifications for all the subscribers
   ;; Create a notification for all the subscribers, apart from the subscriber who wrote the comment.
-  [db parent-block-uid users author notification-message trigger-block-uid notification-type]
+  [{:keys [db parent-block-uid notification-for-users author trigger-block-uid notification-type]}]
   (let [subscriber-data (map
-                          #(get-subscriber-data db %)
-                          users)
+                          #(get-userpage-data db %)
+                          notification-for-users)
         notifications   (mapv
                           #(let [{:keys [inbox-uid userpage userpage-inbox-op]}  %]
                              (composite/make-consequence-op {:op/type :userpage-notification-op}
@@ -210,7 +210,6 @@
                                                                                         :inbox-block-uid             inbox-uid
                                                                                         :notification-position       :first
                                                                                         :notification-type           notification-type
-                                                                                        :notification-message        notification-message
                                                                                         :notification-state          "unread"
                                                                                         :notification-trigger-uid    trigger-block-uid
                                                                                         :notification-trigger-parent parent-block-uid
@@ -234,13 +233,6 @@
     athens-users))
 
 
-(defn create-mention-notifications
-  [db block-uid mentioned-users author block-string]
-  (let [notification-message  (str "**[[@" author "]] mentioned you: **" "*"  block-string "*")
-        notification-ops      (create-notification-op-for-users db block-uid mentioned-users author notification-message block-uid "athens/notification/type/mention")]
-    notification-ops))
-
-
 (defn add-mentioned-users-as-member-and-subscriber
   [db thread-members-uid thread-subs-uid comment-string thread-uid thread-exists? author]
   (if thread-exists?
@@ -258,13 +250,18 @@
   ;; Find all the subscribed members to the thread
   ;; Find the uid of the inbox for these notifications for all the subscribers
   ;; Create a notification for all the subscribers, apart from the subscriber who wrote the comment.
-  [db parent-block-uid thread-uid author comment-string notification-message comment-block-uid]
+  [db parent-block-uid thread-uid author comment-string comment-block-uid]
   (let [subscribers (if (empty? (get-all-mentions comment-string author))
                       (get-subscribers-for-notifying db thread-uid author)
                       (set (concat (get-subscribers-for-notifying db thread-uid author)
                                    (get-all-mentions comment-string author))))]
     (when subscribers
-      (create-notification-op-for-users db parent-block-uid subscribers author notification-message comment-block-uid "athens/notification/type/comment"))))
+      (create-notification-op-for-users {:db                     @db/dsdb
+                                         :parent-block-uid       parent-block-uid
+                                         :notification-for-users subscribers
+                                         :author                 author
+                                         :trigger-block-uid      comment-block-uid
+                                         :notification-type      "athens/notification/type/comment"}))))
 
 
 (rf/reg-event-fx
@@ -299,8 +296,6 @@
           add-mentions-in-str-as-mem-subs-op         (add-mentioned-users-as-member-and-subscriber @db/dsdb thread-members-uid thread-subs-uid comment-string thread-uid thread-exists? author)
           add-author-as-mem-or-subs                  (when thread-exists?
                                                        (add-user-as-member-or-subscriber? @db/dsdb thread-uid (str "[[@" author "]]")))
-          notification-message                       (str "**((" uid "))**" "\n"
-                                                          "*[[@" author "]] commented: "  comment-string "*")
           [add-block-author-as-sub-and-mem
            block-author-notification-op]             (when (and
                                                              (not= author block-author)
@@ -308,8 +303,13 @@
                                                        [(concat []
                                                                 (add-new-member-or-subscriber-to-prop-uid @db/dsdb thread-members-uid (str "[[@" block-author "]]"))
                                                                 (add-new-member-or-subscriber-to-prop-uid @db/dsdb thread-subs-uid (str "[[@" block-author "]]")))
-                                                        (create-notification-op-for-users @db/dsdb uid [(str "[[@" block-author "]]")] author notification-message comment-uid "athens/notification/type/comment")                                                 ()])
-          notification-op                            (create-notification-op-for-comment @db/dsdb uid thread-uid author comment-string notification-message comment-uid)
+                                                        (create-notification-op-for-users {:db                     @db/dsdb
+                                                                                           :parent-block-uid       uid
+                                                                                           :notification-for-users [(str "[[@" block-author "]]")]
+                                                                                           :author                 author
+                                                                                           :trigger-block-uid      comment-uid
+                                                                                           :notification-type      "athens/notification/type/comment"})])
+          notification-op                            (create-notification-op-for-comment @db/dsdb uid thread-uid author comment-string comment-uid)
           ops                                        (concat add-author-as-mem-or-subs
                                                              new-thread-op
                                                              [comment-op]
