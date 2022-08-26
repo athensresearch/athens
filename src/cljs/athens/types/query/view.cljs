@@ -399,24 +399,26 @@
            priority       (get card ":task/priority")
            assignee       (get card ":task/assignee")
            page           (get card ":task/page")
-           _due-date       (get card ":task/due-date")
+           _due-date      (get card ":task/due-date")
            assignee-value (parse-for-title assignee)
            status-uid     (parse-for-uid status)
-           priority-uid (parse-for-uid priority)
+           priority-uid   (parse-for-uid priority)
            priority-value (common-db/get-block-string @db/dsdb priority-uid)
-           curr-idx (.indexOf (map :block/uid all-possible-group-by-columns)
-                              status-uid)
-           first-column? (zero? curr-idx)
-           last-column? (= curr-idx (- (count all-possible-group-by-columns) 1))
+           curr-idx       (.indexOf (map :block/uid all-possible-group-by-columns)
+                                    status-uid)
+           first-column?  (zero? curr-idx)
+           last-column?   (= curr-idx (- (count all-possible-group-by-columns) 1))
            on-arrow-click (fn [direction]
-                            (let [f                    (if (= direction :left) dec inc)
+                            (let [left?                (= direction :left)
+                                  f                    (if left? dec inc)
                                   new-idx              (f curr-idx)
                                   new-status           (nth all-possible-group-by-columns new-idx)
                                   new-status-uid       (:block/uid new-status)
-                                  next-status-is-none? (= curr-idx 1)
+                                  next-status-is-none? (and (= curr-idx 1)
+                                                            left?)
                                   new-status-ref       (str "((" new-status-uid "))")]
                               (update-status uid new-status-ref next-status-is-none?)))
-           parent-uid (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))]
+           parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))]
 
 
        [:> Box {:key           (str "card-" uid "-" page "-" title)
