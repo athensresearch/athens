@@ -232,7 +232,7 @@
 
 
 (defn feature-flags-comp
-  [{:keys [comments reactions notifications properties cover-photo time-controls tasks]} update-fn]
+  [{:keys [comments reactions notifications properties cover-photo time-controls tasks queries]} update-fn]
   [setting-wrapper
    [:<>
     [header
@@ -243,6 +243,14 @@
        [:> Switch {:isChecked comments
                    :onChange #(update-fn :comments %)}
         "Comments"]]
+      [:> FormControl
+       [:> Switch {:isChecked tasks
+                   :onChange #(update-fn :tasks %)}
+        "Tasks"]]
+      [:> FormControl
+       [:> Switch {:isChecked queries
+                   :onChange #(update-fn :queries %)}
+        "Queries"]]
       [:> FormControl
        [:> Switch {:isChecked reactions
                    :onChange #(update-fn :reactions %)}
@@ -262,11 +270,8 @@
       [:> FormControl
        [:> Switch {:isChecked time-controls
                    :onChange #(update-fn :time-controls %)}
-        "Time Controls"]]
-      [:> FormControl
-       [:> Switch {:isChecked tasks
-                   :onChange #(update-fn :tasks %)}
-        "Tasks"]]]]
+        "Time Controls"]]]]
+
     [help
      [:<>
       [:p "Optional experimental features that aren't ready for prime time, but that you can still enable to try out."]

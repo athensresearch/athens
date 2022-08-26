@@ -49,6 +49,7 @@
     ;; need to require it for multimethod participation
     [athens.types.default.view]
     [athens.types.dispatcher                   :as block-type-dispatcher]
+    [athens.types.query.view]
     ;; need to require it for multimethod participation
     [athens.types.tasks.view]
     [athens.util                               :as util]
