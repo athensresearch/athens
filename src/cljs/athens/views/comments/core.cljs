@@ -253,8 +253,8 @@
   [db parent-block-uid thread-uid author comment-string comment-block-uid]
   (let [subscribers (if (empty? (get-all-mentions comment-string author))
                       (get-subscribers-for-notifying db thread-uid author)
-                      (concat (get-subscribers-for-notifying db thread-uid author)
-                              (get-all-mentions comment-string author)))]
+                      (set (concat (get-subscribers-for-notifying db thread-uid author)
+                                   (get-all-mentions comment-string author))))]
     (when subscribers
       (create-notification-op-for-users {:db                     @db/dsdb
                                          :parent-block-uid       parent-block-uid
