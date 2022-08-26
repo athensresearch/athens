@@ -850,23 +850,19 @@
 
 (reg-event-fx
   :notification-for-assigned-task
-  (fn [_ [_ uid]]
-    (let [username         (rf/subscribe [:username])
-          ;; Assuming there can be only one assignee
-          assignee         (-> (common-db/get-block-property-document @db/dsdb [:block/uid uid])
-                               (get ":task/assignee")
-                               :block/string)
+  (fn [{:keys [db]} [_ uid assignee]]
+    (let [username          (-> db :athens/persist :settings :username)
           assignee-op       (when assignee
                               (comments/create-notification-op-for-users {:db                     @db/dsdb
                                                                           :parent-block-uid       uid
                                                                           :notification-for-users [assignee]
-                                                                          :author                 @username
+                                                                          :author                 username
                                                                           :trigger-block-uid      uid
                                                                           :notification-type      "task/assigned"}))
           task-creator-op   (comments/create-notification-op-for-users {:db                     @db/dsdb
                                                                         :parent-block-uid       uid
-                                                                        :notification-for-users [(str "[[@" @username "]]")]
-                                                                        :author                 @username
+                                                                        :notification-for-users [(str "[[@" username "]]")]
+                                                                        :author                 username
                                                                         :trigger-block-uid      uid
                                                                         :notification-type      "task/created"})
           event             (common-events/build-atomic-event  (composite-ops/make-consequence-op {:op/type :mention-notifications}
