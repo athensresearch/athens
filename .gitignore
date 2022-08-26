@@ -14,7 +14,10 @@
 
 # shadow-cljs cache, port files
 /.shadow-cljs/
+
+# Intelli-j files
 .idea/
+athens.iml
 
 # local caches
 .clj-kondo/.cache
