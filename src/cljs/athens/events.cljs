@@ -858,13 +858,13 @@
                                                                           :notification-for-users [assignee]
                                                                           :author                 username
                                                                           :trigger-block-uid      uid
-                                                                          :notification-type      "task/assigned"}))
+                                                                          :notification-type      "athens/task/assigned/to"}))
           task-creator-op   (comments/create-notification-op-for-users {:db                     @db/dsdb
                                                                         :parent-block-uid       uid
                                                                         :notification-for-users [(str "[[@" username "]]")]
                                                                         :author                 username
                                                                         :trigger-block-uid      uid
-                                                                        :notification-type      "task/created"})
+                                                                        :notification-type      "athens/task/assigned/by"})
           event             (common-events/build-atomic-event  (composite-ops/make-consequence-op {:op/type :mention-notifications}
                                                                                                   (concat
                                                                                                     assignee-op
