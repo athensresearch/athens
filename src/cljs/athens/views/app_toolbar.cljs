@@ -102,7 +102,7 @@
                       :onPressMinimize           on-minimize
                       :currentPageTitle          (or @current-page-title nil)
                       :onPressClose              on-close
-                      :databaseMenu              (r/as-element [db-menu])
+                      :workspacesMenu              (r/as-element [db-menu])
                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)
                                                    (r/as-element [toolbar-presence-el]))}
                      (when (notifications/enabled?)

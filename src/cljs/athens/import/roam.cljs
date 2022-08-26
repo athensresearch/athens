@@ -219,7 +219,7 @@
               [:> ButtonGroup
                [:> Button
                 {:onClick #(.click @inputRef)}
-                "Upload database"]]]])
+                "Upload workspace"]]]])
           (let [athens-db @athens.db/dsdb
                 roam-db @transformed-roam-db
                 [shared-pages roam-pages] (shared-and-non-shared-pages athens-db roam-db)]
