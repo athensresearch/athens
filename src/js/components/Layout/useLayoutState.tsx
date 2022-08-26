@@ -1,7 +1,6 @@
 import * as React from "react";
 
 export const LayoutContext = React.createContext(null);
-export const ContextMenuContext = React.createContext(null);
 
 export const VIEW_MODES = ["regular", "compact"];
 
