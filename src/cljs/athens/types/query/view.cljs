@@ -33,7 +33,6 @@
 
 ;; CONSTANTS
 
-
 (def base-schema
   [":block/uid" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time"])
 
@@ -165,10 +164,13 @@
 
   context == {:task/status 'todo'
               :task/project '[[Project: ASD]]'"
-  [context]
+  [context f-special query-uid]
   (let [context             (js->clj context)
         new-block-props     (context-to-block-properties context)
-        parent-of-new-block (:title (dates/get-day))        ; for now, just create a new block on today's daily notes
+        parent-of-new-block (if (= f-special "On this page")
+                              {:block/uid query-uid}
+                              {:page/title (-> (dates/get-day) :title)})
+        position            (merge {:relation :last} parent-of-new-block)
         evt                 (->> (bfs/internal-representation->atomic-ops
                                    @athens.db/dsdb
                                    [#:block{:uid        (utils/gen-block-uid)
@@ -178,8 +180,7 @@
                                                                 ":task/title" #:block{:string "Untitled task"
                                                                                       :uid    (utils/gen-block-uid)}}
                                                                new-block-props)}]
-                                   {:page/title parent-of-new-block
-                                    :relation   :last})
+                                   position)
                                  (composite/make-consequence-op {:op/type :new-type})
                                  common-events/build-atomic-event)]
     (re-frame.core/dispatch [:resolve-transact-forward evt])))
@@ -455,7 +456,8 @@
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
-  (let [[_select layout s-by s-direction f-author f-special _p-order p-hide]
+  (let [query-uid uid
+        [_select layout s-by s-direction f-author f-special _p-order p-hide]
         (get* parsed-properties ["select" "layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
         s-by              (parse-for-title s-by)
         filter-author-fn  (fn [x]
@@ -477,7 +479,6 @@
         query-data        (filterv filter-author-fn query-data)
 
         query-data        (sort-table query-data s-by s-direction)]
-    ;; TODO
     [:> Box {#_#_:margin-top "40px" :width "100%"}
      (case layout
        "board"
@@ -506,11 +507,13 @@
                                                       (get swimlane-columns wrapped-group-by-column-uid))
                         ;; context-object assumes group-by is always status, because of the uid stuff
                         context-object              (cond-> {}
-                                                      (= g-by ":task/status") (assoc g-by (str "((" uid "))"))
-                                                      (not nil-swimlane-id?) (assoc sg-by swimlane-id))]
+                                                            (and (= g-by ":task/status") uid) (assoc g-by (str "((" uid "))"))
+                                                            (not nil-swimlane-id?) (assoc sg-by swimlane-id))]
+
+
                     [:> KanbanColumn {:name string :key (str swimlane-id uid)}
                      [render-cards cards-from-a-column all-possible-group-by-columns]
-                     [:> Button {:onClick    #(new-card context-object)
+                     [:> Button {:onClick    #(new-card context-object f-special query-uid)
                                  :size       "sm"
                                  :variant    "ghost"
                                  :fontWeight "light"}
@@ -607,6 +610,7 @@
         query-data        (->> (reactive/get-reactive-instances-of-key-value ":entity/type" select)
                                (map block-to-flat-map)
                                (map get-root-page))]
+
 
     (if (invalid-query? parsed-properties)
       [:> Box {:color "red"} "invalid query"]
