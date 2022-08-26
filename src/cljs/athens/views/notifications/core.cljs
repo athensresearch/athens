@@ -21,7 +21,13 @@
          "***((" notification-trigger-uid "))***")
 
     (= notification-type  "athens/notification/type/mention")
-    (str "**" notification-trigger-author "** " "mentioned you: " "**((" notification-trigger-uid "))**")))
+    (str "**" notification-trigger-author "** " "mentioned you: " "**((" notification-trigger-uid "))**")
+
+    (= notification-type "task/assigned")
+    (str "**" notification-trigger-author "** " "assigned you task: " "***((" notification-trigger-uid "))***")
+
+    (= notification-type "task/created")
+    (str "You created a task: " "***((" notification-trigger-uid "))***")))
 
 
 (defn new-notification
@@ -100,7 +106,7 @@
     [userpage-inbox-op inbox-uid]))
 
 
-(defn get-subscriber-data
+(defn get-userpage-data
   ;; Returns a list of all the subscriber maps
   ;; {:inbox-uid "some-uid"
   ;;  :name      "subscriber-name"}

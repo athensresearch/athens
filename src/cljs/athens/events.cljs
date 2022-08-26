@@ -833,13 +833,47 @@
 (reg-event-fx
   :check-for-mentions
   (fn [_ [_ uid string]]
-    (let [username    (rf/subscribe [:username])
-          mentions    (comments/get-all-mentions string @username)
-          mention-op  (when (not-empty mentions)
-                        (comments/create-mention-notifications @db/dsdb uid mentions @username string))
-          event       (common-events/build-atomic-event  (composite-ops/make-consequence-op {:op/type :mention-notifications}
-                                                                                            mention-op))]
+    (let [username          (rf/subscribe [:username])
+          mentions          (comments/get-all-mentions string @username)
+          mention-op        (when (not-empty mentions)
+                              (comments/create-notification-op-for-users {:db                     @db/dsdb
+                                                                          :parent-block-uid       uid
+                                                                          :notification-for-users mentions
+                                                                          :author                 @username
+                                                                          :trigger-block-uid      uid
+                                                                          :notification-type      "athens/notification/type/mention"}))
+          event             (common-events/build-atomic-event  (composite-ops/make-consequence-op {:op/type :mention-notifications}
+                                                                                                  mention-op))]
       (when mention-op
+        {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
+
+
+(reg-event-fx
+  :notification-for-assigned-task
+  (fn [_ [_ uid]]
+    (let [username         (rf/subscribe [:username])
+          ;; Assuming there can be only one assignee
+          assignee         (-> (common-db/get-block-property-document @db/dsdb [:block/uid uid])
+                               (get ":task/assignee")
+                               :block/string)
+          assignee-op       (when assignee
+                              (comments/create-notification-op-for-users {:db                     @db/dsdb
+                                                                          :parent-block-uid       uid
+                                                                          :notification-for-users [assignee]
+                                                                          :author                 @username
+                                                                          :trigger-block-uid      uid
+                                                                          :notification-type      "task/assigned"}))
+          task-creator-op   (comments/create-notification-op-for-users {:db                     @db/dsdb
+                                                                        :parent-block-uid       uid
+                                                                        :notification-for-users [(str "[[@" @username "]]")]
+                                                                        :author                 @username
+                                                                        :trigger-block-uid      uid
+                                                                        :notification-type      "task/created"})
+          event             (common-events/build-atomic-event  (composite-ops/make-consequence-op {:op/type :mention-notifications}
+                                                                                                  (concat
+                                                                                                    assignee-op
+                                                                                                    task-creator-op)))]
+      (when assignee-op
         {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
 
 
