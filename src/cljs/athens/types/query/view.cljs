@@ -1,12 +1,12 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
+    ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon]]
     ["/components/Query/KanbanBoard" :refer [KanbanBoard
                                              KanbanSwimlane
                                              KanbanColumn]]
     ["/components/Query/Query" :refer [QueryRadioMenu]]
     ["/components/Query/Table" :refer [QueryTable]]
-    ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon]]
     ["@chakra-ui/react" :refer [Box,
                                 IconButton
                                 HStack
