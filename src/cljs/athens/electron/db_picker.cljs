@@ -87,7 +87,7 @@
           db-exists?       (utils/db-exists? target-db)]
       (cond
         (not synced?)
-        {:dispatch [:alert/js "Database is saving your changes, if you switch now your changes will not be saved."]}
+        {:dispatch [:alert/js "Athens is saving your changes, if you switch now your changes will not be saved."]}
 
         db-exists?
         {:db         (select-db db id)
@@ -96,7 +96,7 @@
                       [:boot]]}
 
         :else
-        {:dispatch-n [[:alert/js "This database does not exist anymore, removing it from list."]
+        {:dispatch-n [[:alert/js "This workspace does not exist. It will be removed from the list."]
                       [:db-picker/remove-db target-db]]}))))
 
 

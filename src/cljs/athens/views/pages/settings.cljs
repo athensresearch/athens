@@ -204,7 +204,7 @@
                  :onChange #(handle-monitoring-click monitoring update-fn)}
       "Send usage data and diagnostics to Athens"]]
     [help
-     [:<> [:p "Athens has never and will never look at the contents of your database."]
+     [:<> [:p "Athens has never and will never look at the contents of your workspace."]
       [:p "Athens will never ever sell your data."]]]]])
 
 
@@ -305,8 +305,8 @@
       "Reset all settings to defaults"]]
     [help
      [:<> [:> Text "All settings saved between sessions will be restored to defaults."]
-      [:> Text "Databases on disk will not be deleted, but you will need to add them to Athens again."]
-      [:> Text "Athens will restart after reset and open the default database path."]]]]])
+      [:> Text "Workspaces on disk will not be deleted, but you will need to add them to Athens again."]
+      [:> Text "Athens will restart after reset and open the default workspace path."]]]]])
 
 
 (defn page
