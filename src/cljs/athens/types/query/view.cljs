@@ -6,7 +6,9 @@
                                              KanbanColumn]]
     ["/components/Query/Query" :refer [QueryRadioMenu]]
     ["/components/Query/Table" :refer [QueryTable]]
+    ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon]]
     ["@chakra-ui/react" :refer [Box,
+                                IconButton
                                 HStack
                                 Button
                                 HStack
@@ -20,6 +22,7 @@
     [athens.common.utils :as utils]
     [athens.dates :as dates]
     [athens.db :as db]
+    [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.types.core :as types]
@@ -416,8 +419,12 @@
                                   new-status     (nth all-possible-group-by-columns new-idx)
                                   new-status-uid (:block/uid new-status)
                                   new-status-ref (str "((" new-status-uid "))")]
-                              (update-status uid new-status-ref)))]
-       [:> Box {:key           (str uid page title)
+                              (update-status uid new-status-ref)))
+
+           parent-uid (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))]
+
+
+       [:> Box {:key           (str "card-" uid "-" page "-" title)
                 :borderRadius  "sm"
                 :minHeight     "4rem"
                 :listStyleType "none"
@@ -429,18 +436,24 @@
                                 :border      "1px solid",
                                 :borderColor "background.floor"}}
 
+
+
         [:> Stack
-         [:> Text {:fontWeight "bold"} title]
+         [:> Text {:fontWeight "bold"} [parse-renderer/parse-and-render title uid]]
          [:> HStack
           [:> Text assignee-value]
           [:> Text priority-value]]
-         [:> HStack
-          (when-not first-column?
-            [:> Button {:onClick #(on-arrow-click :left)}
-             "←"])
-          (when-not last-column?
-            [:> Button {:onClick #(on-arrow-click :right)}
-             "→"])]]]))])
+         [:> HStack {:justifyContent "space-between"}
+          [:> HStack
+           (when-not first-column?
+             [:> Button {:onClick #(on-arrow-click :left)}
+              "←"])
+           (when-not last-column?
+             [:> Button {:onClick #(on-arrow-click :right)}
+              "→"])]
+          [:> IconButton
+           {:onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
+           [:> ArrowRightOnBoxIcon]]]]]))])
 
 
 (defn query-el
@@ -474,7 +487,8 @@
        (let [[g-by sg-by] (get* parsed-properties ["group/by" "group/subgroup/by"])
              query-group-by                (parse-for-title g-by)
              query-subgroup-by             (parse-for-title sg-by)
-             all-possible-group-by-columns (get-reactive-property [:node/title query-group-by] ":property/enum")
+             all-possible-group-by-columns (concat [{:block/string "None" :block/uid nil}]
+                                                   (get-reactive-property [:node/title query-group-by] ":property/enum"))
              boardData                     (if (and query-subgroup-by query-group-by)
                                              (group-stuff query-group-by query-subgroup-by query-data)
                                              (group-by #(get % query-group-by) query-data))]
@@ -490,7 +504,9 @@
                 (for [possible-group-by-column all-possible-group-by-columns]
                   (let [{:block/keys [string uid]} possible-group-by-column
                         wrapped-group-by-column-uid (str "((" uid "))")
-                        cards-from-a-column         (get swimlane-columns wrapped-group-by-column-uid)
+                        cards-from-a-column         (if (= string "None")
+                                                      (get swimlane-columns nil)
+                                                      (get swimlane-columns wrapped-group-by-column-uid))
                         ;; context-object assumes group-by is always status, because of the uid stuff
                         context-object              (cond-> {}
                                                       (= g-by ":task/status") (assoc g-by (str "((" uid "))"))
