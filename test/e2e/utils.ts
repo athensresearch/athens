@@ -9,17 +9,17 @@ export const isMac = process.platform === "darwin";
 export const createLocalAthensDB = async (page: Page, dbName: string) => {
     // click db picker
     await page.click('button:nth-child(1)');
-    // click "Add Database"
-    await page.click('button:has-text("Add Database")');
+    // click "Add Workspace"
+    await page.click('button:has-text("Add Workspace")');
 
     // click "New"
     await page.click('button:has-text("New")');
 
-    // Click [placeholder="DB Name"]
-    await page.click('[placeholder="DB Name"]');
+    // Click [placeholder="Workspace name"]
+    await page.click('[placeholder="Workspace name"]');
 
-    // Fill [placeholder="DB Name"]
-    await page.fill('[placeholder="DB Name"]', dbName);
+    // Fill [placeholder="Workspace name"]
+    await page.fill('[placeholder="Workspace name"]', dbName);
 
     const [fileChooser] = await Promise.all([
         // TODO this is broken in Playwright for electron, no fix in sight

@@ -85,9 +85,9 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   */
   isCommandBarOpen: boolean;
   /**
-  * Whether the choose database dialog is open
+  * Whether the choose workspaces dialog is open
   */
-  isDatabaseDialogOpen: boolean;
+  isWorkspacesDialogOpen: boolean;
   /**
   * Whether the help dialog is open
   */
@@ -122,7 +122,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   onPressLeftSidebarToggle(): void;
   onPressRightSidebarToggle(): void;
   onPressNotification(): void;
-  databaseMenu?: React.FC;
+  workspacesMenu?: React.FC;
   notificationPopover?: React.FC;
   presenceDetails?: React.FC;
 }
@@ -178,7 +178,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressMinimize: handlePressMinimize,
     onPressMaximizeRestore: handlePressMaximizeRestore,
     onPressClose: handlePressClose,
-    databaseMenu,
+    workspacesMenu,
     notificationPopover,
     currentPageTitle,
     presenceDetails,
@@ -206,7 +206,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // If the database color mode doesn't match
+  // If the workspace color mode doesn't match
   // the chakra color mode, update the chakra color mode
   React.useEffect(() => {
     if (isThemeDark && colorMode !== 'dark') {
@@ -300,7 +300,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           >
             <MenuIcon />
           </IconButton>
-          {databaseMenu}
+          {workspacesMenu}
         </ToolbarButtonGroup>
         {/* Right side */}
         {isElectron && (

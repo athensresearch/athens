@@ -62,7 +62,7 @@
 
 
 (defn open-dialog!
-  "Allow user to open db elsewhere from filesystem."
+  "Allow user to open workspace elsewhere from filesystem."
   []
   (let [res         (.showOpenDialogSync (utils/dialog) open-dir-opts)
         db-location (first res)]
@@ -71,7 +71,7 @@
 
 
 (defn create-dialog!
-  "Create a new database."
+  "Create a new workspace"
   [db-name]
   (let [res         (.showOpenDialogSync (utils/dialog) open-dir-opts)
         db-location (first res)]
@@ -94,7 +94,7 @@
 
 
 (defn delete-dialog!
-  "Delete an existing database. Select the first db of the remaining ones if user is deleting the currently selected db."
+  "Delete an existing workspace. Select the first db of the remaining ones if user is deleting the currently selected db."
   [{:keys [id] :as db}]
   (let [remote-db?       (utils/remote-db? db)
         confirmation-msg (delete-msg-prompt db)
