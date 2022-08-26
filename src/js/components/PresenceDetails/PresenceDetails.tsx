@@ -98,7 +98,7 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
               {hostAddress && (
                 <>
                   <MenuItem onClick={() => handleCopyHostAddress(hostAddress)}>
-                    Copy link to database
+                    Copy link to workspace
                   </MenuItem>
                   {handleCopyPermalink && <MenuItem onClick={() => handleCopyPermalink()}>
                     Copy link to page

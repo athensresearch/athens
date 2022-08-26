@@ -185,6 +185,21 @@
                  (:block/string e))))))
 
 
+(defn get-reactive-instances-of-key-value
+  "Find all blocks that have key-value matching where
+  key is a string and value is a string, then find that property block's parent."
+  [k v]
+  (->> @(p/q '[:find [?parent ...]
+               :in $ ?key ?value
+               :where
+               [?eid :block/key ?k]
+               [?k :node/title ?key]
+               [?eid :block/string ?value]
+               [?eid :block/property-of ?parent]]
+             athens.db/dsdb k v)
+       (mapv get-reactive-block-document)))
+
+
 (comment
   ;; Print what ratoms are active.
   (-> (ratoms) utils/spy))

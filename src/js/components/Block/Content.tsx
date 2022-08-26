@@ -122,10 +122,6 @@ const _Content = ({ children, ...props }) => {
         borderColor: "separator.divider",
         color: "foreground.primary",
       },
-      "p": {
-        paddingBottom: "1em",
-        "&last:-child": { paddingBottom: 0 },
-      },
     }}
     {...props}
   > {children}</Box>
