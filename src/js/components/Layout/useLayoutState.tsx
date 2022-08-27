@@ -33,11 +33,17 @@ export const useLayoutState = () => {
   const mainContentRef = React.useRef();
   const toolbarRef = React.useRef();
   const [mainSidebarWidth, setMainSidebarWidth] = React.useState(300);
+  const [unsavedRightSidebarWidth, setUnsavedRightSidebarWidth] = React.useState();
+  const [isResizingLayout, setIsResizingLayout] = React.useState(false);
   const toolbarHeight = "3rem";
 
   return {
     mainSidebarWidth,
     setMainSidebarWidth,
+    unsavedRightSidebarWidth,
+    setUnsavedRightSidebarWidth,
+    isResizingLayout,
+    setIsResizingLayout,
     toolbarHeight,
     mainContentRef,
     toolbarRef,

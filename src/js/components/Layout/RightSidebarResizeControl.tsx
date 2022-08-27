@@ -1,4 +1,5 @@
 import React from 'react';
+import { LayoutContext } from './useLayoutState';
 import { Box, BoxProps } from '@chakra-ui/react';
 
 const MIN_VW = 20;
@@ -22,14 +23,34 @@ interface RightSidebarResizeControlProps extends BoxProps {
 export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps) => {
   const { onResizeSidebar, isRightSidebarOpen, rightSidebarWidth, ...rest } = props;
   const [isDragging, setIsDragging] = React.useState(false);
+  const { unsavedRightSidebarWidth, setUnsavedRightSidebarWidth,
+    setIsResizingLayout
+  } = React.useContext(LayoutContext);
+  const updateWidthTimer = React.useRef<number>();
+
+  const localSidebarWidth = unsavedRightSidebarWidth || rightSidebarWidth;
+
+  const updateWidth = (e) => {
+    if (isDragging) {
+      setIsResizingLayout(true);
+      e.preventDefault();
+      const vw = getVW(e, window);
+      const clampedVW = clamp(vw, MIN_VW, MAX_VW);
+      setUnsavedRightSidebarWidth(clampedVW);
+
+      if (updateWidthTimer.current) {
+        clearTimeout(updateWidthTimer.current);
+      }
+      updateWidthTimer.current = window.setTimeout(() => {
+        onResizeSidebar(clampedVW);
+        setUnsavedRightSidebarWidth(clampedVW);
+        setIsResizingLayout(false);
+      }, 1000);
+    }
+  }
 
   const moveHandler = (e) => {
-    if (isDragging) {
-      e.preventDefault();
-      const calcVW = getVW(e, window);
-      const clampVW = clamp(calcVW, MIN_VW, MAX_VW);
-      onResizeSidebar(clampVW);
-    }
+    updateWidth(e)
   }
 
   const mouseUpHandler = () => {
@@ -57,7 +78,7 @@ export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps)
       position="fixed"
       zIndex={100}
       opacity={0}
-      right={rightSidebarWidth + "vw"}
+      right={localSidebarWidth + "vw"}
       height="100%"
       cursor="col-resize"
       onMouseDown={() => setIsDragging(true)}
