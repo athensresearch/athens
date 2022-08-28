@@ -560,7 +560,6 @@
                     :transitionDuration "fast"
                     :transitionTimingFunction "ease-in-out"
                     :overflow "hidden"
-                    :mb 1
                     :align "stretch"}
          [:> HStack {:alignSelf "stretch"
                      :pr 2
