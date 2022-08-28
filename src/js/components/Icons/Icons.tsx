@@ -727,3 +727,11 @@ export const PauseVariableIcon = createIcon({
     </>
   ),
 });
+
+export const EditIcon = createIcon({
+  displayName: 'EditIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fillRule="evenodd" clipRule="evenodd" d="M11.4625 4.1125C11.8974 3.67758 11.8974 2.97242 11.4625 2.5375C11.0276 2.10258 10.3224 2.10258 9.8875 2.5375L9.30192 3.12308L10.8769 4.69808L11.4625 4.1125ZM10.1698 5.40518L8.59482 3.83018L3.62654 8.79846L2.5375 11.4625L5.20154 10.3735L10.1698 5.40518Z" fill="currentColor" />
+  ),
+})

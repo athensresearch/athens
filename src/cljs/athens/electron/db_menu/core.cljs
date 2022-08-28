@@ -24,7 +24,7 @@
       [:> Button {:mr "auto"
                   :onClick #(reset! merge-open? true)} "Merge from Roam"]
       (when-not (= :in-memory (:type db))
-        [:> Tooltip {:label "Can't remove last database"
+        [:> Tooltip {:label "Can't remove the last workspace"
                      :placement "right"
                      :isDisabled (< 1 (count all-dbs))}
          [:> Button {:isDisabled (= 1 (count all-dbs))
@@ -48,7 +48,7 @@
       [:> PopoverTrigger
        [:> IconButton {:p 0
                        :variant "ghost"
-                       :aria-label "Database menu"}
+                       :aria-label "Workspaces menu"}
         ;; DB Icon + Dropdown toggle
         [db-icon {:db     active-db
                   :status sync-status}]]]
@@ -76,7 +76,7 @@
                       :textTransform "uppercase"
                       :fontWeight "bold"
                       :color "foreground.secondary"}
-          "Other databases"]
+          "Other workspaces"]
          [:> VStack {:align "stretch"
                      :position "relative"
                      :spacing 0
@@ -107,4 +107,4 @@
                           :ml 10
                           :justifyContent "flex-start"}
           [:> Button {:onClick #(dispatch [:modal/toggle])}
-           "Add Database"]]]]]]]))
+           "Add Workspace"]]]]]]]))

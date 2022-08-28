@@ -168,6 +168,9 @@
                                                   (fn [_uid _d-key-down]
                                                     ;; TODO dispatch save and jump to next input
                                                     (println "TODO dispatch save and jump to next input")
+                                                    (when (= ":task/assignee"
+                                                             prop-name)
+                                                      (rf/dispatch [:notification-for-assigned-task parent-block-uid @local-value]))
                                                     (update-fn @local-value)))
                                  :tab-handler   (fn [_uid _embed-id _d-key-down]
                                                   ;; TODO implement focus on next input

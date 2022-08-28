@@ -14,14 +14,20 @@
 
 
 (defn create-notif-message
-  [{:keys [notification-type notification-trigger-uid notification-trigger-parent notification-trigger-author] :as _opts}]
+  [{:keys [notification-type notification-trigger-uid notification-trigger-parent notification-trigger-author notification-for-user] :as _opts}]
   (cond
     (= notification-type  "athens/notification/type/comment")
     (str "**" notification-trigger-author "** " "commented on: " "**((" notification-trigger-parent "))**" "\n"
          "***((" notification-trigger-uid "))***")
 
     (= notification-type  "athens/notification/type/mention")
-    (str "**" notification-trigger-author "** " "mentioned you: " "**((" notification-trigger-uid "))**")))
+    (str "**" notification-trigger-author "** " "mentioned you: " "**((" notification-trigger-uid "))**")
+
+    (= notification-type "athens/task/assigned/to")
+    (str "**" notification-trigger-author "** " "assigned you task: " "***((" notification-trigger-uid "))***")
+
+    (= notification-type "athens/task/assigned/by")
+    (str "You assigned a new task: " "***((" notification-trigger-uid "))*** to " notification-for-user)))
 
 
 (defn new-notification
@@ -100,7 +106,7 @@
     [userpage-inbox-op inbox-uid]))
 
 
-(defn get-subscriber-data
+(defn get-userpage-data
   ;; Returns a list of all the subscriber maps
   ;; {:inbox-uid "some-uid"
   ;;  :name      "subscriber-name"}
