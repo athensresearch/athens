@@ -458,7 +458,6 @@
                                  status-ref (str "((" new-status "))")]
                              (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/status"]
                                            (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))]
-    (prn status-string)
     [:> Portal
      [:> MenuList
       [:> MenuOptionGroup {:defaultValue status-uid

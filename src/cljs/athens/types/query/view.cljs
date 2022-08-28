@@ -14,6 +14,19 @@
                                 HStack
                                 Stack
                                 Text]]
+    ["/components/DnD/DndContext" :refer [DragAndDropContext]]
+    ["/components/DnD/Sortable" :refer [Sortable]]
+    ["@dnd-kit/core" :refer [DndContext,
+                             useSensors,
+                             closestCenter,
+                             KeyboardSensor,
+                             PointerSensor,
+                             DragOverlay,
+                             useSensor]]
+    ["@dnd-kit/sortable" :refer [SortableContext,
+                                 verticalListSortingStrategy,
+                                 sortableKeyboardCoordinates,
+                                 arrayMove]]
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
     [athens.common-events.bfs :as bfs]
@@ -28,7 +41,8 @@
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
     [clojure.string :refer []]
-    [re-frame.core :as rf]))
+    [re-frame.core :as rf]
+    [reagent.core :as r]))
 
 
 ;; CONSTANTS
@@ -107,6 +121,8 @@
      ":last-edit/time" (get-in last-edit [:event/time :time/ts])}))
 
 
+(declare parse-for-uid)
+
 (defn block-to-flat-map
   [block]
   (let [{:block/keys [uid string properties create edits]} block
@@ -121,7 +137,8 @@
                                         ":block/string" string}
                                        props-map
                                        create-auth-and-time
-                                       last-edit-auth-and-time)]
+                                       last-edit-auth-and-time
+                                       {":task/status" (parse-for-uid (get props-map ":task/status"))})]
     merged-map))
 
 
@@ -386,71 +403,112 @@
         [:> Heading {:size "sm"} "Save View"]]]))
 
 
-(defn render-cards
-  [cards-from-a-column all-possible-group-by-columns]
-  [:<>
-   (for [card cards-from-a-column]
-     (let [uid            (get card ":block/uid")
-           title          (get card ":task/title")
-           status         (get card ":task/status")
-           priority       (get card ":task/priority")
-           assignee       (get card ":task/assignee")
-           page           (get card ":task/page")
-           _due-date       (get card ":task/due-date")
 
-           assignee-value (parse-for-title assignee)
+(defn render-card
+  [uid]
+  (let [card           (-> (reactive/get-reactive-block-document [:block/uid uid])
+                           block-to-flat-map
+                           get-root-page)
+        title          (get card ":task/title")
+        status         (get card ":task/status")
+        priority       (get card ":task/priority")
+        assignee       (get card ":task/assignee")
+        page           (get card ":task/page")
+        _due-date      (get card ":task/due-date")
 
-           status-uid     (parse-for-uid status)
-           status-value   (common-db/get-block-string @db/dsdb status-uid)
+        assignee-value (parse-for-title assignee)
 
-           priority-uid   (parse-for-uid priority)
-           priority-value (common-db/get-block-string @db/dsdb priority-uid)
-           curr-idx       (.indexOf all-possible-group-by-columns
-                                    #:block{:string status-value
-                                            :uid    status-uid})
-           first-column?  (zero? curr-idx)
-           last-column?   (= curr-idx (- (count all-possible-group-by-columns) 1))
-           on-arrow-click (fn [direction]
-                            (let [f              (if (= direction :left) dec inc)
-                                  new-idx        (f curr-idx)
-                                  new-status     (nth all-possible-group-by-columns new-idx)
-                                  new-status-uid (:block/uid new-status)
-                                  new-status-ref (str "((" new-status-uid "))")]
-                              (update-status uid new-status-ref)))
+        status-uid     (parse-for-uid status)
+        status-value   (common-db/get-block-string @db/dsdb status-uid)
 
-           parent-uid (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))]
+        priority-uid   (parse-for-uid priority)
+        priority-value (common-db/get-block-string @db/dsdb priority-uid)
 
+        parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))
 
-       [:> Box {:key           (str "card-" uid "-" page "-" title)
-                :borderRadius  "sm"
-                :minHeight     "4rem"
-                :listStyleType "none"
-                :border        "1px solid transparent"
-                :p             2
-                :bg            "background.floor"
-                ;; :width         "300px"
-                :_hover        {:bg          "background.upper",
-                                :border      "1px solid",
-                                :borderColor "background.floor"}}
+        ;; TODO: figure out how to give unique id when one card can show up multiple times on a query, e.g. a card that belongs to multiple projects
+        id             (str uid)]
+
+    ;; TODO: add data property?
+    [:> Sortable {:id id :key id}
+     [:> Box {:borderRadius  "sm"
+              :minHeight     "4rem"
+              :listStyleType "none"
+              :border        "1px solid transparent"
+              :p             2
+              :bg            "background.floor"
+              ;; :width         "300px"
+              :_hover        {:bg          "background.upper",
+                              :border      "1px solid",
+                              :borderColor "background.floor"}}
 
 
 
-        [:> Stack
-         [:> Text {:fontWeight "bold"} [parse-renderer/parse-and-render title uid]]
-         [:> HStack
-          [:> Text assignee-value]
-          [:> Text priority-value]]
-         [:> HStack {:justifyContent "space-between"}
-          [:> HStack
-           (when-not first-column?
-             [:> Button {:onClick #(on-arrow-click :left)}
-              "←"])
-           (when-not last-column?
-             [:> Button {:onClick #(on-arrow-click :right)}
-              "→"])]
-          [:> IconButton
-           {:onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
-           [:> ArrowRightOnBoxIcon]]]]]))])
+      [:> Stack
+       [:> Text {:fontWeight "bold"} [parse-renderer/parse-and-render title uid]]
+       [:> HStack
+        [:> Text assignee-value]
+        [:> Text priority-value]]
+       [:> HStack {:justifyContent "space-between"}
+        ;; onClick events are eaten up by Sortable
+        [:> IconButton {:zIndex  1
+                        :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
+         [:> ArrowRightOnBoxIcon]]]]]]))
+
+(defn- findContainer
+  [e]
+  (.. e -active -data -current -sortable -containerId))
+
+(defn DragAndDropKanbanBoard
+  []
+  (let [active-id        (r/atom nil)
+        over-id          (r/atom nil)
+        active-container (r/atom nil)]
+    (fn [boardData all-possible-group-by-columns g-by sg-by]
+      [:> DragAndDropContext {:onDragStart (fn [e]
+                                             (reset! active-container (findContainer e))
+                                             (reset! active-id (.. e -active -id)))
+                              :onDragOver (fn [e]
+                                            (reset! over-id (.. e -over -id)))
+                              :onDragEnd   (fn [e]
+                                             (reset! active-id nil)
+                                             (reset! active-container nil))}
+       [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
+       (doall
+         (for [swimlanes boardData]
+           (let [[swimlane-id swimlane-columns] swimlanes
+                 nil-swimlane-id? (nil? swimlane-id)
+                 swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
+
+             [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
+              (for [possible-group-by-column all-possible-group-by-columns]
+                (let [{:block/keys [string uid]} possible-group-by-column
+                      wrapped-group-by-column-uid (str "((" uid "))")
+                      cards-from-a-column         (if (= string "None")
+                                                    (get swimlane-columns nil)
+                                                    (get swimlane-columns wrapped-group-by-column-uid))
+                      ;; context-object assumes group-by is always status, because of the uid stuff
+                      context-object              (cond-> {}
+                                                          (= g-by ":task/status") (assoc g-by (str "((" uid "))"))
+                                                          (not nil-swimlane-id?) (assoc sg-by swimlane-id))
+                      items?                      (seq cards-from-a-column)
+                      column-id                   (if uid uid "None")]
+                  ;; TODO: Droppable area for empty columns
+                  [:> SortableContext {:key column-id :id column-id :items (or cards-from-a-column []) :strategy verticalListSortingStrategy}
+                   [:> KanbanColumn {:name string :key column-id}
+                    (for [card cards-from-a-column]
+                      ^{:key (get card ":block/uid")}
+                      [render-card (get card ":block/uid")])
+                    [:> Button {:onClick    #(new-card context-object)
+                                :size       "sm"
+                                :variant    "ghost"
+                                :fontWeight "light"}
+                     "+ New Card"]]]))])))
+       [:> DragOverlay
+        (when @active-id
+          [:<>
+           ;;[:h1 @over-id]
+           [render-card @active-id]])]])))
 
 
 (defn query-el
@@ -490,31 +548,7 @@
                                              (group-stuff query-group-by query-subgroup-by query-data)
                                              (group-by #(get % query-group-by) query-data))]
 
-         [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
-         (doall
-           (for [swimlanes boardData]
-             (let [[swimlane-id swimlane-columns] swimlanes
-                   nil-swimlane-id? (nil? swimlane-id)
-                   swimlane-key (if nil-swimlane-id? "None" swimlane-id)]
-               ;; (prn "SWIMLANE" swimlane-id)
-               [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
-                (for [possible-group-by-column all-possible-group-by-columns]
-                  (let [{:block/keys [string uid]} possible-group-by-column
-                        wrapped-group-by-column-uid (str "((" uid "))")
-                        cards-from-a-column         (if (= string "None")
-                                                      (get swimlane-columns nil)
-                                                      (get swimlane-columns wrapped-group-by-column-uid))
-                        ;; context-object assumes group-by is always status, because of the uid stuff
-                        context-object              (cond-> {}
-                                                      (= g-by ":task/status") (assoc g-by (str "((" uid "))"))
-                                                      (not nil-swimlane-id?) (assoc sg-by swimlane-id))]
-                    [:> KanbanColumn {:name string :key (str swimlane-id uid)}
-                     [render-cards cards-from-a-column all-possible-group-by-columns]
-                     [:> Button {:onClick    #(new-card context-object)
-                                 :size       "sm"
-                                 :variant    "ghost"
-                                 :fontWeight "light"}
-                      "+ New Card"]]))])))
+         [DragAndDropKanbanBoard boardData all-possible-group-by-columns g-by sg-by]
 
          ;; this is when we were passing all data to one top-level Tsx component
          #_[:> QueryKanban {:boardData            boardData
@@ -596,6 +630,7 @@
 ;; TODO: fix properties
 ;; clicking on them can add an SVG somehow
 ;; and then if there are block/children, it is no bueno
+
 
 (defn query-block
   [block-data]
