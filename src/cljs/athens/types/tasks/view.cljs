@@ -552,7 +552,6 @@
             show-created-date? true
             _show-status?      true
             show-due-date?     true
-
             isChecked (is-checked-fn status)]
         [:> HStack {:spacing 0
                     :gridArea "content"
@@ -564,13 +563,9 @@
                     :mb 1
                     :align "stretch"}
          [:> HStack {:alignSelf "stretch"
-                     :flex "1 1 100%"
-                     :variant "ghost"
+                     :pr 2
                      :onClick #(.. % stopPropagation)
-                     :onMouseDown #(.. % stopPropagation)
-                     :alignItems "start"
-                     :size "sm"
-                     :spacing 0}
+                     :onMouseDown #(.. % stopPropagation)}
           [:> Taskbox {:status status
                        :options status-options
                        :onChange (fn [status]
