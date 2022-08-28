@@ -262,6 +262,14 @@ const components = {
             color: "var(--toast-color)",
           }
         })
+      },
+      subtle: {
+        container: {
+          borderRadius: "md"
+        },
+        title: {
+          fontWeight: "normal"
+        },
       }
     }
   },
@@ -433,8 +441,14 @@ const components = {
       }
     },
   },
+  Divider: {
+    baseStyle: {
+      borderColor: "separator.divider",
+    }
+  },
   FormLabel: {
     baseStyle: {
+      fontSize: "sm",
       color: "foreground.secondary",
     }
   },
@@ -485,6 +499,7 @@ const components = {
       sm: {
         item: {
           padding: '0.35rem 0.5rem',
+          lineHeight: '1.5',
           fontSize: "sm"
         },
         icon: {
@@ -523,6 +538,7 @@ const components = {
     baseStyle: {
       content: {
         bg: "background.upper",
+        border: "unset",
         shadow: "popover",
         _focus: {
           outline: 'none',

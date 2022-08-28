@@ -20,7 +20,7 @@
 
 
 (deftest search-in-node-title-test
-  ;; Given that database contains nodes with titles node-titles and we search
+  ;; Given that workspace contains nodes with titles node-titles and we search
   ;; for query, check that expected-titles were returned by the search.
   (are [node-titles query expected-titles]
        (with-redefs
