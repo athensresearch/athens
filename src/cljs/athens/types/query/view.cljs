@@ -405,7 +405,7 @@
 
 
 (defn render-card
-  [uid]
+  [uid over?]
   (let [card           (-> (reactive/get-reactive-block-document [:block/uid uid])
                            block-to-flat-map
                            get-root-page)
@@ -437,6 +437,12 @@
               :border        "1px solid transparent"
               :p             2
               :bg            "background.floor"
+              :position      "relative"
+              :sx            (and over? {":after" {:content          "''"
+                                                   :position         "absolute"
+                                                   :width            "96%"
+                                                   :height           "3px"
+                                                   :background-color "link"}})
               ;; :width         "300px"
               :_hover        {:bg          "background.upper",
                               :border      "1px solid",
@@ -468,11 +474,13 @@
       [:> DragAndDropContext {:onDragStart (fn [e]
                                              (reset! active-container (findContainer e))
                                              (reset! active-id (.. e -active -id)))
-                              :onDragOver (fn [e]
-                                            (reset! over-id (.. e -over -id)))
+                              :onDragOver  (fn [e]
+                                             (reset! over-id (.. e -over -id)))
                               :onDragEnd   (fn [e]
                                              (reset! active-id nil)
-                                             (reset! active-container nil))}
+                                             (reset! active-container nil)
+                                             (reset! over-id nil))}
+
        [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
        (doall
          (for [swimlanes boardData]
@@ -481,29 +489,30 @@
                  swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
 
              [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
-              (for [possible-group-by-column all-possible-group-by-columns]
-                (let [{:block/keys [string uid]} possible-group-by-column
-                      wrapped-group-by-column-uid (str "((" uid "))")
-                      cards-from-a-column         (if (= string "None")
-                                                    (get swimlane-columns nil)
-                                                    (get swimlane-columns wrapped-group-by-column-uid))
-                      ;; context-object assumes group-by is always status, because of the uid stuff
-                      context-object              (cond-> {}
-                                                          (= g-by ":task/status") (assoc g-by (str "((" uid "))"))
-                                                          (not nil-swimlane-id?) (assoc sg-by swimlane-id))
-                      items?                      (seq cards-from-a-column)
-                      column-id                   (if uid uid "None")]
-                  ;; TODO: Droppable area for empty columns
-                  [:> SortableContext {:key column-id :id column-id :items (or cards-from-a-column []) :strategy verticalListSortingStrategy}
-                   [:> KanbanColumn {:name string :key column-id}
-                    (for [card cards-from-a-column]
-                      ^{:key (get card ":block/uid")}
-                      [render-card (get card ":block/uid")])
-                    [:> Button {:onClick    #(new-card context-object)
-                                :size       "sm"
-                                :variant    "ghost"
-                                :fontWeight "light"}
-                     "+ New Card"]]]))])))
+              (doall
+                (for [possible-group-by-column all-possible-group-by-columns]
+                  (let [{:block/keys [string uid]} possible-group-by-column
+                        cards-from-a-column (if (= string "None")
+                                              (get swimlane-columns nil)
+                                              (get swimlane-columns uid))
+                        ;; context-object assumes group-by is always status, because of the uid stuff
+                        context-object      (cond-> {}
+                                                    (= g-by ":task/status") (assoc g-by (str "((" uid "))"))
+                                                    (not nil-swimlane-id?) (assoc sg-by swimlane-id))
+                        column-id           (if uid uid "None")]
+                    ;; TODO: Droppable area for empty columns
+                    [:> SortableContext {:key column-id :id column-id :items (or cards-from-a-column []) :strategy verticalListSortingStrategy}
+                     [:> KanbanColumn {:name string :key column-id}
+                      (doall
+                        (for [card cards-from-a-column]
+                          (let [card-uid (get card ":block/uid")
+                                over?    (= @over-id card-uid)]
+                            ^{:key card-uid} [render-card card-uid over?])))
+                      [:> Button {:onClick    #(new-card context-object)
+                                  :size       "sm"
+                                  :variant    "ghost"
+                                  :fontWeight "light"}
+                       "+ New Card"]]])))])))
        [:> DragOverlay
         (when @active-id
           [:<>
