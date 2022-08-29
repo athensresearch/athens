@@ -426,8 +426,11 @@
 
 
 (defn datom->tx-entry
-  [[e a v]]
-  [:db/add e a v])
+  [[e a v :as datom]]
+  (if (and (string/includes? (name a) "+")
+           (nil? (second v)))
+    (log/warn "Offending attribute entity (it has `nil` for `:block/key` value):" (pr-str datom))
+    [:db/add e a v]))
 
 
 (rf/reg-event-fx
