@@ -580,18 +580,20 @@
                    :cursor "text"
                    :lineHeight 1.4}
            [inline-task-title-2 block-uid title-uid ":task/title" "Title" true false]]
-          [:> ModalInput {:placement "right-start"
+          [:> ModalInput {:placement "left-start"
                           :isLazy true}
            [:> ModalInputTrigger
             [:> Button {:size "sm"
                         :flex "1 0 auto"
-                        :variant "ghost"
+                        :variant "outline"
+                        :borderRadius "full"
                         :onClick #(.. % stopPropagation)
                         :lineHeight "unset"
+                        :whiteSpace "unset"
                         :px 2
-                        :borderRadius "inherit"}
+                        :py 1}
             ;; description
-             #_(when (and show-description? description)
+             (when (and show-description? description)
                  [:> Text {:fontSize "sm" :flexGrow 1 :flexBasis "100%" :m 0 :py 1 :lineHeight 1.4 :color "foreground.secondary"}
                   description])
             ;; tasking/assignment
