@@ -362,7 +362,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     >
       {currentPageTitle && (
         <LocationIndicator
-          isVisible={shouldShowUnderlay}
+          isVisible={isScrolledPastTitle.mainContent}
           type="node"
           uid="123"
           title={currentPageTitle}
