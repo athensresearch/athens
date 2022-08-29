@@ -150,8 +150,7 @@
              [parse-renderer/parse-and-render (:string/local @state) uid])]]
 
          ;; Show comments when the toggle is on
-         [:> Box {:ml "4%"
-                  :w "100%"}
+         [:> PageBody
           (when (or @show-textarea?
                     (and @show-comments?
                          thread-uid))
