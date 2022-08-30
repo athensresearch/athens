@@ -1,7 +1,6 @@
 (ns athens.views.comments.inline
   (:require
-    ["/components/Block/Anchor"      :refer [Anchor]]
-    ["/components/Comments/Comments" :refer [CommentContainer]]
+    ["/components/Comments/Comments" :refer [CommentContainer CommentAnchor]]
     ["/components/Icons/Icons"       :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
     ["/timeAgo.js"                   :refer [timeAgo]]
     ["@chakra-ui/react"              :refer [AvatarGroup Button Box Text VStack Avatar HStack Badge]]
@@ -91,7 +90,7 @@
          (when-not is-followup?
            [:> HStack {:gridArea   "byline"
                        :alignItems "center"
-                       :pt 1
+                       :spacing 2
                        :lineHeight 1.25}
             [:<>
              [:> Avatar {:name author :color "#fff" :size "xs"}]
@@ -103,16 +102,20 @@
                        :color    "foreground.secondary"}
               human-timestamp]]])
 
-         [:> Anchor {:ml 0.5
-                     :height "2em"}]
+         [:> CommentAnchor {:menu menu
+                            :w 4
+                            :mx 1
+                            :mb "auto"
+                            :alignSelf "center"
+                            :height "1.5em"}]
          [:> Box {:flex "1 1 100%"
                   :gridArea "comment"
                   :alignItems "center"
                   :display "flex"
                   :overflow "hidden"
                   :fontSize "sm"
-                  :py 1
-                  :ml 1
+                  ;; :py 1
+                  ;; :ml 1
                   :sx {"> *" {:lineHeight 1.5}}}
           ;; In future this should be rendered differently for reply type and ref-type
           (if-not @is-editing
@@ -121,7 +124,8 @@
              (when edited?
                [:> Text {:fontSize "xs"
                          :as       "span"
-                         :marginLeft "0.5em"
+                         :ml 2
+                         :mb "auto"
                          :color    "foreground.tertiary"}
                 "(edited)"])]
             (let [block-o           {:block/uid      uid
@@ -157,7 +161,7 @@
 
          (when (pos? linked-refs-count)
            [:> Badge {:size "xs"
-                      :m 1.5
+                      :ml 1.5
                       :mr 0
                       :alignSelf "baseline"
                       :lineHeight "1.5"
@@ -179,7 +183,7 @@
                                  (r/as-element [:> ChevronRightIcon {:ml 1}])
                                  (r/as-element [:> ChevronDownIcon {:ml 1}]))
                 :sx {":after" {:content "''"
-                               :opacity (if @hide? 0 1)
+                               :opacity (if @hide? 0 0)
                                :position "absolute"
                                :bottom 0
                                :transition "inherit"
@@ -274,10 +278,16 @@
                                        :placeholder             "Write your comment here"}]
                 (focus-textarea-if-opening-first-time)
                 [:> Box {:px 2
-                         :mt 2
-                         :minHeight "2.125em"
+                         :pl 2
+                         :ml 8
+                         :mt 4
                          :borderRadius "sm"
                          :bg "background.attic"
                          :cursor "text"
+                         :transitionTimingFunction "ease-in-out"
+                         :transitionProperty "common"
+                         :transitionDuration "fast"
+                         :sx {".block-content" {:p 1}}
+                         :shadow "focusPlaceholder"
                          :_focusWithin {:shadow "focus"}}
                  [editor/block-editor block-o state-hooks]])])])))))

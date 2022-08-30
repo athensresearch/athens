@@ -3,6 +3,7 @@ import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
 import { AnimatePresence, motion } from 'framer-motion';
 import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
 import { Button, IconButton, Box, Collapse, VStack, BoxProps } from '@chakra-ui/react';
+import { useInView } from 'react-intersection-observer';
 
 /** Right Sidebar */
 
@@ -14,10 +15,20 @@ interface RightSidebarProps extends BoxProps {
 
 export const RightSidebar = (props: RightSidebarProps) => {
   const { children, rightSidebarWidth, isOpen } = props;
-
   const {
-    toolbarHeight
+    toolbarHeight,
+    setIsScrolledPastTitle,
   } = React.useContext(LayoutContext);
+
+  const { ref: markerRef, inView } = useInView({ threshold: 0 });
+
+  React.useEffect(() => {
+    if (inView) {
+      setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": false }));
+    } else {
+      setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": true }));
+    }
+  }, [inView, setIsScrolledPastTitle]);
 
   return (
     <AnimatePresence initial={false}>
@@ -35,12 +46,22 @@ export const RightSidebar = (props: RightSidebarProps) => {
           borderLeft="1px solid"
           borderColor="separator.divider"
           position="fixed"
+          id="right-sidebar"
           height="100vh"
           inset={0}
           pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
-          <Box width={rightSidebarWidth + "vw"}>
+          <Box
+            bg="green"
+            aria-hidden
+            position="absolute"
+            ref={markerRef}
+            height="20px"
+            top={0}
+          />
+          <Box
+            width={rightSidebarWidth + "vw"}>
             {children}
           </Box>
         </Box>
@@ -93,11 +114,11 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
           sx={{ maskImage: "linear-gradient(to right, black, black calc(100% - 1rem), transparent calc(100%))" }}
         >
           {<ChevronRightIcon
-              transform={isOpen ? "rotate(90deg)" : null}
-              transitionProperty="common"
-              transitionDuration="0.15s"
-              transitionTimingFunction="ease-in-out"
-              justifySelf="center" />}
+            transform={isOpen ? "rotate(90deg)" : null}
+            transitionProperty="common"
+            transitionDuration="0.15s"
+            transitionTimingFunction="ease-in-out"
+            justifySelf="center" />}
           {typeIcon(type, isOpen)}
           <Box
             flex="1 1 100%"
@@ -148,7 +169,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
         unmountOnExit
         zIndex={1}
         px={4}
-        onPointerDown={(e) => {e.stopPropagation()}}
+        onPointerDown={(e) => { e.stopPropagation() }}
       >
         {children}
       </Box>

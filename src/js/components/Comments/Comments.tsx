@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Text, HStack, Textarea, Button, MenuItem } from '@chakra-ui/react'
+import { Box, Text, HStack, Textarea, Button, MenuItem, MenuGroup } from '@chakra-ui/react'
 import { ContextMenuContext } from '@/App/ContextMenuContext';
 import { withErrorBoundary } from "react-error-boundary";
+import { Anchor } from '@/Block/Anchor';
 
 interface InlineCommentInputProps {
   onSubmitComment: (comment: string) => void
@@ -44,6 +45,27 @@ export const InlineCommentInput = ({ onSubmitComment }: InlineCommentInputProps)
   </HStack>)
 }
 
+export const CommentAnchor = ({ menu, ...boxProps }) => {
+  const ref = React.useRef();
+  const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
+  const isMenuOpen = getIsMenuOpen(ref);
+
+  const Menu = () => {
+    return <MenuGroup>
+      {menu.map((action) => <MenuItem key={action.children} {...action} />)}
+    </MenuGroup>
+  }
+
+  return <Anchor
+    isActive={isMenuOpen}
+    ref={ref}
+    onClick={(event) => {
+      addToContextMenu({ event, ref, component: Menu, anchorEl: ref })
+    }}
+    {...boxProps}
+  />
+}
+
 const CommentErrorMessage = () => <Text color="foreground.secondary" display="block" p={2} borderRadius="sm">Couldn't show this comment</Text>;
 
 export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp }) => {
@@ -51,22 +73,21 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
   const isMenuOpen = getIsMenuOpen(ref);
 
-  const MenuList = () => {
-    return <>{menu.map((action) => <MenuItem key={action.children} {...action} />)}</>
+  const Menu = () => {
+    return <MenuGroup>
+      {menu.map((action) => <MenuItem key={action.children} {...action} />)}
+    </MenuGroup>
   }
 
   return <Box
     ref={ref}
-    bg={isMenuOpen ? "interaction.surface.hover" : undefined}
-    onContextMenu={(event) => {
-      addToContextMenu({ event, ref, component: MenuList })
-    }}
-    mb="-1px"
-    _first={{
-      borderTopWidth: 0
-    }}
-    borderTop={isFollowUp ? null : "1px solid"}
-    borderTopColor="separator.divider"
+    bg={isMenuOpen ? "interaction.surface.hover" : "undefined"}
+    borderRadius="sm"
+    transitionProperty="colors"
+    transitionDuration="fastest"
+    m={-1}
+    p={1}
+    mt={isFollowUp ? 0 : 2}
     alignItems="stretch"
     justifyContent="stretch"
     rowGap={0}
@@ -77,6 +98,12 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
     gridTemplateAreas={`
     'byline byline byline'
     'anchor comment refs'`}
+    onContextMenu={(event) => {
+      addToContextMenu({ event, ref, component: Menu })
+    }}
+    _first={{
+      borderTopWidth: 0
+    }}
     sx={{
       "> button.anchor:not([data-active])": {
         color: "foreground.tertiary"

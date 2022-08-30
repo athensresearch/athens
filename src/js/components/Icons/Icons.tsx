@@ -523,6 +523,22 @@ export const PageIcon = createIcon({
   ),
 });
 
+export const PauseIcon = createIcon({
+  displayName: 'PauseIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fillRule="evenodd" clipRule="evenodd" d="M4.49581 2.5C4.49581 2.22385 4.71966 2 4.99581 2C5.27195 2 5.49581 2.22385 5.49581 2.5L5.49579 11.5C5.49579 11.7761 5.27193 12 4.99579 12C4.71965 12 4.49579 11.7761 4.49579 11.5L4.49581 2.5ZM9.49999 2.5C9.49999 2.22385 9.27614 2 8.99999 2C8.72385 2 8.49999 2.22385 8.49999 2.5V11.5C8.49999 11.7761 8.72385 12 8.99999 12C9.27614 12 9.49999 11.7761 9.49999 11.5V2.5Z" fill="currentColor" />
+  ),
+});
+
+export const SquareIcon = createIcon({
+  displayName: 'SquareIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fillRule="evenodd" clipRule="evenodd" d="M10 3H4C3.44772 3 3 3.44772 3 4V10C3 10.5523 3.44772 11 4 11H10C10.5523 11 11 10.5523 11 10V4C11 3.44772 10.5523 3 10 3ZM4 2C2.89543 2 2 2.89543 2 4V10C2 11.1046 2.89543 12 4 12H10C11.1046 12 12 11.1046 12 10V4C12 2.89543 11.1046 2 10 2H4Z" fill="currentColor" />
+  ),
+});
+
 export const PageAddIcon = createIcon({
   displayName: 'PageAddIcon',
   viewBox: '0 0 14 14',
@@ -669,16 +685,53 @@ export const CopyRefFillIcon = createIcon({
   ),
 });
 
-export const EditIcon = createIcon({
-  displayName: 'EditIcon',
-  viewBox: '0 0 24 24',
+export const ChevronDownVariableIcon = createIcon({
+  displayName: 'ChevronDownVariableIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fill="none" strokeWidth={1} d="M2.33331 5.25L6.99998 9.91667L11.6666 5.25" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+  ),
+});
+
+export const ArrowRightVariableIcon = createIcon({
+  displayName: 'ArrowRightVariableIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fill="none" d="M9.2 4.2L12 7M12 7L9.2 9.8M12 7L2.5 7" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+  ),
+});
+
+export const XmarkVariableIcon = createIcon({
+  displayName: 'XmarkVariableIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fill="none" d="M10.5042 3.49577L7.00002 7M3.4958 10.5042L7.00002 7M7.00002 7L3.4958 3.49577M7.00002 7L10.5042 10.5042" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+  ),
+});
+
+export const CheckmarkVariableIcon = createIcon({
+  displayName: 'CheckmarkVariableIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fill="none" d="M11.6667 3.5L5.83332 9.91667L2.91666 6.70833" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+  ),
+});
+
+export const PauseVariableIcon = createIcon({
+  displayName: 'PauseVariableIcon',
+  viewBox: '0 0 14 14',
   path: (
     <>
-    <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z">
-    </path>
-    </g>
+      <path fill="none" d="M9 2.5V11.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+      <path fill="none" d="M4.99581 2.5L4.9958 11.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
     </>
+  ),
+});
+
+export const EditIcon = createIcon({
+  displayName: 'EditIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fillRule="evenodd" clipRule="evenodd" d="M11.4625 4.1125C11.8974 3.67758 11.8974 2.97242 11.4625 2.5375C11.0276 2.10258 10.3224 2.10258 9.8875 2.5375L9.30192 3.12308L10.8769 4.69808L11.4625 4.1125ZM10.1698 5.40518L8.59482 3.83018L3.62654 8.79846L2.5375 11.4625L5.20154 10.3735L10.1698 5.40518Z" fill="currentColor" />
   ),
 })
