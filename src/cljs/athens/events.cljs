@@ -1059,27 +1059,36 @@
   - If value is empty, unindent.
   - If caret is at start and there is a value, create new block below but keep same block index."
   [rfdb uid d-key-down]
-  (let [root-embed?           (= (some-> d-key-down :target
-                                         (.. (closest ".block-embed"))
-                                         (. -firstChild)
-                                         (.getAttribute "data-uid"))
-                                 uid)
-        [uid embed-id]        (db/uid-and-embed-id uid)
-        block                 (db/get-block [:block/uid uid])
+  (let [root-embed?                (= (some-> d-key-down :target
+                                              (.. (closest ".block-embed"))
+                                              (. -firstChild)
+                                              (.getAttribute "data-uid"))
+                                      uid)
+        [uid embed-id]             (db/uid-and-embed-id uid)
+        block                      (db/get-block [:block/uid uid])
+        block-properties           (common-db/get-block-property-document @db/dsdb [:block/uid uid])
+        has-children-without-prop? (empty? (:block/children block))
         {parent-uid :block/uid
-         :as        parent}   (db/get-parent [:block/uid uid])
-        is-parent-root-embed? (= (some-> d-key-down :target
-                                         (.. (closest ".block-embed"))
-                                         (. -firstChild)
-                                         (.getAttribute "data-uid"))
-                                 (str parent-uid "-embed-" embed-id))
-        root-block?           (boolean (:node/title parent))
-        context-root-uid      (get-in rfdb [:current-route :path-params :id])
-        new-uid               (common.utils/gen-block-uid)
-        has-children?         (seq (common-db/sorted-prop+children-uids @db/dsdb [:block/uid uid]))
+         :as        parent}        (db/get-parent [:block/uid uid])
+        is-parent-root-embed?      (= (some-> d-key-down :target
+                                              (.. (closest ".block-embed"))
+                                              (. -firstChild)
+                                              (.getAttribute "data-uid"))
+                                      (str parent-uid "-embed-" embed-id))
+        root-block?                (boolean (:node/title parent))
+        context-root-uid           (get-in rfdb [:current-route :path-params :id])
+        new-uid                    (common.utils/gen-block-uid)
+        has-children?              (seq (common-db/sorted-prop+children-uids @db/dsdb [:block/uid uid]))
 
         {:keys [value start]} d-key-down
         event                 (cond
+                                (and (not-empty (get block-properties ":comment/threads"))
+                                     has-children-without-prop?
+                                     (= start (count value)))
+                                [:enter/new-block {:block    block
+                                                   :parent   parent
+                                                   :new-uid  new-uid
+                                                   :embed-id embed-id}]
                                 (:block/key block)
                                 [:enter/split-block {:uid        uid
                                                      :value      value
