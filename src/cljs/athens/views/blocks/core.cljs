@@ -6,6 +6,7 @@
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/Icons/Icons"                 :refer [ArchiveIcon
+                                                       CheckmarkIcon
                                                        ArrowRightOnBoxIcon
                                                        BlockEmbedIcon
                                                        ChatBubbleIcon
@@ -419,7 +420,7 @@
                                                                  (rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))}]
                                        (when-not (= block-type "[[athens/task]]")
                                          [:> MenuItem {:children "Convert to Task"
-                                                       :icon     (r/as-element [:> BlockEmbedIcon])
+                                                       :icon     (r/as-element [:> CheckmarkIcon])
                                                        :onClick  #(convert-anon-block-to-task block-o)}])
                                        [:> MenuItem {:children (if (> (count @selected-items) 1)
                                                                  "Copy selected block refs"
