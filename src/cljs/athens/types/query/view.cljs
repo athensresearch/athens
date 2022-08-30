@@ -185,10 +185,13 @@
 
   context == {:task/status 'todo'
               :task/project '[[Project: ASD]]'"
-  [context]
+  [context f-special query-uid]
   (let [context             (js->clj context)
         new-block-props     (context-to-block-properties context)
-        parent-of-new-block (:title (dates/get-day))        ; for now, just create a new block on today's daily notes
+        parent-of-new-block (if (= f-special "On this page")
+                              {:block/uid query-uid}
+                              {:page/title (-> (dates/get-day) :title)})
+        position            (merge {:relation :last} parent-of-new-block)
         evt                 (->> (bfs/internal-representation->atomic-ops
                                    @athens.db/dsdb
                                    [#:block{:uid        (utils/gen-block-uid)
@@ -198,8 +201,7 @@
                                                                 ":task/title" #:block{:string "Untitled task"
                                                                                       :uid    (utils/gen-block-uid)}}
                                                                new-block-props)}]
-                                   {:page/title parent-of-new-block
-                                    :relation   :last})
+                                   position)
                                  (composite/make-consequence-op {:op/type :new-type})
                                  common-events/build-atomic-event)]
     (re-frame.core/dispatch [:resolve-transact-forward evt])))
@@ -511,74 +513,79 @@
 
 
 (defn DragAndDropKanbanBoard
-  []
-  (let [active-id        (r/atom nil)
-        over-id          (r/atom nil)]
-    (fn [boardData all-possible-group-by-columns g-by sg-by]
-      [:> DragAndDropContext {:onDragStart (fn [e]
-                                             (reset! active-id (.. e -active -id)))
-                              :onDragOver  (fn [e]
-                                             (reset! over-id (.. e -over -id)))
-                              :onDragEnd   (fn [e]
-                                             ;; TODO: should context metadata be stored at the card level or the container level?
-                                             (let [over-container           (find-container-id e :over)
-                                                   active-container         (find-container-id e :active)
-                                                   over-container-context   (get-container-context over-container)
-                                                   active-container-context (get-container-context active-container)]
-                                               (update-card-container @active-id active-container-context over-container-context)
-                                               (reset! active-id nil)
-                                               (reset! over-id nil)))}
+  [_props]
+  (let [active-id (r/atom nil)
+        over-id   (r/atom nil)]
+    (fn [props]
+      (let [{:keys [query-uid f-special boardData all-possible-group-by-columns groupBy subgroupBy]} props]
+        [:> DragAndDropContext {:onDragStart (fn [e]
+                                               (reset! active-id (.. e -active -id)))
+                                :onDragOver  (fn [e]
+                                               (reset! over-id (.. e -over -id)))
+                                :onDragEnd   (fn [e]
+                                               ;; TODO: should context metadata be stored at the card level or the container level?
+                                               (let [over-container           (find-container-id e :over)
+                                                     active-container         (find-container-id e :active)
+                                                     over-container-context   (get-container-context over-container)
+                                                     active-container-context (get-container-context active-container)]
+                                                 (update-card-container @active-id active-container-context over-container-context)
+                                                 (reset! active-id nil)
+                                                 (reset! over-id nil)))}
 
-       [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
-       (doall
-         (for [swimlanes boardData]
-           (let [[swimlane-id swimlane-columns] swimlanes
-                 nil-swimlane-id? (nil? swimlane-id)
-                 ;; TODO: doesn't handle empty assignee well, or values that are not expected
-                 swimlane-id      (if swimlane-id swimlane-id "None")
-                 swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
+         [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
+         (doall
+           (for [swimlanes boardData]
+             (let [[swimlane-id swimlane-columns] swimlanes
+                   nil-swimlane-id? (nil? swimlane-id)
+                   ;; TODO: doesn't handle empty assignee well, or values that are not expected
+                   swimlane-id      (if swimlane-id swimlane-id "None")
+                   swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
 
-             [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
-              (doall
-                (for [possible-group-by-column all-possible-group-by-columns]
-                  (let [{:block/keys [string uid]} possible-group-by-column
-                        cards-from-a-column (if (= string "None")
-                                              (get swimlane-columns nil)
-                                              (get swimlane-columns uid))
-                        ;; context-object assumes group-by is always status, because of the uid stuff
-                        context-object      (cond-> {}
-                                                    (= g-by ":task/status") (assoc g-by (str "((" uid "))"))
-                                                    (not nil-swimlane-id?) (assoc sg-by swimlane-id))
-                        column-id           (if uid uid "None")
-                        column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
+               [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
+                (doall
+                  (for [possible-group-by-column all-possible-group-by-columns]
+                    (let [{:block/keys [string uid]} possible-group-by-column
+                          cards-from-a-column (if (= string "None")
+                                                (get swimlane-columns nil)
+                                                (get swimlane-columns uid))
+                          ;; context-object assumes group-by is always status, because of the uid stuff
+                          context-object      (cond-> {}
+                                                      (and (= groupBy ":task/status")
+                                                           (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
+                                                      (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
+                          column-id           (if uid uid "None")
+                          column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
 
-                    [:> Droppable {:key column-id :id column-id}
-                     (fn [over?]
-                       (r/as-element
-                         [:> SortableContext {:items (or cards-from-a-column [])
-                                              :strategy verticalListSortingStrategy}
-                          [:> KanbanColumn {:name string :key column-id :isOver over?}
-                           (doall
-                             (for [card cards-from-a-column]
-                               (let [card-uid (get card ":block/uid")
-                                     over?    (= @over-id card-uid)]
-                                 ^{:key card-uid} [render-card card-uid over?])))
-                           [:> Button {:onClick    #(new-card context-object)
-                                       :size       "sm"
-                                       :variant    "ghost"
-                                       :fontWeight "light"}
-                            "+ New Card"]]]))])))])))
+                      [:> Droppable {:key column-id :id column-id}
+                       (fn [over?]
+                         (r/as-element
+                           [:> SortableContext {:items (or cards-from-a-column [])
+                                                :strategy verticalListSortingStrategy}
+                            [:> KanbanColumn {:name string :key column-id :isOver over?}
+                             (doall
+                               (for [card cards-from-a-column]
+                                 (let [card-uid (get card ":block/uid")
+                                       over?    (= @over-id card-uid)]
+                                   ^{:key card-uid} [render-card card-uid over?])))
+                             [:> Button {:onClick    #(new-card context-object f-special query-uid)
+                                         :size       "sm"
+                                         :variant    "ghost"
+                                         :fontWeight "light"}
+                              "+ New Card"]]]))])))])))
 
-       [:> DragOverlay
-        (when @active-id
-          [:<>
-           ;;[:h1 @over-id]
-           [render-card @active-id]])]])))
+         [:> DragOverlay
+          (when @active-id
+            [:<>
+             ;;[:h1 @over-id]
+             [render-card @active-id]])]]))))
+{:event/id #uuid "7155a78b-dcca-414b-965e-838d119b5f8f", :event/type :op/atomic, :event/op {:op/type :composite/consequence, :op/atomic? false, :op/trigger {:op/type :new-type}, :op/consequences [{:op/type :block/new, :op/atomic? true, :op/args {:block/uid "49b0b08cc", :block/position {:relation :last, :block/uid "702856c27"}}} {:op/type :block/new, :op/atomic? true, :op/args {:block/uid "f9137ace4", :block/position {:block/uid "49b0b08cc", :relation {:page/title ":entity/type"}}}} {:op/type :block/new, :op/atomic? true, :op/args {:block/uid "ff25779b0", :block/position {:block/uid "49b0b08cc", :relation {:page/title ":task/title"}}}} {:op/type :block/new, :op/atomic? true, :op/args {:block/uid "ae1760154", :block/position {:block/uid "49b0b08cc", :relation {:page/title ":task/assignee"}}}} {:op/type :block/new, :op/atomic? true, :op/args {:block/uid "161adb3dd", :block/position {:block/uid "49b0b08cc", :relation {:page/title ":task/status"}}}} {:op/type :block/save, :op/atomic? true, :op/args {:block/uid "49b0b08cc", :block/string ""}} {:op/type :block/save, :op/atomic? true, :op/args {:block/uid "f9137ace4", :block/string "[[athens/task]]"}} {:op/type :block/save, :op/atomic? true, :op/args {:block/uid "ff25779b0", :block/string "Untitled task"}} {:op/type :block/save, :op/atomic? true, :op/args {:block/uid "ae1760154", :block/string "@Filipe"}} {:op/type :block/save, :op/atomic? true, :op/args {:block/uid "161adb3dd", :block/string "(())"}}]}, :event/create-time 1661858169029, :event/presence-id "Jeff"}
+
 
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
-  (let [[_select layout s-by s-direction f-author f-special _p-order p-hide]
+  (let [query-uid uid
+        [_select layout s-by s-direction f-author f-special _p-order p-hide]
         (get* parsed-properties ["select" "layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
         s-by              (parse-for-title s-by)
         filter-author-fn  (fn [x]
@@ -613,7 +620,12 @@
                                              (group-stuff query-group-by query-subgroup-by query-data)
                                              (group-by #(get % query-group-by) query-data))]
 
-         [DragAndDropKanbanBoard boardData all-possible-group-by-columns g-by sg-by]
+         [DragAndDropKanbanBoard {:query-uid                     query-uid
+                                  :f-special                     f-special
+                                  :boardData                     boardData
+                                  :all-possible-group-by-columns all-possible-group-by-columns
+                                  :groupBy                       g-by
+                                  :subgroupBy                    sg-by}]
 
          ;; this is when we were passing all data to one top-level Tsx component
          #_[:> QueryKanban {:boardData            boardData
