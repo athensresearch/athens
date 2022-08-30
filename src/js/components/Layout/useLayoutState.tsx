@@ -34,11 +34,14 @@ export const useLayoutState = () => {
   const mainContentRef = React.useRef();
   const toolbarRef = React.useRef();
   const [mainSidebarWidth, setMainSidebarWidth] = React.useState(300);
+  const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState({});
   const toolbarHeight = "3rem";
 
   return {
     mainSidebarWidth,
     setMainSidebarWidth,
+    isScrolledPastTitle,
+    setIsScrolledPastTitle,
     toolbarHeight,
     mainContentRef,
     toolbarRef,
