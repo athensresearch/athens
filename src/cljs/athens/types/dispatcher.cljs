@@ -3,7 +3,8 @@
 
 (defn if-not-disabled
   [block-type feature-flags]
-  (let [type->ff {"[[athens/task]]" :tasks}]
+  (let [type->ff {"[[athens/task]]" :tasks
+                  "[[athens/query]]" :queries}]
     (if-let [ff (type->ff block-type)]
       (and (feature-flags ff) block-type)
       block-type)))

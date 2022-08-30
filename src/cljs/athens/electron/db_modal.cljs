@@ -27,7 +27,7 @@
    [:> FormControl {:isReadOnly true}
     [:> FormLabel (if @loading
                     "No DB Found At"
-                    "Current database location")]
+                    "Current workspace location")]
     [:> HStack
      [:> Text {:as "output"
                :borderRadius "md"
@@ -71,7 +71,7 @@
        (->>
          [:> VStack {:spacing 4}
           [:> FormControl
-           [:> FormLabel "Database name"]
+           [:> FormLabel "Workspace name"]
            [:> Input {:defaultValue @name
                       :onChange #(reset! name (js-event->val %))}]]
           [:> FormControl
@@ -109,7 +109,7 @@
        [:> ModalOverlay]
        [:> ModalContent
         [:> ModalHeader
-         "Add Database"]
+         "Add Workspace"]
         (when-not @loading
           [:> ModalCloseButton])
         [:> ModalBody {:display "contents"}
@@ -120,10 +120,10 @@
                    :display "contents"
                    :defaultIndex (if utils/electron? 0 1)}
           (when utils/electron?
-            [:> TabList
-             [:> Tab "Open Local"]
-             [:> Tab "Join Remote"]
-             [:> Tab "Create New"]])
+            [:> TabList {:px 2}
+             [:> Tab "Open from file"]
+             [:> Tab "Join remote "]
+             [:> Tab "Create new"]])
           [:> TabPanels {:display "contents"}
            [:> TabPanel {:display "contents"}
             [open-local-comp loading selected-db]]

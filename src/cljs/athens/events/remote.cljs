@@ -37,7 +37,7 @@
   :remote/connection-failed
   (fn [_ _]
     (log/warn ":remote/connection-failed")
-    {:fx [[:dispatch-n [[:alert/js "Was not able to connect to the remote database."]
+    {:fx [[:dispatch-n [[:alert/js "Couldn't connect to remote workspace."]
                         [:conn-status :disconnected]
                         [:db-picker/select-default-db]]]]}))
 
