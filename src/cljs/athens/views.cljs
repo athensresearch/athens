@@ -2,7 +2,6 @@
   (:require
     ["/components/App/ContextMenuContext" :refer [ContextMenuProvider]]
     ["/components/Layout/MainContent" :refer [MainContent]]
-    ["/components/Layout/RightSidebarResizeControl" :refer [RightSidebarResizeControl]]
     ["/components/Layout/useLayoutState" :refer [LayoutProvider]]
     ["/theme/theme" :refer [theme]]
     ["@chakra-ui/react" :refer [ChakraProvider Flex VStack HStack Spinner Center]]
