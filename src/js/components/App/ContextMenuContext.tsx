@@ -41,6 +41,15 @@ const useContextMenuState = () => {
     const { event, ref, component, onClose, anchorEl, isExclusive } = props;
     event.preventDefault();
 
+    if (!component) {
+      console.warn("No component provided to addToContextMenu");
+      return;
+    }
+    if (!event) {
+      console.warn("No event provided to addToContextMenu");
+      return;
+    }
+
     // When exclusive, don't add to or update the menu
     if (menuState.isExclusive && menuState.isOpen) {
       return;

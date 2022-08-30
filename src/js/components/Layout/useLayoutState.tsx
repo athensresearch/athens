@@ -37,7 +37,10 @@ export const useLayoutState = (props) => {
   const [mainSidebarWidth, setMainSidebarWidth] = React.useState(300);
   const [unsavedRightSidebarWidth, setUnsavedRightSidebarWidth] = React.useState(rightSidebarWidth);
   const [isResizingLayout, setIsResizingLayout] = React.useState(false);
+  const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState({});
   const toolbarHeight = "3rem";
+
+  console.log(isScrolledPastTitle);
 
   return {
     mainSidebarWidth,
@@ -46,6 +49,8 @@ export const useLayoutState = (props) => {
     setUnsavedRightSidebarWidth,
     isResizingLayout,
     setIsResizingLayout,
+    isScrolledPastTitle,
+    setIsScrolledPastTitle,
     toolbarHeight,
     mainContentRef,
     toolbarRef,

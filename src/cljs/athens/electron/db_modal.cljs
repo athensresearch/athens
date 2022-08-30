@@ -120,10 +120,10 @@
                    :display "contents"
                    :defaultIndex (if utils/electron? 0 1)}
           (when utils/electron?
-            [:> TabList
-             [:> Tab "Open Local Workspace"]
-             [:> Tab "Join Remote Workspace"]
-             [:> Tab "Create Workspace"]])
+            [:> TabList {:px 2}
+             [:> Tab "Open from file"]
+             [:> Tab "Join remote "]
+             [:> Tab "Create new"]])
           [:> TabPanels {:display "contents"}
            [:> TabPanel {:display "contents"}
             [open-local-comp loading selected-db]]

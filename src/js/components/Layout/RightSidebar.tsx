@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { RightSidebarResizeControl } from "./RightSidebarResizeControl";
 import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
 import { Button, IconButton, Box, Collapse, VStack, BoxProps } from '@chakra-ui/react';
+import { useInView } from 'react-intersection-observer';
 
 /** Right Sidebar */
 
@@ -18,9 +19,25 @@ export const RightSidebar = (props: RightSidebarProps) => {
   const { children, onResize, isOpen } = props;
   const {
     toolbarHeight,
+    isScrolledPastTitle,
+    setIsScrolledPastTitle,
     isResizingLayout,
     unsavedRightSidebarWidth
   } = React.useContext(LayoutContext);
+
+  const { ref: markerRef, inView } = useInView({ threshold: 0 });
+
+  React.useEffect(() => {
+    if (inView) {
+      if (isScrolledPastTitle["rightSidebar"]) {
+        setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": false }));
+      }
+    } else {
+      if (!isScrolledPastTitle["rightSidebar"]) {
+        setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": true }));
+      }
+    }
+  }, [inView, setIsScrolledPastTitle]);
 
   const layoutAnimation = {
     ...layoutAnimationProps(unsavedRightSidebarWidth + "vw"),
@@ -50,6 +67,7 @@ export const RightSidebar = (props: RightSidebarProps) => {
           borderLeft="1px solid"
           borderColor="separator.divider"
           position="fixed"
+          id="right-sidebar"
           height="100vh"
           inset={0}
           pt={`calc(${toolbarHeight} + 1rem)`}
@@ -58,7 +76,16 @@ export const RightSidebar = (props: RightSidebarProps) => {
           <RightSidebarResizeControl
             onResizeSidebar={onResize}
           />
-          <Box width={unsavedRightSidebarWidth + "vw"}>
+          <Box
+            bg="green"
+            aria-hidden
+            position="absolute"
+            ref={markerRef}
+            height="20px"
+            top={0}
+          />
+          <Box
+            width={unsavedRightSidebarWidth + "vw"}>
             {children}
           </Box>
         </Box>
