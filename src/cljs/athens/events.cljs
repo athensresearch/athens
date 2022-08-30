@@ -1167,7 +1167,7 @@
 
                                               (and (:block/open block)
                                                    embed-id root-embed?
-                                                  (not caret-at-the-end-of-text))
+                                                   (not caret-at-the-end-of-text))
                                               [:enter/split-block {:uid        uid
                                                                    :value      value
                                                                    :index      start
