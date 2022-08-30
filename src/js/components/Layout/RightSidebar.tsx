@@ -77,7 +77,6 @@ export const RightSidebar = (props: RightSidebarProps) => {
             onResizeSidebar={onResize}
           />
           <Box
-            bg="green"
             aria-hidden
             position="absolute"
             ref={markerRef}
