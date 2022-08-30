@@ -1,6 +1,7 @@
 import * as React from "react";
 import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "./useLayoutState";
 import { AnimatePresence, motion } from 'framer-motion';
+import { RightSidebarResizeControl } from "./RightSidebarResizeControl";
 import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
 import { Button, IconButton, Box, Collapse, VStack, BoxProps } from '@chakra-ui/react';
 
@@ -9,24 +10,22 @@ import { Button, IconButton, Box, Collapse, VStack, BoxProps } from '@chakra-ui/
 
 interface RightSidebarProps extends BoxProps {
   isOpen: boolean;
+  onResize: (size: number) => void;
   rightSidebarWidth: number;
 }
 
 export const RightSidebar = (props: RightSidebarProps) => {
-  const { children, rightSidebarWidth, isOpen } = props;
-
+  const { children, onResize, isOpen } = props;
   const {
     toolbarHeight,
     isResizingLayout,
     unsavedRightSidebarWidth
   } = React.useContext(LayoutContext);
 
-  const localSidebarWidth = unsavedRightSidebarWidth || rightSidebarWidth;
-
   const layoutAnimation = {
-    ...layoutAnimationProps(localSidebarWidth + "vw"),
+    ...layoutAnimationProps(unsavedRightSidebarWidth + "vw"),
     animate: {
-      width: localSidebarWidth + "vw",
+      width: unsavedRightSidebarWidth + "vw",
       opacity: 1,
       transition: isResizingLayout ? {
         ...layoutAnimationTransition,
@@ -56,7 +55,10 @@ export const RightSidebar = (props: RightSidebarProps) => {
           pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
-          <Box width={localSidebarWidth + "vw"}>
+          <RightSidebarResizeControl
+            onResizeSidebar={onResize}
+          />
+          <Box width={unsavedRightSidebarWidth + "vw"}>
             {children}
           </Box>
         </Box>

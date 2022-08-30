@@ -43,7 +43,7 @@
        [:> ChakraProvider {:theme theme,
                            :bg "background.basement"}
         [:> ContextMenuProvider
-         [:> LayoutProvider
+         [:> LayoutProvider {:rightSidebarWidth @right-sidebar-width}
           [help-popup]
           [alert]
           [athena-component]
@@ -87,7 +87,4 @@
                      [:> MainContent {:rightSidebarWidth @right-sidebar-width
                                       :isRightSidebarOpen @right-sidebar-open?}
                       [pages/view]]
-                     [:> RightSidebarResizeControl {:rightSidebarWidth @right-sidebar-width
-                                                    :isRightSidebarOpen @right-sidebar-open?
-                                                    :onResizeSidebar #(rf/dispatch [:right-sidebar/set-width %])}]
                      [right-sidebar/right-sidebar]]]])]]]])))

@@ -16,19 +16,16 @@ const getVW = (e, window) => {
 
 interface RightSidebarResizeControlProps extends BoxProps {
   onResizeSidebar: (size: number) => void;
-  isRightSidebarOpen: boolean;
-  rightSidebarWidth: number;
 }
 
 export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps) => {
-  const { onResizeSidebar, isRightSidebarOpen, rightSidebarWidth, ...rest } = props;
+  const { onResizeSidebar, ...rest } = props;
   const [isDragging, setIsDragging] = React.useState(false);
   const { unsavedRightSidebarWidth, setUnsavedRightSidebarWidth,
     setIsResizingLayout
   } = React.useContext(LayoutContext);
-  const updateWidthTimer = React.useRef<number>();
 
-  const localSidebarWidth = unsavedRightSidebarWidth || rightSidebarWidth;
+  const updateWidthTimer = React.useRef<number>();
 
   const updateWidth = (e) => {
     if (isDragging) {
@@ -41,11 +38,11 @@ export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps)
       if (updateWidthTimer.current) {
         clearTimeout(updateWidthTimer.current);
       }
+
       updateWidthTimer.current = window.setTimeout(() => {
-        onResizeSidebar(clampedVW);
-        setUnsavedRightSidebarWidth(clampedVW);
+        onResizeSidebar(unsavedRightSidebarWidth);
         setIsResizingLayout(false);
-      }, 1000);
+      }, 1000)
     }
   }
 
@@ -66,27 +63,23 @@ export const RightSidebarResizeControl = (props: RightSidebarResizeControlProps)
     }
   });
 
-  if (!isRightSidebarOpen) {
-    return null;
-  }
-
   return (
     <Box
       as="button"
       width="3px"
-      transform="translateX(50%)"
-      position="fixed"
       zIndex={100}
       opacity={0}
-      right={localSidebarWidth + "vw"}
-      height="100%"
+      position="absolute"
+      left={0}
+      top={0}
+      bottom={0}
       cursor="col-resize"
       onMouseDown={() => setIsDragging(true)}
       onMouseMove={moveHandler}
       onMouseUp={mouseUpHandler}
       bg="link"
       transition="opacity 0.2s ease-in-out"
-      _hover={{ opacity: 1 }}
+      _hover={{ opacity: 0.6 }}
       {...isDragging && { opacity: 1 }}
       {...rest}
     >

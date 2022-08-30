@@ -4,15 +4,13 @@ import * as React from "react";
 import { LayoutContext, layoutAnimationTransition } from "./useLayoutState";
 
 /** Main Content */
-export const MainContent = ({ children, isRightSidebarOpen, rightSidebarWidth }) => {
+export const MainContent = ({ children, isRightSidebarOpen }) => {
   const {
     toolbarHeight,
     mainContentRef,
     isResizingLayout,
     unsavedRightSidebarWidth
   } = React.useContext(LayoutContext);
-
-  const localSidebarWidth = unsavedRightSidebarWidth || rightSidebarWidth;
 
   return (
     // AnimatePresence is required to prevent
@@ -34,7 +32,7 @@ export const MainContent = ({ children, isRightSidebarOpen, rightSidebarWidth })
           "--app-header-height": toolbarHeight,
         }}
         animate={{
-          paddingRight: isRightSidebarOpen ? localSidebarWidth + "vw" : 0,
+          paddingRight: isRightSidebarOpen ? unsavedRightSidebarWidth + "vw" : 0,
           transition: isResizingLayout ? {
             ...layoutAnimationTransition,
             mass: 0,
