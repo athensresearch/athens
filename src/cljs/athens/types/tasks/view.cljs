@@ -546,25 +546,24 @@
             show-created-date? true
             _show-status?      true
             show-due-date?     true]
-        [:> HStack {:spacing                  0
+        [:> HStack {:spacing                  1
                     :gridArea                 "content"
                     :borderRadius             "md"
+                    :alignItems               "baseline"
                     :transitionProperty       "colors"
                     :transitionDuration       "fast"
                     :transitionTimingFunction "ease-in-out"
                     :overflow                 "hidden"
                     :align                    "stretch"}
-         [:> HStack {:alignSelf   "stretch"
-                     :pr          2
-                     :onClick     #(.. % stopPropagation)
-                     :onMouseDown #(.. % stopPropagation)}
           [:> Taskbox {:status   status
                        :options  status-options
+                       :position "relative"
+                       :top "0.2em"
                        :onChange (fn [status]
                                    (let [new-status status
                                          status-ref (str "((" new-status "))")]
                                      (rf/dispatch [:graph/update-in [:block/uid block-uid] [":task/status"]
-                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}]]
+                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}]
          [:> Box {:flex       "1 1 100%"
                   :py         1
                   :cursor     "text"
@@ -626,9 +625,9 @@
   types/BlockTypeProtocol
 
   (inline-ref-view
-    [_this _block-data _attr _ref-uid _uid _callbacks _with-breadcrumb?]
-    (let [block (reactive/get-reactive-block-document [:block/uid _ref-uid])]
-      [task-el _this block _callbacks true]))
+   [_this _block-data _attr _ref-uid _uid _callbacks _with-breadcrumb?]
+   (let [block (reactive/get-reactive-block-document [:block/uid _ref-uid])]
+     [:> Flex {:display "inline-flex"  :gap 1} [:> Taskbox] [:> Text (:block/string block)]]))
 
 
   (outline-view
@@ -641,7 +640,9 @@
 
 
   (transclusion-view
-    [_this _block-el _block-uid _callback _transclusion-scope])
+   [_this _block-el block-uid _callback _transclusion-scope]
+   (let [block (reactive/get-reactive-block-document [block-uid])]
+     [task-el _this block true]))
 
 
   (zoomed-in-view
@@ -649,11 +650,12 @@
 
 
   (supported-breadcrumb-styles
-    [_this])
+   [_this]
+   #{:string})
 
 
   (breadcrumbs-view
-    [_this _block-data _callbacks _breadcrumb-style]))
+   [_this _block-data _callbacks _breadcrumb-style]))
 
 
 (defmethod dispatcher/block-type->protocol "[[athens/task]]" [_k _args-map]
