@@ -23,7 +23,6 @@ export const DragAndDropContext = (props) => {
   return (
     <DndContext
       sensors={useSensors(useSensor(PointerSensor))}
-      collisionDetection={closestCorners}
       {...rest}
     >
       {children}

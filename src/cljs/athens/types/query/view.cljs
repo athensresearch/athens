@@ -18,12 +18,9 @@
     ["/components/DnD/Droppable" :refer [Droppable]]
     ["/components/DnD/Sortable" :refer [Sortable]]
     ["@dnd-kit/core" :refer [DndContext,
-                             useSensors,
-                             closestCenter,
-                             KeyboardSensor,
+                             closestCorners,
                              PointerSensor,
-                             DragOverlay,
-                             useSensor]]
+                             DragOverlay,]]
     ["@dnd-kit/sortable" :refer [SortableContext,
                                  verticalListSortingStrategy,
                                  sortableKeyboardCoordinates,
@@ -518,16 +515,19 @@
         over-id   (r/atom nil)]
     (fn [props]
       (let [{:keys [query-uid f-special boardData all-possible-group-by-columns groupBy subgroupBy]} props]
-        [:> DragAndDropContext {:onDragStart (fn [e]
+        [:> DragAndDropContext {:collisionDetection closestCorners
+                                :onDragStart (fn [e]
                                                (reset! active-id (.. e -active -id)))
                                 :onDragOver  (fn [e]
                                                (reset! over-id (.. e -over -id)))
                                 :onDragEnd   (fn [e]
                                                ;; TODO: should context metadata be stored at the card level or the container level?
+                                               (js/console.log e)
                                                (let [over-container           (find-container-id e :over)
                                                      active-container         (find-container-id e :active)
                                                      over-container-context   (get-container-context over-container)
                                                      active-container-context (get-container-context active-container)]
+                                                 (prn over-container active-container)
                                                  (update-card-container @active-id active-container-context over-container-context)
                                                  (reset! active-id nil)
                                                  (reset! over-id nil)))}
@@ -559,7 +559,8 @@
                       [:> Droppable {:key column-id :id column-id}
                        (fn [over?]
                          (r/as-element
-                           [:> SortableContext {:items (or cards-from-a-column [])
+                           [:> SortableContext {:id column-id
+                                                :items (or cards-from-a-column [])
                                                 :strategy verticalListSortingStrategy}
                             [:> KanbanColumn {:name string :key column-id :isOver over?}
                              (doall
@@ -578,7 +579,6 @@
             [:<>
              ;;[:h1 @over-id]
              [render-card @active-id]])]]))))
-{:event/id #uuid "7155a78b-dcca-414b-965e-838d119b5f8f", :event/type :op/atomic, :event/op {:op/type :composite/consequence, :op/atomic? false, :op/trigger {:op/type :new-type}, :op/consequences [{:op/type :block/new, :op/atomic? true, :op/args {:block/uid "49b0b08cc", :block/position {:relation :last, :block/uid "702856c27"}}} {:op/type :block/new, :op/atomic? true, :op/args {:block/uid "f9137ace4", :block/position {:block/uid "49b0b08cc", :relation {:page/title ":entity/type"}}}} {:op/type :block/new, :op/atomic? true, :op/args {:block/uid "ff25779b0", :block/position {:block/uid "49b0b08cc", :relation {:page/title ":task/title"}}}} {:op/type :block/new, :op/atomic? true, :op/args {:block/uid "ae1760154", :block/position {:block/uid "49b0b08cc", :relation {:page/title ":task/assignee"}}}} {:op/type :block/new, :op/atomic? true, :op/args {:block/uid "161adb3dd", :block/position {:block/uid "49b0b08cc", :relation {:page/title ":task/status"}}}} {:op/type :block/save, :op/atomic? true, :op/args {:block/uid "49b0b08cc", :block/string ""}} {:op/type :block/save, :op/atomic? true, :op/args {:block/uid "f9137ace4", :block/string "[[athens/task]]"}} {:op/type :block/save, :op/atomic? true, :op/args {:block/uid "ff25779b0", :block/string "Untitled task"}} {:op/type :block/save, :op/atomic? true, :op/args {:block/uid "ae1760154", :block/string "@Filipe"}} {:op/type :block/save, :op/atomic? true, :op/args {:block/uid "161adb3dd", :block/string "(())"}}]}, :event/create-time 1661858169029, :event/presence-id "Jeff"}
 
 
 
