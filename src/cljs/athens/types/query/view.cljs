@@ -228,11 +228,11 @@
                          (graph-ops/build-block-save-op db prop-uid new-column))])]))))
 
 
-(defn update-status
-  [id new-status]
-  (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
-                (fn [db prop-uid]
-                  [(graph-ops/build-block-save-op db prop-uid new-status)])]))
+#_(defn update-status
+    [id new-status]
+    (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
+                  (fn [db prop-uid]
+                    [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
 
 ;; All commented out for when we modify kanban columns
