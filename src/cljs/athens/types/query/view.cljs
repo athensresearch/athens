@@ -1,6 +1,9 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
+    ["/components/DnD/DndContext" :refer [DragAndDropContext]]
+    ["/components/DnD/Droppable" :refer [Droppable]]
+    ["/components/DnD/Sortable" :refer [Sortable]]
     ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon]]
     ["/components/Query/KanbanBoard" :refer [KanbanBoard
                                              KanbanSwimlane
@@ -14,17 +17,10 @@
                                 HStack
                                 Stack
                                 Text]]
-    ["/components/DnD/DndContext" :refer [DragAndDropContext]]
-    ["/components/DnD/Droppable" :refer [Droppable]]
-    ["/components/DnD/Sortable" :refer [Sortable]]
-    ["@dnd-kit/core" :refer [DndContext,
-                             closestCorners,
-                             PointerSensor,
+    ["@dnd-kit/core" :refer [closestCorners,
                              DragOverlay,]]
     ["@dnd-kit/sortable" :refer [SortableContext,
-                                 verticalListSortingStrategy,
-                                 sortableKeyboardCoordinates,
-                                 arrayMove]]
+                                 verticalListSortingStrategy,]]
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
     [athens.common-events.bfs :as bfs]
@@ -121,10 +117,11 @@
 
 (declare parse-for-uid parse-for-title)
 
+
 (defn block-to-flat-map
   [block]
   ;; TODO: we could technically give pages all the properties of tasks and put them on a kanban board...
-  (let [{:block/keys [uid string properties create edits] :keys [_node/title]} block
+  (let [{:block/keys [uid string properties create edits] :keys [node/_title]} block
         create-auth-and-time    (get-create-auth-and-time create)
         last-edit-auth-and-time (get-last-edit-auth-and-time edits)
         property-keys           (keys properties)
@@ -428,7 +425,6 @@
         [:> Heading {:size "sm"} "Save View"]]]))
 
 
-
 (defn render-card
   [uid over?]
   (let [card           (-> (reactive/get-reactive-block-document [:block/uid uid])
@@ -438,13 +434,13 @@
         status         (get card ":task/status")
         priority       (get card ":task/priority")
         assignee       (get card ":task/assignee")
-        page           (get card ":task/page")
+        _page           (get card ":task/page")
         _due-date      (get card ":task/due-date")
 
         assignee-value (parse-for-title assignee)
 
         status-uid     (parse-for-uid status)
-        status-value   (common-db/get-block-string @db/dsdb status-uid)
+        _status-value   (common-db/get-block-string @db/dsdb status-uid)
 
         priority-uid   (parse-for-uid priority)
         priority-value (common-db/get-block-string @db/dsdb priority-uid)
@@ -487,18 +483,18 @@
                         :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
          [:> ArrowRightOnBoxIcon]]]]]]))
 
+
 (defn- find-container-id
   "Accepts event.active or event.over"
   [e active-or-over]
   (try
     (case active-or-over
-       :active (.. e -active -data -current -sortable -containerId)
-       :over (.. e -over -data -current -sortable -containerId))
+      :active (.. e -active -data -current -sortable -containerId)
+      :over (.. e -over -data -current -sortable -containerId))
     (catch js/Object _
       (case active-or-over
         :active (.. e -active -id)
         :over (.. e -over -id)))))
-
 
 
 (defn- get-container-context
@@ -550,9 +546,9 @@
                                                 (get swimlane-columns uid))
                           ;; context-object assumes group-by is always status, because of the uid stuff
                           context-object      (cond-> {}
-                                                      (and (= groupBy ":task/status")
-                                                           (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
-                                                      (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
+                                                (and (= groupBy ":task/status")
+                                                     (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
+                                                (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
                           column-id           (if uid uid "None")
                           column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
 
@@ -577,9 +573,8 @@
          [:> DragOverlay
           (when @active-id
             [:<>
-             ;;[:h1 @over-id]
+             ;; [:h1 @over-id]
              [render-card @active-id]])]]))))
-
 
 
 (defn query-el
