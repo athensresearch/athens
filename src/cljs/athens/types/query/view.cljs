@@ -121,7 +121,7 @@
      ":last-edit/time" (get-in last-edit [:event/time :time/ts])}))
 
 
-(declare parse-for-uid)
+(declare parse-for-uid parse-for-title)
 
 (defn block-to-flat-map
   [block]
@@ -133,12 +133,13 @@
                                           (assoc acc prop-key (get-in properties [prop-key :block/string])))
                                         {}
                                         property-keys)
-        merged-map              (merge {":block/uid" uid
+        merged-map              (merge {":block/uid"    uid
                                         ":block/string" string}
                                        props-map
                                        create-auth-and-time
                                        last-edit-auth-and-time
-                                       {":task/status" (parse-for-uid (get props-map ":task/status"))})]
+                                       {":task/status" (parse-for-uid (get props-map ":task/status"))}
+                                       {":task/assignee" (parse-for-title (get props-map ":task/assignee"))})]
     merged-map))
 
 
@@ -207,10 +208,12 @@
 ;; update task stuff
 
 (defn update-status
-  [id new-status]
+  [id new-status none?]
   (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
                 (fn [db prop-uid]
-                  [(graph-ops/build-block-save-op db prop-uid new-status)])]))
+                  [(if none?
+                     (graph-ops/build-block-remove-op db prop-uid)
+                     (graph-ops/build-block-save-op db prop-uid new-status))])]))
 
 
 ;; All commented out for when we modify kanban columns
@@ -427,10 +430,11 @@
         parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))
 
         ;; TODO: figure out how to give unique id when one card can show up multiple times on a query, e.g. a card that belongs to multiple projects
+        ;; could use swimlane and column data for uniqueness
         id             (str uid)]
 
-    ;; TODO: add data property?
     [:> Sortable {:id id :key id}
+
      [:> Box {:borderRadius  "sm"
               :minHeight     "4rem"
               :listStyleType "none"
@@ -462,8 +466,18 @@
          [:> ArrowRightOnBoxIcon]]]]]]))
 
 (defn- findContainer
-  [e]
-  (.. e -active -data -current -sortable -containerId))
+  "Accepts event.active or event.over"
+  [e active-or-over]
+  (case active-or-over
+    :active (.. e -active -data -current -sortable -containerId)
+    :over (.. e -over -data -current -sortable -containerId)))
+
+(defn get-container-context
+  [container-id]
+  (let [swimlane-id (-> (re-find #"swimlane-(\w+)" container-id) second)
+        column-id   (-> (re-find #"column-(\w+)" container-id) second)]
+    {:swimlane-id swimlane-id
+     :column-id column-id}))
 
 (defn DragAndDropKanbanBoard
   []
@@ -472,20 +486,31 @@
         active-container (r/atom nil)]
     (fn [boardData all-possible-group-by-columns g-by sg-by]
       [:> DragAndDropContext {:onDragStart (fn [e]
-                                             (reset! active-container (findContainer e))
+                                             (reset! active-container (findContainer e :active))
                                              (reset! active-id (.. e -active -id)))
                               :onDragOver  (fn [e]
                                              (reset! over-id (.. e -over -id)))
                               :onDragEnd   (fn [e]
-                                             (reset! active-id nil)
-                                             (reset! active-container nil)
-                                             (reset! over-id nil))}
+                                             ;; TODO: should context metadata be stored at the card level or the container level?
+                                             (let [over-container           (findContainer e :over)
+                                                   over-container-context   (get-container-context over-container)
+                                                   active-container-context (get-container-context @active-container)
+                                                   none?                    (= "None" over-container)]
+                                               (prn @active-container @active-id active-container-context)
+                                               (prn over-container @over-id over-container-context)
+                                               #_(when (not= over-container @active-container)
+                                                   (update-status @active-id (str "((" over-container "))") none?))
+                                               (reset! active-id nil)
+                                               (reset! active-container nil)
+                                               (reset! over-id nil)))}
 
        [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
        (doall
          (for [swimlanes boardData]
            (let [[swimlane-id swimlane-columns] swimlanes
                  nil-swimlane-id? (nil? swimlane-id)
+                 ;; TODO: doesn't handle empty assignee well, or values that are not expected
+                 swimlane-id      (if swimlane-id swimlane-id "None")
                  swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
 
              [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
@@ -499,7 +524,8 @@
                         context-object      (cond-> {}
                                                     (= g-by ":task/status") (assoc g-by (str "((" uid "))"))
                                                     (not nil-swimlane-id?) (assoc sg-by swimlane-id))
-                        column-id           (if uid uid "None")]
+                        column-id           (if uid uid "None")
+                        column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
                     ;; TODO: Droppable area for empty columns
                     [:> SortableContext {:key column-id :id column-id :items (or cards-from-a-column []) :strategy verticalListSortingStrategy}
                      [:> KanbanColumn {:name string :key column-id}
