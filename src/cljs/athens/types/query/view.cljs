@@ -211,23 +211,24 @@
 (defn update-card-container
   [id active-container-context over-container-context]
   (let [{active-swimlane-id :swimlane-id active-column-id :column-id} active-container-context
-        {over-swimlane-id :swimlane-id over-column-id :column-id} over-container-context]
-    (prn active-container-context over-container-context)
-    (when (not= active-swimlane-id
-                over-swimlane-id)
+        {over-swimlane-id :swimlane-id over-column-id :column-id} over-container-context
+        diff-column?   (not= active-column-id over-column-id)
+        diff-swimlane? (not= active-swimlane-id over-swimlane-id)
+        nil-swimlane?  (= over-swimlane-id "None")
+        nil-column?    (= over-column-id "None")
+        new-column     (str "((" over-column-id "))")]
+    (when diff-swimlane?
       (rf/dispatch [:graph/update-in [:block/uid id] [":task/assignee"]
                     (fn [db prop-uid]
-                      [(if (= over-swimlane-id "None")
+                      [(if nil-swimlane?
                          (graph-ops/build-block-remove-op db prop-uid)
                          (graph-ops/build-block-save-op db prop-uid over-swimlane-id))])]))
-    (when (not= active-column-id
-                over-column-id)
+    (when diff-column?
       (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
                     (fn [db prop-uid]
-                      ;;(prn "CHANGE COLUMN" active-column-id)
-                      [(if (= over-column-id "None")
+                      [(if nil-column?
                          (graph-ops/build-block-remove-op db prop-uid)
-                         (graph-ops/build-block-save-op db prop-uid (str "((" over-column-id "))")))])]))))
+                         (graph-ops/build-block-save-op db prop-uid new-column))])]))))
 
 
 (defn update-status
