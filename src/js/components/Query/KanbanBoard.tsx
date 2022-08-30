@@ -85,7 +85,7 @@ export const KanbanCard = (props) => {
 }
 
 export const KanbanColumn = (props) => {
-  const { name, children, onUpdateKanbanColumn, groupBy } = props;
+  const { name, children, onUpdateKanbanColumn, groupBy, isOver } = props;
   // const [items, setItems] = React.useState(["Card 1", "Card 2", "Card 3"]);
 
   const [isEditing, setIsEditing] = React.useState(false);
@@ -93,41 +93,63 @@ export const KanbanColumn = (props) => {
   const textareaRef = React.useRef();
   React.useEffect(() => {
     if (textareaRef.current) {
-        textareaRef.current.focus()
-        const length = textareaRef.current.value.length
-        textareaRef.current.selectionStart = length
+      textareaRef.current.focus();
+      const length = textareaRef.current.value.length;
+      textareaRef.current.selectionStart = length;
     }
-  }, [isEditing])
+  }, [isEditing]);
 
   const handleInputChange = (e) => {
-     const inputValue = e.target.value
-     setTitleValue(inputValue)
-   }
+    const inputValue = e.target.value;
+    setTitleValue(inputValue);
+  };
+
+  const styles = isOver
+    ? {
+        sx: {
+          ":after": {
+            content: "''",
+            position: "absolute",
+            width: "100%",
+            height: "3px",
+            backgroundColor: "link",
+          },
+        },
+      }
+    : null;
 
   return (
-    <Box>
-      <VStack
-        // as={Reorder.Group}
-        align="stretch"
-        listStyleType={"none"}
-        spacing={2}
-        p={2}
-        borderRadius="md"
-        bg="background.upper"
-        axis="y"
-        width="300px"
-        // values={items}
-        // onReorder={setItems}
-      >
-        <HStack justifyContent="space-between">
-            {isEditing
-                ? <Textarea ref={textareaRef} value={titleValue} onChange={handleInputChange}
-                    onBlur={() => {
-                        onUpdateKanbanColumn(groupBy, name, titleValue)
-                        setIsEditing(!isEditing)
-                    }}/>
-                : <Heading color="foreground.secondary" size="sm">{name}</Heading>
-                }
+    <Box position="relative">
+      <Box {...styles}>
+        <VStack
+          // as={Reorder.Group}
+          align="stretch"
+          listStyleType={"none"}
+          spacing={2}
+          p={2}
+          borderRadius="md"
+          bg="background.upper"
+          axis="y"
+          width="300px"
+          // values={items}
+          // onReorder={setItems}
+        >
+          <HStack justifyContent="space-between">
+            {isEditing ? (
+              <Textarea
+                ref={textareaRef}
+                value={titleValue}
+                onChange={handleInputChange}
+                onBlur={() => {
+                  onUpdateKanbanColumn(groupBy, name, titleValue);
+                  setIsEditing(!isEditing);
+                }}
+              />
+            ) : (
+              <Heading color="foreground.secondary" size="sm">
+                {name}
+              </Heading>
+            )}
             {/* for now, just read-only
             <IconButton icon={<EditIcon/>}
                 onClick={(e) => {
@@ -135,12 +157,13 @@ export const KanbanColumn = (props) => {
                     setIsEditing(!isEditing)
                 }} />
             */}
-    </HStack>
-      {children}
-      </VStack>
+          </HStack>
+          {children}
+        </VStack>
+      </Box>
     </Box>
   );
-}
+};
 
 export const KanbanSwimlane = (props) => {
   const { name, children } = props;

@@ -15,6 +15,7 @@
                                 Stack
                                 Text]]
     ["/components/DnD/DndContext" :refer [DragAndDropContext]]
+    ["/components/DnD/Droppable" :refer [Droppable]]
     ["/components/DnD/Sortable" :refer [Sortable]]
     ["@dnd-kit/core" :refer [DndContext,
                              useSensors,
@@ -487,19 +488,27 @@
                         :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
          [:> ArrowRightOnBoxIcon]]]]]]))
 
-(defn- findContainer
+(defn- find-container-id
   "Accepts event.active or event.over"
   [e active-or-over]
-  (case active-or-over
-    :active (.. e -active -data -current -sortable -containerId)
-    :over (.. e -over -data -current -sortable -containerId)))
+  (try
+    (case active-or-over
+       :active (.. e -active -data -current -sortable -containerId)
+       :over (.. e -over -data -current -sortable -containerId))
+    (catch js/Object _
+      (case active-or-over
+        :active (.. e -active -id)
+        :over (.. e -over -id)))))
 
-(defn get-container-context
+
+
+(defn- get-container-context
   [container-id]
-  (let [swimlane-id (-> (re-find #"swimlane-(\w+)" container-id) second)
+  (let [swimlane-id (-> (re-find #"swimlane-(@?\w+)" container-id) second)
         column-id   (-> (re-find #"column-(\w+)" container-id) second)]
     {:swimlane-id swimlane-id
      :column-id column-id}))
+
 
 (defn DragAndDropKanbanBoard
   []
@@ -512,14 +521,11 @@
                                              (reset! over-id (.. e -over -id)))
                               :onDragEnd   (fn [e]
                                              ;; TODO: should context metadata be stored at the card level or the container level?
-                                             (let [over-container           (findContainer e :over)
-                                                   active-container         (findContainer e :active)
+                                             (let [over-container           (find-container-id e :over)
+                                                   active-container         (find-container-id e :active)
                                                    over-container-context   (get-container-context over-container)
                                                    active-container-context (get-container-context active-container)]
-                                               ;;(prn "ACTIVE" @active-container @active-id active-container-context)
-                                               ;;(prn "OVER" over-container @over-id over-container-context)
-                                               (when (not= over-container active-container)
-                                                 (update-card-container @active-id active-container-context over-container-context))
+                                               (update-card-container @active-id active-container-context over-container-context)
                                                (reset! active-id nil)
                                                (reset! over-id nil)))}
 
@@ -545,19 +551,24 @@
                                                     (not nil-swimlane-id?) (assoc sg-by swimlane-id))
                         column-id           (if uid uid "None")
                         column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
-                    ;; TODO: Droppable area for empty columns
-                    [:> SortableContext {:key column-id :id column-id :items (or cards-from-a-column []) :strategy verticalListSortingStrategy}
-                     [:> KanbanColumn {:name string :key column-id}
-                      (doall
-                        (for [card cards-from-a-column]
-                          (let [card-uid (get card ":block/uid")
-                                over?    (= @over-id card-uid)]
-                            ^{:key card-uid} [render-card card-uid over?])))
-                      [:> Button {:onClick    #(new-card context-object)
-                                  :size       "sm"
-                                  :variant    "ghost"
-                                  :fontWeight "light"}
-                       "+ New Card"]]])))])))
+
+                    [:> Droppable {:key column-id :id column-id}
+                     (fn [over?]
+                       (r/as-element
+                         [:> SortableContext {:items (or cards-from-a-column [])
+                                              :strategy verticalListSortingStrategy}
+                          [:> KanbanColumn {:name string :key column-id :isOver over?}
+                           (doall
+                             (for [card cards-from-a-column]
+                               (let [card-uid (get card ":block/uid")
+                                     over?    (= @over-id card-uid)]
+                                 ^{:key card-uid} [render-card card-uid over?])))
+                           [:> Button {:onClick    #(new-card context-object)
+                                       :size       "sm"
+                                       :variant    "ghost"
+                                       :fontWeight "light"}
+                            "+ New Card"]]]))])))])))
+
        [:> DragOverlay
         (when @active-id
           [:<>
