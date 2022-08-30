@@ -125,7 +125,8 @@
 
 (defn block-to-flat-map
   [block]
-  (let [{:block/keys [uid string properties create edits]} block
+  ;; TODO: we could technically give pages all the properties of tasks and put them on a kanban board...
+  (let [{:block/keys [uid string properties create edits] :keys [_node/title]} block
         create-auth-and-time    (get-create-auth-and-time create)
         last-edit-auth-and-time (get-last-edit-auth-and-time edits)
         property-keys           (keys properties)
@@ -207,13 +208,33 @@
 
 ;; update task stuff
 
+(defn update-card-container
+  [id active-container-context over-container-context]
+  (let [{active-swimlane-id :swimlane-id active-column-id :column-id} active-container-context
+        {over-swimlane-id :swimlane-id over-column-id :column-id} over-container-context]
+    (prn active-container-context over-container-context)
+    (when (not= active-swimlane-id
+                over-swimlane-id)
+      (rf/dispatch [:graph/update-in [:block/uid id] [":task/assignee"]
+                    (fn [db prop-uid]
+                      [(if (= over-swimlane-id "None")
+                         (graph-ops/build-block-remove-op db prop-uid)
+                         (graph-ops/build-block-save-op db prop-uid over-swimlane-id))])]))
+    (when (not= active-column-id
+                over-column-id)
+      (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
+                    (fn [db prop-uid]
+                      ;;(prn "CHANGE COLUMN" active-column-id)
+                      [(if (= over-column-id "None")
+                         (graph-ops/build-block-remove-op db prop-uid)
+                         (graph-ops/build-block-save-op db prop-uid (str "((" over-column-id "))")))])]))))
+
+
 (defn update-status
-  [id new-status none?]
+  [id new-status]
   (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
                 (fn [db prop-uid]
-                  [(if none?
-                     (graph-ops/build-block-remove-op db prop-uid)
-                     (graph-ops/build-block-save-op db prop-uid new-status))])]))
+                  [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
 
 ;; All commented out for when we modify kanban columns
@@ -482,26 +503,23 @@
 (defn DragAndDropKanbanBoard
   []
   (let [active-id        (r/atom nil)
-        over-id          (r/atom nil)
-        active-container (r/atom nil)]
+        over-id          (r/atom nil)]
     (fn [boardData all-possible-group-by-columns g-by sg-by]
       [:> DragAndDropContext {:onDragStart (fn [e]
-                                             (reset! active-container (findContainer e :active))
                                              (reset! active-id (.. e -active -id)))
                               :onDragOver  (fn [e]
                                              (reset! over-id (.. e -over -id)))
                               :onDragEnd   (fn [e]
                                              ;; TODO: should context metadata be stored at the card level or the container level?
                                              (let [over-container           (findContainer e :over)
+                                                   active-container         (findContainer e :active)
                                                    over-container-context   (get-container-context over-container)
-                                                   active-container-context (get-container-context @active-container)
-                                                   none?                    (= "None" over-container)]
-                                               (prn @active-container @active-id active-container-context)
-                                               (prn over-container @over-id over-container-context)
-                                               #_(when (not= over-container @active-container)
-                                                   (update-status @active-id (str "((" over-container "))") none?))
+                                                   active-container-context (get-container-context active-container)]
+                                               ;;(prn "ACTIVE" @active-container @active-id active-container-context)
+                                               ;;(prn "OVER" over-container @over-id over-container-context)
+                                               (when (not= over-container active-container)
+                                                 (update-card-container @active-id active-container-context over-container-context))
                                                (reset! active-id nil)
-                                               (reset! active-container nil)
                                                (reset! over-id nil)))}
 
        [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
