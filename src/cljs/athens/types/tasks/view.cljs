@@ -477,7 +477,6 @@
 ;; NOTE: not used right now
 (defn on-update-status
   [task-uid new-status]
-  (prn "UPDATE" task-uid new-status (find-status-uid new-status))
   (let [new-status (-> new-status find-status-uid)
         new-status (str "((" new-status "))")]
     (rf/dispatch [:graph/update-in [:block/uid task-uid] [":task/status"]
