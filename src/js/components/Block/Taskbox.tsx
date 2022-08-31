@@ -77,7 +77,6 @@ export const Taskbox = (props: TaskboxProps) => {
   const { status: initialStatus, options, onChange, ...flexProps } = props;
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
 
-  console.log("INIT", initialStatus)
   const [status, setStatus] = React.useState(initialStatus || "To Do");
 
   const isEditable = options?.length > 1;
