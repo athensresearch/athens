@@ -247,9 +247,10 @@
               (let [block-o           {:block/uid      block-uid
                                        ;; :block/string   @value-atom
                                        :block/children []}
-                    blur-fn           #(when (not (seq @value-atom))
+                    save-fn           #(when (not (seq @value-atom))
                                          (rf/dispatch [:comment/hide-editor]))
-                    save-fn           #(reset! value-atom %)
+                    update-fn         #(reset! value-atom %)
+                    idle-fn           #(println "idle-fn" (pr-str %))
                     enter-handler     (fn jetsam-enter-handler
                                         [_uid _d-key-down]
                                         (when (not (str/blank? @value-atom))
@@ -263,9 +264,9 @@
                                         [_uid _value])
                     delete-handler    (fn jetsam-delete-handler
                                         [_uid _d-key-down])
-                    state-hooks       {:save-fn                 blur-fn
-                                       :update-fn               #(save-fn %)
-                                       :idle-fn                 #(println "idle-fn" (pr-str %))
+                    state-hooks       {:save-fn                 save-fn
+                                       :update-fn               update-fn
+                                       :idle-fn                 idle-fn
                                        :read-value              value-atom
                                        :show-edit?              show-edit-atom?
                                        :enter-handler           enter-handler
@@ -277,17 +278,17 @@
                                        :style                   {:opacity 1}
                                        :placeholder             "Write your comment here"}]
                 (focus-textarea-if-opening-first-time)
-                [:> Box {:px 2
-                         :pl 2
-                         :ml 8
-                         :mt 4
-                         :borderRadius "sm"
-                         :bg "background.attic"
-                         :cursor "text"
+                [:> Box {:px                       2
+                         :pl                       2
+                         :ml                       8
+                         :mt                       4
+                         :borderRadius             "sm"
+                         :bg                       "background.attic"
+                         :cursor                   "text"
                          :transitionTimingFunction "ease-in-out"
-                         :transitionProperty "common"
-                         :transitionDuration "fast"
-                         :sx {".block-content" {:p 1}}
-                         :shadow "focusPlaceholder"
-                         :_focusWithin {:shadow "focus"}}
+                         :transitionProperty       "common"
+                         :transitionDuration       "fast"
+                         :sx                       {".block-content" {:p 1}}
+                         :shadow                   "focusPlaceholder"
+                         :_focusWithin             {:shadow "focus"}}
                  [editor/block-editor block-o state-hooks]])])])))))

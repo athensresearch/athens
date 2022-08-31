@@ -1,6 +1,6 @@
 import { Box, Input, Textarea } from '@chakra-ui/react';
 
-export const BlockFormInput = ({ children, isMultiline }) => {
+export const BlockFormInput = ({ children, isMultiline, ...inputProps }) => {
   const Component = isMultiline ? Textarea : Input;
 
   return (
@@ -9,7 +9,7 @@ export const BlockFormInput = ({ children, isMultiline }) => {
       position="relative"
       height={isMultiline ? 'auto' : undefined}
       py={1}
-      size="sm"
+      {...inputProps}
       _focusWithin={{
         shadow: "focus"
       }}

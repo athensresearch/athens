@@ -1,10 +1,14 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
+    ["/components/Block/BlockFormInput" :refer [BlockFormInput]]
     ["/components/DnD/DndContext" :refer [DragAndDropContext]]
     ["/components/DnD/Droppable" :refer [Droppable]]
     ["/components/DnD/Sortable" :refer [Sortable]]
     ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon PlusIcon]]
+    ["/components/ModalInput/ModalInput" :refer [ModalInput]]
+    ["/components/ModalInput/ModalInputPopover" :refer [ModalInputPopover]]
+    ["/components/ModalInput/ModalInputTrigger" :refer [ModalInputTrigger]]
     ["/components/Query/KanbanBoard" :refer [KanbanBoard
                                              KanbanCard
                                              KanbanSwimlane
@@ -35,8 +39,10 @@
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
+    [athens.self-hosted.presence.views          :as presence]
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
+    [athens.views.blocks.editor                 :as editor]
     [clojure.string :refer []]
     [re-frame.core :as rf]
     [reagent.core :as r]))
@@ -428,6 +434,42 @@
         [:> Heading {:size "sm"} "Save View"]]]))
 
 
+(defn update-card-field
+  [id k new-value]
+  (rf/dispatch [:graph/update-in [:block/uid id] [k]
+                (fn [db prop-uid]
+                  [(graph-ops/build-block-save-op db prop-uid new-value)])]))
+
+
+(defn title-editor
+  [uid title]
+  (let [value-atom      (r/atom (or title ""))
+        show-edit-atom? (r/atom true)
+        block-o         {:block/uid uid}]
+    (fn []
+      (let [enter-fn!   (fn [uid d-key-down]
+                          (let [{:keys [target]} d-key-down]
+
+                            (update-card-field uid ":task/title" @value-atom)
+                            (reset! show-edit-atom? false)
+                            ;; side effect
+                            (.blur target)))
+            state-hooks {:save-fn                 #()
+                         :enter-handler           enter-fn!
+                         :idle-fn                 #()
+                         :update-fn               #(reset! value-atom %)
+                         :read-value              value-atom
+                         :show-edit?              show-edit-atom?
+                         :tab-handler             #()
+                         :backspace-handler       #()
+                         :delete-handler          #()
+                         :default-verbatim-paste? true
+                         :keyboard-navigation?    false
+                         :style                   {:opacity 1}
+                         :placeholder             "Write your task title here"}]
+        [editor/block-editor block-o state-hooks]))))
+
+
 (defn render-card
   [uid over?]
   (let [card           (-> (reactive/get-reactive-block-document [:block/uid uid])
@@ -437,41 +479,44 @@
         status         (get card ":task/status")
         priority       (get card ":task/priority")
         assignee       (get card ":task/assignee")
-        _page           (get card ":task/page")
+        _page          (get card ":task/page")
         _due-date      (get card ":task/due-date")
-
         assignee-value (parse-for-title assignee)
-
         status-uid     (parse-for-uid status)
-        _status-value   (common-db/get-block-string @db/dsdb status-uid)
-
+        _status-value  (common-db/get-block-string @db/dsdb status-uid)
         priority-uid   (parse-for-uid priority)
         priority-value (common-db/get-block-string @db/dsdb priority-uid)
-
         parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))
-
         ;; TODO: figure out how to give unique id when one card can show up multiple times on a query, e.g. a card that belongs to multiple projects
         ;; could use swimlane and column data for uniqueness
         id             (str uid)]
-
     [:> Sortable {:id id :key id}
-
      [:> KanbanCard {:isOver over?}
       [:> VStack {:spacing 0
-                  :align "stretch"}
-       [:> Text {:fontWeight "medium"
-                 :lineHeight "short"} [parse-renderer/parse-and-render title uid]]
+                  :align   "stretch"}
+       [:> ModalInput {:autoFocus true}
+        [:> ModalInputTrigger
+         ;; TODO show something if empty title
+         [:> Text {:fontWeight    "medium"
+                   :onPointerDown #(.stopPropagation %)
+                   :lineHeight    "short"} [parse-renderer/parse-and-render title uid]]]
+        [:> ModalInputPopover {:preventScroll false}
+         [:> BlockFormInput {:size "md"
+                             :isMultiline true
+                             :onPointerDown #(.stopPropagation %)}
+          [title-editor uid title]
+          [presence/inline-presence-el uid]]]]
        [:> HStack {:justifyContent "space-between"
-                   :fontSize "sm"
-                   :color "foreground.secondary"}
+                   :fontSize       "sm"
+                   :color          "foreground.secondary"}
         [:> HStack
          [:> Text assignee-value]
          [:> Text priority-value]]
         [:> ButtonGroup {:justifyContent "space-between"
-                         :size "xs"
-                         :variant "ghost"
-                         :colorScheme "subtle"
-                         :onPointerDown #(.stopPropagation %)}
+                         :size           "xs"
+                         :variant        "ghost"
+                         :colorScheme    "subtle"
+                         :onPointerDown  #(.stopPropagation %)}
          [:> IconButton {:zIndex  1
                          :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
           [:> ArrowRightOnBoxIcon]]]]]]]))
@@ -511,12 +556,10 @@
                                                (reset! over-id (.. e -over -id)))
                                 :onDragEnd   (fn [e]
                                                ;; TODO: should context metadata be stored at the card level or the container level?
-                                               (js/console.log e)
                                                (let [over-container           (find-container-id e :over)
                                                      active-container         (find-container-id e :active)
                                                      over-container-context   (get-container-context over-container)
                                                      active-container-context (get-container-context active-container)]
-                                                 (prn over-container active-container)
                                                  (update-card-container @active-id active-container-context over-container-context)
                                                  (reset! active-id nil)
                                                  (reset! over-id nil)))}
