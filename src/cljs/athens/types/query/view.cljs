@@ -6,6 +6,7 @@
     ["/components/DnD/Sortable" :refer [Sortable]]
     ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon PlusIcon]]
     ["/components/Query/KanbanBoard" :refer [KanbanBoard
+                                             KanbanCard
                                              KanbanSwimlane
                                              KanbanColumn]]
     ["/components/Query/Query" :refer [QueryRadioMenu]]
@@ -18,7 +19,6 @@
                                 Flex
                                 VStack
                                 HStack
-                                Stack
                                 Text]]
     ["@dnd-kit/core" :refer [closestCorners,
                              DragOverlay,]]
@@ -456,19 +456,7 @@
 
     [:> Sortable {:id id :key id}
 
-     [:> Box {:borderRadius  "sm"
-              :minHeight     "4rem"
-              :listStyleType "none"
-              :p             2
-              :bg            "interaction.surface"
-              :position      "relative"
-              :sx            (and over? {":after" {:content          "''"
-                                                   :position         "absolute"
-                                                   :width            "96%"
-                                                   :height           "3px"
-                                                   :background-color "link"}})
-              :_hover        {:bg          "interaction.surface.hover"}}
-
+     [:> KanbanCard {:isOver over?}
       [:> VStack {:spacing 0
                   :align "stretch"}
        [:> Text {:fontWeight "medium"
@@ -480,12 +468,12 @@
          [:> Text assignee-value]
          [:> Text priority-value]]
         [:> ButtonGroup {:justifyContent "space-between"
+                         :size "xs"
+                         :variant "ghost"
+                         :colorScheme "subtle"
                          :onPointerDown #(.stopPropagation %)}
         ;; onClick events are eaten up by Sortable
          [:> IconButton {:zIndex  1
-                         :variant "ghost"
-                         :colorScheme "subtle"
-                         :size "sm"
                          :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
           [:> ArrowRightOnBoxIcon]]]]]]]))
 
@@ -571,6 +559,8 @@
                                             :isOver over?}
                            [:> Flex {:color "foreground.secondary"
                                      :gap 2
+                                     :px 4
+                                     :py 1
                                      :alignItems "center"}
                             [:> Heading {:fontWeight "medium"
                                          :mr "auto"

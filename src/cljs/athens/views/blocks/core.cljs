@@ -398,7 +398,7 @@
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
-                                      [:> MenuGroup
+                                      [:> MenuGroup {:title "Block"}
                                        (when (< (count @selected-items) 2)
                                          [:> MenuItem {:children "Open block"
                                                        :icon     (r/as-element [:> ExpandIcon])

@@ -37,7 +37,7 @@ const useContextMenuState = () => {
    * Reveal a menu only for the clicked element.
    * To reveal a menu for all clicked menu sources, use onContextMenu instead.
    */
-  const addToContextMenu = (props: addToContextMenuProps) => {
+  const addToContextMenu = React.useCallback((props: addToContextMenuProps) => {
     const { event, ref, component, onClose, anchorEl, isExclusive } = props;
     event.preventDefault();
 
@@ -100,7 +100,7 @@ const useContextMenuState = () => {
       onCloseFn: onClose,
       isExclusive: menuState.isExclusive,
     });
-  };
+  }, [menuState]);
 
   /**
    * Returns true when the menu is open for this item
