@@ -14,9 +14,10 @@ export const KanbanCard = React.forwardRef(({ children, isOver }, ref) => {
 
   const Menu = React.memo(() => {
     return <MenuGroup title="Card">
-      <MenuItem icon={ }>Open in right sidebar</MenuItem>
+      <MenuItem icon={<PlusIcon/>}>Open in right sidebar</MenuItem>
     </MenuGroup>
   })
+
 
   return <Box
     ref={boxRef}
