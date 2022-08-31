@@ -1,10 +1,14 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
+    ["/components/Block/BlockFormInput" :refer [BlockFormInput]]
     ["/components/DnD/DndContext" :refer [DragAndDropContext]]
     ["/components/DnD/Droppable" :refer [Droppable]]
     ["/components/DnD/Sortable" :refer [Sortable]]
     ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon PlusIcon]]
+    ["/components/ModalInput/ModalInput" :refer [ModalInput]]
+    ["/components/ModalInput/ModalInputPopover" :refer [ ModalInputPopover]]
+    ["/components/ModalInput/ModalInputTrigger" :refer [ ModalInputTrigger]]
     ["/components/Query/KanbanBoard" :refer [KanbanBoard
                                              KanbanCard
                                              KanbanSwimlane
@@ -35,8 +39,10 @@
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
+    [athens.self-hosted.presence.views          :as presence]
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
+    [athens.views.blocks.editor                 :as editor]
     [clojure.string :refer []]
     [re-frame.core :as rf]
     [reagent.core :as r]))
@@ -459,8 +465,16 @@
      [:> KanbanCard {:isOver over?}
       [:> VStack {:spacing 0
                   :align "stretch"}
-       [:> Text {:fontWeight "medium"
-                 :lineHeight "short"} [parse-renderer/parse-and-render title uid]]
+       [:> ModalInput {:autoFocus true}
+        [:> ModalInputTrigger
+          [:> Text {:fontWeight "medium"
+                    :onPointerDown #(.stopPropagation %)
+                    :lineHeight "short"} [parse-renderer/parse-and-render title uid]]]
+        [:> ModalInputPopover {:preventScroll false}
+         [:> BlockFormInput {:size "md"}
+                               ;; editor goes here
+                               ;; [editor/block-editor {:block/uid uid}]
+          [presence/inline-presence-el uid]]]]
        [:> HStack {:justifyContent "space-between"
                    :fontSize "sm"
                    :color "foreground.secondary"}

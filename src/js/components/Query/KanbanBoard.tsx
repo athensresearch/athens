@@ -14,9 +14,7 @@ export const KanbanCard = React.forwardRef(({ children, isOver }, ref) => {
 
   const Menu = React.memo(() => {
     return <MenuGroup title="Card">
-      <MenuItem>Mark as done</MenuItem>
-      <MenuItem>Hide from board</MenuItem>
-      <MenuItem>Call Alex's wife</MenuItem>
+      <MenuItem icon={ }>Open in right sidebar</MenuItem>
     </MenuGroup>
   })
 
@@ -224,90 +222,3 @@ export const KanbanBoard = (props) => {
     </VStack>
   );
 }
-
-export const ExampleKanban = () => {
-  const columns = ["Backlog", "In Progress", "Done"];
-  const swimlanes = ["High", "Low"];
-  const cards = ["Card 1", "Card 2", "Card 3"];
-
-  return <KanbanBoard>
-    {swimlanes.map((swimlane) =>
-      <KanbanSwimlane name={swimlane}>
-        {columns.map((column) =>
-          <KanbanColumn name={column}>
-            { }
-          </KanbanColumn>
-        )}
-      </KanbanSwimlane>
-    )}
-  </KanbanBoard>
-}
-
-export const AddCardButton = (props) => {
-  const { children, onAddNewCardClick, context } = props
-  return <Button
-    size={"sm"}
-    variant={"ghost"}
-    fontWeight={"light"}
-    leftIcon={<PlusIcon />}
-    onClick={() =>
-      onAddNewCardClick(context)
-    }>
-    Add
-  </Button>
-};
-
-export const AddColumnButton = (props) => {
-  const { children, onAddNewColumn } = props
-  return <Button size={"md"} variant={"ghost"} fontWeight={"light"} minWidth={"110"} onClick={onAddNewColumn}>
-    + New Column
-  </Button>
-};
-
-export const AddSwimlaneButton = (props) => {
-  const { children, } = props
-  return <Button size={"sm"} variant={"ghost"} fontWeight={"light"} onClick={() => console.log("TODO: new swimlane")}>
-    + New Swimlane
-  </Button>
-};
-
-export const renderCard = (columns, column, swimlaneColumn, onUpdateStatusClick, hideProperties, onClickCard, onUpdateTaskTitle) => {
-  const key = "((" + column.uid + "))"
-  const data = swimlaneColumn[key]
-  return data && data.map((cardData) =>
-    <KanbanCard
-      columns={columns}
-      cardData={cardData}
-      onUpdateStatusClick={onUpdateStatusClick}
-      hideProperties={hideProperties}
-      onClickCard={onClickCard}
-      onUpdateTaskTitle={onUpdateTaskTitle}
-    />
-  )
-}
-
-
-export const QueryKanban = (props) => {
-  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties,
-    onClickCard, groupBy, subgroupBy, onUpdateTaskTitle, onAddNewColumn, onUpdateKanbanColumn,
-    refToString,
-  } = props;
-
-  return (columns && columns.length > 0 && <KanbanBoard name={name}>
-    {Object.entries(boardData).map(([swimlane, swimlaneColumn]) =>
-      <KanbanSwimlane name={swimlane}>
-        {columns.map(column =>
-          <KanbanColumn name={column.string} onUpdateKanbanColumn={onUpdateKanbanColumn} groupBy={groupBy} >
-            {renderCard(columns, column, swimlaneColumn, onUpdateStatusClick, hideProperties, onClickCard, onUpdateTaskTitle)}
-            <AddCardButton context={{ [groupBy]: column, [subgroupBy]: swimlane }} onAddNewCardClick={onAddNewCardClick} />
-          </KanbanColumn>
-        )}
-        <AddColumnButton onAddNewColumn={onAddNewColumn} />
-      </KanbanSwimlane>
-    )}
-    {/* <AddSwimlaneButton/> */}
-  </KanbanBoard>
-  )
-}
-
-
