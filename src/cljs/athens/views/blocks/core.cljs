@@ -399,7 +399,7 @@
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
-                                      [:> MenuGroup
+                                      [:> MenuGroup {:title "Block"}
                                        (when (< (count @selected-items) 2)
                                          [:> MenuItem {:children "Open block"
                                                        :icon     (r/as-element [:> ExpandIcon])
@@ -545,7 +545,7 @@
                         :unreadNotification     (actions/unread-notification? properties)}]
 
             ;; `BlockTypeProtocol` dispatch placement
-            [:> Box {:gridArea "content"}
+            [:> Box {:gridArea "content" :overflow "hidden"}
              ^{:key renderer-k}
              [types/outline-view renderer block {:show-edit? show-edit?}]]
 
