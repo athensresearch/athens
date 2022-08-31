@@ -1,15 +1,16 @@
 (ns athens.db
   (:require
-    [athens.common-db :as common-db]
+    [athens.common-db                    :as common-db]
     [athens.common-events.resolver.order :as order]
-    [athens.common.logging :as log]
-    [athens.common.sentry :refer-macros [defntrace]]
-    [athens.electron.utils :as electron.utils]
-    [athens.patterns :as patterns]
-    [clojure.edn :as edn]
-    [clojure.string :as string]
-    [datascript.core :as d]
-    [re-frame.core :as rf]))
+    [athens.common.logging               :as log]
+    [athens.common.sentry                :refer-macros [defntrace]]
+    [athens.electron.utils               :as electron.utils]
+    [athens.patterns                     :as patterns]
+    [athens.types.tasks.db               :as tasks-db]
+    [clojure.edn                         :as edn]
+    [clojure.string                      :as string]
+    [datascript.core                     :as d]
+    [re-frame.core                       :as rf]))
 
 
 ;; -- Example Roam DBs ---------------------------------------------------
@@ -464,15 +465,36 @@
   2-arity:
     used for multi-block-selection; ignores child blocks"
   ([uid]
-   (let [[uid embed-id]       (uid-and-embed-id uid)
-         props+children       (common-db/sorted-prop+children-uids @dsdb [:block/uid uid])
+   (let [[uid embed-id]            (uid-and-embed-id uid)
+         props-enabled?            @(rf/subscribe [:feature-flags/enabled? :properties])
+         props+children            (if props-enabled?
+                                     (common-db/sorted-prop+children-uids @dsdb [:block/uid uid])
+                                     (common-db/get-children-uids @dsdb [:block/uid uid]))
          {:block/keys [open]
-          node :node/title}   (get-block [:block/uid uid])
-         next-block-recursive (next-sibling-recursively uid)
-         next-block           (cond
-                                (and (or open node)
-                                     (seq props+children)) (get-block [:block/uid (first props+children)])
-                                next-block-recursive       next-block-recursive)]
+          node        :node/title} (get-block [:block/uid uid])
+         next-block-recursive      (next-sibling-recursively uid)
+         next-entity-type          (when next-block-recursive
+                                     (common-db/get-entity-type @dsdb [:block/uid (:block/uid next-block-recursive)]))
+         next-child+prop-uid       (first props+children)
+         next-child+prop-type      (when next-child+prop-uid
+                                     (common-db/get-entity-type @dsdb [:block/uid next-child+prop-uid]))
+         next-block                (cond
+                                     (and next-block-recursive
+                                          (= "[[athens/task]]" next-entity-type))
+                                     (tasks-db/get-title-block-of-task @dsdb (:block/uid next-block-recursive))
+
+                                     (and next-child+prop-uid
+                                          (= "[[athens/task]]" next-child+prop-type))
+                                     (tasks-db/get-title-block-of-task @dsdb next-child+prop-uid)
+
+                                     (and (or open node)
+                                          next-child+prop-uid)
+                                     (get-block [:block/uid next-child+prop-uid])
+
+                                     next-block-recursive
+                                     next-block-recursive)]
+     #_(log/debug "next-block-uid:" (pr-str {:next-block-recursive-uid (:block/uid next-block-recursive)
+                                             :next-entity-type         next-entity-type}))
      (cond-> (:block/uid next-block)
 
        ;; only go to next block if it's part of current embed scheme
