@@ -1,7 +1,6 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
-    [datascript.core :as d]
     ["/components/Block/BlockFormInput" :refer [BlockFormInput]]
     ["/components/DnD/DndContext" :refer [DragAndDropContext]]
     ["/components/DnD/Droppable" :refer [Droppable]]
@@ -46,6 +45,8 @@
     [athens.views.blocks.editor                 :as editor]
     [clojure.string :refer []]
     [re-frame.core :as rf]
+    [athens.types.query.table :refer [QueryTableV2]]
+    [athens.types.query.shared :as shared]
     [reagent.core :as r]))
 
 
@@ -101,7 +102,6 @@
   (->> (map #(str "athens/query/" %) ks)
        (map #(get hm %))))
 
-
 (defn get-schema
   [k]
   (or (get SCHEMA k) base-schema))
@@ -112,66 +112,13 @@
 
 
 ;; Helpers
-
-(defn get-create-auth-and-time
-  [create-event]
-  {":create/auth" (get-in create-event [:event/auth :presence/id])
-   ":create/time" (get-in create-event [:event/time :time/ts])})
-
-
-(defn get-last-edit-auth-and-time
-  [edit-events]
-  (let [last-edit (last edit-events)]
-    {":last-edit/auth" (get-in last-edit [:event/auth :presence/id])
-     ":last-edit/time" (get-in last-edit [:event/time :time/ts])}))
-
-
 (declare parse-for-uid parse-for-title)
 
-
-(defn block-to-flat-map
-  [block]
-  ;; TODO: we could technically give pages all the properties of tasks and put them on a kanban board...
-  (let [{:block/keys [uid string properties create edits children] :keys [node/_title]} block
-        create-auth-and-time    (get-create-auth-and-time create)
-        last-edit-auth-and-time (get-last-edit-auth-and-time edits)
-        property-keys           (keys properties)
-        props-map               (reduce (fn [acc prop-key]
-                                          (assoc acc prop-key (get-in properties [prop-key :block/string])))
-                                        {}
-                                        property-keys)
-        merged-map              (merge {":block/uid"    uid
-                                        ":block/string" string}
-                                       props-map
-                                       create-auth-and-time
-                                       last-edit-auth-and-time
-                                       {":task/status" (parse-for-uid (get props-map ":task/status"))}
-                                       {":task/assignee" (parse-for-title (get props-map ":task/assignee"))})]
-    #_(when children
-        (prn (get merged-map ":task/title") uid children))
-    merged-map))
 
 (defn get-root-page
   [x]
   (merge x
          {":task/page" (:node/title (db/get-root-parent-page (get x ":block/uid")))}))
-
-
-(let [tasks         (->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
-                         (mapv :block/uid)
-                         (mapv (fn [uid]
-                                 (let [parent-uids (->> (db/get-parents-recursively [:block/uid uid])
-                                                        (mapv :block/uid))]
-                                   [uid parent-uids])))
-                         (sort-by #(-> % second count)))
-      tasks-to-tree (reduce (fn [m [uid parents]]
-                              (if (seq parents)
-                                (assoc-in m parents {uid {}})
-                                (assoc m uid {})))
-                            {}
-                            tasks)]
-  tasks
-  tasks-to-tree)
 
 
 (defn nested-group-by
@@ -189,6 +136,14 @@
        (nested-group-by g)))
 
 
+(defn tasks-to-trees
+  [tasks]
+  (reduce (fn [m [uid parents]]
+            (if (seq parents)
+              (assoc-in m parents {uid {}})
+              (assoc m uid {})))
+          {}
+          tasks))
 
 
 (defn context-to-block-properties
@@ -371,28 +326,6 @@
                 (sort-dir-fn query-sort-direction))))
 
 
-(defn parse-for-title
-  "should be able to pass in a plain string, a wikilink, or both?"
-  [s]
-  (when (seq s)
-    (let [re #"\[\[(.*)\]\]"]
-      (cond
-        (re-find re s) (second (re-find re s))
-        (clojure.string/blank? s) (throw "parse-for-title got an empty string")
-        :else s))))
-
-
-(defn parse-for-uid
-  "should be able to pass in a plain string, a wikilink, or both?"
-  [s]
-  (when (seq s)
-    (let [re #"\(\((.*)\)\)"]
-      (cond
-        (re-find re s) (second (re-find re s))
-        (clojure.string/blank? s) (throw "parse-for-title got an empty string")
-        :else s))))
-
-
 #_(defn str-to-title
     [s]
     (str "[[" s "]]"))
@@ -493,7 +426,7 @@
 (defn render-card
   [uid over?]
   (let [card           (-> (reactive/get-reactive-block-document [:block/uid uid])
-                           block-to-flat-map
+                           shared/block-to-flat-map
                            get-root-page)
         title          (get card ":task/title")
         status         (get card ":task/status")
@@ -648,6 +581,8 @@
               [render-card @active-id]])]]]))))
 
 
+
+
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
   (let [query-uid uid
@@ -671,9 +606,7 @@
 
         query-data        (filterv special-filter-fn query-data)
         query-data        (filterv filter-author-fn query-data)
-
         query-data        (sort-table query-data s-by s-direction)]
-    ;; TODO
     [:> VStack {:className "query-el" :key query-uid :align "stretch"}
      (case layout
        "board"
@@ -691,43 +624,34 @@
                                   :boardData                     boardData
                                   :all-possible-group-by-columns all-possible-group-by-columns
                                   :groupBy                       g-by
-                                  :subgroupBy                    sg-by}]
-
-         ;; this is when we were passing all data to one top-level Tsx component
-         #_[:> QueryKanban {:boardData            boardData
-                            ;; store column order here
-                            :columns              columns
-                            :hasSubGroup          (boolean query-subgroup-by)
-                            :onUpdateStatusClick  update-status
-                            :hideProperties       p-hide
-                            :onAddNewCardClick    new-card
-                            :groupBy              query-group-by
-                            :subgroupBy           query-subgroup-by
-                            :filter               nil
-                            :refToString    (fn [x]
-                                              (->> x
-                                                   parse-for-uid
-                                                   (common-db/get-block-string @athens.db/dsdb)))
-                            :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
-                            :onUpdateTaskTitle    update-task-title
-                            :onUpdateKanbanColumn update-kanban-column
-                            :onAddNewColumn       #(new-kanban-column query-group-by)
-                            :onAddNewProjectClick (fn [])}])
+                                  :subgroupBy                    sg-by}])
 
        "list"
        [:div "TODO"]
 
+       (let [get-parents           (fn [uid]
+                                     (let [parent-uids (->> (db/get-parents-recursively [:block/uid uid])
+                                                            (mapv :block/uid))]
+                                       [uid parent-uids]))
+             sort-by-parents-count (fn [x] (-> x second count))
+             tasks                 (->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
+                                        ;;query-data
+                                        (mapv :block/uid)
+                                        (mapv get-parents)
+                                        (sort-by sort-by-parents-count))
+             task-trees         (tasks-to-trees tasks)]
 
-       [:> QueryTable {:data           query-data
-                       :columns        schema
-                       ;; :onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
-                       :sortBy         s-by
-                       :sortDirection  s-direction
-                       :onUidClick     #(rf/dispatch [:right-sidebar/open-item [:block/uid %]])
-                       :onPageClick    #(router/navigate-page %)
-                       :rowCount       (count query-data)
-                       :hideProperties p-hide
-                       :dateFormatFn   #(dates/date-string %)}])]))
+         [QueryTableV2 {:data task-trees}]
+         #_[:> QueryTable {:data           query-data
+                           :columns        schema
+                           ;; :onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
+                           :sortBy         s-by
+                           :sortDirection  s-direction
+                           :onUidClick     #(rf/dispatch [:right-sidebar/open-item [:block/uid %]])
+                           :onPageClick    #(router/navigate-page %)
+                           :rowCount       (count query-data)
+                           :hideProperties p-hide
+                           :dateFormatFn   #(dates/date-string %)}]))]))
 
 
 (comment "current shape of data for query kanban boards"
@@ -783,7 +707,7 @@
         [select] (get* parsed-properties ["select"])
         schema            (get-schema select)
         query-data        (->> (reactive/get-reactive-instances-of-key-value ":entity/type" select)
-                               (map block-to-flat-map)
+                               (map shared/block-to-flat-map)
                                (map get-root-page))]
 
     (if (invalid-query? parsed-properties)
