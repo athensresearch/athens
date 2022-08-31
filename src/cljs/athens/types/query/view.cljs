@@ -112,8 +112,6 @@
 
 
 ;; Helpers
-(declare parse-for-uid parse-for-title)
-
 
 (defn get-root-page
   [x]
@@ -338,7 +336,7 @@
   [{:keys [_properties parsed-properties uid schema]}]
   (let [[layout select _p-order _p-hide f-author f-special s-by s-direction g-by g-s-by]
         (get* parsed-properties ["layout" "select" "properties/order" "properties/hide" "filter/author" "filter/special" "sort/by" "sort/direction" "group/by" "group/subgroup/by"])
-        s-by       (parse-for-title s-by)
+        s-by       (shared/parse-for-title s-by)
         menus-data [{:heading  "Entity Type"
                      :options  ENTITY_TYPES
                      :onChange #(update-query-property uid "select" %)
@@ -374,17 +372,7 @@
     [:> ButtonGroup {:isAttached true :size "xs"}
      (for [menu menus-data]
        (let [{:keys [heading options onChange value]} menu]
-         [:> QueryRadioMenu {:key heading :heading heading :options options :onChange onChange :value value}]))
-
-
-
-     #_[:> Controls {:isCheckedFn          #(get query-properties-hide %)
-                     :properties           schema
-                     :hiddenProperties     query-properties-hide
-                     :menuOptionGroupValue menuOptionGroupValue
-                     :onChange             #(toggle-hidden-property uid %)}]
-     #_[:> Button {:onClick #(prn parsed-properties) :disabled true}
-        [:> Heading {:size "sm"} "Save View"]]]))
+         [:> QueryRadioMenu {:key heading :heading heading :options options :onChange onChange :value value}]))]))
 
 
 (defn update-card-field
@@ -434,10 +422,10 @@
         assignee       (get card ":task/assignee")
         _page          (get card ":task/page")
         _due-date      (get card ":task/due-date")
-        assignee-value (parse-for-title assignee)
-        status-uid     (parse-for-uid status)
+        assignee-value (shared/parse-for-title assignee)
+        status-uid     (shared/parse-for-uid status)
         _status-value  (common-db/get-block-string @db/dsdb status-uid)
-        priority-uid   (parse-for-uid priority)
+        priority-uid   (shared/parse-for-uid priority)
         priority-value (common-db/get-block-string @db/dsdb priority-uid)
         parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))
         ;; TODO: figure out how to give unique id when one card can show up multiple times on a query, e.g. a card that belongs to multiple projects
@@ -588,7 +576,7 @@
   (let [query-uid uid
         [_select layout s-by s-direction f-author f-special _p-order p-hide]
         (get* parsed-properties ["select" "layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
-        s-by              (parse-for-title s-by)
+        s-by              (shared/parse-for-title s-by)
         filter-author-fn  (fn [x]
                             (let [entity-author (get x ":create/auth")]
                               (or (= f-author "None")
@@ -611,8 +599,8 @@
      (case layout
        "board"
        (let [[g-by sg-by] (get* parsed-properties ["group/by" "group/subgroup/by"])
-             query-group-by                (parse-for-title g-by)
-             query-subgroup-by             (parse-for-title sg-by)
+             query-group-by                (shared/parse-for-title g-by)
+             query-subgroup-by             (shared/parse-for-title sg-by)
              all-possible-group-by-columns (concat [{:block/string "None" :block/uid nil}]
                                                    (get-reactive-property [:node/title query-group-by] ":property/enum"))
              boardData                     (if (and query-subgroup-by query-group-by)
@@ -629,6 +617,7 @@
        "list"
        [:div "TODO"]
 
+       "table"
        (let [get-parents           (fn [uid]
                                      (let [parent-uids (->> (db/get-parents-recursively [:block/uid uid])
                                                             (mapv :block/uid))]
@@ -641,17 +630,8 @@
                                         (sort-by sort-by-parents-count))
              task-trees         (tasks-to-trees tasks)]
 
-         [QueryTableV2 {:data task-trees}]
-         #_[:> QueryTable {:data           query-data
-                           :columns        schema
-                           ;; :onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
-                           :sortBy         s-by
-                           :sortDirection  s-direction
-                           :onUidClick     #(rf/dispatch [:right-sidebar/open-item [:block/uid %]])
-                           :onPageClick    #(router/navigate-page %)
-                           :rowCount       (count query-data)
-                           :hideProperties p-hide
-                           :dateFormatFn   #(dates/date-string %)}]))]))
+         [QueryTableV2 {:data task-trees}]))]))
+
 
 
 (comment "current shape of data for query kanban boards"

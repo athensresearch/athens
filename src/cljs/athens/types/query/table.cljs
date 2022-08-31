@@ -49,22 +49,25 @@
     [reagent.core :as r]
     [athens.types.query.shared :as shared]))
 
+
 (defn render-entity
   [uid children]
-  (let [entity    (->> (reactive/get-reactive-block-document [:block/uid uid])
-                       shared/block-to-flat-map)
-        title     (get entity ":task/title")
-        status    (get entity ":task/status")
-        priority  (get entity ":task/priority")
-        assignee  (get entity ":task/assignee")
-        _page     (get entity ":task/page")
-        _due-date (get entity ":task/due-date")]
+  (let [entity     (->> (reactive/get-reactive-block-document [:block/uid uid])
+                        shared/block-to-flat-map)
+        page-title (common-db/get-page-title @db/dsdb uid)
+        task-title (get entity ":task/title")
+        status     (get entity ":task/status")
+        priority   (get entity ":task/priority")
+        assignee   (get entity ":task/assignee")
+        _page      (get entity ":task/page")
+        _due-date  (get entity ":task/due-date")]
     [:> Box
-     [:> Heading {:size "sm"} title]
-     [:> Box {:ml 5}
+     [:> Heading {:size "sm"} (or task-title page-title)]
+     [:> Box
       (for [[uid children] children]
         ^{:key uid}
-        [render-entity uid children])]]))
+        [:> Box {:ml 5}
+         [render-entity uid children]])]]))
 
 
 (defn QueryTableV2
