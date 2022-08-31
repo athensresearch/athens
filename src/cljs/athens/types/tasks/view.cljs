@@ -88,11 +88,10 @@
                                ":task/status"
                                {:block/string status}
                                ;; NOTE Task belonging to a Project is maintained on side of a Project
-                               #_#_":task/projects"
-                                       #:block{:string   ""
-                                               :children (for [project projects]
-                                                           #:block{:string project
-                                                                   :uid    (common.utils/gen-block-uid)})}}}]
+                               #_#_":task/projects" #:block{:string   ""
+                                                            :children (for [project projects]
+                                                                        #:block{:string project
+                                                                                :uid    (common.utils/gen-block-uid)})}}}]
          {:block/uid block-uid
           :relation  position})
        (composite/make-consequence-op {:op/type :new-type})))
