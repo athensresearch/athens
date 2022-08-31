@@ -64,6 +64,12 @@ const STATUS = {
     color: "gray.500",
     text: "Cancelled",
     isDone: true,
+  },
+  "Stalled": {
+    icon: <XmarkVariableIcon />,
+    color: "brown.500",
+    text: "Stalled",
+    isDone: false,
   }
 }
 

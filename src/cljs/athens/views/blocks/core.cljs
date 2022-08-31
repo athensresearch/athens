@@ -6,6 +6,7 @@
     ["/components/Block/Reactions"             :refer [Reactions]]
     ["/components/Block/Toggle"                :refer [Toggle]]
     ["/components/Icons/Icons"                 :refer [ArchiveIcon
+                                                       CheckmarkIcon
                                                        ArrowRightOnBoxIcon
                                                        BlockEmbedIcon
                                                        ChatBubbleIcon
@@ -398,7 +399,7 @@
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
              menu                   (r/as-element
-                                      [:> MenuGroup
+                                      [:> MenuGroup {:title "Block"}
                                        (when (< (count @selected-items) 2)
                                          [:> MenuItem {:children "Open block"
                                                        :icon     (r/as-element [:> ExpandIcon])
@@ -419,7 +420,7 @@
                                                                  (rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))}]
                                        (when-not (= block-type "[[athens/task]]")
                                          [:> MenuItem {:children "Convert to Task"
-                                                       :icon     (r/as-element [:> BlockEmbedIcon])
+                                                       :icon     (r/as-element [:> CheckmarkIcon])
                                                        :onClick  #(convert-anon-block-to-task block-o)}])
                                        [:> MenuItem {:children (if (> (count @selected-items) 1)
                                                                  "Copy selected block refs"
@@ -544,7 +545,7 @@
                         :unreadNotification     (actions/unread-notification? properties)}]
 
             ;; `BlockTypeProtocol` dispatch placement
-            [:> Box {:gridArea "content"}
+            [:> Box {:gridArea "content" :overflow "hidden"}
              ^{:key renderer-k}
              [types/outline-view renderer block {:show-edit? show-edit?}]]
 
