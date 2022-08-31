@@ -77,23 +77,8 @@ export const KanbanCard = React.forwardRef(({ children, isOver }, ref) => {
 export const KanbanColumn = (props) => {
   const { children, isOver } = props;
 
-  const styles = isOver
-    ? {
-      sx: {
-        ":after": {
-          content: "''",
-          position: "absolute",
-          width: "100%",
-          height: "3px",
-          backgroundColor: "link",
-        },
-      },
-    }
-    : null;
-
   return (
     <VStack
-      {...styles}
       flex="1 1 100%"
       minHeight="6.75em"
       position="relative"
@@ -114,6 +99,12 @@ export const KanbanColumn = (props) => {
         borderRadius: "inherit",
         border: "1px solid",
         borderColor: "separator.divider",
+
+        ...(isOver && {
+          border: "none",
+          bg: "link",
+          opacity: 0.1,
+        })
       }}
     >
       <AnimatePresence initial={false}>
@@ -177,7 +168,7 @@ export const KanbanSwimlane = (props) => {
     <VStack
       ref={ref}
       align="stretch"
-      borderRadius="md"
+      borderRadius="lg"
       spacing={3}
       maxHeight="700px"
       flex="1 1 100%"
