@@ -9,11 +9,11 @@ import { RemoveScroll } from "react-remove-scroll";
  * @return {React.ReactNode}
  */
 export const ModalInputPopover = (props) => {
-  const { children, popoverContentProps } = props;
+  const { children, popoverContentProps, preventScroll = true } = props;
   const { isOpen } = usePopoverContext();
   return (
     <Portal>
-      <RemoveScroll enabled={isOpen}>
+      <RemoveScroll enabled={isOpen && preventScroll}>
         <PopoverContent
           flexGrow={1}
           flexShrink={1}
