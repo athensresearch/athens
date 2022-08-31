@@ -24,6 +24,7 @@
                                 Flex
                                 VStack
                                 HStack
+                                Button, Table, Thead, Tbody, Th, Td, Tr, Tfoot, textDecoration, Link
                                 Text]]
     ["@dnd-kit/core" :refer [closestCorners,
                              DragOverlay,]]
@@ -51,18 +52,33 @@
 
 
 (defn render-entity
-  [uid children]
-  (let [entity     (->> (reactive/get-reactive-block-document [:block/uid uid])
-                        shared/block-to-flat-map)
-        page-title (common-db/get-page-title @db/dsdb uid)
-        task-title (get entity ":task/title")
-        status     (get entity ":task/status")
-        priority   (get entity ":task/priority")
-        assignee   (get entity ":task/assignee")
-        _page      (get entity ":task/page")
-        _due-date  (get entity ":task/due-date")]
-    [:> Box
-     [:> Heading {:size "sm"} (or task-title page-title)]
+  [uid children columns]
+  (let [entity         (->> (reactive/get-reactive-block-document [:block/uid uid])
+                            shared/block-to-flat-map)
+        page-title     (common-db/get-page-title @db/dsdb uid)
+        task-title     (get entity ":task/title")
+        title          (or page-title task-title)
+        status         (get entity ":task/status")
+
+        priority       (get entity ":task/priority")
+        assignee       (get entity ":task/assignee")
+        _page          (get entity ":task/page")
+        due-date       (get entity ":task/due-date")
+
+        assignee-value (shared/parse-for-title assignee)
+        status-uid     (shared/parse-for-uid status)
+        status-value   (common-db/get-block-string @db/dsdb status-uid)
+        priority-uid   (shared/parse-for-uid priority)
+        priority-value (common-db/get-block-string @db/dsdb priority-uid)
+        parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))]
+
+    [:> Box {:width "100%"}
+     [:> HStack {:justifyContent "space-between" :width "100%"}
+      [:> Heading {:size "sm"} title]
+      [:> Text {:size "md"} status-value]
+      [:> Text {:size "md"} priority-value]
+      [:> Text {:size "md"} assignee-value]
+      [:> Text {:size "md"} due-date]]
      [:> Box
       (for [[uid children] children]
         ^{:key uid}
@@ -71,9 +87,14 @@
 
 
 (defn QueryTableV2
-  [{:keys [data] :as props}]
-  [:> Box
-   (for [[uid children] data]
-     ^{:key uid}
-     [render-entity uid children])])
+  [{:keys [data columns] :as props}]
+  [:> VStack
+   [:> HStack {:justifyContent "space-between" :width "100%"}
+    (for [column columns]
+      ^{:key column}
+      [:> Heading {:size "md"} column])]
+   [:<>
+    (for [[uid children] data]
+      ^{:key uid}
+      [render-entity uid children columns])]])
 

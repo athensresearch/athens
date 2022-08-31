@@ -630,7 +630,8 @@
                                         (sort-by sort-by-parents-count))
              task-trees         (tasks-to-trees tasks)]
 
-         [QueryTableV2 {:data task-trees}]))]))
+         [QueryTableV2 {:data task-trees
+                        :columns ["Title" "Status" "Priority" "Assignee" "Due Date"]}]))]))
 
 
 
