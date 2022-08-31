@@ -90,7 +90,7 @@ const semanticTokens = {
     },
     "background.basement": {
       default: '#fff',
-      _dark: '#111'
+      _dark: '#141414'
     },
     "background.upper": {
       default: '#fbfbfb',
