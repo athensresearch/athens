@@ -472,7 +472,6 @@
                          :variant "ghost"
                          :colorScheme "subtle"
                          :onPointerDown #(.stopPropagation %)}
-        ;; onClick events are eaten up by Sortable
          [:> IconButton {:zIndex  1
                          :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
           [:> ArrowRightOnBoxIcon]]]]]]]))
@@ -525,64 +524,64 @@
          [:> KanbanBoard
           [:> Heading {:size "md"} "TODO: Create title handler for queries"]
           (doall
-           (for [swimlanes boardData]
-             (let [[swimlane-id swimlane-columns] swimlanes
-                   nil-swimlane-id? (nil? swimlane-id)
-                   ;; TODO: doesn't handle empty assignee well, or values that are not expected
-                   swimlane-id      (if swimlane-id swimlane-id "None")
-                   swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
+            (for [swimlanes boardData]
+              (let [[swimlane-id swimlane-columns] swimlanes
+                    nil-swimlane-id? (nil? swimlane-id)
+                    ;; TODO: doesn't handle empty assignee well, or values that are not expected
+                    swimlane-id      (if swimlane-id swimlane-id "None")
+                    swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
 
-               [:> KanbanSwimlane {:name swimlane-key
-                                   :key swimlane-key
-                                   :bg "background.basement"}
-                (doall
-                 (for [possible-group-by-column all-possible-group-by-columns]
-                   (let [{:block/keys [string uid]} possible-group-by-column
-                         cards-from-a-column (if (= string "None")
-                                               (get swimlane-columns nil)
-                                               (get swimlane-columns uid))
-                          ;; context-object assumes group-by is always status, because of the uid stuff
-                         context-object      (cond-> {}
-                                               (and (= groupBy ":task/status")
-                                                    (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
-                                               (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
-                         column-id           (if uid uid "None")
-                         column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
+                [:> KanbanSwimlane {:name swimlane-key
+                                    :key swimlane-key
+                                    :bg "background.basement"}
+                 (doall
+                   (for [possible-group-by-column all-possible-group-by-columns]
+                     (let [{:block/keys [string uid]} possible-group-by-column
+                           cards-from-a-column (if (= string "None")
+                                                 (get swimlane-columns nil)
+                                                 (get swimlane-columns uid))
+                           ;; context-object assumes group-by is always status, because of the uid stuff
+                           context-object      (cond-> {}
+                                                 (and (= groupBy ":task/status")
+                                                      (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
+                                                 (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
+                           column-id           (if uid uid "None")
+                           column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
 
-                     [:> Droppable {:key column-id :id column-id}
-                      (fn [over?]
-                        (r/as-element
-                         [:> SortableContext {:id column-id
-                                              :items (or cards-from-a-column [])
-                                              :strategy verticalListSortingStrategy}
-                          [:> KanbanColumn {:key column-id
-                                            :isOver over?}
-                           [:> Flex {:color "foreground.secondary"
-                                     :gap 2
-                                     :px 4
-                                     :py 1
-                                     :alignItems "center"}
-                            [:> Heading {:fontWeight "medium"
-                                         :mr "auto"
-                                         :size "sm"}
-                             string]
-                             [:> Text {:fontWeight "medium"
-                                       :fontSize "sm"}
-                              (str (count cards-from-a-column))]
-                            [:> ButtonGroup {:size "sm"
-                                             :variant "ghost"}
-                             [:> IconButton {:onClick #(new-card context-object f-special query-uid)
-                                             :icon    (r/as-element [:> PlusIcon])}]]]
-                           (doall
-                            (for [card cards-from-a-column]
-                              (let [card-uid (get card ":block/uid")
-                                    over?    (= @over-id card-uid)]
-                                ^{:key card-uid} [render-card card-uid over?])))]]))])))])))
+                       [:> Droppable {:key column-id :id column-id}
+                        (fn [over?]
+                          (r/as-element
+                            [:> SortableContext {:id column-id
+                                                 :items (or cards-from-a-column [])
+                                                 :strategy verticalListSortingStrategy}
+                             [:> KanbanColumn {:key column-id
+                                               :isOver over?}
+                              [:> Flex {:color "foreground.secondary"
+                                        :gap 2
+                                        :px 4
+                                        :py 1
+                                        :alignItems "center"}
+                               [:> Heading {:fontWeight "medium"
+                                            :mr "auto"
+                                            :size "sm"}
+                                string]
+                               [:> Text {:fontWeight "medium"
+                                         :fontSize "sm"}
+                                (str (count cards-from-a-column))]
+                               [:> ButtonGroup {:size "sm"
+                                                :variant "ghost"}
+                                [:> IconButton {:onClick #(new-card context-object f-special query-uid)
+                                                :icon    (r/as-element [:> PlusIcon])}]]]
+                              (doall
+                                (for [card cards-from-a-column]
+                                  (let [card-uid (get card ":block/uid")
+                                        over?    (= @over-id card-uid)]
+                                    ^{:key card-uid} [render-card card-uid over?])))]]))])))])))
 
           [:> DragOverlay
            (when @active-id
              [:<>
-             ;; [:h1 @over-id]
+              ;; [:h1 @over-id]
               [render-card @active-id]])]]]))))
 
 
