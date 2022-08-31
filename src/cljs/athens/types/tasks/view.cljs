@@ -89,10 +89,10 @@
                                {:block/string status}
                                ;; NOTE Task belonging to a Project is maintained on side of a Project
                                #_#_":task/projects"
-                                #:block{:string   ""
-                                        :children (for [project projects]
-                                                    #:block{:string project
-                                                            :uid    (common.utils/gen-block-uid)})}}}]
+                                       #:block{:string   ""
+                                               :children (for [project projects]
+                                                           #:block{:string project
+                                                                   :uid    (common.utils/gen-block-uid)})}}}]
          {:block/uid block-uid
           :relation  position})
        (composite/make-consequence-op {:op/type :new-type})))
@@ -194,83 +194,83 @@
                                       "required"
                                       "empty"))]
             #_ [:> FormHelperText {:gridColumn 2}
-             (str "Please provide " prop-title)])]]))))
+                (str "Please provide " prop-title)])]]))))
 
 
 ;; Will need this in future, see Stuart's comment for better understanding here https://discord.com/channels/708122962422792194/1008156785791742002/1009102458695450654
 #_(defn inline-task-title
-  [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
-  (let [prop-id (str (random-uuid))]
-    (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
-      (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
-            prop-str            (or (:block/string prop-block) "")
-            local-value         (r/atom prop-str)
-            invalid-prop-str?   (and (str/blank? prop-str)
-                                     (not (nil? prop-str)))
-            save-fn             (fn
-                                  ([]
-                                   (log/debug prop-name "save-fn" (pr-str @local-value))
-                                   (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
-                                     (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
-                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
-                                  ([e]
-                                   (let [new-value (-> e .-target .-value)]
-                                     (log/debug prop-name "save-fn" (pr-str new-value))
-                                     (reset! local-value new-value)
-                                     (when (#{":task/title"
-                                              ":task/assignee"
-                                              ":task/description"
-                                              ":task/due-date"} prop-name)
+    [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
+    (let [prop-id (str (random-uuid))]
+      (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
+        (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
+              prop-str            (or (:block/string prop-block) "")
+              local-value         (r/atom prop-str)
+              invalid-prop-str?   (and (str/blank? prop-str)
+                                       (not (nil? prop-str)))
+              save-fn             (fn
+                                    ([]
+                                     (log/debug prop-name "save-fn" (pr-str @local-value))
+                                     (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
                                        (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
-                                                     (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
-            update-fn           #(do
-                                   (when-not (= prop-str %)
-                                     (log/debug prop-name "update-fn:" (pr-str %))
-                                     (reset! local-value %)))
-            idle-fn             (gfns/debounce #(do
-                                                  (log/debug prop-name "idle-fn" (pr-str @local-value))
-                                                  (save-fn))
-                                               2000)
-            read-value          local-value
-            show-edit?          (r/atom false)
-            custom-key-handlers {:enter-handler (if multiline?
-                                                  editor/enter-handler-new-line
-                                                  (fn [_uid _d-key-down]
-                                                    ;; TODO dispatch save and jump to next input
-                                                    (println "TODO dispatch save and jump to next input")
-                                                    (update-fn @local-value)))
-                                 :tab-handler   (fn [_uid _embed-id _d-key-down]
-                                                  ;; TODO implement focus on next input
-                                                  (update-fn @local-value))}
-            state-hooks         (merge {:save-fn                 save-fn
-                                        :idle-fn                 idle-fn
-                                        :update-fn               update-fn
-                                        :read-value              read-value
-                                        :show-edit?              show-edit?
-                                        :default-verbatim-paste? true
-                                        :keyboard-navigation?    false}
-                                       custom-key-handlers)]
-        [:> FormControl {:is-required required?
-                         :is-invalid  invalid-prop-str?}
-         [:> FormLabel {:html-for prop-id}
-          prop-title]
-         [:> BlockFormInput
-          ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
-          [editor/block-editor {:block/uid (or prop-block-uid
-                                               ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
-                                               (str "tmp-" (subs prop-name
-                                                                 (inc (.indexOf prop-name "/")))
-                                                    "-uid-" (common.utils/gen-block-uid)))}
-           state-hooks]
-          [presence/inline-presence-el prop-block-uid]]
+                                                     (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
+                                    ([e]
+                                     (let [new-value (-> e .-target .-value)]
+                                       (log/debug prop-name "save-fn" (pr-str new-value))
+                                       (reset! local-value new-value)
+                                       (when (#{":task/title"
+                                                ":task/assignee"
+                                                ":task/description"
+                                                ":task/due-date"} prop-name)
+                                         (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
+                                                       (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
+              update-fn           #(do
+                                     (when-not (= prop-str %)
+                                       (log/debug prop-name "update-fn:" (pr-str %))
+                                       (reset! local-value %)))
+              idle-fn             (gfns/debounce #(do
+                                                    (log/debug prop-name "idle-fn" (pr-str @local-value))
+                                                    (save-fn))
+                                                 2000)
+              read-value          local-value
+              show-edit?          (r/atom false)
+              custom-key-handlers {:enter-handler (if multiline?
+                                                    editor/enter-handler-new-line
+                                                    (fn [_uid _d-key-down]
+                                                      ;; TODO dispatch save and jump to next input
+                                                      (println "TODO dispatch save and jump to next input")
+                                                      (update-fn @local-value)))
+                                   :tab-handler   (fn [_uid _embed-id _d-key-down]
+                                                    ;; TODO implement focus on next input
+                                                    (update-fn @local-value))}
+              state-hooks         (merge {:save-fn                 save-fn
+                                          :idle-fn                 idle-fn
+                                          :update-fn               update-fn
+                                          :read-value              read-value
+                                          :show-edit?              show-edit?
+                                          :default-verbatim-paste? true
+                                          :keyboard-navigation?    false}
+                                         custom-key-handlers)]
+          [:> FormControl {:is-required required?
+                           :is-invalid  invalid-prop-str?}
+           [:> FormLabel {:html-for prop-id}
+            prop-title]
+           [:> BlockFormInput
+            ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
+            [editor/block-editor {:block/uid (or prop-block-uid
+                                                 ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                                 (str "tmp-" (subs prop-name
+                                                                   (inc (.indexOf prop-name "/")))
+                                                      "-uid-" (common.utils/gen-block-uid)))}
+             state-hooks]
+            [presence/inline-presence-el prop-block-uid]]
 
-         (if invalid-prop-str?
-           [:> FormErrorMessage
-            (str prop-title " is " (if required?
-                                     "required"
-                                     "empty"))]
-           [:> FormHelperText
-            (str "Please provide " prop-title)])]))))
+           (if invalid-prop-str?
+             [:> FormErrorMessage
+              (str prop-title " is " (if required?
+                                       "required"
+                                       "empty"))]
+             [:> FormHelperText
+              (str "Please provide " prop-title)])]))))
 
 
 (defn inline-task-title-2
@@ -332,21 +332,21 @@
                                                   "-uid-" (common.utils/gen-block-uid)))}
          state-hooks]
         #_ [:> FormControl {:is-required required?
-                         :is-invalid  invalid-prop-str?}
-         [:> FormLabel {:html-for prop-id}
-          prop-title]
-         [:> BlockFormInput
-          ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
+                            :is-invalid  invalid-prop-str?}
+            [:> FormLabel {:html-for prop-id}
+             prop-title]
+            [:> BlockFormInput
+             ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
 
-          [presence/inline-presence-el prop-block-uid]]
+             [presence/inline-presence-el prop-block-uid]]
 
-         (if invalid-prop-str?
-           [:> FormErrorMessage
-            (str prop-title " is " (if required?
-                                     "required"
-                                     "empty"))]
-           [:> FormHelperText
-            (str "Please provide " prop-title)])]))))
+            (if invalid-prop-str?
+              [:> FormErrorMessage
+               (str prop-title " is " (if required?
+                                        "required"
+                                        "empty"))]
+              [:> FormHelperText
+               (str "Please provide " prop-title)])]))))
 
 
 (defn- find-allowed-priorities
@@ -475,13 +475,17 @@
 
 
 ;; NOTE: not used right now
-(defn on-update-checkbox
-  [parent-block-uid is-checked]
-  (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/status"]
-                (fn [db uid]
-                  (if is-checked
-                    [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "To Do") "))"))]
-                    [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "Done") "))"))]))]))
+(defn on-update-status
+  [task-uid new-status]
+  (prn "UPDATE" task-uid new-status (find-status-uid new-status))
+  (let [new-status (-> new-status find-status-uid)
+        new-status (str "((" new-status "))")]
+    (rf/dispatch [:graph/update-in [:block/uid task-uid] [":task/status"]
+                  (fn [db uid]
+                    [(graph-ops/build-block-save-op db uid new-status)]
+                    #_(if is-checked
+                        [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "To Do") "))"))]
+                        [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "Done") "))"))]))])))
 
 
 ;; NOTE: not used right now
@@ -518,11 +522,8 @@
             status          (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
                                                                                (get ":task/status")
                                                                                :block/string
-                                                                               #_ (common-db/strip-markup "((" "))"))]))
-            _               (prn "test" props) #_ (common-db/get-block @db/dsdb [:block/uid  (-> props
-                                                                                                 (get ":task/status")
-                                                                                                 :block/string
-                                                                                                 #_ (common-db/strip-markup "((" "))"))])
+                                                                               (common-db/strip-markup "((" "))"))])
+                                :block/string)
             _title          (-> props (get ":task/title") :block/string)
             assignee        (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
             priority        (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
@@ -533,7 +534,6 @@
             creator         creator
             description     (-> props (get ":task/description") :block/string)
             created-date    created-date
-            status          status
             due-date        (-> props
                                 (get ":task/due-date")
                                 :block/string
@@ -558,12 +558,8 @@
          [:> Taskbox {:status   status
                       :options  status-options
                       :position "relative"
-                      :top "0.2em"
-                      :onChange (fn [status]
-                                  (let [new-status status
-                                        status-ref (str "((" new-status "))")]
-                                    (rf/dispatch [:graph/update-in [:block/uid block-uid] [":task/status"]
-                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid status-ref)])])))}]
+                      :top      "0.2em"
+                      :onChange #(on-update-status block-uid %)}]
          [:> Box {:flex       "1 1 100%"
                   :py         1
                   :cursor     "text"

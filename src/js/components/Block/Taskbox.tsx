@@ -74,10 +74,11 @@ const STATUS = {
 }
 
 export const Taskbox = (props: TaskboxProps) => {
-  const { options, onChange, ...flexProps } = props;
+  const { status: initialStatus, options, onChange, ...flexProps } = props;
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
 
-  const [status, setStatus] = React.useState('To Do');
+  console.log("INIT", initialStatus)
+  const [status, setStatus] = React.useState(initialStatus || "To Do");
 
   const isEditable = options?.length > 1;
 
@@ -95,7 +96,6 @@ export const Taskbox = (props: TaskboxProps) => {
           defaultValue={status}
           type="radio"
           onChange={(value) => {
-            console.log('changing to ', value)
             onChange(value as string)
             setStatus(value as string);
           }}>
@@ -171,8 +171,10 @@ export const Taskbox = (props: TaskboxProps) => {
           if (isEditable) {
             if (STATUS[status].isDone) {
               setStatus('To Do');
+              onChange('To Do')
             } else {
               setStatus('Done');
+              onChange('Done')
             }
           }
         }
