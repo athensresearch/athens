@@ -1,6 +1,7 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
+    [datascript.core :as d]
     ["/components/DnD/DndContext" :refer [DragAndDropContext]]
     ["/components/DnD/Droppable" :refer [Droppable]]
     ["/components/DnD/Sortable" :refer [Sortable]]
@@ -124,7 +125,7 @@
 (defn block-to-flat-map
   [block]
   ;; TODO: we could technically give pages all the properties of tasks and put them on a kanban board...
-  (let [{:block/keys [uid string properties create edits] :keys [node/_title]} block
+  (let [{:block/keys [uid string properties create edits children] :keys [node/_title]} block
         create-auth-and-time    (get-create-auth-and-time create)
         last-edit-auth-and-time (get-last-edit-auth-and-time edits)
         property-keys           (keys properties)
@@ -139,29 +140,149 @@
                                        last-edit-auth-and-time
                                        {":task/status" (parse-for-uid (get props-map ":task/status"))}
                                        {":task/assignee" (parse-for-title (get props-map ":task/assignee"))})]
+    #_(when children
+        (prn (get merged-map ":task/title") uid children))
     merged-map))
-
 
 (defn get-root-page
   [x]
   (merge x
          {":task/page" (:node/title (db/get-root-parent-page (get x ":block/uid")))}))
 
+(defn shape-parent-query
+  [pull-results]
+  (->> (loop [b   pull-results
+              res []]
+         (cond
+           ;; There's no page in these pull results, log and exit.
+           (nil? b)        (do
+                             (prn "No parent found in" (pr-str pull-results))
+                             [])
+           ;; Found the page.
+           (:node/title b) (conj res b)
+           ;; Recur with the parent.
+           :else           (recur (or (first (:block/_children b))
+                                      (:block/property-of b))
+                                  (conj res (dissoc b :block/_children :block/property-of)))))
+       (rest)
+       (reverse)
+       vec))
+
+
+(defn get-parents-recursively
+  [db id]
+  (when (d/entity db id)
+    (->> (d/pull db '[:db/id :node/title :block/uid :block/string
+                      {:block/property-of ...}
+                      {:block/_children ...}]
+                 id)
+         shape-parent-query)))
+
+(->> (get-parents-recursively @athens.db/dsdb [:block/uid "64169e53f"]))
+
+
+(defn map-vals
+  [m f]
+  (persistent!
+    (reduce-kmap-valsv
+      (fn [m k v]
+        (assoc! m k (f v)))
+      (transient {})
+      m)))
 
 (defn nested-group-by
-  "You have to pass the first group"
-  [kw columns]
-  (into (hash-map)
-        (map (fn [[k v]]
-               [k (group-by #(get % kw) v)])
-             columns)))
+  "Like group-by but instead of a single function, this is given a list or vec
+ of functions to apply recursively via group-by. An optional `final` argument
+ (defaults to identity) may be given to run on the vector result of the final
+ group-by."
+  ([fs coll]
+   (nested-group-by fs coll identity))
+  ([[f & fs] coll final-fn]
+   (if f
+     (map-vals (group-by f coll)
+               (fn [x]
+                 (nested-group-by fs x final-fn)))
+     (final-fn coll))))
 
 
-(defn group-stuff
-  [g sg items]
-  (->> items
-       (group-by #(get % sg))
-       (nested-group-by g)))
+
+(defn my-map
+  ([f coll]
+   (my-map f coll []))
+  ([f [first & rest] acc]
+   (if first
+     (my-map f rest (conj acc (f first)))
+     acc)))
+
+
+(defn my-group-by
+  [f coll]
+  (reduce-kv (fn [m idx item]
+               (let [value (f item)
+                     current (get m value)]
+                 (assoc m value (vec (conj current item)))))
+             {}
+             coll))
+
+(defn my-group-by
+  ([f coll]
+   (my-group-by f coll {}))
+  ([f [first & rest] acc]
+   (if first
+     (let [value   (f first)
+           current (get acc value)]
+       (my-group-by f rest
+                    (assoc acc value (vec (conj current first)))))
+     acc)))
+
+
+(def foo [["A" 2011 "Dan"]
+          ["A" 2011 "Jon"]
+          ["A" 2010 "Tim"]
+          ["B" 2009 "Tom"]])
+
+(nested-group-by [first second] foo)
+
+
+(let [tasks         (->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
+                         (map block-to-flat-map)
+                         (mapv (fn [x]
+                                 (merge x {:parents (get-parents-recursively @athens.db/dsdb [:block/uid (get x ":block/uid")])}))))
+      parents-count (map #(-> % :parents count) tasks)
+      max-parents   (apply max parents-count)]
+  (nested-group-by (mapv (fn [i]
+                           (partial (fn [x]
+                                      (-> x
+                                          :parents
+                                          (nth i nil)))))
+                         (range 1))
+                   tasks))
+
+;; => this returns kind of this information i need
+;; if someone has that many parents, it does the correc group by
+;; but if it has more parents, it doesn't go far enough
+;; and if it has less, it ends up in nil
+
+
+
+#_(nested-group-by [#(-> % :parents first)
+                    #(-> % :parents second)] tasks)
+
+
+;;(defn nested-group-by
+;;  "You have to pass the first group"
+;;  [kw columns]
+;;  (->> (map (fn [[k v]]
+;;              [k (group-by #(get % kw) v)])
+;;            columns)
+;;       (into (hash-map))))
+
+
+;;(defn group-stuff
+;;  [g sg items]
+;;  (->> items
+;;       (group-by #(get % sg))
+;;       (nested-group-by g)))
 
 
 (defn context-to-block-properties
@@ -229,7 +350,6 @@
                       [(if nil-column?
                          (graph-ops/build-block-remove-op db prop-uid)
                          (graph-ops/build-block-save-op db prop-uid new-column))])]))))
-
 
 #_(defn update-status
     [id new-status]
