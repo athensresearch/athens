@@ -4,7 +4,7 @@
     ["/components/DnD/DndContext" :refer [DragAndDropContext]]
     ["/components/DnD/Droppable" :refer [Droppable]]
     ["/components/DnD/Sortable" :refer [Sortable]]
-    ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon]]
+    ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon PlusIcon]]
     ["/components/Query/KanbanBoard" :refer [KanbanBoard
                                              KanbanSwimlane
                                              KanbanColumn]]
@@ -13,7 +13,10 @@
     ["@chakra-ui/react" :refer [Box,
                                 IconButton
                                 HStack
-                                Button
+                                Heading
+                                ButtonGroup
+                                Flex
+                                VStack
                                 HStack
                                 Stack
                                 Text]]
@@ -409,7 +412,7 @@
                      :options GROUP_BY_OPTIONS
                      :onChange #(update-query-property uid "group/subgroup/by" %)
                      :value g-s-by}]]
-    [:> Stack {:direction "row" :spacing 5}
+    [:> ButtonGroup {:isAttached true :size "xs"}
      (for [menu menus-data]
        (let [{:keys [heading options onChange value]} menu]
          [:> QueryRadioMenu {:key heading :heading heading :options options :onChange onChange :value value}]))
@@ -456,32 +459,35 @@
      [:> Box {:borderRadius  "sm"
               :minHeight     "4rem"
               :listStyleType "none"
-              :border        "1px solid transparent"
               :p             2
-              :bg            "background.floor"
+              :bg            "interaction.surface"
               :position      "relative"
               :sx            (and over? {":after" {:content          "''"
                                                    :position         "absolute"
                                                    :width            "96%"
                                                    :height           "3px"
                                                    :background-color "link"}})
-              ;; :width         "300px"
-              :_hover        {:bg          "background.upper",
-                              :border      "1px solid",
-                              :borderColor "background.floor"}}
+              :_hover        {:bg          "interaction.surface.hover"}}
 
-
-
-      [:> Stack
-       [:> Text {:fontWeight "bold"} [parse-renderer/parse-and-render title uid]]
-       [:> HStack
-        [:> Text assignee-value]
-        [:> Text priority-value]]
-       [:> HStack {:justifyContent "space-between"}
+      [:> VStack {:spacing 0
+                  :align "stretch"}
+       [:> Text {:fontWeight "medium"
+                 :lineHeight "short"} [parse-renderer/parse-and-render title uid]]
+       [:> HStack {:justifyContent "space-between"
+                   :fontSize "sm"
+                   :color "foreground.secondary"}
+        [:> HStack
+         [:> Text assignee-value]
+         [:> Text priority-value]]
+        [:> ButtonGroup {:justifyContent "space-between"
+                         :onPointerDown #(.stopPropagation %)}
         ;; onClick events are eaten up by Sortable
-        [:> IconButton {:zIndex  1
-                        :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
-         [:> ArrowRightOnBoxIcon]]]]]]))
+         [:> IconButton {:zIndex  1
+                         :variant "ghost"
+                         :colorScheme "subtle"
+                         :size "sm"
+                         :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
+          [:> ArrowRightOnBoxIcon]]]]]]]))
 
 
 (defn- find-container-id
@@ -528,8 +534,9 @@
                                                  (reset! active-id nil)
                                                  (reset! over-id nil)))}
 
-         [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
-         (doall
+         [:> KanbanBoard
+          [:> Heading {:size "md"} "TODO: Create title handler for queries"]
+          (doall
            (for [swimlanes boardData]
              (let [[swimlane-id swimlane-columns] swimlanes
                    nil-swimlane-id? (nil? swimlane-id)
@@ -537,44 +544,56 @@
                    swimlane-id      (if swimlane-id swimlane-id "None")
                    swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
 
-               [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
+               [:> KanbanSwimlane {:name swimlane-key
+                                   :key swimlane-key
+                                   :bg "background.basement"}
                 (doall
-                  (for [possible-group-by-column all-possible-group-by-columns]
-                    (let [{:block/keys [string uid]} possible-group-by-column
-                          cards-from-a-column (if (= string "None")
-                                                (get swimlane-columns nil)
-                                                (get swimlane-columns uid))
+                 (for [possible-group-by-column all-possible-group-by-columns]
+                   (let [{:block/keys [string uid]} possible-group-by-column
+                         cards-from-a-column (if (= string "None")
+                                               (get swimlane-columns nil)
+                                               (get swimlane-columns uid))
                           ;; context-object assumes group-by is always status, because of the uid stuff
-                          context-object      (cond-> {}
-                                                (and (= groupBy ":task/status")
-                                                     (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
-                                                (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
-                          column-id           (if uid uid "None")
-                          column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
+                         context-object      (cond-> {}
+                                               (and (= groupBy ":task/status")
+                                                    (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
+                                               (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
+                         column-id           (if uid uid "None")
+                         column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
 
-                      [:> Droppable {:key column-id :id column-id}
-                       (fn [over?]
-                         (r/as-element
-                           [:> SortableContext {:id column-id
-                                                :items (or cards-from-a-column [])
-                                                :strategy verticalListSortingStrategy}
-                            [:> KanbanColumn {:name string :key column-id :isOver over?}
-                             (doall
-                               (for [card cards-from-a-column]
-                                 (let [card-uid (get card ":block/uid")
-                                       over?    (= @over-id card-uid)]
-                                   ^{:key card-uid} [render-card card-uid over?])))
-                             [:> Button {:onClick    #(new-card context-object f-special query-uid)
-                                         :size       "sm"
-                                         :variant    "ghost"
-                                         :fontWeight "light"}
-                              "+ New Card"]]]))])))])))
+                     [:> Droppable {:key column-id :id column-id}
+                      (fn [over?]
+                        (r/as-element
+                         [:> SortableContext {:id column-id
+                                              :items (or cards-from-a-column [])
+                                              :strategy verticalListSortingStrategy}
+                          [:> KanbanColumn {:key column-id
+                                            :isOver over?}
+                           [:> Flex {:color "foreground.secondary"
+                                     :gap 2
+                                     :alignItems "center"}
+                            [:> Heading {:fontWeight "medium"
+                                         :mr "auto"
+                                         :size "sm"}
+                             string]
+                             [:> Text {:fontWeight "medium"
+                                       :fontSize "sm"}
+                              (str (count cards-from-a-column))]
+                            [:> ButtonGroup {:size "sm"
+                                             :variant "ghost"}
+                             [:> IconButton {:onClick #(new-card context-object f-special query-uid)
+                                             :icon    (r/as-element [:> PlusIcon])}]]]
+                           (doall
+                            (for [card cards-from-a-column]
+                              (let [card-uid (get card ":block/uid")
+                                    over?    (= @over-id card-uid)]
+                                ^{:key card-uid} [render-card card-uid over?])))]]))])))])))
 
-         [:> DragOverlay
-          (when @active-id
-            [:<>
+          [:> DragOverlay
+           (when @active-id
+             [:<>
              ;; [:h1 @over-id]
-             [render-card @active-id]])]]))))
+              [render-card @active-id]])]]]))))
 
 
 (defn query-el
@@ -603,7 +622,7 @@
 
         query-data        (sort-table query-data s-by s-direction)]
     ;; TODO
-    [:> Box {#_#_:margin-top "40px" :width "100%"}
+    [:> VStack {:className "query-el" :key query-uid :align "stretch"}
      (case layout
        "board"
        (let [[g-by sg-by] (get* parsed-properties ["group/by" "group/subgroup/by"])
@@ -717,8 +736,7 @@
 
     (if (invalid-query? parsed-properties)
       [:> Box {:color "red"} "invalid query"]
-      [:> Box {:gridArea "content" :borderColor "gray"}
-
+      [:<>
        [options-el {:parsed-properties parsed-properties
                     :properties        properties
                     :schema            schema

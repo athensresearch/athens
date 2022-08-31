@@ -544,7 +544,7 @@
                         :unreadNotification     (actions/unread-notification? properties)}]
 
             ;; `BlockTypeProtocol` dispatch placement
-            [:> Box {:gridArea "content"}
+            [:> Box {:gridArea "content" :overflow "hidden"}
              ^{:key renderer-k}
              [types/outline-view renderer block {:show-edit? show-edit?}]]
 
