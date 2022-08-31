@@ -436,7 +436,6 @@
 
 (defn update-card-field
   [id k new-value]
-  (prn id k new-value)
   (rf/dispatch [:graph/update-in [:block/uid id] [k]
                 (fn [db prop-uid]
                   [(graph-ops/build-block-save-op db prop-uid new-value)])]))
@@ -503,6 +502,7 @@
                    :lineHeight    "short"} [parse-renderer/parse-and-render title uid]]]
         [:> ModalInputPopover {:preventScroll false}
          [:> BlockFormInput {:size "md"
+                             :isMultiline true
                              :onPointerDown #(.stopPropagation %)}
           [title-editor uid title]
           [presence/inline-presence-el uid]]]]
