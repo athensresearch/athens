@@ -1092,106 +1092,121 @@
   - If value is empty, unindent.
   - If caret is at start and there is a value, create new block below but keep same block index."
   [rfdb uid d-key-down]
-  (let [root-embed?           (= (some-> d-key-down :target
-                                         (.. (closest ".block-embed"))
-                                         (. -firstChild)
-                                         (.getAttribute "data-uid"))
-                                 uid)
-        [uid embed-id]        (db/uid-and-embed-id uid)
-        block                 (db/get-block [:block/uid uid])
+  (let [root-embed?                         (= (some-> d-key-down :target
+                                                       (.. (closest ".block-embed"))
+                                                       (. -firstChild)
+                                                       (.getAttribute "data-uid"))
+                                               uid)
+        [uid embed-id]                      (db/uid-and-embed-id uid)
+        block                               (db/get-block [:block/uid uid])
+        block-properties                    (common-db/get-block-property-document @db/dsdb [:block/uid uid])
+        has-comments?                       (not-empty (get block-properties ":comment/threads"))
+        block-has-comments-but-no-children? (and has-comments?
+                                                 (empty? (:block/children block)))
+
         {parent-uid :block/uid
-         :as        parent}   (db/get-parent [:block/uid uid])
-        is-parent-root-embed? (= (some-> d-key-down :target
-                                         (.. (closest ".block-embed"))
-                                         (. -firstChild)
-                                         (.getAttribute "data-uid"))
-                                 (str parent-uid "-embed-" embed-id))
-        root-block?           (boolean (:node/title parent))
-        context-root-uid      (get-in rfdb [:current-route :path-params :id])
-        new-uid               (common.utils/gen-block-uid)
-        has-children?         (seq (common-db/sorted-prop+children-uids @db/dsdb [:block/uid uid]))
+         :as        parent}                 (db/get-parent [:block/uid uid])
+        is-parent-root-embed?               (= (some-> d-key-down :target
+                                                       (.. (closest ".block-embed"))
+                                                       (. -firstChild)
+                                                       (.getAttribute "data-uid"))
+                                               (str parent-uid "-embed-" embed-id))
+        root-block?                         (boolean (:node/title parent))
+        context-root-uid                    (get-in rfdb [:current-route :path-params :id])
+        new-uid                             (common.utils/gen-block-uid)
+        has-children?                       (seq (common-db/sorted-prop+children-uids @db/dsdb [:block/uid uid]))
+        {:keys [value start]}               d-key-down
+        caret-at-the-end-of-text            (= start
+                                               (count value))
+        caret-at-the-start-of-text          (and (zero? start)
+                                                 value)
+        event                               (cond
+                                              (and block-has-comments-but-no-children?
+                                                   caret-at-the-end-of-text)
+                                              [:enter/new-block {:block    block
+                                                                 :parent   parent
+                                                                 :new-uid  new-uid
+                                                                 :embed-id embed-id}]
 
-        {:keys [value start]} d-key-down
-        event                 (cond
-                                (:block/key block)
-                                [:enter/split-block {:uid        uid
-                                                     :value      value
-                                                     :index      start
-                                                     :new-uid    new-uid
-                                                     :embed-id   embed-id
-                                                     :relation   :first}]
+                                              (:block/key block)
+                                              [:enter/split-block {:uid        uid
+                                                                   :value      value
+                                                                   :index      start
+                                                                   :new-uid    new-uid
+                                                                   :embed-id   embed-id
+                                                                   :relation   :first}]
 
-                                (and (:block/open block)
-                                     has-children?
-                                     (= start (count value)))
-                                [:enter/add-child {:block    block
-                                                   :new-uid  new-uid
-                                                   :embed-id embed-id}]
+                                              (and (:block/open block)
+                                                   has-children?
+                                                   caret-at-the-end-of-text)
+                                              [:enter/add-child {:block    block
+                                                                 :new-uid  new-uid
+                                                                 :embed-id embed-id}]
 
-                                (and embed-id root-embed?
-                                     (= start (count value)))
-                                [:enter/open-block-add-child {:block    block
-                                                              :new-uid  new-uid
-                                                              :embed-id embed-id}]
+                                              (and embed-id root-embed?
+                                                   caret-at-the-end-of-text)
+                                              [:enter/open-block-add-child {:block    block
+                                                                            :new-uid  new-uid
+                                                                            :embed-id embed-id}]
 
-                                (and (not (:block/open block))
-                                     has-children?
-                                     (= start (count value)))
-                                [:enter/new-block {:block    block
-                                                   :parent   parent
-                                                   :new-uid  new-uid
-                                                   :embed-id embed-id}]
+                                              (and (not (:block/open block))
+                                                   has-children?
+                                                   caret-at-the-end-of-text)
+                                              [:enter/new-block {:block    block
+                                                                 :parent   parent
+                                                                 :new-uid  new-uid
+                                                                 :embed-id embed-id}]
 
-                                (and (empty? value)
-                                     (or (= context-root-uid (:block/uid parent))
-                                         root-block?))
-                                [:enter/new-block {:block    block
-                                                   :parent   parent
-                                                   :new-uid  new-uid
-                                                   :embed-id embed-id}]
+                                              (and (empty? value)
+                                                   (or (= context-root-uid (:block/uid parent))
+                                                       root-block?))
+                                              [:enter/new-block {:block    block
+                                                                 :parent   parent
+                                                                 :new-uid  new-uid
+                                                                 :embed-id embed-id}]
 
-                                (and (:block/open block)
-                                     embed-id root-embed?
-                                     (not= start (count value)))
-                                [:enter/split-block {:uid        uid
-                                                     :value      value
-                                                     :index      start
-                                                     :new-uid    new-uid
-                                                     :embed-id   embed-id
-                                                     :relation   :first}]
+                                              (and (:block/open block)
+                                                   embed-id root-embed?
+                                                   (not caret-at-the-end-of-text))
+                                              [:enter/split-block {:uid        uid
+                                                                   :value      value
+                                                                   :index      start
+                                                                   :new-uid    new-uid
+                                                                   :embed-id   embed-id
+                                                                   :relation   :first}]
 
-                                (and (empty? value) embed-id (not is-parent-root-embed?))
-                                [:unindent {:uid              uid
-                                            :d-key-down       d-key-down
-                                            :context-root-uid context-root-uid
-                                            :embed-id         embed-id
-                                            :local-string     ""}]
+                                              (and (empty? value) embed-id (not is-parent-root-embed?))
+                                              [:unindent {:uid              uid
+                                                          :d-key-down       d-key-down
+                                                          :context-root-uid context-root-uid
+                                                          :embed-id         embed-id
+                                                          :local-string     ""}]
 
-                                (and (empty? value) embed-id is-parent-root-embed?)
-                                [:enter/new-block {:block    block
-                                                   :parent   parent
-                                                   :new-uid  new-uid
-                                                   :embed-id embed-id}]
+                                              (and (empty? value) embed-id is-parent-root-embed?)
+                                              [:enter/new-block {:block    block
+                                                                 :parent   parent
+                                                                 :new-uid  new-uid
+                                                                 :embed-id embed-id}]
 
-                                (not (zero? start))
-                                [:enter/split-block {:uid      uid
-                                                     :value    value
-                                                     :index    start
-                                                     :new-uid  new-uid
-                                                     :embed-id embed-id
-                                                     :relation :after}]
+                                              (not caret-at-the-start-of-text)
+                                              [:enter/split-block {:uid      uid
+                                                                   :value    value
+                                                                   :index    start
+                                                                   :new-uid  new-uid
+                                                                   :embed-id embed-id
+                                                                   :relation :after}]
 
-                                (empty? value)
-                                [:unindent {:uid              uid
-                                            :d-key-down       d-key-down
-                                            :context-root-uid context-root-uid
-                                            :embed-id         embed-id
-                                            :local-string     ""}]
+                                              (empty? value)
+                                              [:unindent {:uid              uid
+                                                          :d-key-down       d-key-down
+                                                          :context-root-uid context-root-uid
+                                                          :embed-id         embed-id
+                                                          :local-string     ""}]
 
-                                (and (zero? start) value)
-                                [:enter/bump-up {:uid      uid
-                                                 :new-uid  new-uid
-                                                 :embed-id embed-id}])]
+                                              caret-at-the-start-of-text
+                                              [:enter/bump-up {:uid      uid
+                                                               :new-uid  new-uid
+                                                               :embed-id embed-id}])]
     (log/debug "[Enter] ->" (pr-str event))
     (assert parent-uid (str "[Enter] no parent for block-uid: " uid))
     {:fx [[:dispatch event]]}))

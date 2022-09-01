@@ -1,16 +1,16 @@
 import React from 'react';
 import { ContextMenuContext } from '@/App/ContextMenuContext';
-import { Box, Button, Checkbox, Flex, IconButton, Menu, MenuButton, MenuGroup, MenuItemOption, MenuList, MenuOptionGroup, Portal, Square } from '@chakra-ui/react';
-import { ArrowRightVariableIcon, CheckboxIcon, CheckmarkIcon, CheckmarkVariableIcon, ChevronDownIcon, ChevronDownVariableIcon, PauseVariableIcon, SquareIcon, XmarkVariableIcon } from '@/Icons/Icons';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Button, Flex, FlexProps, IconButton, Menu, MenuButton, MenuGroup, MenuItemOption, MenuList, MenuOptionGroup, Portal } from '@chakra-ui/react';
+import { ArrowRightVariableIcon, CheckmarkVariableIcon, ChevronDownVariableIcon, PauseVariableIcon, SquareIcon, XmarkVariableIcon } from '@/Icons/Icons';
+import { AnimatePresence, HTMLMotionProps, motion } from 'framer-motion';
 
-interface TaskboxProps {
+interface TaskboxProps extends FlexProps {
   status: string;
   onChange: (status: string) => void;
   options: string[];
 }
 
-const STATUS_ICON_PROPS = {
+const STATUS_ICON_PROPS: FlexProps & HTMLMotionProps<"div"> = {
   as: motion.div,
   position: 'absolute',
   inset: 0,
@@ -64,26 +64,37 @@ const STATUS = {
     color: "gray.500",
     text: "Cancelled",
     isDone: true,
+  },
+  "Stalled": {
+    icon: <XmarkVariableIcon />,
+    color: "brown.500",
+    text: "Stalled",
+    isDone: false,
   }
 }
 
 export const Taskbox = (props: TaskboxProps) => {
-  const { options, onChange, ...boxProps } = props;
+  const { status: initialStatus, options, onChange, ...flexProps } = props;
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
 
-  const [status, setStatus] = React.useState('To Do');
+  const [status, setStatus] = React.useState(initialStatus || "To Do");
+
+  const isEditable = options?.length > 1;
 
   const ref = React.useRef(null);
   const isMenuOpen = getIsMenuOpen(ref);
 
   const StatusMenu = () => {
+    if (!isEditable) {
+      return null;
+    }
+
     return (
       <MenuGroup>
         <MenuOptionGroup
           defaultValue={status}
           type="radio"
           onChange={(value) => {
-            console.log('changing to ', value)
             onChange(value as string)
             setStatus(value as string);
           }}>
@@ -109,28 +120,31 @@ export const Taskbox = (props: TaskboxProps) => {
   }
 
   return <Flex
+    display="inline-flex"
     ref={ref}
     gap={0.5}
-    my="-1px"
-    p="1px"
     borderRadius="sm"
-    alignSelf="flex-start"
     alignItems="center"
-    height="2em"
+    height={4}
+    bg={isMenuOpen ? "interaction.surface.hover" : "interaction.surface"}
     justifyContent="center"
-    bg={isMenuOpen ? "interaction.surface.hover" : "transparent"}
     onContextMenu={(event) => {
-      addToContextMenu({ event, ref, component: StatusMenu, anchorEl: ref, isExclusive: true });
+      if (isEditable) {
+        addToContextMenu({ event, ref, component: StatusMenu, anchorEl: ref, isExclusive: true });
+      }
     }}
+    {...flexProps}
   >
     <Button
       size="sm"
+      isDisabled={!isEditable}
+      opacity={1}
       borderRadius="sm"
       variant="outline"
       overflow="hidden"
       p={0}
       minWidth={0}
-      boxSize={5}
+      boxSize={4}
       flex="0 0 auto"
       borderWidth="2px"
       justifyContent="center"
@@ -138,7 +152,7 @@ export const Taskbox = (props: TaskboxProps) => {
       _hover={{}}
       _active={{}}
       {...STATUS[status].isDone ? {
-        bg: STATUS[status].color,
+        bg: isEditable ? STATUS[status].color : "none",
         color: "background.floor",
       } : {
         borderColor: STATUS[status].color,
@@ -147,15 +161,21 @@ export const Taskbox = (props: TaskboxProps) => {
           content: "''",
           position: "absolute",
           inset: 0,
-          opacity: 0.3,
-          bg: "currentColor"
+          opacity: isEditable ? 0.3 : 0,
+          bg: isEditable ? "currentColor" : "none"
         }
       }}
       onClick={() => {
-        if (STATUS[status].isDone) {
-          setStatus('To Do');
-        } else {
-          setStatus('Done');
+        {
+          if (isEditable) {
+            if (STATUS[status].isDone) {
+              setStatus('To Do');
+              onChange('To Do')
+            } else {
+              setStatus('Done');
+              onChange('Done')
+            }
+          }
         }
       }}
     >
@@ -163,30 +183,33 @@ export const Taskbox = (props: TaskboxProps) => {
         <Flex {...STATUS_ICON_PROPS} key={status}>{status === 'To Do' ? null : STATUS[status].icon}</Flex>
       </AnimatePresence>
     </Button>
-    <Menu>
-      <IconButton
-        size="sm"
-        minWidth={5}
-        height={5}
-        borderRadius="sm"
-        aria-label="Edit status"
-        as={MenuButton}
-        icon={
-          <ChevronDownVariableIcon
-            boxSize={3}
-            color="foreground.secondary"
-            position="relative"
-            top="-1px"
-            sx={{
-              "path": {
-                strokeWidth: 1.5
-              }
-            }} />
-        }>
-      </IconButton>
-      <Portal>
-        <MenuList><StatusMenu /></MenuList>
-      </Portal>
-    </Menu>
+    {isEditable && (
+      <Menu>
+        <IconButton
+          size="sm"
+          minWidth={4}
+          height={4}
+          bg="transparent"
+          borderRadius="sm"
+          aria-label="Edit status"
+          as={MenuButton}
+          icon={
+            <ChevronDownVariableIcon
+              boxSize={3}
+              color="foreground.secondary"
+              position="relative"
+              top="-1px"
+              sx={{
+                "path": {
+                  strokeWidth: 1.5
+                }
+              }} />
+          }>
+        </IconButton>
+        <Portal>
+          <MenuList><StatusMenu /></MenuList>
+        </Portal>
+      </Menu>
+    )}
   </Flex >
 }

@@ -1,8 +1,16 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
-    ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon]]
+    ["/components/Block/BlockFormInput" :refer [BlockFormInput]]
+    ["/components/DnD/DndContext" :refer [DragAndDropContext]]
+    ["/components/DnD/Droppable" :refer [Droppable]]
+    ["/components/DnD/Sortable" :refer [Sortable]]
+    ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon PlusIcon]]
+    ["/components/ModalInput/ModalInput" :refer [ModalInput]]
+    ["/components/ModalInput/ModalInputPopover" :refer [ModalInputPopover]]
+    ["/components/ModalInput/ModalInputTrigger" :refer [ModalInputTrigger]]
     ["/components/Query/KanbanBoard" :refer [KanbanBoard
+                                             KanbanCard
                                              KanbanSwimlane
                                              KanbanColumn]]
     ["/components/Query/Query" :refer [QueryRadioMenu]]
@@ -10,10 +18,16 @@
     ["@chakra-ui/react" :refer [Box,
                                 IconButton
                                 HStack
-                                Button
+                                Heading
+                                ButtonGroup
+                                Flex
+                                VStack
                                 HStack
-                                Stack
                                 Text]]
+    ["@dnd-kit/core" :refer [closestCorners,
+                             DragOverlay,]]
+    ["@dnd-kit/sortable" :refer [SortableContext,
+                                 verticalListSortingStrategy,]]
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
     [athens.common-events.bfs :as bfs]
@@ -25,10 +39,13 @@
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
+    [athens.self-hosted.presence.views          :as presence]
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
+    [athens.views.blocks.editor                 :as editor]
     [clojure.string :refer []]
-    [re-frame.core :as rf]))
+    [re-frame.core :as rf]
+    [reagent.core :as r]))
 
 
 ;; CONSTANTS
@@ -107,9 +124,13 @@
      ":last-edit/time" (get-in last-edit [:event/time :time/ts])}))
 
 
+(declare parse-for-uid parse-for-title)
+
+
 (defn block-to-flat-map
   [block]
-  (let [{:block/keys [uid string properties create edits]} block
+  ;; TODO: we could technically give pages all the properties of tasks and put them on a kanban board...
+  (let [{:block/keys [uid string properties create edits] :keys [node/_title]} block
         create-auth-and-time    (get-create-auth-and-time create)
         last-edit-auth-and-time (get-last-edit-auth-and-time edits)
         property-keys           (keys properties)
@@ -117,11 +138,13 @@
                                           (assoc acc prop-key (get-in properties [prop-key :block/string])))
                                         {}
                                         property-keys)
-        merged-map              (merge {":block/uid" uid
+        merged-map              (merge {":block/uid"    uid
                                         ":block/string" string}
                                        props-map
                                        create-auth-and-time
-                                       last-edit-auth-and-time)]
+                                       last-edit-auth-and-time
+                                       {":task/status" (parse-for-uid (get props-map ":task/status"))}
+                                       {":task/assignee" (parse-for-title (get props-map ":task/assignee"))})]
     merged-map))
 
 
@@ -165,10 +188,13 @@
 
   context == {:task/status 'todo'
               :task/project '[[Project: ASD]]'"
-  [context]
+  [context f-special query-uid]
   (let [context             (js->clj context)
         new-block-props     (context-to-block-properties context)
-        parent-of-new-block (:title (dates/get-day))        ; for now, just create a new block on today's daily notes
+        parent-of-new-block (if (= f-special "On this page")
+                              {:block/uid query-uid}
+                              {:page/title (-> (dates/get-day) :title)})
+        position            (merge {:relation :last} parent-of-new-block)
         evt                 (->> (bfs/internal-representation->atomic-ops
                                    @athens.db/dsdb
                                    [#:block{:uid        (utils/gen-block-uid)
@@ -178,8 +204,7 @@
                                                                 ":task/title" #:block{:string "Untitled task"
                                                                                       :uid    (utils/gen-block-uid)}}
                                                                new-block-props)}]
-                                   {:page/title parent-of-new-block
-                                    :relation   :last})
+                                   position)
                                  (composite/make-consequence-op {:op/type :new-type})
                                  common-events/build-atomic-event)]
     (re-frame.core/dispatch [:resolve-transact-forward evt])))
@@ -189,11 +214,34 @@
 
 ;; update task stuff
 
-(defn update-status
-  [id new-status]
-  (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
-                (fn [db prop-uid]
-                  [(graph-ops/build-block-save-op db prop-uid new-status)])]))
+(defn update-card-container
+  [id active-container-context over-container-context]
+  (let [{active-swimlane-id :swimlane-id active-column-id :column-id} active-container-context
+        {over-swimlane-id :swimlane-id over-column-id :column-id} over-container-context
+        diff-column?   (not= active-column-id over-column-id)
+        diff-swimlane? (not= active-swimlane-id over-swimlane-id)
+        nil-swimlane?  (= over-swimlane-id "None")
+        nil-column?    (= over-column-id "None")
+        new-column     (str "((" over-column-id "))")]
+    (when diff-swimlane?
+      (rf/dispatch [:graph/update-in [:block/uid id] [":task/assignee"]
+                    (fn [db prop-uid]
+                      [(if nil-swimlane?
+                         (graph-ops/build-block-remove-op db prop-uid)
+                         (graph-ops/build-block-save-op db prop-uid over-swimlane-id))])]))
+    (when diff-column?
+      (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
+                    (fn [db prop-uid]
+                      [(if nil-column?
+                         (graph-ops/build-block-remove-op db prop-uid)
+                         (graph-ops/build-block-save-op db prop-uid new-column))])]))))
+
+
+#_(defn update-status
+    [id new-status]
+    (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
+                  (fn [db prop-uid]
+                    [(graph-ops/build-block-save-op db prop-uid new-status)])]))
 
 
 ;; All commented out for when we modify kanban columns
@@ -370,7 +418,7 @@
                      :options GROUP_BY_OPTIONS
                      :onChange #(update-query-property uid "group/subgroup/by" %)
                      :value g-s-by}]]
-    [:> Stack {:direction "row" :spacing 5}
+    [:> ButtonGroup {:isAttached true :size "xs"}
      (for [menu menus-data]
        (let [{:keys [heading options onChange value]} menu]
          [:> QueryRadioMenu {:key heading :heading heading :options options :onChange onChange :value value}]))
@@ -386,76 +434,204 @@
         [:> Heading {:size "sm"} "Save View"]]]))
 
 
-(defn render-cards
-  [cards-from-a-column all-possible-group-by-columns]
-  [:<>
-   (for [card cards-from-a-column]
-     (let [uid            (get card ":block/uid")
-           title          (get card ":task/title")
-           status         (get card ":task/status")
-           priority       (get card ":task/priority")
-           assignee       (get card ":task/assignee")
-           page           (get card ":task/page")
-           _due-date       (get card ":task/due-date")
-
-           assignee-value (parse-for-title assignee)
-
-           status-uid     (parse-for-uid status)
-           status-value   (common-db/get-block-string @db/dsdb status-uid)
-
-           priority-uid   (parse-for-uid priority)
-           priority-value (common-db/get-block-string @db/dsdb priority-uid)
-           curr-idx       (.indexOf all-possible-group-by-columns
-                                    #:block{:string status-value
-                                            :uid    status-uid})
-           first-column?  (zero? curr-idx)
-           last-column?   (= curr-idx (- (count all-possible-group-by-columns) 1))
-           on-arrow-click (fn [direction]
-                            (let [f              (if (= direction :left) dec inc)
-                                  new-idx        (f curr-idx)
-                                  new-status     (nth all-possible-group-by-columns new-idx)
-                                  new-status-uid (:block/uid new-status)
-                                  new-status-ref (str "((" new-status-uid "))")]
-                              (update-status uid new-status-ref)))
-
-           parent-uid (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))]
+(defn update-card-field
+  [id k new-value]
+  (rf/dispatch [:graph/update-in [:block/uid id] [k]
+                (fn [db prop-uid]
+                  [(graph-ops/build-block-save-op db prop-uid new-value)])]))
 
 
-       [:> Box {:key           (str "card-" uid "-" page "-" title)
-                :borderRadius  "sm"
-                :minHeight     "4rem"
-                :listStyleType "none"
-                :border        "1px solid transparent"
-                :p             2
-                :bg            "background.floor"
-                ;; :width         "300px"
-                :_hover        {:bg          "background.upper",
-                                :border      "1px solid",
-                                :borderColor "background.floor"}}
+(defn title-editor
+  [uid title]
+  (let [value-atom      (r/atom (or title ""))
+        show-edit-atom? (r/atom true)
+        block-o         {:block/uid uid}]
+    (fn []
+      (let [enter-fn!   (fn [uid d-key-down]
+                          (let [{:keys [target]} d-key-down]
+
+                            (update-card-field uid ":task/title" @value-atom)
+                            (reset! show-edit-atom? false)
+                            ;; side effect
+                            (.blur target)))
+            state-hooks {:save-fn                 #()
+                         :enter-handler           enter-fn!
+                         :idle-fn                 #()
+                         :update-fn               #(reset! value-atom %)
+                         :read-value              value-atom
+                         :show-edit?              show-edit-atom?
+                         :tab-handler             #()
+                         :backspace-handler       #()
+                         :delete-handler          #()
+                         :default-verbatim-paste? true
+                         :keyboard-navigation?    false
+                         :style                   {:opacity 1}
+                         :placeholder             "Write your task title here"}]
+        [editor/block-editor block-o state-hooks]))))
 
 
+(defn render-card
+  [uid over?]
+  (let [card           (-> (reactive/get-reactive-block-document [:block/uid uid])
+                           block-to-flat-map
+                           get-root-page)
+        title          (get card ":task/title")
+        status         (get card ":task/status")
+        priority       (get card ":task/priority")
+        assignee       (get card ":task/assignee")
+        _page          (get card ":task/page")
+        _due-date      (get card ":task/due-date")
+        assignee-value (parse-for-title assignee)
+        status-uid     (parse-for-uid status)
+        _status-value  (common-db/get-block-string @db/dsdb status-uid)
+        priority-uid   (parse-for-uid priority)
+        priority-value (common-db/get-block-string @db/dsdb priority-uid)
+        parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))
+        ;; TODO: figure out how to give unique id when one card can show up multiple times on a query, e.g. a card that belongs to multiple projects
+        ;; could use swimlane and column data for uniqueness
+        id             (str uid)]
+    [:> Sortable {:id id :key id}
+     [:> KanbanCard {:isOver over?}
+      [:> VStack {:spacing 0
+                  :align   "stretch"}
+       [:> ModalInput {:autoFocus true}
+        [:> ModalInputTrigger
+         ;; TODO show something if empty title
+         [:> Text {:fontWeight    "medium"
+                   :onPointerDown #(.stopPropagation %)
+                   :lineHeight    "short"} [parse-renderer/parse-and-render title uid]]]
+        [:> ModalInputPopover {:preventScroll false}
+         [:> BlockFormInput {:size "md"
+                             :isMultiline true
+                             :onPointerDown #(.stopPropagation %)}
+          [title-editor uid title]
+          [presence/inline-presence-el uid]]]]
+       [:> HStack {:justifyContent "space-between"
+                   :fontSize       "sm"
+                   :color          "foreground.secondary"}
+        [:> HStack
+         [:> Text assignee-value]
+         [:> Text priority-value]]
+        [:> ButtonGroup {:justifyContent "space-between"
+                         :size           "xs"
+                         :variant        "ghost"
+                         :colorScheme    "subtle"
+                         :onPointerDown  #(.stopPropagation %)}
+         [:> IconButton {:zIndex  1
+                         :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
+          [:> ArrowRightOnBoxIcon]]]]]]]))
 
-        [:> Stack
-         [:> Text {:fontWeight "bold"} [parse-renderer/parse-and-render title uid]]
-         [:> HStack
-          [:> Text assignee-value]
-          [:> Text priority-value]]
-         [:> HStack {:justifyContent "space-between"}
-          [:> HStack
-           (when-not first-column?
-             [:> Button {:onClick #(on-arrow-click :left)}
-              "←"])
-           (when-not last-column?
-             [:> Button {:onClick #(on-arrow-click :right)}
-              "→"])]
-          [:> IconButton
-           {:onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
-           [:> ArrowRightOnBoxIcon]]]]]))])
+
+(defn- find-container-id
+  "Accepts event.active or event.over"
+  [e active-or-over]
+  (try
+    (case active-or-over
+      :active (.. e -active -data -current -sortable -containerId)
+      :over (.. e -over -data -current -sortable -containerId))
+    (catch js/Object _
+      (case active-or-over
+        :active (.. e -active -id)
+        :over (.. e -over -id)))))
+
+
+(defn- get-container-context
+  [container-id]
+  (let [swimlane-id (-> (re-find #"swimlane-(@?\w+)" container-id) second)
+        column-id   (-> (re-find #"column-(\w+)" container-id) second)]
+    {:swimlane-id swimlane-id
+     :column-id column-id}))
+
+
+(defn DragAndDropKanbanBoard
+  [_props]
+  (let [active-id (r/atom nil)
+        over-id   (r/atom nil)]
+    (fn [props]
+      (let [{:keys [query-uid f-special boardData all-possible-group-by-columns groupBy subgroupBy]} props]
+        [:> DragAndDropContext {:collisionDetection closestCorners
+                                :onDragStart (fn [e]
+                                               (reset! active-id (.. e -active -id)))
+                                :onDragOver  (fn [e]
+                                               (reset! over-id (.. e -over -id)))
+                                :onDragEnd   (fn [e]
+                                               ;; TODO: should context metadata be stored at the card level or the container level?
+                                               (let [over-container           (find-container-id e :over)
+                                                     active-container         (find-container-id e :active)
+                                                     over-container-context   (get-container-context over-container)
+                                                     active-container-context (get-container-context active-container)]
+                                                 (update-card-container @active-id active-container-context over-container-context)
+                                                 (reset! active-id nil)
+                                                 (reset! over-id nil)))}
+
+         [:> KanbanBoard
+          [:> Heading {:size "md"} "TODO: Create title handler for queries"]
+          (doall
+            (for [swimlanes boardData]
+              (let [[swimlane-id swimlane-columns] swimlanes
+                    nil-swimlane-id? (nil? swimlane-id)
+                    ;; TODO: doesn't handle empty assignee well, or values that are not expected
+                    swimlane-id      (if swimlane-id swimlane-id "None")
+                    swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
+
+                [:> KanbanSwimlane {:name swimlane-key
+                                    :key swimlane-key
+                                    :bg "background.basement"}
+                 (doall
+                   (for [possible-group-by-column all-possible-group-by-columns]
+                     (let [{:block/keys [string uid]} possible-group-by-column
+                           cards-from-a-column (if (= string "None")
+                                                 (get swimlane-columns nil)
+                                                 (get swimlane-columns uid))
+                           ;; context-object assumes group-by is always status, because of the uid stuff
+                           context-object      (cond-> {}
+                                                 (and (= groupBy ":task/status")
+                                                      (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
+                                                 (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
+                           column-id           (if uid uid "None")
+                           column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
+
+                       [:> Droppable {:key column-id :id column-id}
+                        (fn [over?]
+                          (r/as-element
+                            [:> SortableContext {:id column-id
+                                                 :items (or cards-from-a-column [])
+                                                 :strategy verticalListSortingStrategy}
+                             [:> KanbanColumn {:key column-id
+                                               :isOver over?}
+                              [:> Flex {:color "foreground.secondary"
+                                        :gap 2
+                                        :px 4
+                                        :py 1
+                                        :alignItems "center"}
+                               [:> Heading {:fontWeight "medium"
+                                            :mr "auto"
+                                            :size "sm"}
+                                string]
+                               [:> Text {:fontWeight "medium"
+                                         :fontSize "sm"}
+                                (str (count cards-from-a-column))]
+                               [:> ButtonGroup {:size "sm"
+                                                :variant "ghost"}
+                                [:> IconButton {:onClick #(new-card context-object f-special query-uid)
+                                                :icon    (r/as-element [:> PlusIcon])}]]]
+                              (doall
+                                (for [card cards-from-a-column]
+                                  (let [card-uid (get card ":block/uid")
+                                        over?    (= @over-id card-uid)]
+                                    ^{:key card-uid} [render-card card-uid over?])))]]))])))])))
+
+          [:> DragOverlay
+           (when @active-id
+             [:<>
+              ;; [:h1 @over-id]
+              [render-card @active-id]])]]]))))
 
 
 (defn query-el
   [{:keys [query-data parsed-properties uid schema]}]
-  (let [[_select layout s-by s-direction f-author f-special _p-order p-hide]
+  (let [query-uid uid
+        [_select layout s-by s-direction f-author f-special _p-order p-hide]
         (get* parsed-properties ["select" "layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
         s-by              (parse-for-title s-by)
         filter-author-fn  (fn [x]
@@ -478,7 +654,7 @@
 
         query-data        (sort-table query-data s-by s-direction)]
     ;; TODO
-    [:> Box {#_#_:margin-top "40px" :width "100%"}
+    [:> VStack {:className "query-el" :key query-uid :align "stretch"}
      (case layout
        "board"
        (let [[g-by sg-by] (get* parsed-properties ["group/by" "group/subgroup/by"])
@@ -490,31 +666,12 @@
                                              (group-stuff query-group-by query-subgroup-by query-data)
                                              (group-by #(get % query-group-by) query-data))]
 
-         [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
-         (doall
-           (for [swimlanes boardData]
-             (let [[swimlane-id swimlane-columns] swimlanes
-                   nil-swimlane-id? (nil? swimlane-id)
-                   swimlane-key (if nil-swimlane-id? "None" swimlane-id)]
-               ;; (prn "SWIMLANE" swimlane-id)
-               [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
-                (for [possible-group-by-column all-possible-group-by-columns]
-                  (let [{:block/keys [string uid]} possible-group-by-column
-                        wrapped-group-by-column-uid (str "((" uid "))")
-                        cards-from-a-column         (if (= string "None")
-                                                      (get swimlane-columns nil)
-                                                      (get swimlane-columns wrapped-group-by-column-uid))
-                        ;; context-object assumes group-by is always status, because of the uid stuff
-                        context-object              (cond-> {}
-                                                      (= g-by ":task/status") (assoc g-by (str "((" uid "))"))
-                                                      (not nil-swimlane-id?) (assoc sg-by swimlane-id))]
-                    [:> KanbanColumn {:name string :key (str swimlane-id uid)}
-                     [render-cards cards-from-a-column all-possible-group-by-columns]
-                     [:> Button {:onClick    #(new-card context-object)
-                                 :size       "sm"
-                                 :variant    "ghost"
-                                 :fontWeight "light"}
-                      "+ New Card"]]))])))
+         [DragAndDropKanbanBoard {:query-uid                     query-uid
+                                  :f-special                     f-special
+                                  :boardData                     boardData
+                                  :all-possible-group-by-columns all-possible-group-by-columns
+                                  :groupBy                       g-by
+                                  :subgroupBy                    sg-by}]
 
          ;; this is when we were passing all data to one top-level Tsx component
          #_[:> QueryKanban {:boardData            boardData
@@ -597,6 +754,7 @@
 ;; clicking on them can add an SVG somehow
 ;; and then if there are block/children, it is no bueno
 
+
 (defn query-block
   [block-data]
   (let [block-uid         (:block/uid block-data)
@@ -610,8 +768,7 @@
 
     (if (invalid-query? parsed-properties)
       [:> Box {:color "red"} "invalid query"]
-      [:> Box {:gridArea "content" :borderColor "gray"}
-
+      [:<>
        [options-el {:parsed-properties parsed-properties
                     :properties        properties
                     :schema            schema

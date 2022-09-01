@@ -1,14 +1,33 @@
-import { Flex } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import * as React from "react";
 import { LayoutContext, layoutAnimationTransition } from "./useLayoutState";
+import { useInView } from 'react-intersection-observer';
 
 /** Main Content */
-export const MainContent = ({ children, isRightSidebarOpen, rightSidebarWidth }) => {
+export const MainContent = ({ children, isRightSidebarOpen }) => {
   const {
     toolbarHeight,
     mainContentRef,
+    isResizingLayout,
+    isScrolledPastTitle,
+    setIsScrolledPastTitle,
+    unsavedRightSidebarWidth
   } = React.useContext(LayoutContext);
+
+  const { ref: markerRef, inView } = useInView({ threshold: 0 });
+
+  React.useEffect(() => {
+    if (inView) {
+      if (isScrolledPastTitle["mainContent"]) {
+        setIsScrolledPastTitle(prev => ({ ...prev, "mainContent": false }));
+      }
+    } else {
+      if (!isScrolledPastTitle["mainContent"]) {
+        setIsScrolledPastTitle(prev => ({ ...prev, "mainContent": true }));
+      }
+    }
+  }, [inView, setIsScrolledPastTitle]);
 
   return (
     // AnimatePresence is required to prevent
@@ -30,10 +49,20 @@ export const MainContent = ({ children, isRightSidebarOpen, rightSidebarWidth })
           "--app-header-height": toolbarHeight,
         }}
         animate={{
-          paddingRight: isRightSidebarOpen ? rightSidebarWidth + "vw" : 0,
-          transition: layoutAnimationTransition
+          paddingRight: isRightSidebarOpen ? unsavedRightSidebarWidth + "vw" : 0,
+          transition: isResizingLayout ? {
+            ...layoutAnimationTransition,
+            mass: 0,
+          } : layoutAnimationTransition
         }}
       >
+        <Box
+          aria-hidden
+          position="absolute"
+          ref={markerRef}
+          height="20px"
+          top={0}
+        />
         {children}
       </Flex>
     </AnimatePresence>
