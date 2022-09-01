@@ -1,7 +1,6 @@
 import * as React from "react";
 
 export const LayoutContext = React.createContext(null);
-export const ContextMenuContext = React.createContext(null);
 
 export const VIEW_MODES = ["regular", "compact"];
 
@@ -30,16 +29,26 @@ export const layoutAnimationProps = (openWidth) => ({
 /**
  * Instantiate state for an app layout
  */
-export const useLayoutState = () => {
+export const useLayoutState = (props) => {
+  const { rightSidebarWidth } = props;
+
   const mainContentRef = React.useRef();
   const toolbarRef = React.useRef();
   const [mainSidebarWidth, setMainSidebarWidth] = React.useState(300);
+  const [unsavedRightSidebarWidth, setUnsavedRightSidebarWidth] = React.useState(rightSidebarWidth);
+  const [isResizingLayout, setIsResizingLayout] = React.useState(false);
   const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState({});
   const toolbarHeight = "3rem";
+
+  console.log(isScrolledPastTitle);
 
   return {
     mainSidebarWidth,
     setMainSidebarWidth,
+    unsavedRightSidebarWidth,
+    setUnsavedRightSidebarWidth,
+    isResizingLayout,
+    setIsResizingLayout,
     isScrolledPastTitle,
     setIsScrolledPastTitle,
     toolbarHeight,
@@ -48,8 +57,9 @@ export const useLayoutState = () => {
   };
 };
 
-export const LayoutProvider = ({ children }) => {
-  const layoutState = useLayoutState();
+export const LayoutProvider = (props) => {
+  const { children, ...rest } = props;
+  const layoutState = useLayoutState(rest);
 
   return <LayoutContext.Provider value={layoutState}>
     {children}
