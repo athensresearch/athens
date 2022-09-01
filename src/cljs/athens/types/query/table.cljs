@@ -16,9 +16,11 @@
                                              KanbanColumn]]
     ["/components/Query/Query" :refer [QueryRadioMenu]]
     ["/components/Query/Table" :refer [QueryTable]]
+    ["/components/Block/Taskbox" :refer [Taskbox]]
     ["@chakra-ui/react" :refer [Box,
                                 IconButton
                                 HStack
+                                Grid
                                 Heading
                                 ButtonGroup
                                 Flex
@@ -52,7 +54,7 @@
 
 
 (defn render-entity
-  [uid children columns]
+  [uid children indent is-root]
   (let [entity         (->> (reactive/get-reactive-block-document [:block/uid uid])
                             shared/block-to-flat-map)
         page-title     (common-db/get-page-title @db/dsdb uid)
@@ -72,29 +74,46 @@
         priority-value (common-db/get-block-string @db/dsdb priority-uid)
         parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))]
 
-    [:> Box {:width "100%"}
-     [:> HStack {:justifyContent "space-between" :width "100%"}
-      [:> Heading {:size "sm"} title]
-      [:> Text {:size "md"} status-value]
-      [:> Text {:size "md"} priority-value]
-      [:> Text {:size "md"} assignee-value]
-      [:> Text {:size "md"} due-date]]
-     [:> Box
+    [:<>
+     (if is-root
+       [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr"
+                 :mt 2
+                 :textAlign "start"}
+        [:> Text {:pl 1
+                  :color "foreground.secondary"} title]
+        [:> Text {:alignSelf "stretch" :size "md"} status-value]
+        [:> Text {:alignSelf "stretch" :size "md"} priority-value]
+        [:> Text {:alignSelf "stretch" :size "md"} assignee-value]
+        [:> Text {:alignSelf "stretch" :size "md"} due-date]]
+       [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr"
+                 :textAlign "start"
+                 :borderTop "1px solid"
+                 :borderColor "separator.border"
+                 :_hover {:bg "interaction.surface.hover"
+                          :borderRadius "sm"}}
+        [:> Flex {:alignSelf "inline-flex" :align "center" :gap 0.5 :size "sm" :ml 1 :pl (str (* 1 indent) "em")}
+         (when status-value [:> Taskbox {:status status-value}])
+         [:> Text {:pl 1
+                   :color (if is-root "foreground.secondary" "foreground.primary")} title]]
+        [:> Text {:alignSelf "stretch" :size "md"} status-value]
+        [:> Text {:alignSelf "stretch" :size "md"} priority-value]
+        [:> Text {:alignSelf "stretch" :size "md"} assignee-value]
+        [:> Text {:alignSelf "stretch" :size "md"} due-date]])
+     [:<>
       (for [[uid children] children]
         ^{:key uid}
-        [:> Box {:ml 5}
-         [render-entity uid children]])]]))
+        [render-entity uid children (if is-root 0 (inc indent)) false])]]))
 
 
 (defn QueryTableV2
   [{:keys [data columns] :as props}]
-  [:> VStack
-   [:> HStack {:justifyContent "space-between" :width "100%"}
+  [:> Flex {:flexDirection "column" :align "stretch" :py 4}
+   [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr" :textAlign "start"}
     (for [column columns]
       ^{:key column}
-      [:> Heading {:size "md"} column])]
+      [:> Heading {:size "sm" :fontWeight "normal" :color "foreground.secondary"} column])]
    [:<>
     (for [[uid children] data]
       ^{:key uid}
-      [render-entity uid children columns])]])
+      [render-entity uid children 0 true])]])
 
