@@ -156,6 +156,7 @@
 (def routes
   ["/"
    ["" {:name :home}]
+   ["quick-capture" {:name :quickcapture}]
    ["settings" {:name :settings}]
    ["pages" {:name :pages}]
    ["page-t/:title" {:name :page-by-title}]

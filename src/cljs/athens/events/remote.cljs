@@ -307,3 +307,11 @@
                            ;; Remove the server event after everything is done.
                            true
                            (into [[:remote/clear-server-event event]]))]]})))
+
+;; Subs
+
+(rf/reg-sub
+  :remote/event-sync-memory-log
+  (fn [db _]
+    (when-let [event-sync (:remote/event-sync db)]
+      (event-sync/stage-log event-sync :memory))))
