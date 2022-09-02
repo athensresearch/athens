@@ -3,13 +3,15 @@
   (:require
     [datascript.core :as d]
     ["/components/Block/BlockFormInput" :refer [BlockFormInput]]
+    ["/components/Block/Toggle" :refer [Toggle]]
     ["/components/DnD/DndContext" :refer [DragAndDropContext]]
     ["/components/DnD/Droppable" :refer [Droppable]]
     ["/components/DnD/Sortable" :refer [Sortable]]
-    ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon PlusIcon]]
+    ["/components/Icons/Icons" :refer [ChevronDownVariableIcon PencilIcon GraphChildIcon ArrowRightOnBoxIcon PlusIcon]]
     ["/components/ModalInput/ModalInput" :refer [ModalInput]]
     ["/components/ModalInput/ModalInputPopover" :refer [ModalInputPopover]]
     ["/components/ModalInput/ModalInputTrigger" :refer [ModalInputTrigger]]
+    ["/components/ModalInput/ModalInputAnchor" :refer [ModalInputAnchor]]
     ["/components/Query/KanbanBoard" :refer [KanbanBoard
                                              KanbanCard
                                              KanbanSwimlane
@@ -22,6 +24,7 @@
                                 HStack
                                 Grid
                                 Heading
+                                Input
                                 ButtonGroup
                                 Flex
                                 VStack
@@ -67,6 +70,9 @@
         _page          (get entity ":task/page")
         due-date       (get entity ":task/due-date")
 
+        ;; forwhen we can collapse items
+        is-collapsed?  false
+
         assignee-value (shared/parse-for-title assignee)
         status-uid     (shared/parse-for-uid status)
         status-value   (common-db/get-block-string @db/dsdb status-uid)
@@ -77,7 +83,7 @@
     [:<>
      (if is-root
        [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr"
-                 :mt 2
+                 :mt 4
                  :textAlign "start"}
         [:> Text {:pl 1
                   :color "foreground.secondary"} title]
@@ -89,12 +95,59 @@
                  :textAlign "start"
                  :borderTop "1px solid"
                  :borderColor "separator.border"
-                 :_hover {:bg "interaction.surface.hover"
-                          :borderRadius "sm"}}
-        [:> Flex {:alignSelf "inline-flex" :align "center" :gap 0.5 :size "sm" :ml 1 :pl (str (* 1 indent) "em")}
-         (when status-value [:> Taskbox {:status status-value}])
-         [:> Text {:pl 1
-                   :color (if is-root "foreground.secondary" "foreground.primary")} title]]
+                 :_hover {:bg "interaction.surface.hover"}}
+
+        [:> Flex {:position "sticky"
+                  :left 0
+                  :alignSelf "inline-flex"
+                  :align "center"
+                  :gap 1
+                  :ml 1
+                  :pr 1
+                  :pl (str (* 1 indent) "em")}
+
+         [:> IconButton {:size "xs"
+                         :variant "ghost"
+                         :colorScheme "subtle"
+                         ;; GIVE ME ONCLICK EVENT
+                         ;; :onClick toggle this block
+                         }
+          [:> ChevronDownVariableIcon {:sx {:path {:strokeWidth "1.5px"}}
+                                       :boxSize 3
+                                       :transform (if is-collapsed? "rotate(-90deg)" "")}]]
+         [:> ModalInput {:placement "right-start"
+                         :autoFocus true}
+          [:> ModalInputAnchor
+           [:> Flex {:alignSelf "inline-flex"
+                     :flex "1 1 100%"
+                     :align "center"
+                     :gap 0.5}
+            (when status-value
+              [:> Taskbox {:status status-value}])
+            [:> Text {:pl 1
+                      :as "span"
+                      :color (if is-root "foreground.secondary" "foreground.primary")} title]
+            (when (seq children)
+              [:> HStack {:spacing 0
+                          :color "foreground.tertiary"}
+               [:> GraphChildIcon]
+               [:> Text {:as "span"} (count children)]])]]
+          [:> ModalInputTrigger
+           [:> IconButton {:size "sm"
+                           :variant "ghost"
+                           :colorScheme "subtle"
+                           :icon (r/as-element [:> PencilIcon])}]]
+          [:> ModalInputPopover {:popoverContentProps {:mx "-5px" :my "-1px"}}
+           [:> Flex {:align "center"
+                     :gap 0.5}
+            (when status-value
+              [:> Taskbox {:status status-value
+                           :mx 1 :my "auto"}])
+            [:> BlockFormInput {:variant "unstyled"
+                                :flex "1 1 100%"
+                                :size "md"}
+             ;; REPLACE ME WITH EDITOR
+             title]]]]]
         [:> Text {:alignSelf "stretch" :size "md"} status-value]
         [:> Text {:alignSelf "stretch" :size "md"} priority-value]
         [:> Text {:alignSelf "stretch" :size "md"} assignee-value]

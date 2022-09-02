@@ -5,7 +5,7 @@
     ["/components/DnD/DndContext" :refer [DragAndDropContext]]
     ["/components/DnD/Droppable" :refer [Droppable]]
     ["/components/DnD/Sortable" :refer [Sortable]]
-    ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon PlusIcon]]
+    ["/components/Icons/Icons" :refer [GraphChildIcon ArrowRightOnBoxIcon PlusIcon]]
     ["/components/ModalInput/ModalInput" :refer [ModalInput]]
     ["/components/ModalInput/ModalInputPopover" :refer [ModalInputPopover]]
     ["/components/ModalInput/ModalInputTrigger" :refer [ModalInputTrigger]]

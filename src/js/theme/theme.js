@@ -535,7 +535,7 @@ const components = {
     baseStyle: {
       content: {
         bg: "background.upper",
-        border: "unset",
+        // border: "unset",
         shadow: "popover",
         _focus: {
           outline: 'none',
