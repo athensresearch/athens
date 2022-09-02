@@ -530,11 +530,13 @@
 
 (defn handle-escape
   "BUG: escape is fired 24 times for some reason."
-  [uid e]
+  [e uid {:keys [esc-handler] :as _state-hooks}]
   (.. e preventDefault)
-  (if @(rf/subscribe [::inline-search.subs/type uid])
-    (rf/dispatch [::inline-search.events/close! uid])
-    (dispatch [:editing/uid nil])))
+  (if (fn? esc-handler)
+    (esc-handler e uid)
+    (if @(rf/subscribe [::inline-search.subs/type uid])
+      (rf/dispatch [::inline-search.events/close! uid])
+      (dispatch [:editing/uid nil]))))
 
 
 (def throttled-dispatch-sync
@@ -929,7 +931,7 @@
           (= key-code KeyCodes.ENTER)     (handle-enter e uid state-hooks)
           (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state-hooks)
           (= key-code KeyCodes.DELETE)    (handle-delete e uid state-hooks)
-          (= key-code KeyCodes.ESC)       (handle-escape uid e)
+          (= key-code KeyCodes.ESC)       (handle-escape e uid state-hooks)
           (shortcut-key? meta ctrl)       (handle-shortcuts e uid state-hooks)
           (is-character-key? e)           (write-char e uid))))))
 

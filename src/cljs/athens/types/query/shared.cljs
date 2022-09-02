@@ -1,4 +1,9 @@
-(ns athens.types.query.shared)
+(ns athens.types.query.shared
+  (:require
+    [re-frame.core :as rf]
+    [athens.common-events.graph.ops :as graph-ops]
+    [reagent.core :as r]
+    [athens.views.blocks.editor                 :as editor]))
 
 
 (defn parse-for-title
@@ -58,3 +63,42 @@
         (prn (get merged-map ":task/title") uid children))
     merged-map))
 
+
+(defn update-card-field
+  [id k new-value]
+  (rf/dispatch [:graph/update-in [:block/uid id] [k]
+                (fn [db prop-uid]
+                  [(graph-ops/build-block-save-op db prop-uid new-value)])]))
+
+
+(defn title-editor
+  [uid title]
+  (let [value-atom      (r/atom (or title ""))
+        show-edit-atom? (r/atom true)
+        block-o         {:block/uid uid}]
+    (fn []
+      (let [enter-fn!   (fn [uid d-key-down]
+                          (let [{:keys [target]} d-key-down]
+
+                            (update-card-field uid ":task/title" @value-atom)
+                            (reset! show-edit-atom? false)
+                            ;; side effect
+                            (.blur target)))
+            save-fn!    #(update-card-field uid ":task/title" @value-atom)
+            state-hooks {:save-fn                 save-fn!
+                         :enter-handler           enter-fn!
+                         :idle-fn                 #()
+                         :update-fn               #(reset! value-atom %)
+                         :read-value              value-atom
+                         :show-edit?              show-edit-atom?
+                         :esc-handler             (fn [e _uid]
+                                                    (reset! value-atom title)
+                                                    (.. e -target blur))
+                         :tab-handler             #()
+                         :backspace-handler       #()
+                         :delete-handler          #()
+                         :default-verbatim-paste? true
+                         :keyboard-navigation?    false
+                         :style                   {:opacity 1}
+                         :placeholder             "Write your task title here"}]
+        [editor/block-editor block-o state-hooks]))))

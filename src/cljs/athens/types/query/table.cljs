@@ -56,6 +56,7 @@
     [athens.types.query.shared :as shared]))
 
 
+
 (defn render-entity
   [uid children indent is-root]
   (let [entity         (->> (reactive/get-reactive-block-document [:block/uid uid])
@@ -109,9 +110,8 @@
          [:> IconButton {:size "xs"
                          :variant "ghost"
                          :colorScheme "subtle"
-                         ;; GIVE ME ONCLICK EVENT
-                         ;; :onClick toggle this block
-                         }
+                          :onClick #(js/alert "TODO: implement toggle")}
+
           [:> ChevronDownVariableIcon {:sx {:path {:strokeWidth "1.5px"}}
                                        :boxSize 3
                                        :transform (if is-collapsed? "rotate(-90deg)" "")}]]
@@ -122,8 +122,9 @@
                      :flex "1 1 100%"
                      :align "center"
                      :gap 0.5}
-            (when status-value
-              [:> Taskbox {:status status-value}])
+            (if status-value
+              [:> Taskbox {:status status-value}]
+              [:> Taskbox {}])
             [:> Text {:pl 1
                       :as "span"
                       :color (if is-root "foreground.secondary" "foreground.primary")} title]
@@ -147,7 +148,7 @@
                                 :flex "1 1 100%"
                                 :size "md"}
              ;; REPLACE ME WITH EDITOR
-             title]]]]]
+             [shared/title-editor uid title]]]]]]
         [:> Text {:alignSelf "stretch" :size "md"} status-value]
         [:> Text {:alignSelf "stretch" :size "md"} priority-value]
         [:> Text {:alignSelf "stretch" :size "md"} assignee-value]
