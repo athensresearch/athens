@@ -107,14 +107,15 @@
                   :pr 1
                   :pl (str (* 1 indent) "em")}
 
-         [:> IconButton {:size "xs"
-                         :variant "ghost"
-                         :colorScheme "subtle"
-                          :onClick #(js/alert "TODO: implement toggle")}
+         ;; Comment out until we figure out how to persist open/close state on tables
+         #_[:> IconButton {:size "xs"
+                           :variant "ghost"
+                           :colorScheme "subtle"
+                           :onClick #(js/alert "TODO: implement toggle")}
 
-          [:> ChevronDownVariableIcon {:sx {:path {:strokeWidth "1.5px"}}
-                                       :boxSize 3
-                                       :transform (if is-collapsed? "rotate(-90deg)" "")}]]
+            [:> ChevronDownVariableIcon {:sx {:path {:strokeWidth "1.5px"}}
+                                         :boxSize 3
+                                         :transform (if is-collapsed? "rotate(-90deg)" "")}]]
          [:> ModalInput {:placement "right-start"
                          :autoFocus true}
           [:> ModalInputAnchor
@@ -147,7 +148,6 @@
             [:> BlockFormInput {:variant "unstyled"
                                 :flex "1 1 100%"
                                 :size "md"}
-             ;; REPLACE ME WITH EDITOR
              [shared/title-editor uid title]]]]]]
         [:> Text {:alignSelf "stretch" :size "md"} status-value]
         [:> Text {:alignSelf "stretch" :size "md"} priority-value]
