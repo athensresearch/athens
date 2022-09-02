@@ -400,7 +400,8 @@
 
 
 (defn handle-arrow-key
-  [e uid {:keys [keyboard-navigation?]
+  [e uid {:keys [keyboard-navigation?
+                 navigation-uid]
           :or   {keyboard-navigation? true}
           :as   _state-hooks}
    caret-position]
@@ -481,25 +482,25 @@
       (or (and left? start?)
           (and up? end?)) (when keyboard-navigation?
                             (.. e preventDefault)
-                            (dispatch [:up uid :end]))
+                            (dispatch [:up (or navigation-uid uid) :end]))
 
       (and down? end?) (when keyboard-navigation?
                          (.. e preventDefault)
-                         (dispatch [:down uid :end]))
+                         (dispatch [:down (or navigation-uid uid) :end]))
 
       ;; going RIGHT at last index should always go to index 0 of block below
       (and right? end?) (when keyboard-navigation?
                           (.. e preventDefault)
-                          (dispatch [:down uid 0]))
+                          (dispatch [:down (or navigation-uid uid) 0]))
 
       ;; index 0 is special - always go to index 0 when going up or down
       ;; when caret is anywhere between start and end preserve the position and offset by char
       (and up? top-row?)      (when keyboard-navigation?
                                 (.. e preventDefault)
-                                (dispatch [:up uid char-offset]))
+                                (dispatch [:up (or navigation-uid uid) char-offset]))
       (and down? bottom-row?) (when keyboard-navigation?
                                 (.. e preventDefault)
-                                (dispatch [:down uid char-offset])))))
+                                (dispatch [:down (or navigation-uid uid) char-offset])))))
 
 
 ;; Tab

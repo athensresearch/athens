@@ -1,6 +1,7 @@
 import * as React from "react";
-import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
+import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "./useLayoutState";
 import { AnimatePresence, motion } from 'framer-motion';
+import { RightSidebarResizeControl } from "./RightSidebarResizeControl";
 import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
 import { Button, IconButton, Box, Collapse, VStack, BoxProps } from '@chakra-ui/react';
 import { useInView } from 'react-intersection-observer';
@@ -10,32 +11,52 @@ import { useInView } from 'react-intersection-observer';
 
 interface RightSidebarProps extends BoxProps {
   isOpen: boolean;
+  onResize: (size: number) => void;
   rightSidebarWidth: number;
 }
 
 export const RightSidebar = (props: RightSidebarProps) => {
-  const { children, rightSidebarWidth, isOpen } = props;
+  const { children, onResize, isOpen } = props;
   const {
     toolbarHeight,
+    isScrolledPastTitle,
     setIsScrolledPastTitle,
+    isResizingLayout,
+    unsavedRightSidebarWidth
   } = React.useContext(LayoutContext);
 
   const { ref: markerRef, inView } = useInView({ threshold: 0 });
 
   React.useEffect(() => {
     if (inView) {
-      setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": false }));
+      if (isScrolledPastTitle["rightSidebar"]) {
+        setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": false }));
+      }
     } else {
-      setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": true }));
+      if (!isScrolledPastTitle["rightSidebar"]) {
+        setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": true }));
+      }
     }
   }, [inView, setIsScrolledPastTitle]);
+
+  const layoutAnimation = {
+    ...layoutAnimationProps(unsavedRightSidebarWidth + "vw"),
+    animate: {
+      width: unsavedRightSidebarWidth + "vw",
+      opacity: 1,
+      transition: isResizingLayout ? {
+        ...layoutAnimationTransition,
+        mass: 0,
+      } : layoutAnimationTransition
+    },
+  }
 
   return (
     <AnimatePresence initial={false}>
       {isOpen && (
         <Box
           as={motion.div}
-          {...layoutAnimationProps(rightSidebarWidth + "vw")}
+          {...layoutAnimation}
           zIndex={1}
           bg="background.floor"
           transitionProperty="background"
@@ -52,8 +73,10 @@ export const RightSidebar = (props: RightSidebarProps) => {
           pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
+          <RightSidebarResizeControl
+            onResizeSidebar={onResize}
+          />
           <Box
-            bg="green"
             aria-hidden
             position="absolute"
             ref={markerRef}
@@ -61,7 +84,7 @@ export const RightSidebar = (props: RightSidebarProps) => {
             top={0}
           />
           <Box
-            width={rightSidebarWidth + "vw"}>
+            width={unsavedRightSidebarWidth + "vw"}>
             {children}
           </Box>
         </Box>

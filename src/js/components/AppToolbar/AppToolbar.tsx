@@ -38,8 +38,6 @@ import { WindowButtons } from './components/WindowButtons';
 import { LocationIndicator } from './components/LocationIndicator';
 import { reusableToast } from '@/utils/reusableToast';
 
-const PAGE_TITLE_SHOW_HEIGHT = 24;
-
 interface ToolbarButtonGroupProps extends ButtonGroupProps {
   key: string
 }
@@ -166,6 +164,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     isWinMaximized,
     isThemeDark,
     isLeftSidebarOpen,
+    isRightSidebarOpen,
     isShowComments,
     onClickComments: handleClickComments,
     onPressHelp: handlePressHelp,
@@ -190,30 +189,13 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     toolbarHeight,
     mainSidebarWidth,
     isScrolledPastTitle,
-    setIsScrolledPastTitle
   } = React.useContext(LayoutContext);
 
   const toast = useToast();
   const commentsToggleToastRef = React.useRef(null);
 
-  // add event listener to detect when the user scrolls past the title
-  React.useLayoutEffect(() => {
-    const scrollContainer = document.getElementById("main-layout") as HTMLElement;
-    if (scrollContainer) {
-      const handleScroll = () => {
-        if (scrollContainer.scrollTop > PAGE_TITLE_SHOW_HEIGHT) {
-          setIsScrolledPastTitle(prev => ({ ...prev, "mainContent": true }));
-        } else {
-          setIsScrolledPastTitle(prev => ({ ...prev, "mainContent": false }));
-        }
-      }
-      handleScroll();
-      scrollContainer.addEventListener('scroll', handleScroll);
-      return () => scrollContainer.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
 
-  const shouldShowUnderlay = Object.values(isScrolledPastTitle).some(x => x);
+  const shouldShowUnderlay = isScrolledPastTitle["mainContent"] || (isScrolledPastTitle["rightSidebar"] && isRightSidebarOpen);
 
   // If the workspace color mode doesn't match
   // the chakra color mode, update the chakra color mode
@@ -362,7 +344,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     >
       {currentPageTitle && (
         <LocationIndicator
-          isVisible={isScrolledPastTitle.mainContent}
+          isVisible={isScrolledPastTitle["mainContent"]}
           type="node"
           uid="123"
           title={currentPageTitle}
