@@ -514,11 +514,12 @@
                                         string)))
             creator         (-> (:block/create block) :event/auth :presence/id)
             time            (-> (:block/create block) :event/time :time/ts)
-            created-date    (-> time
-                                t/instant
-                                t/date
-                                (dates/get-day 0)
-                                :title)
+            created-date    (when time
+                              (-> time
+                                  t/instant
+                                  t/date
+                                  (dates/get-day 0)
+                                  :title))
             status          (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
                                                                                (get ":task/status")
                                                                                :block/string
@@ -533,7 +534,6 @@
                                 :block/string)
             creator         creator
             description     (-> props (get ":task/description") :block/string)
-            created-date    created-date
             due-date        (-> props
                                 (get ":task/due-date")
                                 :block/string
