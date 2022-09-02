@@ -325,9 +325,12 @@
   [id]
   (let [db @dsdb]
     (loop [uid (common-db/get-block-uid db id)]
-      (let [eid [:block/uid uid]
-            open (-> db (d/entity eid) :block/open)
-            children (common-db/sorted-prop+children-uids db eid)]
+      (let [eid      [:block/uid uid]
+            open     (-> db (d/entity eid) :block/open)
+            props?   @(rf/subscribe [:feature-flags/enabled? :properties])
+            children (if props?
+                       (common-db/sorted-prop+children-uids db eid)
+                       (common-db/get-children-uids db eid))]
         (if (or (zero? (count children))
                 (not open))
           (common-db/get-block db eid)
@@ -407,21 +410,29 @@
 
 (defn sibling-uids
   [uid]
-  (->> [:block/uid uid]
-       get-parent
-       :block/uid
-       (vector :block/uid)
-       (common-db/sorted-prop+children-uids @dsdb)))
+  (let [props-enabled? @(rf/subscribe [:feature-flags/enabled? :properties])
+        eid            (->> [:block/uid uid]
+                            get-parent
+                            :block/uid
+                            (vector :block/uid))]
+    (if props-enabled?
+      (common-db/sorted-prop+children-uids @dsdb eid)
+      (common-db/get-children-uids @dsdb eid))))
 
 
 (defn nth-sibling
   "Find sibling that has relation to current block.
   Relation can be :before or :after."
-  [uid relation]
-  (-> (sibling-uids uid)
-      (order/get relation uid)
-      (->> (vector :block/uid))
-      get-block))
+  ([uid relation]
+   (-> (sibling-uids uid)
+       (order/get relation uid)
+       (->> (vector :block/uid))
+       get-block))
+  ([siblings uid relation]
+   (-> siblings
+       (order/get relation uid)
+       (->> (vector :block/uid))
+       get-block)))
 
 
 (defntrace prev-block-uid
@@ -431,13 +442,31 @@
   [uid]
   (let [[uid embed-id]                (uid-and-embed-id uid)
         siblings                      (sibling-uids uid)
-        prev-sibling                  (nth-sibling uid :before)
-        {:block/keys      [open]
+        oldest-sibling?               (= uid (first siblings))
+        parent                        (when oldest-sibling?
+                                        (get-parent [:block/uid uid]))
+        parent-type                   (when parent
+                                        (common-db/get-entity-type @dsdb [:block/uid (:block/uid parent)]))
+        prev-sibling                  (nth-sibling siblings uid :before)
+        {:block/keys      [open children]
          prev-sibling-uid :block/uid} prev-sibling
+        prev-sibling-children?        (seq children)
+        prev-sibling-type             (when prev-sibling-uid
+                                        (common-db/get-entity-type @dsdb [:block/uid prev-sibling-uid]))
+        prev-sibling-task?            (= "[[athens/task]]" prev-sibling-type)
+        deepest-child                 (when open
+                                        (deepest-child-block [:block/uid prev-sibling-uid]))
+        deepest-child-type            (when deepest-child
+                                        (common-db/get-entity-type @dsdb [:block/uid (:block/uid deepest-child)]))
         prev-block                    (cond
-                                        (= uid (first siblings)) (get-parent [:block/uid uid])
-                                        (false? open)            prev-sibling
-                                        (true? open)             (deepest-child-block [:block/uid prev-sibling-uid]))
+                                        (and oldest-sibling?
+                                             (= "[[athens/task]]" parent-type))         (tasks-db/get-title-block-of-task @dsdb (:block/uid parent))
+                                        oldest-sibling?                                 parent
+                                        (and prev-sibling-task? prev-sibling-children?) deepest-child
+                                        prev-sibling-task?                              (tasks-db/get-title-block-of-task @dsdb prev-sibling-uid)
+                                        (false? open)                                   prev-sibling
+                                        (= "[[athens/task]]" deepest-child-type)        (tasks-db/get-title-block-of-task @dsdb (:block/uid deepest-child))
+                                        (true? open)                                    deepest-child)
         prev-block-uid                (:block/uid prev-block)]
     (when (and prev-block-uid
                (not (:node/title prev-block)))
