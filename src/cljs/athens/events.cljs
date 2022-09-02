@@ -691,6 +691,7 @@
   [(interceptors/sentry-span-no-new-tx "down")]
   (fn [_ [_ uid target-pos]]
     (let [next-block-uid (db/next-block-uid uid)]
+      #_(log/debug ::down (pr-str {:uid uid :target-pos target-pos :next-block-uid next-block-uid}))
       {:dispatch [:editing/uid (or next-block-uid uid) target-pos]})))
 
 

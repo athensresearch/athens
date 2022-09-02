@@ -273,9 +273,9 @@
 
 
 (defn inline-task-title-2
-  [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
+  [_state-hooks _parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
   (let [_prop-id (str (random-uuid))]
-    (fn [parent-block-uid prop-block-uid prop-name _prop-title _required? multiline?]
+    (fn [state-hooks parent-block-uid prop-block-uid prop-name _prop-title _required? multiline?]
       (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
             prop-str            (or (:block/string prop-block) "")
             local-value         (r/atom prop-str)
@@ -322,8 +322,10 @@
                                         :read-value              read-value
                                         :show-edit?              show-edit?
                                         :default-verbatim-paste? true
-                                        :keyboard-navigation?    false}
-                                       custom-key-handlers)]
+                                        :keyboard-navigation?    true
+                                        :navigation-uid          parent-block-uid}
+                                       custom-key-handlers
+                                       state-hooks)]
         [editor/block-editor {:block/uid (or prop-block-uid
                                              ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
                                              (str "tmp-" (subs (or prop-name "")
@@ -495,7 +497,7 @@
 (defn task-el
   [_this block-data _callbacks _is-ref?]
   (let [block-uid (:block/uid block-data)]
-    (fn [_this _block-data _callbacks]
+    (fn [_this _block-data callbacks]
       (let [block           (-> [:block/uid block-uid] reactive/get-reactive-block-document)
             props           (-> block :block/properties)
             title-uid       (-> props (get ":task/title") :block/uid)
@@ -562,7 +564,14 @@
                   :py         1
                   :cursor     "text"
                   :lineHeight 1.4}
-          [inline-task-title-2 block-uid title-uid ":task/title" "Title" true false]]
+          [inline-task-title-2
+           callbacks
+           block-uid
+           title-uid
+           ":task/title"
+           "Title"
+           true
+           false]]
          [:> ModalInput {:placement "left-start"
                          :isLazy    true}
           [:> ModalInputTrigger
@@ -621,12 +630,15 @@
   (inline-ref-view
     [_this _block-data _attr _ref-uid _uid _callbacks _with-breadcrumb?]
     (let [block (reactive/get-reactive-block-document [:block/uid _ref-uid])]
-      [:> Flex {:display "inline-flex"  :gap 1} [:> Taskbox] [:> Text (:block/string block)]]))
+      [:> Flex {:display "inline-flex"
+                :gap     1}
+       [:> Taskbox]
+       [:> Text (:block/string block)]]))
 
 
   (outline-view
-    [_this block-data _callbacks]
-    [task-el _this block-data _callbacks false])
+    [_this block-data callbacks]
+    [task-el _this block-data callbacks false])
 
 
   (supported-transclusion-scopes
