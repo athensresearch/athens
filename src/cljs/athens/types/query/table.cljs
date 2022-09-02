@@ -1,24 +1,23 @@
 (ns athens.types.query.table
   "Views for Athens Tasks"
   (:require
-    [datascript.core :as d]
     ["/components/Block/BlockFormInput" :refer [BlockFormInput]]
+    ["/components/Block/Taskbox" :refer [Taskbox]]
     ["/components/Block/Toggle" :refer [Toggle]]
     ["/components/DnD/DndContext" :refer [DragAndDropContext]]
     ["/components/DnD/Droppable" :refer [Droppable]]
     ["/components/DnD/Sortable" :refer [Sortable]]
     ["/components/Icons/Icons" :refer [ChevronDownVariableIcon PencilIcon GraphChildIcon ArrowRightOnBoxIcon PlusIcon]]
     ["/components/ModalInput/ModalInput" :refer [ModalInput]]
+    ["/components/ModalInput/ModalInputAnchor" :refer [ModalInputAnchor]]
     ["/components/ModalInput/ModalInputPopover" :refer [ModalInputPopover]]
     ["/components/ModalInput/ModalInputTrigger" :refer [ModalInputTrigger]]
-    ["/components/ModalInput/ModalInputAnchor" :refer [ModalInputAnchor]]
     ["/components/Query/KanbanBoard" :refer [KanbanBoard
                                              KanbanCard
                                              KanbanSwimlane
                                              KanbanColumn]]
     ["/components/Query/Query" :refer [QueryRadioMenu]]
     ["/components/Query/Table" :refer [QueryTable]]
-    ["/components/Block/Taskbox" :refer [Taskbox]]
     ["@chakra-ui/react" :refer [Box,
                                 IconButton
                                 HStack
@@ -49,12 +48,12 @@
     [athens.self-hosted.presence.views          :as presence]
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
+    [athens.types.query.shared :as shared]
     [athens.views.blocks.editor                 :as editor]
     [clojure.string :refer []]
+    [datascript.core :as d]
     [re-frame.core :as rf]
-    [reagent.core :as r]
-    [athens.types.query.shared :as shared]))
-
+    [reagent.core :as r]))
 
 
 (defn render-entity

@@ -42,14 +42,13 @@
     [athens.self-hosted.presence.views          :as presence]
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
+    [athens.types.query.kanban :refer [DragAndDropKanbanBoard]]
+    [athens.types.query.shared :as shared]
+    [athens.types.query.table :refer [QueryTableV2]]
     [athens.views.blocks.editor                 :as editor]
     [clojure.string :refer []]
     [re-frame.core :as rf]
-    [athens.types.query.table :refer [QueryTableV2]]
-    [athens.types.query.kanban :refer [DragAndDropKanbanBoard]]
-    [athens.types.query.shared :as shared]
     [reagent.core :as r]))
-
 
 
 ;; CONSTANTS
@@ -103,6 +102,7 @@
   (->> (map #(str "athens/query/" %) ks)
        (map #(get hm %))))
 
+
 (defn get-schema
   [k]
   (or (get SCHEMA k) base-schema))
@@ -122,6 +122,7 @@
               [k (group-by #(get % kw) v)])
             columns)
        (into (hash-map))))
+
 
 (defn group-stuff
   [g sg items]
@@ -205,6 +206,7 @@
                       [(if nil-column?
                          (graph-ops/build-block-remove-op db prop-uid)
                          (graph-ops/build-block-save-op db prop-uid new-column))])]))))
+
 
 #_(defn update-status
     [id new-status]
@@ -378,7 +380,6 @@
                   [(graph-ops/build-block-save-op db prop-uid new-value)])]))
 
 
-
 (defn- find-container-id
   "Accepts event.active or event.over"
   [e active-or-over]
@@ -398,11 +399,6 @@
         column-id   (-> (re-find #"column-(\w+)" container-id) second)]
     {:swimlane-id swimlane-id
      :column-id column-id}))
-
-
-
-
-
 
 
 (defn query-el
@@ -458,7 +454,7 @@
                                        [uid parent-uids]))
              sort-by-parents-count (fn [x] (-> x second count))
              tasks                 (->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
-                                        ;;query-data
+                                        ;; query-data
                                         (mapv :block/uid)
                                         (mapv get-parents)
                                         (sort-by sort-by-parents-count))
@@ -466,7 +462,6 @@
 
          [QueryTableV2 {:data task-trees
                         :columns ["Title" "Status" "Priority" "Assignee" "Due Date"]}]))]))
-
 
 
 (comment "current shape of data for query kanban boards"

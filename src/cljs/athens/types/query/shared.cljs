@@ -1,16 +1,18 @@
 (ns athens.types.query.shared
   (:require
-    [re-frame.core :as rf]
     [athens.common-events.graph.ops :as graph-ops]
-    [reagent.core :as r]
-    [reagent.core :as r]
     [athens.db :as db]
-    [athens.views.blocks.editor                 :as editor]))
+    [athens.views.blocks.editor                 :as editor]
+    [re-frame.core :as rf]
+    [reagent.core :as r]
+    [reagent.core :as r]))
+
 
 (defn get-root-page
   [x]
   (merge x
          {":task/page" (:node/title (db/get-root-parent-page (get x ":block/uid")))}))
+
 
 (defn parse-for-title
   "should be able to pass in a plain string, a wikilink, or both?"

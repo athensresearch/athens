@@ -423,7 +423,9 @@
       add-property-map
       :block/properties))
 
+
 (declare get-page-title-from-eid)
+
 
 (defn get-entity-type
   "Returns the value of eids `:entity/type` prop, if any."
@@ -438,7 +440,6 @@
       prop-entity-type prop-entity-type
       page "page"
       :else "block")))
-
 
 
 (defn get-block-uid

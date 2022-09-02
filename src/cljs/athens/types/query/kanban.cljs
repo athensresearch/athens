@@ -1,7 +1,6 @@
 (ns athens.types.query.kanban
   "Views for Athens Tasks"
   (:require
-    [datascript.core :as d]
     ["/components/Block/BlockFormInput" :refer [BlockFormInput]]
     ["/components/DnD/DndContext" :refer [DragAndDropContext]]
     ["/components/DnD/Droppable" :refer [Droppable]]
@@ -43,11 +42,12 @@
     [athens.self-hosted.presence.views          :as presence]
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
+    [athens.types.query.shared :as shared]
     [athens.views.blocks.editor                 :as editor]
     [clojure.string :refer []]
+    [datascript.core :as d]
     [re-frame.core :as rf]
-    [reagent.core :as r]
-    [athens.types.query.shared :as shared]))
+    [reagent.core :as r]))
 
 
 (defn render-card
@@ -153,6 +153,7 @@
   (->> (map #(str "athens/query/" %) ks)
        (map #(get hm %))))
 
+
 (defn get-schema
   [k]
   (or (get SCHEMA k) base-schema))
@@ -202,6 +203,7 @@
         (prn (get merged-map ":task/title") uid children))
     merged-map))
 
+
 (defn get-root-page
   [x]
   (merge x
@@ -215,6 +217,7 @@
               [k (group-by #(get % kw) v)])
             columns)
        (into (hash-map))))
+
 
 (defn group-stuff
   [g sg items]
@@ -288,6 +291,8 @@
                       [(if nil-column?
                          (graph-ops/build-block-remove-op db prop-uid)
                          (graph-ops/build-block-save-op db prop-uid new-column))])]))))
+
+
 ;; update properties
 
 (defn update-query-property
@@ -296,6 +301,7 @@
     (rf/dispatch [:graph/update-in [:block/uid uid] [namespaced-key]
                   (fn [db prop-uid]
                     [(graph-ops/build-block-save-op db prop-uid new-value)])])))
+
 
 (defn parse-for-title
   "should be able to pass in a plain string, a wikilink, or both?"
@@ -317,9 +323,6 @@
         (re-find re s) (second (re-find re s))
         (clojure.string/blank? s) (throw "parse-for-title got an empty string")
         :else s))))
-
-
-
 
 
 (defn- find-container-id
@@ -385,9 +388,9 @@
                                                  (get swimlane-columns uid))
                            ;; context-object assumes group-by is always status, because of the uid stuff
                            context-object      (cond-> {}
-                                                       (and (= groupBy ":task/status")
-                                                            (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
-                                                       (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
+                                                 (and (= groupBy ":task/status")
+                                                      (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
+                                                 (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
                            column-id           (if uid uid "None")
                            column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
 
