@@ -3,56 +3,25 @@
   (:require
     ["/components/Block/BlockFormInput" :refer [BlockFormInput]]
     ["/components/Block/Taskbox" :refer [Taskbox]]
-    ["/components/Block/Toggle" :refer [Toggle]]
-    ["/components/DnD/DndContext" :refer [DragAndDropContext]]
-    ["/components/DnD/Droppable" :refer [Droppable]]
-    ["/components/DnD/Sortable" :refer [Sortable]]
-    ["/components/Icons/Icons" :refer [ChevronDownVariableIcon PencilIcon GraphChildIcon ArrowRightOnBoxIcon PlusIcon]]
+    ["/components/Icons/Icons" :refer [PencilIcon GraphChildIcon]]
     ["/components/ModalInput/ModalInput" :refer [ModalInput]]
     ["/components/ModalInput/ModalInputAnchor" :refer [ModalInputAnchor]]
     ["/components/ModalInput/ModalInputPopover" :refer [ModalInputPopover]]
     ["/components/ModalInput/ModalInputTrigger" :refer [ModalInputTrigger]]
-    ["/components/Query/KanbanBoard" :refer [KanbanBoard
-                                             KanbanCard
-                                             KanbanSwimlane
-                                             KanbanColumn]]
-    ["/components/Query/Query" :refer [QueryRadioMenu]]
-    ["/components/Query/Table" :refer [QueryTable]]
-    ["@chakra-ui/react" :refer [Box,
-                                IconButton
+    ["@chakra-ui/react" :refer [IconButton
                                 HStack
                                 Grid
                                 Heading
-                                Input
-                                ButtonGroup
                                 Flex
-                                VStack
                                 HStack
-                                Button, Table, Thead, Tbody, Th, Td, Tr, Tfoot, textDecoration, Link
                                 Text]]
-    ["@dnd-kit/core" :refer [closestCorners,
-                             DragOverlay,]]
-    ["@dnd-kit/sortable" :refer [SortableContext,
-                                 verticalListSortingStrategy,]]
+    ["@dnd-kit/core" :refer []]
+    ["@dnd-kit/sortable" :refer []]
     [athens.common-db :as common-db]
-    [athens.common-events :as common-events]
-    [athens.common-events.bfs :as bfs]
-    [athens.common-events.graph.composite :as composite]
-    [athens.common-events.graph.ops :as graph-ops]
-    [athens.common.utils :as utils]
-    [athens.dates :as dates]
     [athens.db :as db]
-    [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
-    [athens.router :as router]
-    [athens.self-hosted.presence.views          :as presence]
-    [athens.types.core :as types]
-    [athens.types.dispatcher :as dispatcher]
     [athens.types.query.shared :as shared]
-    [athens.views.blocks.editor                 :as editor]
     [clojure.string :refer []]
-    [datascript.core :as d]
-    [re-frame.core :as rf]
     [reagent.core :as r]))
 
 

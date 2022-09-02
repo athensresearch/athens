@@ -1,22 +1,9 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
-    ["/components/Block/BlockFormInput" :refer [BlockFormInput]]
-    ["/components/DnD/DndContext" :refer [DragAndDropContext]]
-    ["/components/DnD/Droppable" :refer [Droppable]]
-    ["/components/DnD/Sortable" :refer [Sortable]]
-    ["/components/Icons/Icons" :refer [GraphChildIcon ArrowRightOnBoxIcon PlusIcon]]
-    ["/components/ModalInput/ModalInput" :refer [ModalInput]]
-    ["/components/ModalInput/ModalInputPopover" :refer [ModalInputPopover]]
-    ["/components/ModalInput/ModalInputTrigger" :refer [ModalInputTrigger]]
-    ["/components/Query/KanbanBoard" :refer [KanbanBoard
-                                             KanbanCard
-                                             KanbanSwimlane
-                                             KanbanColumn]]
     ["/components/Query/Query" :refer [QueryRadioMenu]]
     ["/components/Query/Table" :refer [QueryTable]]
     ["@chakra-ui/react" :refer [Box,
-                                IconButton
                                 HStack
                                 Heading
                                 ButtonGroup

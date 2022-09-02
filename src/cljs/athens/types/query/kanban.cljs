@@ -13,10 +13,7 @@
                                              KanbanCard
                                              KanbanSwimlane
                                              KanbanColumn]]
-    ["/components/Query/Query" :refer [QueryRadioMenu]]
-    ["/components/Query/Table" :refer [QueryTable]]
-    ["@chakra-ui/react" :refer [Box,
-                                IconButton
+    ["@chakra-ui/react" :refer [IconButton
                                 HStack
                                 Heading
                                 ButtonGroup
@@ -48,6 +45,102 @@
     [datascript.core :as d]
     [re-frame.core :as rf]
     [reagent.core :as r]))
+
+
+(defn nested-group-by
+  "You have to pass the first group"
+  [kw columns]
+  (->> (map (fn [[k v]]
+              [k (group-by #(get % kw) v)])
+            columns)
+       (into (hash-map))))
+
+
+(defn context-to-block-properties
+  [context]
+  (apply hash-map
+         (->> context
+              (map (fn [[k v]]
+                     [k #:block{:string v
+                                :uid    (utils/gen-block-uid)}]))
+
+              flatten)))
+
+
+(defn new-card
+  "new-card needs to know the context of where it was pressed. For example, pressing it in a given column and swimlane
+  would pass along those properties to the new card. Filter conditions would also be passed along. It doesn't matter if
+  inherited properties are passed throughu group, subgroup, or filters. It just matters that they are true, and the view should be derived properly.
+
+  context == {:task/status 'todo'
+              :task/project '[[Project: ASD]]'"
+  [context f-special query-uid]
+  (let [context             (js->clj context)
+        new-block-props     (context-to-block-properties context)
+        parent-of-new-block (if (= f-special "On this page")
+                              {:block/uid query-uid}
+                              {:page/title (-> (dates/get-day) :title)})
+        position            (merge {:relation :last} parent-of-new-block)
+        evt                 (->> (bfs/internal-representation->atomic-ops
+                                   @athens.db/dsdb
+                                   [#:block{:uid        (utils/gen-block-uid)
+                                            :string     ""
+                                            :properties (merge {":entity/type" #:block{:string "[[athens/task]]"
+                                                                                       :uid    (utils/gen-block-uid)}
+                                                                ":task/title" #:block{:string "Untitled task"
+                                                                                      :uid    (utils/gen-block-uid)}}
+                                                               new-block-props)}]
+                                   position)
+                                 (composite/make-consequence-op {:op/type :new-type})
+                                 common-events/build-atomic-event)]
+    (re-frame.core/dispatch [:resolve-transact-forward evt])))
+
+
+;; UPDATE
+
+
+(defn update-card-container
+  [id active-container-context over-container-context]
+  (let [{active-swimlane-id :swimlane-id active-column-id :column-id} active-container-context
+        {over-swimlane-id :swimlane-id over-column-id :column-id} over-container-context
+        diff-column?   (not= active-column-id over-column-id)
+        diff-swimlane? (not= active-swimlane-id over-swimlane-id)
+        nil-swimlane?  (= over-swimlane-id "None")
+        nil-column?    (= over-column-id "None")
+        new-column     (str "((" over-column-id "))")]
+    (when diff-swimlane?
+      (rf/dispatch [:graph/update-in [:block/uid id] [":task/assignee"]
+                    (fn [db prop-uid]
+                      [(if nil-swimlane?
+                         (graph-ops/build-block-remove-op db prop-uid)
+                         (graph-ops/build-block-save-op db prop-uid over-swimlane-id))])]))
+    (when diff-column?
+      (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
+                    (fn [db prop-uid]
+                      [(if nil-column?
+                         (graph-ops/build-block-remove-op db prop-uid)
+                         (graph-ops/build-block-save-op db prop-uid new-column))])]))))
+
+
+(defn- find-container-id
+  "Accepts event.active or event.over"
+  [e active-or-over]
+  (try
+    (case active-or-over
+      :active (.. e -active -data -current -sortable -containerId)
+      :over (.. e -over -data -current -sortable -containerId))
+    (catch js/Object _
+      (case active-or-over
+        :active (.. e -active -id)
+        :over (.. e -over -id)))))
+
+
+(defn- get-container-context
+  [container-id]
+  (let [swimlane-id (-> (re-find #"swimlane-(@?\w+)" container-id) second)
+        column-id   (-> (re-find #"column-(\w+)" container-id) second)]
+    {:swimlane-id swimlane-id
+     :column-id column-id}))
 
 
 (defn render-card
@@ -100,250 +193,6 @@
          [:> IconButton {:zIndex  1
                          :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
           [:> ArrowRightOnBoxIcon]]]]]]]))
-
-
-;; CONSTANTS
-
-
-(def base-schema
-  [":block/uid" ":create/auth" ":create/time" ":last-edit/auth" ":last-edit/time"])
-
-
-(def SCHEMA
-  ;; "[[athens/comment-thread]]" (concat base-schema [])})
-  {"[[athens/task]]"           (concat [":task/title" ":task/page" ":task/status" ":task/assignee" ":task/priority" ":task/due-date"] base-schema)})
-
-
-(def AUTHORS
-  ["None" "Sid" "Jeff" "Stuart" "Filipe" "Alex"])
-
-
-(def LAYOUTS
-  ["table" "board" #_"list"])
-
-
-(def SORT_DIRECTIONS
-  ["asc" "desc"])
-
-
-(def SPECIAL_FILTERS
-  ["None" "On this page"])
-
-
-(def GROUP_BY_OPTIONS
-  [":task/page" ":task/status" ":task/assignee" ":task/priority" ":create/auth"])
-
-
-(def DEFAULT-PROPS
-  {":entity/type"                   "[[athens/query]]"
-   "athens/query/layout"            "table"
-   "athens/query/select"            "[[athens/comment-thread]]"
-   "athens/query/filter/author"     "None"
-   "athens/query/filter/special"    "None"
-   "athens/query/sort/by"           ":create/time"
-   "athens/query/sort/direction"    "desc"
-   "athens/query/group/by"          ":create/auth"
-   "athens/query/group/subgroup/by" ":create/auth"
-   "athens/query/properties/hide"   {}
-   "athens/query/properties/order"  nil})
-
-
-(defn get*
-  [hm ks]
-  (->> (map #(str "athens/query/" %) ks)
-       (map #(get hm %))))
-
-
-(defn get-schema
-  [k]
-  (or (get SCHEMA k) base-schema))
-
-
-(def ENTITY_TYPES
-  (keys SCHEMA))
-
-
-;; Helpers
-
-(defn get-create-auth-and-time
-  [create-event]
-  {":create/auth" (get-in create-event [:event/auth :presence/id])
-   ":create/time" (get-in create-event [:event/time :time/ts])})
-
-
-(defn get-last-edit-auth-and-time
-  [edit-events]
-  (let [last-edit (last edit-events)]
-    {":last-edit/auth" (get-in last-edit [:event/auth :presence/id])
-     ":last-edit/time" (get-in last-edit [:event/time :time/ts])}))
-
-
-(declare parse-for-uid parse-for-title)
-
-
-(defn block-to-flat-map
-  [block]
-  ;; TODO: we could technically give pages all the properties of tasks and put them on a kanban board...
-  (let [{:block/keys [uid string properties create edits children] :keys [node/_title]} block
-        create-auth-and-time    (get-create-auth-and-time create)
-        last-edit-auth-and-time (get-last-edit-auth-and-time edits)
-        property-keys           (keys properties)
-        props-map               (reduce (fn [acc prop-key]
-                                          (assoc acc prop-key (get-in properties [prop-key :block/string])))
-                                        {}
-                                        property-keys)
-        merged-map              (merge {":block/uid"    uid
-                                        ":block/string" string}
-                                       props-map
-                                       create-auth-and-time
-                                       last-edit-auth-and-time
-                                       {":task/status" (parse-for-uid (get props-map ":task/status"))}
-                                       {":task/assignee" (parse-for-title (get props-map ":task/assignee"))})]
-    #_(when children
-        (prn (get merged-map ":task/title") uid children))
-    merged-map))
-
-
-(defn get-root-page
-  [x]
-  (merge x
-         {":task/page" (:node/title (db/get-root-parent-page (get x ":block/uid")))}))
-
-
-(defn nested-group-by
-  "You have to pass the first group"
-  [kw columns]
-  (->> (map (fn [[k v]]
-              [k (group-by #(get % kw) v)])
-            columns)
-       (into (hash-map))))
-
-
-(defn group-stuff
-  [g sg items]
-  (->> items
-       (group-by #(get % sg))
-       (nested-group-by g)))
-
-
-(defn context-to-block-properties
-  [context]
-  (apply hash-map
-         (->> context
-              (map (fn [[k v]]
-                     [k #:block{:string v
-                                :uid    (utils/gen-block-uid)}]))
-
-              flatten)))
-
-
-(defn new-card
-  "new-card needs to know the context of where it was pressed. For example, pressing it in a given column and swimlane
-  would pass along those properties to the new card. Filter conditions would also be passed along. It doesn't matter if
-  inherited properties are passed throughu group, subgroup, or filters. It just matters that they are true, and the view should be derived properly.
-
-  context == {:task/status 'todo'
-              :task/project '[[Project: ASD]]'"
-  [context f-special query-uid]
-  (let [context             (js->clj context)
-        new-block-props     (context-to-block-properties context)
-        parent-of-new-block (if (= f-special "On this page")
-                              {:block/uid query-uid}
-                              {:page/title (-> (dates/get-day) :title)})
-        position            (merge {:relation :last} parent-of-new-block)
-        evt                 (->> (bfs/internal-representation->atomic-ops
-                                   @athens.db/dsdb
-                                   [#:block{:uid        (utils/gen-block-uid)
-                                            :string     ""
-                                            :properties (merge {":entity/type" #:block{:string "[[athens/task]]"
-                                                                                       :uid    (utils/gen-block-uid)}
-                                                                ":task/title" #:block{:string "Untitled task"
-                                                                                      :uid    (utils/gen-block-uid)}}
-                                                               new-block-props)}]
-                                   position)
-                                 (composite/make-consequence-op {:op/type :new-type})
-                                 common-events/build-atomic-event)]
-    (re-frame.core/dispatch [:resolve-transact-forward evt])))
-
-
-;; UPDATE
-
-;; update task stuff
-
-(defn update-card-container
-  [id active-container-context over-container-context]
-  (let [{active-swimlane-id :swimlane-id active-column-id :column-id} active-container-context
-        {over-swimlane-id :swimlane-id over-column-id :column-id} over-container-context
-        diff-column?   (not= active-column-id over-column-id)
-        diff-swimlane? (not= active-swimlane-id over-swimlane-id)
-        nil-swimlane?  (= over-swimlane-id "None")
-        nil-column?    (= over-column-id "None")
-        new-column     (str "((" over-column-id "))")]
-    (when diff-swimlane?
-      (rf/dispatch [:graph/update-in [:block/uid id] [":task/assignee"]
-                    (fn [db prop-uid]
-                      [(if nil-swimlane?
-                         (graph-ops/build-block-remove-op db prop-uid)
-                         (graph-ops/build-block-save-op db prop-uid over-swimlane-id))])]))
-    (when diff-column?
-      (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
-                    (fn [db prop-uid]
-                      [(if nil-column?
-                         (graph-ops/build-block-remove-op db prop-uid)
-                         (graph-ops/build-block-save-op db prop-uid new-column))])]))))
-
-
-;; update properties
-
-(defn update-query-property
-  [uid key new-value]
-  (let [namespaced-key (str "athens/query/" key)]
-    (rf/dispatch [:graph/update-in [:block/uid uid] [namespaced-key]
-                  (fn [db prop-uid]
-                    [(graph-ops/build-block-save-op db prop-uid new-value)])])))
-
-
-(defn parse-for-title
-  "should be able to pass in a plain string, a wikilink, or both?"
-  [s]
-  (when (seq s)
-    (let [re #"\[\[(.*)\]\]"]
-      (cond
-        (re-find re s) (second (re-find re s))
-        (clojure.string/blank? s) (throw "parse-for-title got an empty string")
-        :else s))))
-
-
-(defn parse-for-uid
-  "should be able to pass in a plain string, a wikilink, or both?"
-  [s]
-  (when (seq s)
-    (let [re #"\(\((.*)\)\)"]
-      (cond
-        (re-find re s) (second (re-find re s))
-        (clojure.string/blank? s) (throw "parse-for-title got an empty string")
-        :else s))))
-
-
-(defn- find-container-id
-  "Accepts event.active or event.over"
-  [e active-or-over]
-  (try
-    (case active-or-over
-      :active (.. e -active -data -current -sortable -containerId)
-      :over (.. e -over -data -current -sortable -containerId))
-    (catch js/Object _
-      (case active-or-over
-        :active (.. e -active -id)
-        :over (.. e -over -id)))))
-
-
-(defn- get-container-context
-  [container-id]
-  (let [swimlane-id (-> (re-find #"swimlane-(@?\w+)" container-id) second)
-        column-id   (-> (re-find #"column-(\w+)" container-id) second)]
-    {:swimlane-id swimlane-id
-     :column-id column-id}))
 
 
 (defn DragAndDropKanbanBoard
