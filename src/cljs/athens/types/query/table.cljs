@@ -58,7 +58,7 @@
 
 
 (defn render-entity
-  [uid children indent is-root]
+  [uid children indent]
   (let [entity         (->> (reactive/get-reactive-block-document [:block/uid uid])
                             shared/block-to-flat-map)
         page-title     (common-db/get-page-title @db/dsdb uid)
@@ -79,10 +79,15 @@
         status-value   (common-db/get-block-string @db/dsdb status-uid)
         priority-uid   (shared/parse-for-uid priority)
         priority-value (common-db/get-block-string @db/dsdb priority-uid)
-        parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))]
+        parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))
+        entity-type (common-db/get-entity-type @db/dsdb [:block/uid uid])
+        is-root (= entity-type "page")]
+
+
 
     [:<>
-     (if is-root
+     (case entity-type
+       "page"
        [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr"
                  :mt 4
                  :textAlign "start"}
@@ -92,6 +97,12 @@
         [:> Text {:alignSelf "stretch" :size "md"} priority-value]
         [:> Text {:alignSelf "stretch" :size "md"} assignee-value]
         [:> Text {:alignSelf "stretch" :size "md"} due-date]]
+
+       "block"
+       [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr"}
+        [:span (str (get entity ":block/string") " > ")]]
+
+       "[[athens/task]]"
        [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr"
                  :textAlign "start"
                  :borderTop "1px solid"
@@ -152,11 +163,13 @@
         [:> Text {:alignSelf "stretch" :size "md"} status-value]
         [:> Text {:alignSelf "stretch" :size "md"} priority-value]
         [:> Text {:alignSelf "stretch" :size "md"} assignee-value]
-        [:> Text {:alignSelf "stretch" :size "md"} due-date]])
+        [:> Text {:alignSelf "stretch" :size "md"} due-date]]
+
+       [:div (str "I am a block with type " entity-type)])
      [:<>
       (for [[uid children] children]
         ^{:key uid}
-        [render-entity uid children (if is-root 0 (inc indent)) false])]]))
+        [render-entity uid children (inc indent)])]]))
 
 
 (defn QueryTableV2
@@ -169,5 +182,5 @@
    [:<>
     (for [[uid children] data]
       ^{:key uid}
-      [render-entity uid children 0 true])]])
+      [render-entity uid children 0])]])
 

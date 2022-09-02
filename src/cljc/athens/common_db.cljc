@@ -423,15 +423,22 @@
       add-property-map
       :block/properties))
 
+(declare get-page-title-from-eid)
 
 (defn get-entity-type
   "Returns the value of eids `:entity/type` prop, if any."
   [db eid]
-  (->> (d/entity db eid)
-       :block/_property-of
-       (some (fn [e]
-               (when (-> e :block/key :node/title (= ":entity/type"))
-                 (:block/string e))))))
+  (let [prop-entity-type (->> (d/entity db eid)
+                              :block/_property-of
+                              (some (fn [e]
+                                      (when (-> e :block/key :node/title (= ":entity/type"))
+                                        (:block/string e)))))
+        page             (get-page-title-from-eid db eid)]
+    (cond
+      prop-entity-type prop-entity-type
+      page "page"
+      :else "block")))
+
 
 
 (defn get-block-uid
@@ -543,6 +550,13 @@
   [db uid]
   (-> db
       (d/entity [:block/uid uid])
+      :node/title))
+
+
+(defn get-page-title-from-eid
+  [db eid]
+  (-> db
+      (d/entity eid)
       :node/title))
 
 
