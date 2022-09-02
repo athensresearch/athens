@@ -46,6 +46,7 @@
     [clojure.string :refer []]
     [re-frame.core :as rf]
     [athens.types.query.table :refer [QueryTableV2]]
+    [athens.types.query.kanban :refer [DragAndDropKanbanBoard]]
     [athens.types.query.shared :as shared]
     [reagent.core :as r]))
 
@@ -112,11 +113,6 @@
 
 
 ;; Helpers
-
-(defn get-root-page
-  [x]
-  (merge x
-         {":task/page" (:node/title (db/get-root-parent-page (get x ":block/uid")))}))
 
 
 (defn nested-group-by
@@ -382,86 +378,6 @@
                   [(graph-ops/build-block-save-op db prop-uid new-value)])]))
 
 
-(defn title-editor
-  [uid title]
-  (let [value-atom      (r/atom (or title ""))
-        show-edit-atom? (r/atom true)
-        block-o         {:block/uid uid}]
-    (fn []
-      (let [enter-fn!   (fn [uid d-key-down]
-                          (let [{:keys [target]} d-key-down]
-
-                            (update-card-field uid ":task/title" @value-atom)
-                            (reset! show-edit-atom? false)
-                            ;; side effect
-                            (.blur target)))
-            state-hooks {:save-fn                 #()
-                         :enter-handler           enter-fn!
-                         :idle-fn                 #()
-                         :update-fn               #(reset! value-atom %)
-                         :read-value              value-atom
-                         :show-edit?              show-edit-atom?
-                         :tab-handler             #()
-                         :backspace-handler       #()
-                         :delete-handler          #()
-                         :default-verbatim-paste? true
-                         :keyboard-navigation?    false
-                         :style                   {:opacity 1}
-                         :placeholder             "Write your task title here"}]
-        [editor/block-editor block-o state-hooks]))))
-
-
-(defn render-card
-  [uid over?]
-  (let [card           (-> (reactive/get-reactive-block-document [:block/uid uid])
-                           shared/block-to-flat-map
-                           get-root-page)
-        title          (get card ":task/title")
-        status         (get card ":task/status")
-        priority       (get card ":task/priority")
-        assignee       (get card ":task/assignee")
-        _page          (get card ":task/page")
-        _due-date      (get card ":task/due-date")
-        assignee-value (shared/parse-for-title assignee)
-        status-uid     (shared/parse-for-uid status)
-        _status-value  (common-db/get-block-string @db/dsdb status-uid)
-        priority-uid   (shared/parse-for-uid priority)
-        priority-value (common-db/get-block-string @db/dsdb priority-uid)
-        parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))
-        ;; TODO: figure out how to give unique id when one card can show up multiple times on a query, e.g. a card that belongs to multiple projects
-        ;; could use swimlane and column data for uniqueness
-        id             (str uid)]
-    [:> Sortable {:id id :key id}
-     [:> KanbanCard {:isOver over?}
-      [:> VStack {:spacing 0
-                  :align   "stretch"}
-       [:> ModalInput {:autoFocus true}
-        [:> ModalInputTrigger
-         ;; TODO show something if empty title
-         [:> Text {:fontWeight    "medium"
-                   :onPointerDown #(.stopPropagation %)
-                   :lineHeight    "short"} [parse-renderer/parse-and-render title uid]]]
-        [:> ModalInputPopover {:preventScroll false}
-         [:> BlockFormInput {:size "md"
-                             :isMultiline true
-                             :onPointerDown #(.stopPropagation %)}
-          [title-editor uid title]
-          [presence/inline-presence-el uid]]]]
-       [:> HStack {:justifyContent "space-between"
-                   :fontSize       "sm"
-                   :color          "foreground.secondary"}
-        [:> HStack
-         [:> Text assignee-value]
-         [:> Text priority-value]]
-        [:> ButtonGroup {:justifyContent "space-between"
-                         :size           "xs"
-                         :variant        "ghost"
-                         :colorScheme    "subtle"
-                         :onPointerDown  #(.stopPropagation %)}
-         [:> IconButton {:zIndex  1
-                         :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
-          [:> ArrowRightOnBoxIcon]]]]]]]))
-
 
 (defn- find-container-id
   "Accepts event.active or event.over"
@@ -484,89 +400,7 @@
      :column-id column-id}))
 
 
-(defn DragAndDropKanbanBoard
-  [_props]
-  (let [active-id (r/atom nil)
-        over-id   (r/atom nil)]
-    (fn [props]
-      (let [{:keys [query-uid f-special boardData all-possible-group-by-columns groupBy subgroupBy]} props]
-        [:> DragAndDropContext {:collisionDetection closestCorners
-                                :onDragStart (fn [e]
-                                               (reset! active-id (.. e -active -id)))
-                                :onDragOver  (fn [e]
-                                               (reset! over-id (.. e -over -id)))
-                                :onDragEnd   (fn [e]
-                                               ;; TODO: should context metadata be stored at the card level or the container level?
-                                               (let [over-container           (find-container-id e :over)
-                                                     active-container         (find-container-id e :active)
-                                                     over-container-context   (get-container-context over-container)
-                                                     active-container-context (get-container-context active-container)]
-                                                 (update-card-container @active-id active-container-context over-container-context)
-                                                 (reset! active-id nil)
-                                                 (reset! over-id nil)))}
 
-         [:> KanbanBoard
-          [:> Heading {:size "md"} "TODO: Create title handler for queries"]
-          (doall
-            (for [swimlanes boardData]
-              (let [[swimlane-id swimlane-columns] swimlanes
-                    nil-swimlane-id? (nil? swimlane-id)
-                    ;; TODO: doesn't handle empty assignee well, or values that are not expected
-                    swimlane-id      (if swimlane-id swimlane-id "None")
-                    swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
-
-                [:> KanbanSwimlane {:name swimlane-key
-                                    :key swimlane-key
-                                    :bg "background.basement"}
-                 (doall
-                   (for [possible-group-by-column all-possible-group-by-columns]
-                     (let [{:block/keys [string uid]} possible-group-by-column
-                           cards-from-a-column (if (= string "None")
-                                                 (get swimlane-columns nil)
-                                                 (get swimlane-columns uid))
-                           ;; context-object assumes group-by is always status, because of the uid stuff
-                           context-object      (cond-> {}
-                                                 (and (= groupBy ":task/status")
-                                                      (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
-                                                 (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
-                           column-id           (if uid uid "None")
-                           column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
-
-                       [:> Droppable {:key column-id :id column-id}
-                        (fn [over?]
-                          (r/as-element
-                            [:> SortableContext {:id column-id
-                                                 :items (or cards-from-a-column [])
-                                                 :strategy verticalListSortingStrategy}
-                             [:> KanbanColumn {:key column-id
-                                               :isOver over?}
-                              [:> Flex {:color "foreground.secondary"
-                                        :gap 2
-                                        :px 4
-                                        :py 1
-                                        :alignItems "center"}
-                               [:> Heading {:fontWeight "medium"
-                                            :mr "auto"
-                                            :size "sm"}
-                                string]
-                               [:> Text {:fontWeight "medium"
-                                         :fontSize "sm"}
-                                (str (count cards-from-a-column))]
-                               [:> ButtonGroup {:size "sm"
-                                                :variant "ghost"}
-                                [:> IconButton {:onClick #(new-card context-object f-special query-uid)
-                                                :icon    (r/as-element [:> PlusIcon])}]]]
-                              (doall
-                                (for [card cards-from-a-column]
-                                  (let [card-uid (get card ":block/uid")
-                                        over?    (= @over-id card-uid)]
-                                    ^{:key card-uid} [render-card card-uid over?])))]]))])))])))
-
-          [:> DragOverlay
-           (when @active-id
-             [:<>
-              ;; [:h1 @over-id]
-              [render-card @active-id]])]]]))))
 
 
 
@@ -584,14 +418,14 @@
                                      entity-author))))
         special-filter-fn (fn [x]
                             (cond
-                              (= f-special "On this page") (let [comment-uid           (get x ":block/uid")
-                                                                 comments-parent-page  (-> (db/get-root-parent-page comment-uid)
-                                                                                           :node/title)
-                                                                 current-page-of-query (-> (db/get-root-parent-page uid)
-                                                                                           :node/title)]
-                                                             (= comments-parent-page current-page-of-query))
+                              (= f-special "On this page")
+                              (let [comment-uid           (get x ":block/uid")
+                                    comments-parent-page  (-> (db/get-root-parent-page comment-uid)
+                                                              :node/title)
+                                    current-page-of-query (-> (db/get-root-parent-page uid)
+                                                              :node/title)]
+                                (= comments-parent-page current-page-of-query))
                               :else true))
-
         query-data        (filterv special-filter-fn query-data)
         query-data        (filterv filter-author-fn query-data)
         query-data        (sort-table query-data s-by s-direction)]
@@ -689,7 +523,7 @@
         schema            (get-schema select)
         query-data        (->> (reactive/get-reactive-instances-of-key-value ":entity/type" select)
                                (map shared/block-to-flat-map)
-                               (map get-root-page))]
+                               (map shared/get-root-page))]
 
     (if (invalid-query? parsed-properties)
       [:> Box {:color "red"} "invalid query"]
