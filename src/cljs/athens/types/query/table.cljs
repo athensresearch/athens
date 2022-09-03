@@ -25,6 +25,12 @@
     [reagent.core :as r]))
 
 
+(def header-row-cell-style
+  {:position "sticky"
+   :left 0
+   :zIndex 1})
+
+
 (defn render-entity-row
   [uid children indent grid-template-cols]
   (let [entity         (->> (reactive/get-reactive-block-document [:block/uid uid])
@@ -62,35 +68,41 @@
                  :templateRows "auto"
                  :pt 8
                  :textAlign "start"}
-        [:> Text {:color "foreground.secondary"} title]
+        [:> Text (merge header-row-cell-style
+                  {:color "foreground.secondary"}) title]
         [:> Text {:alignSelf "stretch" :size "md"} status-value]
         [:> Text {:alignSelf "stretch" :size "md"} priority-value]
         [:> Text {:alignSelf "stretch" :size "md"} assignee-value]
         [:> Text {:alignSelf "stretch" :size "md"} due-date]]
 
        "block"
-       [:> Text {:color "foreground.secondary"
+       [:> Grid {:templateColumns grid-template-cols
+                 :textAlign "start"
+                 :position "relative"
                  :borderTop "1px solid"
                  :borderColor "separator.border"
-                 :pl curr-indent-width
-                 :fontSize "xs"}
-        (str " • " (get entity ":block/string"))]
+                 :_hover {:bg "interaction.surface.hover"}}
+       [:> Text (merge header-row-cell-style
+                       {:color "foreground.secondary"
+                        :pl curr-indent-width
+                        :fontSize "xs"})
+        (str " • " (get entity ":block/string"))]]
 
        "[[athens/task]]"
        [:> Grid {:templateColumns grid-template-cols
                  :textAlign "start"
+                 :position "relative"
                  :borderTop "1px solid"
                  :borderColor "separator.border"
                  :_hover {:bg "interaction.surface.hover"}}
 
-        [:> Flex {:position "sticky"
-                  :left 0
-                  :alignSelf "inline-flex"
-                  :align "center"
-                  :gap 1
-                  :ml 1
-                  :pr 1
-                  :pl curr-indent-width}
+        [:> Flex (merge
+                  header-row-cell-style
+                  {:alignSelf "inline-flex"
+                   :align "center"
+                   :gap 1
+                   :pr 1
+                   :pl curr-indent-width})
 
          ;; Comment out until we figure out how to persist open/close state on tables
          #_[:> IconButton {:size "xs"
@@ -127,9 +139,10 @@
           [:> ModalInputPopover {:popoverContentProps {:mx "-5px" :my "-1px"}}
            [:> Flex {:align "center"
                      :gap 0.5}
-            (when status-value
-              [:> Taskbox {:status status-value
-                           :mx 1 :my "auto"}])
+            (if status-value
+              [:> Taskbox {:mx 1 :my "auto"
+                           :status status-value}]
+              [:> Taskbox {:mx 1 :my "auto"}])
             [:> BlockFormInput {:variant "unstyled"
                                 :flex "1 1 100%"
                                 :size "md"}
@@ -145,7 +158,7 @@
                  :pl curr-indent-width
                  :fontSize "xs"}
         (str "I am a block with type " entity-type)])
-        
+
      [:<>
       (for [[uid children] children]
         ^{:key uid}
@@ -154,12 +167,16 @@
 
 (defn QueryTableV2
   [{:keys [data columns] :as props}]
-  (let [grid-template-cols "3fr 10em 10em 10em 10em"]
-    [:> Flex {:flexDirection "column" :align "stretch" :py 4}
+  (let [grid-template-cols "minmax(20em, 1fr) 9em 9em 9em 9em"]
+    [:> Flex {:flexDirection "column" :align "stretch" :py 4 :width "100%" :overflowX "auto"}
      [:> Grid {:templateColumns grid-template-cols :textAlign "start"}
       (for [column columns]
         ^{:key column}
-        [:> Heading {:size "sm" :fontWeight "normal" :color "foreground.secondary"} column])]
+        [:> Heading (merge
+                     {:size "sm" :fontWeight "normal" :color "foreground.secondary"}
+                     (when (= column "Title")
+                       header-row-cell-style))
+         column])]
      [:<>
       (for [[uid children] data]
         ^{:key uid}
