@@ -25,8 +25,8 @@
     [reagent.core :as r]))
 
 
-(defn render-entity
-  [uid children indent]
+(defn render-entity-row
+  [uid children indent grid-template-cols]
   (let [entity         (->> (reactive/get-reactive-block-document [:block/uid uid])
                             shared/block-to-flat-map)
         page-title     (common-db/get-page-title @db/dsdb uid)
@@ -39,7 +39,9 @@
         _page          (get entity ":task/page")
         due-date       (get entity ":task/due-date")
 
-        ;; forwhen we can collapse items
+        curr-indent-width (str (* 1 indent) "rem")
+
+        ;; for when we can collapse items
         is-collapsed?  false
 
         assignee-value (shared/parse-for-title assignee)
@@ -56,22 +58,26 @@
     [:<>
      (case entity-type
        "page"
-       [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr"
-                 :mt 4
+       [:> Grid {:templateColumns grid-template-cols
+                 :templateRows "auto"
+                 :pt 8
                  :textAlign "start"}
-        [:> Text {:pl 1
-                  :color "foreground.secondary"} title]
+        [:> Text {:color "foreground.secondary"} title]
         [:> Text {:alignSelf "stretch" :size "md"} status-value]
         [:> Text {:alignSelf "stretch" :size "md"} priority-value]
         [:> Text {:alignSelf "stretch" :size "md"} assignee-value]
         [:> Text {:alignSelf "stretch" :size "md"} due-date]]
 
        "block"
-       [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr"}
-        [:span (str (get entity ":block/string") " > ")]]
+       [:> Text {:color "foreground.secondary"
+                 :borderTop "1px solid"
+                 :borderColor "separator.border"
+                 :pl curr-indent-width
+                 :fontSize "xs"}
+        (str " • " (get entity ":block/string"))]
 
        "[[athens/task]]"
-       [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr"
+       [:> Grid {:templateColumns grid-template-cols
                  :textAlign "start"
                  :borderTop "1px solid"
                  :borderColor "separator.border"
@@ -84,7 +90,7 @@
                   :gap 1
                   :ml 1
                   :pr 1
-                  :pl (str (* 1 indent) "em")}
+                  :pl curr-indent-width}
 
          ;; Comment out until we figure out how to persist open/close state on tables
          #_[:> IconButton {:size "xs"
@@ -137,18 +143,19 @@
      [:<>
       (for [[uid children] children]
         ^{:key uid}
-        [render-entity uid children (inc indent)])]]))
+        [render-entity-row uid children (inc indent) grid-template-cols])]]))
 
 
 (defn QueryTableV2
   [{:keys [data columns] :as props}]
-  [:> Flex {:flexDirection "column" :align "stretch" :py 4}
-   [:> Grid {:templateColumns "3fr 1fr 1fr 1fr 1fr" :textAlign "start"}
-    (for [column columns]
-      ^{:key column}
-      [:> Heading {:size "sm" :fontWeight "normal" :color "foreground.secondary"} column])]
-   [:<>
-    (for [[uid children] data]
-      ^{:key uid}
-      [render-entity uid children 0])]])
+  (let [grid-template-cols "3fr 10em 10em 10em 10em"]
+    [:> Flex {:flexDirection "column" :align "stretch" :py 4}
+     [:> Grid {:templateColumns grid-template-cols :textAlign "start"}
+      (for [column columns]
+        ^{:key column}
+        [:> Heading {:size "sm" :fontWeight "normal" :color "foreground.secondary"} column])]
+     [:<>
+      (for [[uid children] data]
+        ^{:key uid}
+        [render-entity-row uid children 0 grid-template-cols])]]))
 
