@@ -139,7 +139,13 @@
         [:> Text {:alignSelf "stretch" :size "md"} assignee-value]
         [:> Text {:alignSelf "stretch" :size "md"} due-date]]
 
-       [:div (str "I am a block with type " entity-type)])
+       [:> Text {:color "foreground.secondary"
+                 :borderTop "1px solid"
+                 :borderColor "separator.border"
+                 :pl curr-indent-width
+                 :fontSize "xs"}
+        (str "I am a block with type " entity-type)])
+        
      [:<>
       (for [[uid children] children]
         ^{:key uid}
