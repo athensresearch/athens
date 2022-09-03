@@ -60,7 +60,7 @@ export const CommentAnchor = ({ menu, ...boxProps }) => {
     isActive={isMenuOpen}
     ref={ref}
     onClick={(event) => {
-      addToContextMenu({ event, ref, component: Menu, anchorEl: ref })
+      addToContextMenu({ event, ref, component: Menu, anchorEl: ref, key: "comment" })
     }}
     {...boxProps}
   />
@@ -99,7 +99,7 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
     'byline byline byline'
     'anchor comment refs'`}
     onContextMenu={(event) => {
-      addToContextMenu({ event, ref, component: Menu })
+      addToContextMenu({ event, ref, component: Menu, key: "comment" })
     }}
     _first={{
       borderTopWidth: 0
