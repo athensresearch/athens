@@ -18,7 +18,8 @@ interface addToContextMenuProps {
   component: () => JSX.Element,
   onClose: () => void,
   anchorEl?: React.MutableRefObject<HTMLElement>,
-  isExclusive?: boolean
+  isExclusive?: boolean,
+  key?: string,
 }
 
 const useContextMenuState = () => {
