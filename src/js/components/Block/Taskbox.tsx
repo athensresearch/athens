@@ -183,7 +183,7 @@ export const Taskbox = (props: TaskboxProps) => {
         }
       }}
     >
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         <Flex {...STATUS_ICON_PROPS} key={status}>{status === 'To Do' ? null : STATUS[status].icon}</Flex>
       </AnimatePresence>
     </Button>
