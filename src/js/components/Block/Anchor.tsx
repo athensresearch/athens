@@ -166,7 +166,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
       onContextMenu={
         (e) => {
           if (menu) {
-            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef })
+            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef, key: "block" })
           }
         }}
       onClick={
@@ -174,7 +174,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
           if (buttonProps?.onClick) {
             buttonProps?.onClick(e);
           } else if (menu) {
-            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef })
+            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef, key: "block" })
           }
         }}
       isActive={buttonProps?.isActive || isMenuOpen}

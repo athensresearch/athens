@@ -14,7 +14,7 @@ export const KanbanCard = React.forwardRef(({ children, isOver }, ref) => {
 
   const Menu = React.memo(() => {
     return <MenuGroup title="Card">
-      <MenuItem icon={<PlusIcon/>}>Open in right sidebar</MenuItem>
+      <MenuItem icon={<PlusIcon />}>Open in right sidebar</MenuItem>
     </MenuGroup>
   })
 
@@ -53,7 +53,8 @@ export const KanbanCard = React.forwardRef(({ children, isOver }, ref) => {
         ref: innerRef,
         event: e,
         component: Menu,
-        isExclusive: true
+        isExclusive: true,
+        key: "card"
       })
     }}
     {...(isOver && {
