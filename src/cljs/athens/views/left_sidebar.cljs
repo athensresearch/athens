@@ -1,15 +1,20 @@
 (ns athens.views.left-sidebar
   (:require
-    ["/components/Icons/Icons" :refer [CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
-    ["/components/Layout/MainSidebar" :refer [MainSidebar SidebarSection SidebarSectionHeading]]
-    ["/components/SidebarShortcuts/List" :refer [List]]
-    ["/components/Widgets/Widgets" :refer [TasksWidget]]
-    ["@chakra-ui/react" :refer [Button IconButton Divider VStack Flex ButtonGroup Link Flex]]
-    [athens.reactive :as reactive]
-    [athens.router   :as router]
-    [athens.util     :as util]
-    [re-frame.core   :as rf]
-    [reagent.core    :as r]))
+   ["/components/App/ContextMenuContext" :refer [ContextMenuContext]]
+   ["/components/Block/Taskbox" :refer [Taskbox]]
+   ["/components/Icons/Icons" :refer [FilterCircleIcon FilterCircleFillIcon CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
+   ["/components/Layout/MainSidebar" :refer [MainSidebar SidebarSection SidebarSectionHeading]]
+   ["/components/SidebarShortcuts/List" :refer [List]]
+   ["/components/Widgets/Widget" :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
+   ["@chakra-ui/react" :refer [CircularProgress FormControl FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal MenuItem MenuGroup IconButton Text Divider VStack Flex ButtonGroup Link Flex]]
+   ["react" :as react]
+   [athens.reactive :as reactive]
+   [athens.router   :as router]
+   [athens.types.query.view :as query]
+   [athens.types.tasks.view :as tasks]
+   [athens.util     :as util]
+   [re-frame.core   :as rf]
+   [reagent.core    :as r]))
 
 
 ;; Components
@@ -24,6 +29,98 @@
                 :leftIcon icon
                 :onClick on-click}
      label]))
+
+
+(defn sidebar-task-el
+  [task]
+  (let [status (get task ":task/status")
+        status-block (reactive/get-reactive-block-document [:block/uid status])
+        status-string (:block/string status-block "(())")]
+    [:> Flex {:display "inline-flex"
+              :align "baseline"
+              :py 1
+              :gap 1}
+     [:> Taskbox {:position "relative"
+                  :top "3px"
+                  :status (when-not (= status-string "(())") status-string)}]
+     [:> Text {:fontSize "sm"
+               :noOfLines 1} (get task ":task/title")]]))
+
+
+
+(defn my-tasks
+  []
+  (let [all-tasks            (->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
+                                  (map query/block-to-flat-map)
+                                  (map query/get-root-page))
+        me                   @(rf/subscribe [:presence/current-username])
+        is-filtered?         true
+        fn-assigned-to-me    (fn [task]
+                               (= (str "@" me)
+                                  (get task ":task/assignee")))
+        tasks-assigned-to-me (filterv fn-assigned-to-me all-tasks)
+        filtered-tasks       (take 5 tasks-assigned-to-me)
+        tasks-by-page        (group-by #(get % ":task/page") tasks-assigned-to-me)]
+
+    [:> Widget {:defaultIsOpen true}
+
+    ;; Widget header, including settings popover
+     [:> Popover {:placement "right"}
+
+       ;; Widget header
+      [:> PopoverAnchor
+       [:> WidgetHeader {:title "Tasks"
+                         :pl 6
+                         :pr 4}
+        [:> PopoverTrigger
+         [:> IconButton {:icon
+                         (r/as-element (if is-filtered?
+                                         [:> FilterCircleFillIcon]
+                                         [:> FilterCircleIcon]))
+                         :size "xs"
+                         :colorScheme "subtle"
+                         :variant "ghost"}]]
+
+        ;; Count of shown tasks
+        [:> Text {:fontSize "xs"
+                  :color "foreground.secondary"} (count tasks-assigned-to-me)]
+
+        ;; standard widget toggle
+        [:> WidgetToggle]]]
+
+      ;; Widget settings popover
+      [:> Portal
+       [:> PopoverContent
+        [:> PopoverBody
+         [:> Heading {:size "xs"}
+          "Tasks"]
+         [:> FormLabel "Filter"]
+         [:> Input {:size "xs"
+                    :placeholder "Search tasks"}]]]]]
+
+     ;; Body of the main widget
+     [:> WidgetBody
+      {:as VStack
+       :py 2
+       :pl 6
+       :pr 4
+       :spacing 2
+       :align "stretch"}
+
+      ;; Per page of tasks...
+      (let [pct-done 50 ]
+        [:> Widget {:defaultIsOpen true}
+         [:> WidgetHeader
+          [:> CircularProgress {:thickness "16"
+                                :size "1em"
+                                :trackColor "background.attic"
+                                :value pct-done}]
+          [:> WidgetTitle "Page 1"]
+          [:> Text {:fontSize "xs" :color "foreground.secondary"} (count tasks-assigned-to-me)]
+          [:> WidgetToggle]]
+         [:> WidgetBody
+          (for [task filtered-tasks]
+            [:f> sidebar-task-el task])]])]]))
 
 
 (defn left-sidebar
@@ -63,14 +160,13 @@
                                                                                                                                :pane   :main-pane}])
                                                                                           (router/navigate :pages))]
 
-       #_[route-button (= route-name :graph) "Graph" (r/as-element [:> GraphIcon]) (fn [_]
-                                                                                     (rf/dispatch [:reporting/navigation {:source :main-sidebar
-                                                                                                                          :target :graph
-                                                                                                                          :pane   :main-pane}])
-                                                                                     (router/navigate :graph))]
-       #_[:> DailyNotesWidget {:isOpen true}]]
+       [route-button (= route-name :graph) "Graph" (r/as-element [:> GraphIcon]) (fn [_]
+                                                                                   (rf/dispatch [:reporting/navigation {:source :main-sidebar
+                                                                                                                        :target :graph
+                                                                                                                        :pane   :main-pane}])
+                                                                                   (router/navigate :graph))]]
 
-      [:> TasksWidget {:isOpen true}]
+      [:f> my-tasks]
 
       ;; SHORTCUTS
       [:> SidebarSection
