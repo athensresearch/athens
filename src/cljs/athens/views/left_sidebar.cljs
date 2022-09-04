@@ -102,7 +102,7 @@
                   :color "foreground.secondary"} (count tasks-assigned-to-me)]
 
         ;; standard widget toggle
-        [:> WidgetToggle]]]
+        [:> WidgetToggle {:isDisabled (not (seq tasks-assigned-to-me))}]]]
 
       ;; Widget settings popover
       [:> Portal
@@ -126,7 +126,6 @@
 
      ;; Body of the main widget
      [:> WidgetBody {:as VStack
-                     :py 2
                      :pl 6
                      :pr 4
                      :spacing 2
