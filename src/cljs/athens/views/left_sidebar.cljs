@@ -174,7 +174,7 @@
         shortcuts (reactive/get-reactive-shortcuts)]
     [:> MainSidebar {:isMainSidebarOpen @is-open?}
 
-     [:> VStack {:spacing 6 :align "stretch" :height "100%"}
+     [:> Flex {:flexDirection "column" :gap 6 :alignItems "stretch" :height "100%"}
 
       [:> VStack {:spacing 0.5
                   :role "nav"
@@ -208,24 +208,26 @@
       [:f> my-tasks]
 
       ;; SHORTCUTS
-      [:> SidebarSection
-       {:title (r/as-element [:> SidebarSectionHeading {:pl 6} "Shortcuts"])
-        :pr 4
-        :flex 1
-        :isOpen true}
-       [:> List {:items shortcuts
-                 :onOpenItem (fn [e [_order page]]
-                               (let [shift? (.-shiftKey e)]
-                                 (rf/dispatch [:reporting/navigation {:source :left-sidebar
-                                                                      :target :page
-                                                                      :pane   (if shift?
-                                                                                :right-pane
-                                                                                :main-pane)}])
-                                 (router/navigate-page page e)))
-                 :onUpdateItemsOrder (fn [oldIndex newIndex]
-                                       (cond
-                                         (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
-                                         (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])))}]]
+      [:> Widget
+       {:pr 4
+        :defaultIsOpen true}
+       [:> WidgetHeader {:title "Shortcuts"
+                         :pl 6}
+        [:> WidgetToggle]]
+       [:> WidgetBody
+        [:> List {:items shortcuts
+                  :onOpenItem (fn [e [_order page]]
+                                (let [shift? (.-shiftKey e)]
+                                  (rf/dispatch [:reporting/navigation {:source :left-sidebar
+                                                                       :target :page
+                                                                       :pane   (if shift?
+                                                                                 :right-pane
+                                                                                 :main-pane)}])
+                                  (router/navigate-page page e)))
+                  :onUpdateItemsOrder (fn [oldIndex newIndex]
+                                        (cond
+                                          (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
+                                          (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])))}]]]
 
       ;; LOGO + BOTTOM BUTTONS
       [:> Flex {:as "footer"
@@ -233,6 +235,7 @@
                 :flexDirection "column"
                 :flex "0 0 auto"
                 :fontSize "xs"
+                :mt "auto"
                 :color "foreground.secondary"
                 :px 6}
        [:> Divider]
