@@ -1,17 +1,18 @@
 (ns athens.views.left-sidebar
   (:require
    ["/components/Block/Taskbox" :refer [Taskbox]]
-   ["/components/Icons/Icons" :refer [FilterCircleIcon FilterCircleFillIcon CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
+   ["/components/Icons/Icons" :refer [InfoIcon FilterCircleIcon FilterCircleFillIcon CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
    ["/components/Layout/MainSidebar" :refer [MainSidebar SidebarSection SidebarSectionHeading]]
    ["/components/SidebarShortcuts/List" :refer [List]]
    ["/components/Widgets/Widget" :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
-   ["@chakra-ui/react" :refer [CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Text Divider VStack Flex ButtonGroup Link Flex]]
+   ["@chakra-ui/react" :refer [Tooltip HStack CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Text Divider VStack Flex ButtonGroup Link Flex]]
    [athens.reactive :as reactive]
    [athens.router   :as router]
    [athens.types.query.view :as query]
    [athens.util     :as util]
    [re-frame.core   :as rf]
-   [reagent.core    :as r]))
+   [reagent.core    :as r]
+   [athens.views.pages.page :as page]))
 
 
 ;; Components
@@ -51,17 +52,36 @@
                                   (map query/block-to-flat-map)
                                   (map query/get-root-page))
         me                   @(rf/subscribe [:presence/current-username])
+        get-is-done          (fn [task]
+                               (let [status (get task ":task/status")
+                                     status-block (reactive/get-reactive-block-document [:block/uid status])
+                                     status-string (:block/string status-block "(())")]
+                                 (= status-string "Done")))
         is-filtered?         true
         fn-assigned-to-me    (fn [task]
                                (= (str "@" me)
                                   (get task ":task/assignee")))
         tasks-assigned-to-me (filterv fn-assigned-to-me all-tasks)
-        filtered-tasks       (take 5 tasks-assigned-to-me)]
+        grouped-tasks        (group-by #(get % ":task/page") tasks-assigned-to-me)
+        get-pct-done         (fn [tasks]
+                               (let [total-tasks (count tasks)
+                                     done-tasks  (count (filterv #(get-is-done %) tasks))]
+                                 (if (zero? total-tasks)
+                                   0
+                                   (int (/ (* 100 done-tasks) total-tasks)))))
+        max-tasks-shown      (r/atom 3)
+        set-num-shown        (fn [num]
+                               (reset! max-tasks-shown num))
+        ;; sort by due date, then priority, then title
+        sort-tasks-list      (fn [tasks]
+                                 (sort-by (juxt #(get % ":task/due") #(get % ":task/priority") #(get % ":task/title")) tasks))
+        get-num-done         (fn [tasks]
+                               (count (filterv #(get-is-done %) tasks)))]
 
     [:> Widget {:defaultIsOpen true}
 
     ;; Widget header, including settings popover
-     [:> Popover {:placement "right"}
+     [:> Popover {:placement "right-start"}
 
        ;; Widget header
       [:> PopoverAnchor
@@ -92,31 +112,54 @@
           "Tasks"]
          [:> FormLabel "Filter"]
          [:> Input {:size "xs"
-                    :placeholder "Search tasks"}]]]]]
+                    :placeholder "Search tasks"}]
+         [:> ButtonGroup {:size "xs"}
+          [:> Button {:isActive (= 3 @max-tasks-shown)
+                      :onClick #(set-num-shown 3)}
+           "3"]
+          [:> Button {:isActive (= 7 @max-tasks-shown)
+                      :onClick #(set-num-shown 7)}
+           "7"]
+          [:> Button {:isActive (= 20 @max-tasks-shown)
+                      :onClick #(set-num-shown 20)}
+           "Max"]]]]]]
 
      ;; Body of the main widget
-     [:> WidgetBody
-      {:as VStack
-       :py 2
-       :pl 6
-       :pr 4
-       :spacing 2
-       :align "stretch"}
+     [:> WidgetBody {:as VStack
+                     :py 2
+                     :pl 6
+                     :pr 4
+                     :spacing 2
+                     :align "stretch"}
 
-      ;; Per page of tasks...
-      (let [pct-done 50 ]
-        [:> Widget {:defaultIsOpen true}
-         [:> WidgetHeader
-          [:> CircularProgress {:thickness "16"
-                                :size "1em"
-                                :trackColor "background.attic"
-                                :value pct-done}]
-          [:> WidgetTitle "Page 1"]
-          [:> Text {:fontSize "xs" :color "foreground.secondary"} (count tasks-assigned-to-me)]
-          [:> WidgetToggle]]
-         [:> WidgetBody
-          (for [task filtered-tasks]
-            [:f> sidebar-task-el task])]])]]))
+      (doall
+       (for [[page tasks] grouped-tasks]
+
+         ;; Per page of tasks...
+         ^{:key page}
+         (let [pct-done (get-pct-done tasks)]
+           [:> Widget {:defaultIsOpen true
+                       :borderTop "1px solid"
+                       :borderColor "separator.divider"
+                       :pt 1}
+            [:> Tooltip {:placement "right-start"
+                         :label (r/as-element
+                                 [:> VStack {:align "stretch"}
+                                  [:> Text (str (get-num-done tasks) " / " (count tasks) " completed")]])}
+             [:> WidgetHeader {:spacing 0}
+              [:> CircularProgress {:thickness "16"
+                                    :capIsRound true
+                                    :size "1em"
+                                    :trackColor "background.attic"
+                                    :value pct-done}]
+              [:> WidgetTitle page]
+              [:> InfoIcon {:boxSize 3 :color "foreground.secondary"}]
+              [:> WidgetToggle]]]
+            [:> WidgetBody
+             (doall
+              (for [task (take @max-tasks-shown (sort-tasks-list tasks))]
+                ^{:key (get task ":block/uid")}
+                [:f> sidebar-task-el task]))]])))]]))
 
 
 (defn left-sidebar
