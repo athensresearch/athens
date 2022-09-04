@@ -2,17 +2,16 @@
   (:require
    ["/components/Block/Taskbox" :refer [Taskbox]]
    ["/components/Icons/Icons" :refer [InfoIcon FilterCircleIcon FilterCircleFillIcon CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
-   ["/components/Layout/MainSidebar" :refer [MainSidebar SidebarSection SidebarSectionHeading]]
+   ["/components/Layout/MainSidebar" :refer [MainSidebar]]
    ["/components/SidebarShortcuts/List" :refer [List]]
    ["/components/Widgets/Widget" :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
-   ["@chakra-ui/react" :refer [Tooltip HStack CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Text Divider VStack Flex ButtonGroup Link Flex]]
+   ["@chakra-ui/react" :refer [Tooltip CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Text Divider VStack Flex ButtonGroup Link Flex]]
    [athens.reactive :as reactive]
    [athens.router   :as router]
    [athens.types.query.view :as query]
    [athens.util     :as util]
    [re-frame.core   :as rf]
-   [reagent.core    :as r]
-   [athens.views.pages.page :as page]))
+   [reagent.core    :as r]))
 
 
 ;; Components
