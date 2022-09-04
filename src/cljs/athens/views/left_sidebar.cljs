@@ -1,17 +1,14 @@
 (ns athens.views.left-sidebar
   (:require
-   ["/components/App/ContextMenuContext" :refer [ContextMenuContext]]
    ["/components/Block/Taskbox" :refer [Taskbox]]
    ["/components/Icons/Icons" :refer [FilterCircleIcon FilterCircleFillIcon CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
    ["/components/Layout/MainSidebar" :refer [MainSidebar SidebarSection SidebarSectionHeading]]
    ["/components/SidebarShortcuts/List" :refer [List]]
    ["/components/Widgets/Widget" :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
-   ["@chakra-ui/react" :refer [CircularProgress FormControl FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal MenuItem MenuGroup IconButton Text Divider VStack Flex ButtonGroup Link Flex]]
-   ["react" :as react]
+   ["@chakra-ui/react" :refer [CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Text Divider VStack Flex ButtonGroup Link Flex]]
    [athens.reactive :as reactive]
    [athens.router   :as router]
    [athens.types.query.view :as query]
-   [athens.types.tasks.view :as tasks]
    [athens.util     :as util]
    [re-frame.core   :as rf]
    [reagent.core    :as r]))
@@ -59,8 +56,7 @@
                                (= (str "@" me)
                                   (get task ":task/assignee")))
         tasks-assigned-to-me (filterv fn-assigned-to-me all-tasks)
-        filtered-tasks       (take 5 tasks-assigned-to-me)
-        tasks-by-page        (group-by #(get % ":task/page") tasks-assigned-to-me)]
+        filtered-tasks       (take 5 tasks-assigned-to-me)]
 
     [:> Widget {:defaultIsOpen true}
 
