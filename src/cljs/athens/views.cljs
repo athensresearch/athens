@@ -12,7 +12,7 @@
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.help :refer [help-popup]]
-    [athens.views.left-sidebar :as left-sidebar]
+    [athens.views.left-sidebar.core :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.pages.settings :as settings]
     [athens.views.right-sidebar.core :as right-sidebar]
