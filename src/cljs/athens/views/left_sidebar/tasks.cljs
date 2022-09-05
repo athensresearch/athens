@@ -9,6 +9,7 @@
     [athens.router   :as router]
     [athens.types.query.view :as query]
     [athens.types.tasks.view :as tasks]
+    [athens.views.left-sidebar.subs :as left-sidebar-subs]
     [re-frame.core   :as rf]
     [reagent.core    :as r]))
 
@@ -38,16 +39,15 @@
 
 (defn my-tasks
   []
-  ;; TODO: persist this setting
-  (let [max-tasks-shown      (r/atom 3)]
+  (let [max-tasks-shown (r/atom (left-sidebar-subs/get-max-tasks))]
     (fn []
       (let [all-tasks            (->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
                                       (map query/block-to-flat-map)
                                       (map query/get-root-page))
             me                   @(rf/subscribe [:presence/current-username])
             get-is-done          (fn [task]
-                                   (let [status (get task ":task/status")
-                                         status-block (reactive/get-reactive-block-document [:block/uid status])
+                                   (let [status        (get task ":task/status")
+                                         status-block  (reactive/get-reactive-block-document [:block/uid status])
                                          status-string (:block/string status-block "(())")]
                                      (= status-string "Done")))
             is-filtered?         true
@@ -63,6 +63,7 @@
                                        0
                                        (int (/ (* 100 done-tasks) total-tasks)))))
             set-num-shown        (fn [num]
+                                   (rf/dispatch [:left-sidebar.tasks/set-max-tasks num])
                                    (reset! max-tasks-shown num))
             ;; sort by due date, then priority, then title
             sort-tasks-list      (fn [tasks]
