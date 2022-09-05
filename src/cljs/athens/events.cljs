@@ -541,7 +541,6 @@
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
 
-
 (reg-event-fx
   :save
   [(interceptors/sentry-span-no-new-tx "save")]

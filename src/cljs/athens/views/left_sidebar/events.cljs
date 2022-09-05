@@ -1,15 +1,15 @@
 (ns athens.views.left-sidebar.events
   (:require
-    [athens.db :as db]
     [athens.common-db :as common-db]
-    [re-frame.core :as rf]
-    [athens.interceptors :as interceptors]
-    [athens.common.logging :as log]
-    [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events :as common-events]
     [athens.common-events.bfs             :as bfs]
+    [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events.graph.ops :as graph-ops]
-    [athens.views.left-sidebar.shared :as shared]))
+    [athens.common.logging :as log]
+    [athens.db :as db]
+    [athens.interceptors :as interceptors]
+    [athens.views.left-sidebar.shared :as shared]
+    [re-frame.core :as rf]))
 
 
 ;; Shortcuts
@@ -60,6 +60,7 @@
       {:fx [[:dispatch [:resolve-transact-forward event]]
             [:dispatch [:posthog/report-feature :left-sidebar]]]})))
 
+
 ;; Tasks
 
 (rf/reg-event-fx
@@ -84,7 +85,6 @@
                           ;; todo: good place to be using a number primitive type
                           [(graph-ops/build-block-save-op db uid (str max-tasks))])]]
             [:dispatch [:posthog/report-feature "left-sidebar/tasks"]]]})))
-
 
 
 ;; Widgets

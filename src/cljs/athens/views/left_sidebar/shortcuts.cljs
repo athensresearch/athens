@@ -1,11 +1,11 @@
 (ns athens.views.left-sidebar.shortcuts
   (:require
-    ["/components/Widget/Widget" :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
     ["/components/SidebarShortcuts/List" :refer [List]]
-    [re-frame.core :as rf]
+    ["/components/Widget/Widget" :refer [Widget WidgetHeader WidgetBody WidgetToggle]]
     [athens.reactive :as reactive]
     [athens.router :as router]
-    [athens.views.left-sidebar.subs :as left-sidebar-subs]))
+    [athens.views.left-sidebar.subs :as left-sidebar-subs]
+    [re-frame.core :as rf]))
 
 
 (defn global-shortcuts

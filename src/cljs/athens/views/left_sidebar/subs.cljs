@@ -1,9 +1,9 @@
 (ns athens.views.left-sidebar.subs
   (:require
+    [athens.reactive :as reactive]
     [athens.views.left-sidebar.shared :as shared]
-    [day8.re-frame.tracing :refer-macros [fn-traced]]
-    [re-frame.core         :as rf]
-    [athens.reactive :as reactive]))
+    [re-frame.core         :as rf]))
+
 
 (defn get-sidebar-open?
   []
@@ -25,6 +25,7 @@
                               :block/string)]
     (js/parseInt (or max-tasks default-max-tasks))))
 
+
 (defn get-widget-open?
   [widget-id]
   (let [user-page @(rf/subscribe [:presence/user-page])
@@ -44,3 +45,9 @@
         open? (-> (get props (shared/ns-str "/tasks/" section-id "/closed?"))
                   boolean)]
     open?))
+
+
+(rf/reg-sub
+  :left-sidebar/open
+  (fn []
+    (get-sidebar-open?)))

@@ -3,7 +3,7 @@
     ["/components/Block/Taskbox" :refer [Taskbox]]
     ["/components/Icons/Icons" :refer [InfoIcon FilterCircleIcon FilterCircleFillIcon]]
     ["/components/Widget/Widget" :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
-    ["@chakra-ui/react" :refer [Tooltip CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Link Text Divider VStack Flex ButtonGroup Link Flex]]
+    ["@chakra-ui/react" :refer [Tooltip CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Link Text VStack Flex ButtonGroup Link Flex]]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router   :as router]

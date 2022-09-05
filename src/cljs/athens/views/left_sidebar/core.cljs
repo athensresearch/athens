@@ -1,15 +1,14 @@
 (ns athens.views.left-sidebar.core
   (:require
-    ["/components/Icons/Icons" :refer [InfoIcon FilterCircleIcon FilterCircleFillIcon CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
+    ["/components/Icons/Icons" :refer [CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
     ["/components/Layout/MainSidebar" :refer [MainSidebar]]
-    ["@chakra-ui/react" :refer [Heading Button Flex VStack ButtonGroup Divider Link IconButton]]
-    [athens.reactive :as reactive]
+    ["@chakra-ui/react" :refer [Button Flex VStack ButtonGroup Divider Link IconButton]]
     [athens.router   :as router]
     [athens.util     :as util]
+    [athens.views.left-sidebar.events]
+    [athens.views.left-sidebar.shortcuts :as shortcuts]
     [athens.views.left-sidebar.subs :as left-sidebar-subs]
     [athens.views.left-sidebar.tasks :as left-sidebar-tasks]
-    [athens.views.left-sidebar.shortcuts :as shortcuts]
-    [athens.views.left-sidebar.events]
     [re-frame.core   :as rf]
     [reagent.core    :as r]))
 
