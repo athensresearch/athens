@@ -2,13 +2,13 @@
   (:require
     ["/components/Icons/Icons" :refer [InfoIcon FilterCircleIcon FilterCircleFillIcon CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
     ["/components/Layout/MainSidebar" :refer [MainSidebar]]
-    ["/components/SidebarShortcuts/List" :refer [List]]
-    ["/components/Widget/Widget" :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
     ["@chakra-ui/react" :refer [Heading Button Flex VStack ButtonGroup Divider Link IconButton]]
     [athens.reactive :as reactive]
     [athens.router   :as router]
     [athens.util     :as util]
+    [athens.views.left-sidebar.subs :as left-sidebar-subs]
     [athens.views.left-sidebar.tasks :as left-sidebar-tasks]
+    [athens.views.left-sidebar.shortcuts :as shortcuts]
     [athens.views.left-sidebar.events]
     [re-frame.core   :as rf]
     [reagent.core    :as r]))
@@ -36,9 +36,8 @@
         on-settings            (fn [_]
                                  (rf/dispatch [:settings/toggle-open]))
         route-name @current-route-name
-        is-open? (rf/subscribe [:left-sidebar/open])
-        shortcuts (reactive/get-reactive-shortcuts)]
-    [:> MainSidebar {:isMainSidebarOpen @is-open?}
+        is-open? (left-sidebar-subs/get-sidebar-open?)]
+    [:> MainSidebar {:isMainSidebarOpen is-open?}
 
      [:> Flex {:flexDirection "column" :gap 6 :alignItems "stretch" :height "100%"}
 
@@ -73,27 +72,8 @@
 
       [:f> left-sidebar-tasks/my-tasks]
 
-      ;; SHORTCUTS
-      [:> Widget
-       {:pr 4
-        :defaultIsOpen true}
-       [:> WidgetHeader {:title "Shortcuts"
-                         :pl 6}
-        [:> WidgetToggle]]
-       [:> WidgetBody
-        [:> List {:items shortcuts
-                  :onOpenItem (fn [e [_order page]]
-                                (let [shift? (.-shiftKey e)]
-                                  (rf/dispatch [:reporting/navigation {:source :left-sidebar
-                                                                       :target :page
-                                                                       :pane   (if shift?
-                                                                                 :right-pane
-                                                                                 :main-pane)}])
-                                  (router/navigate-page page e)))
-                  :onUpdateItemsOrder (fn [oldIndex newIndex]
-                                        (cond
-                                          (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
-                                          (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])))}]]]
+      [:f> shortcuts/global-shortcuts]
+
 
       ;; LOGO + BOTTOM BUTTONS
       [:> Flex {:as "footer"

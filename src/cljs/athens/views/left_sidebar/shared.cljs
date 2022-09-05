@@ -8,5 +8,8 @@
   ([]
    (ns-str ""))
   ([s]
-   (str NS s)))
+   (str NS s))
+  ([s & ss]
+   (apply str NS s ss)))
+
 

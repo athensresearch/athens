@@ -55,7 +55,7 @@ export const WidgetBody = forwardRef(({ children, ...rest }, ref) => {
 })
 
 export const WidgetToggle = forwardRef((props, ref) => {
-  const { ...rest } = props;
+  const { onClick, ...rest } = props;
   const { isOpen, onToggle } = React.useContext(WidgetContext);
 
   return (
@@ -72,8 +72,13 @@ export const WidgetToggle = forwardRef((props, ref) => {
         },
       }}
       icon={<ChevronDownVariableIcon />}
+      onClick={() => {
+        onToggle();
+        if (onClick) {
+            onClick();
+        }
+      }}
       {...rest}
-      onClick={onToggle}
     />
   )
 })

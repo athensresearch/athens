@@ -114,14 +114,6 @@
      :dispatch [:posthog/report-feature :help]}))
 
 
-(reg-event-fx
-  :left-sidebar/toggle
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/toggle")]
-  (fn [{:keys [db]} _]
-    {:db (update db :left-sidebar/open not)
-     :dispatch [:posthog/report-feature :left-sidebar]}))
-
-
 (reg-event-db
   :mouse-down/set
   (fn [db _]

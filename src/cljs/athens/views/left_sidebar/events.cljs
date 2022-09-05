@@ -11,6 +11,23 @@
     [athens.common-events.graph.ops :as graph-ops]
     [athens.views.left-sidebar.shared :as shared]))
 
+
+;; Shortcuts
+
+(rf/reg-event-fx
+  :left-sidebar/toggle
+  [(interceptors/sentry-span-no-new-tx "left-sidebar/toggle")]
+  (fn [_ _]
+    (let [user-page @(rf/subscribe [:presence/user-page])]
+      {:fx [[:dispatch [:graph/update-in [:node/title user-page] [(shared/ns-str "/closed?")]
+                        (fn [db uid]
+                          (let [exists? (common-db/block-exists? db [:block/uid uid])]
+                            [(if exists?
+                               (graph-ops/build-block-remove-op db uid)
+                               (graph-ops/build-block-save-op db uid ""))]))]]
+            [:dispatch [:posthog/report-feature :left-sidebar]]]})))
+
+
 (rf/reg-event-fx
   :left-sidebar/add-shortcut
   [(interceptors/sentry-span-no-new-tx "left-sidebar/add-shortcut")]
@@ -43,6 +60,7 @@
       {:fx [[:dispatch [:resolve-transact-forward event]]
             [:dispatch [:posthog/report-feature :left-sidebar]]]})))
 
+;; Tasks
 
 (rf/reg-event-fx
   :left-sidebar.tasks/set-max-tasks
@@ -53,6 +71,49 @@
                         (fn [db uid]
                           ;; todo: good place to be using a number primitive type
                           [(graph-ops/build-block-save-op db uid (str max-tasks))])]]
+            [:dispatch [:posthog/report-feature "left-sidebar/tasks"]]]})))
+
+
+(rf/reg-event-fx
+  :left-sidebar.tasks/set-max-tasks
+  [(interceptors/sentry-span-no-new-tx "left-sidebar/tasks/set-max-tasks")]
+  (fn [_ [_ max-tasks]]
+    (let [user-page @(rf/subscribe [:presence/user-page])]
+      {:fx [[:dispatch [:graph/update-in [:node/title user-page] [(shared/ns-str "/tasks/max-tasks")]
+                        (fn [db uid]
+                          ;; todo: good place to be using a number primitive type
+                          [(graph-ops/build-block-save-op db uid (str max-tasks))])]]
+            [:dispatch [:posthog/report-feature "left-sidebar/tasks"]]]})))
+
+
+
+;; Widgets
+
+(rf/reg-event-fx
+  :left-sidebar.widgets/toggle-close
+  [(interceptors/sentry-span-no-new-tx "left-sidebar/widgets/toggle")]
+  (fn [_ [_ widget-id]]
+    (let [user-page @(rf/subscribe [:presence/user-page])]
+      {:fx [[:dispatch [:graph/update-in [:node/title user-page] [(shared/ns-str "/widgets/" widget-id "/closed?")]
+                        (fn [db uid]
+                          (let [exists? (common-db/block-exists? db [:block/uid uid])]
+                            [(if exists?
+                               (graph-ops/build-block-remove-op db uid)
+                               (graph-ops/build-block-save-op db uid ""))]))]]
+            [:dispatch [:posthog/report-feature "left-sidebar/widgets"]]]})))
+
+
+(rf/reg-event-fx
+  :left-sidebar.tasks.section/toggle-close
+  [(interceptors/sentry-span-no-new-tx "left-sidebar/widgets/toggle")]
+  (fn [_ [_ page-id]]
+    (let [user-page @(rf/subscribe [:presence/user-page])]
+      {:fx [[:dispatch [:graph/update-in [:node/title user-page] [(shared/ns-str "/tasks/" page-id "/closed?")]
+                        (fn [db uid]
+                          (let [exists? (common-db/block-exists? db [:block/uid uid])]
+                            [(if exists?
+                               (graph-ops/build-block-remove-op db uid)
+                               (graph-ops/build-block-save-op db uid ""))]))]]
             [:dispatch [:posthog/report-feature "left-sidebar/tasks"]]]})))
 
 
