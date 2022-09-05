@@ -475,7 +475,6 @@
        :block/uid))
 
 
-;; NOTE: not used right now
 (defn on-update-status
   [task-uid new-status]
   (let [new-status (-> new-status find-status-uid)
