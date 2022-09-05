@@ -74,18 +74,6 @@
             [:dispatch [:posthog/report-feature "left-sidebar/tasks"]]]})))
 
 
-(rf/reg-event-fx
-  :left-sidebar.tasks/set-max-tasks
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/tasks/set-max-tasks")]
-  (fn [_ [_ max-tasks]]
-    (let [user-page @(rf/subscribe [:presence/user-page])]
-      {:fx [[:dispatch [:graph/update-in [:node/title user-page] [(shared/ns-str "/tasks/max-tasks")]
-                        (fn [db uid]
-                          ;; todo: good place to be using a number primitive type
-                          [(graph-ops/build-block-save-op db uid (str max-tasks))])]]
-            [:dispatch [:posthog/report-feature "left-sidebar/tasks"]]]})))
-
-
 ;; Widgets
 
 (rf/reg-event-fx
@@ -99,12 +87,12 @@
                             [(if exists?
                                (graph-ops/build-block-remove-op db uid)
                                (graph-ops/build-block-save-op db uid ""))]))]]
-            [:dispatch [:posthog/report-feature "left-sidebar/widgets"]]]})))
+            [:dispatch [:posthog/report-feature "left-sidebar/widgets/toggle"]]]})))
 
 
 (rf/reg-event-fx
   :left-sidebar.tasks.section/toggle
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/widgets/toggle")]
+  [(interceptors/sentry-span-no-new-tx "left-sidebar/tasks/section/toggle")]
   (fn [_ [_ page-id]]
     (let [user-page @(rf/subscribe [:presence/user-page])]
       {:fx [[:dispatch [:graph/update-in [:node/title user-page] [(shared/ns-str "/tasks/" page-id "/closed?")]
@@ -113,6 +101,6 @@
                             [(if exists?
                                (graph-ops/build-block-remove-op db uid)
                                (graph-ops/build-block-save-op db uid ""))]))]]
-            [:dispatch [:posthog/report-feature "left-sidebar/tasks"]]]})))
+            [:dispatch [:posthog/report-feature "left-sidebar/tasks/section/toggle"]]]})))
 
 
