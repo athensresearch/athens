@@ -9,6 +9,7 @@
     [athens.router   :as router]
     [athens.util     :as util]
     [athens.views.left-sidebar.tasks :as left-sidebar-tasks]
+    [athens.views.left-sidebar.events]
     [re-frame.core   :as rf]
     [reagent.core    :as r]))
 
