@@ -418,7 +418,7 @@
                      :options GROUP_BY_OPTIONS
                      :onChange #(update-query-property uid "group/subgroup/by" %)
                      :value g-s-by}]]
-    [:> ButtonGroup {:isAttached true :size "xs"}
+    [:> ButtonGroup {:isAttached true :gap "1px" :size "xs"}
      (for [menu menus-data]
        (let [{:keys [heading options onChange value]} menu]
          [:> QueryRadioMenu {:key heading :heading heading :options options :onChange onChange :value value}]))
