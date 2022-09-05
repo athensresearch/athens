@@ -1,17 +1,17 @@
 (ns athens.views.left-sidebar
   (:require
-   ["/components/Block/Taskbox" :refer [Taskbox]]
-   ["/components/Icons/Icons" :refer [InfoIcon FilterCircleIcon FilterCircleFillIcon CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
-   ["/components/Layout/MainSidebar" :refer [MainSidebar]]
-   ["/components/SidebarShortcuts/List" :refer [List]]
-   ["/components/Widgets/Widget" :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
-   ["@chakra-ui/react" :refer [Tooltip CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Text Divider VStack Flex ButtonGroup Link Flex]]
-   [athens.reactive :as reactive]
-   [athens.router   :as router]
-   [athens.types.query.view :as query]
-   [athens.util     :as util]
-   [re-frame.core   :as rf]
-   [reagent.core    :as r]))
+    ["/components/Block/Taskbox" :refer [Taskbox]]
+    ["/components/Icons/Icons" :refer [InfoIcon FilterCircleIcon FilterCircleFillIcon CalendarEditFillIcon AllPagesIcon ContrastIcon SearchIcon GraphIcon SettingsIcon]]
+    ["/components/Layout/MainSidebar" :refer [MainSidebar]]
+    ["/components/SidebarShortcuts/List" :refer [List]]
+    ["/components/Widgets/Widget" :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
+    ["@chakra-ui/react" :refer [Tooltip CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Text Divider VStack Flex ButtonGroup Link Flex]]
+    [athens.reactive :as reactive]
+    [athens.router   :as router]
+    [athens.types.query.view :as query]
+    [athens.util     :as util]
+    [re-frame.core   :as rf]
+    [reagent.core    :as r]))
 
 
 ;; Components
@@ -44,7 +44,6 @@
                :noOfLines 1} (get task ":task/title")]]))
 
 
-
 (defn my-tasks
   []
   (let [all-tasks            (->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
@@ -73,16 +72,16 @@
                                (reset! max-tasks-shown num))
         ;; sort by due date, then priority, then title
         sort-tasks-list      (fn [tasks]
-                                 (sort-by (juxt #(get % ":task/due") #(get % ":task/priority") #(get % ":task/title")) tasks))
+                               (sort-by (juxt #(get % ":task/due") #(get % ":task/priority") #(get % ":task/title")) tasks))
         get-num-done         (fn [tasks]
                                (count (filterv #(get-is-done %) tasks)))]
 
     [:> Widget {:defaultIsOpen true}
 
-    ;; Widget header, including settings popover
+     ;; Widget header, including settings popover
      [:> Popover {:placement "right-start"}
 
-       ;; Widget header
+      ;; Widget header
       [:> PopoverAnchor
        [:> WidgetHeader {:title "Tasks"
                          :pl 6
@@ -131,33 +130,33 @@
                      :align "stretch"}
 
       (doall
-       (for [[page tasks] grouped-tasks]
+        (for [[page tasks] grouped-tasks]
 
-         ;; Per page of tasks...
-         ^{:key page}
-         (let [pct-done (get-pct-done tasks)]
-           [:> Widget {:defaultIsOpen true
-                       :borderTop "1px solid"
-                       :borderColor "separator.divider"
-                       :pt 1}
-            [:> Tooltip {:placement "right-start"
-                         :label (r/as-element
-                                 [:> VStack {:align "stretch"}
-                                  [:> Text (str (get-num-done tasks) " / " (count tasks) " completed")]])}
-             [:> WidgetHeader {:spacing 0}
-              [:> CircularProgress {:thickness "16"
-                                    :capIsRound true
-                                    :size "1em"
-                                    :trackColor "background.attic"
-                                    :value pct-done}]
-              [:> WidgetTitle page]
-              [:> InfoIcon {:boxSize 3 :color "foreground.secondary"}]
-              [:> WidgetToggle]]]
-            [:> WidgetBody
-             (doall
-              (for [task (take @max-tasks-shown (sort-tasks-list tasks))]
-                ^{:key (get task ":block/uid")}
-                [:f> sidebar-task-el task]))]])))]]))
+          ;; Per page of tasks...
+          ^{:key page}
+          (let [pct-done (get-pct-done tasks)]
+            [:> Widget {:defaultIsOpen true
+                        :borderTop "1px solid"
+                        :borderColor "separator.divider"
+                        :pt 1}
+             [:> Tooltip {:placement "right-start"
+                          :label (r/as-element
+                                   [:> VStack {:align "stretch"}
+                                    [:> Text (str (get-num-done tasks) " / " (count tasks) " completed")]])}
+              [:> WidgetHeader {:spacing 0}
+               [:> CircularProgress {:thickness "16"
+                                     :capIsRound true
+                                     :size "1em"
+                                     :trackColor "background.attic"
+                                     :value pct-done}]
+               [:> WidgetTitle page]
+               [:> InfoIcon {:boxSize 3 :color "foreground.secondary"}]
+               [:> WidgetToggle]]]
+             [:> WidgetBody
+              (doall
+                (for [task (take @max-tasks-shown (sort-tasks-list tasks))]
+                  ^{:key (get task ":block/uid")}
+                  [:f> sidebar-task-el task]))]])))]]))
 
 
 (defn left-sidebar
