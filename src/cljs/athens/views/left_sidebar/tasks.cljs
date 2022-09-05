@@ -96,7 +96,7 @@
 
         ;; standard widget toggle
         [:> WidgetToggle {:isDisabled (not (seq tasks-assigned-to-me))
-                          :onClick    #(rf/dispatch [:left-sidebar.widgets/toggle-close "tasks"])}]]]
+                          :onClick    #(rf/dispatch [:left-sidebar.widgets/toggle-widget "tasks"])}]]]
 
       ;; Widget settings popover
       [:> Portal
@@ -153,7 +153,7 @@
                                      :value pct-done}]
                [:> WidgetTitle [:> Link {:onClick #(router/navigate-page page %)} page]]
                [:> InfoIcon {:boxSize 3 :color "foreground.secondary"}]
-               [:> WidgetToggle {:onClick #(rf/dispatch [:left-sidebar.tasks.section/toggle-close page])}]]]
+               [:> WidgetToggle {:onClick #(rf/dispatch [:left-sidebar.tasks.section/toggle page])}]]]
              [:> WidgetBody
               (doall
                 (for [task (take max-tasks-shown (sort-tasks-list tasks))]

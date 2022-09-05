@@ -17,7 +17,7 @@
       :defaultIsOpen is-open?}
      [:> WidgetHeader {:title "Shortcuts"
                        :pl    6}
-      [:> WidgetToggle {:onClick #(rf/dispatch [:left-sidebar.widgets/toggle-close "shortcuts"])}]]
+      [:> WidgetToggle {:onClick #(rf/dispatch [:left-sidebar.widgets/toggle-widget "shortcuts"])}]]
 
      [:> WidgetBody
       [:> List {:items              shortcuts

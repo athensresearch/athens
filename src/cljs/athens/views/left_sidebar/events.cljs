@@ -89,7 +89,7 @@
 ;; Widgets
 
 (rf/reg-event-fx
-  :left-sidebar.widgets/toggle-close
+  :left-sidebar.widgets/toggle-widget
   [(interceptors/sentry-span-no-new-tx "left-sidebar/widgets/toggle")]
   (fn [_ [_ widget-id]]
     (let [user-page @(rf/subscribe [:presence/user-page])]
@@ -103,7 +103,7 @@
 
 
 (rf/reg-event-fx
-  :left-sidebar.tasks.section/toggle-close
+  :left-sidebar.tasks.section/toggle
   [(interceptors/sentry-span-no-new-tx "left-sidebar/widgets/toggle")]
   (fn [_ [_ page-id]]
     (let [user-page @(rf/subscribe [:presence/user-page])]
