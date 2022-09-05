@@ -520,11 +520,13 @@
         (tab-handler uid embed-id d-key-down)
         (if shift
           (dispatch [:unindent {:uid              (or navigation-uid uid)
+                                :editing-uid      uid
                                 :d-key-down       d-key-down
                                 :context-root-uid current-root-uid
                                 :embed-id         embed-id
                                 :local-string     local-string}])
           (dispatch [:indent {:uid          (or navigation-uid uid)
+                              :editing-uid  uid
                               :d-key-down   d-key-down
                               :local-string local-string}]))))))
 
