@@ -76,6 +76,8 @@ export const WidgetToggle = forwardRef((props, ref) => {
         onToggle();
         if (onClick) {
             onClick();
+        } else {
+            alert("Pass onClick to WidgetToggle");
         }
       }}
       {...rest}
