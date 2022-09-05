@@ -493,13 +493,15 @@
     [:> Sortable {:id id :key id}
      [:> KanbanCard {:isOver over?}
       [:> VStack {:spacing 0
+                  :lineHeight "short"
                   :align   "stretch"}
        [:> ModalInput {:autoFocus true}
         [:> ModalInputTrigger
          ;; TODO show something if empty title
          [:> Text {:fontWeight    "medium"
-                   :onPointerDown #(.stopPropagation %)
-                   :lineHeight    "short"} [parse-renderer/parse-and-render title uid]]]
+                   :fontSize     "sm"
+                   :onPointerDown #(.stopPropagation %)}
+          [parse-renderer/parse-and-render title uid]]]
         [:> ModalInputPopover {:preventScroll false}
          [:> BlockFormInput {:size "md"
                              :isMultiline true
@@ -507,7 +509,7 @@
           [title-editor uid title]
           [presence/inline-presence-el uid]]]]
        [:> HStack {:justifyContent "space-between"
-                   :fontSize       "sm"
+                   :fontSize       "xs"
                    :color          "foreground.secondary"}
         [:> HStack
          [:> Text assignee-value]
@@ -601,7 +603,8 @@
                                                :isOver over?}
                               [:> Flex {:color "foreground.secondary"
                                         :gap 2
-                                        :px 4
+                                        :pl 3
+                                        :pr 2
                                         :py 1
                                         :alignItems "center"}
                                [:> Heading {:fontWeight "medium"
@@ -611,7 +614,8 @@
                                [:> Text {:fontWeight "medium"
                                          :fontSize "sm"}
                                 (str (count cards-from-a-column))]
-                               [:> ButtonGroup {:size "sm"
+                               [:> ButtonGroup {:size "xs"
+                                                :colorScheme "subtle"
                                                 :variant "ghost"}
                                 [:> IconButton {:onClick #(new-card context-object f-special query-uid)
                                                 :icon    (r/as-element [:> PlusIcon])}]]]

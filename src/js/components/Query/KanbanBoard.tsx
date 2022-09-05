@@ -33,13 +33,12 @@ export const KanbanCard = forwardRef(({ children, isOver }, ref) => {
       height: 0,
       opacity: 0,
     }}
-    minHeight="4rem"
+    minHeight="3rem"
     listStyleType={"none"}
     bg="interaction.surface"
     position="relative"
-    p={2}
-    px={4}
-    pr={3}
+    py={2}
+    px={3}
     _hover={{
       bg: 'interaction.surface.hover',
     }}
@@ -80,7 +79,7 @@ export const KanbanColumn = forwardRef((props, ref) => {
     <VStack
       ref={ref}
       flex="1 1 100%"
-      minHeight="6.75em"
+      minHeight="calc(3em + 3.375em)" // height of a card plus height of the col header
       position="relative"
       align="stretch"
       listStyleType="none"
@@ -160,8 +159,8 @@ export const KanbanSwimlane = forwardRef((props, ref) => {
     shadowInset
   ), [overflowBox]);
 
-  const innerVPadding = 4;
-  const innerHPadding = 4;
+  const innerVPadding = 3;
+  const innerHPadding = 3;
 
   return (
     <VStack
@@ -187,7 +186,7 @@ export const KanbanSwimlane = forwardRef((props, ref) => {
     >
       <Heading
         color="foreground.secondary"
-        size="md"
+        size="sm"
         pt={innerVPadding}
         px={innerHPadding}
       >
@@ -217,7 +216,7 @@ export const KanbanBoard = forwardRef((props, ref) => {
     <VStack
       ref={ref}
       align="stretch"
-      spacing={3}
+      spacing={2}
       py={2}
     >
       {children}
