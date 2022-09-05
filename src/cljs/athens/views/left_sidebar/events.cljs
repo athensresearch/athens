@@ -2,7 +2,6 @@
   (:require
     [athens.common-db :as common-db]
     [athens.common-events :as common-events]
-    [athens.common-events.bfs             :as bfs]
     [athens.common-events.graph.atomic :as atomic-graph-ops]
     [athens.common-events.graph.ops :as graph-ops]
     [athens.common.logging :as log]
