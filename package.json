@@ -9,6 +9,7 @@
   },
   "scripts": {
     "// repo scripts": "",
+    "postinstall": "node fix-node-modules-class-fields.js",
     "update:dry": "standard-version --dry-run -p --releaseCommitMessageFormat v{{currentTag}}",
     "update": "standard-version -p --releaseCommitMessageFormat v{{currentTag}}",
     "clean": "rimraf resources/public/**/*.js resources/public/**/*.js.map target .shadow-cljs src/gen",
