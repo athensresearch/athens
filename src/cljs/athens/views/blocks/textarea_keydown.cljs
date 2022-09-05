@@ -508,7 +508,7 @@
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
-  [e uid {:keys [read-value tab-handler] :as _state-hooks}]
+  [e uid {:keys [read-value tab-handler navigation-uid] :as _state-hooks}]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items                 @(subscribe [::select-subs/items])
@@ -519,12 +519,12 @@
       (if (fn? tab-handler)
         (tab-handler uid embed-id d-key-down)
         (if shift
-          (dispatch [:unindent {:uid              uid
+          (dispatch [:unindent {:uid              (or navigation-uid uid)
                                 :d-key-down       d-key-down
                                 :context-root-uid current-root-uid
                                 :embed-id         embed-id
                                 :local-string     local-string}])
-          (dispatch [:indent {:uid          uid
+          (dispatch [:indent {:uid          (or navigation-uid uid)
                               :d-key-down   d-key-down
                               :local-string local-string}]))))))
 
