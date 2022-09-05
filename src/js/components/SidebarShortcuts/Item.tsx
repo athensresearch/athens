@@ -5,8 +5,6 @@ import { useSortable } from "@dnd-kit/sortable";
 
 export const Item = (props) => {
   const { id, children, ...rest } = props;
-  const ref = React.useRef();
-
   const [_order, name, isUnread, isCurrent] = id;
 
   const {
@@ -18,21 +16,18 @@ export const Item = (props) => {
     transition
   } = useSortable({ id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition
-  };
-
   return (
     <Button
       size="sm"
       flexShrink={0}
+      px={3}
       variant="ghost"
       isActive={isCurrent}
       justifyContent="flex-start"
       overflow="hidden"
       ref={setNodeRef}
-      style={style}
+      transform={CSS.Transform.toString(transform)}
+      transition={transition}
       opacity={isDragging ? 0.5 : 1}
       {...attributes}
       {...listeners}
