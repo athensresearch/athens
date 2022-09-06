@@ -71,12 +71,8 @@
 (defn get-inbox-uid-for-user
   [db at-username]
   (let [page-uid       (common-db/get-page-uid db at-username)
-        inbox-document (common-db/get-block-document db [:block/uid page-uid])
-        inbox-uid      (->> inbox-document
-                            :block/children
-                            (filter #(when (= "[[Athens inbox]]" (:block/string %)) %))
-                            first
-                            :block/uid)]
+        inbox-document (common-db/get-block-property-document db [:block/uid page-uid])
+        inbox-uid      (:block/uid (get inbox-document "athens/inbox"))]
     inbox-uid))
 
 
@@ -86,11 +82,11 @@
     [[(->> (bfs/internal-representation->atomic-ops
              db
              [#:block{:uid        inbox-uid
-                      :string     "[[Athens inbox]]"
+                      :string     ""
                       :properties {":entity/type"
-                                   #:block{:string "[[athens/inbox]]"
+                                   #:block{:string "athens/inbox"
                                            :uid    (common.utils/gen-block-uid)}}}]
-             {:relation :first
+             {:relation {:page/title "athens/inbox"}
               :page/title at-username})
            (composite/make-consequence-op {:op/type :new-inbox}))]
      inbox-uid]))

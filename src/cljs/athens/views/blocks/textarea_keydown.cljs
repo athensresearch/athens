@@ -508,7 +508,7 @@
 (defn handle-tab
   "Bug: indenting sets the cursor position to 0, likely because a new textarea element is created on the DOM. Set selection appropriately.
   See :indent event for why value must be passed as well."
-  [e uid {:keys [read-value tab-handler] :as _state-hooks}]
+  [e uid {:keys [read-value tab-handler navigation-uid] :as _state-hooks}]
   (.. e preventDefault)
   (let [{:keys [shift] :as d-key-down} (destruct-key-down e)
         selected-items                 @(subscribe [::select-subs/items])
@@ -519,23 +519,27 @@
       (if (fn? tab-handler)
         (tab-handler uid embed-id d-key-down)
         (if shift
-          (dispatch [:unindent {:uid              uid
+          (dispatch [:unindent {:uid              (or navigation-uid uid)
+                                :editing-uid      uid
                                 :d-key-down       d-key-down
                                 :context-root-uid current-root-uid
                                 :embed-id         embed-id
                                 :local-string     local-string}])
-          (dispatch [:indent {:uid          uid
+          (dispatch [:indent {:uid          (or navigation-uid uid)
+                              :editing-uid  uid
                               :d-key-down   d-key-down
                               :local-string local-string}]))))))
 
 
 (defn handle-escape
   "BUG: escape is fired 24 times for some reason."
-  [uid e]
+  [e uid {:keys [esc-handler] :as _state-hooks}]
   (.. e preventDefault)
-  (if @(rf/subscribe [::inline-search.subs/type uid])
-    (rf/dispatch [::inline-search.events/close! uid])
-    (dispatch [:editing/uid nil])))
+  (if (fn? esc-handler)
+    (esc-handler e uid)
+    (if @(rf/subscribe [::inline-search.subs/type uid])
+      (rf/dispatch [::inline-search.events/close! uid])
+      (dispatch [:editing/uid nil]))))
 
 
 (def throttled-dispatch-sync
@@ -930,7 +934,7 @@
           (= key-code KeyCodes.ENTER)     (handle-enter e uid state-hooks)
           (= key-code KeyCodes.BACKSPACE) (handle-backspace e uid state-hooks)
           (= key-code KeyCodes.DELETE)    (handle-delete e uid state-hooks)
-          (= key-code KeyCodes.ESC)       (handle-escape uid e)
+          (= key-code KeyCodes.ESC)       (handle-escape e uid state-hooks)
           (shortcut-key? meta ctrl)       (handle-shortcuts e uid state-hooks)
           (is-character-key? e)           (write-char e uid))))))
 

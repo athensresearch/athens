@@ -10,7 +10,7 @@
 
 (defn is-block-inbox?
   [properties]
-  (= "[[athens/inbox]]"
+  (= "athens/inbox"
      (:block/string (get properties ":entity/type"))))
 
 

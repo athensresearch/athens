@@ -60,12 +60,6 @@
 
 
 (rf/reg-sub
-  :left-sidebar/open
-  (fn-traced [db _]
-             (:left-sidebar/open db)))
-
-
-(rf/reg-sub
   :mouse-down
   (fn [db _]
     (:mouse-down db)))

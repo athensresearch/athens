@@ -7,7 +7,6 @@ import {
   ChatBubbleFillIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  SettingsIcon,
   ContrastIcon,
   EllipsisHorizontalCircleIcon,
   ChatBubbleIcon,
@@ -236,17 +235,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       label: "Help",
       onClick: handlePressHelp,
       icon: <HelpIcon />
-    },
-    {
-      label: "Toggle theme",
-      onClick: handlePressThemeToggle,
-      icon: <ContrastIcon />
-    },
-    {
-      label: "Settings",
-      isActive: route === '/settings',
-      onClick: handlePressSettings,
-      icon: <SettingsIcon />
     },
     {
       label: 'Show right sidebar',
