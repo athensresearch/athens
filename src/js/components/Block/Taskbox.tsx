@@ -152,10 +152,14 @@ export const Taskbox = (props: TaskboxProps) => {
       borderWidth="2px"
       justifyContent="center"
       position="relative"
+      _disabled={{
+        borderWidth: "0",
+        cursor: "default"
+      }}
       _hover={{}}
       _active={{}}
       {...STATUS[status].isDone ? {
-        bg: isEditable ? STATUS[status].color : "none",
+        bg: STATUS[status].color,
         color: "background.floor",
       } : {
         borderColor: STATUS[status].color,
@@ -164,8 +168,8 @@ export const Taskbox = (props: TaskboxProps) => {
           content: "''",
           position: "absolute",
           inset: 0,
-          opacity: isEditable ? 0.3 : 0,
-          bg: isEditable ? "currentColor" : "none"
+          opacity: 0.3,
+          bg: "currentColor"
         }
       }}
       onClick={() => {
@@ -182,7 +186,7 @@ export const Taskbox = (props: TaskboxProps) => {
         }
       }}
     >
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         <Flex {...STATUS_ICON_PROPS} key={status}>{status === 'To Do' ? null : STATUS[status].icon}</Flex>
       </AnimatePresence>
     </Button>
