@@ -55,7 +55,7 @@
         status-value   (common-db/get-block-string @db/dsdb status-uid)
         priority-uid   (shared/parse-for-uid priority)
         priority-value (common-db/get-block-string @db/dsdb priority-uid)
-        parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))
+        _parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))
         entity-type (common-db/get-entity-type @db/dsdb [:block/uid uid])
         is-root (= entity-type "page")]
 
