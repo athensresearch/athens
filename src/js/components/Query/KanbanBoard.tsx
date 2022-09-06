@@ -1,12 +1,12 @@
 import React from 'react';
-import { VStack, HStack, Box, Heading, Button, MenuGroup, MenuItem, useMergeRefs, useTheme, theme } from '@chakra-ui/react';
+import { forwardRef, VStack, HStack, Box, Heading, MenuGroup, MenuItem, useMergeRefs } from '@chakra-ui/react';
 import { PlusIcon } from '@/Icons/Icons';
 import { useOverflowBox } from '@/hooks/useOverflowShadow';
 import { ContextMenuContext } from '@/App/ContextMenuContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
 
-export const KanbanCard = React.forwardRef(({ children, isOver }, ref) => {
+export const KanbanCard = forwardRef(({ children, isOver }, ref) => {
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
   const innerRef = React.useRef();
   const boxRef = useMergeRefs(innerRef, ref);
@@ -17,7 +17,6 @@ export const KanbanCard = React.forwardRef(({ children, isOver }, ref) => {
       <MenuItem icon={<PlusIcon />}>Open in right sidebar</MenuItem>
     </MenuGroup>
   })
-
 
   return <Box
     ref={boxRef}
@@ -34,13 +33,12 @@ export const KanbanCard = React.forwardRef(({ children, isOver }, ref) => {
       height: 0,
       opacity: 0,
     }}
-    minHeight="4rem"
+    minHeight="3rem"
     listStyleType={"none"}
     bg="interaction.surface"
     position="relative"
-    p={2}
-    px={4}
-    pr={3}
+    py={2}
+    px={3}
     _hover={{
       bg: 'interaction.surface.hover',
     }}
@@ -74,13 +72,14 @@ export const KanbanCard = React.forwardRef(({ children, isOver }, ref) => {
   </Box>
 });
 
-export const KanbanColumn = (props) => {
+export const KanbanColumn = forwardRef((props, ref) => {
   const { children, isOver } = props;
 
   return (
     <VStack
+      ref={ref}
       flex="1 1 100%"
-      minHeight="6.75em"
+      minHeight="calc(3em + 3.375em)" // height of a card plus height of the col header
       position="relative"
       align="stretch"
       listStyleType="none"
@@ -112,7 +111,7 @@ export const KanbanColumn = (props) => {
       </AnimatePresence>
     </VStack>
   );
-};
+});
 
 
 const scrollShadow = (top, right, bottom, left, color, depth, blur, inset) => {
@@ -139,9 +138,8 @@ const scrollShadow = (top, right, bottom, left, color, depth, blur, inset) => {
   return [shadowLeft, shadowRight, shadowTop, shadowBottom].join(", ");
 };
 
-export const KanbanSwimlane = (props) => {
+export const KanbanSwimlane = forwardRef((props, ref) => {
   const { name, children, ...laneProps } = props;
-  const ref = React.useRef();
   const scrollBoxRef = React.useRef();
   const { overflowBox, onScroll } = useOverflowBox(scrollBoxRef);
 
@@ -161,8 +159,8 @@ export const KanbanSwimlane = (props) => {
     shadowInset
   ), [overflowBox]);
 
-  const innerVPadding = 4;
-  const innerHPadding = 4;
+  const innerVPadding = 3;
+  const innerHPadding = 3;
 
   return (
     <VStack
@@ -188,7 +186,7 @@ export const KanbanSwimlane = (props) => {
     >
       <Heading
         color="foreground.secondary"
-        size="md"
+        size="sm"
         pt={innerVPadding}
         px={innerHPadding}
       >
@@ -210,17 +208,18 @@ export const KanbanSwimlane = (props) => {
       </HStack>
     </VStack>
   );
-}
+});
 
-export const KanbanBoard = (props) => {
+export const KanbanBoard = forwardRef((props, ref) => {
   const { children } = props;
   return (
     <VStack
+      ref={ref}
       align="stretch"
-      spacing={3}
+      spacing={2}
       py={2}
     >
       {children}
     </VStack>
   );
-}
+})
