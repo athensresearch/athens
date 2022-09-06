@@ -42,15 +42,6 @@
     [reagent.core :as r]))
 
 
-(defn nested-group-by
-  "You have to pass the first group"
-  [kw columns]
-  (->> (map (fn [[k v]]
-              [k (group-by #(get % kw) v)])
-            columns)
-       (into (hash-map))))
-
-
 (defn context-to-block-properties
   [context]
   (apply hash-map
@@ -58,7 +49,6 @@
               (map (fn [[k v]]
                      [k #:block{:string v
                                 :uid    (utils/gen-block-uid)}]))
-
               flatten)))
 
 
@@ -273,3 +263,47 @@
              [:<>
               ;; [:h1 @over-id]
               [render-card @active-id]])]]]))))
+
+
+#_(defn update-status
+    [id new-status]
+    (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
+                  (fn [db prop-uid]
+                    [(graph-ops/build-block-save-op db prop-uid new-status)])]))
+
+
+;; All commented out for when we modify kanban columns
+#_(defn new-kanban-column
+    "This creates a new block/child at the property/values key, but the kanban board doesn't trigger a re-render because it isn't aware of property/values yet."
+    [group-by-id]
+    (rf/dispatch [:graph/update-in [:node/title group-by-id] [":property/values"]
+                  (fn [db prop-uid]
+                    [(graph-ops/build-block-new-op db (utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
+
+
+#_(defn update-many-properties
+    [db key value new-value]
+    (->> (common-db/get-instances-of-key-value db key value)
+         (map #(get-in % [key :block/uid]))
+         (map (fn [uid]
+                (graph-ops/build-block-save-op db uid new-value)))))
+
+
+#_(defn update-kanban-column
+    "Update the property page that is the source of values for a property.
+  Also update all the blocks that are using that property."
+    [property-key property-value new-value]
+    (rf/dispatch [:graph/update-in [:node/title property-key] [":property/values"]
+                  (fn [db prop-uid]
+                    (let [{:block/keys [children]} (common-db/get-block-document db [:block/uid prop-uid])
+                          update-uid (->> children
+                                          (map (fn [{:block/keys [string uid]}] [string uid]))
+                                          (filter #(= (first %) property-value))
+                                          (first)
+                                          second)
+                          ;; update all blocks that match key:value to key:new-value
+                          update-ops (update-many-properties db property-key property-value new-value)]
+
+                      (vec (concat [(graph-ops/build-block-save-op db update-uid new-value)]
+                                   update-ops))))]))
+

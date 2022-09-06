@@ -5,12 +5,7 @@
     ["@chakra-ui/react" :refer [Box,
                                 ButtonGroup
                                 VStack]]
-    [athens.common-events :as common-events]
-    [athens.common-events.bfs :as bfs]
-    [athens.common-events.graph.composite :as composite]
     [athens.common-events.graph.ops :as graph-ops]
-    [athens.common.utils :as utils]
-    [athens.dates :as dates]
     [athens.db :as db]
     [athens.reactive :as reactive]
     [athens.types.core :as types]
@@ -112,116 +107,6 @@
           tasks))
 
 
-(defn context-to-block-properties
-  [context]
-  (apply hash-map
-         (->> context
-              (map (fn [[k v]]
-                     [k #:block{:string v
-                                :uid    (utils/gen-block-uid)}]))
-
-              flatten)))
-
-
-(defn new-card
-  "new-card needs to know the context of where it was pressed. For example, pressing it in a given column and swimlane
-  would pass along those properties to the new card. Filter conditions would also be passed along. It doesn't matter if
-  inherited properties are passed throughu group, subgroup, or filters. It just matters that they are true, and the view should be derived properly.
-
-  context == {:task/status 'todo'
-              :task/project '[[Project: ASD]]'"
-  [context f-special query-uid]
-  (let [context             (js->clj context)
-        new-block-props     (context-to-block-properties context)
-        parent-of-new-block (if (= f-special "On this page")
-                              {:block/uid query-uid}
-                              {:page/title (-> (dates/get-day) :title)})
-        position            (merge {:relation :last} parent-of-new-block)
-        evt                 (->> (bfs/internal-representation->atomic-ops
-                                   @athens.db/dsdb
-                                   [#:block{:uid        (utils/gen-block-uid)
-                                            :string     ""
-                                            :properties (merge {":entity/type" #:block{:string "[[athens/task]]"
-                                                                                       :uid    (utils/gen-block-uid)}
-                                                                ":task/title" #:block{:string "Untitled task"
-                                                                                      :uid    (utils/gen-block-uid)}}
-                                                               new-block-props)}]
-                                   position)
-                                 (composite/make-consequence-op {:op/type :new-type})
-                                 common-events/build-atomic-event)]
-    (re-frame.core/dispatch [:resolve-transact-forward evt])))
-
-
-;; UPDATE
-
-;; update task stuff
-
-(defn update-card-container
-  [id active-container-context over-container-context]
-  (let [{active-swimlane-id :swimlane-id active-column-id :column-id} active-container-context
-        {over-swimlane-id :swimlane-id over-column-id :column-id} over-container-context
-        diff-column?   (not= active-column-id over-column-id)
-        diff-swimlane? (not= active-swimlane-id over-swimlane-id)
-        nil-swimlane?  (= over-swimlane-id "None")
-        nil-column?    (= over-column-id "None")
-        new-column     (str "((" over-column-id "))")]
-    (when diff-swimlane?
-      (rf/dispatch [:graph/update-in [:block/uid id] [":task/assignee"]
-                    (fn [db prop-uid]
-                      [(if nil-swimlane?
-                         (graph-ops/build-block-remove-op db prop-uid)
-                         (graph-ops/build-block-save-op db prop-uid over-swimlane-id))])]))
-    (when diff-column?
-      (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
-                    (fn [db prop-uid]
-                      [(if nil-column?
-                         (graph-ops/build-block-remove-op db prop-uid)
-                         (graph-ops/build-block-save-op db prop-uid new-column))])]))))
-
-
-#_(defn update-status
-    [id new-status]
-    (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
-                  (fn [db prop-uid]
-                    [(graph-ops/build-block-save-op db prop-uid new-status)])]))
-
-
-;; All commented out for when we modify kanban columns
-#_(defn new-kanban-column
-    "This creates a new block/child at the property/values key, but the kanban board doesn't trigger a re-render because it isn't aware of property/values yet."
-    [group-by-id]
-    (rf/dispatch [:graph/update-in [:node/title group-by-id] [":property/values"]
-                  (fn [db prop-uid]
-                    [(graph-ops/build-block-new-op db (utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
-
-
-#_(defn update-many-properties
-    [db key value new-value]
-    (->> (common-db/get-instances-of-key-value db key value)
-         (map #(get-in % [key :block/uid]))
-         (map (fn [uid]
-                (graph-ops/build-block-save-op db uid new-value)))))
-
-
-#_(defn update-kanban-column
-    "Update the property page that is the source of values for a property.
-  Also update all the blocks that are using that property."
-    [property-key property-value new-value]
-    (rf/dispatch [:graph/update-in [:node/title property-key] [":property/values"]
-                  (fn [db prop-uid]
-                    (let [{:block/keys [children]} (common-db/get-block-document db [:block/uid prop-uid])
-                          update-uid (->> children
-                                          (map (fn [{:block/keys [string uid]}] [string uid]))
-                                          (filter #(= (first %) property-value))
-                                          (first)
-                                          second)
-                          ;; update all blocks that match key:value to key:new-value
-                          update-ops (update-many-properties db property-key property-value new-value)]
-
-                      (vec (concat [(graph-ops/build-block-save-op db update-uid new-value)]
-                                   update-ops))))]))
-
-
 ;; update properties
 
 (defn update-query-property
@@ -293,11 +178,6 @@
                 (sort-dir-fn query-sort-direction))))
 
 
-#_(defn str-to-title
-    [s]
-    (str "[[" s "]]"))
-
-
 ;; Views
 
 
@@ -342,13 +222,6 @@
      (for [menu menus-data]
        (let [{:keys [heading options onChange value]} menu]
          [:> QueryRadioMenu {:key heading :heading heading :options options :onChange onChange :value value}]))]))
-
-
-(defn update-card-field
-  [id k new-value]
-  (rf/dispatch [:graph/update-in [:block/uid id] [k]
-                (fn [db prop-uid]
-                  [(graph-ops/build-block-save-op db prop-uid new-value)])]))
 
 
 (defn query-el
