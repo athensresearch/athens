@@ -7,7 +7,7 @@
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router   :as router]
-    [athens.types.query.view :as query]
+    [athens.types.query.shared :as query]
     [athens.types.tasks.view :as tasks]
     [athens.views.left-sidebar.subs :as left-sidebar-subs]
     [re-frame.core   :as rf]
