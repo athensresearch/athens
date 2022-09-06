@@ -1313,7 +1313,7 @@
           event                    (common-events/build-atomic-event block-save-block-move-op)]
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid editing-uid embed-id)])
+        {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid (or editing-uid uid) embed-id)])
               [:set-cursor-position [(or editing-uid uid) start end]]
               [:dispatch-n (cond-> []
                              (seq new-titles)
