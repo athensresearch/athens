@@ -28,10 +28,10 @@ function compileInPlace(filename) {
 
 // Add any new files here.
 var files = [
-  "node_modules/@chakra-ui/utils/dist/index.cjs.js",
-  "node_modules/@chakra-ui/react-use-pan-event/dist/index.cjs.js",
-  "node_modules/@chakra-ui/modal/dist/index.cjs.js",
-  "node_modules/@chakra-ui/descendant/dist/index.cjs.js",
+  "./node_modules/@chakra-ui/utils/dist/index.cjs.js",
+  "./node_modules/@chakra-ui/react-use-pan-event/dist/index.cjs.js",
+  "./node_modules/@chakra-ui/modal/dist/index.cjs.js",
+  "./node_modules/@chakra-ui/descendant/dist/index.cjs.js",
 ];
 
 files.map(compileInPlace);
