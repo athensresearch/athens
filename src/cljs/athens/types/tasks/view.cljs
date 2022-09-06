@@ -312,10 +312,7 @@
                                                   (fn [_uid _d-key-down]
                                                     ;; TODO dispatch save and jump to next input
                                                     (println "TODO dispatch save and jump to next input")
-                                                    (update-fn @local-value)))
-                                 :tab-handler   (fn [_uid _embed-id _d-key-down]
-                                                  ;; TODO implement focus on next input
-                                                  (update-fn @local-value))}
+                                                    (update-fn @local-value)))}
             state-hooks         (merge {:save-fn                 save-fn
                                         :idle-fn                 idle-fn
                                         :update-fn               update-fn
@@ -475,7 +472,6 @@
        :block/uid))
 
 
-;; NOTE: not used right now
 (defn on-update-status
   [task-uid new-status]
   (let [new-status (-> new-status find-status-uid)

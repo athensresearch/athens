@@ -42,16 +42,19 @@ const STATUS = {
     icon: <SquareIcon />,
     color: "blue.500",
     text: "To Do",
+    isDone: false,
   },
   "Doing": {
     icon: <ArrowRightVariableIcon />,
     color: "yellow.500",
     text: "Doing",
+    isDone: false,
   },
   "Blocked": {
     icon: <PauseVariableIcon />,
     color: "red.500",
     text: "Blocked",
+    isDone: false,
   },
   "Done": {
     icon: <CheckmarkVariableIcon />,

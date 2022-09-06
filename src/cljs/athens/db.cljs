@@ -153,7 +153,6 @@
                :win-focused?        true
                :athena/open         false
                :athena/recent-items '()
-               :left-sidebar/open   false
                ;; todo: some value initialization like athens/persist
                ;; :right-sidebar/width 32
                :mouse-down          false
