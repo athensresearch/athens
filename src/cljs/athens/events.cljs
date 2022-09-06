@@ -1209,7 +1209,7 @@
 
 (reg-event-fx
   :indent
-  (fn [{:keys [_db]} [_ {:keys [uid d-key-down local-string] :as args}]]
+  (fn [{:keys [_db]} [_ {:keys [uid d-key-down local-string editing-uid] :as args}]]
     ;; - `block-zero`: The first block in a page
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
@@ -1246,7 +1246,7 @@
       (when (and prev-block-uid
                  (not first-block?))
         {:fx [(transact-async-flow :indent event sentry-tx [])
-              [:set-cursor-position [uid start end]]
+              [:set-cursor-position [(or editing-uid uid) start end]]
               [:dispatch-n (cond-> []
                              (seq new-titles)
                              (conj [:reporting/page.create {:source :indent
@@ -1282,7 +1282,7 @@
 
 (reg-event-fx
   :unindent
-  (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
+  (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string editing-uid] :as args}]]
     (log/debug ":unindent args" (pr-str args))
     (let [sentry-tx                (close-and-get-sentry-tx "unindent")
           db                       @db/dsdb
@@ -1313,8 +1313,8 @@
           event                    (common-events/build-atomic-event block-save-block-move-op)]
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid uid embed-id)])
-              [:set-cursor-position [uid start end]]
+        {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid (or editing-uid uid) embed-id)])
+              [:set-cursor-position [(or editing-uid uid) start end]]
               [:dispatch-n (cond-> []
                              (seq new-titles)
                              (conj [:reporting/page.create {:source :unindent
