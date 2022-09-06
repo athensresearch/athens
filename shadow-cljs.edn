@@ -25,7 +25,7 @@
                                                       :warnings {:redef false}}}
                 :release          {:build-options {:ns-aliases {day8.re-frame.tracing day8.re-frame.tracing-stubs}}}
                 :devtools         {:preloads  [devtools.preload
-                                               day8.re-frame-10x.preload]
+                                               #_day8.re-frame-10x.preload]
                                    :http-root "resources/public"
                                    :http-port 3000}}
 
