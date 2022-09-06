@@ -1,42 +1,20 @@
 (ns athens.types.query.view
   "Views for Athens Tasks"
   (:require
-    ["/components/DnD/DndContext" :refer [DragAndDropContext]]
-    ["/components/DnD/Droppable" :refer [Droppable]]
-    ["/components/DnD/Sortable" :refer [Sortable]]
-    ["/components/Icons/Icons" :refer [ArrowRightOnBoxIcon]]
-    ["/components/Query/KanbanBoard" :refer [KanbanBoard
-                                             KanbanSwimlane
-                                             KanbanColumn]]
     ["/components/Query/Query" :refer [QueryRadioMenu]]
-    ["/components/Query/Table" :refer [QueryTable]]
     ["@chakra-ui/react" :refer [Box,
-                                IconButton
-                                HStack
-                                Button
-                                HStack
-                                Stack
-                                Text]]
-    ["@dnd-kit/core" :refer [closestCorners,
-                             DragOverlay,]]
-    ["@dnd-kit/sortable" :refer [SortableContext,
-                                 verticalListSortingStrategy,]]
-    [athens.common-db :as common-db]
-    [athens.common-events :as common-events]
-    [athens.common-events.bfs :as bfs]
-    [athens.common-events.graph.composite :as composite]
+                                ButtonGroup
+                                VStack]]
     [athens.common-events.graph.ops :as graph-ops]
-    [athens.common.utils :as utils]
-    [athens.dates :as dates]
     [athens.db :as db]
-    [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
-    [athens.router :as router]
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
+    [athens.types.query.kanban :refer [DragAndDropKanbanBoard]]
+    [athens.types.query.shared :as shared]
+    [athens.types.query.table :refer [QueryTableV2]]
     [clojure.string :refer []]
-    [re-frame.core :as rf]
-    [reagent.core :as r]))
+    [re-frame.core :as rf]))
 
 
 ;; CONSTANTS
@@ -102,56 +80,14 @@
 
 ;; Helpers
 
-(defn get-create-auth-and-time
-  [create-event]
-  {":create/auth" (get-in create-event [:event/auth :presence/id])
-   ":create/time" (get-in create-event [:event/time :time/ts])})
-
-
-(defn get-last-edit-auth-and-time
-  [edit-events]
-  (let [last-edit (last edit-events)]
-    {":last-edit/auth" (get-in last-edit [:event/auth :presence/id])
-     ":last-edit/time" (get-in last-edit [:event/time :time/ts])}))
-
-
-(declare parse-for-uid parse-for-title)
-
-
-(defn block-to-flat-map
-  [block]
-  ;; TODO: we could technically give pages all the properties of tasks and put them on a kanban board...
-  (let [{:block/keys [uid string properties create edits] :keys [node/_title]} block
-        create-auth-and-time    (get-create-auth-and-time create)
-        last-edit-auth-and-time (get-last-edit-auth-and-time edits)
-        property-keys           (keys properties)
-        props-map               (reduce (fn [acc prop-key]
-                                          (assoc acc prop-key (get-in properties [prop-key :block/string])))
-                                        {}
-                                        property-keys)
-        merged-map              (merge {":block/uid"    uid
-                                        ":block/string" string}
-                                       props-map
-                                       create-auth-and-time
-                                       last-edit-auth-and-time
-                                       {":task/status" (parse-for-uid (get props-map ":task/status"))}
-                                       {":task/assignee" (parse-for-title (get props-map ":task/assignee"))})]
-    merged-map))
-
-
-(defn get-root-page
-  [x]
-  (merge x
-         {":task/page" (:node/title (db/get-root-parent-page (get x ":block/uid")))}))
-
 
 (defn nested-group-by
   "You have to pass the first group"
   [kw columns]
-  (into (hash-map)
-        (map (fn [[k v]]
-               [k (group-by #(get % kw) v)])
-             columns)))
+  (->> (map (fn [[k v]]
+              [k (group-by #(get % kw) v)])
+            columns)
+       (into (hash-map))))
 
 
 (defn group-stuff
@@ -161,114 +97,14 @@
        (nested-group-by g)))
 
 
-(defn context-to-block-properties
-  [context]
-  (apply hash-map
-         (->> context
-              (map (fn [[k v]]
-                     [k #:block{:string v
-                                :uid    (utils/gen-block-uid)}]))
-
-              flatten)))
-
-
-(defn new-card
-  "new-card needs to know the context of where it was pressed. For example, pressing it in a given column and swimlane
-  would pass along those properties to the new card. Filter conditions would also be passed along. It doesn't matter if
-  inherited properties are passed throughu group, subgroup, or filters. It just matters that they are true, and the view should be derived properly.
-
-  context == {:task/status 'todo'
-              :task/project '[[Project: ASD]]'"
-  [context f-special query-uid]
-  (let [context             (js->clj context)
-        new-block-props     (context-to-block-properties context)
-        parent-of-new-block (if (= f-special "On this page")
-                              {:block/uid query-uid}
-                              {:page/title (-> (dates/get-day) :title)})
-        position            (merge {:relation :last} parent-of-new-block)
-        evt                 (->> (bfs/internal-representation->atomic-ops
-                                   @athens.db/dsdb
-                                   [#:block{:uid        (utils/gen-block-uid)
-                                            :string     ""
-                                            :properties (merge {":entity/type" #:block{:string "[[athens/task]]"
-                                                                                       :uid    (utils/gen-block-uid)}
-                                                                ":task/title" #:block{:string "Untitled task"
-                                                                                      :uid    (utils/gen-block-uid)}}
-                                                               new-block-props)}]
-                                   position)
-                                 (composite/make-consequence-op {:op/type :new-type})
-                                 common-events/build-atomic-event)]
-    (re-frame.core/dispatch [:resolve-transact-forward evt])))
-
-
-;; UPDATE
-
-;; update task stuff
-
-(defn update-card-container
-  [id active-container-context over-container-context]
-  (let [{active-swimlane-id :swimlane-id active-column-id :column-id} active-container-context
-        {over-swimlane-id :swimlane-id over-column-id :column-id} over-container-context
-        diff-column?   (not= active-column-id over-column-id)
-        diff-swimlane? (not= active-swimlane-id over-swimlane-id)
-        nil-swimlane?  (= over-swimlane-id "None")
-        nil-column?    (= over-column-id "None")
-        new-column     (str "((" over-column-id "))")]
-    (when diff-swimlane?
-      (rf/dispatch [:graph/update-in [:block/uid id] [":task/assignee"]
-                    (fn [db prop-uid]
-                      [(if nil-swimlane?
-                         (graph-ops/build-block-remove-op db prop-uid)
-                         (graph-ops/build-block-save-op db prop-uid over-swimlane-id))])]))
-    (when diff-column?
-      (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
-                    (fn [db prop-uid]
-                      [(if nil-column?
-                         (graph-ops/build-block-remove-op db prop-uid)
-                         (graph-ops/build-block-save-op db prop-uid new-column))])]))))
-
-
-#_(defn update-status
-    [id new-status]
-    (rf/dispatch [:graph/update-in [:block/uid id] [":task/status"]
-                  (fn [db prop-uid]
-                    [(graph-ops/build-block-save-op db prop-uid new-status)])]))
-
-
-;; All commented out for when we modify kanban columns
-#_(defn new-kanban-column
-    "This creates a new block/child at the property/values key, but the kanban board doesn't trigger a re-render because it isn't aware of property/values yet."
-    [group-by-id]
-    (rf/dispatch [:graph/update-in [:node/title group-by-id] [":property/values"]
-                  (fn [db prop-uid]
-                    [(graph-ops/build-block-new-op db (utils/gen-block-uid) {:block/uid prop-uid :relation :last})])]))
-
-
-#_(defn update-many-properties
-    [db key value new-value]
-    (->> (common-db/get-instances-of-key-value db key value)
-         (map #(get-in % [key :block/uid]))
-         (map (fn [uid]
-                (graph-ops/build-block-save-op db uid new-value)))))
-
-
-#_(defn update-kanban-column
-    "Update the property page that is the source of values for a property.
-  Also update all the blocks that are using that property."
-    [property-key property-value new-value]
-    (rf/dispatch [:graph/update-in [:node/title property-key] [":property/values"]
-                  (fn [db prop-uid]
-                    (let [{:block/keys [children]} (common-db/get-block-document db [:block/uid prop-uid])
-                          update-uid (->> children
-                                          (map (fn [{:block/keys [string uid]}] [string uid]))
-                                          (filter #(= (first %) property-value))
-                                          (first)
-                                          second)
-                          ;; update all blocks that match key:value to key:new-value
-                          update-ops (update-many-properties db property-key property-value new-value)]
-
-                      (vec (concat [(graph-ops/build-block-save-op db update-uid new-value)]
-                                   update-ops))))]))
+(defn tasks-to-trees
+  [tasks]
+  (reduce (fn [m [uid parents]]
+            (if (seq parents)
+              (assoc-in m parents {uid {}})
+              (assoc m uid {})))
+          {}
+          tasks))
 
 
 ;; update properties
@@ -342,33 +178,6 @@
                 (sort-dir-fn query-sort-direction))))
 
 
-(defn parse-for-title
-  "should be able to pass in a plain string, a wikilink, or both?"
-  [s]
-  (when (seq s)
-    (let [re #"\[\[(.*)\]\]"]
-      (cond
-        (re-find re s) (second (re-find re s))
-        (clojure.string/blank? s) (throw "parse-for-title got an empty string")
-        :else s))))
-
-
-(defn parse-for-uid
-  "should be able to pass in a plain string, a wikilink, or both?"
-  [s]
-  (when (seq s)
-    (let [re #"\(\((.*)\)\)"]
-      (cond
-        (re-find re s) (second (re-find re s))
-        (clojure.string/blank? s) (throw "parse-for-title got an empty string")
-        :else s))))
-
-
-#_(defn str-to-title
-    [s]
-    (str "[[" s "]]"))
-
-
 ;; Views
 
 
@@ -376,7 +185,7 @@
   [{:keys [_properties parsed-properties uid schema]}]
   (let [[layout select _p-order _p-hide f-author f-special s-by s-direction g-by g-s-by]
         (get* parsed-properties ["layout" "select" "properties/order" "properties/hide" "filter/author" "filter/special" "sort/by" "sort/direction" "group/by" "group/subgroup/by"])
-        s-by       (parse-for-title s-by)
+        s-by       (shared/parse-for-title s-by)
         menus-data [{:heading  "Entity Type"
                      :options  ENTITY_TYPES
                      :onChange #(update-query-property uid "select" %)
@@ -409,180 +218,18 @@
                      :options GROUP_BY_OPTIONS
                      :onChange #(update-query-property uid "group/subgroup/by" %)
                      :value g-s-by}]]
-    [:> Stack {:direction "row" :spacing 5}
+    [:> ButtonGroup {:isAttached true :gap "1px" :size "xs"}
      (for [menu menus-data]
        (let [{:keys [heading options onChange value]} menu]
-         [:> QueryRadioMenu {:key heading :heading heading :options options :onChange onChange :value value}]))
-
-
-
-     #_[:> Controls {:isCheckedFn          #(get query-properties-hide %)
-                     :properties           schema
-                     :hiddenProperties     query-properties-hide
-                     :menuOptionGroupValue menuOptionGroupValue
-                     :onChange             #(toggle-hidden-property uid %)}]
-     #_[:> Button {:onClick #(prn parsed-properties) :disabled true}
-        [:> Heading {:size "sm"} "Save View"]]]))
-
-
-(defn render-card
-  [uid over?]
-  (let [card           (-> (reactive/get-reactive-block-document [:block/uid uid])
-                           block-to-flat-map
-                           get-root-page)
-        title          (get card ":task/title")
-        status         (get card ":task/status")
-        priority       (get card ":task/priority")
-        assignee       (get card ":task/assignee")
-        _page           (get card ":task/page")
-        _due-date      (get card ":task/due-date")
-
-        assignee-value (parse-for-title assignee)
-
-        status-uid     (parse-for-uid status)
-        _status-value   (common-db/get-block-string @db/dsdb status-uid)
-
-        priority-uid   (parse-for-uid priority)
-        priority-value (common-db/get-block-string @db/dsdb priority-uid)
-
-        parent-uid     (:block/uid (common-db/get-parent @db/dsdb [:block/uid uid]))
-
-        ;; TODO: figure out how to give unique id when one card can show up multiple times on a query, e.g. a card that belongs to multiple projects
-        ;; could use swimlane and column data for uniqueness
-        id             (str uid)]
-
-    [:> Sortable {:id id :key id}
-
-     [:> Box {:borderRadius  "sm"
-              :minHeight     "4rem"
-              :listStyleType "none"
-              :border        "1px solid transparent"
-              :p             2
-              :bg            "background.floor"
-              :position      "relative"
-              :sx            (and over? {":after" {:content          "''"
-                                                   :position         "absolute"
-                                                   :width            "96%"
-                                                   :height           "3px"
-                                                   :background-color "link"}})
-              ;; :width         "300px"
-              :_hover        {:bg          "background.upper",
-                              :border      "1px solid",
-                              :borderColor "background.floor"}}
-
-
-
-      [:> Stack
-       [:> Text {:fontWeight "bold"} [parse-renderer/parse-and-render title uid]]
-       [:> HStack
-        [:> Text assignee-value]
-        [:> Text priority-value]]
-       [:> HStack {:justifyContent "space-between"}
-        ;; onClick events are eaten up by Sortable
-        [:> IconButton {:zIndex  1
-                        :onClick #(rf/dispatch [:right-sidebar/open-item [:block/uid parent-uid]])}
-         [:> ArrowRightOnBoxIcon]]]]]]))
-
-
-(defn- find-container-id
-  "Accepts event.active or event.over"
-  [e active-or-over]
-  (try
-    (case active-or-over
-      :active (.. e -active -data -current -sortable -containerId)
-      :over (.. e -over -data -current -sortable -containerId))
-    (catch js/Object _
-      (case active-or-over
-        :active (.. e -active -id)
-        :over (.. e -over -id)))))
-
-
-(defn- get-container-context
-  [container-id]
-  (let [swimlane-id (-> (re-find #"swimlane-(@?\w+)" container-id) second)
-        column-id   (-> (re-find #"column-(\w+)" container-id) second)]
-    {:swimlane-id swimlane-id
-     :column-id column-id}))
-
-
-(defn DragAndDropKanbanBoard
-  [_props]
-  (let [active-id (r/atom nil)
-        over-id   (r/atom nil)]
-    (fn [props]
-      (let [{:keys [query-uid f-special boardData all-possible-group-by-columns groupBy subgroupBy]} props]
-        [:> DragAndDropContext {:collisionDetection closestCorners
-                                :onDragStart (fn [e]
-                                               (reset! active-id (.. e -active -id)))
-                                :onDragOver  (fn [e]
-                                               (reset! over-id (.. e -over -id)))
-                                :onDragEnd   (fn [e]
-                                               ;; TODO: should context metadata be stored at the card level or the container level?
-                                               (js/console.log e)
-                                               (let [over-container           (find-container-id e :over)
-                                                     active-container         (find-container-id e :active)
-                                                     over-container-context   (get-container-context over-container)
-                                                     active-container-context (get-container-context active-container)]
-                                                 (prn over-container active-container)
-                                                 (update-card-container @active-id active-container-context over-container-context)
-                                                 (reset! active-id nil)
-                                                 (reset! over-id nil)))}
-
-         [:> KanbanBoard {:name "TODO: Create title handler for queries"}]
-         (doall
-           (for [swimlanes boardData]
-             (let [[swimlane-id swimlane-columns] swimlanes
-                   nil-swimlane-id? (nil? swimlane-id)
-                   ;; TODO: doesn't handle empty assignee well, or values that are not expected
-                   swimlane-id      (if swimlane-id swimlane-id "None")
-                   swimlane-key     (if nil-swimlane-id? "None" swimlane-id)]
-
-               [:> KanbanSwimlane {:name swimlane-key :key swimlane-key}
-                (doall
-                  (for [possible-group-by-column all-possible-group-by-columns]
-                    (let [{:block/keys [string uid]} possible-group-by-column
-                          cards-from-a-column (if (= string "None")
-                                                (get swimlane-columns nil)
-                                                (get swimlane-columns uid))
-                          ;; context-object assumes group-by is always status, because of the uid stuff
-                          context-object      (cond-> {}
-                                                (and (= groupBy ":task/status")
-                                                     (not (nil? uid))) (assoc groupBy (str "((" uid "))"))
-                                                (not nil-swimlane-id?) (assoc subgroupBy (str "[[" swimlane-id "]]")))
-                          column-id           (if uid uid "None")
-                          column-id           (str "swimlane-" swimlane-id "-column-" column-id)]
-
-                      [:> Droppable {:key column-id :id column-id}
-                       (fn [over?]
-                         (r/as-element
-                           [:> SortableContext {:id column-id
-                                                :items (or cards-from-a-column [])
-                                                :strategy verticalListSortingStrategy}
-                            [:> KanbanColumn {:name string :key column-id :isOver over?}
-                             (doall
-                               (for [card cards-from-a-column]
-                                 (let [card-uid (get card ":block/uid")
-                                       over?    (= @over-id card-uid)]
-                                   ^{:key card-uid} [render-card card-uid over?])))
-                             [:> Button {:onClick    #(new-card context-object f-special query-uid)
-                                         :size       "sm"
-                                         :variant    "ghost"
-                                         :fontWeight "light"}
-                              "+ New Card"]]]))])))])))
-
-         [:> DragOverlay
-          (when @active-id
-            [:<>
-             ;; [:h1 @over-id]
-             [render-card @active-id]])]]))))
+         [:> QueryRadioMenu {:key heading :heading heading :options options :onChange onChange :value value}]))]))
 
 
 (defn query-el
-  [{:keys [query-data parsed-properties uid schema]}]
+  [{:keys [query-data parsed-properties uid _schema]}]
   (let [query-uid uid
-        [_select layout s-by s-direction f-author f-special _p-order p-hide]
+        [_select layout s-by s-direction f-author f-special _p-order _p-hide]
         (get* parsed-properties ["select" "layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
-        s-by              (parse-for-title s-by)
+        s-by              (shared/parse-for-title s-by)
         filter-author-fn  (fn [x]
                             (let [entity-author (get x ":create/auth")]
                               (or (= f-author "None")
@@ -590,25 +237,23 @@
                                      entity-author))))
         special-filter-fn (fn [x]
                             (cond
-                              (= f-special "On this page") (let [comment-uid           (get x ":block/uid")
-                                                                 comments-parent-page  (-> (db/get-root-parent-page comment-uid)
-                                                                                           :node/title)
-                                                                 current-page-of-query (-> (db/get-root-parent-page uid)
-                                                                                           :node/title)]
-                                                             (= comments-parent-page current-page-of-query))
+                              (= f-special "On this page")
+                              (let [comment-uid           (get x ":block/uid")
+                                    comments-parent-page  (-> (db/get-root-parent-page comment-uid)
+                                                              :node/title)
+                                    current-page-of-query (-> (db/get-root-parent-page uid)
+                                                              :node/title)]
+                                (= comments-parent-page current-page-of-query))
                               :else true))
-
         query-data        (filterv special-filter-fn query-data)
         query-data        (filterv filter-author-fn query-data)
-
         query-data        (sort-table query-data s-by s-direction)]
-    ;; TODO
-    [:> Box {#_#_:margin-top "40px" :width "100%"}
+    [:> VStack {:className "query-el" :key query-uid :align "stretch"}
      (case layout
        "board"
        (let [[g-by sg-by] (get* parsed-properties ["group/by" "group/subgroup/by"])
-             query-group-by                (parse-for-title g-by)
-             query-subgroup-by             (parse-for-title sg-by)
+             query-group-by                (shared/parse-for-title g-by)
+             query-subgroup-by             (shared/parse-for-title sg-by)
              all-possible-group-by-columns (concat [{:block/string "None" :block/uid nil}]
                                                    (get-reactive-property [:node/title query-group-by] ":property/enum"))
              boardData                     (if (and query-subgroup-by query-group-by)
@@ -620,43 +265,26 @@
                                   :boardData                     boardData
                                   :all-possible-group-by-columns all-possible-group-by-columns
                                   :groupBy                       g-by
-                                  :subgroupBy                    sg-by}]
-
-         ;; this is when we were passing all data to one top-level Tsx component
-         #_[:> QueryKanban {:boardData            boardData
-                            ;; store column order here
-                            :columns              columns
-                            :hasSubGroup          (boolean query-subgroup-by)
-                            :onUpdateStatusClick  update-status
-                            :hideProperties       p-hide
-                            :onAddNewCardClick    new-card
-                            :groupBy              query-group-by
-                            :subgroupBy           query-subgroup-by
-                            :filter               nil
-                            :refToString    (fn [x]
-                                              (->> x
-                                                   parse-for-uid
-                                                   (common-db/get-block-string @athens.db/dsdb)))
-                            :onClickCard          #(rf/dispatch [:right-sidebar/open-item %])
-                            :onUpdateTaskTitle    update-task-title
-                            :onUpdateKanbanColumn update-kanban-column
-                            :onAddNewColumn       #(new-kanban-column query-group-by)
-                            :onAddNewProjectClick (fn [])}])
+                                  :subgroupBy                    sg-by}])
 
        "list"
        [:div "TODO"]
 
+       "table"
+       (let [get-parents           (fn [uid]
+                                     (let [parent-uids (->> (db/get-parents-recursively [:block/uid uid])
+                                                            (mapv :block/uid))]
+                                       [uid parent-uids]))
+             sort-by-parents-count (fn [x] (-> x second count))
+             tasks                 (->> (reactive/get-reactive-instances-of-key-value ":entity/type" "[[athens/task]]")
+                                        ;; query-data
+                                        (mapv :block/uid)
+                                        (mapv get-parents)
+                                        (sort-by sort-by-parents-count))
+             task-trees         (tasks-to-trees tasks)]
 
-       [:> QueryTable {:data           query-data
-                       :columns        schema
-                       ;; :onClickSort    #(update-sort-by uid (str-to-title query-sort-by) query-sort-direction (str-to-title %))
-                       :sortBy         s-by
-                       :sortDirection  s-direction
-                       :onUidClick     #(rf/dispatch [:right-sidebar/open-item [:block/uid %]])
-                       :onPageClick    #(router/navigate-page %)
-                       :rowCount       (count query-data)
-                       :hideProperties p-hide
-                       :dateFormatFn   #(dates/date-string %)}])]))
+         [QueryTableV2 {:data task-trees
+                        :columns ["Title" "Status" "Priority" "Assignee" "Due Date"]}]))]))
 
 
 (comment "current shape of data for query kanban boards"
@@ -712,13 +340,12 @@
         [select] (get* parsed-properties ["select"])
         schema            (get-schema select)
         query-data        (->> (reactive/get-reactive-instances-of-key-value ":entity/type" select)
-                               (map block-to-flat-map)
-                               (map get-root-page))]
+                               (map shared/block-to-flat-map)
+                               (map shared/get-root-page))]
 
     (if (invalid-query? parsed-properties)
       [:> Box {:color "red"} "invalid query"]
-      [:> Box {:gridArea "content" :borderColor "gray"}
-
+      [:<>
        [options-el {:parsed-properties parsed-properties
                     :properties        properties
                     :schema            schema

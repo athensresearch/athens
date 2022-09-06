@@ -1,272 +1,225 @@
 import React from 'react';
-import { Textarea, VStack, HStack, Grid, Box, Text, Heading, Button, IconButton } from '@chakra-ui/react';
-import { Reorder } from 'framer-motion';
-import { EditIcon } from '@/Icons/Icons';
-
-export const KanbanCard = (props) => {
-  const { isSelected, columns, onUpdateStatusClick, cardData, hideProperties, onClickCard, onUpdateTaskTitle } = props;
-  const title = cardData[":task/title"]
-  const status = cardData[":task/status"]
-  const uid = cardData[":block/uid"]
-
-  const columnIndex = columns.indexOf(status);
-  const columnCount = columns.length;
-
-  const handleInputChange = (e) => {
-     const inputValue = e.target.value
-     setTitleValue(inputValue)
-   }
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [titleValue, setTitleValue] = React.useState(title);
-  const textareaRef = React.useRef();
-  React.useEffect(() => {
-    if (textareaRef.current) {
-        textareaRef.current.focus()
-        const length = textareaRef.current.value.length
-        textareaRef.current.selectionStart = length
-    }
-  }, [isEditing])
+import { forwardRef, VStack, HStack, Box, Heading, MenuGroup, MenuItem, useMergeRefs } from '@chakra-ui/react';
+import { PlusIcon } from '@/Icons/Icons';
+import { useOverflowBox } from '@/hooks/useOverflowShadow';
+import { ContextMenuContext } from '@/App/ContextMenuContext';
+import { AnimatePresence, motion } from 'framer-motion';
 
 
+export const KanbanCard = forwardRef(({ children, isOver }, ref) => {
+  const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
+  const innerRef = React.useRef();
+  const boxRef = useMergeRefs(innerRef, ref);
+  const isMenuOpen = getIsMenuOpen(innerRef);
+
+  const Menu = React.memo(() => {
+    return <MenuGroup title="Card">
+      <MenuItem icon={<PlusIcon />}>Open in right sidebar</MenuItem>
+    </MenuGroup>
+  })
 
   return <Box
-//     as={Reorder.Item}
-    key={title}
-    value={title}
-    borderRadius="sm"
-    minHeight="4rem"
-    listStyleType={"none"}
-    border="1px solid transparent"
-    p={2}
-    bg="background.floor"
-    width="300px"
-    _hover={{
-      bg: 'background.upper',
-      border: "1px solid",
-      borderColor: "background.floor"
+    ref={boxRef}
+    as={motion.div}
+    animate={{
+      height: "auto",
+      opacity: 1,
     }}
-    /*onClick={() => onClickCard(id)}*/
-  >
-    <HStack justifyContent="space-between">
-        {isEditing
-            ? <Textarea ref={textareaRef} value={titleValue} onChange={handleInputChange}
-                onBlur={() => {
-                    setIsEditing(!isEditing)
-                    onUpdateTaskTitle(uid, titleValue)
-                }}/>
-            : <Text fontWeight={"bold"}>{title}</Text>
-            }
-        <IconButton icon={<EditIcon/>}
-            onClick={(e) => {
-                e.stopPropagation()
-                setIsEditing(!isEditing)
-            }} />
-    </HStack>
-    {Object.entries(cardData).map(([key, val]) =>
-        (!hideProperties[key]
-            && key != ":task/title"
-            && <Box display="flex">
-                <Text color="gray" width="200px">{key}</Text>
-                <Text width="200px">{val}</Text>
-            </Box>)
-    )}
-  {(columnIndex > 0) &&
-    <Button value="left" onClick={(e) => {
-      onUpdateStatusClick(uid, columns[columnIndex-1])
-      e.stopPropagation()
-    }}>←</Button>}
-  {(columnIndex < (columnCount - 1)) &&
-    <Button value="right" onClick={(e) => {
-      e.stopPropagation()
-      onUpdateStatusClick(uid, columns[columnIndex+1])
-    }
-    }>→</Button>}
-  </Box>;
-}
-
-export const KanbanColumn = (props) => {
-  const { name, children, onUpdateKanbanColumn, groupBy, isOver } = props;
-  // const [items, setItems] = React.useState(["Card 1", "Card 2", "Card 3"]);
-
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [titleValue, setTitleValue] = React.useState(name);
-  const textareaRef = React.useRef();
-  React.useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-      const length = textareaRef.current.value.length;
-      textareaRef.current.selectionStart = length;
-    }
-  }, [isEditing]);
-
-  const handleInputChange = (e) => {
-    const inputValue = e.target.value;
-    setTitleValue(inputValue);
-  };
-
-  const styles = isOver
-    ? {
-        sx: {
-          ":after": {
-            content: "''",
-            position: "absolute",
-            width: "100%",
-            height: "3px",
-            backgroundColor: "link",
-          },
-        },
+    exit={{
+      height: 0,
+      opacity: 0,
+    }}
+    initial={{
+      height: 0,
+      opacity: 0,
+    }}
+    minHeight="3rem"
+    listStyleType={"none"}
+    bg="interaction.surface"
+    position="relative"
+    py={2}
+    px={3}
+    _hover={{
+      bg: 'interaction.surface.hover',
+    }}
+    {...(isMenuOpen && {
+      bg: 'interaction.surface.active',
+      _hover: {}
+    })}
+    onContextMenu={(e) => {
+      addToContextMenu({
+        ref: innerRef,
+        event: e,
+        component: Menu,
+        isExclusive: true,
+        key: "card"
+      })
+    }}
+    {...(isOver && {
+      _after: {
+        content: '""',
+        position: "absolute",
+        inset: 0,
+        top: "auto",
+        height: "2px",
+        bg: "link",
+        _hover: {}
       }
-    : null;
+    }
+    )}
+  >
+    {children}
+  </Box>
+});
+
+export const KanbanColumn = forwardRef((props, ref) => {
+  const { children, isOver } = props;
 
   return (
-    <Box position="relative">
-      <Box {...styles}>
-        <VStack
-          // as={Reorder.Group}
-          align="stretch"
-          listStyleType={"none"}
-          spacing={2}
-          p={2}
-          borderRadius="md"
-          bg="background.upper"
-          axis="y"
-          width="300px"
-          // values={items}
-          // onReorder={setItems}
-        >
-          <HStack justifyContent="space-between">
-            {isEditing ? (
-              <Textarea
-                ref={textareaRef}
-                value={titleValue}
-                onChange={handleInputChange}
-                onBlur={() => {
-                  onUpdateKanbanColumn(groupBy, name, titleValue);
-                  setIsEditing(!isEditing);
-                }}
-              />
-            ) : (
-              <Heading color="foreground.secondary" size="sm">
-                {name}
-              </Heading>
-            )}
-            {/* for now, just read-only
-            <IconButton icon={<EditIcon/>}
-                onClick={(e) => {
-                    e.stopPropagation()
-                    setIsEditing(!isEditing)
-                }} />
-            */}
-          </HStack>
-          {children}
-        </VStack>
-      </Box>
-    </Box>
-  );
-};
+    <VStack
+      ref={ref}
+      flex="1 1 100%"
+      minHeight="calc(3em + 3.375em)" // height of a card plus height of the col header
+      position="relative"
+      align="stretch"
+      listStyleType="none"
+      spacing="2px"
+      bg="background.floor"
+      borderRadius="md"
+      axis="y"
+      overflowY="auto"
+      maxHeight="100%"
+      width="30ch"
+      _after={{
+        content: "''",
+        position: "absolute",
+        pointerEvents: "none",
+        inset: 0,
+        borderRadius: "inherit",
+        border: "1px solid",
+        borderColor: "separator.divider",
 
-export const KanbanSwimlane = (props) => {
-  const { name, children } = props;
-  return (
-    <VStack align="stretch" borderRadius="md" py={2}>
-      <Heading color="foreground.secondary" size="md">{name}</Heading>
-      <HStack spacing={5} alignItems="flex-start" overflowX="auto" maxWidth="80vw">{children}</HStack>
-
-      {/*<Grid gap={2} p={0} templateRows="1" templateColumns="repeat(auto-fill, 15rem)" borderRadius="sm">
+        ...(isOver && {
+          border: "none",
+          bg: "link",
+          opacity: 0.1,
+        })
+      }}
+    >
+      <AnimatePresence initial={false}>
         {children}
-      </Grid>*/}
+      </AnimatePresence>
     </VStack>
   );
-}
+});
 
-export const KanbanBoard = (props) => {
-  const { name, children } = props;
+
+const scrollShadow = (top, right, bottom, left, color, depth, blur, inset) => {
+  const shadowLeft = `inset ${Math.min(
+    left,
+    depth
+  )}px 0 ${blur}px -${blur + inset}px ${color}`;
+
+  const shadowRight = `inset ${Math.max(
+    1 - right,
+    -1 * depth
+  )}px 0 ${blur}px -${blur + inset}px ${color}`;
+
+  const shadowTop = `inset 0 ${Math.min(
+    top,
+    depth
+  )}px ${blur}px -${blur + inset}px ${color}`;
+
+  const shadowBottom = `inset 0 ${Math.max(
+    1 - bottom,
+    -1 * depth
+  )}px ${blur}px -${blur + inset}px ${color}`;
+
+  return [shadowLeft, shadowRight, shadowTop, shadowBottom].join(", ");
+};
+
+export const KanbanSwimlane = forwardRef((props, ref) => {
+  const { name, children, ...laneProps } = props;
+  const scrollBoxRef = React.useRef();
+  const { overflowBox, onScroll } = useOverflowBox(scrollBoxRef);
+
+  const shadowDepth = 12;
+  const shadowBlur = shadowDepth;
+  const shadowInset = shadowDepth / 2;
+  const shadowColor = "#000";
+
+  const shadow = React.useMemo(() => scrollShadow(
+    overflowBox.top,
+    overflowBox.right,
+    overflowBox.bottom,
+    overflowBox.left,
+    shadowColor,
+    shadowDepth,
+    shadowBlur,
+    shadowInset
+  ), [overflowBox]);
+
+  const innerVPadding = 3;
+  const innerHPadding = 3;
+
   return (
-    <VStack align="stretch" spacing={3} py={2}>
-      <Heading size="md">{name}</Heading>
+    <VStack
+      ref={ref}
+      align="stretch"
+      borderRadius="lg"
+      spacing={3}
+      maxHeight="700px"
+      flex="1 1 100%"
+      position="relative"
+      _after={{
+        content: "''",
+        position: "absolute",
+        pointerEvents: "none",
+        inset: 0,
+        borderRadius: "inherit",
+        boxShadow: shadow
+      }}
+      sx={{
+        "-webkit-overflow-scrolling": "touch",
+      }}
+      {...laneProps}
+    >
+      <Heading
+        color="foreground.secondary"
+        size="sm"
+        pt={innerVPadding}
+        px={innerHPadding}
+      >
+        {name}
+      </Heading>
+      <HStack
+        flex="1 1 100%"
+        spacing={2}
+        alignItems="stretch"
+        justify="stretch"
+        px={innerHPadding}
+        pb={innerVPadding}
+        overflowY="hidden"
+        overflowX="auto"
+        ref={scrollBoxRef}
+        onScroll={onScroll}
+      >
+        {children}
+      </HStack>
+    </VStack>
+  );
+});
+
+export const KanbanBoard = forwardRef((props, ref) => {
+  const { children } = props;
+  return (
+    <VStack
+      ref={ref}
+      align="stretch"
+      spacing={2}
+      py={2}
+    >
       {children}
     </VStack>
   );
-}
-
-export const ExampleKanban = () => {
-  const columns = ["Backlog", "In Progress", "Done"];
-  const swimlanes = ["High", "Low"];
-  const cards = ["Card 1", "Card 2", "Card 3"];
-
-  return <KanbanBoard name="Task Board">
-    {swimlanes.map((swimlane) =>
-      <KanbanSwimlane name={swimlane}>
-        {columns.map((column) =>
-          <KanbanColumn name={column}>
-            {}
-          </KanbanColumn>
-        )}
-      </KanbanSwimlane>
-    )}
-  </KanbanBoard>
-}
-
-export const AddCardButton = (props) => {
-  const { children, onAddNewCardClick, context } = props
-  return <Button size={"sm"} variant={"ghost"} fontWeight={"light"} onClick={() =>
-    onAddNewCardClick(context)
-    }>
-    + New
-  </Button>
-};
-
-export const AddColumnButton = (props) => {
-  const { children, onAddNewColumn } = props
-  return <Button size={"md"} variant={"ghost"} fontWeight={"light"} minWidth={"110"} onClick={onAddNewColumn}>
-    + New Column
-  </Button>
-};
-
-export const AddSwimlaneButton = (props) => {
-  const { children, } = props
-  return <Button size={"sm"} variant={"ghost"} fontWeight={"light"} onClick={() => console.log("TODO: new swimlane")}>
-    + New Swimlane
-  </Button>
-};
-
-export const renderCard = (columns, column, swimlaneColumn, onUpdateStatusClick, hideProperties, onClickCard, onUpdateTaskTitle) => {
-    const key = "((" + column.uid + "))"
-    const data = swimlaneColumn[key]
-    return data && data.map((cardData) =>
-      <KanbanCard
-          columns={columns}
-          cardData={cardData}
-          onUpdateStatusClick={onUpdateStatusClick}
-          hideProperties={hideProperties}
-          onClickCard={onClickCard}
-          onUpdateTaskTitle={onUpdateTaskTitle}
-      />
-      )
-}
-
-
-export const QueryKanban = (props) => {
-  const { boardData, columns, onUpdateStatusClick, onAddNewCardClick, name, hasSubGroup, hideProperties,
-      onClickCard, groupBy, subgroupBy, onUpdateTaskTitle, onAddNewColumn, onUpdateKanbanColumn,
-      refToString,
-  } = props;
-
-  return (columns && columns.length > 0 &&  <KanbanBoard name={name}>
-    {Object.entries(boardData).map(([swimlane, swimlaneColumn]) =>
-      <KanbanSwimlane name={swimlane}>
-      {columns.map(column =>
-        <KanbanColumn name={column.string} onUpdateKanbanColumn={onUpdateKanbanColumn} groupBy={groupBy} >
-        {renderCard(columns, column, swimlaneColumn, onUpdateStatusClick, hideProperties, onClickCard, onUpdateTaskTitle)}
-        <AddCardButton context={{[groupBy]: column, [subgroupBy]: swimlane}} onAddNewCardClick={onAddNewCardClick} />
-        </KanbanColumn>
-        )}
-      <AddColumnButton onAddNewColumn={onAddNewColumn} />
-      </KanbanSwimlane>
-      )}
-  {/* <AddSwimlaneButton/> */}
-  </KanbanBoard>
-  )
-}
-
-
+})

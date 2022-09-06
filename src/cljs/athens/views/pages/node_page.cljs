@@ -512,7 +512,7 @@
             [placeholder-block-el uid])
 
           ;; Properties
-          [:div
+          [:<>
            (when (and @properties-enabled?
                       (seq properties))
              (for [prop (common-db/sort-block-properties properties)]
@@ -520,7 +520,7 @@
                [:f> blocks/block-el prop]))]
 
           ;; Children
-          [:div
+          [:<>
            (for [{:block/keys [uid] :as child} children]
              ^{:key uid}
              [perf-mon/hoc-perfmon {:span-name "block-el"}

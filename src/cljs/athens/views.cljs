@@ -2,7 +2,6 @@
   (:require
     ["/components/App/ContextMenuContext" :refer [ContextMenuProvider]]
     ["/components/Layout/MainContent" :refer [MainContent]]
-    ["/components/Layout/RightSidebarResizeControl" :refer [RightSidebarResizeControl]]
     ["/components/Layout/useLayoutState" :refer [LayoutProvider]]
     ["/theme/theme" :refer [theme]]
     ["@chakra-ui/react" :refer [ChakraProvider Flex VStack HStack Spinner Center]]
@@ -13,7 +12,7 @@
     [athens.views.app-toolbar :as app-toolbar]
     [athens.views.athena :refer [athena-component]]
     [athens.views.help :refer [help-popup]]
-    [athens.views.left-sidebar :as left-sidebar]
+    [athens.views.left-sidebar.core :as left-sidebar]
     [athens.views.pages.core :as pages]
     [athens.views.pages.settings :as settings]
     [athens.views.right-sidebar.core :as right-sidebar]
@@ -43,7 +42,7 @@
        [:> ChakraProvider {:theme theme,
                            :bg "background.basement"}
         [:> ContextMenuProvider
-         [:> LayoutProvider
+         [:> LayoutProvider {:rightSidebarWidth @right-sidebar-width}
           [help-popup]
           [alert]
           [athena-component]
@@ -87,7 +86,4 @@
                      [:> MainContent {:rightSidebarWidth @right-sidebar-width
                                       :isRightSidebarOpen @right-sidebar-open?}
                       [pages/view]]
-                     [:> RightSidebarResizeControl {:rightSidebarWidth @right-sidebar-width
-                                                    :isRightSidebarOpen @right-sidebar-open?
-                                                    :onResizeSidebar #(rf/dispatch [:right-sidebar/set-width %])}]
                      [right-sidebar/right-sidebar]]]])]]]])))

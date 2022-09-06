@@ -114,14 +114,6 @@
      :dispatch [:posthog/report-feature :help]}))
 
 
-(reg-event-fx
-  :left-sidebar/toggle
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/toggle")]
-  (fn [{:keys [db]} _]
-    {:db (update db :left-sidebar/open not)
-     :dispatch [:posthog/report-feature :left-sidebar]}))
-
-
 (reg-event-db
   :mouse-down/set
   (fn [db _]
@@ -550,39 +542,6 @@
 
 
 (reg-event-fx
-  :left-sidebar/add-shortcut
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/add-shortcut")]
-  (fn [_ [_ name]]
-    (log/debug ":page/add-shortcut:" name)
-    (let [add-shortcut-op (atomic-graph-ops/make-shortcut-new-op name)
-          event           (common-events/build-atomic-event add-shortcut-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :left-sidebar/remove-shortcut
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/remove-shortcut")]
-  (fn [_ [_ name]]
-    (log/debug ":page/remove-shortcut:" name)
-    (let [remove-shortcut-op (atomic-graph-ops/make-shortcut-remove-op name)
-          event              (common-events/build-atomic-event remove-shortcut-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :left-sidebar/drop
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/drop")]
-  (fn [_ [_ source-order target-order relation]]
-    (let [[source-name target-name] (common-db/find-source-target-title @db/dsdb source-order target-order)
-          drop-op                   (atomic-graph-ops/make-shortcut-move-op source-name
-                                                                            {:page/title target-name
-                                                                             :relation relation})
-          event (common-events/build-atomic-event drop-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]
-            [:dispatch [:posthog/report-feature :left-sidebar]]]})))
-
-
-(reg-event-fx
   :save
   [(interceptors/sentry-span-no-new-tx "save")]
   (fn [_ _]
@@ -691,6 +650,7 @@
   [(interceptors/sentry-span-no-new-tx "down")]
   (fn [_ [_ uid target-pos]]
     (let [next-block-uid (db/next-block-uid uid)]
+      #_(log/debug ::down (pr-str {:uid uid :target-pos target-pos :next-block-uid next-block-uid}))
       {:dispatch [:editing/uid (or next-block-uid uid) target-pos]})))
 
 

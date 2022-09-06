@@ -34,9 +34,10 @@
 
 (defn right-sidebar-el
   "Resizable: use local atom for width, but dispatch value to re-frame on mouse up. Instantiate local value with re-frame width too."
-  [open? items rf-width]
+  [open? items on-resize rf-width]
   [:> RightSidebar
    {:isOpen open?
+    :onResize on-resize
     :rightSidebarWidth rf-width}
    (if (empty? items)
      [empty-message]
@@ -49,5 +50,6 @@
   []
   (let [open? (shared/get-open?)
         items (shared/get-items)
+        on-resize #(rf/dispatch [:right-sidebar/set-width %])
         width @(rf/subscribe [:right-sidebar/width])]
-    [right-sidebar-el open? items width]))
+    [right-sidebar-el open? items on-resize width]))

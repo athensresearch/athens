@@ -163,7 +163,7 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
           const target = e.target as HTMLElement;
           // Don't open the context menu on these e.target as HTMLElement;
           if (!CONTAINER_CONTEXT_MENU_FILTERED_TAGS.includes(target.tagName)) {
-            addToContextMenu({ event: e, ref: internalRef, component: MenuItems, isExclusive: true });
+            addToContextMenu({ event: e, ref: internalRef, component: MenuItems, key: "block" });
           } else {
             e.stopPropagation();
           }

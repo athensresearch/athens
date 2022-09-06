@@ -90,7 +90,7 @@ const semanticTokens = {
     },
     "background.basement": {
       default: '#fff',
-      _dark: '#111'
+      _dark: '#141414'
     },
     "background.upper": {
       default: '#fbfbfb',
@@ -535,7 +535,7 @@ const components = {
     baseStyle: {
       content: {
         bg: "background.upper",
-        border: "unset",
+        // border: "unset",
         shadow: "popover",
         _focus: {
           outline: 'none',
