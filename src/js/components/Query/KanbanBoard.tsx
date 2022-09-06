@@ -5,6 +5,30 @@ import { useOverflowBox } from '@/hooks/useOverflowShadow';
 import { ContextMenuContext } from '@/App/ContextMenuContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
+const KanbanBoardContext = React.createContext(null);
+
+const useKanbanBoard = (props) => {
+  const { shouldSyncScroll } = props;
+  const [sharedScrollPos, setSharedScrollPos] = React.useState(0);
+  const swimlaneRefs = React.useRef([]);
+
+  const addLaneRef = React.useCallback((el) => {
+    if (el && !swimlaneRefs?.current?.includes(el)) {
+      swimlaneRefs.current.push(el);
+    }
+  }, []);
+
+  const onScrollSwimlane = React.useCallback((e) => {
+    setSharedScrollPos(e.target.scrollLeft);
+  }, []);
+
+  return {
+    addLaneRef,
+    sharedScrollPos,
+    shouldSyncScroll,
+    onScrollSwimlane
+  }
+}
 
 export const KanbanCard = React.forwardRef(({ children, isOver }, ref) => {
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
@@ -114,7 +138,6 @@ export const KanbanColumn = (props) => {
   );
 };
 
-
 const scrollShadow = (top, right, bottom, left, color, depth, blur, inset) => {
   const shadowLeft = `inset ${Math.min(
     left,
@@ -144,6 +167,20 @@ export const KanbanSwimlane = (props) => {
   const ref = React.useRef();
   const scrollBoxRef = React.useRef();
   const { overflowBox, onScroll } = useOverflowBox(scrollBoxRef);
+  const { addLaneRef, shouldSyncScroll, sharedScrollPos, onScrollSwimlane } = React.useContext(KanbanBoardContext);
+
+  React.useEffect(() => {
+    addLaneRef(scrollBoxRef);
+  }, [addLaneRef, scrollBoxRef]);
+
+  React.useLayoutEffect(() => {
+    if (shouldSyncScroll && sharedScrollPos) {
+      if (scrollBoxRef?.current) {
+        const el = scrollBoxRef.current as HTMLElement;
+        el.scrollLeft = sharedScrollPos;
+      }
+    }
+  }, [scrollBoxRef, sharedScrollPos, shouldSyncScroll]);
 
   const shadowDepth = 12;
   const shadowBlur = shadowDepth;
@@ -204,7 +241,10 @@ export const KanbanSwimlane = (props) => {
         overflowY="hidden"
         overflowX="auto"
         ref={scrollBoxRef}
-        onScroll={onScroll}
+        onScroll={(e) => {
+          onScroll()
+          onScrollSwimlane(e)
+        }}
       >
         {children}
       </HStack>
@@ -213,14 +253,18 @@ export const KanbanSwimlane = (props) => {
 }
 
 export const KanbanBoard = (props) => {
-  const { children } = props;
+  const { children, shouldSyncScroll = true } = props;
+  const kanbanState = useKanbanBoard({ shouldSyncScroll });
+
   return (
-    <VStack
-      align="stretch"
-      spacing={3}
-      py={2}
-    >
-      {children}
-    </VStack>
+    <KanbanBoardContext.Provider value={kanbanState}>
+      <VStack
+        align="stretch"
+        spacing={3}
+        py={2}
+      >
+        {children}
+      </VStack>
+    </KanbanBoardContext.Provider>
   );
 }
