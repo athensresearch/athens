@@ -2,20 +2,9 @@
   "Views for Athens Tasks"
   (:require
     ["/components/Query/Query" :refer [QueryRadioMenu]]
-    ["/components/Query/Table" :refer [QueryTable]]
     ["@chakra-ui/react" :refer [Box,
-                                HStack
-                                Heading
                                 ButtonGroup
-                                Flex
-                                VStack
-                                HStack
-                                Text]]
-    ["@dnd-kit/core" :refer [closestCorners,
-                             DragOverlay,]]
-    ["@dnd-kit/sortable" :refer [SortableContext,
-                                 verticalListSortingStrategy,]]
-    [athens.common-db :as common-db]
+                                VStack]]
     [athens.common-events :as common-events]
     [athens.common-events.bfs :as bfs]
     [athens.common-events.graph.composite :as composite]
@@ -23,19 +12,14 @@
     [athens.common.utils :as utils]
     [athens.dates :as dates]
     [athens.db :as db]
-    [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
-    [athens.router :as router]
-    [athens.self-hosted.presence.views          :as presence]
     [athens.types.core :as types]
     [athens.types.dispatcher :as dispatcher]
     [athens.types.query.kanban :refer [DragAndDropKanbanBoard]]
     [athens.types.query.shared :as shared]
     [athens.types.query.table :refer [QueryTableV2]]
-    [athens.views.blocks.editor                 :as editor]
     [clojure.string :refer []]
-    [re-frame.core :as rf]
-    [reagent.core :as r]))
+    [re-frame.core :as rf]))
 
 
 ;; CONSTANTS
@@ -367,31 +351,10 @@
                   [(graph-ops/build-block-save-op db prop-uid new-value)])]))
 
 
-(defn- find-container-id
-  "Accepts event.active or event.over"
-  [e active-or-over]
-  (try
-    (case active-or-over
-      :active (.. e -active -data -current -sortable -containerId)
-      :over (.. e -over -data -current -sortable -containerId))
-    (catch js/Object _
-      (case active-or-over
-        :active (.. e -active -id)
-        :over (.. e -over -id)))))
-
-
-(defn- get-container-context
-  [container-id]
-  (let [swimlane-id (-> (re-find #"swimlane-(@?\w+)" container-id) second)
-        column-id   (-> (re-find #"column-(\w+)" container-id) second)]
-    {:swimlane-id swimlane-id
-     :column-id column-id}))
-
-
 (defn query-el
-  [{:keys [query-data parsed-properties uid schema]}]
+  [{:keys [query-data parsed-properties uid _schema]}]
   (let [query-uid uid
-        [_select layout s-by s-direction f-author f-special _p-order p-hide]
+        [_select layout s-by s-direction f-author f-special _p-order _p-hide]
         (get* parsed-properties ["select" "layout" "sort/by" "sort/direction" "filter/author" "filter/special" "properties/order" "properties/hide"])
         s-by              (shared/parse-for-title s-by)
         filter-author-fn  (fn [x]

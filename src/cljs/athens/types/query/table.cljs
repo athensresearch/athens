@@ -48,7 +48,7 @@
         curr-indent-width (str (* 1 indent) "rem")
 
         ;; for when we can collapse items
-        is-collapsed?  false
+        _is-collapsed?  false
 
         assignee-value (shared/parse-for-title assignee)
         status-uid     (shared/parse-for-uid status)
@@ -69,7 +69,7 @@
                  :pt 8
                  :textAlign "start"}
         [:> Text (merge header-row-cell-style
-                  {:color "foreground.secondary"}) title]
+                        {:color "foreground.secondary"}) title]
         [:> Text {:alignSelf "stretch" :size "md"} status-value]
         [:> Text {:alignSelf "stretch" :size "md"} priority-value]
         [:> Text {:alignSelf "stretch" :size "md"} assignee-value]
@@ -82,11 +82,11 @@
                  :borderTop "1px solid"
                  :borderColor "separator.border"
                  :_hover {:bg "interaction.surface.hover"}}
-       [:> Text (merge header-row-cell-style
-                       {:color "foreground.secondary"
-                        :pl curr-indent-width
-                        :fontSize "xs"})
-        (str " • " (get entity ":block/string"))]]
+        [:> Text (merge header-row-cell-style
+                        {:color "foreground.secondary"
+                         :pl curr-indent-width
+                         :fontSize "xs"})
+         (str " • " (get entity ":block/string"))]]
 
        "[[athens/task]]"
        [:> Grid {:templateColumns grid-template-cols
@@ -97,12 +97,12 @@
                  :_hover {:bg "interaction.surface.hover"}}
 
         [:> Flex (merge
-                  header-row-cell-style
-                  {:alignSelf "inline-flex"
-                   :align "center"
-                   :gap 1
-                   :pr 1
-                   :pl curr-indent-width})
+                   header-row-cell-style
+                   {:alignSelf "inline-flex"
+                    :align "center"
+                    :gap 1
+                    :pr 1
+                    :pl curr-indent-width})
 
          ;; Comment out until we figure out how to persist open/close state on tables
          #_[:> IconButton {:size "xs"
@@ -166,16 +166,16 @@
 
 
 (defn QueryTableV2
-  [{:keys [data columns] :as props}]
+  [{:keys [data columns] :as _props}]
   (let [grid-template-cols "minmax(20em, 1fr) 9em 9em 9em 9em"]
     [:> Flex {:flexDirection "column" :align "stretch" :py 4 :width "100%" :overflowX "auto"}
      [:> Grid {:templateColumns grid-template-cols :textAlign "start"}
       (for [column columns]
         ^{:key column}
         [:> Heading (merge
-                     {:size "sm" :fontWeight "normal" :color "foreground.secondary"}
-                     (when (= column "Title")
-                       header-row-cell-style))
+                      {:size "sm" :fontWeight "normal" :color "foreground.secondary"}
+                      (when (= column "Title")
+                        header-row-cell-style))
          column])]
      [:<>
       (for [[uid children] data]

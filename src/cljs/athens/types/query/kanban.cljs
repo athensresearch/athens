@@ -35,14 +35,9 @@
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
-    [athens.router :as router]
     [athens.self-hosted.presence.views          :as presence]
-    [athens.types.core :as types]
-    [athens.types.dispatcher :as dispatcher]
     [athens.types.query.shared :as shared]
-    [athens.views.blocks.editor                 :as editor]
     [clojure.string :refer []]
-    [datascript.core :as d]
     [re-frame.core :as rf]
     [reagent.core :as r]))
 

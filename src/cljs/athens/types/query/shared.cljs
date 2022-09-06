@@ -4,7 +4,6 @@
     [athens.db :as db]
     [athens.views.blocks.editor                 :as editor]
     [re-frame.core :as rf]
-    [reagent.core :as r]
     [reagent.core :as r]))
 
 
@@ -52,7 +51,7 @@
 (defn block-to-flat-map
   [block]
   ;; TODO: we could technically give pages all the properties of tasks and put them on a kanban board...
-  (let [{:block/keys [uid string properties create edits children] :keys [node/_title]} block
+  (let [{:block/keys [uid string properties create edits _children] :keys [node/_title]} block
         create-auth-and-time    (get-create-auth-and-time create)
         last-edit-auth-and-time (get-last-edit-auth-and-time edits)
         property-keys           (keys properties)
