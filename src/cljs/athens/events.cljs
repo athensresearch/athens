@@ -114,14 +114,6 @@
      :dispatch [:posthog/report-feature :help]}))
 
 
-(reg-event-fx
-  :left-sidebar/toggle
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/toggle")]
-  (fn [{:keys [db]} _]
-    {:db (update db :left-sidebar/open not)
-     :dispatch [:posthog/report-feature :left-sidebar]}))
-
-
 (reg-event-db
   :mouse-down/set
   (fn [db _]
@@ -547,39 +539,6 @@
     (log/debug ":page/delete:" title)
     (let [event (common-events/build-atomic-event (atomic-graph-ops/make-page-remove-op title))]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :left-sidebar/add-shortcut
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/add-shortcut")]
-  (fn [_ [_ name]]
-    (log/debug ":page/add-shortcut:" name)
-    (let [add-shortcut-op (atomic-graph-ops/make-shortcut-new-op name)
-          event           (common-events/build-atomic-event add-shortcut-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :left-sidebar/remove-shortcut
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/remove-shortcut")]
-  (fn [_ [_ name]]
-    (log/debug ":page/remove-shortcut:" name)
-    (let [remove-shortcut-op (atomic-graph-ops/make-shortcut-remove-op name)
-          event              (common-events/build-atomic-event remove-shortcut-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :left-sidebar/drop
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/drop")]
-  (fn [_ [_ source-order target-order relation]]
-    (let [[source-name target-name] (common-db/find-source-target-title @db/dsdb source-order target-order)
-          drop-op                   (atomic-graph-ops/make-shortcut-move-op source-name
-                                                                            {:page/title target-name
-                                                                             :relation relation})
-          event (common-events/build-atomic-event drop-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]
-            [:dispatch [:posthog/report-feature :left-sidebar]]]})))
 
 
 (reg-event-fx
