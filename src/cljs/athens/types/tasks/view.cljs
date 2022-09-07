@@ -627,7 +627,7 @@
            [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Due Date" false false]
            [:> Divider {:gridColumn "1 / -1"}]
            [:> Text {:color "foreground.secondary" :fontSize "sm"} "Created by"]
-           [:> Text {:fontSize "sm"} creator]
+           [:> Flex {:align "center"} [:> Avatar {:size "2xs" :marginInlineEnd 1 :name creator}] [:> Text {:fontSize "sm" :noOfLines 0} creator]]
            [:> Text {:color "foreground.secondary" :fontSize "sm"} "Created"]
            [:> Text {:fontSize "sm"} created-date]]]]))))
 
