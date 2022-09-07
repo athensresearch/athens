@@ -276,14 +276,14 @@
 
 (defn inline-task-title-2
   [_state-hooks _parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
-  (let [_prop-id (str (random-uuid))]
-    (fn [state-hooks parent-block-uid prop-block-uid prop-name _prop-title _required? multiline?]
-      (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
-            prop-str            (or (:block/string prop-block) "")
-            local-value         (r/atom prop-str)
-            _invalid-prop-str?  (and (str/blank? prop-str)
+  (let [_prop-id    (str (random-uuid))
+        local-value (r/atom "")]
+    (fn [state-hooks parent-block-uid prop-block-uid prop-name _prop-title _required? _multiline?]
+      (let [prop-block         (reactive/get-reactive-block-document [:block/uid prop-block-uid])
+            prop-str           (:block/string prop-block "")
+            _invalid-prop-str? (and (str/blank? prop-str)
                                      (not (nil? prop-str)))
-            save-fn             (fn
+            save-fn            (fn
                                   ([]
                                    (log/debug prop-name "save-fn" (pr-str @local-value))
                                    (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
@@ -299,32 +299,25 @@
                                               ":task/due-date"} prop-name)
                                        (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                      (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
-            update-fn           #(do
+            update-fn          #(do
                                    (when-not (= prop-str %)
                                      (log/debug prop-name "update-fn:" (pr-str %))
                                      (reset! local-value %)))
-            idle-fn             (gfns/debounce #(do
+            idle-fn            (gfns/debounce #(do
                                                   (log/debug prop-name "idle-fn" (pr-str @local-value))
                                                   (save-fn))
                                                2000)
-            read-value          local-value
-            show-edit?          (r/atom false)
-            custom-key-handlers {:enter-handler (if multiline?
-                                                  editor/enter-handler-new-line
-                                                  (fn [_uid _d-key-down]
-                                                    ;; TODO dispatch save and jump to next input
-                                                    (println "TODO dispatch save and jump to next input")
-                                                    (update-fn @local-value)))}
-            state-hooks         (merge {:save-fn                 save-fn
-                                        :idle-fn                 idle-fn
-                                        :update-fn               update-fn
-                                        :read-value              read-value
-                                        :show-edit?              show-edit?
-                                        :default-verbatim-paste? true
-                                        :keyboard-navigation?    true
-                                        :navigation-uid          parent-block-uid}
-                                       custom-key-handlers
-                                       state-hooks)]
+            show-edit?         (r/atom false)
+            state-hooks        (merge {:save-fn                 save-fn
+                                       :idle-fn                 idle-fn
+                                       :update-fn               update-fn
+                                       :read-value              local-value
+                                       :show-edit?              show-edit?
+                                       :default-verbatim-paste? true
+                                       :keyboard-navigation?    true
+                                       :navigation-uid          parent-block-uid}
+                                      state-hooks)]
+        (reset! local-value prop-str)
         [editor/block-editor {:block/uid (or prop-block-uid
                                              ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
                                              (str "tmp-" (subs (or prop-name "")
