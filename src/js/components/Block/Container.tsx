@@ -90,7 +90,7 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
         },
         ".block-body": {
           display: "grid",
-          gridTemplateColumns: "1em auto 1em 1fr auto",
+          gridTemplateColumns: "1em auto 1em 1fr calc(var(--page-right-gutter-width) / 2) calc(var(--page-right-gutter-width) / 2)",
           gridTemplateRows: "0 1fr auto auto 0",
           gridTemplateAreas:
             `'above above above above above above'
@@ -101,6 +101,10 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
           borderRadius: "0.5rem",
           minHeight: '2em',
           position: "relative",
+        },
+        ".block-body > .inline-presence": {
+          gridArea: "presence",
+          justifySelf: "flex-end"
         },
         "&:hover > .block-toggle, &:focus-within > .block-toggle": { opacity: "1" },
         "button.block-edit-toggle": {
