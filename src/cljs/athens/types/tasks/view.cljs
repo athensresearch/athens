@@ -538,8 +538,8 @@
             show-assignee?     true
             show-description?  true
             show-priority?     true
-            show-creator?      true
-            show-created-date? true
+            show-creator?      false
+            show-created-date? false
             _show-status?      true
             show-due-date?     true]
         [:> HStack {:spacing                  1
@@ -590,7 +590,6 @@
                priority])
             (when (or due-date assignee)
               [:> Flex {:gap 1 :align "center"}
-               [:> Text {:fontSize "xs"} "Due"]
                (when (and show-assignee? assignee)
                  [:> AvatarGroup {:size "xs"}
                   [:> Avatar {:name assignee}]])
