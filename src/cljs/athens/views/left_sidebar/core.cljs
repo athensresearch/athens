@@ -77,6 +77,11 @@
       ;; LOGO + BOTTOM BUTTONS
       [:> Flex {:as "footer"
                 :align "stretch"
+                :position "sticky"
+                :bottom 0
+                :bg "background.vibrancy"
+                :backdropFilter "blur(20px)"
+                :supports
                 :flexDirection "column"
                 :flex "0 0 auto"
                 :fontSize "xs"
