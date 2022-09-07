@@ -135,7 +135,7 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
                             bg={member.color}
                           />}
                         >
-                          <Text isTruncated maxWidth="10em">{member.username}</Text>
+                          <Text maxWidth="10em">{member.username}</Text>
                         </MenuItem>
                       )
                     })}
@@ -160,8 +160,8 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
                         />}
                       >
                         <VStack align="stretch" spacing={0}>
-                          <Text isTruncated maxWidth="10em">{member.username}</Text>
-                          <Text isTruncated maxWidth="10em" color="foreground.secondary">{member.pageTitle}</Text>
+                          <Text maxWidth="10em">{member.username}</Text>
+                          <Text maxWidth="10em" color="foreground.secondary">{member.pageTitle}</Text>
                         </VStack>
                       </MenuItem>
                     ))}
