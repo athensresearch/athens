@@ -106,7 +106,13 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
           gridArea: "presence",
           justifySelf: "flex-end"
         },
-        "&:hover > .block-toggle, &:focus-within > .block-toggle": { opacity: "1" },
+        ".block-body > .block-toggle": {
+          opacity: 0
+        },
+        ".block-body > .block-toggle:focus": {
+          opacity: 1
+        },
+        "&.is-hovered-not-child > .block-body > .block-toggle, &:focus-within > .block-body > .block-toggle": { opacity: "1" },
         "button.block-edit-toggle": {
           position: "absolute",
           appearance: "none",
