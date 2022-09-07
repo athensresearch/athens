@@ -70,7 +70,7 @@ export interface AnchorProps extends ButtonProps {
   menu?: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
-const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotification: boolean) => {
+const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
   return ({
     bg: "transparent",
     "aria-label": "Block anchor",
@@ -81,7 +81,6 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotificatio
     appearance: "none",
     border: "0",
     color: "foreground.secondary",
-    ...unreadNotification && ({ color: "green" }),
     display: "flex",
     placeItems: "center",
     placeContent: "center",
@@ -132,7 +131,6 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
     shouldShowDebugDetails,
     uidSanitizedBlock,
     menu,
-    unreadNotification,
     ...buttonProps
   } = props;
   const innerRef = React.useRef(null);
@@ -161,7 +159,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
     <IconButton
       ref={refs}
       aria-label="Block anchor"
-      {...anchorButtonStyleProps(isClosedWithChildren, unreadNotification)}
+      {...anchorButtonStyleProps(isClosedWithChildren)}
       draggable={buttonProps?.onDragStart ? true : undefined}
       onContextMenu={
         (e) => {
