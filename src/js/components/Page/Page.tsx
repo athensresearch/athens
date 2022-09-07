@@ -19,6 +19,8 @@ const PAGE_PROPS = {
   transitionDuration: "fast",
   sx: {
     "--page-padding": "3rem",
+    "--page-left-gutter-width": "1em",
+    "--page-right-gutter-width": "3.5em",
   }
 }
 
@@ -147,9 +149,11 @@ export const PageHeader = (props: PageHeaderProps): React.ReactChild => {
 export const PageBody = ({ children }) => <Box
   as="main"
   className="page-body"
-  // outset slightly for block toggles
-  pl="calc(var(--page-padding) - 1em)"
-  pr="var(--page-padding)"
+  // outset slightly for block toggles and refs and such
+  px="calc(var(--page-padding) - 1em)"
+
+  // pr="calc((max(0, var(--page-padding) - 3em)))"
+  pr="calc(var(--page-padding) - var(--page-right-gutter-width) + 1.5em)"
   gridArea="content"
 >
   {children}</Box>

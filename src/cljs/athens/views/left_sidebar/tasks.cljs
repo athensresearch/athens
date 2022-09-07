@@ -27,7 +27,6 @@
               :gap     1}
      [:> Taskbox {:position "relative"
                   :top      "3px"
-                  :isEditable true
                   :onChange #(tasks/on-update-status task-uid %)
                   :status   status-string}]
      [:> Link {:fontSize  "sm"

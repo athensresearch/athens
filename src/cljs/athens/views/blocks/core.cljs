@@ -204,9 +204,8 @@
   [count click-fn active?]
   [:> Button {:gridArea "refs"
               :size "xs"
-              :ml "1em"
-              :mt 1
-              :mr 1
+              :variant "ghost"
+              :placeSelf "center"
               :zIndex 10
               :visibility (if (pos? count) "visible" "hidden")
               :isActive active?
@@ -562,9 +561,6 @@
                 @show-textarea? [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid false]
                 :else           [inline-comments/inline-comments (comments/get-comments-in-thread @db/dsdb (comments/get-comment-thread-uid @db/dsdb uid)) uid true]))
 
-            (when in-view?
-              [presence/inline-presence-el uid])
-
             (when (and in-view?
                        (> (count _refs) 0)
                        (not= :block-embed? opts))
@@ -574,7 +570,11 @@
                  (if (.. e -shiftKey)
                    (rf/dispatch [:right-sidebar/open-item [:block/uid uid]])
                    (rf/dispatch [::inline-refs.events/toggle-open! uid])))
-               @inline-refs-open?])]
+               @inline-refs-open?])
+
+            (when in-view?
+              [presence/inline-presence-el uid])]
+
 
            ;; Inline refs
            (when (and in-view?

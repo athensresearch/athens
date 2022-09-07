@@ -53,7 +53,7 @@ export const LocationIndicator = (props: LocationIndicatorProps) => {
           px: 2
         })}
         rightIcon={actions ? <ChevronDownIcon color="foreground.secondary" /> : undefined}>
-        {path && <Heading isTruncated noOfLines={0} maxWidth="100%" display="block" textTransform="uppercase" textAlign="start" color="foreground.secondary" fontSize="50%">{path[0].label}</Heading>}
+        {path && <Heading noOfLines={0} maxWidth="100%" display="block" textTransform="uppercase" textAlign="start" color="foreground.secondary" fontSize="50%">{path[0].label}</Heading>}
         {title}
       </MenuButton>
       <Portal>
