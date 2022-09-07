@@ -38,93 +38,15 @@
     [tick.core                                  :as t]
     [athens.types.tasks.shared :as shared]
     [athens.types.tasks.events :as events]
-    [athens.types.tasks.inline-task-title :as inline-task-title]))
+    [athens.types.tasks.inline-task-title :as inline-task-title]
+    [athens.types.tasks.generic-textarea :as generic-textarea]))
 
 
 
 
 ;; View
 
-(defn generic-textarea-view-for-task-props
-  [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
-  (let [prop-id (str (random-uuid))]
-    (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
-      (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
-            prop-str            (or (:block/string prop-block) "")
-            local-value         (r/atom prop-str)
-            invalid-prop-str?   (and required?
-                                     (str/blank? prop-str)
-                                     (not (nil? prop-str)))
-            save-fn             (fn
-                                  ([]
-                                   (log/debug prop-name "save-fn" (pr-str @local-value))
-                                   (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
-                                     (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
-                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
-                                  ([e]
-                                   (let [new-value (-> e .-target .-value)]
-                                     (log/debug prop-name "save-fn" (pr-str new-value))
-                                     (reset! local-value new-value)
-                                     (when (#{":task/title"
-                                              ":task/assignee"
-                                              ":task/description"
-                                              ":task/due-date"} prop-name)
-                                       (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
-                                                     (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
-            update-fn           #(do
-                                   (when-not (= prop-str %)
-                                     (log/debug prop-name "update-fn:" (pr-str %))
-                                     (reset! local-value %)))
-            idle-fn             (gfns/debounce #(do
-                                                  (log/debug prop-name "idle-fn" (pr-str @local-value))
-                                                  (save-fn))
-                                               2000)
-            read-value          local-value
-            show-edit?          (r/atom true)
-            custom-key-handlers {:enter-handler (if multiline?
-                                                  editor/enter-handler-new-line
-                                                  (fn [_uid _d-key-down]
-                                                    ;; TODO dispatch save and jump to next input
-                                                    (println "TODO dispatch save and jump to next input")
-                                                    (when (= ":task/assignee"
-                                                             prop-name)
-                                                      (rf/dispatch [:notification-for-assigned-task parent-block-uid @local-value]))
-                                                    (update-fn @local-value)))
-                                 :tab-handler   (fn [_uid _embed-id _d-key-down]
-                                                  ;; TODO implement focus on next input
-                                                  (update-fn @local-value))}
-            state-hooks         (merge {:save-fn                 save-fn
-                                        :idle-fn                 idle-fn
-                                        :update-fn               update-fn
-                                        :read-value              read-value
-                                        :show-edit?              show-edit?
-                                        :default-verbatim-paste? true
-                                        :keyboard-navigation?    false}
-                                       custom-key-handlers)]
-        [:> FormControl {:is-required required?
-                         :display "contents"
-                         :is-invalid  invalid-prop-str?}
-         [:> FormLabel {:html-for prop-id}
-          prop-title]
-         [:> Box [:> BlockFormInput
-                  {:isMultiline multiline?
-                   :size "sm"}
-                  ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
-                  [editor/block-editor {:block/uid (or prop-block-uid
-                                                       ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
-                                                       (str "tmp-" (subs prop-name
-                                                                         (inc (.indexOf prop-name "/")))
-                                                            "-uid-" (common.utils/gen-block-uid)))}
-                   state-hooks]
-                  [presence/inline-presence-el prop-block-uid]]
 
-          (when invalid-prop-str?
-            [:> FormErrorMessage {:gridColumn 2}
-             (str prop-title " is " (if required?
-                                      "required"
-                                      "empty"))]
-            #_ [:> FormHelperText {:gridColumn 2}
-                (str "Please provide " prop-title)])]]))))
 
 
 
@@ -284,9 +206,9 @@
              title]]
            [:> Divider {:gridColumn "1 / -1"}]
            [task-priority-view block-uid priority-uid]
-           [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Assignee" false false]
+           [generic-textarea/generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Assignee" false false]
            ;; Making assumption that for now we can add due date manually without date-picker.
-           [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Due Date" false false]
+           [generic-textarea/generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Due Date" false false]
            [:> Divider {:gridColumn "1 / -1"}]
            [:> Text {:color "foreground.secondary" :fontSize "sm"} "Created by"]
            [:> Flex {:align "center"} [:> Avatar {:size "2xs" :marginInlineEnd 1 :name creator}] [:> Text {:fontSize "sm" :noOfLines 0} creator]]
