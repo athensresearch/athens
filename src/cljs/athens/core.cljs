@@ -43,7 +43,8 @@
   (rf/clear-subscription-cache!)
   (when-not first-boot?
     (router/init-routes!))
-  (.render react-root (r/as-element [views/main])))
+  ;; See https://github.com/reagent-project/reagent/issues/579 as to why we render a anonymous fn.
+  (.render react-root (r/as-element [(fn [] views/main)])))
 
 
 (defn sentry-on?
