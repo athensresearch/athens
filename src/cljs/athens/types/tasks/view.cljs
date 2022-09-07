@@ -13,7 +13,6 @@
                                                         Flex
                                                         MenuGroup
                                                         AvatarGroup
-                                                        VStack
                                                         Avatar
                                                         Box
                                                         Divider
@@ -486,12 +485,6 @@
                         [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "Done") "))"))]))])))
 
 
-;; NOTE: not used right now
-(defn is-checked-fn
-  [status]
-  (contains? #{"Done" "Cancelled"} status))
-
-
 (defn task-el
   [_this block-data _callbacks _is-ref?]
   (let [block-uid (:block/uid block-data)]
@@ -501,8 +494,8 @@
             title-uid       (-> props (get ":task/title") :block/uid)
             assignee-uid    (-> props (get ":task/assignee") :block/uid)
             priority-uid    (-> props (get ":task/priority") :block/uid)
-            description-uid (-> props (get ":task/description") :block/uid)
-            creator-uid     (-> props (get ":task/creator") :block/uid)
+            _description-uid (-> props (get ":task/description") :block/uid)
+            _creator-uid     (-> props (get ":task/creator") :block/uid)
             due-date-uid    (-> props (get ":task/due-date") :block/uid)
             ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
             ;; status-uid      (-> props (get ":task/status") :block/uid)
