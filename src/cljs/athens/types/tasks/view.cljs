@@ -124,7 +124,8 @@
       (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
             prop-str            (or (:block/string prop-block) "")
             local-value         (r/atom prop-str)
-            invalid-prop-str?   (and (str/blank? prop-str)
+            invalid-prop-str?   (and required?
+                                     (str/blank? prop-str)
                                      (not (nil? prop-str)))
             save-fn             (fn
                                   ([]
@@ -392,10 +393,9 @@
         allowed-priorities (find-allowed-priorities)
         priority-string    (:block/string priority-block "(())")
         priority-uid       (subs priority-string 2 (- (count priority-string) 2))]
-    [:> FormControl {:is-required true
-                     :display "contents"}
+    [:> FormControl {:display "contents"}
      [:> FormLabel {:html-for priority-id}
-      "Task priority"]
+      "Priority"]
      [:> Box [:> Select {:id          priority-id
                          :value       priority-uid
                          :size "sm"
@@ -571,7 +571,6 @@
            true
            false]]
          [:> ModalInput {:placement "left-start"
-                         :closeOnBlur false
                          :isLazy    true}
           [:> ModalInputTrigger
            [:> Button {:size         "sm"
@@ -615,6 +614,7 @@
                                   :maxWidth            "20em"}}
            [:> HStack {:gridColumn "1 / -1" :align "flex-start"}
             [:> Text {:fontSize "sm"
+                      :noOfLines 2
                       :color "foreground.secondary"}
              title]]
            [:> Divider {:gridColumn "1 / -1"}]
