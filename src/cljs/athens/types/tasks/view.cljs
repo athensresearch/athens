@@ -538,7 +538,7 @@
                                 (common-db/strip-markup "[[" "]]"))
 
             show-assignee?     true
-            show-description?  true
+            show-description?  false
             show-priority?     true
             show-creator?      false
             show-created-date? false
@@ -581,10 +581,12 @@
                        :whiteSpace   "unset"
                        :px           2
                        :py           1}
+
             ;; description
             (when (and show-description? description)
               [:> Text {:fontSize "sm" :flexGrow 1 :flexBasis "100%" :m 0 :py 1 :lineHeight 1.4 :color "foreground.secondary"}
                description])
+
             ;; tasking/assignment
             (when (and show-priority? priority)
               [:> Badge {:size "sm" :variant "primary"}
@@ -596,6 +598,7 @@
                   [:> Avatar {:name assignee}]])
                (when (and show-due-date? due-date)
                  [:> Text {:fontSize "xs"} due-date])])
+
             ;; provenance
             [:> Flex {:gap 1 :align "center"}
              (when (and show-creator? creator)
