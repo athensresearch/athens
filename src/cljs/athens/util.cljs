@@ -264,21 +264,21 @@
   []
   (when config/debug?
     (let [el-10x (getElement "--re-frame-10x--")
-          display-10x (and el-10x (.. el-10x -style -display))]
+          display-10x (.. el-10x -style -display)]
       (not (= "none" display-10x)))))
 
 
 (defn open-10x
   []
   (when config/debug?
-    (when-let [el (js/document.querySelector "#--re-frame-10x--")]
+    (let [el (js/document.querySelector "#--re-frame-10x--")]
       (setProperties el (clj->js {"style" "display: block"})))))
 
 
 (defn hide-10x
   []
   (when config/debug?
-    (when-let [el (js/document.querySelector "#--re-frame-10x--")]
+    (let [el (js/document.querySelector "#--re-frame-10x--")]
       (setProperties el (clj->js {"style" "display: none"})))))
 
 
