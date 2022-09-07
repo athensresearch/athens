@@ -3,7 +3,7 @@
   (:require
     ["/components/Block/BlockFormInput"         :refer [BlockFormInput]]
     ["/components/Block/Taskbox"                :refer [Taskbox]]
-    ["/components/Icons/Icons"                  :refer [CheckmarkIcon]]
+    ["/components/Icons/Icons"                  :refer [CheckmarkIcon PencilIcon]]
     ["/components/ModalInput/ModalInput"        :refer [ModalInput]]
     ["/components/ModalInput/ModalInputPopover" :refer [ModalInputPopover]]
     ["/components/ModalInput/ModalInputTrigger" :refer [ModalInputTrigger]]
@@ -13,6 +13,7 @@
                                                         Flex
                                                         MenuGroup
                                                         AvatarGroup
+                                                        VStack
                                                         Avatar
                                                         Box
                                                         Divider
@@ -177,7 +178,8 @@
          [:> FormLabel {:html-for prop-id}
           prop-title]
          [:> Box [:> BlockFormInput
-                  {:isMultiline multiline?}
+                  {:isMultiline multiline?
+                   :size "sm"}
                   ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
                   [editor/block-editor {:block/uid (or prop-block-uid
                                                        ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
@@ -521,7 +523,7 @@
                                                                                :block/string
                                                                                (common-db/strip-markup "((" "))"))])
                                 :block/string)
-            _title          (-> props (get ":task/title") :block/string)
+            title          (-> props (get ":task/title") :block/string)
             assignee        (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
             priority        (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
                                                                                (get ":task/priority")
@@ -569,12 +571,12 @@
            true
            false]]
          [:> ModalInput {:placement "left-start"
+                         :closeOnBlur false
                          :isLazy    true}
           [:> ModalInputTrigger
            [:> Button {:size         "sm"
                        :flex         "1 0 auto"
-                       :variant      "outline"
-                       :borderRadius "full"
+                       :variant      "ghost"
                        :onClick      #(.. % stopPropagation)
                        :lineHeight   "unset"
                        :whiteSpace   "unset"
@@ -601,20 +603,30 @@
                [:> AvatarGroup {:size "xs"}
                 [:> Avatar {:name creator}]])
              (when (and show-created-date? created-date)
-               [:> Text {:fontSize "xs"} created-date])]]]
-          [:> ModalInputPopover {:popoverContentProps {:display             "grid"
-                                                       :onClick             #(.. % stopPropagation)
-                                                       :gridTemplateColumns "max-content 1fr"
-                                                       :gap                 2
-                                                       :p                   4
-                                                       :maxWidth            "20em"}}
-           [generic-textarea-view-for-task-props block-uid description-uid ":task/description" "Description" false true]
+               [:> Text {:fontSize "xs"} created-date])]
+            [:> PencilIcon {:color "foreground.secondary"}]]]
+          [:> ModalInputPopover {:popoverContentProps
+                                 {:display             "grid"
+                                  :onClick             #(.. % stopPropagation)
+                                  :gridTemplateColumns "max-content 1fr"
+                                  :gap                 2
+                                  :py                  2
+                                  :px                  4
+                                  :maxWidth            "20em"}}
+           [:> HStack {:gridColumn "1 / -1" :align "flex-start"}
+            [:> Text {:fontSize "sm"
+                      :color "foreground.secondary"}
+             title]]
            [:> Divider {:gridColumn "1 / -1"}]
            [task-priority-view block-uid priority-uid]
            [generic-textarea-view-for-task-props block-uid assignee-uid ":task/assignee" "Assignee" false false]
            ;; Making assumption that for now we can add due date manually without date-picker.
            [generic-textarea-view-for-task-props block-uid due-date-uid ":task/due-date" "Due Date" false false]
-           [:> Text creator-uid]]]]))))
+           [:> Divider {:gridColumn "1 / -1"}]
+           [:> Text {:color "foreground.secondary" :fontSize "sm"} "Created by"]
+           [:> Text {:fontSize "sm"} creator]
+           [:> Text {:color "foreground.secondary" :fontSize "sm"} "Created"]
+           [:> Text {:fontSize "sm"} created-date]]]]))))
 
 
 (defrecord TaskView
