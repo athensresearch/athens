@@ -1,6 +1,6 @@
 // This file is used for the editor TS support and for
-// editor and storybook path resolution.
-// Babel is what's compiling typescope and also contains
+// editor path resolution.
+// Babel is what's compiling typescript and also contains
 // path resolution settings.
 {
   "compilerOptions": {
