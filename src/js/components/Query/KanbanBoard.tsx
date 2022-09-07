@@ -87,7 +87,6 @@ export const KanbanColumn = forwardRef((props, ref) => {
       bg="background.floor"
       borderRadius="md"
       axis="y"
-      overflowY="auto"
       maxHeight="100%"
       width="30ch"
       _after={{
