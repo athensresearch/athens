@@ -81,7 +81,6 @@
                 :bottom 0
                 :bg "background.vibrancy"
                 :backdropFilter "blur(20px)"
-                :supports
                 :flexDirection "column"
                 :flex "0 0 auto"
                 :fontSize "xs"
@@ -101,8 +100,9 @@
                    :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
                    :target "_blank"}
           (util/athens-version)]]
-        [:> ButtonGroup {:size "sm" :spacing 0 :variant "ghost" :colorScheme "subtle"}
-
+        [:> ButtonGroup {:size "xs"
+                         :variant "ghost"
+                         :colorScheme "subtle"}
          [:> IconButton {:onClick on-theme
                          :icon (r/as-element [:> ContrastIcon])}]
 
