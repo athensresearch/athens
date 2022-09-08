@@ -113,15 +113,16 @@
         [:> PopoverBody
          [:> Heading {:size "xs"}
           "Display Settings"]
-         [:> FormControl {:display "flex" :flexDirection "row"}
-          [:> FormLabel {:flex "1 1 100%"} "Tasks per page"]
-          [:> Select {:value max-tasks-shown
-                      :size "xs"
-                      :onChange #(set-num-shown (-> % .-target .-value js/parseInt))}
-           [:option {:value 3} "3"]
-           [:option {:value 5} "5"]
-           [:option {:value 10} "7"]
-           [:option {:value 20} "20"]]]]]]]
+          [:> VStack {:py 2}
+           [:> FormControl {:display "flex" :flexDirection "row"}
+            [:> FormLabel {:flex "1 1 100%" :py 1} "Tasks per page"]
+            [:> Select {:value max-tasks-shown
+                        :size "xs"
+                        :onChange #(set-num-shown (-> % .-target .-value js/parseInt))}
+             [:option {:value 3} "3"]
+             [:option {:value 5} "5"]
+             [:option {:value 10} "7"]
+             [:option {:value 20} "20"]]]]]]]]
 
      ;; Body of the main widget
      [:> WidgetBody {:as VStack
