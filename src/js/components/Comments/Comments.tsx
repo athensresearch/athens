@@ -1,6 +1,8 @@
 import React from 'react';
-import { Box, Text, HStack, Textarea, Button } from '@chakra-ui/react'
-import { ChatFilledIcon } from '@/Icons/Icons'
+import { Box, Text, HStack, Textarea, Button, MenuItem, MenuGroup } from '@chakra-ui/react'
+import { ContextMenuContext } from '@/App/ContextMenuContext';
+import { withErrorBoundary } from "react-error-boundary";
+import { Anchor } from '@/Block/Anchor';
 
 interface InlineCommentInputProps {
   onSubmitComment: (comment: string) => void
@@ -43,15 +45,74 @@ export const InlineCommentInput = ({ onSubmitComment }: InlineCommentInputProps)
   </HStack>)
 }
 
-const formatCount = (count: number): string => {
-  if (count > 9) return "9+"
-  else if (count === 0) return ""
-  else return count.toString()
-};
+export const CommentAnchor = ({ menu, ...boxProps }) => {
+  const ref = React.useRef();
+  const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
+  const isMenuOpen = getIsMenuOpen(ref);
 
-export const CommentCounter = ({ count }) => {
-  return <Box display="grid" gridTemplateAreas="'main'">
-    <ChatFilledIcon gridArea="main" transform="scale(1.5) translateY(5%)" zIndex={0} />
-    <Text zIndex={1} gridArea="main" color="background.basement" fontSize="xs">{formatCount(count)}</Text>
-  </Box>
+  const Menu = () => {
+    return <MenuGroup>
+      {menu.map((action) => <MenuItem key={action.children} {...action} />)}
+    </MenuGroup>
+  }
+
+  return <Anchor
+    isActive={isMenuOpen}
+    ref={ref}
+    onClick={(event) => {
+      addToContextMenu({ event, ref, component: Menu, anchorEl: ref, key: "comment" })
+    }}
+    {...boxProps}
+  />
 }
+
+const CommentErrorMessage = () => <Text color="foreground.secondary" display="block" p={2} borderRadius="sm">Couldn't show this comment</Text>;
+
+export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp }) => {
+  const ref = React.useRef();
+  const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
+  const isMenuOpen = getIsMenuOpen(ref);
+
+  const Menu = () => {
+    return <MenuGroup>
+      {menu.map((action) => <MenuItem key={action.children} {...action} />)}
+    </MenuGroup>
+  }
+
+  return <Box
+    ref={ref}
+    bg={isMenuOpen ? "interaction.surface.hover" : "undefined"}
+    borderRadius="sm"
+    transitionProperty="colors"
+    transitionDuration="fastest"
+    m={-1}
+    p={1}
+    mt={isFollowUp ? 0 : 2}
+    alignItems="stretch"
+    justifyContent="stretch"
+    rowGap={0}
+    columnGap={2}
+    display="grid"
+    gridTemplateColumns="auto 1fr"
+    gridTemplateRows="auto auto"
+    gridTemplateAreas={`
+    'byline byline byline'
+    'anchor comment refs'`}
+    onContextMenu={(event) => {
+      addToContextMenu({ event, ref, component: Menu, key: "comment" })
+    }}
+    _first={{
+      borderTopWidth: 0
+    }}
+    sx={{
+      "> button.anchor:not([data-active])": {
+        color: "foreground.tertiary"
+      },
+      ":hover > button.anchor": {
+        color: "foreground.secondary"
+      }
+    }}
+  >
+    {children}
+  </Box>
+}, { fallback: <CommentErrorMessage /> });

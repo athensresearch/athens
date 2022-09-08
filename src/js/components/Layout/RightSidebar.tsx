@@ -1,65 +1,105 @@
+import * as React from "react";
+import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "./useLayoutState";
 import { AnimatePresence, motion } from 'framer-motion';
-import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon } from '@/Icons/Icons';
-import { Button, IconButton, Box, Collapse, VStack } from '@chakra-ui/react';
+import { RightSidebarResizeControl } from "./RightSidebarResizeControl";
+import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import { Button, IconButton, Box, Collapse, VStack, BoxProps } from '@chakra-ui/react';
+import { useInView } from 'react-intersection-observer';
 
-const Container = motion(Box);
+/** Right Sidebar */
 
-export const RightSidebarContainer = ({ isOpen, width, isDragging, children }) => {
-  return <AnimatePresence initial={false}>
-    {isOpen &&
-      <Container
-        className="right-sidebar"
-        display="flex"
-        flexDirection="column"
-        height="calc(100% - 3.25rem)"
-        marginTop="3.25rem"
-        alignItems="stretch"
-        justifySelf="stretch"
-        transformOrigin="right"
-        justifyContent="space-between"
-        overflowX="visible"
-        position="relative"
-        gridArea="secondary-content"
-        sx={{
-          "WebkitAppRegion": "no-drag",
-          "--page-title-font-size": "1.25rem",
-          ".node-page, .block-page": {
-            "--page-padding": "1rem",
-          },
-          ".page-header": {
-            pb: 1
-          },
-          ".page-body": {},
-          ".page-footer": {
-            px: 0,
-            py: 4
-          }
-        }}
-        initial={{
-          width: 0,
-          opacity: 0
-        }}
-        transition={isDragging ? { duration: 0 } : undefined}
-        animate={{
-          width: isOpen ? `${width}vw` : 0,
-          opacity: 1
-        }}
-        exit={{
-          width: 0,
-          opacity: 0
-        }}
-      >
-        {children}
-      </Container>}
-  </AnimatePresence>;
+
+interface RightSidebarProps extends BoxProps {
+  isOpen: boolean;
+  onResize: (size: number) => void;
+  rightSidebarWidth: number;
+}
+
+export const RightSidebar = (props: RightSidebarProps) => {
+  const { children, onResize, isOpen } = props;
+  const {
+    toolbarHeight,
+    isScrolledPastTitle,
+    setIsScrolledPastTitle,
+    isResizingLayout,
+    unsavedRightSidebarWidth
+  } = React.useContext(LayoutContext);
+
+  const { ref: markerRef, inView } = useInView({ threshold: 0 });
+
+  React.useEffect(() => {
+    if (inView) {
+      if (isScrolledPastTitle["rightSidebar"]) {
+        setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": false }));
+      }
+    } else {
+      if (!isScrolledPastTitle["rightSidebar"]) {
+        setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": true }));
+      }
+    }
+  }, [inView, setIsScrolledPastTitle]);
+
+  const layoutAnimation = {
+    ...layoutAnimationProps(unsavedRightSidebarWidth + "vw"),
+    animate: {
+      width: unsavedRightSidebarWidth + "vw",
+      opacity: 1,
+      transition: isResizingLayout ? {
+        ...layoutAnimationTransition,
+        mass: 0,
+      } : layoutAnimationTransition
+    },
+  }
+
+  return (
+    <AnimatePresence initial={false}>
+      {isOpen && (
+        <Box
+          as={motion.div}
+          {...layoutAnimation}
+          zIndex={1}
+          bg="background.floor"
+          transitionProperty="background"
+          transitionTimingFunction="ease-in-out"
+          transitionDuration="fast"
+          overflowX="hidden"
+          overflowY="auto"
+          borderLeft="1px solid"
+          borderColor="separator.divider"
+          position="fixed"
+          id="right-sidebar"
+          height="100vh"
+          inset={0}
+          pt={`calc(${toolbarHeight} + 1rem)`}
+          left="auto"
+        >
+          <RightSidebarResizeControl
+            onResizeSidebar={onResize}
+          />
+          <Box
+            aria-hidden
+            position="absolute"
+            ref={markerRef}
+            height="20px"
+            top={0}
+          />
+          <Box
+            width={unsavedRightSidebarWidth + "vw"}>
+            {children}
+          </Box>
+        </Box>
+      )}
+    </AnimatePresence>
+  );
 };
+
 const typeIcon = (type, isOpen) => {
-  return isOpen ? { "node": <PageFillIcon />, "graph": <GraphIcon />, "block": <BlockFillIcon /> }[type]
-    : { "node": <PageIcon />, "graph": <GraphIcon />, "block": <BlockIcon /> }[type];
+  return isOpen ? { "page": <PageFillIcon />, "graph": <GraphIcon />, "block": <BlockFillIcon /> }[type]
+    : { "page": <PageIcon />, "graph": <GraphIcon />, "block": <BlockIcon /> }[type];
 };
 
-export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children }) => {
-  const canToggle = type !== 'graph';
+export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigate, children, ...props }) => {
+  const className = { "page": "node-page", "block": "block-page", "graph": "graph-page" }[type];
   return (
     <VStack
       align="stretch"
@@ -76,19 +116,13 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
         position="sticky"
         background="background.floor"
         display="grid"
-        gridTemplateColumns="1fr 3rem"
+        gridTemplateColumns="1fr 3rem 3rem"
         pr={2}
         alignItems="center"
         justifyContent="center"
       >
         <Button
-          onClick={canToggle ? onToggle : undefined}
-          as={canToggle ? undefined : 'div'}
-          {...(!canToggle && {
-            _hover: {},
-            _focus: {},
-            _active: {},
-          })}
+          onClick={onToggle}
           display="flex"
           bg="transparent"
           borderRadius="0"
@@ -102,14 +136,12 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
           whiteSpace="nowrap"
           sx={{ maskImage: "linear-gradient(to right, black, black calc(100% - 1rem), transparent calc(100%))" }}
         >
-          {canToggle && (
-            <ChevronRightIcon
-              transform={isOpen ? "rotate(90deg)" : null}
-              transitionProperty="common"
-              transitionDuration="0.15s"
-              transitionTimingFunction="ease-in-out"
-              justifySelf="center" />
-          )}
+          {<ChevronRightIcon
+            transform={isOpen ? "rotate(90deg)" : null}
+            transitionProperty="common"
+            transitionDuration="0.15s"
+            transitionTimingFunction="ease-in-out"
+            justifySelf="center" />}
           {typeIcon(type, isOpen)}
           <Box
             flex="1 1 100%"
@@ -121,6 +153,25 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
             color="foreground.secondary"
           >{title}</Box>
         </Button>
+        <IconButton
+          onClick={onNavigate}
+          size="sm"
+          color="foreground.secondary"
+          alignSelf="center"
+          justifySelf="center"
+          bg="transparent"
+          aria-label="Close"
+        >
+          <ArrowLeftOnBoxIcon />
+        </IconButton>
+        {/* <IconButton
+            size={"sm"}
+            alignSelf="center"
+            justifySelf={"center"}
+            bg="transparent"
+            aria-label="drag">
+          <DragIcon alignSelf={"center"} justifySelf={"center"}/>
+        </IconButton> */}
         <IconButton
           onClick={onRemove}
           size="sm"
@@ -136,13 +187,15 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, children 
       <Box
         as={Collapse}
         in={isOpen}
-        className={`${type}-page`}
+        className={className}
         animateOpacity
         unmountOnExit
         zIndex={1}
         px={4}
+        onPointerDown={(e) => { e.stopPropagation() }}
       >
         {children}
       </Box>
-    </VStack>);
+    </VStack>
+  );
 };

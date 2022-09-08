@@ -132,6 +132,8 @@
   (vec (concat '[:db/id :block/uid :block/string :block/open :block/_refs
                  {:block/key [:node/title]}
                  {:block/children [:block/uid :block/order]}
+                 {:block/create [{:event/time [:time/ts]}
+                                 {:event/auth [:presence/id]}]}
                  {:block/edits [{:event/time [:time/ts]}]}]
                recursive-properties-document-pull-vector)))
 
@@ -141,6 +143,11 @@
   (->> @(p/pull db/dsdb block-document-pull-vector id)
        common-db/sort-block-children
        common-db/add-property-map))
+
+
+(defntrace get-reactive-right-sidebar-item
+  [id]
+  (->> @(p/pull db/dsdb '[:db/id :block/uid :block/string :node/title] id)))
 
 
 (defntrace get-reactive-parents-recursively
@@ -168,8 +175,35 @@
   @(p/pull db/dsdb '[:node/title :block/string :db/id] [:block/uid uid]))
 
 
+(defntrace reactive-get-entity-type
+  "Reactive version of athens.common-db/get-entity-type."
+  [eid]
+  (->> @(p/pull db/dsdb '[{:block/_property-of [:block/string {:block/key [:node/title]}]}] eid)
+       :block/_property-of
+       (some (fn [e]
+               (when (-> e :block/key :node/title (= ":entity/type"))
+                 (:block/string e))))))
+
+
+(defn get-reactive-instances-of-key-value
+  "Find all blocks that have key-value matching where
+  key is a string and value is a string, then find that property block's parent."
+  [k v]
+  (->> @(p/q '[:find [?parent ...]
+               :in $ ?key ?value
+               :where
+               [?eid :block/key ?k]
+               [?k :node/title ?key]
+               [?eid :block/string ?value]
+               [?eid :block/property-of ?parent]]
+             athens.db/dsdb k v)
+       (mapv get-reactive-block-document)))
+
+
 (comment
   ;; Print what ratoms are active.
-  (-> (ratoms) utils/spy)
-  ;;
-  )
+  (-> (ratoms) utils/spy))
+
+
+;;
+

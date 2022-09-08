@@ -9,20 +9,24 @@
     [athens.subs]
     [athens.util                         :as util]
     [athens.views.comments.core          :as comments]
+    [athens.views.notifications.core     :as notifications]
+    [athens.views.notifications.popover :refer  [notifications-popover]]
     [re-frame.core                       :as rf]
     [reagent.core                        :as r]))
 
 
 (defn app-toolbar
   []
-  (let [left-open?             (rf/subscribe [:left-sidebar/open])
+  (let [current-page-title     (rf/subscribe [:current-route/page-title])
+        left-open?             (rf/subscribe [:left-sidebar/open])
         right-open?            (rf/subscribe [:right-sidebar/open])
         help-open?             (rf/subscribe [:help/open?])
         athena-open?           (rf/subscribe [:athena/open])
-        inline-comments        (rf/subscribe [:comment/show-inline-comments?])
+        show-comments?         (rf/subscribe [:comment/show-comments?])
         route-name             (rf/subscribe [:current-route/name])
         theme-dark             (rf/subscribe [:theme/dark])
         selected-db            (rf/subscribe [:db-picker/selected-db])
+        notificationsPopoverOpen? (rf/subscribe [:notification/show-popover?])
         electron?              electron.utils/electron?
         win-focused?           (if electron?
                                  (rf/subscribe [:win-focused?])
@@ -61,10 +65,7 @@
                                                                       :pane   :main-pane}])
                                  (router/navigate :graph))
         on-settings            (fn [_]
-                                 (rf/dispatch [:reporting/navigation {:source :app-toolbar
-                                                                      :target :settings
-                                                                      :pane   :main-pane}])
-                                 (router/navigate :settings))
+                                 (rf/dispatch [:settings/toggle-open]))
         on-athena              #(rf/dispatch [:athena/toggle])
         on-help                #(rf/dispatch [:help/toggle])
         on-theme               #(rf/dispatch [:theme/toggle])
@@ -72,6 +73,7 @@
         on-maximize            #(rf/dispatch [:toggle-max-min-win])
         on-minimize            #(rf/dispatch [:minimize-win])
         on-close               #(rf/dispatch [:close-win])]
+
     [:> AppToolbar (merge
                      {:style                     (unzoom)
                       :os                        os
@@ -98,10 +100,14 @@
                       :onPressRightSidebarToggle on-right-sidebar
                       :onPressMaximizeRestore    on-maximize
                       :onPressMinimize           on-minimize
+                      :currentPageTitle          (or @current-page-title nil)
                       :onPressClose              on-close
-                      :databaseMenu              (r/as-element [db-menu])
+                      :workspacesMenu              (r/as-element [db-menu])
                       :presenceDetails           (when (electron.utils/remote-db? @selected-db)
                                                    (r/as-element [toolbar-presence-el]))}
+                     (when (notifications/enabled?)
+                       {:notificationPopover (r/as-element [notifications-popover])
+                        :isNotificationsPopoverOpen @notificationsPopoverOpen?})
                      (when (comments/enabled?)
-                       {:isShowInlineComments @inline-comments
-                        :onClickInlineComments #(rf/dispatch [:comment/toggle-inline-comments])}))]))
+                       {:isShowComments  @show-comments?
+                        :onClickComments #(rf/dispatch [:comment/toggle-comments])}))]))

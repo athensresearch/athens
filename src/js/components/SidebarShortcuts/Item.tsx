@@ -1,11 +1,11 @@
-import { Button, Box } from "@chakra-ui/react";
+import React from 'react';
+import { Button, Text, Box } from "@chakra-ui/react";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 
 export const Item = (props) => {
   const { id, children, ...rest } = props;
-
-  const [_order, name] = id;
+  const [_order, name, isUnread, isCurrent] = id;
 
   const {
     attributes,
@@ -16,26 +16,32 @@ export const Item = (props) => {
     transition
   } = useSortable({ id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition
-  };
-
   return (
     <Button
-      as="li"
       size="sm"
+      flexShrink={0}
+      px={3}
       variant="ghost"
-      width="14em"
+      isActive={isCurrent}
       justifyContent="flex-start"
+      overflow="hidden"
       ref={setNodeRef}
-      style={style}
+      transform={CSS.Transform.toString(transform)}
+      transition={transition}
       opacity={isDragging ? 0.5 : 1}
       {...attributes}
       {...listeners}
       {...rest}
     >
-      {name}
+      <Text
+        as="span"
+        textAlign="start"
+        flex="1 1 100%"
+        fontWeight={isUnread ? "bold" : "n"}
+        overflow="hidden"
+        textOverflow="ellipsis">
+        {name}
+      </Text>
       {children}
     </Button>
   );

@@ -1,7 +1,7 @@
 (ns athens.views.jetsam
   "This is for experimentation with re-usability of block view/edit."
   (:require
-    [athens.views.blocks.content          :as b-content]
+    [athens.views.blocks.eitor :as editor]
     [athens.views.blocks.textarea-keydown :as txt-key-down]
     [reagent.core                         :as r]))
 
@@ -51,4 +51,4 @@
                      :width            "50vw"
                      :height           "50vh"
                      :background-color "lightgreen"}}
-       [b-content/block-content-el block-o state-hooks]])))
+       [editor/block-editor block-o state-hooks]])))

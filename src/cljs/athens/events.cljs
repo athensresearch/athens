@@ -22,11 +22,11 @@
     [athens.events.remote                 :as events-remote]
     [athens.events.sentry]
     [athens.interceptors                  :as interceptors]
-    [athens.patterns                      :as patterns]
     [athens.undo                          :as undo]
     [athens.util                          :as util]
     [athens.utils.sentry                  :as sentry]
     [athens.views.blocks.textarea-keydown :as textarea-keydown]
+    [athens.views.comments.core :as comments]
     [clojure.pprint                       :as pp]
     [clojure.string                       :as string]
     [datascript.core                      :as d]
@@ -90,130 +90,6 @@
     (assoc db :db/synced false)))
 
 
-(defn shared-blocks-excl-date-pages
-  [roam-db]
-  (->> (d/q '[:find [?blocks ...]
-              :in $athens $roam
-              :where
-              [$athens _ :block/uid ?blocks]
-              [$roam _ :block/uid ?blocks]
-              [$roam ?e :block/uid ?blocks]
-              [(missing? $roam ?e :node/title)]]
-            @athens.db/dsdb
-            roam-db)))
-
-
-(defn merge-shared-page
-  "If page exists in both databases, but roam-db's page has no children, then do not add the merge block"
-  [shared-page roam-db roam-db-filename]
-  (let [page-athens              (db/get-node-document shared-page db/dsdb)
-        page-roam                (db/get-roam-node-document shared-page roam-db)
-        athens-child-count       (-> page-athens :block/children count)
-        roam-child-count         (-> page-roam :block/children count)
-        new-uid                  (common.utils/gen-block-uid)
-        today-date-page          (:title (dates/get-day))
-        new-children             (conj (:block/children page-athens)
-                                       {:block/string   (str "[[Roam Import]] "
-                                                             "[[" today-date-page "]] "
-                                                             "[[" roam-db-filename "]]")
-                                        :block/uid      new-uid
-                                        :block/children (:block/children page-roam)
-                                        :block/order    athens-child-count
-                                        :block/open     true})
-        merge-pages              (merge page-roam page-athens)
-        final-page-with-children (assoc merge-pages :block/children new-children)]
-    (if (zero? roam-child-count)
-      merge-pages
-      final-page-with-children)))
-
-
-(defn get-shared-pages
-  [roam-db]
-  (->> (d/q '[:find [?pages ...]
-              :in $athens $roam
-              :where
-              [$athens _ :node/title ?pages]
-              [$roam _ :node/title ?pages]]
-            @athens.db/dsdb
-            roam-db)
-       sort))
-
-
-(defn pages
-  [roam-db]
-  (->> (d/q '[:find [?pages ...]
-              :in $
-              :where
-              [_ :node/title ?pages]]
-            roam-db)
-       sort))
-
-
-(defn gett
-  [s x]
-  (not ((set s) x)))
-
-
-(defn not-shared-pages
-  [roam-db shared-pages]
-  (->> (d/q '[:find [?pages ...]
-              :in $ ?fn ?shared
-              :where
-              [_ :node/title ?pages]
-              [(?fn ?shared ?pages)]]
-            roam-db
-            athens.events/gett
-            shared-pages)
-       sort))
-
-
-(defn update-roam-db-dates
-  "Strips the ordinal suffixes of Roam dates from block strings and dates.
-  e.g. January 18th, 2021 -> January 18, 2021"
-  [db]
-  (let [date-pages         (d/q '[:find ?t ?u
-                                  :keys node/title block/uid
-                                  :in $ ?date
-                                  :where
-                                  [?e :node/title ?t]
-                                  [(?date ?t)]
-                                  [?e :block/uid ?u]]
-                                db
-                                patterns/date-block-string)
-        date-block-strings (d/q '[:find ?s ?u
-                                  :keys block/string block/uid
-                                  :in $ ?date
-                                  :where
-                                  [?e :block/string ?s]
-                                  [(?date ?s)]
-                                  [?e :block/uid ?u]]
-                                db
-                                patterns/date-block-string)
-        date-concat        (concat date-pages date-block-strings)
-        tx-data            (map (fn [{:keys [block/string node/title block/uid]}]
-                                  (cond-> {:db/id [:block/uid uid]}
-                                    string (assoc :block/string (patterns/replace-roam-date string))
-                                    title (assoc :node/title (patterns/replace-roam-date title))))
-                                date-concat)]
-    ;; tx-data))
-    (d/db-with db tx-data)))
-
-
-(reg-event-fx
-  :upload/roam-edn
-  [(interceptors/sentry-span-no-new-tx "upload/roam-edn")]
-  (fn [_ [_ transformed-dates-roam-db roam-db-filename]]
-    (let [shared-pages   (get-shared-pages transformed-dates-roam-db)
-          merge-shared   (mapv (fn [x] (merge-shared-page [:node/title x] transformed-dates-roam-db roam-db-filename))
-                               shared-pages)
-          merge-unshared (->> (not-shared-pages transformed-dates-roam-db shared-pages)
-                              (map (fn [x] (db/get-roam-node-document [:node/title x] transformed-dates-roam-db))))
-          tx-data        (concat merge-shared merge-unshared)]
-      ;; TODO: this functionality needs to create a internal representation event instead.
-      ;; That will cause it to work in RTC and remove the need to transact directly to the in-memory db.
-      {:dispatch [:transact tx-data]})))
-
-
 (reg-event-fx
   :athena/toggle
   [(interceptors/sentry-span-no-new-tx "athena/toggle")]
@@ -238,38 +114,6 @@
      :dispatch [:posthog/report-feature :help]}))
 
 
-(reg-event-fx
-  :left-sidebar/toggle
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/toggle")]
-  (fn [{:keys [db]} _]
-    {:db (update db :left-sidebar/open not)
-     :dispatch [:posthog/report-feature :left-sidebar]}))
-
-
-(reg-event-fx
-  :right-sidebar/toggle
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/toggle")]
-  (fn [{:keys [db]} _]
-    (let [closing? (:right-sidebar/open db)]
-      {:db       (update db :right-sidebar/open not)
-       :dispatch [:posthog/report-feature :right-sidebar (not closing?)]})))
-
-
-(reg-event-fx
-  :right-sidebar/toggle-item
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/toggle-item")]
-  (fn [{:keys [db]} [_ item]]
-    {:db       (update-in db [:right-sidebar/items item :open] not)
-     :dispatch [:posthog/report-feature :right-sidebar true]}))
-
-
-(reg-event-db
-  :right-sidebar/set-width
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/set-width")]
-  (fn [db [_ width]]
-    (assoc db :right-sidebar/width width)))
-
-
 (reg-event-db
   :mouse-down/set
   (fn [db _]
@@ -289,92 +133,6 @@
   (fn [_ _]
     (log/warn "Called :no-op re-frame event, this shouldn't be happening.")
     {}))
-
-
-;; TODO: dec all indices > closed item
-(reg-event-fx
-  :right-sidebar/close-item
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/close-item")]
-  (fn [{:keys [db]} [_ uid]]
-    (let [{:right-sidebar/keys
-           [items]}  db
-          last-item? (= 1 (count items))
-          new-db     (cond-> (update db :right-sidebar/items dissoc uid)
-                       last-item? (assoc :right-sidebar/open false))]
-      {:db       new-db
-       :dispatch [:posthog/report-feature :right-sidebar (not last-item?)]})))
-
-
-(reg-event-fx
-  :right-sidebar/navigate-item
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/navigate-item")]
-  (fn [{:keys [db]} [_ uid breadcrumb-uid]]
-    (let [block      (d/pull @db/dsdb '[:node/title :block/string] [:block/uid breadcrumb-uid])
-          item-index (get-in db [:right-sidebar/items uid :index])
-          new-item   (merge block {:open true :index item-index})]
-      {:db       (-> db
-                     (update-in [:right-sidebar/items] dissoc uid)
-                     (update-in [:right-sidebar/items] assoc breadcrumb-uid new-item))
-       :dispatch [:posthog/report-feature :right-sidebar true]})))
-
-
-;; TODO: change right sidebar items from map to datascript
-(reg-event-fx
-  :right-sidebar/open-item
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/open-item")]
-  (fn [{:keys [db]} [_ uid is-graph?]]
-    (let [block     (d/pull @db/dsdb '[:node/title :block/string] [:block/uid uid])
-          new-item  (merge block {:open true :index -1 :is-graph? is-graph?})
-          ;; Avoid a memory leak by forgetting the comparison function
-          ;; that is stored in the sorted map
-          ;; `(assoc (:right-sidebar/items db) uid new-item)`
-          new-items (into {}
-                          (assoc (:right-sidebar/items db) uid new-item))
-          inc-items (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
-                               {}
-                               new-items)
-          sorted-items (into (sorted-map-by (fn [k1 k2]
-                                              (compare
-                                                [(get-in inc-items [k1 :index]) k2]
-                                                [(get-in inc-items [k2 :index]) k1]))) inc-items)]
-      {:db         (assoc db :right-sidebar/items sorted-items)
-       :dispatch-n [(when (not (:right-sidebar/open db))
-                      [:right-sidebar/toggle])
-                    [:right-sidebar/scroll-top]
-                    [:posthog/report-feature :right-sidebar true]]})))
-
-
-(reg-event-fx
-  :right-sidebar/open-page
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/open-page")]
-  (fn [{:keys [db]} [_ page-title is-graph?]]
-    (let [{:keys [:block/uid]
-           :as   block} (d/pull @db/dsdb '[:block/uid :node/title :block/string] [:node/title page-title])
-          new-item      (merge block {:open true :index -1 :is-graph? is-graph?})
-          ;; Avoid a memory leak by forgetting the comparison function
-          ;; that is stored in the sorted map
-          ;; `(assoc (:right-sidebar/items db) uid new-item)`
-          new-items     (into {}
-                              (assoc (:right-sidebar/items db) uid new-item))
-          inc-items     (reduce-kv (fn [m k v] (assoc m k (update v :index inc)))
-                                   {}
-                                   new-items)
-          sorted-items  (into (sorted-map-by (fn [k1 k2]
-                                               (compare
-                                                 [(get-in inc-items [k1 :index]) k2]
-                                                 [(get-in inc-items [k2 :index]) k1]))) inc-items)]
-      {:db         (assoc db :right-sidebar/items sorted-items)
-       :dispatch-n [(when (not (:right-sidebar/open db))
-                      [:right-sidebar/toggle])
-                    [:right-sidebar/scroll-top]
-                    [:posthog/report-feature :right-sidebar true]]})))
-
-
-(reg-event-fx
-  :right-sidebar/scroll-top
-  [(interceptors/sentry-span-no-new-tx "right-sidebar/scroll-top")]
-  (fn []
-    {:right-sidebar/scroll-top nil}))
 
 
 (reg-event-fx
@@ -629,31 +387,6 @@
 
 ;; Datascript
 
-
-
-;; TODO: remove this event and also :transact! when the following are converted to events:
-;; - athens.electron.images/dnd-image (needs file upload)
-;; - :upload/roam-edn (needs internal representation)
-;; No other reframe events should be calling this event.
-(reg-event-fx
-  :transact
-  [(interceptors/sentry-span "transact")]
-  (fn-traced [_ [_ tx-data]]
-             (let [synced?   @(subscribe [:db/synced])
-                   electron? electron.utils/electron?]
-               (if (and synced? electron?)
-                 {:fx [[:transact! tx-data]
-                       [:dispatch [:db/not-synced]]
-                       [:dispatch [:save]]]}
-                 {:fx [[:transact! tx-data]]}))))
-
-
-(rf/reg-event-fx
-  :success-transact
-  (fn [_ _]
-    {}))
-
-
 ;; These events are used for async flows, so we know when changes are in the
 ;; datascript db.
 ;; If you need to know which event was resolved, check the arg as
@@ -685,8 +418,11 @@
 
 
 (defn datom->tx-entry
-  [[e a v]]
-  [:db/add e a v])
+  [[e a v :as datom]]
+  (if (and (string/includes? (name a) "+")
+           (nil? (second v)))
+    (log/warn "Offending attribute entity (it has `nil` for `:block/key` value):" (pr-str datom))
+    [:db/add e a v]))
 
 
 (rf/reg-event-fx
@@ -806,39 +542,6 @@
 
 
 (reg-event-fx
-  :left-sidebar/add-shortcut
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/add-shortcut")]
-  (fn [_ [_ name]]
-    (log/debug ":page/add-shortcut:" name)
-    (let [add-shortcut-op (atomic-graph-ops/make-shortcut-new-op name)
-          event           (common-events/build-atomic-event add-shortcut-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :left-sidebar/remove-shortcut
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/remove-shortcut")]
-  (fn [_ [_ name]]
-    (log/debug ":page/remove-shortcut:" name)
-    (let [remove-shortcut-op (atomic-graph-ops/make-shortcut-remove-op name)
-          event              (common-events/build-atomic-event remove-shortcut-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]]})))
-
-
-(reg-event-fx
-  :left-sidebar/drop
-  [(interceptors/sentry-span-no-new-tx "left-sidebar/drop")]
-  (fn [_ [_ source-order target-order relation]]
-    (let [[source-name target-name] (common-db/find-source-target-title @db/dsdb source-order target-order)
-          drop-op                   (atomic-graph-ops/make-shortcut-move-op source-name
-                                                                            {:page/title target-name
-                                                                             :relation relation})
-          event (common-events/build-atomic-event drop-op)]
-      {:fx [[:dispatch [:resolve-transact-forward event]]
-            [:dispatch [:posthog/report-feature :left-sidebar]]]})))
-
-
-(reg-event-fx
   :save
   [(interceptors/sentry-span-no-new-tx "save")]
   (fn [_ _]
@@ -947,6 +650,7 @@
   [(interceptors/sentry-span-no-new-tx "down")]
   (fn [_ [_ uid target-pos]]
     (let [next-block-uid (db/next-block-uid uid)]
+      #_(log/debug ::down (pr-str {:uid uid :target-pos target-pos :next-block-uid next-block-uid}))
       {:dispatch [:editing/uid (or next-block-uid uid) target-pos]})))
 
 
@@ -1090,6 +794,50 @@
 
 
 (reg-event-fx
+  :check-for-mentions
+  (fn [_ [_ uid string]]
+    (let [username          (rf/subscribe [:username])
+          mentions          (comments/get-all-mentions string @username)
+          mention-op        (when (not-empty mentions)
+                              (comments/create-notification-op-for-users {:db                     @db/dsdb
+                                                                          :parent-block-uid       uid
+                                                                          :notification-for-users mentions
+                                                                          :author                 @username
+                                                                          :trigger-block-uid      uid
+                                                                          :notification-type      "athens/notification/type/mention"}))
+          event             (common-events/build-atomic-event  (composite-ops/make-consequence-op {:op/type :mention-notifications}
+                                                                                                  mention-op))]
+      (when mention-op
+        {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
+
+
+(reg-event-fx
+  :notification-for-assigned-task
+  (fn [{:keys [db]} [_ uid assignee]]
+    (let [username          (-> db :athens/persist :settings :username)
+          assignee-op       (when assignee
+                              (comments/create-notification-op-for-users {:db                     @db/dsdb
+                                                                          :parent-block-uid       uid
+                                                                          :notification-for-users [assignee]
+                                                                          :author                 username
+                                                                          :trigger-block-uid      uid
+                                                                          :notification-type      "athens/notification/type/task/assigned/to"}))
+          task-creator-op   (when (not= assignee (str "[[@" username "]]"))
+                              (comments/create-notification-op-for-users {:db                     @db/dsdb
+                                                                          :parent-block-uid       uid
+                                                                          :notification-for-users [(str "[[@" username "]]")]
+                                                                          :author                 username
+                                                                          :trigger-block-uid      uid
+                                                                          :notification-type      "athens/notification/type/task/assigned/by"}))
+          event             (common-events/build-atomic-event  (composite-ops/make-consequence-op {:op/type :mention-notifications}
+                                                                                                  (concat
+                                                                                                    assignee-op
+                                                                                                    task-creator-op)))]
+      (when assignee-op
+        {:fx [[:dispatch [:resolve-transact-forward event]]]}))))
+
+
+(reg-event-fx
   :block/save
   (fn [{:keys [db]} [_ {:keys [uid string source] :as args}]]
     (log/debug ":block/save args" (pr-str args))
@@ -1107,7 +855,8 @@
       (log/debug ":block/save local?" local?
                  ", do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]]
+        {:fx [[:dispatch-n (cond-> [[:resolve-transact-forward event]
+                                    [:check-for-mentions uid string]]
                              (seq new-titles)
                              (conj [:reporting/page.create {:source (or source :unknown-block-save)
                                                             :count  (count new-titles)}])
@@ -1159,7 +908,7 @@
     (let [page-uid (common-db/get-page-uid @db/dsdb title)]
       {:fx [[:dispatch-n [(cond
                             shift?
-                            [:right-sidebar/open-item page-uid]
+                            [:right-sidebar/open-item [:node/title title]]
 
                             (not (dates/is-daily-note page-uid))
                             [:navigate :page {:id page-uid}])]]]})))
@@ -1247,7 +996,8 @@
           event      (common-events/build-atomic-event op)]
       {:fx [(transact-async-flow :enter-split-block event sentry-tx [(focus-on-uid new-uid embed-id)])
             [:dispatch-n (cond-> [[:reporting/block.create {:source :enter-split
-                                                            :count  1}]]
+                                                            :count  1}]
+                                  [:check-for-mentions uid value]]
                            (seq new-titles)
                            (conj [:reporting/page.create {:source :enter-split
                                                           :count  (count new-titles)}])
@@ -1303,103 +1053,121 @@
   - If value is empty, unindent.
   - If caret is at start and there is a value, create new block below but keep same block index."
   [rfdb uid d-key-down]
-  (let [root-embed?           (= (some-> d-key-down :target
-                                         (.. (closest ".block-embed"))
-                                         (. -firstChild)
-                                         (.getAttribute "data-uid"))
-                                 uid)
-        [uid embed-id]        (db/uid-and-embed-id uid)
-        block                 (db/get-block [:block/uid uid])
+  (let [root-embed?                         (= (some-> d-key-down :target
+                                                       (.. (closest ".block-embed"))
+                                                       (. -firstChild)
+                                                       (.getAttribute "data-uid"))
+                                               uid)
+        [uid embed-id]                      (db/uid-and-embed-id uid)
+        block                               (db/get-block [:block/uid uid])
+        block-properties                    (common-db/get-block-property-document @db/dsdb [:block/uid uid])
+        has-comments?                       (not-empty (get block-properties ":comment/threads"))
+        block-has-comments-but-no-children? (and has-comments?
+                                                 (empty? (:block/children block)))
+
         {parent-uid :block/uid
-         :as        parent}   (db/get-parent [:block/uid uid])
-        is-parent-root-embed? (= (some-> d-key-down :target
-                                         (.. (closest ".block-embed"))
-                                         (. -firstChild)
-                                         (.getAttribute "data-uid"))
-                                 (str parent-uid "-embed-" embed-id))
-        root-block?           (boolean (:node/title parent))
-        context-root-uid      (get-in rfdb [:current-route :path-params :id])
-        new-uid               (common.utils/gen-block-uid)
-        has-children?         (seq (common-db/sorted-prop+children-uids @db/dsdb [:block/uid uid]))
+         :as        parent}                 (db/get-parent [:block/uid uid])
+        is-parent-root-embed?               (= (some-> d-key-down :target
+                                                       (.. (closest ".block-embed"))
+                                                       (. -firstChild)
+                                                       (.getAttribute "data-uid"))
+                                               (str parent-uid "-embed-" embed-id))
+        root-block?                         (boolean (:node/title parent))
+        context-root-uid                    (get-in rfdb [:current-route :path-params :id])
+        new-uid                             (common.utils/gen-block-uid)
+        has-children?                       (seq (common-db/sorted-prop+children-uids @db/dsdb [:block/uid uid]))
+        {:keys [value start]}               d-key-down
+        caret-at-the-end-of-text            (= start
+                                               (count value))
+        caret-at-the-start-of-text          (and (zero? start)
+                                                 value)
+        event                               (cond
+                                              (and block-has-comments-but-no-children?
+                                                   caret-at-the-end-of-text)
+                                              [:enter/new-block {:block    block
+                                                                 :parent   parent
+                                                                 :new-uid  new-uid
+                                                                 :embed-id embed-id}]
 
-        {:keys [value start]} d-key-down
-        event                 (cond
-                                (:block/key block)
-                                [:enter/open-block-add-child {:block    block
-                                                              :new-uid  new-uid
-                                                              :embed-id embed-id}]
+                                              (:block/key block)
+                                              [:enter/split-block {:uid        uid
+                                                                   :value      value
+                                                                   :index      start
+                                                                   :new-uid    new-uid
+                                                                   :embed-id   embed-id
+                                                                   :relation   :first}]
 
-                                (and (:block/open block)
-                                     has-children?
-                                     (= start (count value)))
-                                [:enter/add-child {:block    block
-                                                   :new-uid  new-uid
-                                                   :embed-id embed-id}]
+                                              (and (:block/open block)
+                                                   has-children?
+                                                   caret-at-the-end-of-text)
+                                              [:enter/add-child {:block    block
+                                                                 :new-uid  new-uid
+                                                                 :embed-id embed-id}]
 
-                                (and embed-id root-embed?
-                                     (= start (count value)))
-                                [:enter/open-block-add-child {:block    block
-                                                              :new-uid  new-uid
-                                                              :embed-id embed-id}]
+                                              (and embed-id root-embed?
+                                                   caret-at-the-end-of-text)
+                                              [:enter/open-block-add-child {:block    block
+                                                                            :new-uid  new-uid
+                                                                            :embed-id embed-id}]
 
-                                (and (not (:block/open block))
-                                     has-children?
-                                     (= start (count value)))
-                                [:enter/new-block {:block    block
-                                                   :parent   parent
-                                                   :new-uid  new-uid
-                                                   :embed-id embed-id}]
+                                              (and (not (:block/open block))
+                                                   has-children?
+                                                   caret-at-the-end-of-text)
+                                              [:enter/new-block {:block    block
+                                                                 :parent   parent
+                                                                 :new-uid  new-uid
+                                                                 :embed-id embed-id}]
 
-                                (and (empty? value)
-                                     (or (= context-root-uid (:block/uid parent))
-                                         root-block?))
-                                [:enter/new-block {:block    block
-                                                   :parent   parent
-                                                   :new-uid  new-uid
-                                                   :embed-id embed-id}]
+                                              (and (empty? value)
+                                                   (or (= context-root-uid (:block/uid parent))
+                                                       root-block?))
+                                              [:enter/new-block {:block    block
+                                                                 :parent   parent
+                                                                 :new-uid  new-uid
+                                                                 :embed-id embed-id}]
 
-                                (and (:block/open block)
-                                     embed-id root-embed?
-                                     (not= start (count value)))
-                                [:enter/split-block {:uid        uid
-                                                     :value      value
-                                                     :index      start
-                                                     :new-uid    new-uid
-                                                     :embed-id   embed-id
-                                                     :relation   :first}]
+                                              (and (:block/open block)
+                                                   embed-id root-embed?
+                                                   (not caret-at-the-end-of-text))
+                                              [:enter/split-block {:uid        uid
+                                                                   :value      value
+                                                                   :index      start
+                                                                   :new-uid    new-uid
+                                                                   :embed-id   embed-id
+                                                                   :relation   :first}]
 
-                                (and (empty? value) embed-id (not is-parent-root-embed?))
-                                [:unindent {:uid              uid
-                                            :d-key-down       d-key-down
-                                            :context-root-uid context-root-uid
-                                            :embed-id         embed-id
-                                            :local-string     ""}]
+                                              (and (empty? value) embed-id (not is-parent-root-embed?))
+                                              [:unindent {:uid              uid
+                                                          :d-key-down       d-key-down
+                                                          :context-root-uid context-root-uid
+                                                          :embed-id         embed-id
+                                                          :local-string     ""}]
 
-                                (and (empty? value) embed-id is-parent-root-embed?)
-                                [:enter/new-block {:block    block
-                                                   :parent   parent
-                                                   :new-uid  new-uid
-                                                   :embed-id embed-id}]
+                                              (and (empty? value) embed-id is-parent-root-embed?)
+                                              [:enter/new-block {:block    block
+                                                                 :parent   parent
+                                                                 :new-uid  new-uid
+                                                                 :embed-id embed-id}]
 
-                                (not (zero? start))
-                                [:enter/split-block {:uid      uid
-                                                     :value    value
-                                                     :index    start
-                                                     :new-uid  new-uid
-                                                     :embed-id embed-id
-                                                     :relation :after}]
+                                              (not caret-at-the-start-of-text)
+                                              [:enter/split-block {:uid      uid
+                                                                   :value    value
+                                                                   :index    start
+                                                                   :new-uid  new-uid
+                                                                   :embed-id embed-id
+                                                                   :relation :after}]
 
-                                (empty? value)
-                                [:unindent {:uid              uid
-                                            :d-key-down       d-key-down
-                                            :context-root-uid context-root-uid
-                                            :embed-id         embed-id
-                                            :local-string     ""}]
+                                              (empty? value)
+                                              [:unindent {:uid              uid
+                                                          :d-key-down       d-key-down
+                                                          :context-root-uid context-root-uid
+                                                          :embed-id         embed-id
+                                                          :local-string     ""}]
 
-                                (and (zero? start) value)
-                                [:enter/bump-up {:uid      uid
-                                                 :new-uid  new-uid
-                                                 :embed-id embed-id}])]
+                                              caret-at-the-start-of-text
+                                              [:enter/bump-up {:uid      uid
+                                                               :new-uid  new-uid
+                                                               :embed-id embed-id}])]
     (log/debug "[Enter] ->" (pr-str event))
     (assert parent-uid (str "[Enter] no parent for block-uid: " uid))
     {:fx [[:dispatch event]]}))
@@ -1442,7 +1210,7 @@
 
 (reg-event-fx
   :indent
-  (fn [{:keys [_db]} [_ {:keys [uid d-key-down local-string] :as args}]]
+  (fn [{:keys [_db]} [_ {:keys [uid d-key-down local-string editing-uid] :as args}]]
     ;; - `block-zero`: The first block in a page
     ;; - `value`     : The current string inside the block being indented. Otherwise, if user changes block string and indents,
     ;;                 the local string  is reset to original value, since it has not been unfocused yet (which is currently the
@@ -1479,7 +1247,7 @@
       (when (and prev-block-uid
                  (not first-block?))
         {:fx [(transact-async-flow :indent event sentry-tx [])
-              [:set-cursor-position [uid start end]]
+              [:set-cursor-position [(or editing-uid uid) start end]]
               [:dispatch-n (cond-> []
                              (seq new-titles)
                              (conj [:reporting/page.create {:source :indent
@@ -1515,7 +1283,7 @@
 
 (reg-event-fx
   :unindent
-  (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string] :as args}]]
+  (fn [{:keys [_db]} [_ {:keys [uid d-key-down context-root-uid embed-id local-string editing-uid] :as args}]]
     (log/debug ":unindent args" (pr-str args))
     (let [sentry-tx                (close-and-get-sentry-tx "unindent")
           db                       @db/dsdb
@@ -1546,8 +1314,8 @@
           event                    (common-events/build-atomic-event block-save-block-move-op)]
       (log/debug ":unindent do-nothing?" do-nothing?)
       (when-not do-nothing?
-        {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid uid embed-id)])
-              [:set-cursor-position [uid start end]]
+        {:fx [(transact-async-flow :unindent event sentry-tx [(focus-on-uid (or editing-uid uid) embed-id)])
+              [:set-cursor-position [(or editing-uid uid) start end]]
               [:dispatch-n (cond-> []
                              (seq new-titles)
                              (conj [:reporting/page.create {:source :unindent
@@ -1627,7 +1395,7 @@
   :drop-multi/child
   (fn [_ [_ {:keys [source-uids target-uid] :as args}]]
     (log/debug ":drop-multi/child args" (pr-str args))
-    (let [atomic-op (graph-ops/block-move-chain target-uid source-uids :first)
+    (let [atomic-op (graph-ops/block-move-chain @db/dsdb target-uid source-uids :first)
           event     (common-events/build-atomic-event atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
@@ -1639,7 +1407,7 @@
     ;; This also applies if on selects multiple Zero level blocks and change the order among other Zero level blocks.
     (log/debug ":drop-multi/sibling args" (pr-str args))
     (let [rel-position drag-target
-          atomic-op    (graph-ops/block-move-chain target-uid source-uids rel-position)
+          atomic-op    (graph-ops/block-move-chain @db/dsdb target-uid source-uids rel-position)
           event        (common-events/build-atomic-event atomic-op)]
       {:fx [[:dispatch [:resolve-transact-forward event]]]})))
 
@@ -1789,16 +1557,29 @@
 
 ;; Works like clojure's update-in.
 ;; Calls (f db uid), where uid is the existing block uid, or a uid that will be created in ks property path.
-;; (f db uid) should return a seq of operations to perform. If no operations are return, nothing is transacted.
+;; (f db uid) should return a seq of operations to perform. If no operations are returned, nothing is transacted.
 (reg-event-fx
-  :properties/update-in
-  (fn [_ [_ id ks f]]
-    (log/debug ":properties/update-in args" id ks)
-    (let [db                  @db/dsdb
-          uid                 (common-db/get-block-uid db id)
-          [prop-uid path-ops] (graph-ops/build-property-path db uid ks)
-          f-ops               (f db prop-uid)]
-      (when (seq f-ops)
-        {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
-                                                            (composite-ops/make-consequence-op {:op/type :properties/update})
-                                                            common-events/build-atomic-event)]]]]}))))
+  :graph/update-in
+  [(interceptors/sentry-span-no-new-tx "graph/update-in")]
+  (fn [_ [_ eid ks f]]
+    (log/debug ":graph/update-in args" eid ks)
+    (when (seq ks)
+      (let [db                  @db/dsdb
+            [prop-uid path-ops] (graph-ops/build-path db eid ks)
+            f-ops               (f db prop-uid)]
+        (when (seq f-ops)
+          {:fx [[:dispatch-n [[:resolve-transact-forward (->> (into path-ops f-ops)
+                                                              (composite-ops/make-consequence-op {:op/type :graph/update-in})
+                                                              common-events/build-atomic-event)]]]]})))))
+
+
+;; Add internal representation to graph, using default-position for blocks without pages.
+(reg-event-fx
+  :graph/add-internal-representation
+  [(interceptors/sentry-span-no-new-tx "graph/add-internal-representation")]
+  (fn [_ [_ internal-representation default-position]]
+    (log/debug ":graph/add-internal-representation args" internal-representation default-position)
+    (when (seq internal-representation)
+      {:fx [[:dispatch-n [[:resolve-transact-forward (->> (bfs/internal-representation->atomic-ops @db/dsdb internal-representation default-position)
+                                                          (composite-ops/make-consequence-op {:op/type :graph/add-internal-representation})
+                                                          common-events/build-atomic-event)]]]]})))

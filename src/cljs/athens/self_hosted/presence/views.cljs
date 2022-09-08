@@ -106,9 +106,9 @@
                                  (str/join ", "))}
          [:> AvatarGroup {:max 1
                           :zIndex 2
+                          :className "inline-presence"
                           :size "xs"
-                          :cursor "default"
-                          :gridArea "presence"}
+                          :cursor "default"}
           (->> @users
                (map user->person)
                (remove nil?)

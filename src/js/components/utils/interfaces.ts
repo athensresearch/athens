@@ -27,7 +27,7 @@ type HostAddress = string;
 /**
  * A knowledge graph
  */
-type Database = {
+type Workspace = {
   id: string;
   name: string;
   isRemote: boolean;

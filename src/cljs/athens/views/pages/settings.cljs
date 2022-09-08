@@ -5,7 +5,7 @@
     [athens.util :refer [toast]]
     [cljs-http.client :as http]
     [cljs.core.async :refer [<!]]
-    [re-frame.core :refer [subscribe dispatch reg-event-fx]]
+    [re-frame.core :as rf :refer [subscribe dispatch reg-event-fx]]
     [reagent.core :as r])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
@@ -70,6 +70,46 @@
   (if monitoring
     (monitoring-off (partial update-fn false))
     (monitoring-on (partial update-fn true))))
+
+
+;; re-frame
+
+(rf/reg-sub
+  :feature-flags/enabled?
+  :<- [:feature-flags]
+  (fn [a [_ flag]]
+    (get a flag)))
+
+
+(reg-event-fx
+  :settings/update
+  (fn [{:keys [db]} [_ k v]]
+    {:db (assoc-in db [:athens/persist :settings k] v)}))
+
+
+(reg-event-fx
+  :settings/update-in
+  (fn [{:keys [db]} [_ ks v]]
+    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
+
+
+(reg-event-fx
+  :settings/reset
+  (fn [{:keys [db]} _]
+    {:db (assoc db :athens/persist default-athens-persist)
+     :dispatch [:boot]}))
+
+
+(rf/reg-event-db
+  :settings/toggle-open
+  (fn [db _]
+    (update db :settings/open? not)))
+
+
+(rf/reg-sub
+  :settings/open?
+  (fn [db _]
+    (:settings/open? db)))
 
 
 ;; Components
@@ -164,7 +204,7 @@
                  :onChange #(handle-monitoring-click monitoring update-fn)}
       "Send usage data and diagnostics to Athens"]]
     [help
-     [:<> [:p "Athens has never and will never look at the contents of your database."]
+     [:<> [:p "Athens has never and will never look at the contents of your workspace."]
       [:p "Athens will never ever sell your data."]]]]])
 
 
@@ -192,7 +232,7 @@
 
 
 (defn feature-flags-comp
-  [{:keys [comments reactions cover-photo time-controls]} update-fn]
+  [{:keys [comments reactions notifications properties cover-photo time-controls tasks queries]} update-fn]
   [setting-wrapper
    [:<>
     [header
@@ -200,21 +240,38 @@
     [form
      [:<>
       [:> FormControl
-       [:> Switch {:defaultChecked comments
+       [:> Switch {:isChecked comments
                    :onChange #(update-fn :comments %)}
         "Comments"]]
       [:> FormControl
-       [:> Switch {:defaultChecked reactions
+       [:> Switch {:isChecked tasks
+                   :onChange #(update-fn :tasks %)}
+        "Tasks"]]
+      [:> FormControl
+       [:> Switch {:isChecked queries
+                   :onChange #(update-fn :queries %)}
+        "Queries"]]
+      [:> FormControl
+       [:> Switch {:isChecked reactions
                    :onChange #(update-fn :reactions %)}
         "Reactions"]]
       [:> FormControl
-       [:> Switch {:defaultChecked cover-photo
+       [:> Switch {:isChecked notifications
+                   :onChange #(update-fn :notifications %)}
+        "Notifications"]]
+      [:> FormControl
+       [:> Switch {:isChecked properties
+                   :onChange #(update-fn :properties %)}
+        "Properties"]]
+      [:> FormControl
+       [:> Switch {:isChecked cover-photo
                    :onChange #(update-fn :cover-photo %)}
         "Cover Photo"]]
       [:> FormControl
-       [:> Switch {:defaultChecked time-controls
+       [:> Switch {:isChecked time-controls
                    :onChange #(update-fn :time-controls %)}
         "Time Controls"]]]]
+
     [help
      [:<>
       [:p "Optional experimental features that aren't ready for prime time, but that you can still enable to try out."]
@@ -248,27 +305,8 @@
       "Reset all settings to defaults"]]
     [help
      [:<> [:> Text "All settings saved between sessions will be restored to defaults."]
-      [:> Text "Databases on disk will not be deleted, but you will need to add them to Athens again."]
-      [:> Text "Athens will restart after reset and open the default database path."]]]]])
-
-
-(reg-event-fx
-  :settings/update
-  (fn [{:keys [db]} [_ k v]]
-    {:db (assoc-in db [:athens/persist :settings k] v)}))
-
-
-(reg-event-fx
-  :settings/update-in
-  (fn [{:keys [db]} [_ ks v]]
-    {:db (assoc-in db (into [:athens/persist :settings] ks) v)}))
-
-
-(reg-event-fx
-  :settings/reset
-  (fn [{:keys [db]} _]
-    {:db (assoc db :athens/persist default-athens-persist)
-     :dispatch [:boot]}))
+      [:> Text "Workspaces on disk will not be deleted, but you will need to add them to Athens again."]
+      [:> Text "Athens will restart after reset and open the default workspace path."]]]]])
 
 
 (defn page
@@ -276,7 +314,7 @@
   (let [{:keys [email monitoring backup-time feature-flags]} @(subscribe [:settings])]
     [:> Modal {:isOpen true
                :scrollBehavior "inside"
-               :onClose #(.back js/window.history)
+               :onClose #(rf/dispatch [:settings/toggle-open])
                :size "xl"}
      [:> ModalOverlay]
      [:> ModalContent {:maxWidth "calc(100% - 8rem)"

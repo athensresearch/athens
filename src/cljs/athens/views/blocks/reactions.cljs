@@ -1,16 +1,27 @@
 (ns athens.views.blocks.reactions
   (:require
+    ["@chakra-ui/react" :refer [Box
+                                Tooltip
+                                VStack
+                                HStack
+                                MenuItem
+                                MenuGroup
+                                Text]]
     [athens.common-db                          :as common-db]
     [athens.common-events.graph.ops            :as graph-ops]
     [athens.db                                 :as db]
-    [re-frame.core                             :as rf]))
+    [re-frame.core                             :as rf]
+    [reagent.core :as r]))
+
+
+(def common-reactions ["👍" "👎" "❤️" "🔥" "😂" "😲" "😢" "😡"])
 
 
 (defn toggle-reaction
   "Toggle reaction on block uid. Cleans up when toggling the last one off.
   Stores emojis in the [:reactions/emojis reaction user-id] property path."
   [id reaction user-id]
-  (rf/dispatch [:properties/update-in id [":reactions" reaction user-id]
+  (rf/dispatch [:graph/update-in id [":reactions" reaction user-id]
                 (fn [db user-reaction-uid]
                   (let [user-reacted?       (common-db/block-exists? db [:block/uid user-reaction-uid])
                         reaction            (when user-reacted?
@@ -57,3 +68,22 @@
        (sort-by first)
        (into [])))
 
+
+(defn reactions-menu-list-item
+  [props]
+  (let [{:keys [icon fn command]} props]
+    [:> Box {:display "inline-flex" :flex 1}
+     [:> Tooltip {:closeOnMouseDown true
+                  :label (r/as-element [:> VStack {:align "center"}
+                                        [:> Text "React with '" icon "'"]
+                                        (when command [:> Text command])])}
+      [:> MenuItem {:justifyContent "center" :on-click #(fn)} icon]]]))
+
+
+(defn reactions-menu-list
+  [uid user-id]
+  [:> MenuGroup {:title "Add reaction"}
+   [:> HStack {:spacing 0 :justifyContent "stretch"}
+    (for [reaction-icon common-reactions]
+      ^{:key reaction-icon}
+      [reactions-menu-list-item {:icon reaction-icon :fn #(toggle-reaction uid reaction-icon user-id)}])]])

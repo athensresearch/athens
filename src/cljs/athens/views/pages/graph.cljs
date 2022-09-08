@@ -433,12 +433,6 @@
                  :borderRadius "lg"
                  :bg "background.basement"
                  :position "relative"}
-                {:class "graph-page"
-                 :gridColumn "1 / -1"
-                 :position "fixed"
-                 :top 0
-                 :left 0
-                 :width "100vw"
-                 :height "100vh"})
+                {:class "graph-page"})
        [graph-root local-node-eid]]
       [graph-controls local-node-eid]])))
