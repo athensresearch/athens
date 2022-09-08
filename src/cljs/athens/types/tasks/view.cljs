@@ -473,7 +473,7 @@
        :block/uid))
 
 
-(defn on-update-status
+(defn update-task-status
   [task-uid new-status]
   (let [new-status (-> new-status find-status-uid)
         new-status (str "((" new-status "))")]
@@ -550,7 +550,7 @@
                       :options  status-options
                       :position "relative"
                       :top      "0.2em"
-                      :onChange #(on-update-status block-uid %)}]
+                      :onChange #(update-task-status block-uid %)}]
          [:> Box {:flex       "1 1 100%"
                   :py         1
                   :cursor     "text"
@@ -625,18 +625,44 @@
            [:> Text {:fontSize "sm"} created-date]]]]))))
 
 
+(defn task-ref-el
+  [ref-uid]
+  (let [{:block/keys [properties]} (reactive/get-reactive-block-document [:block/uid ref-uid])
+        title                      (-> properties
+                                       (get ":task/title")
+                                       :block/string)
+        status-options             (->> (find-allowed-statuses)
+                                        (map (fn [{:block/keys [string]}]
+                                               string)))
+        status-uid                 (-> properties
+                                       (get ":task/status")
+                                       :block/string
+                                       (common-db/strip-markup "((" "))"))
+        status                     (-> (common-db/get-block @db/dsdb [:block/uid status-uid])
+                                       :block/string)]
+    (log/debug ::task-ref-el :status (pr-str status))
+    [:> Flex {:display           "inline-flex"
+              :class             "block-ref"
+              :borderBottomWidth "1px"
+              :borderBottomStyle "solid"
+              :borderBottomColor "ref.foreground"
+              :gap               1}
+     [:> Taskbox {:status   status
+                  :options  status-options
+                  :position "relative"
+                  :top      "0.2em"
+                  :onChange #(update-task-status ref-uid %)}]
+     [:> Text title]]))
+
+
 (defrecord TaskView
   []
 
   types/BlockTypeProtocol
 
   (inline-ref-view
-    [_this _block-data _attr _ref-uid _uid _callbacks _with-breadcrumb?]
-    (let [block (reactive/get-reactive-block-document [:block/uid _ref-uid])]
-      [:> Flex {:display "inline-flex"
-                :gap     1}
-       [:> Taskbox]
-       [:> Text (:block/string block)]]))
+    [_this _block-data _attr ref-uid _uid _callbacks _with-breadcrumb?]
+    (task-ref-el ref-uid))
 
 
   (outline-view
