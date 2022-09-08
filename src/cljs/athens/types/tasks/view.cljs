@@ -485,50 +485,64 @@
                         [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "Done") "))"))]))])))
 
 
+(defn- task-status-view-v2
+  [_task-uid _status-uid]
+  (let [status-options (->> (find-allowed-statuses)
+                            (map (fn [{:block/keys [string]}]
+                                   string)))
+        status         (r/atom nil)]
+    (fn task-status-view-v2-render
+      [task-uid status-uid]
+      (let [status-block (reactive/get-reactive-block-document [:block/uid status-uid])]
+        (reset! status (:block/string status-block))
+        ^{:key @status}
+        [:> Taskbox {:status   @status
+                     :options  status-options
+                     :position "relative"
+                     :top      "0.2em"
+                     :onChange #(update-task-status task-uid %)}]))))
+
+
 (defn task-el
   [_this block-data _callbacks _is-ref?]
   (let [block-uid (:block/uid block-data)]
     (fn [_this _block-data callbacks]
-      (let [block           (-> [:block/uid block-uid] reactive/get-reactive-block-document)
-            props           (-> block :block/properties)
-            title-uid       (-> props (get ":task/title") :block/uid)
-            assignee-uid    (-> props (get ":task/assignee") :block/uid)
-            priority-uid    (-> props (get ":task/priority") :block/uid)
+      (let [block            (-> [:block/uid block-uid] reactive/get-reactive-block-document)
+            props            (-> block :block/properties)
+            title-uid        (-> props (get ":task/title") :block/uid)
+            assignee-uid     (-> props (get ":task/assignee") :block/uid)
+            priority-uid     (-> props (get ":task/priority") :block/uid)
             _description-uid (-> props (get ":task/description") :block/uid)
             _creator-uid     (-> props (get ":task/creator") :block/uid)
-            due-date-uid    (-> props (get ":task/due-date") :block/uid)
+            due-date-uid     (-> props (get ":task/due-date") :block/uid)
             ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
             ;; status-uid      (-> props (get ":task/status") :block/uid)
-            ;; map the :string key of the return from (find-allowed-statuses) into a vector
-            status-options  (->> (find-allowed-statuses)
-                                 (map (fn [{:block/keys [string]}]
-                                        string)))
-            creator         (-> (:block/create block) :event/auth :presence/id)
-            time            (-> (:block/create block) :event/time :time/ts)
-            created-date    (when time
-                              (-> time
-                                  t/instant
-                                  t/date
-                                  (dates/get-day 0)
-                                  :title))
-            status          (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
-                                                                               (get ":task/status")
-                                                                               :block/string
-                                                                               (common-db/strip-markup "((" "))"))])
-                                :block/string)
-            title          (-> props (get ":task/title") :block/string)
-            assignee        (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
-            priority        (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
-                                                                               (get ":task/priority")
-                                                                               :block/string
-                                                                               (common-db/strip-markup "((" "))"))])
-                                :block/string)
-            creator         creator
-            description     (-> props (get ":task/description") :block/string)
-            due-date        (-> props
-                                (get ":task/due-date")
-                                :block/string
-                                (common-db/strip-markup "[[" "]]"))
+            creator          (-> (:block/create block) :event/auth :presence/id)
+            time             (-> (:block/create block) :event/time :time/ts)
+            created-date     (when time
+                               (-> time
+                                   t/instant
+                                   t/date
+                                   (dates/get-day 0)
+                                   :title))
+            status-uid       (-> props
+                                 (get ":task/status")
+                                 :block/string
+                                 (common-db/strip-markup "((" "))"))
+            title            (-> props (get ":task/title") :block/string)
+            assignee         (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
+            priority         (-> [:block/uid  (-> props
+                                                  (get ":task/priority")
+                                                  :block/string
+                                                  (common-db/strip-markup "((" "))"))]
+                                 (reactive/get-reactive-block-document)
+                                 :block/string)
+            creator          creator
+            description      (-> props (get ":task/description") :block/string)
+            due-date         (-> props
+                                 (get ":task/due-date")
+                                 :block/string
+                                 (common-db/strip-markup "[[" "]]"))
 
             show-assignee?     true
             show-description?  false
@@ -546,11 +560,7 @@
                     :transitionTimingFunction "ease-in-out"
                     :overflow                 "hidden"
                     :align                    "stretch"}
-         [:> Taskbox {:status   status
-                      :options  status-options
-                      :position "relative"
-                      :top      "0.2em"
-                      :onChange #(update-task-status block-uid %)}]
+         [task-status-view-v2 block-uid status-uid]
          [:> Box {:flex       "1 1 100%"
                   :py         1
                   :cursor     "text"
@@ -566,14 +576,14 @@
          [:> ModalInput {:placement "left-start"
                          :isLazy    true}
           [:> ModalInputTrigger
-           [:> Button {:size         "sm"
-                       :flex         "1 0 auto"
-                       :variant      "ghost"
-                       :onClick      #(.. % stopPropagation)
-                       :lineHeight   "unset"
-                       :whiteSpace   "unset"
-                       :px           2
-                       :py           1}
+           [:> Button {:size       "sm"
+                       :flex       "1 0 auto"
+                       :variant    "ghost"
+                       :onClick    #(.. % stopPropagation)
+                       :lineHeight "unset"
+                       :whiteSpace "unset"
+                       :px         2
+                       :py         1}
 
             ;; description
             (when (and show-description? description)
@@ -609,9 +619,9 @@
                                   :px                  4
                                   :maxWidth            "20em"}}
            [:> HStack {:gridColumn "1 / -1" :align "flex-start"}
-            [:> Text {:fontSize "sm"
+            [:> Text {:fontSize  "sm"
                       :noOfLines 2
-                      :color "foreground.secondary"}
+                      :color     "foreground.secondary"}
              title]]
            [:> Divider {:gridColumn "1 / -1"}]
            [task-priority-view block-uid priority-uid]
@@ -631,28 +641,18 @@
         title                      (-> properties
                                        (get ":task/title")
                                        :block/string)
-        status-options             (->> (find-allowed-statuses)
-                                        (map (fn [{:block/keys [string]}]
-                                               string)))
         status-uid                 (-> properties
                                        (get ":task/status")
                                        :block/string
-                                       (common-db/strip-markup "((" "))"))
-        status                     (-> (common-db/get-block @db/dsdb [:block/uid status-uid])
-                                       :block/string)]
-    (log/debug ::task-ref-el :status (pr-str status))
-    [:> Flex {:display           "inline-flex"
-              :class             "block-ref"
-              :borderBottomWidth "1px"
-              :borderBottomStyle "solid"
-              :borderBottomColor "ref.foreground"
-              :gap               1}
-     [:> Taskbox {:status   status
-                  :options  status-options
-                  :position "relative"
-                  :top      "0.2em"
-                  :onChange #(update-task-status ref-uid %)}]
-     [:> Text title]]))
+                                       (common-db/strip-markup "((" "))"))]
+    [:> Flex {:display "inline-flex"
+              :gap     1}
+     [task-status-view-v2 ref-uid status-uid]
+     [:> Text {:class             "block-ref"
+               :borderBottomWidth "1px"
+               :borderBottomStyle "solid"
+               :borderBottomColor "ref.foreground"}
+      title]]))
 
 
 (defrecord TaskView
