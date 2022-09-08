@@ -282,31 +282,31 @@
       (let [prop-block         (reactive/get-reactive-block-document [:block/uid prop-block-uid])
             prop-str           (:block/string prop-block "")
             _invalid-prop-str? (and (str/blank? prop-str)
-                                     (not (nil? prop-str)))
+                                    (not (nil? prop-str)))
             save-fn            (fn
-                                  ([]
-                                   (log/debug prop-name "save-fn" (pr-str @local-value))
-                                   (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
-                                     (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
-                                                   (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
-                                  ([e]
-                                   (let [new-value (-> e .-target .-value)]
-                                     (log/debug prop-name "save-fn" (pr-str new-value))
-                                     (reset! local-value new-value)
-                                     (when (#{":task/title"
-                                              ":task/assignee"
-                                              ":task/description"
-                                              ":task/due-date"} prop-name)
-                                       (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
-                                                     (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
+                                 ([]
+                                  (log/debug prop-name "save-fn" (pr-str @local-value))
+                                  (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
+                                    (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
+                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])])))
+                                 ([e]
+                                  (let [new-value (-> e .-target .-value)]
+                                    (log/debug prop-name "save-fn" (pr-str new-value))
+                                    (reset! local-value new-value)
+                                    (when (#{":task/title"
+                                             ":task/assignee"
+                                             ":task/description"
+                                             ":task/due-date"} prop-name)
+                                      (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
+                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
             update-fn          #(do
-                                   (when-not (= prop-str %)
-                                     (log/debug prop-name "update-fn:" (pr-str %))
-                                     (reset! local-value %)))
+                                  (when-not (= prop-str %)
+                                    (log/debug prop-name "update-fn:" (pr-str %))
+                                    (reset! local-value %)))
             idle-fn            (gfns/debounce #(do
-                                                  (log/debug prop-name "idle-fn" (pr-str @local-value))
-                                                  (save-fn))
-                                               2000)
+                                                 (log/debug prop-name "idle-fn" (pr-str @local-value))
+                                                 (save-fn))
+                                              2000)
             show-edit?         (r/atom false)
             state-hooks        (merge {:save-fn                 save-fn
                                        :idle-fn                 idle-fn
