@@ -74,8 +74,6 @@
         set-num-shown        (fn [num]
                                (rf/dispatch [:left-sidebar.tasks/set-max-tasks num]))
         ;; sort by due date, then priority, then title
-        get-num-done         (fn [tasks]
-                               (count (filterv #(get-is-done %) tasks)))
         widget-open?         (left-sidebar-subs/get-widget-open? "tasks")]
 
 
