@@ -73,30 +73,30 @@ jobs:
        #   run: yarn server:test:fluree
 
 
-   e2e:
-     runs-on: ubuntu-latest
-     steps:
-       - uses: actions/checkout@v2
-       - uses: ./.github/custom-actions/clojure-env
-       - uses: ./.github/custom-actions/node-env
+  #  e2e:
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - uses: actions/checkout@v2
+  #      - uses: ./.github/custom-actions/clojure-env
+  #      - uses: ./.github/custom-actions/node-env
 
-       # Caching the build is generally a terrible idea, but e2e is really slow
-       # and shadow-cljs is usually pretty good at cache invalidation.
-       # Still, if you think this cache is breaking builds, just bump the version number.
-       - name: Restore shadow-cljs build cache
-         uses: actions/cache@v2
-         id: restore-shadow-cljs-build-cache
-         with:
-           path: ./.shadow-cljs
-           key: ${{ runner.os }}-v2-shadow-cljs-build-cache-${{ hashFiles('yarn.lock') }}
-           restore-keys: |
-             ${{ runner.os }}-v2-shadow-cljs-build-cache
+  #      # Caching the build is generally a terrible idea, but e2e is really slow
+  #      # and shadow-cljs is usually pretty good at cache invalidation.
+  #      # Still, if you think this cache is breaking builds, just bump the version number.
+  #      - name: Restore shadow-cljs build cache
+  #        uses: actions/cache@v2
+  #        id: restore-shadow-cljs-build-cache
+  #        with:
+  #          path: ./.shadow-cljs
+  #          key: ${{ runner.os }}-v2-shadow-cljs-build-cache-${{ hashFiles('yarn.lock') }}
+  #          restore-keys: |
+  #            ${{ runner.os }}-v2-shadow-cljs-build-cache
 
-       - name: Compile JS assets for dev
-         run: yarn client:dev-build
+  #      - name: Compile JS assets for dev
+  #        run: yarn client:dev-build
 
-       - name: Run client e2e tests over dev build
-         run: yarn client:e2e
+  #      - name: Run client e2e tests over dev build
+  #        run: yarn client:e2e
 
 
    build-app:
@@ -114,8 +114,8 @@ jobs:
            SENTRY_DSN: ${{ secrets.sentry_dsn }}
            COMMIT_URL: "https://github.com/${{github.repository}}/commit/${{github.sha}}"
 
-       - name: Run client e2e tests over the prod build
-         run: yarn client:e2e
+      #  - name: Run client e2e tests over the prod build
+      #    run: yarn client:e2e
 
        - name: Upload built app for release-web, release-electron
          uses: actions/upload-artifact@v2
