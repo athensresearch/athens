@@ -48,8 +48,8 @@
       [parse-renderer/parse-and-render task-title task-uid]]]))
 
 
-
-(defn sort-tasks-list [tasks]
+(defn sort-tasks-list
+  [tasks]
   (sort-by (juxt #(get % ":task/due") #(get % ":task/priority") #(get % ":task/title")) tasks))
 
 
@@ -81,7 +81,7 @@
 
      ;; Widget header, including settings popover
      [:> Popover {:placement "right-start" :size "sm"}
- 
+
       ;; Widget header
       [:> PopoverAnchor
        [:> WidgetHeader {:title "Assigned to Me"
@@ -111,16 +111,16 @@
         [:> PopoverBody
          [:> Heading {:size "xs"}
           "Display Settings"]
-          [:> VStack {:py 2}
-           [:> FormControl {:display "flex" :flexDirection "row"}
-            [:> FormLabel {:flex "1 1 100%" :py 1} "Tasks per page"]
-            [:> Select {:value max-tasks-shown
-                        :size "xs"
-                        :onChange #(set-num-shown (-> % .-target .-value js/parseInt))}
-             [:option {:value 3} "3"]
-             [:option {:value 5} "5"]
-             [:option {:value 10} "7"]
-             [:option {:value 20} "20"]]]]]]]]
+         [:> VStack {:py 2}
+          [:> FormControl {:display "flex" :flexDirection "row"}
+           [:> FormLabel {:flex "1 1 100%" :py 1} "Tasks per page"]
+           [:> Select {:value max-tasks-shown
+                       :size "xs"
+                       :onChange #(set-num-shown (-> % .-target .-value js/parseInt))}
+            [:option {:value 3} "3"]
+            [:option {:value 5} "5"]
+            [:option {:value 10} "7"]
+            [:option {:value 20} "20"]]]]]]]]
 
      ;; Body of the main widget
      [:> WidgetBody {:as VStack
@@ -154,6 +154,6 @@
                 [:> AnimatePresence {:initial false}
                  (doall
                    ;; show sorted list of limited number of incomplete tasks
-                  (for [task (take max-tasks-shown (sort-tasks-list incomplete-tasks))]
-                    ^{:key (get task ":block/uid")}
-                    [:f> sidebar-task-el task]))]]]))))]]))
+                   (for [task (take max-tasks-shown (sort-tasks-list incomplete-tasks))]
+                     ^{:key (get task ":block/uid")}
+                     [:f> sidebar-task-el task]))]]]))))]]))
