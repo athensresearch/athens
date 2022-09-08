@@ -349,7 +349,7 @@
                (str "Please provide " prop-title)])]))))
 
 
-(defn- find-allowed-priorities
+(defn find-allowed-priorities
   []
   (let [task-priority-page  (reactive/get-reactive-node-document [:node/title ":task/priority"])
         allowed-prio-blocks (-> task-priority-page
@@ -367,7 +367,7 @@
       allowed-priorities)))
 
 
-(defn- find-allowed-statuses
+(defn find-allowed-statuses
   []
   (let [task-status-page    (reactive/get-reactive-node-document [:node/title ":task/status"])
         allowed-stat-blocks (-> task-status-page
