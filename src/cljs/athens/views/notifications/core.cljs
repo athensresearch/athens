@@ -23,10 +23,10 @@
     (= notification-type  "athens/notification/type/mention")
     (str "**" notification-trigger-author "** " "mentioned you: " "**((" notification-trigger-uid "))**")
 
-    (= notification-type "athens/task/assigned/to")
+    (= notification-type "athens/notification/type/task/assigned/to")
     (str "**" notification-trigger-author "** " "assigned you task: " "***((" notification-trigger-uid "))***")
 
-    (= notification-type "athens/task/assigned/by")
+    (= notification-type "athens/notification/type/task/assigned/by")
     (str "You assigned a new task: " "***((" notification-trigger-uid "))*** to " notification-for-user)))
 
 
