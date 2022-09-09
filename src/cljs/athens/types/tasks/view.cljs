@@ -32,7 +32,9 @@
     [athens.common.utils                        :as common.utils]
     [athens.dates                               :as dates]
     [athens.db                                  :as db]
+    [athens.parse-renderer                      :as parser]
     [athens.reactive                            :as reactive]
+    [athens.router                              :as router]
     [athens.self-hosted.presence.views          :as presence]
     [athens.types.core                          :as types]
     [athens.types.dispatcher                    :as dispatcher]
@@ -648,11 +650,63 @@
     [:> Flex {:display "inline-flex"
               :gap     1}
      [task-status-view-v2 ref-uid status-uid]
-     [:> Text {:class             "block-ref"
-               :borderBottomWidth "1px"
-               :borderBottomStyle "solid"
-               :borderBottomColor "ref.foreground"}
-      title]]))
+     [:> Button {:variant           "link"
+                 :as                "a"
+                 :class             "block-ref"
+                 :display           "inline"
+                 :color             "unset"
+                 :whiteSpace        "unset"
+                 :textAlign         "unset"
+                 :minWidth          "0"
+                 :fontSize          "inherit"
+                 :fontWeight        "inherit"
+                 :lineHeight        "inherit"
+                 :marginInline      "-2px"
+                 :paddingInline     "2px"
+                 :borderBottomWidth "1px"
+                 :borderBottomStyle "solid"
+                 :borderBottomColor "ref.foreground"
+                 :cursor            "alias"
+                 :sx                {"WebkitBoxDecorationBreak" "clone"
+                                     :h1                        {:marginBlock         0
+                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                                                 :fontSize            "inherit"
+                                                                 :display             "inline-block"}
+                                     :h2                        {:marginBlock         0
+                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                                                 :fontSize            "inherit"
+                                                                 :display             "inline-block"}
+                                     :h3                        {:marginBlock         0
+                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                                                 :fontSize            "inherit"
+                                                                 :display             "inline-block"}
+                                     :h4                        {:marginBlock         0
+                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                                                 :fontSize            "inherit"
+                                                                 :display             "inline-block"}
+                                     :h5                        {:marginBlock         0
+                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                                                 :fontSize            "inherit"
+                                                                 :display             "inline-block"}
+                                     :h6                        {:marginBlock         0
+                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
+                                                                 :fontSize            "inherit"
+                                                                 :display             "inline-block"}
+                                     :p                         {:display     "inline-block"
+                                                                 :marginBlock 0}}
+                 :_hover            {:textDecoration    "none"
+                                     :borderBottomColor "transparent"
+                                     :bg                "ref.background"}
+                 :onClick           (fn [e]
+                                      (.. e stopPropagation)
+                                      (let [shift? (.-shiftKey e)]
+                                        (rf/dispatch [:reporting/navigation {:source :pr-task-ref
+                                                                             :target :task
+                                                                             :pane   (if shift?
+                                                                                       :right-pane
+                                                                                       :main-pane)}])
+                                        (router/navigate-uid ref-uid e)))}
+      [parser/parse-and-render title]]]))
 
 
 (defrecord TaskView
