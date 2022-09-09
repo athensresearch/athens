@@ -4,14 +4,11 @@
     [athens.common.logging                      :as log]
     [athens.common.utils                        :as common.utils]
     [athens.reactive                            :as reactive]
-    [athens.self-hosted.presence.views          :as presence]
     [athens.views.blocks.editor                 :as editor]
     [clojure.string                             :as str]
     [goog.functions                             :as gfns]
     [re-frame.core                              :as rf]
     [reagent.core                               :as r]))
-
-
 
 
 (defn inline-task-title-2
@@ -87,10 +84,6 @@
                                         "empty"))]
               [:> FormHelperText
                (str "Please provide " prop-title)])]))))
-
-
-
-
 
 
 ;; Will need this in future, see Stuart's comment for better understanding here https://discord.com/channels/708122962422792194/1008156785791742002/1009102458695450654

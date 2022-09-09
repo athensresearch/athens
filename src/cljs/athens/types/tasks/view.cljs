@@ -1,7 +1,7 @@
 (ns athens.types.tasks.view
   "Views for Athens Tasks"
   (:require
-    ["/components/Block/BlockFormInput"         :refer [BlockFormInput]]
+    ["/components/Block/BlockFormInput"         :refer []]
     ["/components/Block/Taskbox"                :refer [Taskbox]]
     ["/components/Icons/Icons"                  :refer [PencilIcon]]
     ["/components/ModalInput/ModalInput"        :refer [ModalInput]]
@@ -17,36 +17,24 @@
                                                         Divider
                                                         Button
                                                         Badge
-                                                        FormErrorMessage
                                                         Select
                                                         HStack]]
     [athens.common-db                           :as common-db]
     [athens.common-events.graph.ops             :as graph-ops]
-    [athens.common.logging                      :as log]
-    [athens.common.utils                        :as common.utils]
     [athens.dates                               :as dates]
     [athens.db                                  :as db]
     [athens.reactive                            :as reactive]
-    [athens.self-hosted.presence.views          :as presence]
     [athens.types.core                          :as types]
     [athens.types.dispatcher                    :as dispatcher]
-    [athens.views.blocks.editor                 :as editor]
-    [clojure.string                             :as str]
-    [goog.functions                             :as gfns]
-    [re-frame.core                              :as rf]
-    [reagent.core                               :as r]
-    [tick.core                                  :as t]
-    [athens.types.tasks.shared :as shared]
     [athens.types.tasks.events :as events]
+    [athens.types.tasks.generic-textarea :as generic-textarea]
     [athens.types.tasks.inline-task-title :as inline-task-title]
-    [athens.types.tasks.generic-textarea :as generic-textarea]))
-
-
+    [athens.types.tasks.shared :as shared]
+    [re-frame.core                              :as rf]
+    [tick.core                                  :as t]))
 
 
 ;; View
-
-
 
 
 

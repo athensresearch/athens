@@ -1,9 +1,10 @@
 (ns athens.types.tasks.shared
   (:require
-    [athens.reactive :as reactive]
-    [re-frame.core :as rf]
     [athens.common-db                           :as common-db]
-    [athens.common-events.bfs                   :as bfs]))
+    [athens.common-events.bfs                   :as bfs]
+    [athens.reactive :as reactive]
+    [re-frame.core :as rf]))
+
 
 ;; Create default task statuses configuration
 
@@ -59,6 +60,7 @@
                                                                  {:block/uid uid :relation :first})))]))
     (when (seq allowed-statuses)
       allowed-statuses)))
+
 
 (defn find-status-uid
   [status]

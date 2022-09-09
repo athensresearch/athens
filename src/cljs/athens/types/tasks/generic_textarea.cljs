@@ -1,24 +1,15 @@
 (ns athens.types.tasks.generic-textarea
   (:require
     ["/components/Block/BlockFormInput"         :refer [BlockFormInput]]
-    ["/components/Block/Taskbox"                :refer [Taskbox]]
-    ["/components/Icons/Icons"                  :refer [PencilIcon]]
-    ["/components/ModalInput/ModalInput"        :refer [ModalInput]]
-    ["/components/ModalInput/ModalInputPopover" :refer [ModalInputPopover]]
-    ["/components/ModalInput/ModalInputTrigger" :refer [ModalInputTrigger]]
+    ["/components/Block/Taskbox"                :refer []]
+    ["/components/Icons/Icons"                  :refer []]
+    ["/components/ModalInput/ModalInput"        :refer []]
+    ["/components/ModalInput/ModalInputPopover" :refer []]
+    ["/components/ModalInput/ModalInputTrigger" :refer []]
     ["@chakra-ui/react"                         :refer [FormControl
                                                         FormLabel
-                                                        Text
-                                                        Flex
-                                                        AvatarGroup
-                                                        Avatar
                                                         Box
-                                                        Divider
-                                                        Button
-                                                        Badge
-                                                        FormErrorMessage
-                                                        Select
-                                                        HStack]]
+                                                        FormErrorMessage]]
     [athens.common-events.graph.ops             :as graph-ops]
     [athens.common.logging                      :as log]
     [athens.common.utils                        :as common.utils]
@@ -29,7 +20,6 @@
     [goog.functions                             :as gfns]
     [re-frame.core                              :as rf]
     [reagent.core                               :as r]))
-
 
 
 (defn generic-textarea-view-for-task-props
