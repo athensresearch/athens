@@ -502,6 +502,7 @@
                      :options  status-options
                      :position "relative"
                      :top      "0.2em"
+                     :onClick  #(.stopPropagation %)
                      :onChange #(update-task-status task-uid %)}]))))
 
 
@@ -647,56 +648,25 @@
                                        (get ":task/status")
                                        :block/string
                                        (common-db/strip-markup "((" "))"))]
-    [:> Flex {:display "inline-flex"
-              :gap     1}
+    [:> Flex {:display   "inline-flex"
+              :align     "baseline"
+              :bg        "ref.background"
+              :sx        {"WebkitBoxDecorationBreak" "clone"}
+              :alignSelf "baseline"
+              :gap       1}
      [task-status-view-v2 ref-uid status-uid]
-     [:> Button {:variant           "link"
-                 :as                "a"
-                 :class             "block-ref"
-                 :display           "inline"
-                 :color             "unset"
-                 :whiteSpace        "unset"
-                 :textAlign         "unset"
-                 :minWidth          "0"
-                 :fontSize          "inherit"
-                 :fontWeight        "inherit"
-                 :lineHeight        "inherit"
-                 :marginInline      "-2px"
-                 :paddingInline     "2px"
+     [:> Button {:variant           "unstyled"
+                 :fontWeight        "normal"
+                 :height "auto"
+                 :borderRadius "none"
                  :borderBottomWidth "1px"
                  :borderBottomStyle "solid"
                  :borderBottomColor "ref.foreground"
-                 :cursor            "alias"
-                 :sx                {"WebkitBoxDecorationBreak" "clone"
-                                     :h1                        {:marginBlock         0
-                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
-                                                                 :fontSize            "inherit"
-                                                                 :display             "inline-block"}
-                                     :h2                        {:marginBlock         0
-                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
-                                                                 :fontSize            "inherit"
-                                                                 :display             "inline-block"}
-                                     :h3                        {:marginBlock         0
-                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
-                                                                 :fontSize            "inherit"
-                                                                 :display             "inline-block"}
-                                     :h4                        {:marginBlock         0
-                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
-                                                                 :fontSize            "inherit"
-                                                                 :display             "inline-block"}
-                                     :h5                        {:marginBlock         0
-                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
-                                                                 :fontSize            "inherit"
-                                                                 :display             "inline-block"}
-                                     :h6                        {:marginBlock         0
-                                                                 "&:not(:last-child)" {:paddingInlineEnd "0.35ch"}
-                                                                 :fontSize            "inherit"
-                                                                 :display             "inline-block"}
-                                     :p                         {:display     "inline-block"
-                                                                 :marginBlock 0}}
                  :_hover            {:textDecoration    "none"
                                      :borderBottomColor "transparent"
                                      :bg                "ref.background"}
+                 :lineHeight        "1.4"
+                 :cursor            "alias"
                  :onClick           (fn [e]
                                       (.. e stopPropagation)
                                       (let [shift? (.-shiftKey e)]
