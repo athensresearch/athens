@@ -224,13 +224,20 @@
 
 
   (supported-transclusion-scopes
-    [_this])
+    [_this]
+    #{:embed})
 
 
   (transclusion-view
-    [_this _block-el block-uid _callback _transclusion-scope]
-    (let [block (reactive/get-reactive-block-document [block-uid])]
-      [task-el _this block true]))
+    [this _block-el block-uid _callback transclusion-scope]
+    (let [supported-trans (types/supported-transclusion-scopes this)]
+      (if-not (contains? supported-trans transclusion-scope)
+        (throw (ex-info (str "Invalid transclusion scope: " (pr-str transclusion-scope)
+                             ". Supported transclusion types: " (pr-str supported-trans))
+                        {:supported-transclusion-scopes supported-trans
+                         :provided-transclusion-scope   transclusion-scope}))
+        (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
+          [task-el this block true]))))
 
 
   (zoomed-in-view
