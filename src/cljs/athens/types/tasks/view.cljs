@@ -29,10 +29,12 @@
     [athens.common-events.graph.composite       :as composite]
     [athens.common-events.graph.ops             :as graph-ops]
     [athens.common.logging                      :as log]
+
     [athens.common.utils                        :as common.utils]
     [athens.dates                               :as dates]
     [athens.db                                  :as db]
     [athens.reactive                            :as reactive]
+        [athens.router              :as router]
     [athens.self-hosted.presence.views          :as presence]
     [athens.types.core                          :as types]
     [athens.types.dispatcher                    :as dispatcher]
@@ -626,17 +628,51 @@
 
 
 (defrecord TaskView
-  []
+           []
 
   types/BlockTypeProtocol
 
   (inline-ref-view
-    [_this _block-data _attr _ref-uid _uid _callbacks _with-breadcrumb?]
-    (let [block (reactive/get-reactive-block-document [:block/uid _ref-uid])]
+    [_this _block-data _attr ref-uid _uid _callbacks _with-breadcrumb?]
+    (let [block (reactive/get-reactive-block-document [:block/uid ref-uid])
+          props           (-> block :block/properties)
+          title          (-> props (get ":task/title") :block/string)
+          status-options (->> (find-allowed-statuses)
+                              (map (fn [{:block/keys [string]}]
+                                     string)))]
       [:> Flex {:display "inline-flex"
+                :align "baseline"
+                :bg "ref.background"
+                :sx                {"WebkitBoxDecorationBreak" "clone"}
+                :alignSelf "baseline"
                 :gap     1}
-       [:> Taskbox]
-       [:> Text (:block/string block)]]))
+       [:> Taskbox {:status   (-> block :block/props (get ":task/status") :block/string)
+                    :options  status-options
+                    :onClick #(.. % stopPropagation)
+                    :onChange #(on-update-status ref-uid %)
+                    :position "relative"
+                    :top      "0.2em"}]
+       [:> Button {:variant "unstyled"
+                   :fontWeight "normal"
+                   :height "auto"
+                   :borderRadius "none"
+                   :borderBottomWidth "1px"
+                   :borderBottomStyle "solid"
+                   :borderBottomColor "ref.foreground"
+                   :_hover            {:textDecoration    "none"
+                                       :borderBottomColor "transparent"
+                                       :bg                "ref.background"}
+                   :lineHeight "1.4"
+                   :cursor "alias"
+                   :onClick (fn [e]
+                              (.. e stopPropagation)
+                              (let [shift? (.-shiftKey e)]
+                                (rf/dispatch [:reporting/navigation {:source :pr-block-ref
+                                                                     :target :block
+                                                                     :pane   (if shift?
+                                                                               :right-pane
+                                                                               :main-pane)}])
+                                (router/navigate-uid ref-uid e)))} title]]))
 
 
   (outline-view
