@@ -29,12 +29,11 @@
     [athens.common-events.graph.composite       :as composite]
     [athens.common-events.graph.ops             :as graph-ops]
     [athens.common.logging                      :as log]
-
     [athens.common.utils                        :as common.utils]
     [athens.dates                               :as dates]
     [athens.db                                  :as db]
     [athens.reactive                            :as reactive]
-        [athens.router              :as router]
+    [athens.router                              :as router]
     [athens.self-hosted.presence.views          :as presence]
     [athens.types.core                          :as types]
     [athens.types.dispatcher                    :as dispatcher]
@@ -628,7 +627,7 @@
 
 
 (defrecord TaskView
-           []
+  []
 
   types/BlockTypeProtocol
 
