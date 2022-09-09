@@ -17,7 +17,7 @@ const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: 
   return (closestBlockContainer?.dataset?.uid === thisBlockUid)
 }
 
-const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
+const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
   const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
 
   const internalRef = React.useRef(null)
@@ -52,7 +52,7 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
       bg={isMenuOpen ? "background.upper" : undefined}
       justifyContent="flex-start"
       flexDirection="column"
-      display={isHidden ? "none" : "block"}
+      display= "block"
       background="var(--block-surface-color)"
       opacity={isDragging ? 0.5 : 1}
       data-uid={uid}
