@@ -650,21 +650,35 @@
                                        (common-db/strip-markup "((" "))"))]
     [:> Flex {:display   "inline-flex"
               :align     "baseline"
-              :bg        "ref.background"
-              :sx        {"WebkitBoxDecorationBreak" "clone"}
+              :bg        "transparent"
+              :transitionProperty "colors"
+              :transitionDuration "fast"
+              :borderRadius "2px"
+              :transitionTimingFunction "ease-in-out"
+              :sx        {"WebkitBoxDecorationBreak" "clone"
+                          "&:has(.task-title:hover)"
+                          {:textDecoration    "none"
+                           :borderBottomColor "transparent"
+                           :bg                "ref.background"}}
               :alignSelf "baseline"
               :gap       1}
      [task-status-view-v2 ref-uid status-uid]
-     [:> Button {:variant           "unstyled"
-                 :fontWeight        "normal"
+     [:> Button {:variant "unstyled"
+                 :className "task-title"
+                 :fontWeight "normal"
+                 :whiteSpace "normal"
+                 :minWidth "0"
+                 :display "inline"
+                 :sx {"WebkitBoxDecorationBreak" "clone"
+                      ".block" {"WebkitBoxDecorationBreak" "clone",
+                                :borderBottomWidth "1px"
+                                :borderBottomStyle "solid"
+                                :borderBottomColor "ref.foreground"}
+                      ":hover .block" {:borderBottomColor "transparent"}}
+                 :textAlign "start"
+                 :justifyContent "start"
                  :height "auto"
                  :borderRadius "none"
-                 :borderBottomWidth "1px"
-                 :borderBottomStyle "solid"
-                 :borderBottomColor "ref.foreground"
-                 :_hover            {:textDecoration    "none"
-                                     :borderBottomColor "transparent"
-                                     :bg                "ref.background"}
                  :lineHeight        "1.4"
                  :cursor            "alias"
                  :onClick           (fn [e]
