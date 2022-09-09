@@ -271,22 +271,23 @@
 (defntrace shape-parent-query
   "Normalize path from deeply nested block to root node."
   [pull-results]
-  (->> (loop [b   pull-results
-              res []]
-         (cond
-           ;; There's no page in these pull results, log and exit.
-           (nil? b)        (do
-                             (log/warn "No parent found in" (pr-str pull-results))
-                             [])
-           ;; Found the page.
-           (:node/title b) (conj res b)
-           ;; Recur with the parent.
-           :else           (recur (or (first (:block/_children b))
-                                      (:block/property-of b))
-                                  (conj res (dissoc b :block/_children :block/property-of)))))
-       (rest)
-       (reverse)
-       vec))
+  (when (:db/id pull-results)
+    (->> (loop [b   pull-results
+                res []]
+           (cond
+             ;; There's no page in these pull results, log and exit.
+             (nil? b)        (do
+                               (log/warn "No parent found in" (pr-str pull-results))
+                               [])
+             ;; Found the page.
+             (:node/title b) (conj res b)
+             ;; Recur with the parent.
+             :else           (recur (or (first (:block/_children b))
+                                        (:block/property-of b))
+                                    (conj res (dissoc b :block/_children :block/property-of)))))
+         (rest)
+         (reverse)
+         vec)))
 
 
 (defntrace get-parents-recursively
