@@ -77,18 +77,14 @@ export const KanbanColumn = forwardRef((props, ref) => {
 
   return (
     <VStack
-      ref={ref}
       flex="1 1 100%"
-      minHeight="calc(3em + 3.375em)" // height of a card plus height of the col header
       position="relative"
       align="stretch"
-      listStyleType="none"
-      spacing="2px"
       bg="background.floor"
       borderRadius="md"
-      axis="y"
       maxHeight="100%"
       width="30ch"
+      overflowY="auto"
       _after={{
         content: "''",
         position: "absolute",
@@ -105,9 +101,20 @@ export const KanbanColumn = forwardRef((props, ref) => {
         })
       }}
     >
-      <AnimatePresence initial={false}>
-        {children}
-      </AnimatePresence>
+      <VStack
+        spacing="2px"
+        minHeight="calc(3em + 3.375em)" // height of a card plus height of the col header
+        overflowY="auto"
+        align="stretch"
+        listStyleType="none"
+        ref={ref}
+        axis="y"
+
+      >
+        <AnimatePresence initial={false}>
+          {children}
+        </AnimatePresence>
+      </VStack>
     </VStack>
   );
 });
@@ -179,7 +186,7 @@ export const KanbanSwimlane = forwardRef((props, ref) => {
         boxShadow: shadow
       }}
       sx={{
-        "-webkit-overflow-scrolling": "touch",
+        "WebkitOverflowScrolling": "touch",
       }}
       {...laneProps}
     >
