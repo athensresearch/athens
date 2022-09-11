@@ -10,6 +10,7 @@
     [athens.router   :as router]
     [athens.types.query.shared :as query]
     [athens.types.tasks.events :as tasks]
+    [athens.types.tasks.shared :as shared]
     [athens.views.left-sidebar.subs :as left-sidebar-subs]
     [re-frame.core   :as rf]
     [reagent.core    :as r]))
@@ -20,7 +21,7 @@
   (let [task-uid      (get task ":block/uid")
         task-title    (get task ":task/title")
         status-uid    (get task ":task/status")
-        status-options (->> (tasks/find-allowed-statuses)
+        status-options (->> (shared/find-allowed-statuses)
                             (map (fn [{:block/keys [string]}]
                                    string)))
         status-block  (reactive/get-reactive-block-document [:block/uid status-uid])
