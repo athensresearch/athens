@@ -452,8 +452,7 @@
                     "block:" (pr-str (:block/open block))
                     "merge:" (pr-str (:block/open (merge block-o block))))
 
-         [:> Container {:isHidden     (actions/archived-notification? properties)
-                        :isDragging   (and @dragging? (not @selected?))
+         [:> Container {:isDragging   (and @dragging? (not @selected?))
                         :isSelected   @selected?
                         :hasChildren  (seq children)
                         :isOpen       open
