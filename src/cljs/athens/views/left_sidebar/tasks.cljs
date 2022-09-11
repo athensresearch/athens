@@ -65,7 +65,8 @@
                                (let [status        (get task ":task/status")
                                      status-block  (reactive/get-reactive-block-document [:block/uid status])
                                      status-string (:block/string status-block "(())")]
-                                 (= status-string "Done")))
+                                 (or (= status-string "Done")
+                                     (= status-string "Cancelled"))))
         is-filtered?         true
         fn-assigned-to-me    (fn [task]
                                (= (str "@" me)
