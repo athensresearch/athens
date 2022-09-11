@@ -220,6 +220,7 @@
                      :value g-s-by}]]
     [:> ButtonGroup {:isAttached true :gap "1px" :size "xs"}
      (for [menu menus-data]
+       ^{:key menu}
        (let [{:keys [heading options onChange value]} menu]
          [:> QueryRadioMenu {:key heading :heading heading :options options :onChange onChange :value value}]))]))
 

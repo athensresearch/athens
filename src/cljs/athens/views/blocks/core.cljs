@@ -527,8 +527,7 @@
                         :on-drag-start          (fn [e]
                                                   (block-bullet/bullet-drag-start e uid))
                         :on-drag-end            (fn [e]
-                                                  (block-bullet/bullet-drag-end e uid))
-                        :unreadNotification     (actions/unread-notification? properties)}]
+                                                  (block-bullet/bullet-drag-end e uid))}]
 
             ;; `BlockTypeProtocol` dispatch placement
             [:> Box {:gridArea "content" :overflow "hidden"}
