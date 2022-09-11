@@ -123,7 +123,6 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
                   <MenuDivider />
                   <MenuGroup title="On this page">
                     {currentPageMembers.map((member) => {
-                      console.log(member)
                       return (
                         <MenuItem
                           onClick={() => handlePressMember(member)}
