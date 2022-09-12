@@ -199,7 +199,7 @@ const semanticTokens = {
       _dark: "#fbbe6366",
     },
     "ref.background": {
-      default: "#fbbe63bb",
+      default: "#fbbe6344",
       _dark: "#fbbe6311",
     }
   }

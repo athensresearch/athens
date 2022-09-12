@@ -1,9 +1,9 @@
 import React from 'react';
 import {
   Button, VStack, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
-  Tooltip, FormLabel, BoxProps, MenuGroup, MenuItem, MenuDivider, Text
+  Tooltip, FormLabel, BoxProps, Text
 } from '@chakra-ui/react';
-import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, CalendarCircleFillIcon, CalendarTomorrowIcon, TemplateIcon, LinkedIcon, CalendarIcon } from '@/Icons/Icons';
+import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, CalendarIcon } from '@/Icons/Icons';
 import { useInView } from 'react-intersection-observer';
 import { withErrorBoundary } from "react-error-boundary";
 
@@ -151,8 +151,6 @@ export const PageBody = ({ children }) => <Box
   className="page-body"
   // outset slightly for block toggles and refs and such
   px="calc(var(--page-padding) - 1em)"
-
-  // pr="calc((max(0, var(--page-padding) - 3em)))"
   pr="calc(var(--page-padding) - var(--page-right-gutter-width) + 1.5em)"
   gridArea="content"
 >
