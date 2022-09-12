@@ -26,8 +26,8 @@
     [athens.router                              :as router]
     [athens.types.core                          :as types]
     [athens.types.dispatcher                    :as dispatcher]
-    [athens.types.tasks.events                  :as events]
     [athens.types.tasks.generic-textarea        :as generic-textarea]
+    [athens.types.tasks.handlers                :as handlers]
     [athens.types.tasks.inline-task-title       :as inline-task-title]
     [athens.types.tasks.shared                  :as shared]
     [re-frame.core                              :as rf]
@@ -102,7 +102,7 @@
                      :position "relative"
                      :top      "0.2em"
                      :onClick  #(.stopPropagation %)
-                     :onChange #(events/on-update-status task-uid %)}]))))
+                     :onChange #(handlers/update-task-status task-uid %)}]))))
 
 
 (defn task-el

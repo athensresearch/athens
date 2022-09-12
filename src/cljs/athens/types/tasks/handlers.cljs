@@ -1,11 +1,11 @@
-(ns athens.types.tasks.events
+(ns athens.types.tasks.handlers
   (:require
     [athens.common-events.graph.ops             :as graph-ops]
     [athens.types.tasks.shared :as shared]
     [re-frame.core :as rf]))
 
 
-(defn on-update-status
+(defn update-task-status
   [task-uid new-status]
   (let [new-status (-> new-status shared/find-status-uid)
         new-status (str "((" new-status "))")]

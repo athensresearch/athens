@@ -46,12 +46,6 @@
                                                2000)
             read-value          local-value
             show-edit?          (r/atom false)
-            custom-key-handlers {:enter-handler (if multiline?
-                                                  editor/enter-handler-new-line
-                                                  (fn [_uid _d-key-down]
-                                                    ;; TODO dispatch save and jump to next input
-                                                    (println "TODO dispatch save and jump to next input")
-                                                    (update-fn @local-value)))}
             state-hooks         (merge {:save-fn                 save-fn
                                         :idle-fn                 idle-fn
                                         :update-fn               update-fn
@@ -60,7 +54,6 @@
                                         :default-verbatim-paste? true
                                         :keyboard-navigation?    true
                                         :navigation-uid          parent-block-uid}
-                                       custom-key-handlers
                                        state-hooks)]
         [editor/block-editor {:block/uid (or prop-block-uid
                                              ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
