@@ -1,38 +1,33 @@
-(ns athens.types.tasks.generic-textarea
+(ns athens.types.tasks.view.generic-textarea
   (:require
-    ["/components/Block/BlockFormInput"         :refer [BlockFormInput]]
-    ["/components/Block/Taskbox"                :refer []]
-    ["/components/Icons/Icons"                  :refer []]
-    ["/components/ModalInput/ModalInput"        :refer []]
-    ["/components/ModalInput/ModalInputPopover" :refer []]
-    ["/components/ModalInput/ModalInputTrigger" :refer []]
-    ["@chakra-ui/react"                         :refer [FormControl
-                                                        FormLabel
-                                                        Box
-                                                        FormErrorMessage]]
-    [athens.common-events.graph.ops             :as graph-ops]
-    [athens.common.logging                      :as log]
-    [athens.common.utils                        :as common.utils]
-    [athens.reactive                            :as reactive]
-    [athens.self-hosted.presence.views          :as presence]
-    [athens.views.blocks.editor                 :as editor]
-    [clojure.string                             :as str]
-    [goog.functions                             :as gfns]
-    [re-frame.core                              :as rf]
-    [reagent.core                               :as r]))
+    ["/components/Block/BlockFormInput" :refer [BlockFormInput]]
+    ["@chakra-ui/react"                 :refer [Box
+                                                FormControl
+                                                FormErrorMessage
+                                                FormLabel]]
+    [athens.common-events.graph.ops     :as graph-ops]
+    [athens.common.logging              :as log]
+    [athens.common.utils                :as common.utils]
+    [athens.reactive                    :as reactive]
+    [athens.self-hosted.presence.views  :as presence]
+    [athens.views.blocks.editor         :as editor]
+    [clojure.string                     :as str]
+    [goog.functions                     :as gfns]
+    [re-frame.core                      :as rf]
+    [reagent.core                       :as r]))
 
 
 (defn generic-textarea-view-for-task-props
   [_parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
-  (let [prop-id (str (random-uuid))]
+  (let [prop-id     (str (random-uuid))
+        local-value (r/atom "")]
     (fn [parent-block-uid prop-block-uid prop-name prop-title required? multiline?]
       (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
             prop-str            (or (:block/string prop-block) "")
-            local-value         (r/atom prop-str)
             invalid-prop-str?   (and required?
                                      (str/blank? prop-str)
                                      (not (nil? prop-str)))
-            save-fn             (fn
+            save-fn             (fn generic-textarea-view-for-task-props-save-fn
                                   ([]
                                    (log/debug prop-name "save-fn" (pr-str @local-value))
                                    (when (#{":task/title" ":task/description" ":task/due-date"} prop-name)
@@ -49,9 +44,8 @@
                                        (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
                                                      (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
             update-fn           #(do
-                                   (when-not (= prop-str %)
-                                     (log/debug prop-name "update-fn:" (pr-str %))
-                                     (reset! local-value %)))
+                                   (log/debug prop-name "update-fn:" (pr-str %))
+                                   (reset! local-value %))
             idle-fn             (gfns/debounce #(do
                                                   (log/debug prop-name "idle-fn" (pr-str @local-value))
                                                   (save-fn))
@@ -62,7 +56,6 @@
                                                   editor/enter-handler-new-line
                                                   (fn [_uid _d-key-down]
                                                     ;; TODO dispatch save and jump to next input
-                                                    (println "TODO dispatch save and jump to next input")
                                                     (when (= ":task/assignee"
                                                              prop-name)
                                                       (rf/dispatch [:notification-for-assigned-task parent-block-uid @local-value]))
@@ -78,14 +71,15 @@
                                         :default-verbatim-paste? true
                                         :keyboard-navigation?    false}
                                        custom-key-handlers)]
+        (reset! local-value prop-str)
         [:> FormControl {:is-required required?
-                         :display "contents"
+                         :display     "contents"
                          :is-invalid  invalid-prop-str?}
          [:> FormLabel {:html-for prop-id}
           prop-title]
          [:> Box [:> BlockFormInput
                   {:isMultiline multiline?
-                   :size "sm"}
+                   :size        "sm"}
                   ;; NOTE: we generate temporary uid for prop if it doesn't exist, so editor can work
                   [editor/block-editor {:block/uid (or prop-block-uid
                                                        ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
