@@ -1,42 +1,41 @@
 (ns athens.types.tasks.view
   "Views for Athens Tasks"
   (:require
-    ["/components/Block/BlockFormInput"         :refer []]
     ["/components/Block/Taskbox"                :refer [Taskbox]]
     ["/components/Icons/Icons"                  :refer [PencilIcon]]
     ["/components/ModalInput/ModalInput"        :refer [ModalInput]]
     ["/components/ModalInput/ModalInputPopover" :refer [ModalInputPopover]]
     ["/components/ModalInput/ModalInputTrigger" :refer [ModalInputTrigger]]
-    ["@chakra-ui/react"                         :refer [FormControl
-                                                        FormLabel
-                                                        Text
-                                                        Flex
-                                                        AvatarGroup
+    ["@chakra-ui/react"                         :refer [AvatarGroup
                                                         Avatar
                                                         Box
                                                         Divider
                                                         Button
                                                         Badge
+                                                        Flex
+                                                        FormControl
+                                                        FormLabel
+                                                        HStack
                                                         Select
-                                                        HStack]]
+                                                        Text]]
     [athens.common-db                           :as common-db]
     [athens.common-events.graph.ops             :as graph-ops]
     [athens.dates                               :as dates]
-    [athens.db                                  :as db]
+    [athens.parse-renderer                      :as parser]
     [athens.reactive                            :as reactive]
+    [athens.router                              :as router]
     [athens.types.core                          :as types]
     [athens.types.dispatcher                    :as dispatcher]
-    [athens.types.tasks.events :as events]
-    [athens.types.tasks.generic-textarea :as generic-textarea]
-    [athens.types.tasks.inline-task-title :as inline-task-title]
-    [athens.types.tasks.shared :as shared]
+    [athens.types.tasks.generic-textarea        :as generic-textarea]
+    [athens.types.tasks.handlers                :as handlers]
+    [athens.types.tasks.inline-task-title       :as inline-task-title]
+    [athens.types.tasks.shared                  :as shared]
     [re-frame.core                              :as rf]
+    [reagent.core                               :as r]
     [tick.core                                  :as t]))
 
 
 ;; View
-
-
 
 (defn task-priority-view
   [parent-block-uid priority-block-uid]
@@ -64,51 +63,62 @@
                    string]))]]]))
 
 
+(defn- task-status-view-v2
+  [_task-uid _status-uid]
+  (let [status-options (->> (shared/find-allowed-statuses)
+                            (map (fn [{:block/keys [string]}]
+                                   string)))
+        status         (r/atom nil)]
+    (fn task-status-view-v2-render
+      [task-uid status-uid]
+      (let [status-block (reactive/get-reactive-block-document [:block/uid status-uid])]
+        (reset! status (:block/string status-block))
+        ^{:key @status}
+        [:> Taskbox {:status   @status
+                     :options  status-options
+                     :position "relative"
+                     :top      "0.2em"
+                     :onClick  #(.stopPropagation %)
+                     :onChange #(handlers/update-task-status task-uid %)}]))))
+
+
 (defn task-el
   [_this block-data _callbacks _is-ref?]
   (let [block-uid (:block/uid block-data)]
     (fn [_this _block-data callbacks]
-      (let [block           (-> [:block/uid block-uid] reactive/get-reactive-block-document)
-            props           (-> block :block/properties)
-            title-uid       (-> props (get ":task/title") :block/uid)
-            assignee-uid    (-> props (get ":task/assignee") :block/uid)
-            priority-uid    (-> props (get ":task/priority") :block/uid)
+      (let [block            (-> [:block/uid block-uid] reactive/get-reactive-block-document)
+            props            (-> block :block/properties)
+            title-uid        (-> props (get ":task/title") :block/uid)
+            assignee-uid     (-> props (get ":task/assignee") :block/uid)
+            priority-uid     (-> props (get ":task/priority") :block/uid)
             _description-uid (-> props (get ":task/description") :block/uid)
             _creator-uid     (-> props (get ":task/creator") :block/uid)
-            due-date-uid    (-> props (get ":task/due-date") :block/uid)
-            ;; projects-uid  (:block/uid (find-property-block-by-key-name reactive-block ":task/projects"))
-            ;; status-uid      (-> props (get ":task/status") :block/uid)
-            ;; map the :string key of the return from (find-allowed-statuses) into a vector
-            status-options  (->> (shared/find-allowed-statuses)
-                                 (map (fn [{:block/keys [string]}]
-                                        string)))
-            creator         (-> (:block/create block) :event/auth :presence/id)
-            time            (-> (:block/create block) :event/time :time/ts)
-            created-date    (when time
-                              (-> time
-                                  t/instant
-                                  t/date
-                                  (dates/get-day 0)
-                                  :title))
-            status          (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
-                                                                               (get ":task/status")
-                                                                               :block/string
-                                                                               (common-db/strip-markup "((" "))"))])
-                                :block/string)
-            title          (-> props (get ":task/title") :block/string)
-            assignee        (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
-            priority        (-> (common-db/get-block @db/dsdb [:block/uid  (-> props
-                                                                               (get ":task/priority")
-                                                                               :block/string
-                                                                               (common-db/strip-markup "((" "))"))])
-                                :block/string)
-            creator         creator
-            description     (-> props (get ":task/description") :block/string)
-            due-date        (-> props
-                                (get ":task/due-date")
-                                :block/string
-                                (common-db/strip-markup "[[" "]]"))
-
+            due-date-uid     (-> props (get ":task/due-date") :block/uid)
+            creator          (-> (:block/create block) :event/auth :presence/id)
+            time             (-> (:block/create block) :event/time :time/ts)
+            created-date     (when time
+                               (-> time
+                                   t/instant
+                                   t/date
+                                   (dates/get-day 0)
+                                   :title))
+            status-uid       (-> props
+                                 (get ":task/status")
+                                 :block/string
+                                 (common-db/strip-markup "((" "))"))
+            title            (-> props (get ":task/title") :block/string)
+            assignee         (-> props (get ":task/assignee") :block/string (common-db/strip-markup "[[" "]]"))
+            priority         (-> [:block/uid  (-> props
+                                                  (get ":task/priority")
+                                                  :block/string
+                                                  (common-db/strip-markup "((" "))"))]
+                                 (reactive/get-reactive-block-document)
+                                 :block/string)
+            description      (-> props (get ":task/description") :block/string)
+            due-date         (-> props
+                                 (get ":task/due-date")
+                                 :block/string
+                                 (common-db/strip-markup "[[" "]]"))
             show-assignee?     true
             show-description?  false
             show-priority?     true
@@ -125,11 +135,7 @@
                     :transitionTimingFunction "ease-in-out"
                     :overflow                 "hidden"
                     :align                    "stretch"}
-         [:> Taskbox {:status   status
-                      :options  status-options
-                      :position "relative"
-                      :top      "0.2em"
-                      :onChange #(events/on-update-status block-uid %)}]
+         [task-status-view-v2 block-uid status-uid]
          [:> Box {:flex       "1 1 100%"
                   :py         1
                   :cursor     "text"
@@ -145,14 +151,14 @@
          [:> ModalInput {:placement "left-start"
                          :isLazy    true}
           [:> ModalInputTrigger
-           [:> Button {:size         "sm"
-                       :flex         "1 0 auto"
-                       :variant      "ghost"
-                       :onClick      #(.. % stopPropagation)
-                       :lineHeight   "unset"
-                       :whiteSpace   "unset"
-                       :px           2
-                       :py           1}
+           [:> Button {:size       "sm"
+                       :flex       "1 0 auto"
+                       :variant    "ghost"
+                       :onClick    #(.. % stopPropagation)
+                       :lineHeight "unset"
+                       :whiteSpace "unset"
+                       :px         2
+                       :py         1}
 
             ;; description
             (when (and show-description? description)
@@ -188,9 +194,9 @@
                                   :px                  4
                                   :maxWidth            "20em"}}
            [:> HStack {:gridColumn "1 / -1" :align "flex-start"}
-            [:> Text {:fontSize "sm"
+            [:> Text {:fontSize  "sm"
                       :noOfLines 2
-                      :color "foreground.secondary"}
+                      :color     "foreground.secondary"}
              title]]
            [:> Divider {:gridColumn "1 / -1"}]
            [task-priority-view block-uid priority-uid]
@@ -204,18 +210,69 @@
            [:> Text {:fontSize "sm"} created-date]]]]))))
 
 
+(defn task-ref-el
+  [ref-uid]
+  (let [{:block/keys [properties]} (reactive/get-reactive-block-document [:block/uid ref-uid])
+        title                      (-> properties
+                                       (get ":task/title")
+                                       :block/string)
+        status-uid                 (-> properties
+                                       (get ":task/status")
+                                       :block/string
+                                       (common-db/strip-markup "((" "))"))]
+    [:> Flex {:display   "inline-flex"
+              :align     "baseline"
+              :bg        "transparent"
+              :transitionProperty "colors"
+              :transitionDuration "fast"
+              :borderRadius "2px"
+              :transitionTimingFunction "ease-in-out"
+              :sx        {"WebkitBoxDecorationBreak" "clone"
+                          "&:has(.task-title:hover)"
+                          {:textDecoration    "none"
+                           :borderBottomColor "transparent"
+                           :bg                "ref.background"}}
+              :alignSelf "baseline"
+              :gap       1}
+     [task-status-view-v2 ref-uid status-uid]
+     [:> Button {:variant "unstyled"
+                 :className "task-title"
+                 :fontWeight "normal"
+                 :whiteSpace "normal"
+                 :minWidth "0"
+                 :display "inline"
+                 :sx {"WebkitBoxDecorationBreak" "clone"
+                      ".block" {"WebkitBoxDecorationBreak" "clone",
+                                :borderBottomWidth "1px"
+                                :borderBottomStyle "solid"
+                                :borderBottomColor "ref.foreground"}
+                      ":hover .block" {:borderBottomColor "transparent"}}
+                 :textAlign "start"
+                 :justifyContent "start"
+                 :height "auto"
+                 :borderRadius "none"
+                 :lineHeight        "1.4"
+                 :cursor            "alias"
+                 :onClick           (fn [e]
+                                      (.. e stopPropagation)
+                                      (let [shift? (.-shiftKey e)]
+                                        (rf/dispatch [:reporting/navigation {:source :pr-task-ref
+                                                                             :target :task
+                                                                             :pane   (if shift?
+                                                                                       :right-pane
+                                                                                       :main-pane)}])
+                                        (router/navigate-uid ref-uid e)))}
+      [parser/parse-and-render title]]]))
+
+
 (defrecord TaskView
   []
 
   types/BlockTypeProtocol
 
   (inline-ref-view
-    [_this _block-data _attr _ref-uid _uid _callbacks _with-breadcrumb?]
-    (let [block (reactive/get-reactive-block-document [:block/uid _ref-uid])]
-      [:> Flex {:display "inline-flex"
-                :gap     1}
-       [:> Taskbox]
-       [:> Text (:block/string block)]]))
+    [_this _block-data _attr ref-uid _uid _callbacks _with-breadcrumb?]
+    (task-ref-el ref-uid))
 
 
   (outline-view
