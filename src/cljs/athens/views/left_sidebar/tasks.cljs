@@ -8,7 +8,7 @@
     [athens.reactive :as reactive]
     [athens.router   :as router]
     [athens.types.query.shared :as query]
-    [athens.types.tasks.view :as tasks]
+    [athens.types.tasks.events :as tasks]
     [athens.views.left-sidebar.subs :as left-sidebar-subs]
     [re-frame.core   :as rf]
     [reagent.core    :as r]))
