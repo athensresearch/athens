@@ -65,27 +65,6 @@
                    string]))]]]))
 
 
-(defn find-status-uid
-  [status]
-  (->> (filter (fn [allowed-status]
-                 (= status (:block/string allowed-status)))
-               (shared/find-allowed-statuses))
-       first
-       :block/uid))
-
-
-(defn update-task-status
-  [task-uid new-status]
-  (let [new-status (-> new-status shared/find-status-uid)
-        new-status (str "((" new-status "))")]
-    (rf/dispatch [:graph/update-in [:block/uid task-uid] [":task/status"]
-                  (fn [db uid]
-                    [(graph-ops/build-block-save-op db uid new-status)]
-                    #_(if is-checked
-                        [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "To Do") "))"))]
-                        [(graph-ops/build-block-save-op db uid (str "((" (find-status-uid "Done") "))"))]))])))
-
-
 (defn- task-status-view-v2
   [_task-uid _status-uid]
   (let [status-options (->> (shared/find-allowed-statuses)

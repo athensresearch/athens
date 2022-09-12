@@ -14,7 +14,7 @@
 (defn inline-task-title-2
   [_state-hooks _parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
   (let [_prop-id (str (random-uuid))]
-    (fn [state-hooks parent-block-uid prop-block-uid prop-name _prop-title _required? multiline?]
+    (fn [state-hooks parent-block-uid prop-block-uid prop-name _prop-title _required? _multiline?]
       (let [prop-block          (reactive/get-reactive-block-document [:block/uid prop-block-uid])
             prop-str            (or (:block/string prop-block) "")
             local-value         (r/atom prop-str)
