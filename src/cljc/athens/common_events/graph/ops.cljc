@@ -218,11 +218,9 @@
   If old-block is open or closed, pass that state on to new-block.
   Ignores both behaviours above if old-block is a property."
   [db {:keys [old-block-uid new-block-uid
-              string index relation
-              navigation-uid]}]
+              string index relation]}]
   (let [save-block-op      (build-block-save-op db old-block-uid (subs string 0 index))
-        new-block-op       (atomic/make-block-new-op new-block-uid {:block/uid (or navigation-uid
-                                                                                   old-block-uid)
+        new-block-op       (atomic/make-block-new-op new-block-uid {:block/uid old-block-uid
                                                                     :relation  relation})
         new-block-save-op  (build-block-save-op db new-block-uid (subs string index))
         {:block/keys [open key]} (common-db/get-block db [:block/uid old-block-uid])

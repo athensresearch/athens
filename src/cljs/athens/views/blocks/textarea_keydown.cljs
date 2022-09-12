@@ -547,7 +547,7 @@
 
 
 (defn handle-enter
-  [e uid {:keys [enter-handler navigation-uid] :as state-hooks}]
+  [e uid {:keys [enter-handler] :as state-hooks}]
   (let [{:keys [shift
                 ctrl
                 meta
@@ -586,7 +586,7 @@
       ;; default: may mutate blocks, important action, no delay on 1st event, then throttled
       :else                     (if (fn? enter-handler)
                                   (enter-handler uid d-key-down)
-                                  (throttled-dispatch-sync [:enter uid d-key-down navigation-uid])))))
+                                  (throttled-dispatch-sync [:enter uid d-key-down])))))
 
 
 ;; Pair Chars: auto-balance for backspace and writing chars
