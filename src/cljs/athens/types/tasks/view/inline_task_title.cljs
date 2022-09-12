@@ -1,4 +1,4 @@
-(ns athens.types.tasks.inline-task-title
+(ns athens.types.tasks.view.inline-task-title
   (:require
     [athens.common-events.graph.ops             :as graph-ops]
     [athens.common.logging                      :as log]

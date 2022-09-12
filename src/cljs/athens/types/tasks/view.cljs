@@ -26,10 +26,10 @@
     [athens.router                              :as router]
     [athens.types.core                          :as types]
     [athens.types.dispatcher                    :as dispatcher]
-    [athens.types.tasks.generic-textarea        :as generic-textarea]
     [athens.types.tasks.handlers                :as handlers]
-    [athens.types.tasks.inline-task-title       :as inline-task-title]
     [athens.types.tasks.shared                  :as shared]
+    [athens.types.tasks.view.generic-textarea   :as generic-textarea]
+    [athens.types.tasks.view.inline-task-title  :as inline-task-title]
     [re-frame.core                              :as rf]
     [reagent.core                               :as r]
     [tick.core                                  :as t]))

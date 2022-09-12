@@ -1,4 +1,4 @@
-(ns athens.types.tasks.generic-textarea
+(ns athens.types.tasks.view.generic-textarea
   (:require
     ["/components/Block/BlockFormInput"         :refer [BlockFormInput]]
     ["/components/Block/Taskbox"                :refer []]
