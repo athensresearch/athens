@@ -12,8 +12,8 @@
                                                        ChatBubbleIcon
                                                        ExpandIcon
                                                        TextIcon]]
-    ["/components/References/InlineReferences" :refer [ReferenceBlock
-                                                       ReferenceGroup]]
+    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
+    ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     ["@chakra-ui/react"                        :refer [Box
                                                        Breadcrumb
                                                        BreadcrumbItem
@@ -62,13 +62,6 @@
     [athens.views.comments.inline              :as inline-comments]
     [athens.views.notifications.actions        :as actions]
     [com.rpl.specter                           :as s]
-    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
-    ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
-    [athens.parse-renderer :as parse-renderer]
-    [athens.router :as router]
-    [athens.views.comments.core :as comments]
-    [athens.views.comments.inline :as inline-comments]
-    [re-frame.core :as rf :refer [dispatch]]
     [re-frame.core                             :as rf]
     [reagent.core                              :as r]))
 
@@ -616,23 +609,6 @@
 
 
 ;; Block page
-
-(defn- persist-textarea-string
-  "A helper fn that takes `state` containing textarea changes and when user has made a text change dispatches `transact-string`.
-   Used in `block-page-el` function to log when there is a diff and `on-blur`"
-  [state block-uid]
-  (rf/dispatch [:block/save {:uid       block-uid
-                             :string    (:string/local state)
-                             :add-time? true
-                             :source    :on-blur-block-save}]))
-
-
-;; Components
-
-(defn block-page-change
-  [e _uid state]
-  (let [value (.. e -target -value)]
-    (swap! state assoc :string/local value)))
 
 
 (defn breadcrumb-handle-click

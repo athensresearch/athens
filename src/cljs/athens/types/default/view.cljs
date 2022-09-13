@@ -4,8 +4,6 @@
   (:require
     ["/components/Icons/Icons" :refer [PencilIcon]]
     ["@chakra-ui/react" :refer [Box Button ButtonGroup IconButton]]
-    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
-    ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
     [athens.db :as db]
     [athens.parse-renderer :as parser]
     [athens.reactive :as reactive]
@@ -192,8 +190,6 @@
 
   (zoomed-in-view
     [_this block-data callbacks]
-    ;; This is to be similar to how zoomed in view for a block is done
-    ;; Make sure to make the block-data being passed is reactive(outline-view
     (let [{:block/keys [uid
                         original-uid
                         string]} block-data
@@ -234,7 +230,6 @@
             (update-old-fn string))
 
           [editor/block-editor block state-hooks]))))
-
 
 
   (supported-breadcrumb-styles

@@ -5,10 +5,9 @@
     [athens.db :as db]
     [athens.reactive :as reactive]
     [athens.router :as router]
+    [athens.views.blocks.core :as blocks]
     [athens.views.pages.node-page :as node-page]
-    [re-frame.core :as rf]
-    [athens.types.core :as types]
-    [athens.views.blocks.core :as blocks]))
+    [re-frame.core :as rf]))
 
 
 (defn page-by-title
@@ -31,5 +30,4 @@
      (cond
        title [node-page/page id]
        string [blocks/page id]
-       ;;string [block-page/page id]
        :else [:> PageNotFound {:onClickHome #(router/navigate :pages)}])]))

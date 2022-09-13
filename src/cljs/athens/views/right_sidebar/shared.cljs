@@ -5,11 +5,11 @@
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
+    [athens.views.blocks.core :as blocks]
     [athens.views.pages.graph :as graph]
     [athens.views.pages.node-page :as node-page]
     [re-frame.core :as rf]
-    [reagent.core :as r]
-    [athens.views.blocks.core :as blocks]))
+    [reagent.core :as r]))
 
 
 (def NS "athens/right-sidebar")
