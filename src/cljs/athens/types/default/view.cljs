@@ -2,21 +2,21 @@
   "Default Block Type Renderer.
   A.k.a standard `:block/string` blocks"
   (:require
-    ["/components/Icons/Icons" :refer [PencilIcon]]
-    ["@chakra-ui/react" :refer [Box Button ButtonGroup IconButton]]
-    [athens.db :as db]
-    [athens.parse-renderer :as parser]
-    [athens.reactive :as reactive]
-    [athens.router :as router]
-    [athens.types.core :as types]
-    [athens.types.dispatcher :as dispatcher]
-    [athens.util :as util]
-    [athens.views.blocks.editor :as editor]
-    [clojure.string :as str]
-    [goog.functions :as gfns]
-    [re-frame.core :as rf]
-    [reagent.core :as r]
-    [reagent.ratom :as ratom]))
+    ["/components/Icons/Icons"  :refer [PencilIcon]]
+    ["@chakra-ui/react"         :refer [Box Button ButtonGroup IconButton]]
+    [athens.db                  :as    db]
+    [athens.parse-renderer      :as    parser]
+    [athens.reactive            :as    reactive]
+    [athens.router              :as    router]
+    [athens.types.core          :as    types]
+    [athens.types.dispatcher    :as    dispatcher]
+    [athens.util                :as    util]
+    [athens.views.blocks.editor :as    editor]
+    [clojure.string             :as    str]
+    [goog.functions             :as    gfns]
+    [re-frame.core              :as    rf]
+    [reagent.core               :as    r]
+    [reagent.ratom              :as    ratom]))
 
 
 (defn- block-breadcrumb-string
@@ -192,7 +192,7 @@
     [_this block-data callbacks]
     (let [{:block/keys [uid
                         original-uid
-                        string]} block-data
+                        string]}       block-data
           local-value                  (r/atom string)
           show-edit-atom?              (r/atom true)
           old-value                    (r/atom nil)
@@ -212,15 +212,12 @@
                                                :update-old-fn  update-old-fn
                                                :read-value     read-value
                                                :read-old-value read-old-value})]
-      (println "this is zoomed in view for string" string)
       (fn render-block
         [_this block _callbacks]
         (let [ident                 [:block/uid (or original-uid uid)]
               block-o               (reactive/get-reactive-block-document ident)
               {:block/keys [string
                             _refs]} (merge block-o block)]
-
-          ;; (prn uid is-selected)
 
           ;; If datascript string value does not equal local value, overwrite local value.
           ;; Write on initialization

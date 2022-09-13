@@ -12,8 +12,13 @@
                                                        ChatBubbleIcon
                                                        ExpandIcon
                                                        TextIcon]]
-    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
-    ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
+    ["/components/Page/Page"                   :refer [PageHeader
+                                                       PageBody
+                                                       PageFooter
+                                                       TitleContainer]]
+    ["/components/References/References"       :refer [PageReferences
+                                                       ReferenceBlock
+                                                       ReferenceGroup]]
     ["@chakra-ui/react"                        :refer [Box
                                                        Breadcrumb
                                                        BreadcrumbItem
