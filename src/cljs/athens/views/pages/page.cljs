@@ -1,13 +1,14 @@
 (ns athens.views.pages.page
   (:require
     ["/components/Page/Page" :refer [PageContainer PageNotFound]]
-    [athens.common-db              :as common-db]
-    [athens.db                     :as db]
-    [athens.reactive               :as reactive]
-    [athens.router                 :as router]
-    [athens.views.pages.block-page :as block-page]
-    [athens.views.pages.node-page  :as node-page]
-    [re-frame.core                 :as rf]))
+    [athens.common-db :as common-db]
+    [athens.db :as db]
+    [athens.reactive :as reactive]
+    [athens.router :as router]
+    [athens.views.pages.node-page :as node-page]
+    [re-frame.core :as rf]
+    [athens.types.core :as types]
+    [athens.views.blocks.core :as blocks]))
 
 
 (defn page-by-title
@@ -29,5 +30,6 @@
     [:> PageContainer {:uid @uid :type (if title "node" "block")}
      (cond
        title [node-page/page id]
-       string [block-page/page id]
+       string [blocks/page id]
+       ;;string [block-page/page id]
        :else [:> PageNotFound {:onClickHome #(router/navigate :pages)}])]))
