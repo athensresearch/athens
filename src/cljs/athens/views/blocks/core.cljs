@@ -714,6 +714,7 @@
                                            (rf/dispatch [:editing/uid uid])))}
            (if (clojure.string/blank? (:string/local @state))
              [:span [:wbr]]
+             ^{:key renderer-k}
              [types/zoomed-in-view renderer block {}])]]
 
          ;; Show comments when the toggle is on
