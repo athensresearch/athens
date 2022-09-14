@@ -117,7 +117,7 @@
   :feature-flags
   :<- [:settings]
   (fn [settings _]
-    (:feature-flags settings)))
+    (get settings :feature-flags {})))
 
 
 (rf/reg-sub
