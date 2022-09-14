@@ -24,7 +24,6 @@
                                                        BreadcrumbItem
                                                        BreadcrumbLink
                                                        Button
-                                                       Divider
                                                        HStack
                                                        MenuDivider
                                                        MenuGroup
@@ -442,17 +441,6 @@
                                          [:<>
                                           [:> MenuDivider]
                                           [block-reaction/reactions-menu-list uid user-id]])
-
-                                       (when (and notifications-enabled? (actions/is-block-inbox? properties))
-                                         [:<>
-                                          [:> Divider]
-                                          [:> MenuItem {:children "Archive all notifications"
-                                                        :icon     (r/as-element [:> ArchiveIcon])
-                                                        :onClick  #(actions/archive-all-notifications uid)}]
-                                          [:> MenuItem {:children "Unarchive all notifications"
-                                                        :icon     (r/as-element [:> ArchiveIcon])
-                                                        :onClick  #(actions/unarchive-all-notifications uid)}]])
-
                                        (when (and notifications-enabled? (actions/is-block-notification? properties))
                                          [:> MenuItem {:children "Archive"
                                                        :icon     (r/as-element [:> ArchiveIcon])

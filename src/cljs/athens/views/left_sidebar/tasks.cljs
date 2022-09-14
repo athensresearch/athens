@@ -1,17 +1,17 @@
 (ns athens.views.left-sidebar.tasks
   (:require
-    ["/components/Block/Taskbox" :refer [Taskbox]]
-    ["/components/Icons/Icons" :refer [InfoIcon FilterCircleIcon FilterCircleFillIcon]]
-    ["/components/Widget/Widget" :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
-    ["@chakra-ui/react" :refer [Tooltip CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Link Text VStack Flex ButtonGroup Link Flex]]
-    [athens.parse-renderer :as parse-renderer]
-    [athens.reactive :as reactive]
-    [athens.router   :as router]
-    [athens.types.query.shared :as query]
-    [athens.types.tasks.view :as tasks]
+    ["/components/Block/Taskbox"    :refer [Taskbox]]
+    ["/components/Icons/Icons"      :refer [InfoIcon FilterCircleIcon FilterCircleFillIcon]]
+    ["/components/Widget/Widget"    :refer [Widget WidgetHeader WidgetBody WidgetTitle WidgetToggle]]
+    ["@chakra-ui/react"             :refer [Tooltip CircularProgress FormLabel Input Heading Button Popover PopoverTrigger PopoverAnchor PopoverContent PopoverBody Portal IconButton Link Text VStack Flex ButtonGroup Link Flex]]
+    [athens.parse-renderer          :as parse-renderer]
+    [athens.reactive                :as reactive]
+    [athens.router                  :as router]
+    [athens.types.query.shared      :as query]
+    [athens.types.tasks.handlers    :as task-handlers]
     [athens.views.left-sidebar.subs :as left-sidebar-subs]
-    [re-frame.core   :as rf]
-    [reagent.core    :as r]))
+    [re-frame.core                  :as rf]
+    [reagent.core                   :as r]))
 
 
 (defn sidebar-task-el
@@ -27,7 +27,7 @@
               :gap     1}
      [:> Taskbox {:position "relative"
                   :top      "3px"
-                  :onChange #(tasks/on-update-status task-uid %)
+                  :onChange #(task-handlers/update-task-status task-uid %)
                   :status   status-string}]
      [:> Link {:fontSize  "sm"
                :noOfLines 1

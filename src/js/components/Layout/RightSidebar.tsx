@@ -62,29 +62,32 @@ export const RightSidebar = (props: RightSidebarProps) => {
           transitionProperty="background"
           transitionTimingFunction="ease-in-out"
           transitionDuration="fast"
-          overflowX="hidden"
-          overflowY="auto"
           borderLeft="1px solid"
           borderColor="separator.divider"
+          height="100vh"
           position="fixed"
           id="right-sidebar"
-          height="100vh"
           inset={0}
-          pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
           <RightSidebarResizeControl
             onResizeSidebar={onResize}
           />
           <Box
-            aria-hidden
-            position="absolute"
-            ref={markerRef}
-            height="20px"
-            top={0}
-          />
-          <Box
-            width={unsavedRightSidebarWidth + "vw"}>
+            pt={`calc(${toolbarHeight} + 1rem)`}
+            overflowX="hidden"
+            overflowY="auto"
+            height="100%"
+            position="relative"
+            width={unsavedRightSidebarWidth + "vw"}
+          >
+            <Box
+              aria-hidden
+              position="absolute"
+              ref={markerRef}
+              height="20px"
+              top={0}
+            />
             {children}
           </Box>
         </Box>
@@ -106,6 +109,11 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
       position="relative"
       spacing={0}
       ml="1px" // Account for the floating separator
+      sx={{
+        "--page-padding": "0rem",
+        "--page-left-gutter-width": "1em",
+        "--page-right-gutter-width": "3em",
+      }}
       _notFirst={{
         borderTop: "1px solid",
         borderColor: "separator.divider"
