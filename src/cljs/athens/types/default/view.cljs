@@ -16,7 +16,9 @@
     [goog.functions             :as    gfns]
     [re-frame.core              :as    rf]
     [reagent.core               :as    r]
-    [reagent.ratom              :as    ratom]))
+    [reagent.ratom              :as    ratom]
+    [athens.common-db           :as common-db]
+    [athens.common.utils        :as utils]))
 
 
 (defn- block-breadcrumb-string
@@ -204,6 +206,17 @@
           update-old-fn                #(reset! old-value %)
           read-value                   (ratom/reaction @local-value)
           read-old-value               (ratom/reaction @old-value)
+
+          enter-handler                (fn [uid d-key-down]
+                                         (let [[uid embed-id]         (common-db/uid-and-embed-id uid)
+                                                new-uid               (utils/gen-block-uid)
+                                               {:keys [start value]}  d-key-down]
+                                           (rf/dispatch [:enter/split-block {:uid uid
+                                                                             :value             value
+                                                                             :index             start
+                                                                             :new-uid           new-uid
+                                                                             :embed-id          embed-id
+                                                                             :relation          :first}])))
           state-hooks                  (merge callbacks
                                               {:save-fn        save-fn
                                                :idle-fn        idle-fn
@@ -211,7 +224,8 @@
                                                :show-edit?     show-edit-atom?
                                                :update-old-fn  update-old-fn
                                                :read-value     read-value
-                                               :read-old-value read-old-value})]
+                                               :read-old-value read-old-value
+                                               :enter-handler  enter-handler})]
       (fn render-block
         [_this block _callbacks]
         (let [ident                 [:block/uid (or original-uid uid)]

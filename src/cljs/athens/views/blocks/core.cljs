@@ -692,6 +692,8 @@
             comments-data              (comments/get-comments-in-thread @db/dsdb thread-uid)
             block-type                 (reactive/reactive-get-entity-type [:block/uid uid])
             ff                         @(rf/subscribe [:feature-flags])
+            task-title                 (when (= "[[athens/task]]" block-type)
+                                         (-> properties (get ":task/title") :block/string))
             renderer-k                 (block-type-dispatcher/block-type->protocol-k block-type ff)
             renderer                   (block-type-dispatcher/block-type->protocol renderer-k {})]
 
@@ -717,7 +719,8 @@
                                              (router/navigate-uid uid e))
 
                                            (rf/dispatch [:editing/uid uid])))}
-           (if (clojure.string/blank? (:string/local @state))
+           (if (and (nil? task-title)
+                    (clojure.string/blank? (:string/local @state)))
              [:span [:wbr]]
              ^{:key renderer-k}
              [types/zoomed-in-view renderer block {}])]]
