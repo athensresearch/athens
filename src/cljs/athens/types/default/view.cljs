@@ -4,6 +4,8 @@
   (:require
     ["/components/Icons/Icons"  :refer [PencilIcon]]
     ["@chakra-ui/react"         :refer [Box Button ButtonGroup IconButton]]
+    [athens.common-db           :as common-db]
+    [athens.common.utils        :as utils]
     [athens.db                  :as    db]
     [athens.parse-renderer      :as    parser]
     [athens.reactive            :as    reactive]
@@ -16,9 +18,7 @@
     [goog.functions             :as    gfns]
     [re-frame.core              :as    rf]
     [reagent.core               :as    r]
-    [reagent.ratom              :as    ratom]
-    [athens.common-db           :as common-db]
-    [athens.common.utils        :as utils]))
+    [reagent.ratom              :as    ratom]))
 
 
 (defn- block-breadcrumb-string
@@ -27,6 +27,7 @@
        (map #(or (:node/title %)
                  (:block/string %)))
        (str/join " >\n")))
+
 
 (defn zoomed-in-view-el
   [_this block-data callbacks]
@@ -79,7 +80,6 @@
           (update-old-fn string))
 
         [editor/block-editor block state-hooks]))))
-
 
 
 (defrecord DefaultBlockRenderer
@@ -246,7 +246,6 @@
   (zoomed-in-view
     [_this block-data callbacks]
     [zoomed-in-view-el _this block-data callbacks])
-
 
 
   (supported-breadcrumb-styles

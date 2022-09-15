@@ -20,7 +20,9 @@
                                                         Text]]
     [athens.common-db                           :as common-db]
     [athens.common-events.graph.ops             :as graph-ops]
+    [athens.common.utils                        :as common.utils]
     [athens.dates                               :as dates]
+    [athens.db                                  :as db]
     [athens.parse-renderer                      :as parser]
     [athens.reactive                            :as reactive]
     [athens.router                              :as router]
@@ -30,15 +32,12 @@
     [athens.types.tasks.shared                  :as shared]
     [athens.types.tasks.view.generic-textarea   :as generic-textarea]
     [athens.types.tasks.view.inline-task-title  :as inline-task-title]
+    [athens.views.blocks.editor                 :as editor]
+    [clojure.string                             :as str]
+    [goog.functions                             :as gfns]
     [re-frame.core                              :as rf]
     [reagent.core                               :as r]
-    [tick.core                                  :as t]
-    [athens.db                                  :as db]
-    [clojure.string                             :as str]
-    [athens.common.utils                        :as common.utils]
-    [athens.views.blocks.editor                 :as editor]
-    [goog.functions                             :as gfns]))
-
+    [tick.core                                  :as t]))
 
 
 ;; View
@@ -357,7 +356,6 @@
   (zoomed-in-view
     [_this block-data _callbacks]
     [zoomed-in-view-el _this block-data _callbacks])
-
 
 
   (supported-breadcrumb-styles
