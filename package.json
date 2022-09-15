@@ -28,6 +28,7 @@
     "client:dev-build": "yarn components && shadow-cljs compile main renderer app",
     "client:test": "yarn components && shadow-cljs compile karma-test && karma start --single-run",
     "client:electron": "electron .",
+    "client:web:server": "serve -l 3000 vercel-static/athens/",
     "client:web:static": "yarn components && shadow-cljs release app && cp -R resources/public/. vercel-static/athens/",
     "components": "babel ./src/js/components/ --extensions \".ts,.tsx\" --out-dir ./src/gen/components/",
     "components:watch": "yarn components --watch",

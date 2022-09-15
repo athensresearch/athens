@@ -46,7 +46,7 @@
                   :as ButtonGroup
                   :size "sm"
                   :align "stretch"
-                  :px 4}
+                  :px 3}
        [:> Button {:onClick on-athena
                    :variant "outline"
                    :justifyContent "start"
@@ -77,6 +77,10 @@
       ;; LOGO + BOTTOM BUTTONS
       [:> Flex {:as "footer"
                 :align "stretch"
+                :position "sticky"
+                :bottom 0
+                :bg "background.vibrancy"
+                :backdropFilter "blur(20px)"
                 :flexDirection "column"
                 :flex "0 0 auto"
                 :fontSize "xs"
@@ -96,8 +100,9 @@
                    :href "https://github.com/athensresearch/athens/blob/master/CHANGELOG.md"
                    :target "_blank"}
           (util/athens-version)]]
-        [:> ButtonGroup {:size "sm" :spacing 0 :variant "ghost" :colorScheme "subtle"}
-
+        [:> ButtonGroup {:size "xs"
+                         :variant "ghost"
+                         :colorScheme "subtle"}
          [:> IconButton {:onClick on-theme
                          :icon (r/as-element [:> ContrastIcon])}]
 

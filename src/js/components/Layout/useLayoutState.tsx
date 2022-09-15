@@ -40,8 +40,6 @@ export const useLayoutState = (props) => {
   const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState({});
   const toolbarHeight = "3rem";
 
-  console.log(isScrolledPastTitle);
-
   return {
     mainSidebarWidth,
     setMainSidebarWidth,
