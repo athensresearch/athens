@@ -28,6 +28,61 @@
                  (:block/string %)))
        (str/join " >\n")))
 
+(defn zoomed-in-view-el
+  [_this block-data callbacks]
+  (let [{:block/keys [uid
+                      original-uid
+                      string]}       block-data
+        local-value                  (r/atom string)
+        show-edit-atom?              (r/atom true)
+        old-value                    (r/atom nil)
+        savep-fn                     (partial db/transact-state-for-uid (or original-uid uid))
+        save-fn                      #(savep-fn @local-value :block-save)
+        idle-fn                      (gfns/debounce #(savep-fn @local-value :autosave)
+                                                    2000)
+        update-fn                    #(reset! local-value %)
+        update-old-fn                #(reset! old-value %)
+        read-value                   (ratom/reaction @local-value)
+        read-old-value               (ratom/reaction @old-value)
+
+        enter-handler                (fn [uid d-key-down]
+                                       (let [[uid embed-id]         (common-db/uid-and-embed-id uid)
+                                             new-uid               (utils/gen-block-uid)
+                                             {:keys [start value]}  d-key-down]
+                                         (rf/dispatch [:enter/split-block {:uid uid
+                                                                           :value             value
+                                                                           :index             start
+                                                                           :new-uid           new-uid
+                                                                           :embed-id          embed-id
+                                                                           :relation          :first}])))
+        state-hooks                  (merge callbacks
+                                            {:save-fn        save-fn
+                                             :idle-fn        idle-fn
+                                             :update-fn      update-fn
+                                             :show-edit?     show-edit-atom?
+                                             :update-old-fn  update-old-fn
+                                             :read-value     read-value
+                                             :read-old-value read-old-value
+                                             :enter-handler  enter-handler})]
+    (fn render-block
+      [_this block _callbacks]
+      (let [ident                 [:block/uid (or original-uid uid)]
+            block-o               (reactive/get-reactive-block-document ident)
+            {:block/keys [string
+                          _refs]} (merge block-o block)]
+
+        ;; If datascript string value does not equal local value, overwrite local value.
+        ;; Write on initialization
+        ;; Write also from backspace, which can join bottom block's contents to top the block.
+        (when (not= string @old-value)
+          (update-fn string)
+          (update-old-fn string))
+
+        [editor/block-editor block state-hooks]))))
+
+
+(defn inline-ref-view-el)
+
 
 (defrecord DefaultBlockRenderer
   [linked-ref-data]
@@ -192,55 +247,8 @@
 
   (zoomed-in-view
     [_this block-data callbacks]
-    (let [{:block/keys [uid
-                        original-uid
-                        string]}       block-data
-          local-value                  (r/atom string)
-          show-edit-atom?              (r/atom true)
-          old-value                    (r/atom nil)
-          savep-fn                     (partial db/transact-state-for-uid (or original-uid uid))
-          save-fn                      #(savep-fn @local-value :block-save)
-          idle-fn                      (gfns/debounce #(savep-fn @local-value :autosave)
-                                                      2000)
-          update-fn                    #(reset! local-value %)
-          update-old-fn                #(reset! old-value %)
-          read-value                   (ratom/reaction @local-value)
-          read-old-value               (ratom/reaction @old-value)
+    [zoomed-in-view-el _this block-data callbacks])
 
-          enter-handler                (fn [uid d-key-down]
-                                         (let [[uid embed-id]         (common-db/uid-and-embed-id uid)
-                                                new-uid               (utils/gen-block-uid)
-                                               {:keys [start value]}  d-key-down]
-                                           (rf/dispatch [:enter/split-block {:uid uid
-                                                                             :value             value
-                                                                             :index             start
-                                                                             :new-uid           new-uid
-                                                                             :embed-id          embed-id
-                                                                             :relation          :first}])))
-          state-hooks                  (merge callbacks
-                                              {:save-fn        save-fn
-                                               :idle-fn        idle-fn
-                                               :update-fn      update-fn
-                                               :show-edit?     show-edit-atom?
-                                               :update-old-fn  update-old-fn
-                                               :read-value     read-value
-                                               :read-old-value read-old-value
-                                               :enter-handler  enter-handler})]
-      (fn render-block
-        [_this block _callbacks]
-        (let [ident                 [:block/uid (or original-uid uid)]
-              block-o               (reactive/get-reactive-block-document ident)
-              {:block/keys [string
-                            _refs]} (merge block-o block)]
-
-          ;; If datascript string value does not equal local value, overwrite local value.
-          ;; Write on initialization
-          ;; Write also from backspace, which can join bottom block's contents to top the block.
-          (when (not= string @old-value)
-            (update-fn string)
-            (update-old-fn string))
-
-          [editor/block-editor block state-hooks]))))
 
 
   (supported-breadcrumb-styles
