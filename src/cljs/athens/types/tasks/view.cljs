@@ -356,53 +356,8 @@
 
   (zoomed-in-view
     [_this block-data _callbacks]
-    (let [parent-block-uid    (:block/uid block-data)
-          props               (common-db/get-block-property-document @db/dsdb [:block/uid parent-block-uid])
-          title-uid           (-> props (get ":task/title") :block/uid)
-          title-block         (reactive/get-reactive-block-document [:block/uid title-uid])
-          title-str           (or (:block/string title-block) "")
-          local-value         (r/atom title-str)
-          _invalid-prop-str?  (and (str/blank? title-str)
-                                   (not (nil? title-str)))
-          save-fn             (fn
-                                ([]
-                                 (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/title"]
-                                               (fn [db uid] [(graph-ops/build-block-save-op db uid @local-value)])]))
-                                ([e]
-                                 (let [new-value (-> e .-target .-value)]
-                                   (reset! local-value new-value)
-                                   (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/title"]
-                                                 (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])]))))
-          update-fn           #(do
-                                 (when-not (= title-str %)
-                                   (reset! local-value %)))
-          idle-fn             (gfns/debounce #(do
-                                                (save-fn))
-                                             2000)
-          read-value          local-value
-          show-edit?          (r/atom false)
-          custom-key-handlers {:enter-handler (fn [_uid _d-key-down]
-                                                ;; TODO dispatch save and jump to next input
-                                                (println "TODO dispatch save and jump to next input")
-                                                (update-fn @local-value))}
-          state-hooks         (merge {:save-fn                 save-fn
-                                      :idle-fn                 idle-fn
-                                      :update-fn               update-fn
-                                      :read-value              read-value
-                                      :show-edit?              show-edit?
-                                      :default-verbatim-paste? true
-                                      :keyboard-navigation?    true
-                                      :navigation-uid          parent-block-uid
-                                      ;; TODO here we add styles
-                                      :style                   {}}
-                                     custom-key-handlers)]
+    [zoomed-in-view-el _this block-data _callbacks])
 
-      [editor/block-editor {:block/uid (or title-uid
-                                           ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
-                                           (str "tmp-" (subs (or ":task/title" "")
-                                                             (inc (.indexOf (or ":task/title" "") "/")))
-                                                "-uid-" (common.utils/gen-block-uid)))}
-       state-hooks]))
 
 
   (supported-breadcrumb-styles
