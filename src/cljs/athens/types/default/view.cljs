@@ -81,8 +81,6 @@
         [editor/block-editor block state-hooks]))))
 
 
-(defn inline-ref-view-el)
-
 
 (defrecord DefaultBlockRenderer
   [linked-ref-data]
