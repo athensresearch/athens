@@ -134,7 +134,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
           whiteSpace="nowrap"
           leftIcon={<ChevronDownVariableIcon
             boxSize={4}
-            mr={0}
+            mr={-2}
             transform={isOpen ? undefined : "rotate(-90deg)"}
             transitionProperty="common"
             transitionDuration="0.15s"
@@ -177,6 +177,14 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
         unmountOnExit
         zIndex={1}
         px={4}
+        sx={{
+          // HACK: Gentle hack to create padding
+          // within the collapse container, only
+          // when open
+          "> *:last-child": {
+            mb: 2,
+          }
+        }}
         onPointerDown={(e) => { e.stopPropagation() }}
       >
         {children}
