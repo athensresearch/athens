@@ -80,6 +80,7 @@ export const RightSidebar = (props: RightSidebarProps) => {
             overflowY="auto"
             height="100%"
             position="relative"
+            pb={10}
           >
             <Box
               aria-hidden
