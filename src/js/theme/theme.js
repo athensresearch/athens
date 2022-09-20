@@ -35,6 +35,17 @@ const radii = {
   full: '9999px',
 }
 
+const layerStyles = {
+  card: {
+    bg: 'background.upper',
+    borderRadius: 'md',
+  },
+  cardDark: {
+    bg: 'background.attic',
+    borderRadius: 'md',
+  },
+}
+
 const semanticTokens = {
   shadows: {
     focus: {
@@ -755,4 +766,4 @@ const sizes = {
   ...spacing
 }
 
-export const theme = extendTheme({ config, radii, fonts, shadows, semanticTokens, spacing, sizes, components, styles });
+export const theme = extendTheme({ layerStyles, config, radii, fonts, shadows, semanticTokens, spacing, sizes, components, styles });

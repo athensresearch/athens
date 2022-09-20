@@ -32,6 +32,13 @@
 
   types/BlockTypeProtocol
 
+  (text-view
+    [_this block {:keys [_from title]} ref-uid _uid]
+    (if (not (str/blank? title))
+      (parser/parse-to-text title ref-uid)
+      (parser/parse-to-text (:block/string block) ref-uid)))
+
+
   (inline-ref-view
     [_this block {:keys [from title]} ref-uid uid _callback _with-breadcrumb?]
     (let [parents   (reactive/get-reactive-parents-recursively [:block/uid ref-uid])

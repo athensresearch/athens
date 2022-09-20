@@ -1,5 +1,5 @@
 import * as React from "react";
-import { VStack, Box, Portal, AvatarGroup, Avatar } from "@chakra-ui/react";
+import { Portal } from "@chakra-ui/react";
 import {
   DndContext,
   useSensors,
@@ -20,19 +20,14 @@ const activationConstraint = {
   distance: 15,
 }
 
-
 export const List = (props) => {
   const {
     items: outerItems,
     children,
     onUpdateItemsOrder,
     onOpenItem,
-    ...rest
   } = props;
   const ids = outerItems.map(x => x.key)
-
-  const container = React.useRef();
-  const [containerWidth, setContainerWidth] = React.useState("unset");
 
   // Maintain an internal list of items for proper animation
   const [items, setItems] = React.useState(outerItems);
@@ -41,13 +36,6 @@ export const List = (props) => {
   React.useEffect(() => {
     setItems(outerItems)
   }, [outerItems])
-
-  React.useEffect(() => {
-    if (container.current) {
-      const el = container.current as HTMLElement;
-      setContainerWidth(el.getBoundingClientRect().width.toString());
-    }
-  }, [container]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint }),
@@ -73,27 +61,23 @@ export const List = (props) => {
   };
 
   return (
-    <Box sx={{ "--parentWidth": containerWidth }}>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-        onDragStart={handleDragStart}
-      >
-        <VStack spacing={0.25} align="stretch" overflowX="hidden" {...rest}>
-          <SortableContext strategy={verticalListSortingStrategy} items={items}>
-            {items.map(({ ...props }) => <Item
-              {...props}
-              ></Item>)}
-          </SortableContext>
-        </VStack>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+      onDragStart={handleDragStart}
+    >
+      <SortableContext strategy={verticalListSortingStrategy} items={items}>
+        {items.map(({ ...props }) => <Item
+          {...props}
+        ></Item>)}
+      </SortableContext>
 
-        <Portal>
-          <DragOverlay>
-            {activeId ? <ItemDragOverlay sx={{ "--parentWidth": containerWidth }} key={activeId} id={activeId} /> : null}
-          </DragOverlay>
-        </Portal>
-      </DndContext>
-    </Box>
+      <Portal>
+        <DragOverlay>
+          {activeId ? <ItemDragOverlay key={activeId} id={activeId} /> : null}
+        </DragOverlay>
+      </Portal>
+    </DndContext>
   );
 };
