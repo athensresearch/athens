@@ -3,13 +3,16 @@
     ["/components/Comments/Comments" :refer [CommentContainer CommentAnchor]]
     ["/components/Icons/Icons"       :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
     ["/timeAgo.js"                   :refer [timeAgo]]
-    ["@chakra-ui/react"              :refer [AvatarGroup Button Box Text VStack Avatar HStack Badge]]
+    ["@chakra-ui/react"              :refer [AvatarGroup Button Box MenuDivider Text VStack Avatar HStack Badge]]
     [athens.common-events            :as common-events]
     [athens.common-events.graph.ops  :as graph-ops]
     [athens.common.logging           :as log]
     [athens.common.utils             :as common.utils]
+    ["/components/Block/Reactions"             :refer [Reactions]]
+    ["react-intersection-observer"   :refer [useInView]]
     [athens.db                       :as db]
     [athens.parse-renderer           :as parse-renderer]
+    [athens.views.blocks.reactions   :as block-reaction]
     [athens.reactive                 :as reactive]
     [athens.util                     :as util]
     [athens.views.blocks.editor      :as editor]
@@ -78,10 +81,19 @@
         human-timestamp   (timeAgo time)
         is-editing        (rf/subscribe [:editing/is-editing uid])
         value-atom        (r/atom string)
+        feature-flags     (rf/subscribe [:feature-flags])
+        current-user      (rf/subscribe [:presence/current-user])
         show-edit-atom?   (r/atom true)]
 
     (fn []
       (let [current-user-is-author? (= author @current-username)
+            reactions-enabled?      (:reactions @feature-flags)
+            user-id                 (or (:username @current-user)
+                                       ;; We use empty string for when there is no user information, like in PKM.
+                                       "")
+            properties              (athens.common-db/get-block-property-document @db/dsdb [:block/uid uid])
+            reactions              (and reactions-enabled?
+                                        (block-reaction/props->reactions properties))
             menu                    (create-menu item current-user-is-author?)]
         [:> CommentContainer {:menu menu :isFollowUp is-followup? :isEdited edited?}
 
@@ -165,7 +177,14 @@
                       :mr 0
                       :alignSelf "baseline"
                       :lineHeight "1.5"
-                      :gridArea "refs"} linked-refs-count])]))))
+                      :gridArea "refs"} linked-refs-count])
+
+         (when (and reactions-enabled? reactions)
+            [:> Reactions {:reactions        (clj->js reactions)
+                           :currentUser      user-id
+                           :onToggleReaction (partial block-reaction/toggle-reaction [:block/uid uid])}])]))))
+
+
 
 
 (defn comments-disclosure
