@@ -1,9 +1,9 @@
 (ns athens.views.comments.inline
   (:require
     ["/components/Comments/Comments" :refer [CommentContainer CommentAnchor]]
-    ["/components/Icons/Icons"       :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
+    ["/components/Icons/Icons"       :refer [ExpandIcon ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
     ["/timeAgo.js"                   :refer [timeAgo]]
-    ["@chakra-ui/react"              :refer [AvatarGroup Button Box MenuDivider Text VStack Avatar HStack Badge]]
+    ["@chakra-ui/react"              :refer [MenuGroup MenuItem AvatarGroup Button Box MenuDivider Text VStack Avatar HStack Badge]]
     [athens.common-events            :as common-events]
     [athens.common-events.graph.ops  :as graph-ops]
     [athens.common.logging           :as log]
@@ -57,19 +57,38 @@
 
 
 (defn create-menu
-  [{:keys [block/uid]} current-user-is-author?]
-  (->> [{:children "Copy comment ref"
+  [{:keys [block/uid]} current-user-is-author? user-id]
+  [:> MenuGroup
+   [:> MenuItem {:icon     (r/as-element [:> BlockEmbedIcon])
+                 :onClick  #(copy-comment-uid uid)}
+    "Copy comment ref"]
+   (when current-user-is-author?
+       [:> MenuItem {:icon     [:> PencilIcon]
+                     :onClick  #(rf/dispatch [:comment/edit-comment uid])}
+        "Edit"])
+   (when current-user-is-author?
+       [:> MenuItem {:icon     (r/as-element [:> TrashIcon])
+                     :onClick  #(rf/dispatch [:comment/remove-comment uid])}
+        "Delete"])
+   [:> MenuGroup
+      [:> MenuDivider]
+      [block-reaction/reactions-menu-list uid user-id]]])
+
+  #_ (->> [{:children "Copy comment ref"
          :icon     (r/as-element [:> BlockEmbedIcon])
          :onClick  #(copy-comment-uid uid)}
         (when current-user-is-author?
           {:children "Edit"
            :icon     (r/as-element [:> PencilIcon])
            :onClick  #(rf/dispatch [:comment/edit-comment uid])})
+        [:MenuGroup
+         [:> MenuDivider]
+         [block-reaction/reactions-menu-list uid user-id]]
         (when current-user-is-author?
           {:children "Delete"
            :icon     (r/as-element [:> TrashIcon])
            :onClick  #(rf/dispatch [:comment/remove-comment uid])})]
-       (filterv seq)))
+       (filterv seq))
 
 
 (defn comment-el
@@ -94,7 +113,7 @@
             properties              (athens.common-db/get-block-property-document @db/dsdb [:block/uid uid])
             reactions              (and reactions-enabled?
                                         (block-reaction/props->reactions properties))
-            menu                    (create-menu item current-user-is-author?)]
+            menu                    (r/as-element (create-menu item current-user-is-author? user-id))]
         [:> CommentContainer {:menu menu :isFollowUp is-followup? :isEdited edited?}
 
          ;; if is-followup?, hide byline and avatar

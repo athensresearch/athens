@@ -50,17 +50,21 @@ export const CommentAnchor = ({ menu, ...boxProps }) => {
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
   const isMenuOpen = getIsMenuOpen(ref);
 
-  const Menu = () => {
-    return <MenuGroup>
-      {menu.map((action) => <MenuItem key={action.children} {...action} />)}
-    </MenuGroup>
+  // const Menu = () => {
+  //   return <MenuGroup>
+  //     {menu.map((action) => <MenuItem key={action.children} {...action} />)}
+  //   </MenuGroup>
+  // }
+
+  const MenuItems = () => {
+    return menu
   }
 
   return <Anchor
     isActive={isMenuOpen}
     ref={ref}
     onClick={(event) => {
-      addToContextMenu({ event, ref, component: Menu, anchorEl: ref, key: "comment" })
+      addToContextMenu({ event, ref, component: MenuItems, anchorEl: ref, key: "comment" })
     }}
     {...boxProps}
   />
@@ -73,10 +77,14 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
   const isMenuOpen = getIsMenuOpen(ref);
 
-  const Menu = () => {
-    return <MenuGroup>
-      {menu.map((action) => <MenuItem key={action.children} {...action} />)}
-    </MenuGroup>
+  // const Menu = () => {
+  //   return <MenuGroup title="Test">
+  //     {menu.map((action) => <MenuItem key={action.children} {...action} />)}
+  //   </MenuGroup>
+  // }
+
+  const MenuItems = () => {
+    return menu
   }
 
   return <Box
@@ -100,7 +108,7 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
     'anchor comment refs'
     '_ reactions reactions'`}
     onContextMenu={(event) => {
-      addToContextMenu({ event, ref, component: Menu, key: "comment" })
+      addToContextMenu({ event, ref, component: MenuItems, key: "comment" })
     }}
     _first={{
       borderTopWidth: 0
