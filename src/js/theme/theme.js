@@ -314,6 +314,10 @@ const components = {
         _active: {
           bg: "interaction.surface.active"
         },
+        _focus: {
+          outline: "none",
+          boxShadow: "none",
+        },
         _focusVisible: {
           outline: "none",
           boxShadow: "focusInset"
@@ -362,6 +366,10 @@ const components = {
       transitionTimingFunction: 'ease-in-out',
       _active: {
         transitionDuration: "0s",
+      },
+      _focus: {
+        outline: 'none',
+        boxShadow: 'none'
       },
       _focusVisible: {
         outline: 'none',
@@ -521,6 +529,9 @@ const components = {
     baseStyle: {
       dialogContainer: {
         WebkitAppRegion: 'no-drag',
+        _focus: {
+          outline: 'none'
+        }
       },
       dialog: {
         shadow: "dialog",
@@ -536,6 +547,10 @@ const components = {
       content: {
         bg: "background.upper",
         shadow: "popover",
+        _focus: {
+          outline: 'none',
+          shadow: "popover",
+        },
         _focusVisible: {
           shadow: "popover",
         },
@@ -624,6 +639,10 @@ const components = {
             color: 'foreground.primary',
             borderBottomColor: "foreground.primary"
           },
+          _focus: {
+            outline: 'none',
+            shadow: 'focusInset'
+          },
           _hover: {
             bg: "interaction.surface.hover",
             shadow: 'none'
@@ -633,7 +652,7 @@ const components = {
             shadow: 'none'
           },
           _focusVisible: {
-            shadow: 'focusInset'
+            shadow: "focus"
           }
         }
       },
@@ -657,6 +676,10 @@ const components = {
             left: "1ch",
             borderRadius: "md",
             height: "1.5px",
+          },
+          _focus: {
+            outline: 'none',
+            shadow: 'none'
           },
           _focusVisible: {
             outline: 'none',
