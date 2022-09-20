@@ -1,21 +1,20 @@
 (ns athens.views.comments.inline
   (:require
+    ["/components/Block/Reactions"   :refer [Reactions]]
     ["/components/Comments/Comments" :refer [CommentContainer CommentAnchor]]
-    ["/components/Icons/Icons"       :refer [ExpandIcon ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
+    ["/components/Icons/Icons"       :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
     ["/timeAgo.js"                   :refer [timeAgo]]
     ["@chakra-ui/react"              :refer [MenuGroup MenuItem AvatarGroup Button Box MenuDivider Text VStack Avatar HStack Badge]]
     [athens.common-events            :as common-events]
     [athens.common-events.graph.ops  :as graph-ops]
     [athens.common.logging           :as log]
     [athens.common.utils             :as common.utils]
-    ["/components/Block/Reactions"             :refer [Reactions]]
-    ["react-intersection-observer"   :refer [useInView]]
     [athens.db                       :as db]
     [athens.parse-renderer           :as parse-renderer]
-    [athens.views.blocks.reactions   :as block-reaction]
     [athens.reactive                 :as reactive]
     [athens.util                     :as util]
     [athens.views.blocks.editor      :as editor]
+    [athens.views.blocks.reactions   :as block-reaction]
     [athens.views.comments.core      :as comments.core]
     [clojure.string                  :as str]
     [re-frame.core                   :as rf]
@@ -63,16 +62,16 @@
                  :onClick  #(copy-comment-uid uid)}
     "Copy comment ref"]
    (when current-user-is-author?
-       [:> MenuItem {:icon     (r/as-element [:> PencilIcon])
-                     :onClick  #(rf/dispatch [:comment/edit-comment uid])}
-        "Edit"])
+     [:> MenuItem {:icon     (r/as-element [:> PencilIcon])
+                   :onClick  #(rf/dispatch [:comment/edit-comment uid])}
+      "Edit"])
    (when current-user-is-author?
-       [:> MenuItem {:icon     (r/as-element [:> TrashIcon])
-                     :onClick  #(rf/dispatch [:comment/remove-comment uid])}
-        "Delete"])
+     [:> MenuItem {:icon     (r/as-element [:> TrashIcon])
+                   :onClick  #(rf/dispatch [:comment/remove-comment uid])}
+      "Delete"])
    [:> MenuGroup
-      [:> MenuDivider]
-      [block-reaction/reactions-menu-list uid user-id]]])
+    [:> MenuDivider]
+    [block-reaction/reactions-menu-list uid user-id]]])
 
 
 (defn comment-el
@@ -92,8 +91,8 @@
       (let [current-user-is-author? (= author @current-username)
             reactions-enabled?      (:reactions @feature-flags)
             user-id                 (or (:username @current-user)
-                                       ;; We use empty string for when there is no user information, like in PKM.
-                                       "")
+                                        ;; We use empty string for when there is no user information, like in PKM.
+                                        "")
             properties              (:block/properties (reactive/get-reactive-block-document [:block/uid uid]))
             reactions               (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
@@ -183,11 +182,9 @@
                       :gridArea "refs"} linked-refs-count])
 
          (when (and reactions-enabled? reactions)
-            [:> Reactions {:reactions        (clj->js reactions)
-                           :currentUser      user-id
-                           :onToggleReaction (partial block-reaction/toggle-reaction [:block/uid uid])}])]))))
-
-
+           [:> Reactions {:reactions        (clj->js reactions)
+                          :currentUser      user-id
+                          :onToggleReaction (partial block-reaction/toggle-reaction [:block/uid uid])}])]))))
 
 
 (defn comments-disclosure
