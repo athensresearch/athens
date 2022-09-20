@@ -96,7 +96,7 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
     'anchor comment refs'
     '_ reactions reactions'`}
     onContextMenu={(event) => {
-      addToContextMenu({ event, ref, component: MenuItems, key: "comment" })
+      addToContextMenu({ event, ref, component: MenuItems, key: "comment", isExclusive: true })
     }}
     _first={{
       borderTopWidth: 0
