@@ -315,6 +315,79 @@
     tree))
 
 
+(defn transform->text
+  "Transforms Instaparse output to Hiccup."
+  [tree uid]
+  (insta/transform
+   ;; TODO update these transformations
+   {:block   (fn [& contents]
+               (str/join contents))
+    :heading (fn [{n :n} & contents]
+               (str (str/join (repeat n "*"))
+                    " "
+                    (str/join contents)))
+
+    ;; for more information regarding how custom components are parsed, see
+    ;; https://athensresearch.gitbook.io/handbook/athens/athens-components-documentation/
+    :component            (fn [& contents]
+                            (let [content (first contents)]
+                              (str "{{" content ":" (str/join (rest contents))"}}")))
+    :page-link            (fn [_ & title-coll]
+                            (str "[[" (str/join title-coll) "]]"))
+    :hashtag              (fn [{_from :from} & title-coll]
+                            (str "#" (str/join title-coll)))
+    :block-ref            (fn [{_from :from :as attr} ref-uid]
+                            (let [block      (reactive/get-reactive-block-or-page-by-uid ref-uid)
+                                  block-type (reactive/reactive-get-entity-type [:block/uid ref-uid])
+                                  ff         @(rf/subscribe [:feature-flags])
+                                  renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
+                                  renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]
+                              (types/text-view renderer block attr ref-uid uid)))
+    :url-image            (fn [{url :src alt :alt}]
+                            (str "![" alt "](" url ")"))
+    :url-link             (fn [{url :url} text]
+                            (str "[" text "](" url ")"))
+    :link                 (fn [{:keys [text target title]}]
+                            (str "[" title "](" target
+                                 (when (string? text)
+                                   (str " " text))
+                                 ")"))
+    :autolink             (fn [{:keys [text _target]}]
+                            (str "<" text ">"))
+    :text-run             (fn [& contents]
+                            (str/join contents))
+    :paragraph            (fn [& contents]
+                            (str/join contents))
+    :bold                 (fn [& contents]
+                            (str "*" (str/join contents) "*"))
+    :italic               (fn [& contents]
+                            (str "**" (str/join contents) "**"))
+    :strikethrough        (fn [& contents]
+                            (str "~~" (str/join contents) "~~"))
+    :underline            (fn [& contents]
+                            (str "__" (str/join contents) "__"))
+    :highlight            (fn [& contents]
+                            (str "^^" (str/join contents) "^^"))
+    :pre-formatted        (fn [text]
+                            (str "`" text "`"))
+    :inline-pre-formatted (fn [text]
+                            (str "`" text "`"))
+    :indented-code-block  (fn [{:keys [_from]} code-text]
+                            (->> code-text
+                                 (map #(str "    " %))
+                                 (str/join "\n")))
+    :fenced-code-block    (fn [{lang :lang} code-text]
+                            (let [text (second code-text)]
+                              (str "```" lang "\n"
+                                   text "\n```")))
+
+    :latex   (fn [text]
+               (str "$$" text "$$"))
+    :newline (fn [_]
+               "\n")}
+    tree))
+
+
 (defn parse-and-render
   "Converts a string of block syntax to Hiccup, with fallback formatting if it can’t be parsed."
   [string uid]
@@ -341,3 +414,12 @@
           (js/console.log "view creation:" vt-total)
           (js/console.groupEnd))
         view))))
+
+
+(defn parse-to-text
+  [string uid]
+  (let [ast    (parser-impl/staged-parser->ast string)
+        result (if (insta/failure? ast)
+                 (insta/get-failure ast)
+                 (transform->text ast uid))]
+    (str/join result)))
