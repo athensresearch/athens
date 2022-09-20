@@ -63,7 +63,7 @@
                  :onClick  #(copy-comment-uid uid)}
     "Copy comment ref"]
    (when current-user-is-author?
-       [:> MenuItem {:icon     [:> PencilIcon]
+       [:> MenuItem {:icon     (r/as-element [:> PencilIcon])
                      :onClick  #(rf/dispatch [:comment/edit-comment uid])}
         "Edit"])
    (when current-user-is-author?
@@ -73,22 +73,6 @@
    [:> MenuGroup
       [:> MenuDivider]
       [block-reaction/reactions-menu-list uid user-id]]])
-
-  #_ (->> [{:children "Copy comment ref"
-         :icon     (r/as-element [:> BlockEmbedIcon])
-         :onClick  #(copy-comment-uid uid)}
-        (when current-user-is-author?
-          {:children "Edit"
-           :icon     (r/as-element [:> PencilIcon])
-           :onClick  #(rf/dispatch [:comment/edit-comment uid])})
-        [:MenuGroup
-         [:> MenuDivider]
-         [block-reaction/reactions-menu-list uid user-id]]
-        (when current-user-is-author?
-          {:children "Delete"
-           :icon     (r/as-element [:> TrashIcon])
-           :onClick  #(rf/dispatch [:comment/remove-comment uid])})]
-       (filterv seq))
 
 
 (defn comment-el
@@ -110,9 +94,9 @@
             user-id                 (or (:username @current-user)
                                        ;; We use empty string for when there is no user information, like in PKM.
                                        "")
-            properties              (athens.common-db/get-block-property-document @db/dsdb [:block/uid uid])
-            reactions              (and reactions-enabled?
-                                        (block-reaction/props->reactions properties))
+            properties              (:block/properties (reactive/get-reactive-block-document [:block/uid uid]))
+            reactions               (and reactions-enabled?
+                                         (block-reaction/props->reactions properties))
             menu                    (r/as-element (create-menu item current-user-is-author? user-id))]
         [:> CommentContainer {:menu menu :isFollowUp is-followup? :isEdited edited?}
 

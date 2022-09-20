@@ -50,12 +50,6 @@ export const CommentAnchor = ({ menu, ...boxProps }) => {
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
   const isMenuOpen = getIsMenuOpen(ref);
 
-  // const Menu = () => {
-  //   return <MenuGroup>
-  //     {menu.map((action) => <MenuItem key={action.children} {...action} />)}
-  //   </MenuGroup>
-  // }
-
   const MenuItems = () => {
     return menu
   }
@@ -76,12 +70,6 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
   const ref = React.useRef();
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
   const isMenuOpen = getIsMenuOpen(ref);
-
-  // const Menu = () => {
-  //   return <MenuGroup title="Test">
-  //     {menu.map((action) => <MenuItem key={action.children} {...action} />)}
-  //   </MenuGroup>
-  // }
 
   const MenuItems = () => {
     return menu
