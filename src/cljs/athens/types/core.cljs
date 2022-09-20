@@ -5,6 +5,11 @@
 (defprotocol BlockTypeProtocol
   "Block/Entity Type Protocol for rendering aspects"
 
+  (text-view
+    [this block-data attr ref-uid uid]
+    "Renders Block/Entity Type as textual representation.
+     Recursively resolves references and all.")
+
   (inline-ref-view
     [this block-data attr ref-uid uid callbacks with-breadcrumb?]
     "Render Block/Entity Type as inline reference")
