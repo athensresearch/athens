@@ -97,7 +97,8 @@ export const CommentContainer = withErrorBoundary(({ children, menu, isFollowUp 
     gridTemplateRows="auto auto"
     gridTemplateAreas={`
     'byline byline byline'
-    'anchor comment refs'`}
+    'anchor comment refs'
+    '_ reactions reactions'`}
     onContextMenu={(event) => {
       addToContextMenu({ event, ref, component: Menu, key: "comment" })
     }}
