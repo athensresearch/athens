@@ -270,6 +270,11 @@
 
   types/BlockTypeProtocol
 
+  (text-view
+    [_this _block-data _attr _ref-uid uid]
+    (str "Task: " uid))
+
+
   (inline-ref-view
     [_this _block-data _attr ref-uid _uid _callbacks _with-breadcrumb?]
     (task-ref-el ref-uid))
