@@ -296,7 +296,7 @@
                                               (save-fn))
                                            2000)
         read-value          local-value
-        show-edit?          (r/atom false)
+        show-edit?          (r/atom true)
         custom-key-handlers {:enter-handler (fn [_uid _d-key-down]
                                               ;; TODO dispatch save and jump to next input
                                               (println "TODO dispatch save and jump to next input")
