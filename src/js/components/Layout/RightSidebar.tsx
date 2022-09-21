@@ -74,7 +74,7 @@ export const RightSidebar = (props: RightSidebarProps) => {
             onResizeSidebar={onResize}
           />
           <Box
-            pt={`calc(${toolbarHeight} + 1rem)`}
+            pt={`calc(${toolbarHeight} + 0.5rem)`}
             width={unsavedRightSidebarWidth + "vw"}
             overflowX="hidden"
             overflowY="auto"

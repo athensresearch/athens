@@ -33,10 +33,10 @@
   types/BlockTypeProtocol
 
   (text-view
-    [_this block {:keys [_from title]} ref-uid _uid]
+    [_this {:block/keys [string]} {:keys [_from title]}]
     (if (not (str/blank? title))
-      (parser/parse-to-text title ref-uid)
-      (parser/parse-to-text (:block/string block) ref-uid)))
+      (parser/parse-to-text title)
+      (parser/parse-to-text string)))
 
 
   (inline-ref-view

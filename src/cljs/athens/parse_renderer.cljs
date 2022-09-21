@@ -317,7 +317,7 @@
 
 (defn transform->text
   "Transforms Instaparse output to Hiccup."
-  [tree uid]
+  [tree]
   (insta/transform
     {:block   (fn [& contents]
                 (str/join contents))
@@ -341,7 +341,7 @@
                                    ff         @(rf/subscribe [:feature-flags])
                                    renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
                                    renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]
-                               (types/text-view renderer block attr ref-uid uid)))
+                               (str "((" (types/text-view renderer block attr) "))")))
      :url-image            (fn [{url :src alt :alt}]
                              (str "![" alt "](" url ")"))
      :url-link             (fn [{url :url} text]
@@ -416,9 +416,9 @@
 
 
 (defn parse-to-text
-  [string uid]
+  [string]
   (let [ast    (parser-impl/staged-parser->ast string)
         result (if (insta/failure? ast)
                  (insta/get-failure ast)
-                 (transform->text ast uid))]
+                 (transform->text ast))]
     (str/join result)))
