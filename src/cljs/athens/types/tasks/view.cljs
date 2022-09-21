@@ -273,7 +273,7 @@
 (defn zoomed-in-view-el
   [_this block-data _callbacks]
   (let [parent-block-uid    (:block/uid block-data)
-        props               (common-db/get-block-property-document @db/dsdb [:block/uid parent-block-uid])
+        props               (:block/properties (reactive/get-reactive-block-document [:block/uid parent-block-uid]))
         title-uid           (-> props (get ":task/title") :block/uid)
         title-block         (reactive/get-reactive-block-document [:block/uid title-uid])
         title-str           (or (:block/string title-block) "")
@@ -289,9 +289,7 @@
                                  (reset! local-value new-value)
                                  (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/title"]
                                                (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])]))))
-        update-fn           #(do
-                               (when-not (= title-str %)
-                                 (reset! local-value %)))
+        update-fn           #(reset! local-value %)
         idle-fn             (gfns/debounce #(do
                                               (save-fn))
                                            2000)
@@ -313,12 +311,20 @@
                                     :style                   {}}
                                    custom-key-handlers)]
 
-    [editor/block-editor {:block/uid (or title-uid
-                                         ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
-                                         (str "tmp-" (subs (or ":task/title" "")
-                                                           (inc (.indexOf (or ":task/title" "") "/")))
-                                              "-uid-" (common.utils/gen-block-uid)))}
-     state-hooks]))
+    (fn render-task
+      [_this block-data _callbacks]
+      (let [parent-block-uid    (:block/uid block-data)
+            props               (:block/properties (reactive/get-reactive-block-document [:block/uid parent-block-uid]))
+            title-uid           (-> props (get ":task/title") :block/uid)
+            title-block         (reactive/get-reactive-block-document [:block/uid title-uid])
+            title-str           (or (:block/string title-block) "")]
+        (update-fn title-str)
+        [editor/block-editor {:block/uid (or title-uid
+                                              ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                              (str "tmp-" (subs (or ":task/title" "")
+                                                                (inc (.indexOf (or ":task/title" "") "/")))
+                                                   "-uid-" (common.utils/gen-block-uid)))}
+          state-hooks]))))
 
 
 (defrecord TaskView
