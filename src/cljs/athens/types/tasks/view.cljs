@@ -271,8 +271,8 @@
   types/BlockTypeProtocol
 
   (text-view
-    [_this _block-data _attr _ref-uid uid]
-    (str "Task: " uid))
+    [_this block-data _attr]
+    (str "Task: " (:block/uid block-data)))
 
 
   (inline-ref-view
