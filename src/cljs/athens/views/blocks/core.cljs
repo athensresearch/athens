@@ -678,8 +678,6 @@
             comments-data              (comments/get-comments-in-thread @db/dsdb thread-uid)
             block-type                 (reactive/reactive-get-entity-type [:block/uid uid])
             ff                         @(rf/subscribe [:feature-flags])
-            task-title                 (when (= "[[athens/task]]" block-type)
-                                         (-> properties (get ":task/title") :block/string))
             renderer-k                 (block-type-dispatcher/block-type->protocol-k block-type ff)
             renderer                   (block-type-dispatcher/block-type->protocol renderer-k {})]
 

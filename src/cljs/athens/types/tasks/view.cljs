@@ -22,7 +22,6 @@
     [athens.common-events.graph.ops             :as graph-ops]
     [athens.common.utils                        :as common.utils]
     [athens.dates                               :as dates]
-    [athens.db                                  :as db]
     [athens.parse-renderer                      :as parser]
     [athens.reactive                            :as reactive]
     [athens.router                              :as router]
@@ -320,11 +319,11 @@
             title-str           (or (:block/string title-block) "")]
         (update-fn title-str)
         [editor/block-editor {:block/uid (or title-uid
-                                              ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
-                                              (str "tmp-" (subs (or ":task/title" "")
-                                                                (inc (.indexOf (or ":task/title" "") "/")))
-                                                   "-uid-" (common.utils/gen-block-uid)))}
-          state-hooks]))))
+                                             ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                             (str "tmp-" (subs (or ":task/title" "")
+                                                               (inc (.indexOf (or ":task/title" "") "/")))
+                                                  "-uid-" (common.utils/gen-block-uid)))}
+         state-hooks]))))
 
 
 (defrecord TaskView
