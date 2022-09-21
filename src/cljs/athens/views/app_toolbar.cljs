@@ -1,20 +1,25 @@
 (ns athens.views.app-toolbar
   (:require
-    ["/components/AppToolbar/AppToolbar" :refer [AppToolbar]]
-    [athens.electron.db-menu.core        :refer [db-menu]]
-    [athens.electron.utils               :as electron.utils]
-    [athens.router                       :as router]
-    [athens.self-hosted.presence.views   :refer [toolbar-presence-el]]
-    [athens.style                        :refer [unzoom]]
-    [athens.subs]
-    [athens.common-db :as common-db]
-    [athens.db :as db]
-    [athens.util                         :as util]
-    [athens.views.comments.core          :as comments]
-    [athens.views.notifications.core     :as notifications]
-    [athens.views.notifications.popover :refer  [notifications-popover]]
-    [re-frame.core                       :as rf]
-    [reagent.core                        :as r]))
+   ["/components/AppToolbar/AppToolbar" :refer [AppToolbar]]
+   [athens.common-db                    :as common-db]
+   [athens.db                           :as db]
+   [athens.electron.db-menu.core        :refer [db-menu]]
+   [athens.electron.utils               :as electron.utils]
+   [athens.router                       :as router]
+   [athens.self-hosted.presence.views   :refer [toolbar-presence-el]]
+   [athens.style                        :refer [unzoom]]
+   [athens.subs]
+   [athens.util                         :as util]
+   [athens.views.comments.core          :as comments]
+   [athens.views.notifications.core     :as notifications]
+   [athens.views.notifications.popover  :refer [notifications-popover]]
+   [re-frame.core                       :as rf]
+   [reagent.core                        :as r]))
+
+
+(def name-from-route
+  {:home "Daily Notes"
+   :graph "Graph"})
 
 
 (defn app-toolbar
@@ -25,14 +30,8 @@
         help-open?             (rf/subscribe [:help/open?])
         athena-open?           (rf/subscribe [:athena/open])
         show-comments?         (rf/subscribe [:comment/show-comments?])
-        ;;
-        route                  (rf/subscribe [:current-route])
         route-name             (rf/subscribe [:current-route/name])
-        route-page-title       (rf/subscribe [:current-route/page-title])
         route-uid              (rf/subscribe [:current-route/uid])
-        route-block-string     (common-db/get-block-string @db/dsdb @route-uid)
-
-        ;;
         theme-dark             (rf/subscribe [:theme/dark])
         selected-db            (rf/subscribe [:db-picker/selected-db])
         notificationsPopoverOpen? (rf/subscribe [:notification/show-popover?])
@@ -83,18 +82,14 @@
         on-minimize            #(rf/dispatch [:minimize-win])
         on-close               #(rf/dispatch [:close-win])]
 
-        (prn @route-uid)
-        (prn (common-db/get-block-string @db/dsdb @route-uid))
-
     [:> AppToolbar
      (merge
       {:style                     (unzoom)
        :os                        os
        :isElectron                electron?
-       :route                     @route
-       :routeName                 @route-name
-       :routePageTitle            @route-page-title
-       :routeBlockString          (common-db/get-block-string @db/dsdb @route-uid)
+       :currentLocationName       (or @current-page-title
+                                      (common-db/get-block-string @db/dsdb @route-uid)
+                                      (name-from-route @route-name))
        :isWinFullscreen           @win-fullscreen?
        :isWinMaximized            @win-maximized?
        :isWinFocused              @win-focused?

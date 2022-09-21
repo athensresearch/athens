@@ -1,20 +1,22 @@
 import { ChevronDownIcon } from '@/Icons/Icons';
-import { mapActionsToMenuList, ActionsListItem } from '@/utils/mapActionsToMenuList';
-import { Heading, VStack, Menu, MenuButton, MenuList, Portal, Button, Breadcrumb, BreadcrumbLink, BreadcrumbItem } from '@chakra-ui/react';
+import { ActionsListItem, mapActionsToMenuList } from '@/utils/mapActionsToMenuList';
+import { Heading, VStack, Menu, MenuButton, MenuList, Portal, Button } from '@chakra-ui/react';
 
 interface LocationIndicatorProps {
-  title: string;
-  uid: string;
+  currentLocationName: string;
   isVisible: boolean;
-  type: "node" | "block",
-  path?: { label: string, path: string }[]
-  actions?: ActionsListItem[];
+  breadcrumbs?: {}[],
+  actions?: ActionsListItem[],
+  uid?: string
 }
 
 export const LocationIndicator = (props: LocationIndicatorProps) => {
-  const { isVisible, ...locationProps } = props;
-  const { title, uid, type, path, actions } = locationProps;
-  if (type !== 'node') return null;
+  const { isVisible,
+    currentLocationName,
+    breadcrumbs,
+    actions,
+    uid
+  } = props;
 
   return <VStack
     opacity={isVisible ? 1 : 0}
@@ -25,42 +27,46 @@ export const LocationIndicator = (props: LocationIndicatorProps) => {
     tabIndex={isVisible ? 0 : -1}
     pointerEvents={isVisible ? 'all' : 'none'}
   >
-    <Menu placement="bottom" isLazy>
-      <MenuButton
-        as={Button}
-        variant="ghost"
-        fontSize="sm"
-        size="sm"
-        overflow="hidden"
-        textAlign="start"
-        sx={{
-          "> span": {
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            alignItems: "flex-start",
-            justifyContent: "flex-start"
-          },
-          ...(path && {
-            ".chakra-button__icon": {
-              alignSelf: "flex-end"
-            }
-          })
-        }}
-        {...(path && {
-          height: "auto",
-          py: 1,
-          px: 2
-        })}
-        rightIcon={actions ? <ChevronDownIcon color="foreground.secondary" /> : undefined}>
-        {path && <Heading noOfLines={0} maxWidth="100%" display="block" textTransform="uppercase" textAlign="start" color="foreground.secondary" fontSize="50%">{path[0].label}</Heading>}
-        {title}
-      </MenuButton>
-      <Portal>
-        <MenuList>
-          {mapActionsToMenuList({ target: uid, menuItems: actions })}
-        </MenuList>
-      </Portal>
-    </Menu>
-  </VStack >
+    {(actions) ? (
+      <Menu placement="bottom" isLazy>
+        <MenuButton
+          as={Button}
+          variant="ghost"
+          fontSize="sm"
+          size="sm"
+          overflow="hidden"
+          textAlign="start"
+          sx={{
+            "> span": {
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              alignItems: "flex-start",
+              justifyContent: "flex-start"
+            },
+            ...(breadcrumbs && {
+              ".chakra-button__icon": {
+                alignSelf: "flex-end"
+              }
+            })
+          }}
+          {...(breadcrumbs && {
+            height: "auto",
+            py: 1,
+            px: 2
+          })}
+          rightIcon={actions ? <ChevronDownIcon color="foreground.secondary" /> : undefined}>
+          {breadcrumbs && <Heading noOfLines={0} maxWidth="100%" display="block" textTransform="uppercase" textAlign="start" color="foreground.secondary" fontSize="50%">{breadcrumbs[0].label}</Heading>}
+          {currentLocationName}
+        </MenuButton>
+        <Portal>
+          <MenuList>
+            {mapActionsToMenuList({ target: uid, menuItems: actions })}
+          </MenuList>
+        </Portal>
+      </Menu>
+    ) : (
+      <Heading pl={2} whiteSpace="nowrap" noOfLines={0} color="foreground.secondary" size="xs">{currentLocationName}</Heading>
+    )}
+  </VStack>
 }
