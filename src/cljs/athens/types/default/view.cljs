@@ -230,6 +230,13 @@
 
   types/BlockTypeProtocol
 
+  (text-view
+    [_this block {:keys [_from title]} ref-uid _uid]
+    (if (not (str/blank? title))
+      (parser/parse-to-text title ref-uid)
+      (parser/parse-to-text (:block/string block) ref-uid)))
+
+
   (inline-ref-view
     [_this block attr ref-uid uid _callback _with-breadcrumb?]
     [inline-ref-view-el _this block attr ref-uid uid _callback _with-breadcrumb?])

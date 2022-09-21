@@ -52,7 +52,7 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
       bg={isMenuOpen ? "background.upper" : undefined}
       justifyContent="flex-start"
       flexDirection="column"
-      display= "block"
+      display="block"
       background="var(--block-surface-color)"
       opacity={isDragging ? 0.5 : 1}
       data-uid={uid}
@@ -95,8 +95,8 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
           gridTemplateAreas:
             `'above above above above above above'
             'toggle name anchor content refs presence'
-            '_ _ _ reactions reactions reactions'
-            '_ _ _ comments comments comments'
+            'a a a reactions reactions reactions'
+            'a a a comments b b'
             'below below below below below below'`,
           borderRadius: "0.5rem",
           minHeight: '2em',

@@ -93,10 +93,16 @@
   [items]
   (doall
     (mapv (fn [entity]
-            (let [{:keys [open? name source-uid type]} entity
-                  eid  (get-eid entity)
-                  item (reactive/get-reactive-right-sidebar-item eid)
-                  {:keys [node/title block/string block/uid]} item]
+            (let [{:keys [open?
+                          name
+                          source-uid
+                          type]}      entity
+                  eid                 (get-eid entity)
+                  {:keys [node/title
+                          block/string
+                          block/uid]} (reactive/get-reactive-right-sidebar-item eid)
+                  ;; NOTE: add support for BlockTypeProtocol
+                  entity-title        (parse-renderer/parse-to-text (or title string) name)]
               {:isOpen     open?
                :key        source-uid
                :id         source-uid
@@ -106,10 +112,10 @@
                :onNavigate (if (= type "page")
                              #(router/navigate-page title %)
                              #(router/navigate-uid uid %))
-               ;; nth 1 to get just the title
-               :title      (nth [parse-renderer/parse-and-render (or title string) name] 1)
+               :title      entity-title
                :children   (r/as-element (cond
                                            (= type "graph") [graph/page name]
-                                           (= type "page") [node-page/page eid]
-                                           :else [blocks/page eid]))}))
+                                           (= type "page")  [node-page/page eid]
+                                           :else            [blocks/page eid]))}))
+
           items)))
