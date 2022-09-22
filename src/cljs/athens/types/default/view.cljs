@@ -36,16 +36,11 @@
                       string]}       block-data
         local-value                  (r/atom string)
         show-edit-atom?              (r/atom true)
-        old-value                    (r/atom nil)
         savep-fn                     (partial db/transact-state-for-uid (or original-uid uid))
         save-fn                      #(savep-fn @local-value :block-save)
         idle-fn                      (gfns/debounce #(savep-fn @local-value :autosave)
                                                     2000)
         update-fn                    #(reset! local-value %)
-        update-old-fn                #(reset! old-value %)
-        read-value                   (ratom/reaction @local-value)
-        read-old-value               (ratom/reaction @old-value)
-
         enter-handler                (fn [uid d-key-down]
                                        (let [[uid embed-id]         (common-db/uid-and-embed-id uid)
                                              new-uid               (utils/gen-block-uid)
@@ -61,19 +56,9 @@
                                              :idle-fn        idle-fn
                                              :update-fn      update-fn
                                              :show-edit?     show-edit-atom?
-                                             :update-old-fn  update-old-fn
-                                             :read-value     read-value
-                                             :read-old-value read-old-value
+                                             :read-value     local-value
                                              :enter-handler  enter-handler})]
-    (fn render-block
-      [_this block _callbacks]
-      (let [ident                 [:block/uid (or original-uid uid)]
-            block-o               (reactive/get-reactive-block-document ident)
-            {:block/keys [string
-                          _refs]} (merge block-o block)]
-
-        (update-fn string)
-        [editor/block-editor block state-hooks]))))
+    [editor/block-editor block-data state-hooks]))
 
 
 (defn inline-ref-view-el

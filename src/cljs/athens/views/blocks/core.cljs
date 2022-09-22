@@ -703,7 +703,7 @@
                                              (router/navigate-uid uid e))
 
                                            (rf/dispatch [:editing/uid uid])))}
-           ^{:key renderer-k}
+           ^{:key (str renderer-k uid)}
            [types/zoomed-in-view renderer block {}]]]
 
          ;; Show comments when the toggle is on

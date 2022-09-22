@@ -309,21 +309,12 @@
                                     ;; TODO here we add styles
                                     :style                   {}}
                                    custom-key-handlers)]
-
-    (fn render-task
-      [_this block-data _callbacks]
-      (let [parent-block-uid    (:block/uid block-data)
-            props               (:block/properties (reactive/get-reactive-block-document [:block/uid parent-block-uid]))
-            title-uid           (-> props (get ":task/title") :block/uid)
-            title-block         (reactive/get-reactive-block-document [:block/uid title-uid])
-            title-str           (or (:block/string title-block) "")]
-        (update-fn title-str)
-        [editor/block-editor {:block/uid (or title-uid
+    [editor/block-editor {:block/uid (or title-uid
                                              ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
                                              (str "tmp-" (subs (or ":task/title" "")
-                                                               (inc (.indexOf (or ":task/title" "") "/")))
-                                                  "-uid-" (common.utils/gen-block-uid)))}
-         state-hooks]))))
+                                                           (inc (.indexOf (or ":task/title" "") "/")))
+                                              "-uid-" (common.utils/gen-block-uid)))}
+         state-hooks]))
 
 
 (defrecord TaskView
