@@ -310,11 +310,11 @@
                                     :style                   {}}
                                    custom-key-handlers)]
     [editor/block-editor {:block/uid (or title-uid
-                                             ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
-                                             (str "tmp-" (subs (or ":task/title" "")
+                                         ;; NOTE: temporary magic, stripping `:task/` 🤷‍♂️
+                                         (str "tmp-" (subs (or ":task/title" "")
                                                            (inc (.indexOf (or ":task/title" "") "/")))
                                               "-uid-" (common.utils/gen-block-uid)))}
-         state-hooks]))
+     state-hooks]))
 
 
 (defrecord TaskView
