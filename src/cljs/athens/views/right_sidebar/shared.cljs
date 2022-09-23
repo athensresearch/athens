@@ -102,7 +102,7 @@
                           block/string
                           block/uid]} (reactive/get-reactive-right-sidebar-item eid)
                   ;; NOTE: add support for BlockTypeProtocol
-                  entity-title        (parse-renderer/parse-to-text (or title string) name)]
+                  entity-title        (parse-renderer/parse-to-text (or title string))]
               {:isOpen     open?
                :key        source-uid
                :id         source-uid
