@@ -6,7 +6,7 @@
   "Block/Entity Type Protocol for rendering aspects"
 
   (text-view
-    [this block-data attr ref-uid uid]
+    [this block-data attr]
     "Renders Block/Entity Type as textual representation.
      Recursively resolves references and all.")
 
