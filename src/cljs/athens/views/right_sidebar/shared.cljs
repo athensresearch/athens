@@ -5,7 +5,7 @@
     [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
-    [athens.views.pages.block-page :as block-page]
+    [athens.views.blocks.core :as blocks]
     [athens.views.pages.graph :as graph]
     [athens.views.pages.node-page :as node-page]
     [re-frame.core :as rf]
@@ -116,5 +116,6 @@
                :children   (r/as-element (cond
                                            (= type "graph") [graph/page name]
                                            (= type "page")  [node-page/page eid]
-                                           :else            [block-page/page eid]))}))
+                                           :else            [blocks/page eid]))}))
+
           items)))
