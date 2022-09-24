@@ -40,6 +40,7 @@
   ;; web server
   http-kit/http-kit                     #:mvn{:version "2.5.3"}
   compojure/compojure                   #:mvn{:version "1.6.2"}
+  metosin/muuntaja                      #:mvn{:version "0.6.8"}
   ;; data validation
   metosin/malli                         #:mvn{:version "0.5.1"}
   ;; networked repl
