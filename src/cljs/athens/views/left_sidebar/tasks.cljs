@@ -136,32 +136,32 @@
 
       (if (seq tasks-assigned-to-me)
         (doall
-         (for [[page tasks] grouped-tasks]
+          (for [[page tasks] grouped-tasks]
 
-          ;; TODO: filter out pages with no tasks assigned to me
-          ;; before getting to this point
-           (when (seq (filterv #(not (get-is-done %)) tasks))
+            ;; TODO: filter out pages with no tasks assigned to me
+            ;; before getting to this point
+            (when (seq (filterv #(not (get-is-done %)) tasks))
 
-            ;; Per page of tasks...
-             (let [incomplete-tasks (filterv #(not (get-is-done %)) tasks)
-                   section-open? (left-sidebar-subs/get-task-section-open? page)]
+              ;; Per page of tasks...
+              (let [incomplete-tasks (filterv #(not (get-is-done %)) tasks)
+                    section-open? (left-sidebar-subs/get-task-section-open? page)]
 
-               ^{:key page}
-               [:> Widget {:defaultIsOpen section-open?
-                           :borderTop "1px solid"
-                           :borderColor "separator.divider"
-                           :pt 2}
-                [:> WidgetHeader {:spacing 0}
-                 [:> WidgetTitle [:> Link {:onClick #(router/navigate-page page %)} page]]
-                 [:> Text {:className "shown-on-hover" :fontSize "xs" :color "foreground.secondary"} (count tasks)]
-                 [:> WidgetToggle {:className "shown-on-hover" :onClick #(rf/dispatch [:left-sidebar.tasks.section/toggle page])}]]
-                [:> WidgetBody
-                 [:> AnimatePresence {:initial false}
-                  (doall
-                   ;; show sorted list of limited number of incomplete tasks
-                   (for [task (take max-tasks-shown (sort-tasks-list incomplete-tasks))]
-                     ^{:key (get task ":block/uid")}
-                     [:f> sidebar-task-el task]))]]]))))
+                ^{:key page}
+                [:> Widget {:defaultIsOpen section-open?
+                            :borderTop "1px solid"
+                            :borderColor "separator.divider"
+                            :pt 2}
+                 [:> WidgetHeader {:spacing 0}
+                  [:> WidgetTitle [:> Link {:onClick #(router/navigate-page page %)} page]]
+                  [:> Text {:className "shown-on-hover" :fontSize "xs" :color "foreground.secondary"} (count tasks)]
+                  [:> WidgetToggle {:className "shown-on-hover" :onClick #(rf/dispatch [:left-sidebar.tasks.section/toggle page])}]]
+                 [:> WidgetBody
+                  [:> AnimatePresence {:initial false}
+                   (doall
+                     ;; show sorted list of limited number of incomplete tasks
+                     (for [task (take max-tasks-shown (sort-tasks-list incomplete-tasks))]
+                       ^{:key (get task ":block/uid")}
+                       [:f> sidebar-task-el task]))]]]))))
 
         [:> Empty {:size "sm" :pl 0}
          [:> EmptyIcon {:Icon CheckboxIcon}]

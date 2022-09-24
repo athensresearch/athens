@@ -158,7 +158,7 @@
                  :onArchive         (fn [e uid]
                                       (.. e stopPropagation)
                                       (rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true")))
-               ;; :onUnarchive       #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
+                 ;; :onUnarchive       #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
                  :notificationsList notification-list}]
 
                [:> Empty {:size "sm" :py 8}

@@ -1,13 +1,13 @@
 (ns athens.views.left-sidebar.shortcuts
   (:require
-   ["/components/Empty/Empty" :refer [Empty EmptyTitle EmptyIcon EmptyMessage]]
-   ["/components/Icons/Icons" :refer [BookmarkIcon]]
-   ["/components/SidebarShortcuts/List" :refer [List]]
-   ["/components/Widget/Widget" :refer [Widget WidgetHeader WidgetBody WidgetToggle]]
-   [athens.reactive :as reactive]
-   [athens.router :as router]
-   [athens.views.left-sidebar.subs :as left-sidebar-subs]
-   [re-frame.core :as rf]))
+    ["/components/Empty/Empty" :refer [Empty EmptyTitle EmptyIcon EmptyMessage]]
+    ["/components/Icons/Icons" :refer [BookmarkIcon]]
+    ["/components/SidebarShortcuts/List" :refer [List]]
+    ["/components/Widget/Widget" :refer [Widget WidgetHeader WidgetBody WidgetToggle]]
+    [athens.reactive :as reactive]
+    [athens.router :as router]
+    [athens.views.left-sidebar.subs :as left-sidebar-subs]
+    [re-frame.core :as rf]))
 
 
 (defn global-shortcuts
@@ -40,7 +40,7 @@
                                           (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
                                           (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])))}]
 
-        [:> Empty {:size "sm" :pr 2 :pl 4} 
+        [:> Empty {:size "sm" :pr 2 :pl 4}
          [:> EmptyIcon {:Icon BookmarkIcon}]
          [:> EmptyTitle "No shortcuts"]
          [:> EmptyMessage "Add shortcuts to mark important pages in your workspace."]])]]))
