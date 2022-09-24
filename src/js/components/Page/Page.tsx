@@ -1,20 +1,26 @@
-import { Button, Divider, Center, Box, Heading, IconButton, ButtonGroup, Tooltip } from '@chakra-ui/react';
-import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import React from 'react';
+import {
+  Button, VStack, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
+  Tooltip, FormLabel, BoxProps, Text
+} from '@chakra-ui/react';
+import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, CalendarIcon } from '@/Icons/Icons';
+import { useInView } from 'react-intersection-observer';
+import { withErrorBoundary } from "react-error-boundary";
+
 
 const PAGE_PROPS = {
   as: "article",
   display: "grid",
-  flexBasis: "100%",
-  width: "100%",
-  maxWidth: "70em",
+  alignSelf: "stretch",
   gridTemplateAreas: "'header' 'content' 'footer'",
   gridTemplateRows: "auto 1fr auto",
-  marginInline: "auto",
+  transitionProperty: "background",
+  transitionTimingFunction: "ease-in-out",
+  transitionDuration: "fast",
   sx: {
     "--page-padding": "3rem",
-    "&:not(.right-sidebar &)": {
-      mt: 2,
-    }
+    "--page-left-gutter-width": "1em",
+    "--page-right-gutter-width": "3.5em",
   }
 }
 
@@ -44,79 +50,111 @@ export const PageNotFound = ({ title, onClickHome, children }) => {
 export const PageContainer = ({ children, uid, type }) => <Box
   {...PAGE_PROPS}
   flexGrow={1}
+  pt={2}
   data-ui={uid}
   className={type + '-page'}
   flexDirection="column"
-  marginInline="auto"
 >{children}</Box>
 
-export const HeaderImage = ({ src }) => <Box
-  as="img"
+export const HeaderImage = ({ src }) => <Image
   src={src}
-  position="absolute"
-  left="0"
-  right="0"
-  top="0"
+  marginTop="1rem"
+  gridArea="image"
+  borderRadius="md"
   width="100%"
   overflow="hidden"
-  opacity="0.125"
-  pointerEvents="none"
   objectFit="cover"
-  height="20em"
-  sx={{
-    maskImage: "linear-gradient(to bottom, black, black calc(100% - 4rem), transparent)"
-  }}
 />
 
-export const PageHeader = ({ children, image, onClickOpenInSidebar, onClickOpenInMainView }) => <Box
-  as="header"
-  className="page-header"
-  pt="var(--page-padding)"
-  px="var(--page-padding)"
-  pb={4}
-  gridArea="header"
-  display="grid"
-  gridTemplateColumns="1fr auto"
-  gridTemplateRows="auto auto"
-  alignItems="center"
-  gridTemplateAreas="'breadcrumb breadcrumb' 
-  'title extras'"
->
-  {image && <HeaderImage src={image} />}
-  {children}
 
-  <ButtonGroup gridArea="extras" size="sm">
-    {onClickOpenInMainView && <Tooltip label="Open in main view">
-      <IconButton
-        aria-label='Open in main view'
-        color="foreground.secondary"
-        variant="ghost"
-        colorScheme="subtle"
-        onClick={onClickOpenInMainView}
-      >
-        <ArrowLeftOnBoxIcon boxSize="1.5em" />
-      </IconButton></Tooltip>}
-    {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
-      <IconButton
-        aria-label='Open in right sidebar'
-        color="foreground.secondary"
-        variant="ghost"
-        colorScheme="subtle"
-        onClick={onClickOpenInSidebar}
-      >
-        <ArrowRightOnBoxIcon boxSize="1.5em" />
-      </IconButton></Tooltip>}
-  </ButtonGroup>
-</Box>
+interface PageHeaderProps extends BoxProps {
+  overline?: React.ReactNode;
+  headerImageUrl?: string;
+  onChangeHeaderImageUrl?: (url: string) => void;
+  onClickOpenInSidebar?: () => void;
+  onClickOpenInMainView?: () => void;
+  headerImageEnabled?: boolean;
+}
+
+const PageHeaderOverline = ({ children }) => <Heading color="foreground.secondary" size="xs" gridArea="overline">{children}</Heading>
+
+export const PageHeader = (props: PageHeaderProps): React.ReactChild => {
+  const {
+    children,
+    overline,
+    onChangeHeaderImageUrl,
+    headerImageUrl,
+    onClickOpenInSidebar,
+    onClickOpenInMainView,
+    headerImageEnabled,
+    ...boxProps
+  } = props;
+  const [isPropertiesOpen, setIsPropertiesOpen] = React.useState(false)
+
+  return (<Box
+    as="header"
+    className="page-header"
+    pt="var(--page-padding)"
+    px="var(--page-padding)"
+    pb={4}
+    gridArea="header"
+    display="grid"
+    gridTemplateColumns="1fr auto"
+    gridTemplateRows="auto auto auto"
+    alignItems="center"
+    gridTemplateAreas={`'breadcrumb breadcrumb'
+                        'overline overline'
+                        'title extras'
+                        'properties properties'
+                        'image image'`}
+    {...boxProps}
+  >
+    {overline && <PageHeaderOverline>{overline}</PageHeaderOverline>}
+
+    {children}
+
+    <ButtonGroup
+      gridArea="extras"
+      size="sm"
+      variant="ghost"
+      colorScheme="subtle"
+    >
+      {headerImageEnabled && <Button onClick={() => setIsPropertiesOpen(!isPropertiesOpen)}>Properties</Button>}
+      {onClickOpenInMainView && <Tooltip label="Open in main view">
+        <IconButton
+          aria-label='Open in main view'
+          onClick={onClickOpenInMainView}
+          icon={<ArrowLeftOnBoxIcon />}
+        /></Tooltip>}
+      {onClickOpenInSidebar && <Tooltip label="Open in right sidebar">
+        <IconButton
+          aria-label='Open in right sidebar'
+          onClick={onClickOpenInSidebar}
+          icon={<ArrowRightOnBoxIcon />}
+        /></Tooltip>}
+    </ButtonGroup>
+
+    {isPropertiesOpen && <Box gridArea="properties">
+      <FormControl>
+        <FormLabel>Header image url</FormLabel>
+        <Input defaultValue={headerImageUrl} onBlur={(e) => onChangeHeaderImageUrl(e.target.value)} />
+      </FormControl>
+    </Box>
+    }
+
+    {headerImageUrl && <HeaderImage src={headerImageUrl} />}
+  </Box>)
+}
 
 export const PageBody = ({ children }) => <Box
   as="main"
   className="page-body"
-  // outset slightly for block toggles
-  pl="calc(var(--page-padding) - 1em)"
-  pr="var(--page-padding)"
+  // outset slightly for block toggles and refs and such
+  px="calc(var(--page-padding) - 1em)"
+  pr="calc(var(--page-padding) - var(--page-right-gutter-width) + 1.5em)"
   gridArea="content"
->{children}</Box>
+>
+  {children}</Box>
 
 export const PageFooter = ({ children }) => <Box
   as="footer"
@@ -127,19 +165,87 @@ export const PageFooter = ({ children }) => <Box
 >{children}</Box>
 
 
-export const DailyNotesPage = ({ isReal, children }) => <Box
-  {...PAGE_PROPS}
-  className="node-page daily-notes"
-  boxShadow="page"
-  bg="background.floor"
-  opacity={isReal ? 1 : 0.5}
-  borderWidth="1px"
-  borderStyle="solid"
-  borderColor="separator.divider"
-  transitionDuration="0s"
-  borderRadius="0.5rem"
-  minHeight="calc(100vh - 10rem)"
->{children}</Box>
+const DailyNotePageError = () => {
+  return (
+    <Box
+      {...PAGE_PROPS}
+      className="node-page daily-notes"
+      boxShadow="page"
+      bg="background.floor"
+      display="flex"
+      borderWidth="1px"
+      borderStyle="solid"
+      borderColor="separator.divider"
+      borderRadius="0.5rem"
+      textAlign="center"
+      p={12}
+      color="foreground.secondary"
+      placeItems="center"
+      placeContent="center"
+    >
+      Couldn't load page
+    </Box>)
+}
+
+interface DailyNotesListProps extends BoxProps {
+  onGetAnotherNote: () => void;
+}
+
+export const DailyNotesList = (props: DailyNotesListProps) => {
+  const { onGetAnotherNote, ...boxProps } = props;
+  const listRef = React.useRef<HTMLDivElement>(null)
+  const { ref, inView } = useInView({ threshold: 0 });
+
+  React.useLayoutEffect(() => {
+    if (inView) {
+      onGetAnotherNote();
+    }
+  });
+
+  return <VStack py={16}
+    align="stretch"
+    pb={4}
+    width="100%"
+    ref={listRef}
+    {...boxProps}>
+    {boxProps.children}
+    <DailyNotesPage isReal={false}>
+      <Box ref={ref} />
+      <PageHeader overline={<Text as="span" display="flex" gap={1} alignItems="center"><CalendarIcon /> Daily Note</Text>}>
+        <TitleContainer isEditing="false">Earlier</TitleContainer>
+      </PageHeader>
+    </DailyNotesPage>
+  </VStack>
+
+}
+
+
+interface DailyNotesPageProps extends BoxProps {
+  isReal: boolean;
+}
+
+export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => {
+  const { isReal, ...boxProps } = props
+  const pageRef = React.useRef<HTMLDivElement>(null)
+
+  return (
+    <Box
+      {...PAGE_PROPS}
+      {...boxProps}
+      ref={pageRef}
+      flex="0 0 auto"
+      className="node-page daily-notes"
+      minHeight="calc(100vh - 4rem)"
+      boxShadow="page"
+      bg="background.floor"
+      borderWidth="1px"
+      borderStyle="solid"
+      borderColor="separator.divider"
+      borderRadius="0.5rem"
+    />)
+}, {
+  fallback: <DailyNotePageError />
+});
 
 
 export const TitleContainer = ({ children, isEditing, props }) => <Box
@@ -272,14 +378,11 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
       borderColor: "separator.divider",
       color: "foreground.primary",
     },
-    "p": {
-      paddingBottom: "1em",
-      "&last:-child": { paddingBottom: 0 },
-    },
     "mark.contents.highlight": {
       padding: "0 0.2em",
       borderRadius: "0.125rem",
-      background: "highlight",
+      background: "gold",
+      color: "goldContrast",
     }
   }}
   {...props}>

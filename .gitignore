@@ -14,7 +14,10 @@
 
 # shadow-cljs cache, port files
 /.shadow-cljs/
+
+# Intelli-j files
 .idea/
+athens.iml
 
 # local caches
 .clj-kondo/.cache
@@ -53,3 +56,5 @@ vercel-static/*
 !vercel-static/index.html
 !vercel-state/athens/.gitignore
 .vercel
+vercel-release/*
+!vercel-release/package.json

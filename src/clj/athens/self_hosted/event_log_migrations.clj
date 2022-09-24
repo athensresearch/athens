@@ -1,10 +1,83 @@
 (ns athens.self-hosted.event-log-migrations
   "Contains schema and data migrations to the event log."
   (:require
+    [athens.common.logging :as log]
+    [athens.common.migrations :as migrations]
     [athens.self-hosted.fluree.utils :as fu]
-    [athens.self-hosted.migrate :as migrate]
-    [clojure.tools.logging :as log]
+    [clojure.string :as str]
     [fluree.db.api :as fdb]))
+
+
+;; Migration helpers
+
+(defn get-predicate-values
+  [conn ledger predicate]
+  (set (fu/query conn ledger {:select "?o"
+                              :where  [["?s" predicate "?o"]]})))
+
+
+(defn internal-name?
+  [s]
+  (str/starts-with? s "_"))
+
+
+(defn collections
+  [conn ledger]
+  (->> (get-predicate-values conn ledger "_collection/name")
+       (remove internal-name?)
+       set))
+
+
+(defn predicates
+  [conn ledger]
+  (->> (get-predicate-values conn ledger "_predicate/name")
+       (remove internal-name?)
+       set))
+
+
+(defn functions
+  [conn ledger]
+  (set (get-predicate-values conn ledger "_fn/name")))
+
+
+;; Bootstrap migrations and version fns
+
+(def bootstrap-migration-1-schema
+  [{:_id :_collection
+    :_collection/name :migrations
+    :_collection/doc "Completed migrations for the Athens semantic event log."}
+   {:_id :_predicate
+    :_predicate/name :migrations/version
+    :_predicate/doc "Marker that the matching migration version was applied."
+    :_predicate/unique true
+    :_predicate/upsert true
+    :_predicate/type :int}])
+
+
+(defn bootstrap-migrate-to-1
+  [ledger conn]
+  (when-not ((collections conn ledger) "migrations")
+    (fu/transact! conn ledger bootstrap-migration-1-schema)))
+
+
+(defn bootstrap-migrations
+  [ledger]
+  [[1 (partial bootstrap-migrate-to-1 ledger)]])
+
+
+(defn set-version!
+  [ledger conn version]
+  (fu/transact! conn ledger [{:_id :migrations
+                              :migrations/version version}]))
+
+
+(defn version
+  [ledger conn]
+  (let [ret (fu/query conn ledger {:select "(max ?v)"
+                                   :where [["?s" "migrations/version" "?v"]]})]
+    (if (ex-message ret)
+      0
+      (or ret 0))))
 
 
 ;; Migration #1
@@ -26,9 +99,9 @@
 
 
 (defn migrate-to-1
-  [conn ledger]
-  (when-not (and ((migrate/collections conn ledger) "event")
-                 (every? (migrate/predicates conn ledger) ["event/id" "event/data"]))
+  [ledger conn]
+  (when-not (and ((collections conn ledger) "event")
+                 (every? (predicates conn ledger) ["event/id" "event/data"]))
     (fu/transact! conn ledger migration-1-schema)))
 
 
@@ -87,8 +160,8 @@
 
 
 (defn migrate-to-2
-  [conn ledger]
-  (when-not ((migrate/functions conn ledger) "immutable")
+  [ledger conn]
+  (when-not ((functions conn ledger) "immutable")
     (fu/transact! conn ledger migration-2-fn))
   (run! (partial add-missing-uuid! conn ledger)
         (sids-with-missing-uids conn ledger)))
@@ -173,8 +246,8 @@
 
 
 (defn migrate-to-3
-  [conn ledger]
-  (when-not ((migrate/predicates conn ledger) "event/order")
+  [ledger conn]
+  (when-not ((predicates conn ledger) "event/order")
     (->> (fu/transact! conn ledger migration-3-schema)
          :block
          ;; Force sync to ensure query recognizes the new schema predicate.
@@ -183,12 +256,21 @@
         (sids-with-missing-order conn ledger)))
 
 
-(def migrations
-  [[1 migrate-to-1]
-   [2 migrate-to-2]
-   [3 migrate-to-3]
-   ;; [4 migrate-to-4]
-   ])
+(defn migrations
+  [ledger]
+  [[1 (partial migrate-to-1 ledger)]
+   [2 (partial migrate-to-2 ledger)]
+   [3 (partial migrate-to-3 ledger)]])
+
+
+(defn migrate!
+  [conn ledger & {:as opts}]
+  (migrations/migrate! conn
+                       (migrations ledger)
+                       (bootstrap-migrations ledger)
+                       (partial version ledger)
+                       (partial set-version! ledger)
+                       opts))
 
 
 (comment
@@ -207,7 +289,7 @@
 
   ;; Migration 2
   ;; init and add some events, one without id
-  (migrate/migrate-ledger! conn ledger migrations :up-to 1)
+  (migrate! conn ledger :up-to 1)
   (def ids (repeatedly 4 #(str (random-uuid))))
   (fu/transact! conn ledger [{:_id :event :event/id (nth ids 0) :event/data "0"}
                                    {:_id :event :event/id (nth ids 1) :event/data "1"}

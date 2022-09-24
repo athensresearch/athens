@@ -1,5 +1,5 @@
 (ns athens.common-events.resolver.order-test
-  (:refer-clojure :exclude [remove])
+  (:refer-clojure :exclude [get remove])
   (:require
     [athens.common-events.resolver.order :as order]
     [clojure.test :as t]))
@@ -10,6 +10,24 @@
     [1 2 3] [2 3] 1
     [1 2 3] [1 3] 2
     [1 2 3] [1 2] 3))
+
+
+(t/deftest get
+  (t/are [v x rel target] (= x (order/get v rel target))
+    [:x 1 2 3] :x :first nil
+    [1 2 3 :x] :x :last nil
+    [:x 1 2 3] :x :before 1
+    [1 :x 2 3] :x :after 1
+    [1 :x 2 3] :x :before 2
+    [1 2 :x 3] :x :after 2
+    [1 2 :x 3] :x :before 3
+    [1 2 3 :x] :x :after 3
+    [1 2 3]   nil :after 4
+    [1 2 3]   nil :before 4
+    [1 2 3]   nil :after 3
+    [1 2 3]   nil :before 1
+    []        nil :first nil
+    []        nil :last nil))
 
 
 (t/deftest insert
@@ -24,25 +42,6 @@
     [1 2 3] [1 2 3 :x] :x :after 3
     [1 2 3] [1 2 3] :x :after 4
     [1 2 3] [1 2 3] :x :before 4))
-
-
-(t/deftest move-between
-  (t/are [from to from' to' x rel target] (= [from' to'] (order/move-between from to x rel target))
-    [1 2 3 :x] [4 5 6]
-    [1 2 3] [:x 4 5 6]
-    :x :first nil
-
-    [:x 1 2 3] [4 5 6]
-    [1 2 3] [4 5 6 :x]
-    :x :last nil
-
-    [1 2 :x 3] [4 5 6]
-    [1 2 3] [4 :x 5 6]
-    :x :before 5
-
-    [1 :x 2 3] [4 5 6]
-    [1 2 3] [4 5 :x 6]
-    :x :after 5))
 
 
 (t/deftest move-within

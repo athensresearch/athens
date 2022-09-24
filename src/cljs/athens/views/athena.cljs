@@ -3,7 +3,8 @@
     ["/components/Icons/Icons" :refer [PageAddIcon XmarkIcon ArrowRightIcon]]
     ["@chakra-ui/react" :refer [Modal ModalContent ModalOverlay VStack Button IconButton Input HStack Heading Text]]
     [athens.common.utils :as utils]
-    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title re-case-insensitive]]
+    [athens.db           :as db :refer [search-in-block-content search-exact-node-title search-in-node-title]]
+    [athens.patterns     :as patterns]
     [athens.router       :as router]
     [athens.subs]
     [athens.util         :refer [scroll-into-view]]
@@ -22,14 +23,19 @@
 
 (defn highlight-match
   [query txt]
-  (let [query-pattern (re-case-insensitive (str "((?<=" query ")|(?=" query "))"))]
-    (doall
-      (map-indexed (fn [i part]
-                     (if (re-find query-pattern part)
-                       [:> Text {:class "result-highlight"
-                                 :key i} part]
-                       part))
-                   (str/split txt query-pattern)))))
+  (if-not query
+    txt
+    (map-indexed (fn [i part]
+                   (if (= part query)
+                     [:> Text {:as           "span"
+                               :background   "interaction.surface.hover"
+                               :color        "foreground.primary"
+                               :borderRadius "sm"
+                               :py           0
+                               :px           0.25
+                               :key i} part]
+                     part))
+                 (patterns/split-on txt query))))
 
 
 (defn create-search-handler
@@ -53,7 +59,9 @@
   (let [key                           (.. e -keyCode)
         shift?                        (.. e -shiftKey)
         {:keys [index query results]} @state
-        item                          (get results index)]
+        item                          (get results index)
+        navigate-uid                  (or (:block-search/navigate-uid item)
+                                          (:block/uid item))]
     (cond
       (= KeyCodes.ENTER key) (cond
                                ;; if page doesn't exist, create and open
@@ -74,14 +82,16 @@
                                ;; if shift: open in right-sidebar
                                shift?
                                (do (dispatch [:athena/toggle])
-                                   (dispatch [:right-sidebar/open-page (:node/title item)])
+                                   (let [title (:node/title item)]
+                                     (dispatch [:right-sidebar/open-item (if title
+                                                                           [:node/title title]
+                                                                           [:block/uid navigate-uid])]))
                                    (dispatch [:reporting/navigation {:source :athena
                                                                      :target :page
                                                                      :pane   :right-pane}]))
                                ;; else open in main view
                                :else
-                               (let [title (:node/title item)
-                                     uid   (:block/uid item)]
+                               (let [title (:node/title item)]
                                  (dispatch [:athena/toggle])
                                  (dispatch [:reporting/navigation {:source :athena
                                                                    :target (if title
@@ -90,8 +100,8 @@
                                                                    :pane   :main-pane}])
                                  (if title
                                    (router/navigate-page title)
-                                   (router/navigate-uid uid))
-                                 (dispatch [:editing/uid uid])))
+                                   (router/navigate-uid navigate-uid))
+                                 (dispatch [:editing/uid navigate-uid])))
 
       (= key KeyCodes.UP)
       (do
@@ -218,12 +228,13 @@
               :_empty {:display "none"}}
    (doall
      (for [[i x] (map-indexed list results)
-           :let  [block-uid (:block/uid x)
-                  parent    (:block/parent x)
-                  type      (if parent :block :node)
-                  title     (or (:node/title parent) (:node/title x))
-                  uid       (or (:block/uid parent) (:block/uid x))
-                  string    (:block/string x)]]
+           :let  [parent          (:block/parent x)
+                  type            (if parent :block :node)
+                  title           (or (:node/title parent) (:node/title x) (:block/string parent))
+                  uid             (or (:block/uid parent) (:block/uid x))
+                  navigate-to-uid (or (:block-search/navigate-uid x)
+                                      (:block/uid x))
+                  string          (:block/string x)]]
        (if (nil? x)
          ^{:key i}
          [result-el {:key      i
@@ -231,7 +242,7 @@
                      :prefix   "Create page"
                      :preview  nil
                      :type     :page
-                     :query    query
+                     :query    nil
                      :icon     (r/as-element [:> PageAddIcon])
                      :active?  (= i index)
                      :on-click (fn [e]
@@ -271,7 +282,7 @@
                                                                                :right-pane
                                                                                :main-pane)}])
                                    (if parent
-                                     (router/navigate-uid block-uid)
+                                     (router/navigate-uid navigate-to-uid)
                                      (router/navigate-page title e))))}])))])
 
 
@@ -300,7 +311,7 @@
                          :maxWidth "calc(100vw - 4rem)"}
         [:> Input
          {:type "search"
-          :autocomplete "off"
+          :autoComplete "off"
           :width "100%"
           :border 0
           :fontSize "2.375rem"

@@ -69,8 +69,7 @@
       (let [child-1-eid    (common-db/e-by-av @@fixture/connection
                                               :block/uid child-1-uid)
             block-save-op  (graph-ops/build-block-save-op @@fixture/connection child-1-uid new-str)
-            block-save-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection
-                                                                    block-save-op)]
+            block-save-txs (atomic-resolver/resolve-to-tx @@fixture/connection block-save-op)]
         (t/is (= empty-str (common-db/v-by-ea @@fixture/connection
                                               child-1-eid :block/string)))
         (d/transact! @fixture/connection block-save-txs)
@@ -92,15 +91,12 @@
       (d/transact! @fixture/connection setup-txs)
       (let [child-1-eid        (common-db/e-by-av @@fixture/connection
                                                   :block/uid child-1-uid)
-            block-save-op      (graph-ops/build-block-save-op @@fixture/connection child-1-uid new-str)
-            block-save-atomics (graph-ops/extract-atomics block-save-op)]
+            block-save-op      (graph-ops/build-block-save-op @@fixture/connection child-1-uid new-str)]
         (t/is (nil? (common-db/e-by-av @@fixture/connection
                                        :node/title page-title)))
         (t/is (= empty-str (common-db/v-by-ea @@fixture/connection
                                               child-1-eid :block/string)))
-        (doseq [atomic-op block-save-atomics
-                :let      [atomic-txs (atomic-resolver/resolve-atomic-op-to-tx @@fixture/connection atomic-op)]]
-          (d/transact! @fixture/connection atomic-txs))
+        (-> block-save-op fixture/op-resolve-transact!)
         (t/is (not (nil? (common-db/e-by-av @@fixture/connection
                                             :node/title page-title))))
         (t/is (= new-str (common-db/v-by-ea @@fixture/connection

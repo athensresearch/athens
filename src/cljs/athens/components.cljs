@@ -1,15 +1,14 @@
 (ns athens.components
   (:require
-    ["/components/Icons/Icons" :refer [PencilIcon]]
-    ["@chakra-ui/react" :refer [Checkbox Box IconButton Button ButtonGroup]]
-    [athens.db :as db]
-    [athens.parse-renderer :refer [component]]
-    [athens.reactive :as reactive]
-    [athens.util :refer [recursively-modify-block-for-embed]]
+    ["@chakra-ui/react"       :refer [Checkbox Button]]
+    [athens.db                :as db]
+    [athens.parse-renderer    :refer [component]]
+    [athens.reactive          :as reactive]
+    [athens.types.core        :as types]
+    [athens.types.dispatcher  :as block-type-dispatcher]
     [athens.views.blocks.core :as blocks]
-    [clojure.string :as str]
-    [re-frame.core :as rf :refer [dispatch subscribe]]
-    [reagent.core :as r]))
+    [clojure.string           :as str]
+    [re-frame.core            :as rf]))
 
 
 (defn todo-on-click
@@ -80,32 +79,15 @@
   ;; bindings are eval only once in with-let
   ;; which is needed to keep embed integrity else it will update on
   ;; each re-render. Similar to ref-comp
-  (let [block-uid (last (re-find #"\(\((.+)\)\)" content))]
-    ;; todo -- not reactive. some cases where delete then ctrl-z doesn't work
-    (if (db/e-by-av :block/uid block-uid)
-      (r/with-let [embed-id (random-uuid)]
-                  [:> Box {:class "block-embed"
-                           :bg "background.basement"
-                           :flex 1
-                           :pr 1
-                           :position "relative"
-                           :display "flex"
-                           :sx {"> .block-container" {:ml 0
-                                                      :flex 1
-                                                      :pr "1.3rem"
-                                                      "textarea" {:background "transparent"}}}}
-                   (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
-                     [:<>
-                      [blocks/block-el
-                       (recursively-modify-block-for-embed block embed-id)
-                       {:linked-ref false}
-                       {:block-embed? true}]
-                      (when-not @(subscribe [:editing/is-editing uid])
-                        [:> ButtonGroup {:height "2em" :size "xs" :flex "0 0 auto" :zIndex "5" :alignItems "center"}
-                         [:> IconButton {:on-click (fn [e]
-                                                     (.. e stopPropagation)
-                                                     (dispatch [:editing/uid uid]))}
-                          [:> PencilIcon]]])])])
+  (let [block-uid (last (re-find #"\(\((.+)\)\)" content))
+        block-eid (db/e-by-av :block/uid block-uid)]
+    (if block-eid
+      (let [block-type (reactive/reactive-get-entity-type [:block/uid block-uid])
+            ff         @(rf/subscribe [:feature-flags])
+            renderer-k (block-type-dispatcher/block-type->protocol-k block-type ff)
+            renderer   (block-type-dispatcher/block-type->protocol renderer-k {})]
+        ^{:key renderer-k}
+        [:f> types/transclusion-view renderer blocks/block-el block-uid {:transcluding-block-uid uid} :embed])
       ;; roam actually hides the brackets around [[embed]]
       [:span "{{" content "}}"])))
 

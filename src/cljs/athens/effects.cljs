@@ -4,7 +4,7 @@
     [athens.common-db            :as common-db]
     [athens.common-events.schema :as schema]
     [athens.common.logging       :as log]
-    [athens.common.sentry        :refer-macros [wrap-span wrap-span-no-new-tx]]
+    [athens.common.sentry        :refer-macros [wrap-span-no-new-tx]]
     [athens.db                   :as db]
     [athens.reactive             :as reactive]
     [athens.self-hosted.client   :as client]
@@ -12,7 +12,6 @@
     [cljs.core.async             :refer [go <!]]
     [cljs.core.async.interop     :refer [<p!]]
     [com.stuartsierra.component  :as component]
-    [datascript.core             :as d]
     [day8.re-frame.async-flow-fx]
     [goog.dom.selection          :refer [setCursorPosition]]
     [malli.core                  :as m]
@@ -22,16 +21,6 @@
 
 ;; Effects
 
-
-;; TODO: remove this effect when :transact is removed.
-(rf/reg-fx
-  :transact!
-  (fn [tx-data]
-    (wrap-span "fx/transact!"
-               (common-db/transact-with-middleware! db/dsdb tx-data))
-    (rf/dispatch [:success-transact])))
-
-
 (rf/reg-fx
   :reset-conn!
   (fn [[new-db skip-health-check?]]
@@ -39,7 +28,7 @@
     ;; the watchers from processing a massive tx-report.
     (reactive/unwatch!)
     (wrap-span-no-new-tx "ds/reset-conn"
-                         (d/reset-conn! db/dsdb new-db))
+                         (common-db/reset-conn! db/dsdb new-db))
     (when-not skip-health-check?
       (wrap-span-no-new-tx "db/health-check"
                            (common-db/health-check db/dsdb)))

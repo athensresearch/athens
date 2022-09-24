@@ -1,6 +1,5 @@
 athens.db/help-url
 athens.db/ego-url
-athens.events/shared-blocks-excl-date-pages
 athens.views.right-sidebar/sidebar-section-heading-style
 athens.core/init
 athens.main.core/main
@@ -40,3 +39,4 @@ athens.common-events.graph.schema/valid-atomic-op?
 athens.common-events.graph.schema/explain-atomic-op
 athens.style/unzoom
 athens.self-hosted.fluree.test-helpers/query
+athens.views.jetsam/jetsam-component

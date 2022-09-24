@@ -1,5 +1,5 @@
 (ns athens.common-events.resolver.order
-  (:refer-clojure :exclude [remove])
+  (:refer-clojure :exclude [get remove])
   (:require
     [clojure.core :as c]))
 
@@ -15,29 +15,42 @@
   (vec (concat (take n v) [x] (drop n v))))
 
 
+(defn- index-of
+  [v x]
+  (let [n (.indexOf v x)]
+    (if (= n -1)
+      nil
+      n)))
+
+
+(defn get
+  "Get position defined by relation to target in v."
+  [v relation target]
+  (let [n (when (and target (#{:before :after} relation))
+            (index-of v target))]
+    (cond
+      (= relation :first)         (first v)
+      (= relation :last)          (last v)
+      (and n
+           (= relation :before)
+           (> n 0))               (nth v (dec n))
+      (and n
+           (= relation :after)
+           (< n (dec (count v)))) (nth v (inc n)))))
+
+
 (defn insert
   "Insert x in v, in a position defined by relation to target.
   See athens.common-events.graph.schema for position values."
   [v x relation target]
   (let [n (when (and target (#{:before :after} relation))
-            (let [n (.indexOf v target)]
-              (if (= n -1)
-                nil
-                n)))]
+            (index-of v target))]
     (cond
       (= relation :first)  (into [x] v)
       (= relation :last)   (into v [x])
       (and n (= relation :before)) (insert-at v x n)
       (and n (= relation :after))  (insert-at v x (inc n))
       :else v)))
-
-
-(defn move-between
-  "Move x from origin to destination, to a position defined by relation to target.
-  See athens.common-events.graph.schema for position values.
-  Returns [modified-origin modified-destination]."
-  [origin destination x relation target]
-  [(remove origin x) (insert destination x relation target)])
 
 
 (defn move-within

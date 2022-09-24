@@ -20,11 +20,11 @@
 
 
 (deftest search-in-node-title-test
-  ;; Given that database contains nodes with titles node-titles and we search
+  ;; Given that workspace contains nodes with titles node-titles and we search
   ;; for query, check that expected-titles were returned by the search.
   (are [node-titles query expected-titles]
        (with-redefs
-         [db/dsdb (d/create-conn common-db/schema)]
+         [db/dsdb (common-db/create-conn)]
          (d/transact! db/dsdb (make-nodes-with-titles node-titles))
          (let
            [search-results (db/search-in-node-title query)

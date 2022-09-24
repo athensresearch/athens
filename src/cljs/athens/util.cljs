@@ -1,8 +1,8 @@
 (ns athens.util
   (:require
-    ["/textarea" :as getCaretCoordinates]
     ["/theme/theme" :refer [theme]]
     ["@chakra-ui/react" :refer [createStandaloneToast]]
+    ["textarea-caret" :as getCaretCoordinates]
     [athens.config :as config]
     [athens.electron.utils :as electron.utils]
     [clojure.string :as string]
@@ -177,21 +177,6 @@
 (defn js-event->val
   [event]
   (.. event -target -value))
-
-
-;; -- Regex -----------------------------------------------------------
-
-;; https://stackoverflow.com/a/11672480
-(def regex-esc-char-map
-  (let [esc-chars "()*&^%$#![]"]
-    (zipmap esc-chars
-            (map #(str "\\" %) esc-chars))))
-
-
-(defn escape-str
-  "Take a string and escape all regex special characters in it"
-  [str]
-  (string/escape str regex-esc-char-map))
 
 
 ;; -- specter --------------------------------------------------------

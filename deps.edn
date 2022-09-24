@@ -1,10 +1,10 @@
-{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen" "test"]
+{:paths ["src/clj" "src/cljs" "src/cljc" "src/js" "src/gen" "test" "resources"]
 
  :deps
  {org.clojure/clojure                   #:mvn{:version "1.11.1"}
-  org.clojure/clojurescript             #:mvn{:version "1.11.4"}
+  org.clojure/clojurescript             #:mvn{:version "1.11.60"}
   org.clojure/tools.cli                 #:mvn{:version "1.0.206"}
-  thheller/shadow-cljs                  #:mvn{:version "2.18.0"}
+  thheller/shadow-cljs                  #:mvn{:version "2.19.5"}
   reagent/reagent                       #:mvn{:version "1.0.0"}
   re-frame/re-frame                     #:mvn{:version "1.2.0"}
   day8.re-frame/async-flow-fx           #:mvn{:version "0.3.0"}
@@ -21,7 +21,7 @@
   com.rpl/specter                       #:mvn{:version "1.1.3"}
   com.taoensso/sente                    #:mvn{:version "1.16.2"}
   binaryage/devtools                    #:mvn{:version "1.0.3"}
-  day8.re-frame/re-frame-10x            #:mvn{:version "1.1.13"}
+  day8.re-frame/re-frame-10x            #:mvn{:version "1.5.0"}
   day8.re-frame/tracing                 #:mvn{:version "0.6.2"}
   org.flatland/ordered                  #:mvn{:version "1.15.10"}
   io.github.nextjournal/clerk           #:git{:sha "d111501576537c402dc8bf65eee30e2cd90d2666"}
@@ -40,6 +40,7 @@
   ;; web server
   http-kit/http-kit                     #:mvn{:version "2.5.3"}
   compojure/compojure                   #:mvn{:version "1.6.2"}
+  ring/ring-core                        #:mvn{:version "1.9.5"}
   metosin/muuntaja                      #:mvn{:version "0.6.8"}
   ;; data validation
   metosin/malli                         #:mvn{:version "0.5.1"}
@@ -49,7 +50,12 @@
   cider/cider-nrepl                     #:mvn{:version "0.27.2"}}
 
  :aliases
- {:carve
+ {:shadow-cljs
+  ;; Increase max JVM stack size.
+  ;; Without this, the node_modules/highlight.js/lib/languages/isbl.js file will randomly break the e2e CI job
+  ;; because the Google Closure Compiler can't parse it without busting the stack size.
+  {:jvm-opts ["-Xss4m"]}
+  :carve
   {:extra-deps {borkdude/carve
                 #:git{:url "https://github.com/borkdude/carve"
                       :sha "7d87e7fdf471121b4f3cc4b442e6ca39503ca07e"}}

@@ -24,7 +24,7 @@ runs:
     - name: Prepare java
       uses: actions/setup-java@v2
       with:
-        java-version: '11'
+        java-version: '17'
         distribution: 'temurin'
 
     - uses: DeLaGuardo/setup-clojure@3.5

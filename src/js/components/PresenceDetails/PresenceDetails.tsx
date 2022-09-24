@@ -1,29 +1,35 @@
-import { withErrorBoundary } from 'react-error-boundary';
 import React from "react";
 
-import { Text, Tooltip, Avatar, AvatarGroup, Menu, MenuDivider, MenuButton, MenuList, MenuGroup, MenuItem, Button, Portal } from '@chakra-ui/react';
-
+import { withErrorBoundary } from 'react-error-boundary';
+import { VStack, Text, HStack, Tooltip, Avatar, AvatarGroup, Menu, MenuDivider, MenuButton, MenuList, MenuGroup, MenuItem, Button, Portal } from '@chakra-ui/react';
 import { ProfileSettingsDialog } from "@/ProfileSettingsDialog";
+
+type PersonWithPresence = Person & {
+  pageTitle?: string,
+  pageUid?: string
+  blockUid?: string
+}
 
 export interface PresenceDetailsProps {
   hostAddress: HostAddress;
-  currentUser?: Person;
-  currentPageMembers: Person[];
-  differentPageMembers: Person[];
+  currentUser?: PersonWithPresence;
+  currentPageMembers: PersonWithPresence[];
+  differentPageMembers: PersonWithPresence[];
   handleUpdateProfile(person: Person): void;
   handleCopyHostAddress(hostAddress: HostAddress): void;
   handleCopyPermalink?(): void;
-  handlePressMember(person: Person): void;
+  handlePressMember(person: PersonWithPresence): void;
   connectionStatus: ConnectionStatus;
   defaultOpen?: boolean;
 }
 interface ConnectionButtonProps {
   connectionStatus: ConnectionStatus;
-  showablePersons: Person[];
+  showablePersons: PersonWithPresence[];
+  currentUser: PersonWithPresence;
 }
 
 const ConnectionButton = React.forwardRef((props: ConnectionButtonProps, ref) => {
-  const { connectionStatus, showablePersons } = props;
+  const { showablePersons, currentUser } = props;
   return (
     <Tooltip label={`${showablePersons.length} member${showablePersons.length === 1 ? '' : 's'} online`}>
       <Button
@@ -37,8 +43,13 @@ const ConnectionButton = React.forwardRef((props: ConnectionButtonProps, ref) =>
           bg: "background.upper",
         }}
       >
-        {connectionStatus === "connected" && (
-          showablePersons.length > 0 && (
+        {currentUser && (
+          <HStack>
+            <Avatar
+              name={currentUser.username}
+              bg={currentUser.color}
+              size="xs"
+            />
             <AvatarGroup size="xs" max={5}>
               {showablePersons.map((member) => (
                 <Avatar
@@ -47,7 +58,7 @@ const ConnectionButton = React.forwardRef((props: ConnectionButtonProps, ref) =>
                   bg={member.color} />
               ))}
             </AvatarGroup>
-          )
+          </HStack>
         )}
       </Button>
     </Tooltip>
@@ -79,6 +90,7 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
         <ConnectionButton
           connectionStatus={connectionStatus}
           showablePersons={showablePersons}
+          currentUser={currentUser}
         />
         <Portal>
           <MenuList>
@@ -86,7 +98,7 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
               {hostAddress && (
                 <>
                   <MenuItem onClick={() => handleCopyHostAddress(hostAddress)}>
-                    Copy link to database
+                    Copy link to workspace
                   </MenuItem>
                   {handleCopyPermalink && <MenuItem onClick={() => handleCopyPermalink()}>
                     Copy link to page
@@ -110,20 +122,22 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
                 <>
                   <MenuDivider />
                   <MenuGroup title="On this page">
-                    {currentPageMembers.map((member) => (
-                      <MenuItem
-                        onClick={() => handlePressMember(member)}
-                        key={member.personId}
-                        icon={<Avatar
-                          size="xs"
-                          marginBlock={-1}
-                          name={member.username}
-                          bg={member.color}
-                        />}
-                      >
-                        {member.username}
-                      </MenuItem>
-                    ))}
+                    {currentPageMembers.map((member) => {
+                      return (
+                        <MenuItem
+                          onClick={() => handlePressMember(member)}
+                          key={member.personId}
+                          icon={<Avatar
+                            size="xs"
+                            marginBlock={-1}
+                            name={member.username}
+                            bg={member.color}
+                          />}
+                        >
+                          <Text maxWidth="10em">{member.username}</Text>
+                        </MenuItem>
+                      )
+                    })}
                   </MenuGroup>
                 </>
               )}
@@ -131,10 +145,11 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
               {differentPageMembers.length > 0 && (
                 <>
                   <MenuDivider />
-                  <MenuGroup title="On other pages">
+                  <MenuGroup>
                     {differentPageMembers.map((member) => (
                       <MenuItem
                         onClick={() => handlePressMember(member)}
+                        isDisabled={!member.pageTitle}
                         key={member.personId}
                         icon={<Avatar
                           marginBlock={-1}
@@ -143,7 +158,10 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
                           bg={member.color}
                         />}
                       >
-                        {member.username}
+                        <VStack align="stretch" spacing={0}>
+                          <Text maxWidth="10em">{member.username}</Text>
+                          <Text maxWidth="10em" color="foreground.secondary">{member.pageTitle}</Text>
+                        </VStack>
                       </MenuItem>
                     ))}
                   </MenuGroup>

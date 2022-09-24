@@ -4,6 +4,13 @@ import { spacing } from './spacing'
 
 const $arrowBg = cssVar("popper-arrow-bg");
 
+const buttonIconFontSize = {
+  xs: "16px",
+  sm: "20px",
+  md: "24px",
+  lg: "32px",
+}
+
 const shadows = {
   focusLight: '0 0 0 3px #0071DB',
   focusDark: '0 0 0 3px #498eda',
@@ -26,6 +33,17 @@ const radii = {
   md: '0.5rem',
   lg: '1rem',
   full: '9999px',
+}
+
+const layerStyles = {
+  card: {
+    bg: 'background.upper',
+    borderRadius: 'md',
+  },
+  cardDark: {
+    bg: 'background.attic',
+    borderRadius: 'md',
+  },
 }
 
 const semanticTokens = {
@@ -69,8 +87,8 @@ const semanticTokens = {
     },
     // separator colors
     "separator.border": {
-      default: '00000022',
-      _dark: '#ffffff55'
+      default: '#00000033',
+      _dark: '#ffffff22'
     },
     "separator.divider": {
       default: '#00000022',
@@ -83,7 +101,7 @@ const semanticTokens = {
     },
     "background.basement": {
       default: '#fff',
-      _dark: '#111'
+      _dark: '#141414'
     },
     "background.upper": {
       default: '#fbfbfb',
@@ -100,11 +118,11 @@ const semanticTokens = {
     // foreground colors
     "foreground.primary": {
       default: 'hsla(0, 0%, 0%, 0.87)',
-      _dark: 'hsla(0, 0%, 100%, 0.8)'
+      _dark: 'hsla(0, 0%, 100%, 0.83)'
     },
     "foreground.secondary": {
       default: 'hsla(0, 0%, 0%, 0.57)',
-      _dark: 'hsla(0, 0%, 100%, 0.57)'
+      _dark: 'hsla(0, 0%, 100%, 0.5)'
     },
     "foreground.tertiary": {
       default: 'hsla(0, 0%, 0%, 0.2)',
@@ -132,6 +150,10 @@ const semanticTokens = {
       default: '#0071DB',
       _dark: '#498eda'
     },
+    infoText: {
+      default: '#fff',
+      _dark: '#fff'
+    },
     warning: {
       default: '#D20000',
       _dark: '#DE3C21'
@@ -140,12 +162,23 @@ const semanticTokens = {
       default: '#4CBB17',
       _dark: '#498eda'
     },
+
+    // Notifications
+    notification: {
+      default: '#d70015',
+      _dark: '#ff6961'
+    },
+    notificationText: {
+      default: '#fff',
+      _dark: '#fff'
+    },
+
     // other colors
     textHighlight: {
       default: '#ffdb8a',
       _dark: '#FBBE63'
     },
-    highlight: {
+    "highlight": {
       default: '#F9A132',
       _dark: '#FBBE63'
     },
@@ -161,13 +194,23 @@ const semanticTokens = {
       default: '#fff',
       _dark: '#fff'
     },
+
+    gold: {
+      default: '#F9A132',
+      _dark: '#FBBE63'
+    },
+    goldContrast: {
+      default: '#000',
+      _dark: '#000'
+    },
+
     // block content colors
     "ref.foreground": {
       default: "#fbbe63bb",
       _dark: "#fbbe6366",
     },
     "ref.background": {
-      default: "#fbbe63bb",
+      default: "#fbbe6344",
       _dark: "#fbbe6311",
     }
   }
@@ -230,6 +273,14 @@ const components = {
             color: "var(--toast-color)",
           }
         })
+      },
+      subtle: {
+        container: {
+          borderRadius: "md"
+        },
+        title: {
+          fontWeight: "normal"
+        },
       }
     }
   },
@@ -311,8 +362,7 @@ const components = {
     }
   },
   Button: {
-    baseStyle: {
-      transitionProperty: 'common',
+    baseStyle: ({ size }) => ({
       transitionTimingFunction: 'ease-in-out',
       _active: {
         transitionDuration: "0s",
@@ -324,8 +374,11 @@ const components = {
       _focusVisible: {
         outline: 'none',
         boxShadow: 'focus'
+      },
+      "> .chakra-button__icon, > .chakra-icon, &.chakra-menu__menu-button > span > .chakra-icon": {
+        fontSize: buttonIconFontSize[size],
       }
-    },
+    }),
     variants: {
       link: {
         color: "link",
@@ -366,15 +419,9 @@ const components = {
           })
         }
       },
-      ghost: {
+      ghost: ({ colorScheme }) => ({
         bg: "transparent",
-        color: (colorScheme) => {
-          if (colorScheme === 'subtle') {
-            return "foreground.secondary"
-          } else {
-            return "foreground.primary"
-          }
-        },
+        color: (colorScheme === 'subtle') ? "foreground.secondary" : "foreground.primary",
         _hover: {
           bg: "interaction.surface.hover"
         },
@@ -382,7 +429,7 @@ const components = {
           color: 'foreground.primary',
           bg: 'interaction.surface.active',
         },
-      },
+      }),
       outline: {
         bg: "transparent",
         borderWidth: "1px",
@@ -403,35 +450,17 @@ const components = {
       error: {
         color: "error"
       }
+    },
+  },
+  Divider: {
+    baseStyle: {
+      borderColor: "separator.divider",
     }
   },
   FormLabel: {
     baseStyle: {
+      fontSize: "sm",
       color: "foreground.secondary",
-    }
-  },
-  IconButton: {
-    baseStyle: {
-      fontSize: "1em",
-      _active: {
-        transitionDuration: "0s",
-      },
-      _focus: {
-        outline: 'none',
-        boxShadow: 'none'
-      },
-      _focusVisible: {
-        outline: 'none',
-        boxShadow: 'focus'
-      }
-    },
-    variants: {
-      solid: {
-        _active: {
-          color: 'linkContrast',
-          bg: 'link',
-        },
-      }
     }
   },
   Menu: {
@@ -449,9 +478,8 @@ const components = {
       },
       groupTitle: {
         color: "foreground.secondary",
-        textTransform: "uppercase",
         fontSize: "0.75em",
-        fontWeight: "bold",
+        fontWeight: "700",
       },
       item: {
         "&.isActive": {
@@ -482,6 +510,7 @@ const components = {
       sm: {
         item: {
           padding: '0.35rem 0.5rem',
+          lineHeight: '1.5',
           fontSize: "sm"
         },
         icon: {
@@ -491,6 +520,9 @@ const components = {
           margin: '0.35rem 0.5rem',
         }
       }
+    },
+    defaultProps: {
+      size: 'sm',
     }
   },
   Modal: {
@@ -515,6 +547,13 @@ const components = {
       content: {
         bg: "background.upper",
         shadow: "popover",
+        _focus: {
+          outline: 'none',
+          shadow: "popover",
+        },
+        _focusVisible: {
+          shadow: "popover",
+        },
         [$arrowBg.variable]: "colors.background.upper",
       }
     }
@@ -580,29 +619,85 @@ const components = {
     }
   },
   Tabs: {
+    baseStyle: {
+      tab: {
+        userSelect: "none"
+      },
+    },
     variants: {
       line: {
         tabList: {
-          borderBottom: "separator.border"
+          borderBottomWidth: "1px",
+          borderBottomColor: "separator.border",
         },
         tab: {
           color: "link",
-          borderBottom: "2px solid",
+          borderBottom: "1px solid",
           borderBottomColor: "separator.border",
+          marginBottom: "-1px",
           _selected: {
-            bg: 'background.attic',
             color: 'foreground.primary',
             borderBottomColor: "foreground.primary"
           },
           _focus: {
             outline: 'none',
+            shadow: 'focusInset'
+          },
+          _hover: {
+            bg: "interaction.surface.hover",
+            shadow: 'none'
+          },
+          _active: {
+            bg: "interaction.surface.active",
             shadow: 'none'
           },
           _focusVisible: {
             shadow: "focus"
           }
         }
+      },
+      rect: {
+        tabList: {
+          gap: "1px",
+        },
+        tab: {
+          borderRadius: "md",
+          position: "relative",
+          shadow: "focusPlaceholderInset",
+          transitionProperty: "color",
+          transitionDuration: "fast",
+          transitionTimingFunction: "ease-in-out",
+          _after: {
+            content: "''",
+            position: "absolute",
+            top: "calc(100% - 1.5px)",
+            right: "1ch",
+            bottom: "auto",
+            left: "1ch",
+            borderRadius: "md",
+            height: "1.5px",
+          },
+          _focus: {
+            outline: 'none',
+            shadow: 'none'
+          },
+          _focusVisible: {
+            outline: 'none',
+            shadow: 'focusInset'
+          },
+          _hover: {
+            bg: "interaction.surface.hover",
+          },
+          _selected: {
+            _after: {
+              bg: "foreground.primary",
+            }
+          },
+        }
       }
+    },
+    defaultProps: {
+      variant: 'rect',
     }
   },
   Tooltip: {
@@ -623,7 +718,11 @@ const components = {
 }
 
 // Default prop overrides
-Tooltip.defaultProps = { ...Tooltip.defaultProps, openDelay: 500 }
+Tooltip.defaultProps = {
+  ...Tooltip.defaultProps,
+  closeOnMouseDown: true,
+  openDelay: 500
+}
 
 const config = {
   initialColorMode: 'system',
@@ -638,13 +737,25 @@ const styles = {
       lineHeight: '1.5',
       height: '100vh',
       fontFamily: 'default',
+      sx: {
+        "::WebkitScrollbar": {
+          background: "background.basement",
+          width: "0.5rem",
+          height: "0.5rem"
+        },
+        "::WebkitScrollbar-corner": { bg: "background.basement" },
+        "::WebkitScrollbar-thumb": {
+          bg: "background.upper",
+          borderRadius: "full"
+        }
+      }
     },
     "#chakra-toast-manager-top-right, #chakra-toast-manager-top, #chakra-toast-manager-top-left": {
       margin: "3rem 1rem"
     },
     mark: {
-      background: "highlight",
-      color: "highlightContrast",
+      background: "gold",
+      color: "goldContrast",
       padding: '0 0.2em',
       borderRadius: "sm",
     }
@@ -655,4 +766,4 @@ const sizes = {
   ...spacing
 }
 
-export const theme = extendTheme({ config, radii, fonts, shadows, semanticTokens, spacing, sizes, components, styles });
+export const theme = extendTheme({ layerStyles, config, radii, fonts, shadows, semanticTokens, spacing, sizes, components, styles });
