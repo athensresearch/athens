@@ -1,5 +1,6 @@
 (ns athens.views.notifications.popover
   (:require
+    ["/components/Empty/Empty" :refer [Empty EmptyTitle EmptyIcon EmptyMessage]]
     ["/components/Icons/Icons" :refer [BellFillIcon ArrowRightIcon]]
     ["/components/Inbox/Inbox" :refer [InboxItemsList]]
     ["/timeAgo.js" :refer [timeAgo]]
@@ -148,13 +149,19 @@
                       :as            PopoverBody
                       :flexDirection "column"
                       :overflow      "hidden"}
-             [:> InboxItemsList
+             (if (seq notification-list)
+               [:> InboxItemsList
 
-              {:onOpenItem        on-click-notification-item
-               :onMarkAsRead      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
-               :onMarkAsUnread    #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-               :onArchive         (fn [e uid]
-                                    (.. e stopPropagation)
-                                    (rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true")))
+                {:onOpenItem        on-click-notification-item
+                 :onMarkAsRead      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
+                 :onMarkAsUnread    #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
+                 :onArchive         (fn [e uid]
+                                      (.. e stopPropagation)
+                                      (rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true")))
                ;; :onUnarchive       #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-               :notificationsList notification-list}]]]])))))
+                 :notificationsList notification-list}]
+
+               [:> Empty {:size "sm" :py 8}
+                [:> EmptyIcon]
+                [:> EmptyTitle "All clear"]
+                [:> EmptyMessage "Unread notifications will appear here."]])]]])))))
