@@ -486,6 +486,7 @@ const components = {
       sm: {
         container: {
           p: 2,
+          px: 4
         },
         icon: {
           boxSize: 6,

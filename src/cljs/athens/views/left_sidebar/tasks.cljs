@@ -163,7 +163,7 @@
                      ^{:key (get task ":block/uid")}
                      [:f> sidebar-task-el task]))]]]))))
 
-        [:> Empty {:size "sm"}
+        [:> Empty {:size "sm" :pl 0}
          [:> EmptyIcon {:Icon CheckboxIcon}]
          [:> EmptyTitle "All done"]
          [:> EmptyMessage "Tasks assigned to you will appear here."]])]]))
