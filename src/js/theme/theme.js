@@ -470,10 +470,8 @@ const components = {
       },
       icon: {
         color: 'foreground.tertiary',
-        boxSize: 8,
       },
       title: {
-        mt: 2,
         fontWeight: 'semibold',
         textAlign: 'center',
         color: 'foreground.secondary',
@@ -491,9 +489,9 @@ const components = {
         },
         icon: {
           boxSize: 6,
+          mb: 1,
         },
         title: {
-          mt: 1,
           fontSize: 'sm',
         },
         message: {
@@ -506,9 +504,9 @@ const components = {
         },
         icon: {
           boxSize: 8,
+          mb: 2,
         },
         title: {
-          mt: 2,
           fontSize: 'md',
         },
         message: {
@@ -521,9 +519,9 @@ const components = {
         },
         icon: {
           boxSize: 10,
+          mb: 3,
         },
         title: {
-          mt: 3,
           fontSize: 'lg',
         },
         message: {
