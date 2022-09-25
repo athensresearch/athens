@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
-import { IconButton, Text, MenuGroup, Box, useMergeRefs } from '@chakra-ui/react';
+import { IconButton, useMergeRefs } from '@chakra-ui/react';
 import { ColonIcon, BulletIcon, DashIcon } from '@/Icons/Icons';
-import { ContextMenuContext } from "@/App/ContextMenuContext";
 
 const ANCHORS = {
   "bullet": <BulletIcon />,
@@ -9,51 +8,6 @@ const ANCHORS = {
   "dash": <DashIcon />
 }
 
-const showValue = (value) => {
-  if (typeof value === 'object') return (value = JSON.stringify(value));
-  else if (typeof value === 'boolean') return (value = value ? 'true' : 'false');
-  else return value;
-}
-
-const properties = (block) => ({
-  "uid": block?.uid,
-  "db/id": block?.id,
-  "order": block?.order,
-  "open": block?.open,
-  "refs": block?._refs?.length || 0,
-});
-
-const Item = ({ children }) => {
-  return (<Text
-    as="li"
-    fontSize="sm"
-    margin={0}
-    padding={0}
-    display="flex"
-    justifyContent={'space-between'}
-    sx={{
-      "span": {
-        color: "foreground.secondary",
-        flex: "1 1 50%",
-        fontWeight: "medium"
-      },
-      "span + span": {
-        marginLeft: "1ch",
-        color: "foreground.primary",
-        fontWeight: "normal"
-      }
-    }}
-  >{children}</Text>)
-}
-
-const propertiesList = (block) => {
-  return Object.entries(properties(block)).map(([key, value]) => {
-    return <Item key={key}>
-      <span>{key}</span>
-      <span>{showValue(value)}</span>
-    </Item>
-  })
-}
 
 type Anchors = typeof ANCHORS;
 type AnchorImage = keyof Anchors;
@@ -65,9 +19,6 @@ export interface AnchorProps extends ButtonProps {
   uidSanitizedBlock: any;
   shouldShowDebugDetails: boolean;
   as: ReactNode;
-  onCopyRef: () => void;
-  onCopyUnformatted: () => void;
-  menu?: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
 const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
@@ -82,8 +33,6 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
     border: "0",
     color: "foreground.secondary",
     display: "flex",
-    // placeItems: "center",
-    // placeContent: "flex-start",
     alignItems: "flex-start",
     alignSelf: "flex-start",
     minHeight: "inherit",
@@ -131,52 +80,16 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
     anchorElement,
     shouldShowDebugDetails,
     uidSanitizedBlock,
-    menu,
     ...buttonProps
   } = props;
   const innerRef = React.useRef(null);
   const refs = useMergeRefs(innerRef, ref);
-
-  const {
-    addToContextMenu,
-    getIsMenuOpen,
-  } = React.useContext(ContextMenuContext);
-
-  const isMenuOpen = getIsMenuOpen(innerRef);
-
-  const MenuItems = () => {
-    return shouldShowDebugDetails ? (
-      <>
-        {menu}
-        <MenuGroup title="Debug details">
-          <Box px={4} pb={3}>
-            {propertiesList(uidSanitizedBlock)}
-          </Box>
-        </MenuGroup>
-      </>) : menu
-  }
 
   return <>
     <IconButton
       ref={refs}
       aria-label="Block anchor"
       {...anchorButtonStyleProps(isClosedWithChildren)}
-      draggable={buttonProps?.onDragStart ? true : undefined}
-      onContextMenu={
-        (e) => {
-          if (menu) {
-            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef, key: "block" })
-          }
-        }}
-      onClick={
-        (e) => {
-          if (buttonProps?.onClick) {
-            buttonProps?.onClick(e);
-          } else if (menu) {
-            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef, key: "block" })
-          }
-        }}
-      isActive={buttonProps?.isActive || isMenuOpen}
       {...buttonProps}
     >
       {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}

@@ -24,6 +24,8 @@
                                                        Breadcrumb
                                                        BreadcrumbItem
                                                        BreadcrumbLink
+                                                       UnorderedList
+                                                       ListItem
                                                        Button
                                                        HStack
                                                        MenuDivider
@@ -349,8 +351,19 @@
     (rf/dispatch task-title-event)))
 
 
+(defn block-debug-properties
+  [sanitized-block]
+  (let [{:block/keys [uid refs id order open?]} sanitized-block]
+    [:> UnorderedList
+     [:> ListItem "uid: " uid]
+     [:> ListItem "db/id " id]
+     [:> ListItem "order " order]
+     [:> ListItem "open?: " open?]
+     [:> ListItem "refs: " (count refs)]]))
+
+
 (defn block-menu
-  [selected-items uid block-type comments-enabled? block-o reactions-enabled? user-id properties notifications-enabled?]
+  [selected-items uid block-type uid-sanitized-block comments-enabled? block-o reactions-enabled? user-id properties notifications-enabled? show-debug-details?]
   [:> MenuGroup {:title "Block"}
    (when (< (count @selected-items) 2)
      [:> MenuItem {:children "Open block"
@@ -393,7 +406,9 @@
    (when (and notifications-enabled? (actions/is-block-notification? properties))
      [:> MenuItem {:children "Archive"
                    :icon     (r/as-element [:> ArchiveIcon])
-                   :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
+                   :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])
+   (when show-debug-details?
+     [block-debug-properties uid-sanitized-block])])
 
 
 (def CONTAINER_CONTEXT_MENU_FILTERED_TAGS
@@ -463,6 +478,8 @@
              renderer       (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
              context-menu   (react/useContext ContextMenuContext)
              has-menu-open? (.getIsMenuOpen context-menu container-ref-ref)
+             show-debug-details? (util/re-frame-10x-open?)
+             menu-component (r/as-element [block-menu selected-items uid block-type uid-sanitized-block comments-enabled? block-o reactions-enabled? user-id properties notifications-enabled? show-debug-details?])
              [ref in-view?] (useInView {:delay 250})
              _              (react/useEffect (fn []
                                                (on-block-mount)
@@ -498,7 +515,7 @@
                                            (.addToContextMenu context-menu
                                                               #js {:ref container-ref-ref
                                                                    :event e
-                                                                   :component (r/as-element [block-menu selected-items uid block-type comments-enabled? block-o reactions-enabled? user-id properties notifications-enabled?])
+                                                                   :component menu-component
                                                                    :key "block"})))
                         :sx        (merge {} (time-controls/block-styles block-o))}
           (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
@@ -540,6 +557,12 @@
                                                   "closed-with-children")
                         :uidSanitizedBlock      uid-sanitized-block
                         :shouldShowDebugDetails (util/re-frame-10x-open?)
+                        :onClick (fn [e]
+                                   (.addToContextMenu context-menu
+                                                      #js {:ref container-ref-ref
+                                                           :event e
+                                                           :component menu-component
+                                                           :key "block"}))
                         :onDoubleClick          (fn [e]
                                                   (let [shift? (.-shiftKey e)]
                                                     (rf/dispatch [:reporting/navigation {:source :block-bullet
