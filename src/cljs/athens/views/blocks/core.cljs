@@ -557,8 +557,12 @@
                                                            (or (and (true? linked-ref) (not @linked-ref-open?))
                                                                (and (false? linked-ref) (not open))))
                                                   "closed-with-children")
-                        :uidSanitizedBlock      uid-sanitized-block
-                        :shouldShowDebugDetails (util/re-frame-10x-open?)
+                        :onContextMenu (fn [e]
+                                   (.addToContextMenu context-menu
+                                                      #js {:ref container-ref-ref
+                                                           :event e
+                                                           :component menu-component
+                                                           :key "block"}))
                         :onClick (fn [e]
                                    (.addToContextMenu context-menu
                                                       #js {:ref container-ref-ref
