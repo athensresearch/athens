@@ -3,11 +3,10 @@
    ["/components/Icons/Icons" :refer [BellIcon ArrowRightIcon]]
    ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
    ["/timeAgo.js" :refer [timeAgo]]
-   ["@chakra-ui/react" :refer [Badge Box Heading VStack IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
-   ["framer-motion" :refer [AnimatePresence motion]]
-    [athens.parse-renderer :as parse-renderer]
+   ["@chakra-ui/react" :refer [Badge Box Text Heading VStack IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
    [athens.common-db :as common-db]
    [athens.db :as db]
+   [athens.parse-renderer :as parse-renderer]
    [athens.reactive :as reactive]
    [athens.router :as router]
    [athens.views.notifications.actions :as actions]
@@ -90,9 +89,17 @@
      "subject"    {"username" username}}))
 
 
+
 (defn filter-hidden-notifs
   [inbox-notif]
   (not (get inbox-notif "isArchived")))
+
+
+(def event-verb
+  {"Comments" "commented on"
+   "Mentions" "mentioned you in"
+   "Assignments" "assigned you to"
+   "Created" "created"})
 
 
 (defn get-inbox-items-for-popover
@@ -177,10 +184,22 @@
 
                  (for [notification notifs]
 
-                   ^{:key (:id notification)}
+                   ^{:key (get notification "id")}
                    [:> NotificationItem
                     {:notification   notification
                      :onOpenItem     on-click-notification-item
                      :onMarkAsRead   #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
                      :onMarkAsUnread #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-                     :onArchive      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))}])])))]]]))))
+                     :onArchive      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))}
+
+                    [:> Text {:fontWeight "bold" :noOfLines 2 :fontSize "sm"}
+                     (str (get-in notification ["subject" "username"]) " ")
+                     (str (get event-verb (get notification "type")) " ")
+                     [parse-renderer/parse-and-render (or
+                                                       (get object "name")
+                                                       (get object "string"))
+                      (:id notification)]]
+                    [:> Text {:fontSize "sm"}
+                     [parse-renderer/parse-and-render
+                      (get notification "body")
+                      (get notification "id")]]])])))]]]))))
