@@ -558,11 +558,11 @@
                                                                (and (false? linked-ref) (not open))))
                                                   "closed-with-children")
                         :onContextMenu (fn [e]
-                                   (.addToContextMenu context-menu
-                                                      #js {:ref container-ref-ref
-                                                           :event e
-                                                           :component menu-component
-                                                           :key "block"}))
+                                         (.addToContextMenu context-menu
+                                                            #js {:ref container-ref-ref
+                                                                 :event e
+                                                                 :component menu-component
+                                                                 :key "block"}))
                         :onClick (fn [e]
                                    (.addToContextMenu context-menu
                                                       #js {:ref container-ref-ref
