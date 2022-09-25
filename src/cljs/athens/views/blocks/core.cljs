@@ -430,6 +430,7 @@
          is-hovered-not-child?    (r/atom false)
          !container-ref           (clojure.core/atom nil)
          linked-ref-open?         (rf/subscribe [::linked-ref.subs/open? block-uid])
+         editing?                 (rf/subscribe [:editing/is-editing block-uid])
          dragging?                (rf/subscribe [::drag.subs/dragging? block-uid])
          drag-target              (rf/subscribe [::drag.subs/drag-target block-uid])
          selected?                (rf/subscribe [::select-subs/selected? block-uid])
@@ -464,10 +465,10 @@
              reactions-enabled?     (:reactions @feature-flags)
              notifications-enabled? (:notifications @feature-flags)
              uid-sanitized-block    (s/transform
-                                     (util/specter-recursive-path #(contains? % :block/uid))
-                                     (fn [{:block/keys [original-uid uid] :as block}]
-                                       (assoc block :block/uid (or original-uid uid)))
-                                     block)
+                                      (util/specter-recursive-path #(contains? % :block/uid))
+                                      (fn [{:block/keys [original-uid uid] :as block}]
+                                        (assoc block :block/uid (or original-uid uid)))
+                                      block)
              user-id                (or (:username @current-user)
                                         ;; We use empty string for when there is no user information, like in PKM.
                                         "")
@@ -493,6 +494,7 @@
          [:> Container {:isActive          has-menu-open?
                         :isHoveredNotChild @is-hovered-not-child?
                         :isOpen            open
+                        :isEditing         @editing?
                         :isSelected        @selected?
                         :hasChildren       (seq children)
                         :uid               uid

@@ -11,7 +11,7 @@ const ErrorMessage = ({ error }) => {
 };
 
 export const Container = forwardRef((props, ref) => {
-  const { children, isActive, isHoveredNotChild, isDragging, isSelected, isOpen, hasChildren, uid, childrenUids, ...rest } = props;
+  const { children, isActive, isEditing, isHoveredNotChild, isDragging, isSelected, isOpen, hasChildren, uid, childrenUids, ...rest } = props;
 
   return <ErrorBoundary FallbackComponent={ErrorMessage}>
     <chakra.div
@@ -22,6 +22,7 @@ export const Container = forwardRef((props, ref) => {
         isSelected ? "is-selected" : "",
         isOpen ? "is-open" : "",
         isActive && 'is-active',
+        isEditing && 'is-editing',
         (hasChildren && isOpen) ? "show-tree-indicator" : "",
         isHoveredNotChild && "is-hovered-not-child",
       ].filter(Boolean).join(' ')}
@@ -96,7 +97,7 @@ export const Container = forwardRef((props, ref) => {
         ".block-body > .block-toggle:focus": {
           opacity: 1
         },
-        "&.is-hovered-not-child > .block-body > .block-toggle, &:focus-within > .block-body > .block-toggle": {
+        "&.is-hovered-not-child > .block-body > .block-toggle, &.is-editing > .block-body > .block-toggle": {
           opacity: "1"
         },
         "button.block-edit-toggle": {
