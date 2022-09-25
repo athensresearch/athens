@@ -1,12 +1,14 @@
 import React from 'react';
-import { useTheme, chakra, Alert, AlertIcon, AlertTitle, forwardRef, AlertDescription } from "@chakra-ui/react";
+import { useTheme, chakra, VStack, Alert, AlertIcon, AlertTitle, forwardRef, AlertDescription } from "@chakra-ui/react";
 import { ErrorBoundary } from "react-error-boundary";
 
 const ErrorMessage = ({ error }) => {
-  return (<Alert ml={4} status='error'>
+  return (<Alert ml="4rem" alignItems="flex-start" mr="var(--page-right-gutter-width)" status='error' w="auto" px={2} py={1} my={1}>
     <AlertIcon />
-    <AlertTitle>An error occurred while rendering this block.</AlertTitle>
-    <AlertDescription>{error}</AlertDescription>
+    <VStack align="stretch" spacing={0}>
+      <AlertTitle>An error occurred while rendering this block.</AlertTitle>
+      <AlertDescription opacity={0.85} fontSize="sm">{error.toString()}</AlertDescription>
+    </VStack>
   </Alert>)
 };
 
