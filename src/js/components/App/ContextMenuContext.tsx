@@ -41,7 +41,6 @@ const useContextMenuState = () => {
    */
   const addToContextMenu = React.useCallback((props: addToContextMenuProps) => {
     const { event, ref, component, onClose, anchorEl, key, isExclusive } = props;
-    console.log(event);
     event.preventDefault();
 
     if (keys.includes(key)) {
@@ -69,8 +68,6 @@ const useContextMenuState = () => {
     // These are updated by the event bubbling through the DOM
     components = [...components, component];
     sources = [...sources, ref.current];
-
-    console.log("sources", sources);
 
     let position;
     if (anchorEl) {
