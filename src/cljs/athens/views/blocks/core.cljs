@@ -508,7 +508,7 @@
                                                                    :event e
                                                                    :component (r/as-element [block-menu selected-items uid block-type comments-enabled? block-o reactions-enabled? user-id properties notifications-enabled?])
                                                                    :key "block"})))
-                        :style        (merge {} (time-controls/block-styles block-o))}
+                        :sx        (merge {} (time-controls/block-styles block-o))}
           (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
           [:<>
