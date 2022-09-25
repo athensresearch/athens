@@ -1,18 +1,18 @@
 (ns athens.views.notifications.popover
   (:require
-   ["/components/Icons/Icons" :refer [BellIcon ArrowRightIcon]]
-   ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
-   ["/timeAgo.js" :refer [timeAgo]]
-   ["@chakra-ui/react" :refer [Badge Box Text Heading VStack IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
-   [athens.common-db :as common-db]
-   [athens.db :as db]
-   [athens.parse-renderer :as parse-renderer]
-   [athens.reactive :as reactive]
-   [athens.router :as router]
-   [athens.views.notifications.actions :as actions]
-   [athens.views.notifications.core :as notifications :refer [get-inbox-uid-for-user]]
-   [re-frame.core :as rf]
-   [reagent.core :as r]))
+    ["/components/Icons/Icons" :refer [BellIcon ArrowRightIcon]]
+    ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
+    ["/timeAgo.js" :refer [timeAgo]]
+    ["@chakra-ui/react" :refer [Badge Box Text Heading VStack IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
+    [athens.common-db :as common-db]
+    [athens.db :as db]
+    [athens.parse-renderer :as parse-renderer]
+    [athens.reactive :as reactive]
+    [athens.router :as router]
+    [athens.views.notifications.actions :as actions]
+    [athens.views.notifications.core :as notifications :refer [get-inbox-uid-for-user]]
+    [re-frame.core :as rf]
+    [reagent.core :as r]))
 
 
 (rf/reg-sub
@@ -87,7 +87,6 @@
      "object"     {"name"      trigger-parent-string
                    "parentUid" trigger-parent-uid}
      "subject"    {"username" username}}))
-
 
 
 (defn filter-hidden-notifs
@@ -168,38 +167,38 @@
                       :p 2}
 
            (doall
-            (when (seq notifications-grouped-by-object)
-              (for [[object notifs] notifications-grouped-by-object]
-                
-                [:> VStack {:align "stretch"
-                            :key (str (:parentUid object))}
-                 [:> Heading {:size "xs"
-                              :fontWeight "normal"
-                              :noOfLines 1
-                              :color "foreground.secondary"
-                              :lineHeight "base"
-                              :px 2
-                              :pt 2}
-                  [parse-renderer/parse-and-render (or (get object "name") (get object "string")) (get object "parentUid")]]
+             (when (seq notifications-grouped-by-object)
+               (for [[object notifs] notifications-grouped-by-object]
 
-                 (for [notification notifs]
+                 [:> VStack {:align "stretch"
+                             :key (str (:parentUid object))}
+                  [:> Heading {:size "xs"
+                               :fontWeight "normal"
+                               :noOfLines 1
+                               :color "foreground.secondary"
+                               :lineHeight "base"
+                               :px 2
+                               :pt 2}
+                   [parse-renderer/parse-and-render (or (get object "name") (get object "string")) (get object "parentUid")]]
 
-                   ^{:key (get notification "id")}
-                   [:> NotificationItem
-                    {:notification   notification
-                     :onOpenItem     on-click-notification-item
-                     :onMarkAsRead   #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
-                     :onMarkAsUnread #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-                     :onArchive      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))}
+                  (for [notification notifs]
 
-                    [:> Text {:fontWeight "bold" :noOfLines 2 :fontSize "sm"}
-                     (str (get-in notification ["subject" "username"]) " ")
-                     (str (get event-verb (get notification "type")) " ")
-                     [parse-renderer/parse-and-render (or
-                                                       (get object "name")
-                                                       (get object "string"))
-                      (:id notification)]]
-                    [:> Text {:fontSize "sm"}
-                     [parse-renderer/parse-and-render
-                      (get notification "body")
-                      (get notification "id")]]])])))]]]))))
+                    ^{:key (get notification "id")}
+                    [:> NotificationItem
+                     {:notification   notification
+                      :onOpenItem     on-click-notification-item
+                      :onMarkAsRead   #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
+                      :onMarkAsUnread #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
+                      :onArchive      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))}
+
+                     [:> Text {:fontWeight "bold" :noOfLines 2 :fontSize "sm"}
+                      (str (get-in notification ["subject" "username"]) " ")
+                      (str (get event-verb (get notification "type")) " ")
+                      [parse-renderer/parse-and-render (or
+                                                         (get object "name")
+                                                         (get object "string"))
+                       (:id notification)]]
+                     [:> Text {:fontSize "sm"}
+                      [parse-renderer/parse-and-render
+                       (get notification "body")
+                       (get notification "id")]]])])))]]]))))
