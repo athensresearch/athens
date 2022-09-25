@@ -1,7 +1,6 @@
 import { Box } from '@chakra-ui/react';
-import { withErrorBoundary } from 'react-error-boundary';
 
-const _Content = ({ children, ...props }) => {
+export const Content = ({ children, ...props }) => {
   return <Box
     className="block-content"
     display="grid"
@@ -127,5 +126,3 @@ const _Content = ({ children, ...props }) => {
     {...props}
   > {children}</Box>
 }
-
-export const Content = withErrorBoundary(_Content, { fallback: <div>oops</div> });
