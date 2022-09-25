@@ -11,9 +11,6 @@ interface ToggleProps extends React.HTMLAttributes<HTMLButtonElement> {
  */
 export const Toggle = (props: ToggleProps) => {
   const { isOpen, ...rest } = props;
-  const theme = useTheme();
-
-  const buttonHeight = `calc(${theme.fontSizes.md} * ${theme.lineHeights.taller})`;
 
   return (
     <IconButton
@@ -35,7 +32,7 @@ export const Toggle = (props: ToggleProps) => {
         minHeight: "inherit",
         zIndex: 2,
         minWidth: "0",
-        h: buttonHeight,
+        h: "var(--control-height)",
         w: "auto",
         fontSize: "inherit",
         p: 0,

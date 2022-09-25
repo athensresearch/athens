@@ -210,6 +210,7 @@
   [count click-fn active?]
   [:> Button {:gridArea "refs"
               :size "xs"
+              :height "var(--control-height)"
               :variant "ghost"
               :placeSelf "center"
               :zIndex 10

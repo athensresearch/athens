@@ -141,9 +141,8 @@
                     :align                    "stretch"}
          [task-status-view-v2 block-uid status-uid]
          [:> Box {:flex       "1 1 100%"
-                  :py         1
-                  :cursor     "text"
-                  :lineHeight 1.4}
+                  :lineHeight "base"
+                  :cursor     "text"}
           [inline-task-title/inline-task-title-2
            callbacks
            block-uid
@@ -155,14 +154,15 @@
          [:> ModalInput {:placement "left-start"
                          :isLazy    true}
           [:> ModalInputTrigger
-           [:> Button {:size       "sm"
+           [:> Button {:size       "xs"
+                       :alignSelf "flex-start"
                        :flex       "1 0 auto"
                        :variant    "ghost"
                        :onClick    #(.. % stopPropagation)
                        :lineHeight "unset"
                        :whiteSpace "unset"
-                       :px         2
-                       :py         1}
+                       :height     "var(--control-height)"
+                       :px         2}
 
             ;; description
             (when (and show-description? description)
@@ -176,16 +176,16 @@
             (when (or due-date assignee)
               [:> Flex {:gap 1 :align "center"}
                (when (and show-assignee? assignee)
-                 [:> AvatarGroup {:size "xs"}
-                  [:> Avatar {:name assignee}]])
+                 [:> AvatarGroup 
+                  [:> Avatar {:size "xs" :name assignee}]])
                (when (and show-due-date? due-date)
                  [:> Text {:fontSize "xs"} due-date])])
 
             ;; provenance
             [:> Flex {:gap 1 :align "center"}
              (when (and show-creator? creator)
-               [:> AvatarGroup {:size "xs"}
-                [:> Avatar {:name creator}]])
+               [:> AvatarGroup
+                [:> Avatar {:size "xs" :name creator}]])
              (when (and show-created-date? created-date)
                [:> Text {:fontSize "xs"} created-date])]
             [:> PencilIcon {:color "foreground.secondary"}]]]
