@@ -1,74 +1,74 @@
 (ns athens.views.blocks.core
   (:require
-   ["/components/App/ContextMenuContext"      :refer [ContextMenuContext]]
-   ["/components/Block/Anchor"                :refer [Anchor]]
-   ["/components/Block/Container"             :refer [Container]]
-   ["/components/Block/PropertyName"          :refer [PropertyName]]
-   ["/components/Block/Reactions"             :refer [Reactions]]
-   ["/components/Block/Toggle"                :refer [Toggle]]
-   ["/components/Icons/Icons"                 :refer [ArchiveIcon
-                                                      CheckmarkIcon
-                                                      ArrowRightOnBoxIcon
-                                                      BlockEmbedIcon
-                                                      ChatBubbleIcon
-                                                      ExpandIcon
-                                                      TextIcon]]
-   ["/components/Page/Page"                   :refer [PageHeader
-                                                      PageBody
-                                                      PageFooter
-                                                      TitleContainer]]
-   ["/components/References/References"       :refer [PageReferences
-                                                      ReferenceBlock
-                                                      ReferenceGroup]]
-   ["@chakra-ui/react"                        :refer [Box
-                                                      Breadcrumb
-                                                      BreadcrumbItem
-                                                      BreadcrumbLink
-                                                      Button
-                                                      HStack
-                                                      MenuDivider
-                                                      MenuGroup
-                                                      MenuItem
-                                                      VStack]]
-   ["react"                                   :as react]
-   ["react-intersection-observer"             :refer [useInView]]
-   [athens.common-db                          :as common-db]
-   [athens.common-events.graph.ops            :as graph-ops]
-   [athens.common.logging                     :as log]
-   [athens.db                                 :as db]
-   [athens.electron.images                    :as images]
-   [athens.electron.utils                     :as electron.utils]
-   [athens.events.dragging                    :as drag.events]
-   [athens.events.inline-refs                 :as inline-refs.events]
-   [athens.events.linked-refs                 :as linked-ref.events]
-   [athens.events.selection                   :as select-events]
-   [athens.parse-renderer                     :as parse-renderer]
-   [athens.reactive                           :as reactive]
-   [athens.router                             :as router]
-   [athens.self-hosted.presence.views         :as presence]
-   [athens.subs.dragging                      :as drag.subs]
-   [athens.subs.inline-refs                   :as inline-refs.subs]
-   [athens.subs.linked-refs                   :as linked-ref.subs]
-   [athens.subs.selection                     :as select-subs]
-   [athens.time-controls                      :as time-controls]
-   [athens.types.core                         :as types]
+    ["/components/App/ContextMenuContext"      :refer [ContextMenuContext]]
+    ["/components/Block/Anchor"                :refer [Anchor]]
+    ["/components/Block/Container"             :refer [Container]]
+    ["/components/Block/PropertyName"          :refer [PropertyName]]
+    ["/components/Block/Reactions"             :refer [Reactions]]
+    ["/components/Block/Toggle"                :refer [Toggle]]
+    ["/components/Icons/Icons"                 :refer [ArchiveIcon
+                                                       CheckmarkIcon
+                                                       ArrowRightOnBoxIcon
+                                                       BlockEmbedIcon
+                                                       ChatBubbleIcon
+                                                       ExpandIcon
+                                                       TextIcon]]
+    ["/components/Page/Page"                   :refer [PageHeader
+                                                       PageBody
+                                                       PageFooter
+                                                       TitleContainer]]
+    ["/components/References/References"       :refer [PageReferences
+                                                       ReferenceBlock
+                                                       ReferenceGroup]]
+    ["@chakra-ui/react"                        :refer [Box
+                                                       Breadcrumb
+                                                       BreadcrumbItem
+                                                       BreadcrumbLink
+                                                       Button
+                                                       HStack
+                                                       MenuDivider
+                                                       MenuGroup
+                                                       MenuItem
+                                                       VStack]]
+    ["react"                                   :as react]
+    ["react-intersection-observer"             :refer [useInView]]
+    [athens.common-db                          :as common-db]
+    [athens.common-events.graph.ops            :as graph-ops]
+    [athens.common.logging                     :as log]
+    [athens.db                                 :as db]
+    [athens.electron.images                    :as images]
+    [athens.electron.utils                     :as electron.utils]
+    [athens.events.dragging                    :as drag.events]
+    [athens.events.inline-refs                 :as inline-refs.events]
+    [athens.events.linked-refs                 :as linked-ref.events]
+    [athens.events.selection                   :as select-events]
+    [athens.parse-renderer                     :as parse-renderer]
+    [athens.reactive                           :as reactive]
+    [athens.router                             :as router]
+    [athens.self-hosted.presence.views         :as presence]
+    [athens.subs.dragging                      :as drag.subs]
+    [athens.subs.inline-refs                   :as inline-refs.subs]
+    [athens.subs.linked-refs                   :as linked-ref.subs]
+    [athens.subs.selection                     :as select-subs]
+    [athens.time-controls                      :as time-controls]
+    [athens.types.core                         :as types]
     ;; need to require it for multimethod participation
-   [athens.types.default.view]
-   [athens.types.dispatcher                   :as block-type-dispatcher]
-   [athens.types.query.view]
+    [athens.types.default.view]
+    [athens.types.dispatcher                   :as block-type-dispatcher]
+    [athens.types.query.view]
     ;; need to require it for multimethod participation
-   [athens.types.tasks.view]
-   [athens.util                               :as util]
-   [athens.views.blocks.bullet                :as block-bullet]
-   [athens.views.blocks.context-menu          :as ctx-menu]
-   [athens.views.blocks.drop-area-indicator   :as drop-area-indicator]
-   [athens.views.blocks.reactions             :as block-reaction]
-   [athens.views.comments.core                :as comments]
-   [athens.views.comments.inline              :as inline-comments]
-   [athens.views.notifications.actions        :as actions]
-   [com.rpl.specter                           :as s]
-   [re-frame.core                             :as rf]
-   [reagent.core                              :as r]))
+    [athens.types.tasks.view]
+    [athens.util                               :as util]
+    [athens.views.blocks.bullet                :as block-bullet]
+    [athens.views.blocks.context-menu          :as ctx-menu]
+    [athens.views.blocks.drop-area-indicator   :as drop-area-indicator]
+    [athens.views.blocks.reactions             :as block-reaction]
+    [athens.views.comments.core                :as comments]
+    [athens.views.comments.inline              :as inline-comments]
+    [athens.views.notifications.actions        :as actions]
+    [com.rpl.specter                           :as s]
+    [re-frame.core                             :as rf]
+    [reagent.core                              :as r]))
 
 
 ;; Components
@@ -254,28 +254,28 @@
 
           [:> Breadcrumb {:fontSize "xs" :color "foreground.secondary"}
            (doall
-            (for [{:keys [block/uid] :as breadcrumb-block}
-                  (if (or @inline-ref-open?
-                          (not @inline-ref-focus?))
-                    @inline-ref-parents
-                    (conj @inline-ref-parents block))]
-              [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
-               [:> BreadcrumbLink {:onClick (fn [e]
-                                              (let [shift? (.-shiftKey e)]
-                                                (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                     :target :block
-                                                                                     :pane   (if shift?
-                                                                                               :right-pane
-                                                                                               :main-pane)}])
-                                                (let [new-B (db/get-block [:block/uid uid])
-                                                      new-P (concat
-                                                             (take-while (fn [b] (not= (:block/uid b) uid)) @inline-ref-parents)
-                                                             [breadcrumb-block])]
-                                                  (.. e stopPropagation)
-                                                  (rf/dispatch [::inline-refs.events/set-block! orig-uid new-B])
-                                                  (rf/dispatch [::inline-refs.events/set-parents! orig-uid new-P])
-                                                  (rf/dispatch [::inline-refs.events/set-focus! orig-uid false]))))}
-                [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb uid) uid]]]))]]
+             (for [{:keys [block/uid] :as breadcrumb-block}
+                   (if (or @inline-ref-open?
+                           (not @inline-ref-focus?))
+                     @inline-ref-parents
+                     (conj @inline-ref-parents block))]
+               [:> BreadcrumbItem {:key (str "breadcrumb-" uid)}
+                [:> BreadcrumbLink {:onClick (fn [e]
+                                               (let [shift? (.-shiftKey e)]
+                                                 (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                                      :target :block
+                                                                                      :pane   (if shift?
+                                                                                                :right-pane
+                                                                                                :main-pane)}])
+                                                 (let [new-B (db/get-block [:block/uid uid])
+                                                       new-P (concat
+                                                               (take-while (fn [b] (not= (:block/uid b) uid)) @inline-ref-parents)
+                                                               [breadcrumb-block])]
+                                                   (.. e stopPropagation)
+                                                   (rf/dispatch [::inline-refs.events/set-block! orig-uid new-B])
+                                                   (rf/dispatch [::inline-refs.events/set-parents! orig-uid new-P])
+                                                   (rf/dispatch [::inline-refs.events/set-focus! orig-uid false]))))}
+                 [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb uid) uid]]]))]]
 
          (when @inline-ref-open?
            (if @inline-ref-focus?
@@ -296,6 +296,7 @@
                  (util/recursively-modify-block-for-embed child @inline-ref-embed-id)
                  linked-ref-data
                  {:block-embed? true}]])))]))))
+
 
 (defn is-event-target-current-block-and-not-child
   [e block-uid]
@@ -321,13 +322,13 @@
                   :borderRadius "md"
                   :background "background.basement"}
        (doall
-        (for [[group-title group] refs]
-          [:> ReferenceGroup {:title group-title
-                              :key (str "group-" group-title)}
-           (doall
-            (for [block' group]
-              [:> ReferenceBlock {:key (str "ref-" (:block/uid block'))}
-               [ref-comp block-el block']]))]))])))
+         (for [[group-title group] refs]
+           [:> ReferenceGroup {:title group-title
+                               :key (str "group-" group-title)}
+            (doall
+              (for [block' group]
+                [:> ReferenceBlock {:key (str "ref-" (:block/uid block'))}
+                 [ref-comp block-el block']]))]))])))
 
 
 (defn convert-anon-block-to-task
@@ -394,6 +395,7 @@
                    :icon     (r/as-element [:> ArchiveIcon])
                    :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
 
+
 (def CONTAINER_CONTEXT_MENU_FILTERED_TAGS
   #js ["A" "BUTTON" "INPUT" "TEXTAREA" "LABEL" "VIDEO" "EMBED" "IFRAME" "IMG"])
 
@@ -446,10 +448,10 @@
              reactions-enabled?     (:reactions @feature-flags)
              notifications-enabled? (:notifications @feature-flags)
              uid-sanitized-block    (s/transform
-                                     (util/specter-recursive-path #(contains? % :block/uid))
-                                     (fn [{:block/keys [original-uid uid] :as block}]
-                                       (assoc block :block/uid (or original-uid uid)))
-                                     block)
+                                      (util/specter-recursive-path #(contains? % :block/uid))
+                                      (fn [{:block/keys [original-uid uid] :as block}]
+                                        (assoc block :block/uid (or original-uid uid)))
+                                      block)
              user-id                (or (:username @current-user)
                                         ;; We use empty string for when there is no user information, like in PKM.
                                         "")
@@ -499,7 +501,7 @@
                                         (block-drop e block))
                         :onContextMenu (fn [e]
                                          (if
-                                          (.includes CONTAINER_CONTEXT_MENU_FILTERED_TAGS (.-tagName (.-target e)))
+                                           (.includes CONTAINER_CONTEXT_MENU_FILTERED_TAGS (.-tagName (.-target e)))
                                            (.preventDefault e)
                                            (.addToContextMenu context-menu
                                                               #js {:ref container-ref
@@ -651,22 +653,22 @@
       [:> PageReferences {:title "Linked References"
                           :count (count linked-refs)}
        (doall
-        (for [[group-title group] linked-refs]
-          [:> ReferenceGroup {:key (str "group-" group-title)
-                              :title group-title
-                              :onClickTitle (fn [e]
-                                              (let [shift?       (.-shiftKey e)
-                                                    parsed-title (parse-renderer/parse-title group-title)]
-                                                (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
-                                                                                     :target :page
-                                                                                     :pane   (if shift?
-                                                                                               :right-pane
-                                                                                               :main-pane)}])
-                                                (router/navigate-page parsed-title)))}
-           (doall
-            (for [block group]
-              [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
-               [ref-comp block]]))]))])))
+         (for [[group-title group] linked-refs]
+           [:> ReferenceGroup {:key (str "group-" group-title)
+                               :title group-title
+                               :onClickTitle (fn [e]
+                                               (let [shift?       (.-shiftKey e)
+                                                     parsed-title (parse-renderer/parse-title group-title)]
+                                                 (rf/dispatch [:reporting/navigation {:source :block-page-linked-refs
+                                                                                      :target :page
+                                                                                      :pane   (if shift?
+                                                                                                :right-pane
+                                                                                                :main-pane)}])
+                                                 (router/navigate-page parsed-title)))}
+            (doall
+              (for [block group]
+                [:> ReferenceBlock {:key (str "ref-" (:block/uid block))}
+                 [ref-comp block]]))]))])))
 
 
 (defn parents-el
@@ -674,12 +676,12 @@
   (let [parents (reactive/get-reactive-parents-recursively id)]
     [:> Breadcrumb {:gridArea "breadcrumb" :opacity 0.75}
      (doall
-      (for [{breadcrumb-uid :block/uid breadcrumb-node-title :node/title} parents]
-        ^{:key breadcrumb-uid}
-        [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
-         [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid breadcrumb-node-title)}
-          [:span {:style {:pointer-events "none"}}
-           [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb breadcrumb-uid)]]]]))]))
+       (for [{breadcrumb-uid :block/uid breadcrumb-node-title :node/title} parents]
+         ^{:key breadcrumb-uid}
+         [:> BreadcrumbItem {:key (str "breadcrumb-" breadcrumb-uid)}
+          [:> BreadcrumbLink {:onClick #(breadcrumb-handle-click % uid breadcrumb-uid breadcrumb-node-title)}
+           [:span {:style {:pointer-events "none"}}
+            [parse-renderer/parse-and-render (common-db/breadcrumb-string @db/dsdb breadcrumb-uid)]]]]))]))
 
 
 (defn block-page-el
