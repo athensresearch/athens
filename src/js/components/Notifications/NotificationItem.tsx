@@ -1,7 +1,6 @@
 import React from 'react';
 import { BulletIcon, ArchiveIcon, ArrowLeftOnBoxIcon, CheckboxIcon, UnreadIcon } from "@/Icons/Icons";
-import { mapActionsToButtons } from "@/utils/mapActionsToButtons";
-import { useTheme, Flex, Box, ButtonGroup, HStack, MenuGroup, MenuItem, Text, VStack } from "@chakra-ui/react";
+import { useTheme, Button, Flex, Box, ButtonGroup, HStack, MenuGroup, MenuItem, Text, VStack } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { ContextMenuContext } from "@/App/ContextMenuContext";
 
@@ -33,54 +32,23 @@ export const NotificationItem = (props) => {
   const theme = useTheme();
   const indicatorHeight = `calc(${theme.lineHeights.base} * ${theme.fontSizes.md})`;
 
-  const getActionsForNotification = (notification) => {
-    const actions = [];
-    if (notification.isArchived) {
-      actions.push({
-        label: "Unarchive",
-        fn: () => onUnarchive(notification.id),
-        icon: <ArchiveIcon />
-      });
-    } else {
-      actions.push({
-        label: "Archive",
-        fn: (e) => onArchive(e, notification.id),
-        icon: <ArchiveIcon />
-      });
-    }
-    return actions;
-  }
-
   const ContextMenuItems = () => {
     return <MenuGroup>
-      <MenuItem onClick={(e) => onOpenItem(e, object.parentUid, id)} icon={<ArrowLeftOnBoxIcon />}>Open {object.name ? "page" : "block"}</MenuItem>
+      <MenuItem onClick={() => onOpenItem(object.parentUid, id)} icon={<ArrowLeftOnBoxIcon />}>Open {object.name ? "page" : "block"}</MenuItem>
       {isRead
-        ? <MenuItem onClick={(e) => onMarkAsUnread(e, id)} icon={<UnreadIcon />}>Mark as unread</MenuItem>
-        : <MenuItem onClick={(e) => onMarkAsRead(e, id)} icon={<CheckboxIcon />}>Mark as read</MenuItem>}
-      <MenuItem onClick={(e) => onArchive(e, id)} icon={<ArchiveIcon />}>Archive</MenuItem>
+        ? <MenuItem onClick={() => onMarkAsUnread(id)} icon={<UnreadIcon />}>Mark as unread</MenuItem>
+        : <MenuItem onClick={() => onMarkAsRead(id)} icon={<CheckboxIcon />}>Mark as read</MenuItem>}
+      <MenuItem onClick={() => onArchive(id)} icon={<ArchiveIcon />}>Archive</MenuItem>
     </MenuGroup>
   }
 
   return <Box
     key={id + notificationTime}
-    layout
-    initial={{
-      height: 0,
-      opacity: 0,
-    }}
-    animate={{
-      height: "auto",
-      opacity: 1,
-    }}
-    exit={{
-      height: 0,
-      opacity: 0,
-    }}
     ref={ref}
     flexShrink={0}
     overflow="hidden"
-    as={motion.div}
   ><VStack
+    className="notification"
     p={2}
     spacing={1}
     align="stretch"
@@ -88,6 +56,9 @@ export const NotificationItem = (props) => {
     transitionProperty="common"
     transitionDuration="fast"
     transitionTimingFunction="ease-in-out"
+    border="1px solid"
+    // borderColor={isRead ? "separator.divider" : "transparent"}
+    borderColor={"separator.divider"}
     boxShadow={isMenuOpen ? "focusInset" : "none"}
     borderRadius="md"
     bg={isRead ? "transparent" : "interaction.surface"}
@@ -133,13 +104,22 @@ export const NotificationItem = (props) => {
           marginLeft="14px"
           color="gray">{notificationTime}</Text>
         <ButtonGroup
+          transitionProperty="common"
+          transitionDuration="fast"
+          transitionTimingFunction="ease-in-out"
+          sx={{
+            opacity: 0,
+            ".notification:hover &": {
+              opacity: 1
+            }
+          }}
           variant="ghost"
           flex="0 0 auto"
           onClick={(e) => e.stopPropagation()}
           size="xs"
           alignSelf="flex-end"
         >
-          {mapActionsToButtons(getActionsForNotification(notification), 1)}
+          <Button onClick={() => onArchive(id)} leftIcon={<ArchiveIcon />}>Archive</Button>
         </ButtonGroup>
       </HStack>
     </VStack>
