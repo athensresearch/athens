@@ -35,7 +35,7 @@ export const Container = forwardRef((props, ref) => {
         background: 'var(--block-surface-color)',
         justifyContent: 'flex-start',
         flexDirection: 'column',
-        bg: isActive ? 'background.upper' : 'var(--block-surface-color)',
+        bg: isActive ? 'interaction.surface.active' : 'var(--block-surface-color)',
         opacity: isDragging ? 0.5 : 1,
         "&.show-tree-indicator:before": {
           content: "''",

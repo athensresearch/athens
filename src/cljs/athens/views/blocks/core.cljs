@@ -304,8 +304,8 @@
   [e block-uid]
   ;; If the closest block container to the target has the given block, return true.
   (let [target-el (.-target e)
-        closest-block-container (.closest target-el ".block-container")
-        closest-block-uid (.. closest-block-container -dataset -uid)]
+        closest-block-container (or (.closest target-el ".block-container") nil)
+        closest-block-uid (if closest-block-container (.. closest-block-container -dataset -uid) nil)]
     (= closest-block-uid block-uid)))
 
 
