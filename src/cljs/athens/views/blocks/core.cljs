@@ -410,10 +410,10 @@
    (let [[block-uid _embed-id]    (-> block :block/uid common-db/uid-and-embed-id)
          {:keys [initial-open
                  parent-uids
-                 linked-ref
-                 linked-ref-uid]} linked-ref-data
+                 linked-ref]} linked-ref-data
          ident                    [:block/uid block-uid]
          is-hovered-not-child?    (r/atom false)
+         !container-ref           (clojure.core/atom nil)
          linked-ref-open?         (rf/subscribe [::linked-ref.subs/open? block-uid])
          dragging?                (rf/subscribe [::drag.subs/dragging? block-uid])
          drag-target              (rf/subscribe [::drag.subs/drag-target block-uid])
@@ -444,14 +444,15 @@
              block-type             (reactive/reactive-get-entity-type [:block/uid block-uid])
              children-uids          (set (map :block/uid children))
              children?              (seq children-uids)
+             container-ref-ref      #js {:current @!container-ref}
              comments-enabled?      (:comments @feature-flags)
              reactions-enabled?     (:reactions @feature-flags)
              notifications-enabled? (:notifications @feature-flags)
              uid-sanitized-block    (s/transform
-                                      (util/specter-recursive-path #(contains? % :block/uid))
-                                      (fn [{:block/keys [original-uid uid] :as block}]
-                                        (assoc block :block/uid (or original-uid uid)))
-                                      block)
+                                     (util/specter-recursive-path #(contains? % :block/uid))
+                                     (fn [{:block/keys [original-uid uid] :as block}]
+                                       (assoc block :block/uid (or original-uid uid)))
+                                     block)
              user-id                (or (:username @current-user)
                                         ;; We use empty string for when there is no user information, like in PKM.
                                         "")
@@ -460,9 +461,8 @@
              ff             @(rf/subscribe [:feature-flags])
              renderer-k     (block-type-dispatcher/block-type->protocol-k block-type ff)
              renderer       (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
-             container-ref  (react/useRef)
              context-menu   (react/useContext ContextMenuContext)
-             has-menu-open? (.getIsMenuOpen context-menu #js [container-ref])
+             has-menu-open? (.getIsMenuOpen context-menu container-ref-ref)
              [ref in-view?] (useInView {:delay 250})
              _              (react/useEffect (fn []
                                                (on-block-mount)
@@ -473,23 +473,15 @@
                       "block:" (pr-str (:block/open block))
                       "merge:" (pr-str (:block/open (merge block-o block))))
 
-         (js/console.log container-ref)
-
          [:> Container {:isActive          has-menu-open?
-                        :isDragging        (and @dragging? (not @selected?))
                         :isHoveredNotChild @is-hovered-not-child?
-                        :isLinkedRef       (and (false? initial-open) (= uid linked-ref-uid))
                         :isOpen            open
                         :isSelected        @selected?
                         :hasChildren       (seq children)
                         :uid               uid
-                        :ref               container-ref
-                        ;; need to know children for selection resolution
+                        :ref               (fn [el] (reset! !container-ref el))
                         :childrenUids      children-uids
-                        ;; show-edit? allows us to render the editing elements (like the textarea)
-                        ;; even when not editing this block. When true, clicking the block content will pass
-                        ;; the clicks down to the underlying textarea. The textarea is expensive to render,
-                        ;; so we avoid rendering it when it's not needed.
+                        :isDragging        (and @dragging? (not @selected?))
                         :onMouseOver (fn [e]
                                        (reset! is-hovered-not-child? (is-event-target-current-block-and-not-child e uid)))
                         :onMouseLeave (fn [_] (reset! is-hovered-not-child? false))
@@ -504,7 +496,7 @@
                                            (.includes CONTAINER_CONTEXT_MENU_FILTERED_TAGS (.-tagName (.-target e)))
                                            (.preventDefault e)
                                            (.addToContextMenu context-menu
-                                                              #js {:ref container-ref
+                                                              #js {:ref container-ref-ref
                                                                    :event e
                                                                    :component (r/as-element [block-menu selected-items uid block-type comments-enabled? block-o reactions-enabled? user-id properties notifications-enabled?])
                                                                    :key "block"})))
