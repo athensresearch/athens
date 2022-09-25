@@ -99,9 +99,6 @@ export const Container = forwardRef((props, ref) => {
         "&.is-hovered-not-child > .block-body > .block-toggle, &:focus-within > .block-body > .block-toggle": {
           opacity: "1"
         },
-        "&.is-hovered-not-child": {
-          boxShadow: "inset 0 0 0 1px yellow"
-        },
         "button.block-edit-toggle": {
           position: "absolute",
           appearance: "none",
