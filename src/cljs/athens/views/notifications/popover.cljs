@@ -3,7 +3,7 @@
    ["/components/Icons/Icons" :refer [BellIcon ArrowRightIcon]]
    ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
    ["/timeAgo.js" :refer [timeAgo]]
-   ["@chakra-ui/react" :refer [Badge Box VStack Center Text IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
+   ["@chakra-ui/react" :refer [Badge Box Heading VStack Center Text IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
    ["framer-motion" :refer [AnimatePresence]]
    [athens.common-db :as common-db]
    [athens.db :as db]
@@ -121,7 +121,11 @@
         (let [user-page-title    (str "@" @username)
               notification-list  (get-inbox-items-for-popover @db/dsdb user-page-title)
               navigate-user-page #(router/navigate-page user-page-title)
+              notifications-grouped-by-object (group-by #(get % "object") notification-list)
               num-notifications  (count notification-list)]
+
+              (js/console.log notification-list)
+              (js/console.log notifications-grouped-by-object)
           [:> Popover {:closeOnBlur false
                        :isLazy true
                        :size "lg"}
@@ -152,10 +156,37 @@
                         :align "stretch"
                         :overflowY "auto"
                         :overscrollBehavior "contain"
+                        :spacing 4
                         :p 2}
              [:> AnimatePresence {:initial false}
-              (if (seq notification-list)
+
+              (doall
+               (when (seq notifications-grouped-by-object)
+                 (for [[object notifs] notifications-grouped-by-object]
+
+                   [:> VStack {:align "stretch" :key (str (:parentUid object))}
+                    [:> Heading {:size "xs" :noOfLines 1 :color "foreground.secondary" :lineHeight "base" :px 6 :pt 2} 
+                      (get object "name")
+                      (get object "string")
+                    ]
+
+                    [:> AnimatePresence {:initial false}
+                    (for [notification notifs]
+
+                      ^{:key (:id notification)}
+                      [:> NotificationItem
+                       {:notification   notification
+                        :onOpenItem     on-click-notification-item
+                        :onMarkAsRead   #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
+                        :onMarkAsUnread #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
+                        :onArchive      (fn [e uid]
+                                          (.. e -stopPropagation)
+                                          (rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true")))}])]])))
+                
+
+              #_ (if (seq notification-list)
                 (for [notification notification-list]
+                  ^{:key (:id notification)}
                   [:> NotificationItem
                    {:notification   notification
                     :onOpenItem     on-click-notification-item

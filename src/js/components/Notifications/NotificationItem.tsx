@@ -31,8 +31,7 @@ export const NotificationItem = (props) => {
   const ref = React.useRef(null);
   const isMenuOpen = getIsMenuOpen(ref);
   const theme = useTheme();
-
-  const height = `calc(${theme.lineHeights.base} * ${theme.fontSizes.md})`;
+  const indicatorHeight = `calc(${theme.lineHeights.base} * ${theme.fontSizes.md})`;
 
   const getActionsForNotification = (notification) => {
     const actions = [];
@@ -54,16 +53,16 @@ export const NotificationItem = (props) => {
 
   const ContextMenuItems = () => {
     return <MenuGroup>
-      <MenuItem onClick={() => onOpenItem(object.parentUid, id)} icon={<ArrowLeftOnBoxIcon />}>Open {object.name ? "page" : "block"}</MenuItem>
+      <MenuItem onClick={(e) => onOpenItem(e, object.parentUid, id)} icon={<ArrowLeftOnBoxIcon />}>Open {object.name ? "page" : "block"}</MenuItem>
       {isRead
-        ? <MenuItem onClick={() => onMarkAsUnread(id)} icon={<UnreadIcon />}>Mark as unread</MenuItem>
-        : <MenuItem onClick={() => onMarkAsRead(id)} icon={<CheckboxIcon />}>Mark as read</MenuItem>}
-      <MenuItem onClick={() => onArchive(id)} icon={<ArchiveIcon />}>Archive</MenuItem>
+        ? <MenuItem onClick={(e) => onMarkAsUnread(e, id)} icon={<UnreadIcon />}>Mark as unread</MenuItem>
+        : <MenuItem onClick={(e) => onMarkAsRead(e, id)} icon={<CheckboxIcon />}>Mark as read</MenuItem>}
+      <MenuItem onClick={(e) => onArchive(e, id)} icon={<ArchiveIcon />}>Archive</MenuItem>
     </MenuGroup>
   }
 
   return <Box
-    key={id}
+    key={id + notificationTime}
     layout
     initial={{
       height: 0,
@@ -113,7 +112,7 @@ export const NotificationItem = (props) => {
           flexShrink={0}
           placeItems="center"
           placeContent="center"
-          height={height}
+          height={indicatorHeight}
         >
           {isRead ? (null) : (
             <BulletIcon
