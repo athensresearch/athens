@@ -73,10 +73,6 @@ export const NotificationItem = (props) => {
       </Flex>
       <VStack flexShrink={1} spacing={0} align="stretch">
         {children}
-        {/* <Text fontWeight="bold" noOfLines={2} fontSize="sm">
-            {notification.subject.username.slice(1)} {verbForType(notification.type)} "{object.name || object.string}"
-          </Text>
-          {body && <Text fontSize="sm">{body}</Text>} */}
       </VStack>
     </HStack>
     <HStack justifyContent="space-between" >
