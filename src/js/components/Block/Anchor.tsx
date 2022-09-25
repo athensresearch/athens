@@ -37,7 +37,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
   const refs = useMergeRefs(innerRef, ref);
   const theme = useTheme();
 
-  const buttonHeight = `calc(${theme.fontSizes.md} * ${theme.lineHeights.base})`;
+  const buttonHeight = `calc(${theme.fontSizes.md} * ${theme.lineHeights.taller})`;
 
   return <IconButton
     className={['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' ')}

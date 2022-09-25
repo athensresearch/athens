@@ -11,7 +11,6 @@ export const Content = ({ children, ...props }) => {
       // Do not modify them without good reason.
       bg: "var(--block-surface-color)",
       color: "foreground.primary",
-      py: 1,
       display: "grid",
       gridTemplateAreas: "'main'",
       alignItems: "stretch",
@@ -20,7 +19,7 @@ export const Content = ({ children, ...props }) => {
       overflow: "visible",
       fontWeight: "normal",
       letterSpacing: "normal",
-      lineHeight: "inherit",
+      lineHeight: "taller",
       zIndex: 2,
       flexGrow: 1,
       wordBreak: "break-word",

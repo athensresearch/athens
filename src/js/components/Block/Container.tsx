@@ -37,9 +37,6 @@ export const Container = forwardRef((props, ref) => {
         flexDirection: 'column',
         bg: isActive ? 'background.upper' : 'var(--block-surface-color)',
         opacity: isDragging ? 0.5 : 1,
-        ".anchor, .toggle": {
-          minHeight: "100%"
-        },
         "&.show-tree-indicator:before": {
           content: "''",
           position: "absolute",

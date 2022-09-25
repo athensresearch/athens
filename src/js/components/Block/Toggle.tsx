@@ -13,7 +13,7 @@ export const Toggle = (props: ToggleProps) => {
   const { isOpen, ...rest } = props;
   const theme = useTheme();
 
-  const buttonHeight = `calc(${theme.fontSizes.md} * ${theme.lineHeights.base})`;
+  const buttonHeight = `calc(${theme.fontSizes.md} * ${theme.lineHeights.taller})`;
 
   return (
     <IconButton
