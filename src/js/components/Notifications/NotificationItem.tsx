@@ -1,9 +1,15 @@
 import React from 'react';
-import { ArchiveIcon, ArrowLeftOnBoxIcon, ArrowRightIcon } from "@/Icons/Icons";
+import { BulletIcon, ArchiveIcon, ArrowLeftOnBoxIcon, CheckboxIcon, UnreadIcon } from "@/Icons/Icons";
 import { mapActionsToButtons } from "@/utils/mapActionsToButtons";
-import { Box, ButtonGroup, HStack, MenuGroup, MenuItem, Text, VStack } from "@chakra-ui/react";
+import { useTheme, Flex, Box, ButtonGroup, HStack, MenuGroup, MenuItem, Text, VStack } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { ContextMenuContext } from "@/App/ContextMenuContext";
+
+const Subject = ({ children }) => {
+  return (
+    <Text as="span" fontWeight="bold" noOfLines={2}>{children}</Text>
+  );
+}
 
 const messageForNotification = (notification: NOTIFICATION): React.ReactNode => {
   const { type, subject, object } = notification;
@@ -11,42 +17,46 @@ const messageForNotification = (notification: NOTIFICATION): React.ReactNode => 
   const objectName = object.string || object.name;
 
   if (type === "Created") {
-    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> created <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
+    return <Subject>{subjectName} created {objectName}</Subject>;
   } else if (type === "Edited") {
-    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> edited <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
+    return <Subject>{subjectName} edited {objectName}</Subject>;
   } else if (type === "Deleted") {
-    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> deleted <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
+    return <Subject>{subjectName} deleted {objectName}</Subject>;
   } else if (type === "Comments") {
-    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> commented on <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
+    return <Subject>{subjectName} commented on {objectName}</Subject>;
   } else if (type === "Mentions") {
-    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> mentioned you in  <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
+    return <Subject>{subjectName} mentioned you in  {objectName}</Subject>;
   } else if (type === "Assignments") {
-    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> assigned you to <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
+    return <Subject>{subjectName} assigned you to {objectName}</Subject>;
   } else if (type === "Completed") {
-    return <Text as="span"><Text as="span" fontWeight="semibold">{subjectName}</Text> completed <Text as="span" fontWeight="semibold">{objectName}</Text></Text>;
+    return <Subject>{subjectName} completed {objectName}</Subject>;
   }
 }
 
-const NotificationStatusIndicator = ({ isRead, }) => {
-  return <Box
+const NotificationStatusIndicator = ({ isRead }) => {
+  const theme = useTheme();
+
+  const height = `calc(${theme.lineHeights.base} * ${theme.fontSizes.md})`;
+
+  return <Flex
+    width={2}
     flexShrink={0}
-    borderRadius="100%"
-    position="relative"
-    top="-0.15ch"
-    w="0.5em"
-    h="0.5em"
-    {...isRead ? {
-      bg: "transparent",
-      boxShadow: 'inset 0 0 0 1px foreground.secondary'
-    } : {
-      bg: "info",
-    }}
-  />
+    placeItems="center"
+    placeContent="center"
+    height={height}
+  >
+    {isRead ? (null) : (
+      <BulletIcon
+        fontSize="3xl"
+        color="info"
+      />
+    )}
+  </Flex>
 }
 
 export const NotificationItem = (props) => {
   const { notification, ...otherProps } = props;
-  const { id, isRead, type, isArchived, body, object, notificationTime } = notification;
+  const { id, isRead, body, object, notificationTime } = notification;
   const { onOpenItem, onMarkAsRead, onMarkAsUnread, onArchive, onUnarchive, ...boxProps } = otherProps;
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
   const ref = React.useRef(null);
@@ -74,14 +84,14 @@ export const NotificationItem = (props) => {
     return <MenuGroup>
       <MenuItem onClick={() => onOpenItem(object.parentUid, id)} icon={<ArrowLeftOnBoxIcon />}>Open {object.name ? "page" : "block"}</MenuItem>
       {isRead
-        ? <MenuItem onClick={() => onMarkAsUnread(id)} icon={<ArchiveIcon />}>Mark as unread</MenuItem>
-        : <MenuItem onClick={() => onMarkAsRead(id)} icon={<ArchiveIcon />}>Mark as read</MenuItem>}
+        ? <MenuItem onClick={() => onMarkAsUnread(id)} icon={<UnreadIcon />}>Mark as unread</MenuItem>
+        : <MenuItem onClick={() => onMarkAsRead(id)} icon={<CheckboxIcon />}>Mark as read</MenuItem>}
       <MenuItem onClick={() => onArchive(id)} icon={<ArchiveIcon />}>Archive</MenuItem>
     </MenuGroup>
   }
 
   return <Box
-    key={id + notificationTime}
+    key={id}
     layout
     initial={{
       height: 0,
@@ -106,20 +116,20 @@ export const NotificationItem = (props) => {
     userSelect="none"
     boxShadow={isMenuOpen ? "focusInset" : "none"}
     borderRadius="md"
-    bg={"interaction.surface"}
+    bg={isRead ? "transparent" : "interaction.surface"}
     color={isRead ? "foreground.secondary" : "foreground.primary"}
     _hover={{
       cursor: "pointer",
       bg: "interaction.surface.hover"
     }}
-    // onClick={(e) => { if (e?.button === 0) onOpenItem(object.parentUid, id) }}
+    onClick={(e) => { if (e?.button === 0) onOpenItem(object.parentUid, id) }}
     onContextMenu={(e) => {
       addToContextMenu({ event: e, component: ContextMenuItems, ref });
     }}
     {...boxProps}
   >
       <HStack
-        align="baseline"
+        alignItems="flex-start"
         textAlign="left"
         spacing={1.5}
       >
@@ -129,13 +139,14 @@ export const NotificationItem = (props) => {
           {body && <Text fontSize="sm">{body}</Text>}
         </VStack>
       </HStack>
-      <HStack justifyContent="space-between">
+      <HStack justifyContent="space-between" >
         <Text fontSize="sm"
           marginLeft="14px"
           color="gray">{notificationTime}</Text>
         <ButtonGroup
+          variant="ghost"
           flex="0 0 auto"
-          onDoubleClick={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           size="xs"
           alignSelf="flex-end"
         >

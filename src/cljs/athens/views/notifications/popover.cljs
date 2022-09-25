@@ -3,10 +3,8 @@
    ["/components/Icons/Icons" :refer [BellIcon ArrowRightIcon]]
    ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
    ["/timeAgo.js" :refer [timeAgo]]
-   ["framer-motion" :refer [AnimatePresence motion]]
-   ["/components/App/ContextMenuContext" :refer [ContextMenuContext]]
-   ["@chakra-ui/react" :refer [Badge Box VStack Center Text IconButton Flex PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
-   ["react" :as react]
+   ["@chakra-ui/react" :refer [Badge Box VStack Center Text IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
+   ["framer-motion" :refer [AnimatePresence]]
    [athens.common-db :as common-db]
    [athens.db :as db]
    [athens.reactive :as reactive]
@@ -126,7 +124,7 @@
               num-notifications  (count notification-list)]
           [:> Popover {:closeOnBlur false
                        :isLazy true
-                       :size "md"}
+                       :size "lg"}
            [:> PopoverTrigger
             [:> Box {:position "relative"}
              [:> IconButton {"aria-label"   "Notifications"

@@ -558,6 +558,26 @@ const components = {
         },
         [$arrowBg.variable]: "colors.background.upper",
       }
+    },
+    sizes: {
+      sm: {
+        content: {
+          borderRadius: "sm",
+          width: "10rem",
+        },
+      },
+      md: {
+        content: {
+          borderRadius: "md",
+          width: "20rem",
+        },
+      },
+      lg: {
+        content: {
+          borderRadius: "md",
+          width: "30rem",
+        },
+      },
     }
   },
   Spinner: {
