@@ -1,9 +1,9 @@
 import React from 'react';
-import { Box, useMergeRefs } from "@chakra-ui/react";
+import { Alert, AlertIcon, AlertTitle, Box, useMergeRefs } from "@chakra-ui/react";
 import { withErrorBoundary } from "react-error-boundary";
 import { ContextMenuContext } from "@/App/ContextMenuContext";
 
-const ERROR_MESSAGE = "An error occurred while rendering this block.";
+const ERROR_MESSAGE = <Alert ml={4} status='error'><AlertIcon /><AlertTitle>An error occurred while rendering this block.</AlertTitle></Alert>;
 
 // Don't open the context menu on these elements
 const CONTAINER_CONTEXT_MENU_FILTERED_TAGS = ["A", "BUTTON", "INPUT", "TEXTAREA", "LABEL", "VIDEO", "EMBED", "IFRAME", "IMG"];
@@ -17,7 +17,7 @@ const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: 
   return (closestBlockContainer?.dataset?.uid === thisBlockUid)
 }
 
-const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
+const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
   const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
 
   const internalRef = React.useRef(null)
@@ -52,7 +52,7 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
       bg={isMenuOpen ? "background.upper" : undefined}
       justifyContent="flex-start"
       flexDirection="column"
-      display={isHidden ? "none" : "block"}
+      display="block"
       background="var(--block-surface-color)"
       opacity={isDragging ? 0.5 : 1}
       data-uid={uid}
@@ -90,19 +90,29 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
         },
         ".block-body": {
           display: "grid",
-          gridTemplateColumns: "1em auto 1em 1fr auto",
+          gridTemplateColumns: "1em auto 1em 1fr calc(var(--page-right-gutter-width) / 2) calc(var(--page-right-gutter-width) / 2)",
           gridTemplateRows: "0 1fr auto auto 0",
           gridTemplateAreas:
             `'above above above above above above'
             'toggle name anchor content refs presence'
-            '_ _ _ reactions reactions reactions'
-            '_ _ _ comments comments comments'
+            'a a a reactions reactions reactions'
+            'a a a comments b b'
             'below below below below below below'`,
           borderRadius: "0.5rem",
           minHeight: '2em',
           position: "relative",
         },
-        "&:hover > .block-toggle, &:focus-within > .block-toggle": { opacity: "1" },
+        ".block-body > .inline-presence": {
+          gridArea: "presence",
+          justifySelf: "flex-end"
+        },
+        ".block-body > .block-toggle": {
+          opacity: 0
+        },
+        ".block-body > .block-toggle:focus": {
+          opacity: 1
+        },
+        "&.is-hovered-not-child > .block-body > .block-toggle, &:focus-within > .block-body > .block-toggle": { opacity: "1" },
         "button.block-edit-toggle": {
           position: "absolute",
           appearance: "none",
@@ -163,7 +173,7 @@ const _Container = React.forwardRef(({ children, isDragging, isHidden, isSelecte
           const target = e.target as HTMLElement;
           // Don't open the context menu on these e.target as HTMLElement;
           if (!CONTAINER_CONTEXT_MENU_FILTERED_TAGS.includes(target.tagName)) {
-            addToContextMenu({ event: e, ref: internalRef, component: MenuItems, isExclusive: true });
+            addToContextMenu({ event: e, ref: internalRef, component: MenuItems, key: "block" });
           } else {
             e.stopPropagation();
           }

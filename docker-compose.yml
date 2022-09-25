@@ -43,7 +43,6 @@ services:
     depends_on:
       athens:
         condition: service_healthy
-    restart: always
     ports:
       - 80:80
 

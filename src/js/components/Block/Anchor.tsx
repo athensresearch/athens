@@ -58,7 +58,7 @@ const propertiesList = (block) => {
 type Anchors = typeof ANCHORS;
 type AnchorImage = keyof Anchors;
 
-export interface AnchorProps {
+export interface AnchorProps extends ButtonProps {
   anchorElement?: AnchorImage | number;
   isClosedWithChildren: boolean;
   block: any;
@@ -67,13 +67,10 @@ export interface AnchorProps {
   as: ReactNode;
   onCopyRef: () => void;
   onCopyUnformatted: () => void;
-  onDragStart: () => void;
-  onDragEnd: () => void;
-  onClick: () => void;
   menu?: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
 }
 
-const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotification: boolean) => {
+const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
   return ({
     bg: "transparent",
     "aria-label": "Block anchor",
@@ -84,7 +81,6 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean, unreadNotificatio
     appearance: "none",
     border: "0",
     color: "foreground.secondary",
-    ...unreadNotification && ({ color: "green" }),
     display: "flex",
     placeItems: "center",
     placeContent: "center",
@@ -133,10 +129,8 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
   const { isClosedWithChildren,
     anchorElement,
     shouldShowDebugDetails,
-    onClick,
     uidSanitizedBlock,
     menu,
-    unreadNotification,
     ...buttonProps
   } = props;
   const innerRef = React.useRef(null);
@@ -165,21 +159,23 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
     <IconButton
       ref={refs}
       aria-label="Block anchor"
-      {...anchorButtonStyleProps(isClosedWithChildren, unreadNotification)}
-      draggable={buttonProps.onDragStart ? true : undefined}
+      {...anchorButtonStyleProps(isClosedWithChildren)}
+      draggable={buttonProps?.onDragStart ? true : undefined}
       onContextMenu={
         (e) => {
           if (menu) {
-            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef })
+            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef, key: "block" })
           }
         }}
       onClick={
         (e) => {
-          if (menu) {
-            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef })
+          if (buttonProps?.onClick) {
+            buttonProps?.onClick(e);
+          } else if (menu) {
+            addToContextMenu({ event: e, ref: innerRef, component: MenuItems, anchorEl: innerRef, key: "block" })
           }
         }}
-      isActive={isMenuOpen}
+      isActive={buttonProps?.isActive || isMenuOpen}
       {...buttonProps}
     >
       {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}

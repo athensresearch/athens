@@ -1,46 +1,94 @@
 import * as React from "react";
-import { LayoutContext, layoutAnimationProps } from "./useLayoutState";
+import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "./useLayoutState";
 import { AnimatePresence, motion } from 'framer-motion';
-import { XmarkIcon, ChevronRightIcon, PageIcon, PageFillIcon, BlockIcon, BlockFillIcon, GraphIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
-import { Button, IconButton, Box, Collapse, VStack, BoxProps } from '@chakra-ui/react';
+import { RightSidebarResizeControl } from "./RightSidebarResizeControl";
+import { XmarkIcon, ChevronDownVariableIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
+import { Flex, ButtonGroup, Button, IconButton, Box, Collapse, VStack, BoxProps, Tooltip } from '@chakra-ui/react';
+import { useInView } from 'react-intersection-observer';
 
 /** Right Sidebar */
 
 
 interface RightSidebarProps extends BoxProps {
   isOpen: boolean;
+  onResize: (size: number) => void;
   rightSidebarWidth: number;
 }
 
 export const RightSidebar = (props: RightSidebarProps) => {
-  const { children, rightSidebarWidth, isOpen } = props;
-
+  const { children, onResize, isOpen } = props;
   const {
-    toolbarHeight
+    toolbarHeight,
+    isScrolledPastTitle,
+    setIsScrolledPastTitle,
+    isResizingLayout,
+    unsavedRightSidebarWidth
   } = React.useContext(LayoutContext);
+
+  const { ref: markerRef, inView } = useInView({ threshold: 0 });
+
+  React.useEffect(() => {
+    if (inView) {
+      if (isScrolledPastTitle["rightSidebar"]) {
+        setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": false }));
+      }
+    } else {
+      if (!isScrolledPastTitle["rightSidebar"]) {
+        setIsScrolledPastTitle(prev => ({ ...prev, "rightSidebar": true }));
+      }
+    }
+  }, [inView, setIsScrolledPastTitle]);
+
+  const layoutAnimation = {
+    ...layoutAnimationProps(unsavedRightSidebarWidth + "vw"),
+    animate: {
+      width: unsavedRightSidebarWidth + "vw",
+      opacity: 1,
+      transition: isResizingLayout ? {
+        ...layoutAnimationTransition,
+        mass: 0,
+      } : layoutAnimationTransition
+    },
+  }
 
   return (
     <AnimatePresence initial={false}>
       {isOpen && (
         <Box
           as={motion.div}
-          {...layoutAnimationProps(rightSidebarWidth + "vw")}
+          {...layoutAnimation}
           zIndex={1}
           bg="background.floor"
           transitionProperty="background"
           transitionTimingFunction="ease-in-out"
           transitionDuration="fast"
-          overflowX="hidden"
-          overflowY="auto"
           borderLeft="1px solid"
           borderColor="separator.divider"
-          position="fixed"
           height="100vh"
+          position="fixed"
+          id="right-sidebar"
           inset={0}
-          pt={`calc(${toolbarHeight} + 1rem)`}
           left="auto"
         >
-          <Box width={rightSidebarWidth + "vw"}>
+          <RightSidebarResizeControl
+            onResizeSidebar={onResize}
+          />
+          <Box
+            pt={`calc(${toolbarHeight} + 0.5rem)`}
+            width={unsavedRightSidebarWidth + "vw"}
+            overflowX="hidden"
+            overflowY="auto"
+            height="100%"
+            position="relative"
+            pb={10}
+          >
+            <Box
+              aria-hidden
+              position="absolute"
+              ref={markerRef}
+              height="20px"
+              top={0}
+            />
             {children}
           </Box>
         </Box>
@@ -49,97 +97,79 @@ export const RightSidebar = (props: RightSidebarProps) => {
   );
 };
 
-const typeIcon = (type, isOpen) => {
-  return isOpen ? { "page": <PageFillIcon />, "graph": <GraphIcon />, "block": <BlockFillIcon /> }[type]
-    : { "page": <PageIcon />, "graph": <GraphIcon />, "block": <BlockIcon /> }[type];
-};
-
-export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigate, children, ...props }) => {
+export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigate, children }) => {
   const className = { "page": "node-page", "block": "block-page", "graph": "graph-page" }[type];
   return (
     <VStack
+      layerStyle="card"
+      overflow="hidden"
       align="stretch"
       position="relative"
       spacing={0}
-      ml="1px" // Account for the floating separator
-      _notFirst={{
-        borderTop: "1px solid",
-        borderColor: "separator.divider"
-      }}>
-      <Box
-        top="-1px"
-        zIndex={2}
-        position="sticky"
-        background="background.floor"
-        display="grid"
-        gridTemplateColumns="1fr 3rem 3rem"
-        pr={2}
+      mx={4}
+      sx={{
+        "--page-padding": "0rem",
+        "--page-left-gutter-width": "1em",
+        "--page-right-gutter-width": "3em",
+      }}
+      mt={2}>
+      <Flex
         alignItems="center"
         justifyContent="center"
       >
         <Button
           onClick={onToggle}
+          colorScheme="subtle"
+          justifyContent="flex-start"
+          variant="ghost"
+          size="sm"
           display="flex"
-          bg="transparent"
+          flex="1 1 100%"
           borderRadius="0"
           gap={2}
-          py={3}
-          pl={5}
-          pr={0}
+          p={2}
+          px={4}
           height="auto"
           textAlign="left"
           overflow="hidden"
           whiteSpace="nowrap"
-          sx={{ maskImage: "linear-gradient(to right, black, black calc(100% - 1rem), transparent calc(100%))" }}
+          leftIcon={<ChevronDownVariableIcon
+            boxSize={4}
+            mr={-2}
+            transform={isOpen ? undefined : "rotate(-90deg)"}
+            transitionProperty="common"
+            transitionDuration="0.15s"
+            transitionTimingFunction="ease-in-out"
+            justifySelf="center" />}
         >
-          {<ChevronRightIcon
-              transform={isOpen ? "rotate(90deg)" : null}
-              transitionProperty="common"
-              transitionDuration="0.15s"
-              transitionTimingFunction="ease-in-out"
-              justifySelf="center" />}
-          {typeIcon(type, isOpen)}
-          <Box
-            flex="1 1 100%"
-            tabIndex={-1}
-            pointerEvents="none"
-            position="relative"
-            bottom="1px"
-            overflow="hidden"
-            color="foreground.secondary"
-          >{title}</Box>
+          {title}
         </Button>
-        <IconButton
-          onClick={onNavigate}
-          size="sm"
-          color="foreground.secondary"
-          alignSelf="center"
-          justifySelf="center"
-          bg="transparent"
-          aria-label="Close"
+        <ButtonGroup
+          colorScheme="subtle"
+          variant="ghost"
+          size="xs"
+          position="absolute"
+          right={0}
+          top={0}
+          px={2}
+          py={1}
         >
-          <ArrowLeftOnBoxIcon />
-        </IconButton>
-        {/* <IconButton
-            size={"sm"}
-            alignSelf="center"
-            justifySelf={"center"}
-            bg="transparent"
-            aria-label="drag">
-          <DragIcon alignSelf={"center"} justifySelf={"center"}/>
-        </IconButton> */}
-        <IconButton
-          onClick={onRemove}
-          size="sm"
-          color="foreground.secondary"
-          alignSelf="center"
-          justifySelf="center"
-          bg="transparent"
-          aria-label="Close"
-        >
-          <XmarkIcon />
-        </IconButton>
-      </Box>
+          <Tooltip label="Open">
+            <IconButton
+              onClick={onNavigate}
+              aria-label="Close"
+              icon={<ArrowLeftOnBoxIcon />}
+            />
+          </Tooltip>
+          <Tooltip label="Remove from Sidebar">
+            <IconButton
+              onClick={onRemove}
+              aria-label="Close"
+              icon={<XmarkIcon />}
+            />
+          </Tooltip>
+        </ButtonGroup>
+      </Flex>
       <Box
         as={Collapse}
         in={isOpen}
@@ -148,10 +178,18 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
         unmountOnExit
         zIndex={1}
         px={4}
-        onPointerDown={(e) => {e.stopPropagation()}}
+        sx={{
+          // HACK: Gentle hack to create padding
+          // within the collapse container, only
+          // when open
+          "> *:last-child": {
+            mb: 2,
+          }
+        }}
+        onPointerDown={(e) => { e.stopPropagation() }}
       >
         {children}
       </Box>
-    </VStack>
+    </VStack >
   );
 };

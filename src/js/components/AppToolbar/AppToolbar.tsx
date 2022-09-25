@@ -7,8 +7,6 @@ import {
   ChatBubbleFillIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  SettingsIcon,
-  ContrastIcon,
   EllipsisHorizontalCircleIcon,
   ChatBubbleIcon,
 } from '@/Icons/Icons';
@@ -38,8 +36,6 @@ import { WindowButtons } from './components/WindowButtons';
 import { LocationIndicator } from './components/LocationIndicator';
 import { reusableToast } from '@/utils/reusableToast';
 
-const PAGE_TITLE_SHOW_HEIGHT = 24;
-
 interface ToolbarButtonGroupProps extends ButtonGroupProps {
   key: string
 }
@@ -51,7 +47,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
   * The application's current route
   */
-  route: string;
+  currentLocationName: string;
   /**
   * If the app is in Electron, whether or not it has user focus
   */
@@ -85,9 +81,9 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   */
   isCommandBarOpen: boolean;
   /**
-  * Whether the choose database dialog is open
+  * Whether the choose workspaces dialog is open
   */
-  isDatabaseDialogOpen: boolean;
+  isWorkspacesDialogOpen: boolean;
   /**
   * Whether the help dialog is open
   */
@@ -122,7 +118,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   onPressLeftSidebarToggle(): void;
   onPressRightSidebarToggle(): void;
   onPressNotification(): void;
-  databaseMenu?: React.FC;
+  workspacesMenu?: React.FC;
   notificationPopover?: React.FC;
   presenceDetails?: React.FC;
 }
@@ -159,13 +155,14 @@ const secondaryToolbarOverflowMenu = (items) => {
 export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   const {
     os,
-    route,
+    currentLocationName,
     isElectron,
     isWinFullscreen,
     isWinFocused,
     isWinMaximized,
     isThemeDark,
     isLeftSidebarOpen,
+    isRightSidebarOpen,
     isShowComments,
     onClickComments: handleClickComments,
     onPressHelp: handlePressHelp,
@@ -178,35 +175,24 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressMinimize: handlePressMinimize,
     onPressMaximizeRestore: handlePressMaximizeRestore,
     onPressClose: handlePressClose,
-    databaseMenu,
+    workspacesMenu,
     notificationPopover,
-    currentPageTitle,
     presenceDetails,
   } = props;
+
   const { colorMode, toggleColorMode } = useColorMode();
   const [canShowFullSecondaryMenu] = useMediaQuery('(min-width: 900px)');
-  const [isScrolledPastTitle, setIsScrolledPastTitle] = React.useState(null);
-
+  const {
+    toolbarRef,
+    toolbarHeight,
+    mainSidebarWidth,
+    isScrolledPastTitle,
+  } = React.useContext(LayoutContext);
   const toast = useToast();
   const commentsToggleToastRef = React.useRef(null);
+  const shouldShowUnderlay = isScrolledPastTitle["mainContent"] || (isScrolledPastTitle["rightSidebar"] && isRightSidebarOpen);
 
-  // add event listener to detect when the user scrolls past the title
-  React.useLayoutEffect(() => {
-    const scrollContainer = document.getElementById("main-layout") as HTMLElement;
-
-    const handleScroll = () => {
-      if (scrollContainer.scrollTop > PAGE_TITLE_SHOW_HEIGHT) {
-        setIsScrolledPastTitle(true);
-      } else {
-        setIsScrolledPastTitle(false);
-      }
-    }
-    handleScroll();
-    scrollContainer.addEventListener('scroll', handleScroll);
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // If the database color mode doesn't match
+  // If the workspace color mode doesn't match
   // the chakra color mode, update the chakra color mode
   React.useEffect(() => {
     if (isThemeDark && colorMode !== 'dark') {
@@ -215,12 +201,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       toggleColorMode()
     }
   }, [isThemeDark, toggleColorMode]);
-
-  const {
-    toolbarRef,
-    toolbarHeight,
-    mainSidebarWidth
-  } = React.useContext(LayoutContext);
 
   const secondaryTools = [
     handleClickComments && {
@@ -253,17 +233,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       icon: <HelpIcon />
     },
     {
-      label: "Toggle theme",
-      onClick: handlePressThemeToggle,
-      icon: <ContrastIcon />
-    },
-    {
-      label: "Settings",
-      isActive: route === '/settings',
-      onClick: handlePressSettings,
-      icon: <SettingsIcon />
-    },
-    {
       label: 'Show right sidebar',
       onClick: handlePressRightSidebarToggle,
       icon: <RightSidebarIcon />
@@ -289,7 +258,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           alignItems="center"
           justifyContent="flex-start"
         >
-
           {isElectron && os === "mac" && (
             <FakeTrafficLights opacity={isWinFocused ? 1 : 0} />
           )}
@@ -300,7 +268,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           >
             <MenuIcon />
           </IconButton>
-          {databaseMenu}
+          {workspacesMenu}
         </ToolbarButtonGroup>
         {/* Right side */}
         {isElectron && (
@@ -357,14 +325,10 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       display="flex"
       justifyContent="flex-start"
     >
-      {currentPageTitle && (
-        <LocationIndicator
-          isVisible={isScrolledPastTitle}
-          type="node"
-          uid="123"
-          title={currentPageTitle}
-        />
-      )}
+      <LocationIndicator
+        isVisible={isScrolledPastTitle["mainContent"]}
+        currentLocationName={currentLocationName}
+      />
     </ToolbarButtonGroup>
   )
 
@@ -415,7 +379,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
         {contentControls || <Spacer />}
         {rightToolbarControls}
 
-        {(isScrolledPastTitle && (
+        {(shouldShowUnderlay && (
           <Box
             as={motion.div}
             key="header-backdrop"
@@ -441,7 +405,7 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
             variants={variants}
             animate={[
               isLeftSidebarOpen && "isLeftSidebarOpen",
-              isScrolledPastTitle && "visible"
+              shouldShowUnderlay && "visible"
             ].filter(Boolean)}
             exit={{ opacity: 0 }}
           />

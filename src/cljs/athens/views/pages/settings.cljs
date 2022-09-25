@@ -204,7 +204,7 @@
                  :onChange #(handle-monitoring-click monitoring update-fn)}
       "Send usage data and diagnostics to Athens"]]
     [help
-     [:<> [:p "Athens has never and will never look at the contents of your database."]
+     [:<> [:p "Athens has never and will never look at the contents of your workspace."]
       [:p "Athens will never ever sell your data."]]]]])
 
 
@@ -232,7 +232,7 @@
 
 
 (defn feature-flags-comp
-  [{:keys [comments reactions notifications properties cover-photo time-controls tasks]} update-fn]
+  [{:keys [comments reactions notifications properties cover-photo time-controls tasks queries]} update-fn]
   [setting-wrapper
    [:<>
     [header
@@ -243,6 +243,14 @@
        [:> Switch {:isChecked comments
                    :onChange #(update-fn :comments %)}
         "Comments"]]
+      [:> FormControl
+       [:> Switch {:isChecked tasks
+                   :onChange #(update-fn :tasks %)}
+        "Tasks"]]
+      [:> FormControl
+       [:> Switch {:isChecked queries
+                   :onChange #(update-fn :queries %)}
+        "Queries"]]
       [:> FormControl
        [:> Switch {:isChecked reactions
                    :onChange #(update-fn :reactions %)}
@@ -262,11 +270,8 @@
       [:> FormControl
        [:> Switch {:isChecked time-controls
                    :onChange #(update-fn :time-controls %)}
-        "Time Controls"]]
-      [:> FormControl
-       [:> Switch {:isChecked tasks
-                   :onChange #(update-fn :tasks %)}
-        "Tasks"]]]]
+        "Time Controls"]]]]
+
     [help
      [:<>
       [:p "Optional experimental features that aren't ready for prime time, but that you can still enable to try out."]
@@ -300,8 +305,8 @@
       "Reset all settings to defaults"]]
     [help
      [:<> [:> Text "All settings saved between sessions will be restored to defaults."]
-      [:> Text "Databases on disk will not be deleted, but you will need to add them to Athens again."]
-      [:> Text "Athens will restart after reset and open the default database path."]]]]])
+      [:> Text "Workspaces on disk will not be deleted, but you will need to add them to Athens again."]
+      [:> Text "Athens will restart after reset and open the default workspace path."]]]]])
 
 
 (defn page

@@ -1,17 +1,8 @@
 (ns athens.views.notifications.actions
   (:require
     [athens.common-db :as common-db]
-    [athens.common-events :as common-events]
-    [athens.common-events.graph.composite :as composite-ops]
     [athens.common-events.graph.ops :as graph-ops]
-    [athens.db :as db]
-    [re-frame.core :as rf]))
-
-
-(defn is-block-inbox?
-  [properties]
-  (= "[[athens/inbox]]"
-     (:block/string (get properties ":entity/type"))))
+    [athens.db :as db]))
 
 
 (defn is-block-notification?
@@ -20,7 +11,7 @@
      (:block/string (get properties ":entity/type"))))
 
 
-(defn unread-notification?
+#_(defn unread-notification?
   [properties]
   (= "false"
      (:block/string (get properties "athens/notification/is-read"))))
@@ -32,7 +23,7 @@
        (:block/string (get properties "athens/notification/is-read"))))
 
 
-(defn archived-notification?
+#_(defn archived-notification?
   [properties]
   (= "true"
      (:block/string (get properties "athens/notification/is-archived"))))
@@ -61,34 +52,3 @@
                                                                      (fn [db prop-uid]
                                                                        [(graph-ops/build-block-save-op db prop-uid new-state)])])]
     updated-prop))
-
-
-(defn multi-uids-prop-update
-  [uids key new-val]
-  (let [ops                  (into [] (map
-                                        #(let [[prop-uid] (graph-ops/build-path @db/dsdb  % [key])
-                                               save-op    (graph-ops/build-block-save-op @db/dsdb prop-uid new-val)]
-                                           save-op)
-                                        uids))
-        composite-op         (composite-ops/make-consequence-op {:op/type :show-hidden-notifications}
-                                                                ops)
-        event                (common-events/build-atomic-event composite-op)]
-    (rf/dispatch [:resolve-transact-forward event])))
-
-
-(defn unarchive-all-notifications
-  [inbox-uid]
-  (let [all-notifications (->> (common-db/get-block-document @db/dsdb [:block/uid inbox-uid])
-                               :block/children
-                               (mapv :block/uid))]
-    (multi-uids-prop-update all-notifications "athens/notification/is-archived" "false")))
-
-
-(defn archive-all-notifications
-  [inbox-uid]
-  (let [all-notifications (->> (common-db/get-block-document @db/dsdb [:block/uid inbox-uid])
-                               :block/children
-                               (mapv :block/uid))]
-    (multi-uids-prop-update all-notifications "athens/notification/is-archived" "true")))
-
-

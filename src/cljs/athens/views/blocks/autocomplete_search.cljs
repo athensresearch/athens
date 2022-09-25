@@ -33,7 +33,8 @@
       (let [is-open (some #(= % @inline-search-type) [:page :block :hashtag :template :property])]
         [:> Autocomplete {:event   @last-event
                           :isOpen  is-open
-                          :onClose #(rf/dispatch [::inline-search.events/close! block-uid])}
+                          :onClose #(when is-open
+                                      (rf/dispatch [::inline-search.events/close! block-uid]))}
          (when is-open
            (if (or (string/blank? @inline-search-query)
                    (empty? @inline-search-results))

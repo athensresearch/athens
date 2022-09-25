@@ -18,7 +18,8 @@ interface addToContextMenuProps {
   component: () => JSX.Element,
   onClose: () => void,
   anchorEl?: React.MutableRefObject<HTMLElement>,
-  isExclusive?: boolean
+  isExclusive?: boolean,
+  key?: string,
 }
 
 const useContextMenuState = () => {
@@ -32,14 +33,31 @@ const useContextMenuState = () => {
 
   let components = [];
   let sources = [];
+  let keys = [];
 
   /**
    * Reveal a menu only for the clicked element.
    * To reveal a menu for all clicked menu sources, use onContextMenu instead.
    */
-  const addToContextMenu = (props: addToContextMenuProps) => {
-    const { event, ref, component, onClose, anchorEl, isExclusive } = props;
+  const addToContextMenu = React.useCallback((props: addToContextMenuProps) => {
+    const { event, ref, component, onClose, anchorEl, key, isExclusive } = props;
     event.preventDefault();
+
+    if (keys.includes(key)) {
+      // Skip if a menu with the same key is already present
+      return;
+    } else {
+      keys.push(key);
+    }
+
+    if (!component) {
+      console.warn("No component provided to addToContextMenu");
+      return;
+    }
+    if (!event) {
+      console.warn("No event provided to addToContextMenu");
+      return;
+    }
 
     // When exclusive, don't add to or update the menu
     if (menuState.isExclusive && menuState.isOpen) {
@@ -91,7 +109,7 @@ const useContextMenuState = () => {
       onCloseFn: onClose,
       isExclusive: menuState.isExclusive,
     });
-  };
+  }, [menuState]);
 
   /**
    * Returns true when the menu is open

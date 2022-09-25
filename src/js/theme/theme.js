@@ -36,6 +36,17 @@ const radii = {
   full: '9999px',
 }
 
+const layerStyles = {
+  card: {
+    bg: 'background.upper',
+    borderRadius: 'md',
+  },
+  cardDark: {
+    bg: 'background.attic',
+    borderRadius: 'md',
+  },
+}
+
 const semanticTokens = {
   shadows: {
     focus: {
@@ -92,7 +103,7 @@ const semanticTokens = {
     },
     "background.basement": {
       default: '#fff',
-      _dark: '#111'
+      _dark: '#141414'
     },
     "background.upper": {
       default: '#fbfbfb',
@@ -201,7 +212,7 @@ const semanticTokens = {
       _dark: "#fbbe6366",
     },
     "ref.background": {
-      default: "#fbbe63bb",
+      default: "#fbbe6344",
       _dark: "#fbbe6311",
     }
   }
@@ -264,6 +275,14 @@ const components = {
             color: "var(--toast-color)",
           }
         })
+      },
+      subtle: {
+        container: {
+          borderRadius: "md"
+        },
+        title: {
+          fontWeight: "normal"
+        },
       }
     }
   },
@@ -435,8 +454,14 @@ const components = {
       }
     },
   },
+  Divider: {
+    baseStyle: {
+      borderColor: "separator.divider",
+    }
+  },
   FormLabel: {
     baseStyle: {
+      fontSize: "sm",
       color: "foreground.secondary",
     }
   },
@@ -487,6 +512,7 @@ const components = {
       sm: {
         item: {
           padding: '0.35rem 0.5rem',
+          lineHeight: '1.5',
           fontSize: "sm"
         },
         icon: {
@@ -595,29 +621,85 @@ const components = {
     }
   },
   Tabs: {
+    baseStyle: {
+      tab: {
+        userSelect: "none"
+      },
+    },
     variants: {
       line: {
         tabList: {
-          borderBottom: "separator.border"
+          borderBottomWidth: "1px",
+          borderBottomColor: "separator.border",
         },
         tab: {
           color: "link",
-          borderBottom: "2px solid",
+          borderBottom: "1px solid",
           borderBottomColor: "separator.border",
+          marginBottom: "-1px",
           _selected: {
-            bg: 'background.attic',
             color: 'foreground.primary',
             borderBottomColor: "foreground.primary"
           },
           _focus: {
             outline: 'none',
+            shadow: 'focusInset'
+          },
+          _hover: {
+            bg: "interaction.surface.hover",
+            shadow: 'none'
+          },
+          _active: {
+            bg: "interaction.surface.active",
             shadow: 'none'
           },
           _focusVisible: {
             shadow: "focus"
           }
         }
+      },
+      rect: {
+        tabList: {
+          gap: "1px",
+        },
+        tab: {
+          borderRadius: "md",
+          position: "relative",
+          shadow: "focusPlaceholderInset",
+          transitionProperty: "color",
+          transitionDuration: "fast",
+          transitionTimingFunction: "ease-in-out",
+          _after: {
+            content: "''",
+            position: "absolute",
+            top: "calc(100% - 1.5px)",
+            right: "1ch",
+            bottom: "auto",
+            left: "1ch",
+            borderRadius: "md",
+            height: "1.5px",
+          },
+          _focus: {
+            outline: 'none',
+            shadow: 'none'
+          },
+          _focusVisible: {
+            outline: 'none',
+            shadow: 'focusInset'
+          },
+          _hover: {
+            bg: "interaction.surface.hover",
+          },
+          _selected: {
+            _after: {
+              bg: "foreground.primary",
+            }
+          },
+        }
       }
+    },
+    defaultProps: {
+      variant: 'rect',
     }
   },
   Tooltip: {
@@ -686,4 +768,4 @@ const sizes = {
   ...spacing
 }
 
-export const theme = extendTheme({ config, radii, fonts, shadows, semanticTokens, spacing, sizes, components, styles });
+export const theme = extendTheme({ layerStyles, config, radii, fonts, shadows, semanticTokens, spacing, sizes, components, styles });

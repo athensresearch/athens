@@ -1,9 +1,9 @@
 import React from 'react';
 import {
   Button, VStack, Divider, Center, Box, Heading, Image, IconButton, ButtonGroup, FormControl, Input,
-  Tooltip, FormLabel, BoxProps, MenuGroup, MenuItem, MenuDivider, Text
+  Tooltip, FormLabel, BoxProps, Text
 } from '@chakra-ui/react';
-import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, CalendarCircleFillIcon, CalendarTomorrowIcon, TemplateIcon, LinkedIcon, CalendarIcon } from '@/Icons/Icons';
+import { ArrowRightOnBoxIcon, ArrowLeftOnBoxIcon, CalendarIcon } from '@/Icons/Icons';
 import { useInView } from 'react-intersection-observer';
 import { withErrorBoundary } from "react-error-boundary";
 
@@ -19,6 +19,8 @@ const PAGE_PROPS = {
   transitionDuration: "fast",
   sx: {
     "--page-padding": "3rem",
+    "--page-left-gutter-width": "1em",
+    "--page-right-gutter-width": "3.5em",
   }
 }
 
@@ -147,9 +149,9 @@ export const PageHeader = (props: PageHeaderProps): React.ReactChild => {
 export const PageBody = ({ children }) => <Box
   as="main"
   className="page-body"
-  // outset slightly for block toggles
-  pl="calc(var(--page-padding) - 1em)"
-  pr="var(--page-padding)"
+  // outset slightly for block toggles and refs and such
+  px="calc(var(--page-padding) - 1em)"
+  pr="calc(var(--page-padding) - var(--page-right-gutter-width) + 1.5em)"
   gridArea="content"
 >
   {children}</Box>
@@ -375,10 +377,6 @@ export const TitleContainer = ({ children, isEditing, props }) => <Box
       borderInlineStart: "1px solid",
       borderColor: "separator.divider",
       color: "foreground.primary",
-    },
-    "p": {
-      paddingBottom: "1em",
-      "&last:-child": { paddingBottom: 0 },
     },
     "mark.contents.highlight": {
       padding: "0 0.2em",

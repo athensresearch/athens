@@ -1,6 +1,8 @@
 (ns athens.views.app-toolbar
   (:require
     ["/components/AppToolbar/AppToolbar" :refer [AppToolbar]]
+    [athens.common-db                    :as common-db]
+    [athens.db                           :as db]
     [athens.electron.db-menu.core        :refer [db-menu]]
     [athens.electron.utils               :as electron.utils]
     [athens.router                       :as router]
@@ -10,9 +12,14 @@
     [athens.util                         :as util]
     [athens.views.comments.core          :as comments]
     [athens.views.notifications.core     :as notifications]
-    [athens.views.notifications.popover :refer  [notifications-popover]]
+    [athens.views.notifications.popover  :refer [notifications-popover]]
     [re-frame.core                       :as rf]
     [reagent.core                        :as r]))
+
+
+(def name-from-route
+  {:home "Daily Notes"
+   :graph "Graph"})
 
 
 (defn app-toolbar
@@ -24,6 +31,7 @@
         athena-open?           (rf/subscribe [:athena/open])
         show-comments?         (rf/subscribe [:comment/show-comments?])
         route-name             (rf/subscribe [:current-route/name])
+        route-uid              (rf/subscribe [:current-route/uid])
         theme-dark             (rf/subscribe [:theme/dark])
         selected-db            (rf/subscribe [:db-picker/selected-db])
         notificationsPopoverOpen? (rf/subscribe [:notification/show-popover?])
@@ -74,40 +82,43 @@
         on-minimize            #(rf/dispatch [:minimize-win])
         on-close               #(rf/dispatch [:close-win])]
 
-    [:> AppToolbar (merge
-                     {:style                     (unzoom)
-                      :os                        os
-                      :isElectron                electron?
-                      :route                     @route-name
-                      :isWinFullscreen           @win-fullscreen?
-                      :isWinMaximized            @win-maximized?
-                      :isWinFocused              @win-focused?
-                      :isHelpOpen                @help-open?
-                      :isThemeDark               @theme-dark
-                      :isLeftSidebarOpen         @left-open?
-                      :isRightSidebarOpen        @right-open?
-                      :isCommandBarOpen          @athena-open?
-                      :onPressLeftSidebarToggle  on-left-sidebar-toggle
-                      :onPressHistoryBack        on-back
-                      :onPressHistoryForward     on-forward
-                      :onPressDailyNotes         on-daily-pages
-                      :onPressAllPages           on-all-pages
-                      :onPressGraph              on-graph
-                      :onPressCommandBar         on-athena
-                      :onPressHelp               on-help
-                      :onPressThemeToggle        on-theme
-                      :onPressSettings           on-settings
-                      :onPressRightSidebarToggle on-right-sidebar
-                      :onPressMaximizeRestore    on-maximize
-                      :onPressMinimize           on-minimize
-                      :currentPageTitle          (or @current-page-title nil)
-                      :onPressClose              on-close
-                      :databaseMenu              (r/as-element [db-menu])
-                      :presenceDetails           (when (electron.utils/remote-db? @selected-db)
-                                                   (r/as-element [toolbar-presence-el]))}
-                     (when (notifications/enabled?)
-                       {:notificationPopover (r/as-element [:f> notifications-popover])
-                        :isNotificationsPopoverOpen @notificationsPopoverOpen?})
-                     (when (comments/enabled?)
-                       {:isShowComments  @show-comments?
-                        :onClickComments #(rf/dispatch [:comment/toggle-comments])}))]))
+    [:> AppToolbar
+     (merge
+       {:style                     (unzoom)
+        :os                        os
+        :isElectron                electron?
+        :currentLocationName       (or @current-page-title
+                                       (common-db/get-block-string @db/dsdb @route-uid)
+                                       (name-from-route @route-name))
+        :isWinFullscreen           @win-fullscreen?
+        :isWinMaximized            @win-maximized?
+        :isWinFocused              @win-focused?
+        :isHelpOpen                @help-open?
+        :isThemeDark               @theme-dark
+        :isLeftSidebarOpen         @left-open?
+        :isRightSidebarOpen        @right-open?
+        :isCommandBarOpen          @athena-open?
+        :onPressLeftSidebarToggle  on-left-sidebar-toggle
+        :onPressHistoryBack        on-back
+        :onPressHistoryForward     on-forward
+        :onPressDailyNotes         on-daily-pages
+        :onPressAllPages           on-all-pages
+        :onPressGraph              on-graph
+        :onPressCommandBar         on-athena
+        :onPressHelp               on-help
+        :onPressThemeToggle        on-theme
+        :onPressSettings           on-settings
+        :onPressRightSidebarToggle on-right-sidebar
+        :onPressMaximizeRestore    on-maximize
+        :onPressMinimize           on-minimize
+        :currentPageTitle          (or @current-page-title nil)
+        :onPressClose              on-close
+        :workspacesMenu              (r/as-element [db-menu])
+        :presenceDetails           (when (electron.utils/remote-db? @selected-db)
+                                     (r/as-element [toolbar-presence-el]))}
+       (when (notifications/enabled?)
+         {:notificationPopover (r/as-element [:f> notifications-popover])
+          :isNotificationsPopoverOpen @notificationsPopoverOpen?})
+       (when (comments/enabled?)
+         {:isShowComments  @show-comments?
+          :onClickComments #(rf/dispatch [:comment/toggle-comments])}))]))

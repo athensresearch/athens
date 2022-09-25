@@ -35,8 +35,10 @@
   [prop]
   (let [type (:block/string (get prop "athens/notification/type"))]
     (cond
-      (= type "[[athens/notification/type/comment]]")  "Comments"
-      (= type "[[athens/notification/type/mention]]")  "Mentions")))
+      (= type "[[athens/notification/type/comment]]")           "Comments"
+      (= type "[[athens/notification/type/mention]]")           "Mentions"
+      (= type "[[athens/notification/type/task/assigned/to]]")  "Assignments"
+      (= type "[[athens/notification/type/task/assigned/by]]")  "Created")))
 
 
 (defn get-archive-state

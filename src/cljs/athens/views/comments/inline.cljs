@@ -1,10 +1,10 @@
 (ns athens.views.comments.inline
   (:require
-    ["/components/Block/Anchor"      :refer [Anchor]]
-    ["/components/Comments/Comments" :refer [CommentCounter CommentContainer]]
+    ["/components/Block/Reactions"   :refer [Reactions]]
+    ["/components/Comments/Comments" :refer [CommentContainer CommentAnchor]]
     ["/components/Icons/Icons"       :refer [ChevronDownIcon ChevronRightIcon BlockEmbedIcon PencilIcon TrashIcon]]
     ["/timeAgo.js"                   :refer [timeAgo]]
-    ["@chakra-ui/react"              :refer [Button Box Text VStack Avatar HStack Badge]]
+    ["@chakra-ui/react"              :refer [MenuGroup MenuItem AvatarGroup Button Box MenuDivider Text VStack Avatar HStack Badge]]
     [athens.common-events            :as common-events]
     [athens.common-events.graph.ops  :as graph-ops]
     [athens.common.logging           :as log]
@@ -14,6 +14,7 @@
     [athens.reactive                 :as reactive]
     [athens.util                     :as util]
     [athens.views.blocks.editor      :as editor]
+    [athens.views.blocks.reactions   :as block-reaction]
     [athens.views.comments.core      :as comments.core]
     [clojure.string                  :as str]
     [re-frame.core                   :as rf]
@@ -55,19 +56,22 @@
 
 
 (defn create-menu
-  [{:keys [block/uid]} current-user-is-author?]
-  (->> [{:children "Copy comment ref"
-         :icon     (r/as-element [:> BlockEmbedIcon])
-         :onClick  #(copy-comment-uid uid)}
-        (when current-user-is-author?
-          {:children "Edit"
-           :icon     (r/as-element [:> PencilIcon])
-           :onClick  #(rf/dispatch [:comment/edit-comment uid])})
-        (when current-user-is-author?
-          {:children "Delete"
-           :icon     (r/as-element [:> TrashIcon])
-           :onClick  #(rf/dispatch [:comment/remove-comment uid])})]
-       (filterv seq)))
+  [{:keys [block/uid]} current-user-is-author? user-id]
+  [:> MenuGroup
+   [:> MenuItem {:icon     (r/as-element [:> BlockEmbedIcon])
+                 :onClick  #(copy-comment-uid uid)}
+    "Copy comment ref"]
+   (when current-user-is-author?
+     [:> MenuItem {:icon     (r/as-element [:> PencilIcon])
+                   :onClick  #(rf/dispatch [:comment/edit-comment uid])}
+      "Edit"])
+   (when current-user-is-author?
+     [:> MenuItem {:icon     (r/as-element [:> TrashIcon])
+                   :onClick  #(rf/dispatch [:comment/remove-comment uid])}
+      "Delete"])
+   [:> MenuGroup
+    [:> MenuDivider]
+    [block-reaction/reactions-menu-list uid user-id]]])
 
 
 (defn comment-el
@@ -79,11 +83,20 @@
         human-timestamp   (timeAgo time)
         is-editing        (rf/subscribe [:editing/is-editing uid])
         value-atom        (r/atom string)
+        feature-flags     (rf/subscribe [:feature-flags])
+        current-user      (rf/subscribe [:presence/current-user])
         show-edit-atom?   (r/atom true)]
 
     (fn []
       (let [current-user-is-author? (= author @current-username)
-            menu                    (create-menu item current-user-is-author?)]
+            reactions-enabled?      (:reactions @feature-flags)
+            user-id                 (or (:username @current-user)
+                                        ;; We use empty string for when there is no user information, like in PKM.
+                                        "")
+            properties              (:block/properties (reactive/get-reactive-block-document [:block/uid uid]))
+            reactions               (and reactions-enabled?
+                                         (block-reaction/props->reactions properties))
+            menu                    (r/as-element (create-menu item current-user-is-author? user-id))]
         [:> CommentContainer {:menu menu :isFollowUp is-followup? :isEdited edited?}
 
          ;; if is-followup?, hide byline and avatar
@@ -91,7 +104,7 @@
          (when-not is-followup?
            [:> HStack {:gridArea   "byline"
                        :alignItems "center"
-                       :pt 1
+                       :spacing 2
                        :lineHeight 1.25}
             [:<>
              [:> Avatar {:name author :color "#fff" :size "xs"}]
@@ -103,16 +116,20 @@
                        :color    "foreground.secondary"}
               human-timestamp]]])
 
-         [:> Anchor {:ml "0.25em"
-                     :height "2em"}]
+         [:> CommentAnchor {:menu menu
+                            :w 4
+                            :mx 1
+                            :mb "auto"
+                            :alignSelf "center"
+                            :height "1.5em"}]
          [:> Box {:flex "1 1 100%"
                   :gridArea "comment"
                   :alignItems "center"
                   :display "flex"
                   :overflow "hidden"
                   :fontSize "sm"
-                  :py 1
-                  :ml 1
+                  ;; :py 1
+                  ;; :ml 1
                   :sx {"> *" {:lineHeight 1.5}}}
           ;; In future this should be rendered differently for reply type and ref-type
           (if-not @is-editing
@@ -121,7 +138,8 @@
              (when edited?
                [:> Text {:fontSize "xs"
                          :as       "span"
-                         :marginLeft "0.5em"
+                         :ml 2
+                         :mb "auto"
                          :color    "foreground.tertiary"}
                 "(edited)"])]
             (let [block-o           {:block/uid      uid
@@ -157,53 +175,61 @@
 
          (when (pos? linked-refs-count)
            [:> Badge {:size "xs"
-                      :m 1.5
+                      :ml 1.5
                       :mr 0
                       :alignSelf "baseline"
                       :lineHeight "1.5"
-                      :gridArea "refs"} linked-refs-count])]))))
+                      :gridArea "refs"} linked-refs-count])
+
+         (when (and reactions-enabled? reactions)
+           [:> Reactions {:reactions        (clj->js reactions)
+                          :currentUser      user-id
+                          :onToggleReaction (partial block-reaction/toggle-reaction [:block/uid uid])}])]))))
 
 
 (defn comments-disclosure
   [hide? num-comments last-comment]
   [:> Button (merge
-               (when-not @hide?
-                 {:bg                 "background.upper"
-                  :borderColor        "transparent"
-                  :borderBottomRadius 0})
                {:justifyContent "flex-start"
                 :color          "foreground.secondary"
-                :variant        "outline"
-                :size           "sm"
-                :gap            2
+                :variant        "ghost"
+                :size           "xs"
+                :minHeight      7
                 :flex           "1 0 auto"
-                :onClick        #(reset! hide? (not @hide?))})
-   (if @hide?
-     [:<>
-      [:> ChevronRightIcon]
-      [:> CommentCounter {:count num-comments}]
-      [:> Text {:pl 1.5} "Comments"]
-      [:> HStack
-       [:> Box
-        (:author last-comment)]
-       [:> Box
-        (:string last-comment)]
-       [:> Box
-        (timeAgo (:time last-comment))]]]
-     [:<>
-      [:> ChevronDownIcon]
-      [:> CommentCounter {:count num-comments}]
-      [:> Text {:pl 1.5} "Comments"]])])
+                :bg             "background.upper"
+                :borderRadius "none"
+                :leftIcon      (if @hide?
+                                 (r/as-element [:> ChevronRightIcon {:ml 1}])
+                                 (r/as-element [:> ChevronDownIcon {:ml 1}]))
+                :sx {":after" {:content "''"
+                               :opacity (if @hide? 0 0)
+                               :position "absolute"
+                               :bottom 0
+                               :transition "inherit"
+                               :left 9
+                               :right 0
+                               :borderBottom "1px solid"
+                               :borderBottomColor "separator.divider"}
+                     ":hover:after" {:opacity 0}}
+                :onClick        #(reset! hide? (not @hide?))}
+               (when @hide?
+                 {:bg "transparent"
+                  :borderColor        "transparent"}))
+   [:> HStack
+    [:> AvatarGroup [:> Avatar {:size "xs" :name (:author last-comment)}]]
+    [:> Text (str num-comments " comments")]
+    [:> Text {:color "foreground.tertiary"}
+     (timeAgo (:time last-comment))]]])
 
 
 (defn inline-comments
-  [_data _uid hide?]
+  [_data _comment-block-uid hide?]
   (when (comments.core/enabled?)
     (let [hide?           (r/atom hide?)
           block-uid       (common.utils/gen-block-uid)
           value-atom      (r/atom "")
           show-edit-atom? (r/atom true)]
-      (fn [data uid _hide?]
+      (fn [data comment-block-uid _hide?]
         (let [num-comments (count data)
               username     (rf/subscribe [:username])
               last-comment  (last data)
@@ -213,22 +239,26 @@
                                                       (rf/dispatch [:editing/uid block-uid]))]
 
           [:> VStack (merge
-                       (when-not @hide?
-                         {:bg "background.upper"
-                          :mb 4})
                        {:gridArea "comments"
                         :color "foreground.secondary"
                         :flex "1 0 auto"
+                        :bg "background.upper"
+                        :mb 2
+                        :borderWidth "1px"
+                        :borderStyle "solid"
+                        :borderColor "separator.border"
+                        :overflow "hidden"
                         :spacing 0
                         :borderRadius "md"
-                        :align "stretch"})
+                        :align "stretch"}
+                       (when @hide?
+                         {:bg "transparent"
+                          :borderColor "separator.divider"}))
 
            [comments-disclosure hide? num-comments last-comment]
 
            (when-not @hide?
-             [:> Box {:pl 8
-                      :pr 4
-                      :pb 4}
+             [:> Box {:p 2}
               (for [item data]
                 ^{:key item}
                 [comment-el item])
@@ -236,14 +266,15 @@
               (let [block-o           {:block/uid      block-uid
                                        ;; :block/string   @value-atom
                                        :block/children []}
-                    blur-fn           #(when (not (seq @value-atom))
+                    save-fn           #(when (not (seq @value-atom))
                                          (rf/dispatch [:comment/hide-editor]))
-                    save-fn           #(reset! value-atom %)
+                    update-fn         #(reset! value-atom %)
+                    idle-fn           #(println "idle-fn" (pr-str %))
                     enter-handler     (fn jetsam-enter-handler
                                         [_uid _d-key-down]
                                         (when (not (str/blank? @value-atom))
                                           ;; Passing username because we need the username for other ops before the block is created.
-                                          (rf/dispatch [:comment/write-comment uid @value-atom @username])
+                                          (rf/dispatch [:comment/write-comment comment-block-uid @value-atom @username])
                                           (reset! value-atom "")
                                           (rf/dispatch [:editing/uid block-uid])))
                     tab-handler       (fn jetsam-tab-handler
@@ -252,9 +283,9 @@
                                         [_uid _value])
                     delete-handler    (fn jetsam-delete-handler
                                         [_uid _d-key-down])
-                    state-hooks       {:save-fn                 blur-fn
-                                       :update-fn               #(save-fn %)
-                                       :idle-fn                 #(println "idle-fn" (pr-str %))
+                    state-hooks       {:save-fn                 save-fn
+                                       :update-fn               update-fn
+                                       :idle-fn                 idle-fn
                                        :read-value              value-atom
                                        :show-edit?              show-edit-atom?
                                        :enter-handler           enter-handler
@@ -266,11 +297,17 @@
                                        :style                   {:opacity 1}
                                        :placeholder             "Write your comment here"}]
                 (focus-textarea-if-opening-first-time)
-                [:> Box {:px 2
-                         :mt 2
-                         :minHeight "2.125em"
-                         :borderRadius "sm"
-                         :bg "background.attic"
-                         :cursor "text"
-                         :_focusWithin {:shadow "focus"}}
+                [:> Box {:px                       2
+                         :pl                       2
+                         :ml                       8
+                         :mt                       4
+                         :borderRadius             "sm"
+                         :bg                       "background.attic"
+                         :cursor                   "text"
+                         :transitionTimingFunction "ease-in-out"
+                         :transitionProperty       "common"
+                         :transitionDuration       "fast"
+                         :sx                       {".block-content" {:p 1}}
+                         :shadow                   "focusPlaceholder"
+                         :_focusWithin             {:shadow "focus"}}
                  [editor/block-editor block-o state-hooks]])])])))))

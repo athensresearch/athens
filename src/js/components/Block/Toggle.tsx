@@ -14,7 +14,7 @@ export const Toggle = (props: ToggleProps) => {
 
   return (
     <IconButton
-      className="toggle"
+      className="toggle block-toggle"
       bg="transparent"
       aria-label="Block toggle"
       gridArea="toggle"

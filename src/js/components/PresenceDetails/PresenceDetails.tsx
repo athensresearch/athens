@@ -98,7 +98,7 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
               {hostAddress && (
                 <>
                   <MenuItem onClick={() => handleCopyHostAddress(hostAddress)}>
-                    Copy link to database
+                    Copy link to workspace
                   </MenuItem>
                   {handleCopyPermalink && <MenuItem onClick={() => handleCopyPermalink()}>
                     Copy link to page
@@ -123,7 +123,6 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
                   <MenuDivider />
                   <MenuGroup title="On this page">
                     {currentPageMembers.map((member) => {
-                      console.log(member)
                       return (
                         <MenuItem
                           onClick={() => handlePressMember(member)}
@@ -135,7 +134,7 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
                             bg={member.color}
                           />}
                         >
-                          <Text isTruncated maxWidth="10em">{member.username}</Text>
+                          <Text maxWidth="10em">{member.username}</Text>
                         </MenuItem>
                       )
                     })}
@@ -160,8 +159,8 @@ export const PresenceDetails = withErrorBoundary((props: PresenceDetailsProps) =
                         />}
                       >
                         <VStack align="stretch" spacing={0}>
-                          <Text isTruncated maxWidth="10em">{member.username}</Text>
-                          <Text isTruncated maxWidth="10em" color="foreground.secondary">{member.pageTitle}</Text>
+                          <Text maxWidth="10em">{member.username}</Text>
+                          <Text maxWidth="10em" color="foreground.secondary">{member.pageTitle}</Text>
                         </VStack>
                       </MenuItem>
                     ))}
