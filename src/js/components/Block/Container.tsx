@@ -30,18 +30,14 @@ export const Container = forwardRef((props, ref) => {
       data-uid={uid}
       data-childrenuids={childrenUids}
       __css={{
-        "&": {
-          py: 1.5,
-          lineHeight: 'base',
-          position: 'relative',
-          borderRadius: '0.125rem',
-          background: 'var(--block-surface-color)',
-          justifyContent: 'flex-start',
-          flexDirection: 'column',
-          bg: isActive ? 'background.upper' : 'var(--block-surface-color)',
-          opacity: isDragging ? 0.5 : 1,
-        },
-        ".anchor": {
+        position: 'relative',
+        borderRadius: '0.125rem',
+        background: 'var(--block-surface-color)',
+        justifyContent: 'flex-start',
+        flexDirection: 'column',
+        bg: isActive ? 'background.upper' : 'var(--block-surface-color)',
+        opacity: isDragging ? 0.5 : 1,
+        ".anchor, .toggle": {
           minHeight: "100%"
         },
         "&.show-tree-indicator:before": {

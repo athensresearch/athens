@@ -3,26 +3,27 @@ import { Box } from '@chakra-ui/react';
 export const Content = ({ children, ...props }) => {
   return <Box
     className="block-content"
-    display="grid"
-    background="var(--block-surface-color)"
-    color="foreground.primary"
-    gridTemplateAreas="'main'"
-    alignItems="stretch"
-    justifyContent="stretch"
-    position="relative"
-    overflow="visible"
-    fontWeight="normal"
-    letterSpacing="normal"
-    lineHeight="inherit"
-    zIndex={2}
-    flexGrow={1}
-    wordBreak="break-word"
-    sx={{
+    __css={{
       // DANGER DANGER DANGER
       //
       // The styles below are essential to the
       // basic basic editing workflow.
       // Do not modify them without good reason.
+      bg: "var(--block-surface-color)",
+      color: "foreground.primary",
+      py: 1,
+      display: "grid",
+      gridTemplateAreas: "'main'",
+      alignItems: "stretch",
+      justifyContent: "stretch",
+      position: "relative",
+      overflow: "visible",
+      fontWeight: "normal",
+      letterSpacing: "normal",
+      lineHeight: "inherit",
+      zIndex: 2,
+      flexGrow: 1,
+      wordBreak: "break-word",
       //
       // make the textarea transparent
       "textarea": {

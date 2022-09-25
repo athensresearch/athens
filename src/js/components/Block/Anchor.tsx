@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { IconButton, useMergeRefs } from '@chakra-ui/react';
+import { IconButton, useMergeRefs, useTheme } from '@chakra-ui/react';
 import { ColonIcon, BulletIcon, DashIcon } from '@/Icons/Icons';
 
 const ANCHORS = {
@@ -21,29 +21,48 @@ export interface AnchorProps extends ButtonProps {
   as: ReactNode;
 }
 
-const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
-  return ({
-    bg: "transparent",
-    "aria-label": "Block anchor",
-    className: ['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' '),
-    gridArea: "anchor",
-    flexShrink: 0,
-    position: 'relative',
-    appearance: "none",
-    border: "0",
-    color: "foreground.secondary",
-    display: "flex",
-    alignItems: "flex-start",
-    alignSelf: "flex-start",
-    minHeight: "inherit",
-    zIndex: 2,
-    minWidth: "0",
-    h: "auto",
-    w: "auto",
-    fontSize: "inherit",
-    size: "sm",
-    p: 0,
-    sx: {
+
+/**
+ * A handle and indicator of a block's position in the document
+*/
+export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
+
+  const { isClosedWithChildren,
+    anchorElement,
+    shouldShowDebugDetails,
+    uidSanitizedBlock,
+    ...buttonProps
+  } = props;
+  const innerRef = React.useRef(null);
+  const refs = useMergeRefs(innerRef, ref);
+  const theme = useTheme();
+
+  const buttonHeight = `calc(${theme.fontSizes.md} * ${theme.lineHeights.base})`;
+
+  return <IconButton
+    className={['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' ')}
+    ref={refs}
+    aria-label="Block anchor"
+    colorScheme="subtle"
+    variant="ghost"
+    size="sm"
+    sx={{
+      gridArea: "anchor",
+      flexShrink: 0,
+      position: 'relative',
+      appearance: "none",
+      placeItems: "center",
+      placeContent: "center",
+      display: "flex",
+      alignItems: "flex-start",
+      alignSelf: "flex-start",
+      minHeight: "inherit",
+      zIndex: 2,
+      minWidth: "0",
+      h: buttonHeight,
+      w: "auto",
+      fontSize: "inherit",
+      p: 0,
       "svg": {
         pointerEvents: "none",
         transform: "scale(1.0001)", // Prevents the bullet being squished
@@ -60,42 +79,19 @@ const anchorButtonStyleProps = (isClosedWithChildren: boolean) => {
         stroke: "transparent",
         strokeWidth: "0.125em",
         fill: "currentColor",
-        ...isClosedWithChildren && ({
+      },
+      "&.closed-with-children": {
+        "svg path": {
           transform: "scale(1.25)",
           stroke: 'currentColor',
           fill: "none",
-        })
+        }
       }
-    }
-  })
-};
-
-
-/**
- * A handle and indicator of a block's position in the document
-*/
-export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
-
-  const { isClosedWithChildren,
-    anchorElement,
-    shouldShowDebugDetails,
-    uidSanitizedBlock,
-    ...buttonProps
-  } = props;
-  const innerRef = React.useRef(null);
-  const refs = useMergeRefs(innerRef, ref);
-
-  return <>
-    <IconButton
-      ref={refs}
-      aria-label="Block anchor"
-      {...anchorButtonStyleProps(isClosedWithChildren)}
-      {...buttonProps}
-    >
-      {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}
-    </IconButton>
-  </>
-
+    }}
+    {...buttonProps}
+  >
+    {ANCHORS[anchorElement] ? ANCHORS[anchorElement] : anchorElement}
+  </IconButton>
 });
 
 Anchor.defaultProps = {
