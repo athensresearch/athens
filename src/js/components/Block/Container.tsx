@@ -6,6 +6,8 @@ const ERROR_MESSAGE = <Alert ml={4} status='error'><AlertIcon /><AlertTitle>An e
 
 const _Container = forwardRef(({ children, isActive, isHoveredNotChild, isDragging, isSelected, onMouseEnter, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
 
+  console.log("inside Container", ref);
+
   return <Box
     ref={ref}
     className={[
@@ -15,19 +17,16 @@ const _Container = forwardRef(({ children, isActive, isHoveredNotChild, isDraggi
       isOpen ? "is-open" : "",
       isActive && 'isActive',
       (hasChildren && isOpen) ? "show-tree-indicator" : "",
-      isLinkedRef ? "is-linked-ref" : "",
       isHoveredNotChild && "is-hovered-not-child",
-      hasPresence ? "is-presence" : "",
     ].filter(Boolean).join(' ')}
     py={1.5}
     lineHeight="base"
     position="relative"
     borderRadius="0.125rem"
-    bg={isActive ? "background.upper" : undefined}
+    bg={isActive ? "background.upper" : "var(--block-surface-color)"}
     justifyContent="flex-start"
     flexDirection="column"
     display="block"
-    background="var(--block-surface-color)"
     opacity={isDragging ? 0.5 : 1}
     data-uid={uid}
     data-childrenuids={childrenUids}
@@ -76,7 +75,6 @@ const _Container = forwardRef(({ children, isActive, isHoveredNotChild, isDraggi
             'a a a comments b b'
             'below below below below below below'`,
         borderRadius: "0.5rem",
-        // minHeight: '2em',
         position: "relative",
       },
       ".block-body > .inline-presence": {
@@ -120,9 +118,7 @@ const _Container = forwardRef(({ children, isActive, isHoveredNotChild, isDraggi
       },
       ".block-content": {
         gridArea: "content",
-        // minHeight: "1.5em",
       },
-      "&.is-linked-ref": { bg: "background-attic" },
       "&.isMenuOpen": { bg: "background.attic" },
       ".block-container": {
         marginLeft: "2em",

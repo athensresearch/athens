@@ -70,6 +70,8 @@ const useContextMenuState = () => {
     components = [...components, component];
     sources = [...sources, ref.current];
 
+    console.log("sources", sources);
+
     let position;
     if (anchorEl) {
       const { left, top, width, height } = anchorEl.current.getBoundingClientRect();
@@ -84,7 +86,6 @@ const useContextMenuState = () => {
         height: 0
       }
     }
-
     // Exclusive menus set state immediately and then
     // stop the event from creating more menus
     if (isExclusive && !menuState.isExclusive) {
@@ -117,7 +118,14 @@ const useContextMenuState = () => {
    * @param ref: React.MutableRefObject<HTMLElement>,
    * @returns 
    */
-  const getIsMenuOpen = (ref: React.MutableRefObject<HTMLElement>) => menuState.sources?.includes(ref.current);
+  const getIsMenuOpen = (ref: React.MutableRefObject<HTMLElement>) => {
+    if (!menuState.sources.filter(Boolean).length) {
+      return false;
+    } else {
+      return menuState.sources?.includes(ref.current)
+    }
+  };
+
 
   return {
     addToContextMenu,

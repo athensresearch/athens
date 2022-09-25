@@ -412,12 +412,10 @@
                  linked-ref-uid]} linked-ref-data
          ident                    [:block/uid block-uid]
          is-hovered-not-child?    (r/atom false)
-         container-ref            (r/atom nil)
          linked-ref-open?         (rf/subscribe [::linked-ref.subs/open? block-uid])
          dragging?                (rf/subscribe [::drag.subs/dragging? block-uid])
          drag-target              (rf/subscribe [::drag.subs/drag-target block-uid])
          selected?                (rf/subscribe [::select-subs/selected? block-uid])
-         present-user             (rf/subscribe [:presence/has-presence block-uid])
          selected-items           (rf/subscribe [::select-subs/items])
          feature-flags            (rf/subscribe [:feature-flags])
          current-user             (rf/subscribe [:presence/current-user])
@@ -444,7 +442,6 @@
              block-type             (reactive/reactive-get-entity-type [:block/uid block-uid])
              children-uids          (set (map :block/uid children))
              children?              (seq children-uids)
-             presence?              (seq @present-user)
              comments-enabled?      (:comments @feature-flags)
              reactions-enabled?     (:reactions @feature-flags)
              notifications-enabled? (:notifications @feature-flags)
@@ -461,7 +458,9 @@
              ff             @(rf/subscribe [:feature-flags])
              renderer-k     (block-type-dispatcher/block-type->protocol-k block-type ff)
              renderer       (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
+             container-ref  (react/useRef)
              context-menu   (react/useContext ContextMenuContext)
+             has-menu-open? (.getIsMenuOpen context-menu #js [container-ref])
              [ref in-view?] (useInView {:delay 250})
              _              (react/useEffect (fn []
                                                (on-block-mount)
@@ -472,22 +471,23 @@
                       "block:" (pr-str (:block/open block))
                       "merge:" (pr-str (:block/open (merge block-o block))))
 
-         [:> Container {:isDragging   (and @dragging? (not @selected?))
-                        :isSelected   @selected?
-                        :ref          container-ref
-                        :hasChildren  (seq children)
-                        :isOpen       open
-                        :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
-                        :hasPresence  presence?
-                        :uid          uid
+         (js/console.log container-ref)
+
+         [:> Container {:isActive          has-menu-open?
+                        :isDragging        (and @dragging? (not @selected?))
                         :isHoveredNotChild @is-hovered-not-child?
+                        :isLinkedRef       (and (false? initial-open) (= uid linked-ref-uid))
+                        :isOpen            open
+                        :isSelected        @selected?
+                        :hasChildren       (seq children)
+                        :uid               uid
+                        :ref               container-ref
                         ;; need to know children for selection resolution
-                        :childrenUids children-uids
+                        :childrenUids      children-uids
                         ;; show-edit? allows us to render the editing elements (like the textarea)
                         ;; even when not editing this block. When true, clicking the block content will pass
                         ;; the clicks down to the underlying textarea. The textarea is expensive to render,
                         ;; so we avoid rendering it when it's not needed.
-                        ;; :onMouseEnter (when @is-hovered-not-child (show-edit-fn))
                         :onMouseOver (fn [e]
                                        (reset! is-hovered-not-child? (is-event-target-current-block-and-not-child e uid)))
                         :onMouseLeave (fn [_] (reset! is-hovered-not-child? false))
@@ -498,7 +498,6 @@
                         :onDrop       (fn [e]
                                         (block-drop e block))
                         :onContextMenu (fn [e]
-                                         (js/console.log "event at source" e)
                                          (if
                                           (.includes CONTAINER_CONTEXT_MENU_FILTERED_TAGS (.-tagName (.-target e)))
                                            (.preventDefault e)
@@ -547,7 +546,6 @@
                                                   "closed-with-children")
                         :uidSanitizedBlock      uid-sanitized-block
                         :shouldShowDebugDetails (util/re-frame-10x-open?)
-                        ;; :menu                   menu
                         :onDoubleClick          (fn [e]
                                                   (let [shift? (.-shiftKey e)]
                                                     (rf/dispatch [:reporting/navigation {:source :block-bullet
