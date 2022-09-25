@@ -14,6 +14,7 @@ const _Content = ({ children, ...props }) => {
     overflow="visible"
     fontWeight="normal"
     letterSpacing="normal"
+    lineHeight="inherit"
     zIndex={2}
     flexGrow={1}
     wordBreak="break-word"
@@ -55,7 +56,7 @@ const _Content = ({ children, ...props }) => {
         zIndex: 2,
       },
       // manage the textarea interactions
-      "&:hover textarea:not:(.is-editing)": { lineHeight: 2 },
+      // "&:hover textarea:not:(.is-editing)": { lineHeight: 2 },
       "textarea.is-editing": {
         zIndex: 3,
         lineHeight: "inherit",

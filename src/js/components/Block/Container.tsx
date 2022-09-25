@@ -8,23 +8,11 @@ const ERROR_MESSAGE = <Alert ml={4} status='error'><AlertIcon /><AlertTitle>An e
 // Don't open the context menu on these elements
 const CONTAINER_CONTEXT_MENU_FILTERED_TAGS = ["A", "BUTTON", "INPUT", "TEXTAREA", "LABEL", "VIDEO", "EMBED", "IFRAME", "IMG"];
 
-const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: string): boolean => {
-  if (!target) return false;
-
-  // if hovered element's closest block container has the current UID,
-  // we're hovering the current block. Otherwise return false
-  const closestBlockContainer = target.closest('.block-container') as HTMLElement;
-  return (closestBlockContainer?.dataset?.uid === thisBlockUid)
-}
-
-const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
-  const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
+const _Container = React.forwardRef(({ children, isHoveredNotChild, isDragging, isSelected, onMouseEnter, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
 
   const internalRef = React.useRef(null)
   const refs = useMergeRefs(internalRef, ref)
 
-  const handleMouseOver = (e) => setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
-  const handleMouseLeave = () => isHoveredNotChild && setIsHoveredNotChild(false);
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
   const isMenuOpen = getIsMenuOpen(internalRef);
 
@@ -46,7 +34,8 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
         isHoveredNotChild && "is-hovered-not-child",
         hasPresence ? "is-presence" : "",
       ].filter(Boolean).join(' ')}
-      lineHeight="2em"
+      py={1}
+      lineHeight="base"
       position="relative"
       borderRadius="0.125rem"
       bg={isMenuOpen ? "background.upper" : undefined}
@@ -58,6 +47,9 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
       data-uid={uid}
       data-childrenuids={childrenUids}
       sx={{
+        ".anchor": {
+          minHeight: "100%"
+        },
         "&.show-tree-indicator:before": {
           content: "''",
           position: "absolute",
@@ -99,7 +91,7 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
             'a a a comments b b'
             'below below below below below below'`,
           borderRadius: "0.5rem",
-          minHeight: '2em',
+          // minHeight: '2em',
           position: "relative",
         },
         ".block-body > .inline-presence": {
@@ -112,7 +104,12 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
         ".block-body > .block-toggle:focus": {
           opacity: 1
         },
-        "&.is-hovered-not-child > .block-body > .block-toggle, &:focus-within > .block-body > .block-toggle": { opacity: "1" },
+        "&.is-hovered-not-child > .block-body > .block-toggle, &:focus-within > .block-body > .block-toggle": {
+          opacity: "1"
+        },
+        "&.is-hovered-not-child": {
+          border: "1px solid yellow"
+        },
         "button.block-edit-toggle": {
           position: "absolute",
           appearance: "none",
@@ -138,7 +135,7 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
         },
         ".block-content": {
           gridArea: "content",
-          minHeight: "1.5em",
+          // minHeight: "1.5em",
         },
         "&.is-linked-ref": { bg: "background-attic" },
         "&.isMenuOpen": { bg: "background.attic" },
@@ -180,11 +177,6 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
         }
       }
       {...props}
-      onMouseOver={handleMouseOver}
-      onMouseLeave={(e) => {
-        if (props?.onMouseLeave) props.onMouseLeave(e);
-        handleMouseLeave();
-      }}
     >
       {children}
     </Box>
