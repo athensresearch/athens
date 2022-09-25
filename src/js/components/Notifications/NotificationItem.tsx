@@ -5,53 +5,22 @@ import { useTheme, Flex, Box, ButtonGroup, HStack, MenuGroup, MenuItem, Text, VS
 import { motion } from "framer-motion";
 import { ContextMenuContext } from "@/App/ContextMenuContext";
 
-const Subject = ({ children }) => {
-  return (
-    <Text as="span" fontWeight="bold" noOfLines={2}>{children}</Text>
-  );
-}
-
-const messageForNotification = (notification: NOTIFICATION): React.ReactNode => {
-  const { type, subject, object } = notification;
-  const subjectName = subject.username;
-  const objectName = object.string || object.name;
-
+const verbForType = (type: string): string => {
   if (type === "Created") {
-    return <Subject>{subjectName} created {objectName}</Subject>;
+    return "created";
   } else if (type === "Edited") {
-    return <Subject>{subjectName} edited {objectName}</Subject>;
+    return "edited";
   } else if (type === "Deleted") {
-    return <Subject>{subjectName} deleted {objectName}</Subject>;
+    return "deleted";
   } else if (type === "Comments") {
-    return <Subject>{subjectName} commented on {objectName}</Subject>;
+    return "commented on";
   } else if (type === "Mentions") {
-    return <Subject>{subjectName} mentioned you in  {objectName}</Subject>;
+    return "mentioned you in";
   } else if (type === "Assignments") {
-    return <Subject>{subjectName} assigned you to {objectName}</Subject>;
+    return "assigned you to";
   } else if (type === "Completed") {
-    return <Subject>{subjectName} completed {objectName}</Subject>;
+    return "completed";
   }
-}
-
-const NotificationStatusIndicator = ({ isRead }) => {
-  const theme = useTheme();
-
-  const height = `calc(${theme.lineHeights.base} * ${theme.fontSizes.md})`;
-
-  return <Flex
-    width={2}
-    flexShrink={0}
-    placeItems="center"
-    placeContent="center"
-    height={height}
-  >
-    {isRead ? (null) : (
-      <BulletIcon
-        fontSize="3xl"
-        color="info"
-      />
-    )}
-  </Flex>
 }
 
 export const NotificationItem = (props) => {
@@ -61,6 +30,9 @@ export const NotificationItem = (props) => {
   const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
   const ref = React.useRef(null);
   const isMenuOpen = getIsMenuOpen(ref);
+  const theme = useTheme();
+
+  const height = `calc(${theme.lineHeights.base} * ${theme.fontSizes.md})`;
 
   const getActionsForNotification = (notification) => {
     const actions = [];
@@ -114,6 +86,9 @@ export const NotificationItem = (props) => {
     spacing={1}
     align="stretch"
     userSelect="none"
+    transitionProperty="common"
+    transitionDuration="fast"
+    transitionTimingFunction="ease-in-out"
     boxShadow={isMenuOpen ? "focusInset" : "none"}
     borderRadius="md"
     bg={isRead ? "transparent" : "interaction.surface"}
@@ -133,9 +108,24 @@ export const NotificationItem = (props) => {
         textAlign="left"
         spacing={1.5}
       >
-        <NotificationStatusIndicator isRead={isRead} />
+        <Flex
+          width={2}
+          flexShrink={0}
+          placeItems="center"
+          placeContent="center"
+          height={height}
+        >
+          {isRead ? (null) : (
+            <BulletIcon
+              fontSize="3xl"
+              color="info"
+            />
+          )}
+        </Flex>
         <VStack flexShrink={1} spacing={0} align="stretch">
-          <Text fontSize="sm">{messageForNotification(notification)}</Text>
+          <Text fontWeight="bold" noOfLines={2} fontSize="sm">
+            {notification.subject.username.slice(1)} {verbForType(notification.type)} "{object.name || object.string}"
+          </Text>
           {body && <Text fontSize="sm">{body}</Text>}
         </VStack>
       </HStack>
