@@ -176,7 +176,7 @@
             (when (or due-date assignee)
               [:> Flex {:gap 1 :align "center"}
                (when (and show-assignee? assignee)
-                 [:> AvatarGroup 
+                 [:> AvatarGroup
                   [:> Avatar {:size "xs" :name assignee}]])
                (when (and show-due-date? due-date)
                  [:> Text {:fontSize "xs"} due-date])])
