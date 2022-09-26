@@ -1,5 +1,7 @@
 (ns athens.views.notifications.popover
   (:require
+    ["/components/Empty/Empty" :refer [Empty EmptyTitle EmptyIcon EmptyMessage]]
+    ["/components/Icons/Icons" :refer [BellFillIcon ArrowRightIcon]]
     ["/components/Icons/Icons" :refer [BellIcon ArrowRightIcon]]
     ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
     ["/timeAgo.js" :refer [timeAgo]]
@@ -167,7 +169,7 @@
                       :p 2}
 
            (doall
-             (when (seq notifications-grouped-by-object)
+             (if (seq notifications-grouped-by-object)
                (for [[object notifs] notifications-grouped-by-object]
 
                  [:> VStack {:align "stretch"
@@ -189,16 +191,9 @@
                       :onOpenItem     on-click-notification-item
                       :onMarkAsRead   #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
                       :onMarkAsUnread #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-                      :onArchive      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))}
+                      :onArchive      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))}])])
 
-                     [:> Text {:fontWeight "bold" :noOfLines 2 :fontSize "sm"}
-                      (str (get-in notification ["subject" "username"]) " ")
-                      (str (get event-verb (get notification "type")) " ")
-                      [parse-renderer/parse-and-render (or
-                                                         (get object "name")
-                                                         (get object "string"))
-                       (:id notification)]]
-                     [:> Text {:fontSize "sm"}
-                      [parse-renderer/parse-and-render
-                       (get notification "body")
-                       (get notification "id")]]])])))]]]))))
+               [:> Empty {:size "sm" :py 8}
+                [:> EmptyIcon]
+                [:> EmptyTitle "All clear"]
+                [:> EmptyMessage "Unread notifications will appear here."]]))]]]))))
