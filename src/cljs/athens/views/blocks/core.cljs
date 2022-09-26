@@ -1,5 +1,6 @@
 (ns athens.views.blocks.core
   (:require
+    ["/components/App/ContextMenuContext"      :refer [ContextMenuContext]]
     ["/components/Block/Anchor"                :refer [Anchor]]
     ["/components/Block/Container"             :refer [Container]]
     ["/components/Block/PropertyName"          :refer [PropertyName]]
@@ -23,6 +24,8 @@
                                                        Breadcrumb
                                                        BreadcrumbItem
                                                        BreadcrumbLink
+                                                       UnorderedList
+                                                       ListItem
                                                        Button
                                                        HStack
                                                        MenuDivider
@@ -115,7 +118,6 @@
   (let [{target-uid :block/uid} block
         related-uid (util/get-dataset-uid (.. e -relatedTarget))]
     (when-not (= related-uid target-uid)
-      ;; (prn target-uid related-uid  "LEAVE")
       (rf/dispatch [::drag.events/cleanup! target-uid]))))
 
 
@@ -208,8 +210,10 @@
   [count click-fn active?]
   [:> Button {:gridArea "refs"
               :size "xs"
+              :height "var(--control-height)"
               :variant "ghost"
-              :placeSelf "center"
+              :colorScheme "subtle"
+              :alignSelf "flex-start"
               :zIndex 10
               :visibility (if (pos? count) "visible" "hidden")
               :isActive active?
@@ -298,6 +302,15 @@
                  {:block-embed? true}]])))]))))
 
 
+(defn is-event-target-current-block-and-not-child
+  [e block-uid]
+  ;; If the closest block container to the target has the given block, return true.
+  (let [target-el (.-target e)
+        closest-block-container (or (.closest target-el ".block-container") nil)
+        closest-block-uid (if closest-block-container (.. closest-block-container -dataset -uid) nil)]
+    (= closest-block-uid block-uid)))
+
+
 (defn inline-linked-refs-el
   [block-el uid]
   (let [refs (reactive/get-reactive-linked-references [:block/uid uid])]
@@ -340,6 +353,70 @@
     (rf/dispatch task-title-event)))
 
 
+(defn block-debug-properties
+  [sanitized-block]
+  (let [{:block/keys [uid refs id order open?]} sanitized-block]
+    [:> UnorderedList
+     [:> ListItem "uid: " uid]
+     [:> ListItem "db/id " id]
+     [:> ListItem "order " order]
+     [:> ListItem "open?: " open?]
+     [:> ListItem "refs: " (count refs)]]))
+
+
+(defn block-menu
+  [selected-items uid block-type uid-sanitized-block comments-enabled? block-o reactions-enabled? user-id properties notifications-enabled? show-debug-details?]
+  [:> MenuGroup {:title "Block"}
+   (when (< (count @selected-items) 2)
+     [:> MenuItem {:children "Open block"
+                   :icon     (r/as-element [:> ExpandIcon])
+                   :onClick  (fn [e]
+                               (let [shift? (.-shiftKey e)]
+                                 (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                      :target :block
+                                                                      :pane   (if shift?
+                                                                                :right-pane
+                                                                                :main-pane)}])
+                                 (router/navigate-uid uid e)))}])
+   [:> MenuItem {:children "Open in right sidebar"
+                 :icon     (r/as-element [:> ArrowRightOnBoxIcon])
+                 :onClick  (fn [_]
+                             (rf/dispatch [:reporting/navigation {:source :block-bullet
+                                                                  :target :block
+                                                                  :pane   :right-pane}])
+                             (rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))}]
+   (when-not (= block-type "[[athens/task]]")
+     [:> MenuItem {:children "Convert to Task"
+                   :icon     (r/as-element [:> CheckmarkIcon])
+                   :onClick  #(convert-anon-block-to-task block-o)}])
+   [:> MenuItem {:children (if (> (count @selected-items) 1)
+                             "Copy selected block refs"
+                             "Copy block ref")
+                 :icon     (r/as-element [:> BlockEmbedIcon])
+                 :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
+   [:> MenuItem {:children "Copy unformatted text"
+                 :icon     (r/as-element [:> TextIcon])
+                 :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
+   (when comments-enabled?
+     [:> MenuItem {:children "Add comment"
+                   :onClick  #(ctx-menu/handle-click-comment % uid)
+                   :icon     (r/as-element [:> ChatBubbleIcon])}])
+   (when reactions-enabled?
+     [:<>
+      [:> MenuDivider]
+      [block-reaction/reactions-menu-list uid user-id]])
+   (when (and notifications-enabled? (actions/is-block-notification? properties))
+     [:> MenuItem {:children "Archive"
+                   :icon     (r/as-element [:> ArchiveIcon])
+                   :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])
+   (when show-debug-details?
+     [block-debug-properties uid-sanitized-block])])
+
+
+(def CONTAINER_CONTEXT_MENU_FILTERED_TAGS
+  #js ["A" "BUTTON" "INPUT" "TEXTAREA" "LABEL" "VIDEO" "EMBED" "IFRAME" "IMG"])
+
+
 (defn block-el
   "Two checks dec to make sure block is open or not: children exist and :block/open bool"
   ([block]
@@ -350,17 +427,15 @@
    (let [[block-uid _embed-id]    (-> block :block/uid common-db/uid-and-embed-id)
          {:keys [initial-open
                  parent-uids
-                 linked-ref
-                 linked-ref-uid]} linked-ref-data
+                 linked-ref]} linked-ref-data
          ident                    [:block/uid block-uid]
-         show-edit?               (r/atom false)
-         hide-edit-fn             #(reset! show-edit? false)
-         show-edit-fn             #(reset! show-edit? true)
+         is-hovered-not-child?    (r/atom false)
+         !container-ref           (clojure.core/atom nil)
          linked-ref-open?         (rf/subscribe [::linked-ref.subs/open? block-uid])
+         editing?                 (rf/subscribe [:editing/is-editing block-uid])
          dragging?                (rf/subscribe [::drag.subs/dragging? block-uid])
          drag-target              (rf/subscribe [::drag.subs/drag-target block-uid])
          selected?                (rf/subscribe [::select-subs/selected? block-uid])
-         present-user             (rf/subscribe [:presence/has-presence block-uid])
          selected-items           (rf/subscribe [::select-subs/items])
          feature-flags            (rf/subscribe [:feature-flags])
          current-user             (rf/subscribe [:presence/current-user])
@@ -387,7 +462,7 @@
              block-type             (reactive/reactive-get-entity-type [:block/uid block-uid])
              children-uids          (set (map :block/uid children))
              children?              (seq children-uids)
-             presence?              (seq @present-user)
+             container-ref-ref      #js {:current @!container-ref}
              comments-enabled?      (:comments @feature-flags)
              reactions-enabled?     (:reactions @feature-flags)
              notifications-enabled? (:notifications @feature-flags)
@@ -401,86 +476,52 @@
                                         "")
              reactions              (and reactions-enabled?
                                          (block-reaction/props->reactions properties))
-             menu                   (r/as-element
-                                      [:> MenuGroup {:title "Block"}
-                                       (when (< (count @selected-items) 2)
-                                         [:> MenuItem {:children "Open block"
-                                                       :icon     (r/as-element [:> ExpandIcon])
-                                                       :onClick  (fn [e]
-                                                                   (let [shift? (.-shiftKey e)]
-                                                                     (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                                          :target :block
-                                                                                                          :pane   (if shift?
-                                                                                                                    :right-pane
-                                                                                                                    :main-pane)}])
-                                                                     (router/navigate-uid uid e)))}])
-                                       [:> MenuItem {:children "Open in right sidebar"
-                                                     :icon     (r/as-element [:> ArrowRightOnBoxIcon])
-                                                     :onClick  (fn [_]
-                                                                 (rf/dispatch [:reporting/navigation {:source :block-bullet
-                                                                                                      :target :block
-                                                                                                      :pane   :right-pane}])
-                                                                 (rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))}]
-                                       (when-not (= block-type "[[athens/task]]")
-                                         [:> MenuItem {:children "Convert to Task"
-                                                       :icon     (r/as-element [:> CheckmarkIcon])
-                                                       :onClick  #(convert-anon-block-to-task block-o)}])
-                                       [:> MenuItem {:children (if (> (count @selected-items) 1)
-                                                                 "Copy selected block refs"
-                                                                 "Copy block ref")
-                                                     :icon     (r/as-element [:> BlockEmbedIcon])
-                                                     :onClick  #(ctx-menu/handle-copy-refs nil uid)}]
-                                       [:> MenuItem {:children "Copy unformatted text"
-                                                     :icon     (r/as-element [:> TextIcon])
-                                                     :onClick  #(ctx-menu/handle-copy-unformatted uid)}]
-                                       (when comments-enabled?
-                                         [:> MenuItem {:children "Add comment"
-                                                       :onClick  #(ctx-menu/handle-click-comment % uid)
-                                                       :icon     (r/as-element [:> ChatBubbleIcon])}])
-                                       (when reactions-enabled?
-                                         [:<>
-                                          [:> MenuDivider]
-                                          [block-reaction/reactions-menu-list uid user-id]])
-                                       (when (and notifications-enabled? (actions/is-block-notification? properties))
-                                         [:> MenuItem {:children "Archive"
-                                                       :icon     (r/as-element [:> ArchiveIcon])
-                                                       :onClick  #(rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true"))}])])
              ff             @(rf/subscribe [:feature-flags])
              renderer-k     (block-type-dispatcher/block-type->protocol-k block-type ff)
              renderer       (block-type-dispatcher/block-type->protocol renderer-k {:linked-ref-data linked-ref-data})
+             context-menu   (react/useContext ContextMenuContext)
+             has-menu-open? (.getIsMenuOpen context-menu container-ref-ref)
+             show-debug-details? (util/re-frame-10x-open?)
+             menu-component (r/as-element [block-menu selected-items uid block-type uid-sanitized-block comments-enabled? block-o reactions-enabled? user-id properties notifications-enabled? show-debug-details?])
              [ref in-view?] (useInView {:delay 250})
              _              (react/useEffect (fn []
                                                (on-block-mount)
                                                on-unmount-block)
                                              #js [])]
-         #_(log/debug "block open render: block-o:" (pr-str (:block/open block-o))
-                    "block:" (pr-str (:block/open block))
-                    "merge:" (pr-str (:block/open (merge block-o block))))
 
-         [:> Container {:isDragging   (and @dragging? (not @selected?))
-                        :isSelected   @selected?
-                        :hasChildren  (seq children)
-                        :isOpen       open
-                        :isLinkedRef  (and (false? initial-open) (= uid linked-ref-uid))
-                        :hasPresence  presence?
-                        :uid          uid
-                        ;; need to know children for selection resolution
-                        :childrenUids children-uids
-                        ;; show-edit? allows us to render the editing elements (like the textarea)
-                        ;; even when not editing this block. When true, clicking the block content will pass
-                        ;; the clicks down to the underlying textarea. The textarea is expensive to render,
-                        ;; so we avoid rendering it when it's not needed.
-                        :onMouseEnter show-edit-fn
-                        :onMouseLeave hide-edit-fn
+         #_(log/debug "block open render: block-o:" (pr-str (:block/open block-o))
+                      "block:" (pr-str (:block/open block))
+                      "merge:" (pr-str (:block/open (merge block-o block))))
+
+         [:> Container {:isActive          has-menu-open?
+                        :isHoveredNotChild @is-hovered-not-child?
+                        :isOpen            open
+                        :isEditing         @editing?
+                        :isSelected        @selected?
+                        :hasChildren       (seq children)
+                        :uid               uid
+                        :ref               (fn [el] (reset! !container-ref el))
+                        :childrenUids      children-uids
+                        :isDragging        (and @dragging? (not @selected?))
+                        :onMouseOver (fn [e]
+                                       (reset! is-hovered-not-child? (is-event-target-current-block-and-not-child e uid)))
+                        :onMouseLeave (fn [_] (reset! is-hovered-not-child? false))
                         :onDragOver   (fn [e]
                                         (block-drag-over e block))
                         :onDragLeave  (fn [e]
                                         (block-drag-leave e block))
                         :onDrop       (fn [e]
                                         (block-drop e block))
-                        :menu         menu
-                        :style        (merge {} (time-controls/block-styles block-o))}
-
+                        :onContextMenu (fn [e]
+                                         (if
+                                           (.includes CONTAINER_CONTEXT_MENU_FILTERED_TAGS (.-tagName (.-target e)))
+                                           (.preventDefault e)
+                                           (.addToContextMenu context-menu
+                                                              #js {:ref container-ref-ref
+                                                                   :event e
+                                                                   :component menu-component
+                                                                   :key "block"})))
+                        :sx        (merge {} (time-controls/block-styles block-o))}
           (when (= @drag-target :before) [drop-area-indicator/drop-area-indicator {:placement "above"}])
 
           [:<>
@@ -518,9 +559,18 @@
                                                            (or (and (true? linked-ref) (not @linked-ref-open?))
                                                                (and (false? linked-ref) (not open))))
                                                   "closed-with-children")
-                        :uidSanitizedBlock      uid-sanitized-block
-                        :shouldShowDebugDetails (util/re-frame-10x-open?)
-                        :menu                   menu
+                        :onContextMenu (fn [e]
+                                         (.addToContextMenu context-menu
+                                                            #js {:ref container-ref-ref
+                                                                 :event e
+                                                                 :component menu-component
+                                                                 :key "block"}))
+                        :onClick (fn [e]
+                                   (.addToContextMenu context-menu
+                                                      #js {:ref container-ref-ref
+                                                           :event e
+                                                           :component menu-component
+                                                           :key "block"}))
                         :onDoubleClick          (fn [e]
                                                   (let [shift? (.-shiftKey e)]
                                                     (rf/dispatch [:reporting/navigation {:source :block-bullet
@@ -537,7 +587,7 @@
             ;; `BlockTypeProtocol` dispatch placement
             [:> Box {:gridArea "content" :overflow "hidden"}
              ^{:key renderer-k}
-             [types/outline-view renderer block {:show-edit? show-edit?}]]
+             [types/outline-view renderer block {:show-edit? is-hovered-not-child?}]]
 
             (when (and in-view? reactions-enabled? reactions)
               [:> Reactions {:reactions        (clj->js reactions)

@@ -1,63 +1,48 @@
 import React from 'react';
-import { Alert, AlertIcon, AlertTitle, Box, useMergeRefs } from "@chakra-ui/react";
-import { withErrorBoundary } from "react-error-boundary";
-import { ContextMenuContext } from "@/App/ContextMenuContext";
+import { useTheme, chakra, VStack, Alert, AlertIcon, AlertTitle, forwardRef, AlertDescription } from "@chakra-ui/react";
+import { ErrorBoundary } from "react-error-boundary";
 
-const ERROR_MESSAGE = <Alert ml={4} status='error'><AlertIcon /><AlertTitle>An error occurred while rendering this block.</AlertTitle></Alert>;
+const ErrorMessage = ({ error }) => {
+  return (<Alert ml="4rem" alignItems="flex-start" mr="var(--page-right-gutter-width)" status='error' w="auto" px={2} py={1} my={1}>
+    <AlertIcon />
+    <VStack align="stretch" spacing={0}>
+      <AlertTitle>An error occurred while rendering this block.</AlertTitle>
+      <AlertDescription opacity={0.85} fontSize="sm">{error.toString()}</AlertDescription>
+    </VStack>
+  </Alert>)
+};
 
-// Don't open the context menu on these elements
-const CONTAINER_CONTEXT_MENU_FILTERED_TAGS = ["A", "BUTTON", "INPUT", "TEXTAREA", "LABEL", "VIDEO", "EMBED", "IFRAME", "IMG"];
+export const Container = forwardRef((props, ref) => {
+  const { children, isActive, isEditing, isHoveredNotChild, isDragging, isSelected, isOpen, hasChildren, uid, childrenUids, ...rest } = props;
+  const theme = useTheme();
+  const controlHeight = `calc(${theme.fontSizes.md} * ${theme.lineHeights.base})`;
 
-const isEventTargetIsCurrentBlockNotChild = (target: HTMLElement, thisBlockUid: string): boolean => {
-  if (!target) return false;
-
-  // if hovered element's closest block container has the current UID,
-  // we're hovering the current block. Otherwise return false
-  const closestBlockContainer = target.closest('.block-container') as HTMLElement;
-  return (closestBlockContainer?.dataset?.uid === thisBlockUid)
-}
-
-const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen, hasChildren, hasPresence, isLinkedRef, uid, childrenUids, menu, actions, reactions, isEditing, ...props }, ref) => {
-  const [isHoveredNotChild, setIsHoveredNotChild] = React.useState(false);
-
-  const internalRef = React.useRef(null)
-  const refs = useMergeRefs(internalRef, ref)
-
-  const handleMouseOver = (e) => setIsHoveredNotChild(isEventTargetIsCurrentBlockNotChild(e.target, uid));
-  const handleMouseLeave = () => isHoveredNotChild && setIsHoveredNotChild(false);
-  const { addToContextMenu, getIsMenuOpen } = React.useContext(ContextMenuContext);
-  const isMenuOpen = getIsMenuOpen(internalRef);
-
-  const MenuItems = () => {
-    return menu
-  }
-
-  return <>
-    <Box
-      ref={refs}
+  return <ErrorBoundary FallbackComponent={ErrorMessage}>
+    <chakra.div
+      ref={ref}
       className={[
         "block-container",
         isDragging ? "is-dragging" : "",
         isSelected ? "is-selected" : "",
         isOpen ? "is-open" : "",
-        isMenuOpen && 'isMenuOpen',
+        isActive && 'is-active',
+        isEditing && 'is-editing',
         (hasChildren && isOpen) ? "show-tree-indicator" : "",
-        isLinkedRef ? "is-linked-ref" : "",
         isHoveredNotChild && "is-hovered-not-child",
-        hasPresence ? "is-presence" : "",
       ].filter(Boolean).join(' ')}
-      lineHeight="2em"
-      position="relative"
-      borderRadius="0.125rem"
-      bg={isMenuOpen ? "background.upper" : undefined}
-      justifyContent="flex-start"
-      flexDirection="column"
-      display="block"
-      background="var(--block-surface-color)"
       opacity={isDragging ? 0.5 : 1}
       data-uid={uid}
       data-childrenuids={childrenUids}
-      sx={{
+      __css={{
+        "--control-height": controlHeight,
+        position: 'relative',
+        pt: 2,
+        borderRadius: '0.125rem',
+        background: 'var(--block-surface-color)',
+        justifyContent: 'flex-start',
+        flexDirection: 'column',
+        bg: isActive ? 'interaction.surface.active' : 'var(--block-surface-color)',
+        opacity: isDragging ? 0.5 : 1,
         "&.show-tree-indicator:before": {
           content: "''",
           position: "absolute",
@@ -99,7 +84,6 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
             'a a a comments b b'
             'below below below below below below'`,
           borderRadius: "0.5rem",
-          minHeight: '2em',
           position: "relative",
         },
         ".block-body > .inline-presence": {
@@ -112,7 +96,9 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
         ".block-body > .block-toggle:focus": {
           opacity: 1
         },
-        "&.is-hovered-not-child > .block-body > .block-toggle, &:focus-within > .block-body > .block-toggle": { opacity: "1" },
+        "&.is-hovered-not-child > .block-body > .block-toggle, &.is-editing > .block-body > .block-toggle": {
+          opacity: "1"
+        },
         "button.block-edit-toggle": {
           position: "absolute",
           appearance: "none",
@@ -138,9 +124,7 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
         },
         ".block-content": {
           gridArea: "content",
-          minHeight: "1.5em",
         },
-        "&.is-linked-ref": { bg: "background-attic" },
         "&.isMenuOpen": { bg: "background.attic" },
         ".block-container": {
           marginLeft: "2em",
@@ -168,27 +152,9 @@ const _Container = React.forwardRef(({ children, isDragging, isSelected, isOpen,
           mt: 1
         },
       }}
-      onContextMenu={
-        (e) => {
-          const target = e.target as HTMLElement;
-          // Don't open the context menu on these e.target as HTMLElement;
-          if (!CONTAINER_CONTEXT_MENU_FILTERED_TAGS.includes(target.tagName)) {
-            addToContextMenu({ event: e, ref: internalRef, component: MenuItems, key: "block" });
-          } else {
-            e.stopPropagation();
-          }
-        }
-      }
-      {...props}
-      onMouseOver={handleMouseOver}
-      onMouseLeave={(e) => {
-        if (props?.onMouseLeave) props.onMouseLeave(e);
-        handleMouseLeave();
-      }}
+      {...rest}
     >
       {children}
-    </Box>
-  </>;
+    </chakra.div>
+  </ErrorBoundary>
 })
-
-export const Container = withErrorBoundary(_Container, { fallback: <p>{ERROR_MESSAGE}</p> });
