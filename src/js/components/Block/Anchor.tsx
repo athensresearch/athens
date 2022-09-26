@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { IconButton, useMergeRefs, useTheme } from '@chakra-ui/react';
+import { IconButton, useMergeRefs } from '@chakra-ui/react';
 import { ColonIcon, BulletIcon, DashIcon } from '@/Icons/Icons';
 
 const ANCHORS = {
@@ -35,9 +35,6 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
   } = props;
   const innerRef = React.useRef(null);
   const refs = useMergeRefs(innerRef, ref);
-  const theme = useTheme();
-
-  const buttonHeight = `calc(${theme.fontSizes.md} * ${theme.lineHeights.taller})`;
 
   return <IconButton
     className={['anchor', isClosedWithChildren && 'closed-with-children'].filter(Boolean).join(' ')}
@@ -59,7 +56,7 @@ export const Anchor = React.forwardRef((props: AnchorProps, ref) => {
       minHeight: "inherit",
       zIndex: 2,
       minWidth: "0",
-      h: buttonHeight,
+      h: "var(--control-height)",
       w: "auto",
       fontSize: "inherit",
       p: 0,

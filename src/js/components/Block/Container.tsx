@@ -1,5 +1,5 @@
 import React from 'react';
-import { chakra, VStack, Alert, AlertIcon, AlertTitle, forwardRef, AlertDescription } from "@chakra-ui/react";
+import { useTheme, chakra, VStack, Alert, AlertIcon, AlertTitle, forwardRef, AlertDescription } from "@chakra-ui/react";
 import { ErrorBoundary } from "react-error-boundary";
 
 const ErrorMessage = ({ error }) => {
@@ -14,6 +14,8 @@ const ErrorMessage = ({ error }) => {
 
 export const Container = forwardRef((props, ref) => {
   const { children, isActive, isEditing, isHoveredNotChild, isDragging, isSelected, isOpen, hasChildren, uid, childrenUids, ...rest } = props;
+  const theme = useTheme();
+  const controlHeight = `calc(${theme.fontSizes.md} * ${theme.lineHeights.base})`;
 
   return <ErrorBoundary FallbackComponent={ErrorMessage}>
     <chakra.div
@@ -32,7 +34,9 @@ export const Container = forwardRef((props, ref) => {
       data-uid={uid}
       data-childrenuids={childrenUids}
       __css={{
+        "--control-height": controlHeight,
         position: 'relative',
+        pt: 2,
         borderRadius: '0.125rem',
         background: 'var(--block-surface-color)',
         justifyContent: 'flex-start',

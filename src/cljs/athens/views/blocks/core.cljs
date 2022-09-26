@@ -210,8 +210,10 @@
   [count click-fn active?]
   [:> Button {:gridArea "refs"
               :size "xs"
+              :height "var(--control-height)"
               :variant "ghost"
-              :placeSelf "center"
+              :colorScheme "subtle"
+              :alignSelf "flex-start"
               :zIndex 10
               :visibility (if (pos? count) "visible" "hidden")
               :isActive active?
