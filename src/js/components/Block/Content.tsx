@@ -1,28 +1,28 @@
 import { Box } from '@chakra-ui/react';
-import { withErrorBoundary } from 'react-error-boundary';
 
-const _Content = ({ children, ...props }) => {
+export const Content = ({ children, ...props }) => {
   return <Box
     className="block-content"
-    display="grid"
-    background="var(--block-surface-color)"
-    color="foreground.primary"
-    gridTemplateAreas="'main'"
-    alignItems="stretch"
-    justifyContent="stretch"
-    position="relative"
-    overflow="visible"
-    fontWeight="normal"
-    letterSpacing="normal"
-    zIndex={2}
-    flexGrow={1}
-    wordBreak="break-word"
-    sx={{
+    __css={{
       // DANGER DANGER DANGER
       //
       // The styles below are essential to the
       // basic basic editing workflow.
       // Do not modify them without good reason.
+      bg: "var(--block-surface-color)",
+      color: "foreground.primary",
+      display: "grid",
+      gridTemplateAreas: "'main'",
+      alignItems: "stretch",
+      justifyContent: "stretch",
+      position: "relative",
+      overflow: "visible",
+      fontWeight: "normal",
+      letterSpacing: "normal",
+      lineHeight: "taller",
+      zIndex: 2,
+      flexGrow: 1,
+      wordBreak: "break-word",
       //
       // make the textarea transparent
       "textarea": {
@@ -55,7 +55,6 @@ const _Content = ({ children, ...props }) => {
         zIndex: 2,
       },
       // manage the textarea interactions
-      "&:hover textarea:not:(.is-editing)": { lineHeight: 2 },
       "textarea.is-editing": {
         zIndex: 3,
         lineHeight: "inherit",
@@ -126,5 +125,3 @@ const _Content = ({ children, ...props }) => {
     {...props}
   > {children}</Box>
 }
-
-export const Content = withErrorBoundary(_Content, { fallback: <div>oops</div> });
