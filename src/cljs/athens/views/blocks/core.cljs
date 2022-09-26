@@ -431,6 +431,7 @@
          ident                    [:block/uid block-uid]
          is-hovered-not-child?    (r/atom false)
          !container-ref           (clojure.core/atom nil)
+         !anchor-ref              (clojure.core/atom nil)
          linked-ref-open?         (rf/subscribe [::linked-ref.subs/open? block-uid])
          editing?                 (rf/subscribe [:editing/is-editing block-uid])
          dragging?                (rf/subscribe [::drag.subs/dragging? block-uid])
@@ -463,6 +464,7 @@
              children-uids          (set (map :block/uid children))
              children?              (seq children-uids)
              container-ref-ref      #js {:current @!container-ref}
+             anchor-ref-ref         #js {:current @!anchor-ref}
              comments-enabled?      (:comments @feature-flags)
              reactions-enabled?     (:reactions @feature-flags)
              notifications-enabled? (:notifications @feature-flags)
@@ -560,20 +562,24 @@
                                                                (and (false? linked-ref) (not open))))
                                                   "closed-with-children")
                         :draggable true
+                        :ref (fn [el] (reset! !anchor-ref el))
                         :onContextMenu (fn [e]
                                          (.addToContextMenu context-menu
                                                             #js {:ref container-ref-ref
                                                                  :event e
+                                                                 :anchorEl anchor-ref-ref
                                                                  :component menu-component
                                                                  :key "block"}))
                         :onClick (fn [e]
                                    (.addToContextMenu context-menu
                                                       #js {:ref container-ref-ref
                                                            :event e
+                                                           :anchorEl anchor-ref-ref
                                                            :component menu-component
                                                            :key "block"}))
                         :onDoubleClick (fn [e]
                                          (let [shift? (.-shiftKey e)]
+                                           (.onCloseMenu context-menu)
                                            (rf/dispatch [:reporting/navigation {:source :block-bullet
                                                                                 :target :block
                                                                                 :pane   (if shift?
