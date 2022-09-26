@@ -27,16 +27,16 @@
 (defn page
   []
   (let [note-refs (subscribe [:daily-notes/items])
-        get-another-note #(dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last @note-refs)) 1)])]
+        get-another-note #(dispatch [:daily-note/next (dates/get-day (dates/uid-to-date %) 1)])]
     (fn []
       (when (empty? @note-refs)
         (dispatch [:daily-note/next (dates/get-day)]))
       (let [notes (reactive-pull-many @note-refs)
             [ref in-view?] (useInView {:delay 250})
             _ (react/useLayoutEffect
-               (fn [] (when (and notes in-view?) (get-another-note))
+               (fn [] (when (and (last @note-refs) in-view?) (get-another-note (last @note-refs)))
                  js/undefined)
-               #js [in-view? notes])]
+               #js [in-view? note-refs])]
         [:> VStack {:align "stretch"
                     :alignSelf "stretch"
                     :spacing 4
@@ -44,6 +44,7 @@
                     :px 4}
            (doall
             (for [{:keys [block/uid]} notes]
+              ^{:key uid}
               [node-page/page
                [:block/uid uid]
                {:variant "elevated"
