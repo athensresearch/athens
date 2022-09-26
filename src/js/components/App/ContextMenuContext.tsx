@@ -83,7 +83,6 @@ const useContextMenuState = () => {
         height: 0
       }
     }
-
     // Exclusive menus set state immediately and then
     // stop the event from creating more menus
     if (isExclusive && !menuState.isExclusive) {
@@ -116,16 +115,23 @@ const useContextMenuState = () => {
    * @param ref: React.MutableRefObject<HTMLElement>,
    * @returns 
    */
-  const getIsMenuOpen = (ref: React.MutableRefObject<HTMLElement>) => menuState.sources?.includes(ref.current);
+  const getIsMenuOpen = (ref: React.MutableRefObject<HTMLElement>) => {
+    if (!menuState.sources.filter(Boolean).length) {
+      return false;
+    } else {
+      return menuState.sources?.includes(ref.current)
+    }
+  };
+
 
   return {
-    onCloseMenu,
     addToContextMenu,
     getIsMenuOpen,
+    onCloseMenu,
     contextMenuPosition: menuState.position,
     contextMenuSources: menuState.sources,
     isContextMenuOpen: menuState.isOpen,
-    contextMenucomponents: menuState.components,
+    contextMenuComponents: menuState.components,
   };
 }
 
@@ -147,7 +153,7 @@ export const ContextMenuProvider = ({ children }) => {
   const {
     contextMenuPosition,
     isContextMenuOpen,
-    contextMenucomponents,
+    contextMenuComponents,
     onCloseMenu,
   } = contextMenuState;
 
@@ -176,8 +182,12 @@ export const ContextMenuProvider = ({ children }) => {
         <Portal>
           <MenuSource position={contextMenuPosition} />
           <MenuList className="app-context-menu" ref={menuRef}>
-            {contextMenucomponents.map((Child, index) => {
-              return (<Child key={index} />)
+            {contextMenuComponents.map((Child, index) => {
+              if (typeof Child === "function") {
+                return <Child key={index} />
+              } else {
+                return <React.Fragment key={index}>{Child}</React.Fragment>;
+              }
             })}
           </MenuList>
         </Portal>

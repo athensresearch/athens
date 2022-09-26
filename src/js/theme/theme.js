@@ -457,6 +457,84 @@ const components = {
       borderColor: "separator.divider",
     }
   },
+  Empty: {
+    parts: ['container', 'icon', 'title', 'message'],
+    baseStyle: {
+      container: {
+        display: "flex",
+        alignItems: "center",
+        flexDirection: "column",
+        p: 4,
+        height: "100%",
+        maxHeight: "min(30em, max-content)",
+      },
+      icon: {
+        color: 'foreground.tertiary',
+      },
+      title: {
+        fontWeight: 'semibold',
+        textAlign: 'center',
+        color: 'foreground.secondary',
+      },
+      message: {
+        fontWeight: 'normal',
+        textAlign: 'center',
+        color: 'foreground.secondary',
+      }
+    },
+    sizes: {
+      sm: {
+        container: {
+          p: 2,
+          px: 4
+        },
+        icon: {
+          boxSize: 6,
+          mb: 1,
+        },
+        title: {
+          fontSize: 'sm',
+        },
+        message: {
+          fontSize: 'xs',
+        }
+      },
+      md: {
+        container: {
+          p: 4,
+        },
+        icon: {
+          boxSize: 8,
+          mb: 2,
+        },
+        title: {
+          fontSize: 'md',
+        },
+        message: {
+          fontSize: 'sm',
+        }
+      },
+      lg: {
+        container: {
+          p: 6,
+        },
+        icon: {
+          boxSize: 10,
+          mb: 3,
+        },
+        title: {
+          fontSize: 'lg',
+        },
+        message: {
+          fontSize: 'md',
+        },
+      }
+    },
+    variants: {},
+    defaultProps: {
+      size: 'md',
+    }
+  },
   FormLabel: {
     baseStyle: {
       fontSize: "sm",
