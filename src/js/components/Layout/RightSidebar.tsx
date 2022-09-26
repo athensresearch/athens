@@ -3,7 +3,7 @@ import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "
 import { AnimatePresence, motion } from 'framer-motion';
 import { RightSidebarResizeControl } from "./RightSidebarResizeControl";
 import { XmarkIcon, ChevronDownVariableIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
-import { Flex, ButtonGroup, Button, IconButton, Box, Collapse, VStack, BoxProps, Tooltip } from '@chakra-ui/react';
+import { Flex, ButtonGroup, Button, Text, IconButton, Box, Collapse, VStack, BoxProps, Tooltip } from '@chakra-ui/react';
 import { useInView } from 'react-intersection-observer';
 
 /** Right Sidebar */
@@ -129,6 +129,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
           gap={2}
           p={2}
           px={4}
+          pr={20}
           height="auto"
           textAlign="left"
           overflow="hidden"
@@ -142,7 +143,11 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
             transitionTimingFunction="ease-in-out"
             justifySelf="center" />}
         >
-          {title}
+          <Text
+            noOfLines={0}
+            overflow="hidden"
+            textOverflow="ellipsis"
+          >{title}</Text>
         </Button>
         <ButtonGroup
           colorScheme="subtle"
