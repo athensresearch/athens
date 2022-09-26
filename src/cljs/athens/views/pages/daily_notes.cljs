@@ -34,22 +34,23 @@
       (let [notes (reactive-pull-many @note-refs)
             [ref in-view?] (useInView {:delay 250})
             _ (react/useLayoutEffect
-               (fn [] (when (and (last @note-refs) in-view?) (get-another-note (last @note-refs)))
-                 js/undefined)
-               #js [in-view? note-refs])]
+                (fn []
+                  (when (and (last @note-refs) in-view?) (get-another-note (last @note-refs)))
+                  js/undefined)
+                #js [in-view? note-refs])]
         [:> VStack {:align "stretch"
                     :alignSelf "stretch"
-                    :spacing 4
+                    :spacing 6
                     :pt "4rem"
                     :px 4}
-           (doall
-            (for [{:keys [block/uid]} notes]
-              ^{:key uid}
-              [node-page/page
-               [:block/uid uid]
-               {:variant "elevated"
-                :alignSelf "stretch"
-                :minHeight "calc(100vh - 6rem)"}]))
+         (doall
+           (for [{:keys [block/uid]} notes]
+             ^{:key uid}
+             [node-page/page
+              [:block/uid uid]
+              {:variant "elevated"
+               :alignSelf "stretch"
+               :minHeight "calc(100vh - 6rem)"}]))
 
          [:> Page {:minHeight "calc(100vh - 6rem)"
                    :alignSelf "stretch"

@@ -466,8 +466,8 @@
           [:> HStack {:justifyContent "space-between" :flexGrow 1}
 
            [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
-              ;; Prevent editable textarea if a node/title is a date
-              ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
+            ;; Prevent editable textarea if a node/title is a date
+            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 
             (when-not daily-note?
               [autosize/textarea
@@ -475,7 +475,7 @@
                 :id          (str "editable-uid-" uid)
                 :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
                 :on-blur     (fn [_]
-                              ;; add title Untitled-n for empty titles
+                               ;; add title Untitled-n for empty titles
                                (when (empty? (:title/local @state))
                                  (swap! state assoc :title/local (auto-inc-untitled)))
                                (handle-blur node state))
@@ -483,13 +483,13 @@
                 :on-change   (fn [e] (handle-change e state))}])
 
             [:> HStack {:width "fit-content" :gridArea "main"}
-            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
+             ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
              (if (str/blank? (:title/local @state))
                [:wbr]
                [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
                 [parse-renderer/parse-and-render (:title/local @state) uid]])
 
-              ;; Dropdown
+             ;; Dropdown
              [menu-dropdown node daily-note? on-daily-notes?]]]
 
            [:> ButtonGroup {:size "sm"
@@ -511,8 +511,9 @@
              [:> FormControl
               [:> FormLabel "Header Image URL"]
               [:> Input {:defaultValue (-> properties (get ":header/url") :block/string)
-                         :onBlur (fn [e] (dispatch [:graph/update-in [:node/title title] [":header/url"]
-                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid (.. e -target -value))])]))}]]])
+                         :onBlur (fn [e]
+                                   (dispatch [:graph/update-in [:node/title title] [":header/url"]
+                                              (fn [db uid] [(graph-ops/build-block-save-op db uid (.. e -target -value))])]))}]]])
 
 
           (when (and @cover-photo-enabled? (-> properties (get ":header/url") :block/string))
