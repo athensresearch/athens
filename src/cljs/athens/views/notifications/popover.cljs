@@ -1,11 +1,10 @@
 (ns athens.views.notifications.popover
   (:require
     ["/components/Empty/Empty" :refer [Empty EmptyTitle EmptyIcon EmptyMessage]]
-    ["/components/Icons/Icons" :refer [BellFillIcon ArrowRightIcon]]
     ["/components/Icons/Icons" :refer [BellIcon ArrowRightIcon]]
     ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
     ["/timeAgo.js" :refer [timeAgo]]
-    ["@chakra-ui/react" :refer [Badge Box Text Heading VStack IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
+    ["@chakra-ui/react" :refer [Badge Box Heading VStack IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
     [athens.common-db :as common-db]
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
