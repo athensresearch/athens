@@ -38,13 +38,11 @@ export const Container = forwardRef((props, ref) => {
         position: 'relative',
         mt: 2,
         borderRadius: '0.125rem',
-        background: 'var(--block-surface-color)',
         transitionProperty: "common",
         transitionDuration: "fast",
         transitionTimingFunction: 'ease-in-out',
         justifyContent: 'flex-start',
         flexDirection: 'column',
-        bg: isActive ? 'interaction.surface.active' : 'var(--block-surface-color)',
         opacity: isDragging ? 0.5 : 1,
         "&.show-tree-indicator:before": {
           content: "''",
@@ -63,6 +61,9 @@ export const Container = forwardRef((props, ref) => {
           content: "''",
           zIndex: 0,
           position: "absolute",
+          transitionProperty: "common",
+          transitionDuration: "fast",
+          transitionTimingFunction: 'ease-in-out',
           left: 0,
           right: 0,
           top: `calc(-${theme.sizes["1"]} + 1px)`,
@@ -72,9 +73,19 @@ export const Container = forwardRef((props, ref) => {
           pointerEvents: "none",
           borderRadius: "sm",
           transition: "opacity 0.075s ease-in-out",
-          background: "link",
         },
-        "&.is-selected:after": { opacity: 0.2 },
+        "&.is-selected:after": {
+          opacity: 0.2,
+          bg: "link"
+        },
+        "&.is-active:after": {
+          opacity: 1,
+          bg: "interaction.surface.hover",
+        },
+        "&.is-selected.is-active:after": {
+          opacity: 0.4,
+          bg: "link",
+        },
         ".user-avatar": {
           position: "absolute",
           left: "4px",
