@@ -115,7 +115,7 @@
                :title      entity-title
                :children   (r/as-element (cond
                                            (= type "graph") [graph/page name]
-                                           (= type "page")  [node-page/page eid]
-                                           :else            [blocks/page eid]))}))
+                                           (= type "page")  [node-page/page eid {:size "xs"}]
+                                           :else            [blocks/page eid {:size "xs"}]))}))
 
           items)))

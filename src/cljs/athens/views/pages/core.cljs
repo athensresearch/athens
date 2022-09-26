@@ -23,12 +23,12 @@
        :pages         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/all-pages"}
                        [all-pages/page]]
        :page          [perf-mon/hoc-perfmon {:span-name "pages/page"}
-                       [page/page]]
+                       [:f> page/page]]
        :page-by-title [perf-mon/hoc-perfmon {:span-name "pages/page-by-title"}
-                       [page/page-by-title]]
+                       [:f> page/page-by-title]]
        :home          [perf-mon/hoc-perfmon {:span-name "pages/home-page"}
-                       [daily-notes/page]]
+                       [:f> daily-notes/page]]
        :graph         [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/graph"}
                        [graph/page]]
        [perf-mon/hoc-perfmon-no-new-tx {:span-name "pages/default"}
-        [daily-notes/page]])]))
+        [:f> daily-notes/page]])]))

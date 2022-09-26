@@ -1,7 +1,6 @@
 (ns athens.views.pages.page
   (:require
-    ["/components/Page/Page"      :refer [PageContainer
-                                          PageNotFound]]
+    ["/components/Page/Page"      :refer [PageNotFound]]
     [athens.common-db             :as    common-db]
     [athens.db                    :as    db]
     [athens.reactive              :as    reactive]
@@ -15,11 +14,10 @@
   []
   (let [title    (rf/subscribe [:current-route/page-title])
         page-eid (common-db/e-by-av @db/dsdb :node/title @title)]
-    [:> PageContainer {:uid page-eid :type "node"}
      (if (int? page-eid)
        [node-page/page page-eid]
        [:> PageNotFound {:title @title
-                         :onClickHome #(router/navigate :pages)}])]))
+                         :onClickHome #(router/navigate :pages)}])))
 
 
 (defn page
@@ -27,8 +25,7 @@
   []
   (let [uid (rf/subscribe [:current-route/uid])
         {:keys [node/title block/string db/id]} (reactive/get-reactive-block-or-page-by-uid @uid)]
-    [:> PageContainer {:uid @uid :type (if title "node" "block")}
      (cond
        title [node-page/page id]
        string [blocks/page id]
-       :else [:> PageNotFound {:onClickHome #(router/navigate :pages)}])]))
+       :else [:> PageNotFound {:onClickHome #(router/navigate :pages)}])))

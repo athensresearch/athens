@@ -715,6 +715,126 @@ const components = {
       zIndex: "tooltip",
     },
   },
+  Page: {
+    parts: ["container", "header", "overline", "headerImage", "title", "body", "footer"],
+    baseStyle: {
+      container: {
+        display: "grid",
+        alignSelf: "stretch",
+        gridTemplateAreas: "'header' 'content' 'footer'",
+        gridTemplateRows: "auto 1fr auto",
+        transitionProperty: "background",
+        transitionTimingFunction: "ease-in-out",
+        transitionDuration: "fast",
+        "--page-padding": "3rem",
+        "--page-left-gutter-width": "1em",
+        "--page-right-gutter-width": "3.5em",
+      },
+      header: {
+        pt: "var(--page-padding)",
+        px: "var(--page-padding)",
+        position: 'relative',
+        pb: 4,
+        gridArea: "header",
+        alignItems: "center",
+      },
+      headerImage: {
+        marginTop: 4,
+        gridArea: "image",
+        borderRadius: "md",
+        width: "100%",
+        height: "auto",
+        objectFit: "cover",
+        objectPosition: "center",
+      },
+      overline: {
+        color: "foreground.secondary",
+        fontSize: "sm",
+        fontWeight: "bold",
+        "svg": {
+          mr: 1,
+          verticalAlign: "-0.125em",
+        }
+      },
+      title: {
+        gridArea: "title",
+        position: 'relative',
+        overflow: 'visible',
+        whiteSpace: 'pre-line',
+        wordBreak: 'break-word',
+        fontWeight: "bold",
+        flexGrow: 1,
+        margin: 0
+      },
+      body: {
+        px: "calc(var(--page-padding) - 1em)",
+        pr: "calc(var(--page-padding) - var(--page-right-gutter-width) + 1.5em)",
+        gridArea: 'content',
+      },
+      footer: {
+        gridArea: "footer",
+        p: "var(--page-padding)",
+      }
+    },
+    variants: {
+      elevated: {
+        container: {
+          boxShadow: 'page',
+          border: "1px solid",
+          borderColor: "separator.divider",
+          borderRadius: "md",
+        }
+      },
+    },
+    sizes: {
+      xs: {
+        container: {
+          "--page-padding": "0.5rem",
+        },
+        header: {
+        },
+        title: {
+          fontSize: "lg",
+        },
+        body: {
+        },
+        footer: {
+        },
+      },
+      sm: {
+        container: {
+          "--page-padding": "1.5rem",
+        },
+        header: {
+        },
+        title: {
+          fontSize: "2xl",
+        },
+        body: {
+        },
+        footer: {
+          padding: 4,
+        },
+      },
+      md: {
+        container: {
+          "--page-padding": "3rem",
+        },
+        header: {
+        },
+        title: {
+          fontSize: "3xl",
+        },
+        body: {
+        },
+        footer: {
+        },
+      },
+    },
+    defaultProps: {
+      size: "md",
+    }
+  }
 }
 
 // Default prop overrides

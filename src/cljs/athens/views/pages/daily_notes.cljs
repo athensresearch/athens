@@ -1,6 +1,9 @@
 (ns athens.views.pages.daily-notes
   (:require
-    ["/components/Page/Page" :refer [DailyNotesPage DailyNotesList]]
+    ["/components/Page/Page" :refer [Page PageHeader PageOverline TitleContainer]]
+    ["@chakra-ui/react" :refer [Box VStack]]
+    ["react" :as react]
+    ["react-intersection-observer" :refer [useInView]]
     [athens.dates :as dates]
     [athens.reactive :as reactive]
     [athens.views.pages.node-page :as node-page]
@@ -26,22 +29,31 @@
   (let [note-refs (subscribe [:daily-notes/items])
         get-another-note #(dispatch [:daily-note/next (dates/get-day (dates/uid-to-date (last @note-refs)) 1)])]
     (fn []
-      (if (empty? @note-refs)
-        (dispatch [:daily-note/next (dates/get-day)])
-        (let [notes (reactive-pull-many @note-refs)]
-          [:> DailyNotesList {:id "daily-notes"
-                              :onGetAnotherNote get-another-note
-                              :minHeight     "calc(100vh + 1px)"
-                              :height        "calc(100vh + 1px)"
-                              :display       "flex"
-                              :overflowY     "auto"
-                              :gap           "1.5rem"
-                              :px            "2rem"
-                              :alignItems    "center"
-                              :flex          "1 1 100%"
-                              :flexDirection "column"}
+      (when (empty? @note-refs)
+        (dispatch [:daily-note/next (dates/get-day)]))
+      (let [notes (reactive-pull-many @note-refs)
+            [ref in-view?] (useInView {:delay 250})
+            _ (react/useLayoutEffect
+               (fn [] (when (and notes in-view?) (get-another-note))
+                 js/undefined)
+               #js [in-view? notes])]
+        [:> VStack {:align "stretch"
+                    :alignSelf "stretch"
+                    :spacing 4
+                    :pt "4rem"
+                    :px 4}
            (doall
-             (for [{:keys [block/uid]} notes]
-               [:> DailyNotesPage {:key uid
-                                   :isReal true}
-                [node-page/page [:block/uid uid]]]))])))))
+            (for [{:keys [block/uid]} notes]
+              [node-page/page
+               [:block/uid uid]
+               {:variant "elevated"
+                :alignSelf "stretch"
+                :minHeight "calc(100vh - 6rem)"}]))
+
+         [:> Page {:minHeight "calc(100vh - 6rem)"
+                   :alignSelf "stretch"
+                   :variant "elevated"}
+          [:> Box {:ref ref}]
+          [:> PageHeader
+           [:> PageOverline "Daily Notes"]
+           [:> TitleContainer "Loading..."]]]]))))
