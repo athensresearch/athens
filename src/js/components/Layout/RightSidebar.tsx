@@ -101,7 +101,8 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
   const className = { "page": "node-page", "block": "block-page", "graph": "graph-page" }[type];
   return (
     <VStack
-      layerStyle="card"
+      bg="background.upper"
+      borderRadius="md"
       overflow="hidden"
       align="stretch"
       position="relative"
@@ -112,7 +113,8 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
         "--page-left-gutter-width": "1em",
         "--page-right-gutter-width": "3em",
       }}
-      mt={2}>
+      mt={2}
+    >
       <Flex
         alignItems="center"
         justifyContent="center"
