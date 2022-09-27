@@ -507,8 +507,7 @@
           (when-not on-daily-notes?
             [time-controls/slider title])
 
-          (when (and (empty? properties)
-                     (empty? children))
+          (when (empty? children)
             [placeholder-block-el uid])
 
           ;; Properties
