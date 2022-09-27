@@ -287,7 +287,9 @@
                                (let [new-value (-> e .-target .-value)]
                                  (reset! local-value new-value)
                                  (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/title"]
-                                               (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])]))))
+                                               (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])
+                                 (rf/dispatch [:block/save {:uid    parent-block-uid
+                                                            :string new-value}]))))
         update-fn           #(reset! local-value %)
         idle-fn             (gfns/debounce #(do
                                               (save-fn))

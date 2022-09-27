@@ -35,7 +35,10 @@
                                              ":task/description"
                                              ":task/due-date"} prop-name)
                                       (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [prop-name]
-                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])))))
+                                                    (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])]))
+                                    (when (= ":task/title" prop-name)
+                                      (rf/dispatch [:block/save {:uid    parent-block-uid
+                                                                 :string new-value}])))))
             update-fn          #(do
                                   (log/debug prop-name "update-fn:" (pr-str %))
                                   (reset! local-value %))
