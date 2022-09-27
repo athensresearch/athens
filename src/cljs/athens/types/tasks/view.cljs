@@ -343,7 +343,7 @@
 
 
   (transclusion-view
-    [this _block-el block-uid _callback transclusion-scope]
+    [this _block-el block-uid callbacks transclusion-scope]
     (let [supported-trans (types/supported-transclusion-scopes this)]
       (if-not (contains? supported-trans transclusion-scope)
         (throw (ex-info (str "Invalid transclusion scope: " (pr-str transclusion-scope)
@@ -351,7 +351,7 @@
                         {:supported-transclusion-scopes supported-trans
                          :provided-transclusion-scope   transclusion-scope}))
         (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
-          [task-el this block true]))))
+          [task-el this block callbacks true]))))
 
 
   (zoomed-in-view
