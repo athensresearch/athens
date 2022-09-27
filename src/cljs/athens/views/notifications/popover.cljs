@@ -4,7 +4,7 @@
     ["/components/Icons/Icons" :refer [BellIcon ArrowRightIcon]]
     ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
     ["/timeAgo.js" :refer [timeAgo]]
-    ["@chakra-ui/react" :refer [Badge Box Heading VStack IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
+    ["@chakra-ui/react" :refer [Badge Text Box Heading VStack IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
     [athens.common-db :as common-db]
     [athens.db :as db]
     [athens.parse-renderer :as parse-renderer]
@@ -132,8 +132,6 @@
             notifications-grouped-by-object (group-by #(get % "object") notification-list)
             num-notifications  (count notification-list)]
 
-        (js/console.log notification-list)
-        (js/console.log notifications-grouped-by-object)
         [:> Popover {:closeOnBlur false
                      :isLazy true
                      :size "lg"}
@@ -171,6 +169,7 @@
              (if (seq notifications-grouped-by-object)
                (for [[object notifs] notifications-grouped-by-object]
 
+                 ^{:key (get object "parentUid")}
                  [:> VStack {:align "stretch"
                              :key (str (:parentUid object))}
                   [:> Heading {:size "xs"
@@ -190,7 +189,15 @@
                       :onOpenItem     on-click-notification-item
                       :onMarkAsRead   #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
                       :onMarkAsUnread #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-                      :onArchive      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))}])])
+                      :onArchive      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))}
+                     [:> Text {:fontWeight "bold" :noOfLines 2 :fontSize "sm"}
+                      (str (get-in notification ["subject" "username"]) " ")
+                      (str (get event-verb (get notification "type")) " ")
+                      [parse-renderer/parse-and-render (or
+                                                        (get object "name")
+                                                        (get object "string"))
+                       (:id notification)]]
+                     [:> Text [parse-renderer/parse-and-render (get notification "body")]]])])
 
                [:> Empty {:size "sm" :py 8}
                 [:> EmptyIcon]
