@@ -40,7 +40,7 @@
                 #js [in-view? note-refs])]
         [:> VStack {:align "stretch"
                     :alignSelf "stretch"
-                    :spacing 6
+                    :spacing 4
                     :pt "4rem"
                     :px 4}
          (doall

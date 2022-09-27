@@ -804,7 +804,6 @@ const components = {
         transitionProperty: "background",
         transitionTimingFunction: "ease-in-out",
         transitionDuration: "fast",
-        "--page-padding": "3rem",
         "--page-left-gutter-width": "1em",
         "--page-right-gutter-width": "3.5em",
       },
@@ -865,52 +864,75 @@ const components = {
       },
     },
     sizes: {
-      xs: {
-        container: {
-          "--page-padding": "0.5rem",
-        },
+      sm: {
         header: {
+          pt: 4,
+          px: 2,
+          pb: 2,
+          fontSize: "sm",
+        },
+        body: {
+          fontSize: "sm",
+          p: 2,
+          py: 2,
+        },
+        footer: {
+          fontSize: "xs",
+          pt: 2,
+          px: 2,
+          pb: 2,
         },
         title: {
           fontSize: "lg",
         },
+      },
+      md: {
+        header: {
+          pt: 6,
+          px: 6,
+          pb: 3,
+          fontSize: "sm"
+        },
         body: {
+          p: 6,
+          py: 3,
+          fontSize: "sm"
         },
         footer: {
-        },
-      },
-      sm: {
-        container: {
-          "--page-padding": "1.5rem",
-        },
-        header: {
+          pt: 3,
+          px: 6,
+          pb: 6,
+          fontSize: "sm"
         },
         title: {
           fontSize: "2xl",
         },
+      },
+      lg: {
+        header: {
+          pt: 8,
+          px: 8,
+          pb: 4,
+          fontSize: "md"
+        },
         body: {
+          p: 8,
+          py: 4,
+          fontSize: "md"
         },
         footer: {
-          padding: 4,
-        },
-      },
-      md: {
-        container: {
-          "--page-padding": "3rem",
-        },
-        header: {
+          pt: 4,
+          px: 8,
+          pb: 8,
+          fontSize: "md"
         },
         title: {
           fontSize: "3xl",
         },
-        body: {
-        },
-        footer: {
-        },
       },
     },
     defaultProps: {
-      size: "md",
+      size: "lg",
     }
   }
 }
