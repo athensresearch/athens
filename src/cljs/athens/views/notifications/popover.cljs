@@ -194,8 +194,8 @@
                       (str (get-in notification ["subject" "username"]) " "
                            (get event-verb (get notification "type")) " ")
                       [parse-renderer/parse-and-render (or
-                                                        (get object "name")
-                                                        (get object "string"))
+                                                         (get object "name")
+                                                         (get object "string"))
                        (:id notification)]]
                      [:> Text [parse-renderer/parse-and-render (get notification "body")]]])])
 
