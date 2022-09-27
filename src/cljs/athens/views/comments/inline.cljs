@@ -243,7 +243,7 @@
                         :color "foreground.secondary"
                         :flex "1 0 auto"
                         :bg "background.upper"
-                        :mb 2
+                        :my 2
                         :borderWidth "1px"
                         :borderStyle "solid"
                         :borderColor "separator.border"

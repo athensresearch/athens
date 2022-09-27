@@ -101,4 +101,4 @@
                        hue (math/floor (/ (* (- 100 percent)
                                              120)
                                           100))]
-                   {:background-color (str "hsl(" hue ",50%,75%)")})))))))
+                   {:backgroundColor (str "hsl(" hue ",50%,75%)")})))))))
