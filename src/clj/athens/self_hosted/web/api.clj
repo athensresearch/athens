@@ -103,30 +103,30 @@
 (defn make-routes
   [datascript fluree config]
   (let [conn (:conn datascript)
-        ;; TODO: only if config ff is on
         ;; TODO: handle pw
         ;; password    (-> config :config :password)
         ]
-
-    (->
-      (c/routes
+    (if-not (-> config :config :feature-flags :api)
+      (c/routes)
+      (->
+       (c/routes
         (c/context
-          "/api/path" []
+         "/api/path" []
 
-          (c/POST
-            "/read" {{:keys [path]} :body-params}
-            (->> path
-                 (read-path conn)
-                 ok))
+         (c/POST
+          "/read" {{:keys [path]} :body-params}
+          (->> path
+               (read-path conn)
+               ok))
 
-          (c/POST
-            "/write" {{:keys [path relation data]} :body-params}
-            (->> (write-in-path-evt conn path relation data)
-                 (process-event! datascript fluree config)
-                 (ret-first path)
-                 (read-path conn)
-                 ok))))
-      muuntaja.mw/wrap-format)))
+         (c/POST
+          "/write" {{:keys [path relation data]} :body-params}
+          (->> (write-in-path-evt conn path relation data)
+               (process-event! datascript fluree config)
+               (ret-first path)
+               (read-path conn)
+               ok))))
+       muuntaja.mw/wrap-format))))
 
 
 ;; curl examples
