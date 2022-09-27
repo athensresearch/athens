@@ -143,7 +143,7 @@
          [:> Box {:flex       "1 1 100%"
                   :lineHeight "base"
                   :cursor     "text"}
-          [inline-task-title/inline-task-title-2
+          [inline-task-title/inline-task-title
            callbacks
            block-uid
            title-uid
