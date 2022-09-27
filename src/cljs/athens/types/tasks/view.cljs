@@ -143,7 +143,7 @@
          [:> Box {:flex       "1 1 100%"
                   :lineHeight "base"
                   :cursor     "text"}
-          [inline-task-title/inline-task-title-2
+          [inline-task-title/inline-task-title
            callbacks
            block-uid
            title-uid
@@ -287,7 +287,9 @@
                                (let [new-value (-> e .-target .-value)]
                                  (reset! local-value new-value)
                                  (rf/dispatch [:graph/update-in [:block/uid parent-block-uid] [":task/title"]
-                                               (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])]))))
+                                               (fn [db uid] [(graph-ops/build-block-save-op db uid new-value)])])
+                                 (rf/dispatch [:block/save {:uid    parent-block-uid
+                                                            :string new-value}]))))
         update-fn           #(reset! local-value %)
         idle-fn             (gfns/debounce #(do
                                               (save-fn))
@@ -343,7 +345,7 @@
 
 
   (transclusion-view
-    [this _block-el block-uid _callback transclusion-scope]
+    [this _block-el block-uid callbacks transclusion-scope]
     (let [supported-trans (types/supported-transclusion-scopes this)]
       (if-not (contains? supported-trans transclusion-scope)
         (throw (ex-info (str "Invalid transclusion scope: " (pr-str transclusion-scope)
@@ -351,7 +353,7 @@
                         {:supported-transclusion-scopes supported-trans
                          :provided-transclusion-scope   transclusion-scope}))
         (let [block (reactive/get-reactive-block-document [:block/uid block-uid])]
-          [task-el this block true]))))
+          [task-el this block callbacks true]))))
 
 
   (zoomed-in-view
