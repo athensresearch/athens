@@ -11,7 +11,7 @@
     [reagent.core                   :as r]))
 
 
-(defn inline-task-title-2
+(defn inline-task-title
   [_state-hooks _parent-block-uid _prop-block-uid _prop-name _prop-title _required? _multiline?]
   (let [_prop-id    (str (random-uuid))
         local-value (r/atom "")]

@@ -1,5 +1,7 @@
 (ns athens.views.left-sidebar.shortcuts
   (:require
+    ["/components/Empty/Empty" :refer [Empty EmptyTitle EmptyIcon EmptyMessage]]
+    ["/components/Icons/Icons" :refer [BookmarkIcon]]
     ["/components/SidebarShortcuts/List" :refer [List]]
     ["/components/Widget/Widget" :refer [Widget WidgetHeader WidgetBody WidgetToggle]]
     [athens.reactive :as reactive]
@@ -20,16 +22,25 @@
       [:> WidgetToggle {:onClick #(rf/dispatch [:left-sidebar.widgets/toggle-widget "shortcuts"])}]]
 
      [:> WidgetBody
-      [:> List {:items              shortcuts
-                :onOpenItem         (fn [e [_order page]]
-                                      (let [shift? (.-shiftKey e)]
-                                        (rf/dispatch [:reporting/navigation {:source :left-sidebar
-                                                                             :target :page
-                                                                             :pane   (if shift?
-                                                                                       :right-pane
-                                                                                       :main-pane)}])
-                                        (router/navigate-page page e)))
-                :onUpdateItemsOrder (fn [oldIndex newIndex]
-                                      (cond
-                                        (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
-                                        (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])))}]]]))
+
+      (if (seq shortcuts)
+
+
+        [:> List {:items              shortcuts
+                  :onOpenItem         (fn [e [_order page]]
+                                        (let [shift? (.-shiftKey e)]
+                                          (rf/dispatch [:reporting/navigation {:source :left-sidebar
+                                                                               :target :page
+                                                                               :pane   (if shift?
+                                                                                         :right-pane
+                                                                                         :main-pane)}])
+                                          (router/navigate-page page e)))
+                  :onUpdateItemsOrder (fn [oldIndex newIndex]
+                                        (cond
+                                          (< oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :after])
+                                          (> oldIndex newIndex) (rf/dispatch [:left-sidebar/drop oldIndex newIndex :before])))}]
+
+        [:> Empty {:size "sm" :pr 2 :pl 4}
+         [:> EmptyIcon {:Icon BookmarkIcon}]
+         [:> EmptyTitle "No shortcuts"]
+         [:> EmptyMessage "Add shortcuts to mark important pages in your workspace."]])]]))
