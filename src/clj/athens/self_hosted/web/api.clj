@@ -8,8 +8,10 @@
     [athens.self-hosted.clients :as clients]
     [athens.self-hosted.web.datascript :as web.datascript]
     [clojure.set :as set]
+    [clojure.string :as str]
     [compojure.core :as c]
-    [muuntaja.middleware :as muuntaja.mw]))
+    [muuntaja.middleware :as muuntaja.mw]
+    [ring.middleware.basic-authentication :as basic-auth]))
 
 
 ;; Helpers
@@ -74,6 +76,11 @@
          common-events/build-atomic-event)))
 
 
+(defn add-presence-id
+  [presence-id event]
+  (common-events/add-presence event presence-id))
+
+
 (defn process-event!
   [datascript fluree config evt]
   (when-not (schema/valid-event? evt)
@@ -98,41 +105,56 @@
   x)
 
 
+;; Username is always required non-empty
+(defn authenticated?
+  [config-pw username pw]
+  (if (and (not (str/blank? username))
+           (or (not config-pw)
+               (= pw config-pw)))
+    {:presence-id username}
+    false))
+
+
 ;; Routes with inline handlers.
 
 (defn make-routes
   [datascript fluree config]
   (let [conn (:conn datascript)
-        ;; TODO: handle pw
-        ;; password    (-> config :config :password)
-        ]
+        ;; TODO: take presence-id from basic auth username
+        config-pw (-> config :config :password)]
     (if-not (-> config :config :feature-flags :api)
       (c/routes)
       (->
-       (c/routes
-        (c/context
-         "/api/path" []
+        (c/routes
+          (c/context
+            "/api/path" []
 
-         (c/POST
-          "/read" {{:keys [path]} :body-params}
-          (->> path
-               (read-path conn)
-               ok))
+            (c/POST
+              "/read" {{:keys [path]} :body-params}
+              (->> path
+                   (read-path conn)
+                   ok))
 
-         (c/POST
-          "/write" {{:keys [path relation data]} :body-params}
-          (->> (write-in-path-evt conn path relation data)
-               (process-event! datascript fluree config)
-               (ret-first path)
-               (read-path conn)
-               ok))))
-       muuntaja.mw/wrap-format))))
+            (c/POST
+              "/write" {{:keys [path relation data]} :body-params
+                        {:keys [presence-id]}        :basic-authentication}
+              (->> (write-in-path-evt conn path relation data)
+                   (add-presence-id presence-id)
+                   (process-event! datascript fluree config)
+                   (ret-first path)
+                   (read-path conn)
+                   ok))))
+        (basic-auth/wrap-basic-authentication (partial authenticated? config-pw))
+        muuntaja.mw/wrap-format))))
 
 
 ;; curl examples
 ;; read
-;; curl -H "Content-Type: application/edn" -H "Accept: application/edn" -X POST localhost:3010/api/path/read -d '{:path [{:page/title "page"}]}'
-;; curl -H "Content-Type: application/json" -X POST localhost:3010/api/path/read -d '{"path":[{"page/title":"page"}]}'
+;; curl -u api-test: -H "Content-Type: application/edn" -H "Accept: application/edn" -X POST localhost:3010/api/path/read -d '{:path [{:page/title "page"}]}'
+;; curl -u api-test: -H "Content-Type: application/json" -X POST localhost:3010/api/path/read -d '{"path":[{"page/title":"page"}]}'
 ;; write
-;; curl -H "Content-Type: application/edn" -H "Accept: application/edn" -X POST localhost:3010/api/path/write -d '{:path [{:page/title "page"}] :data [{:block/string "one" :block/children [{:block/string "two"}]}]}'
-;; curl -H "Content-Type: application/json" -X POST localhost:3010/api/path/write -d '{"path":[{"page/title":"page"}], "data":[{"block/string":"one", "block/children":[{"block/string":"two"}]}]}'
+;; curl -u api-test: -H "Content-Type: application/edn" -H "Accept: application/edn" -X POST localhost:3010/api/path/write -d '{:path [{:page/title "page"}] :data [{:block/string "one" :block/children [{:block/string "two"}]}]}'
+;; curl -u api-test: -H "Content-Type: application/json" -X POST localhost:3010/api/path/write -d '{"path":[{"page/title":"page"}], "data":[{"block/string":"one", "block/children":[{"block/string":"two"}]}]}'
+;; auth
+;; userrname always needed even if empty/no pw
+;; curl -u presence-name:server-password ...
