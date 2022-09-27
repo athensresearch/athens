@@ -191,8 +191,8 @@
                       :onMarkAsUnread #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
                       :onArchive      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))}
                      [:> Text {:fontWeight "bold" :noOfLines 2 :fontSize "sm"}
-                      (str (get-in notification ["subject" "username"]) " ")
-                      (str (get event-verb (get notification "type")) " ")
+                      (str (get-in notification ["subject" "username"]) " "
+                           (get event-verb (get notification "type")) " ")
                       [parse-renderer/parse-and-render (or
                                                         (get object "name")
                                                         (get object "string"))
