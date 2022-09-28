@@ -83,7 +83,6 @@ const useContextMenuState = () => {
         height: 0
       }
     }
-
     // Exclusive menus set state immediately and then
     // stop the event from creating more menus
     if (isExclusive && !menuState.isExclusive) {
@@ -112,20 +111,24 @@ const useContextMenuState = () => {
   }, [menuState]);
 
   /**
-   * Returns true when the menu is open for this item
-   * @param ref: React.MutableRefObject<HTMLElement>,
-   * @returns 
+   * Returns true when the menu is open
+   * If a ref is passed, it will return true if the ref is open
+   * @param ref?: React.MutableRefObject<HTMLElement>,
+   * @returns boolean
    */
-  const getIsMenuOpen = (ref: React.MutableRefObject<HTMLElement>) => menuState.sources?.includes(ref.current);
+  const getIsMenuOpen = (ref?: React.MutableRefObject<HTMLElement>) => {
+    if (!ref) return menuState?.isOpen;
+    return menuState?.sources?.includes(ref.current);
+  };
 
   return {
-    onCloseMenu,
     addToContextMenu,
     getIsMenuOpen,
+    onCloseMenu,
     contextMenuPosition: menuState.position,
     contextMenuSources: menuState.sources,
     isContextMenuOpen: menuState.isOpen,
-    contextMenucomponents: menuState.components,
+    contextMenuComponents: menuState.components,
   };
 }
 
@@ -147,7 +150,7 @@ export const ContextMenuProvider = ({ children }) => {
   const {
     contextMenuPosition,
     isContextMenuOpen,
-    contextMenucomponents,
+    contextMenuComponents,
     onCloseMenu,
   } = contextMenuState;
 
@@ -176,8 +179,12 @@ export const ContextMenuProvider = ({ children }) => {
         <Portal>
           <MenuSource position={contextMenuPosition} />
           <MenuList className="app-context-menu" ref={menuRef}>
-            {contextMenucomponents.map((Child, index) => {
-              return (<Child key={index} />)
+            {contextMenuComponents.map((Child, index) => {
+              if (typeof Child === "function") {
+                return <Child key={index} />
+              } else {
+                return <React.Fragment key={index}>{Child}</React.Fragment>;
+              }
             })}
           </MenuList>
         </Portal>

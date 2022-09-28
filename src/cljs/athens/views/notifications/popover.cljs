@@ -1,11 +1,13 @@
 (ns athens.views.notifications.popover
   (:require
-    ["/components/Icons/Icons" :refer [BellFillIcon ArrowRightIcon]]
-    ["/components/Inbox/Inbox" :refer [InboxItemsList]]
+    ["/components/Empty/Empty" :refer [Empty EmptyTitle EmptyIcon EmptyMessage]]
+    ["/components/Icons/Icons" :refer [BellIcon ArrowRightIcon]]
+    ["/components/Notifications/NotificationItem" :refer [NotificationItem]]
     ["/timeAgo.js" :refer [timeAgo]]
-    ["@chakra-ui/react" :refer [Badge Box IconButton Flex PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
+    ["@chakra-ui/react" :refer [Badge Text Box Heading VStack IconButton PopoverBody PopoverTrigger Popover PopoverContent PopoverCloseButton PopoverHeader Button]]
     [athens.common-db :as common-db]
     [athens.db :as db]
+    [athens.parse-renderer :as parse-renderer]
     [athens.reactive :as reactive]
     [athens.router :as router]
     [athens.views.notifications.actions :as actions]
@@ -93,6 +95,13 @@
   (not (get inbox-notif "isArchived")))
 
 
+(def event-verb
+  {"Comments" "commented on"
+   "Mentions" "mentioned you in"
+   "Assignments" "assigned you to"
+   "Created" "created"})
+
+
 (defn get-inbox-items-for-popover
   [db at-username]
   (let [inbox-uid                 (get-inbox-uid-for-user db at-username)
@@ -117,44 +126,80 @@
   []
   (let [username (rf/subscribe [:username])]
     (fn []
-      (when (notifications/enabled?)
-        (let [user-page-title    (str "@" @username)
-              notification-list  (get-inbox-items-for-popover @db/dsdb user-page-title)
-              navigate-user-page #(router/navigate-page user-page-title)
-              num-notifications  (count notification-list)]
-          [:> Popover {:closeOnBlur true :size "md"}
+      (let [user-page-title    (str "@" @username)
+            notification-list  (get-inbox-items-for-popover @db/dsdb user-page-title)
+            navigate-user-page #(router/navigate-page user-page-title)
+            notifications-grouped-by-object (group-by #(get % "object") notification-list)
+            num-notifications  (count notification-list)]
 
-           [:> PopoverTrigger
-            [:> Box {:position "relative"}
-             [:> IconButton {"aria-label"   "Notifications"
-                             :onDoubleClick navigate-user-page
-                             :onClick       (fn [e]
-                                              (when (.. e -shiftKey)
-                                                (rf/dispatch [:right-sidebar/open-item [:node/title user-page-title]])))
-                             :icon          (r/as-element [:> BellFillIcon])}]
-             (when (> num-notifications 0)
-               [:> Badge {:position "absolute"
-                          :bg "gold"
-                          :color "goldContrast"
-                          :right "-3px"
-                          :bottom "-1px"
-                          :zIndex 1} num-notifications])]]
+        [:> Popover {:closeOnBlur false
+                     :isLazy true
+                     :size "lg"}
+         [:> PopoverTrigger
+          [:> Box {:position "relative"}
+           [:> IconButton {"aria-label"   "Notifications"
+                           :onDoubleClick navigate-user-page
+                           :onClick       (fn [e]
+                                            (when (.. e -shiftKey)
+                                              (rf/dispatch [:right-sidebar/open-item [:node/title user-page-title]])))
+                           :icon          (r/as-element [:> BellIcon])}]
+           (when (> num-notifications 0)
+             [:> Badge {:position "absolute"
+                        :bg "gold"
+                        :pointerEvents "none"
+                        :color "goldContrast"
+                        :right "-3px"
+                        :bottom "-1px"
+                        :zIndex 1} num-notifications])]]
 
-
-           [:> PopoverContent {:maxHeight "calc(100vh - 4rem)"}
-            [:> PopoverCloseButton]
-            [:> PopoverHeader [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])} "Notifications"]]
-            [:> Flex {:p             0
-                      :as            PopoverBody
+         [:> PopoverContent {:maxHeight "calc(100vh - 4rem)"}
+          [:> PopoverCloseButton]
+          [:> PopoverHeader
+           [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])}
+            "Notifications"]]
+          [:> VStack {:as PopoverBody
                       :flexDirection "column"
-                      :overflow      "hidden"}
-             [:> InboxItemsList
+                      :align "stretch"
+                      :overflowY "auto"
+                      :overscrollBehavior "contain"
+                      :spacing 6
+                      :p 2}
 
-              {:onOpenItem        on-click-notification-item
-               :onMarkAsRead      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
-               :onMarkAsUnread    #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-               :onArchive         (fn [e uid]
-                                    (.. e stopPropagation)
-                                    (rf/dispatch (actions/update-state-prop uid "athens/notification/is-archived" "true")))
-               ;; :onUnarchive       #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
-               :notificationsList notification-list}]]]])))))
+           (doall
+             (if (seq notifications-grouped-by-object)
+               (for [[object notifs] notifications-grouped-by-object]
+
+                 ^{:key (get object "parentUid")}
+                 [:> VStack {:align "stretch"
+                             :key (str (:parentUid object))}
+                  [:> Heading {:size "xs"
+                               :fontWeight "normal"
+                               :noOfLines 1
+                               :color "foreground.secondary"
+                               :lineHeight "base"
+                               :px 2
+                               :pt 2}
+                   [parse-renderer/parse-and-render (or (get object "name") (get object "string")) (get object "parentUid")]]
+
+                  (for [notification notifs]
+
+                    ^{:key (get notification "id")}
+                    [:> NotificationItem
+                     {:notification   notification
+                      :onOpenItem     on-click-notification-item
+                      :onMarkAsRead   #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "true"))
+                      :onMarkAsUnread #(rf/dispatch (actions/update-state-prop % "athens/notification/is-read" "false"))
+                      :onArchive      #(rf/dispatch (actions/update-state-prop % "athens/notification/is-archived" "true"))}
+                     [:> Text {:fontWeight "bold" :noOfLines 2 :fontSize "sm"}
+                      (str (get-in notification ["subject" "username"]) " "
+                           (get event-verb (get notification "type")) " ")
+                      [parse-renderer/parse-and-render (or
+                                                         (get object "name")
+                                                         (get object "string"))
+                       (:id notification)]]
+                     [:> Text [parse-renderer/parse-and-render (get notification "body")]]])])
+
+               [:> Empty {:size "sm" :py 8}
+                [:> EmptyIcon]
+                [:> EmptyTitle "All clear"]
+                [:> EmptyMessage "Unread notifications will appear here."]]))]]]))))
