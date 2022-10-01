@@ -91,7 +91,10 @@
                             (reset! show-edit-atom? false)
                             ;; side effect
                             (.blur target)))
-            save-fn!    #(update-card-field uid ":task/title" @value-atom)
+            save-fn!    #(do
+                           (update-card-field uid ":task/title" @value-atom)
+                           (rf/dispatch [:block/save {:uid    uid
+                                                      :string @value-atom}]))
             state-hooks {:save-fn                 save-fn!
                          :enter-handler           enter-fn!
                          :idle-fn                 #()

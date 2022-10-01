@@ -117,7 +117,7 @@
         :presenceDetails           (when (electron.utils/remote-db? @selected-db)
                                      (r/as-element [toolbar-presence-el]))}
        (when (notifications/enabled?)
-         {:notificationPopover (r/as-element [notifications-popover])
+         {:notificationPopover (r/as-element [:f> notifications-popover])
           :isNotificationsPopoverOpen @notificationsPopoverOpen?})
        (when (comments/enabled?)
          {:isShowComments  @show-comments?

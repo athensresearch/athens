@@ -111,18 +111,15 @@ const useContextMenuState = () => {
   }, [menuState]);
 
   /**
-   * Returns true when the menu is open for this item
-   * @param ref: React.MutableRefObject<HTMLElement>,
-   * @returns 
+   * Returns true when the menu is open
+   * If a ref is passed, it will return true if the ref is open
+   * @param ref?: React.MutableRefObject<HTMLElement>,
+   * @returns boolean
    */
-  const getIsMenuOpen = (ref: React.MutableRefObject<HTMLElement>) => {
-    if (!menuState.sources.filter(Boolean).length) {
-      return false;
-    } else {
-      return menuState.sources?.includes(ref.current)
-    }
+  const getIsMenuOpen = (ref?: React.MutableRefObject<HTMLElement>) => {
+    if (!ref) return menuState?.isOpen;
+    return menuState?.sources?.includes(ref.current);
   };
-
 
   return {
     addToContextMenu,

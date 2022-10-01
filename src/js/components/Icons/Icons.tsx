@@ -819,4 +819,12 @@ export const GraphChildIcon = createIcon({
   ),
 })
 
+export const UnreadIcon = createIcon({
+  displayName: 'UnreadIcon',
+  viewBox: '0 0 14 14',
+  path: (
+    <path fillRule="evenodd" clipRule="evenodd" d="M10.5 6C11.8807 6 13 4.88071 13 3.5C13 2.11929 11.8807 1 10.5 1C9.11929 1 8 2.11929 8 3.5C8 4.88071 9.11929 6 10.5 6ZM12 10V6.66318C11.6891 6.81085 11.3531 6.91405 11 6.96456V10C11 10.5523 10.5523 11 10 11H4C3.44772 11 3 10.5523 3 10V4C3 3.44772 3.44772 3 4 3H7.03544C7.08595 2.64693 7.18915 2.31085 7.33682 2H4C2.89543 2 2 2.89543 2 4V10C2 11.1046 2.89543 12 4 12H10C11.1046 12 12 11.1046 12 10Z" fill="currentColor" />
+  ),
+})
+
 export const EditIcon = PencilIcon
