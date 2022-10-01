@@ -84,7 +84,7 @@
              [#:block{:uid        inbox-uid
                       :string     ""
                       :properties {":entity/type"
-                                   #:block{:string "athens/inbox"
+                                   #:block{:string "[[athens/inbox]]"
                                            :uid    (common.utils/gen-block-uid)}}}]
              {:relation {:page/title "athens/inbox"}
               :page/title at-username})
