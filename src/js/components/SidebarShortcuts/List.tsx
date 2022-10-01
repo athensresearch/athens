@@ -27,6 +27,7 @@ export const List = (props) => {
   const {
     items: outerItems,
     children,
+    currentPageName,
     onUpdateItemsOrder,
     onOpenItem,
     ...rest
@@ -76,6 +77,7 @@ export const List = (props) => {
         <SortableContext strategy={verticalListSortingStrategy} items={items}>
           {items.map(item => <Item
             onClick={(e) => onOpenItem(e, item)}
+            isActive={item[1] === currentPageName}
             key={item}
             id={item}></Item>)}
         </SortableContext>
