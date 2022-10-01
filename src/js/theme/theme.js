@@ -815,6 +815,148 @@ const components = {
       zIndex: "tooltip",
     },
   },
+  Page: {
+    parts: ["container", "header", "overline", "headerImage", "title", "body", "footer"],
+    baseStyle: {
+      container: {
+        display: "grid",
+        alignSelf: "stretch",
+        gridTemplateAreas: "'header' 'content' 'footer'",
+        gridTemplateRows: "auto 1fr auto",
+        transitionProperty: "background",
+        transitionTimingFunction: "ease-in-out",
+        transitionDuration: "fast",
+        "--page-left-gutter-width": "1em",
+        "--page-right-gutter-width": "3.5em",
+      },
+      header: {
+        pt: "var(--page-padding)",
+        px: "var(--page-padding)",
+        position: 'relative',
+        pb: 4,
+        gridArea: "header",
+        alignItems: "center",
+      },
+      headerImage: {
+        marginTop: 4,
+        gridArea: "image",
+        borderRadius: "md",
+        width: "100%",
+        height: "auto",
+        objectFit: "cover",
+        objectPosition: "center",
+      },
+      overline: {
+        color: "foreground.secondary",
+        fontSize: "sm",
+        fontWeight: "bold",
+        "svg": {
+          mr: 1,
+          verticalAlign: "-0.125em",
+        }
+      },
+      title: {
+        gridArea: "title",
+        position: 'relative',
+        overflow: 'visible',
+        whiteSpace: 'pre-line',
+        wordBreak: 'break-word',
+        fontWeight: "bold",
+        flexGrow: 1,
+        margin: 0
+      },
+      body: {
+        px: "calc(var(--page-padding) - 1em)",
+        pr: "calc(var(--page-padding) - var(--page-right-gutter-width) + 1.5em)",
+        gridArea: 'content',
+      },
+      footer: {
+        gridArea: "footer",
+        p: "var(--page-padding)",
+      }
+    },
+    variants: {
+      elevated: {
+        container: {
+          boxShadow: 'page',
+          border: "1px solid",
+          borderColor: "separator.divider",
+          borderRadius: "md",
+        }
+      },
+    },
+    sizes: {
+      sm: {
+        header: {
+          pt: 4,
+          px: 2,
+          pb: 2,
+          fontSize: "sm",
+        },
+        body: {
+          fontSize: "sm",
+          p: 2,
+          py: 2,
+        },
+        footer: {
+          fontSize: "xs",
+          pt: 2,
+          px: 2,
+          pb: 2,
+        },
+        title: {
+          fontSize: "lg",
+        },
+      },
+      md: {
+        header: {
+          pt: 6,
+          px: 6,
+          pb: 3,
+          fontSize: "sm"
+        },
+        body: {
+          p: 6,
+          py: 3,
+          fontSize: "sm"
+        },
+        footer: {
+          pt: 3,
+          px: 6,
+          pb: 6,
+          fontSize: "sm"
+        },
+        title: {
+          fontSize: "2xl",
+        },
+      },
+      lg: {
+        header: {
+          pt: 8,
+          px: 8,
+          pb: 4,
+          fontSize: "md"
+        },
+        body: {
+          p: 8,
+          py: 4,
+          fontSize: "md"
+        },
+        footer: {
+          pt: 4,
+          px: 8,
+          pb: 8,
+          fontSize: "md"
+        },
+        title: {
+          fontSize: "3xl",
+        },
+      },
+    },
+    defaultProps: {
+      size: "lg",
+    }
+  }
 }
 
 // Default prop overrides

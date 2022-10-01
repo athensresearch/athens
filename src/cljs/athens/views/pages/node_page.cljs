@@ -3,10 +3,10 @@
     ["/components/Block/Anchor" :refer [Anchor]]
     ["/components/Block/Container" :refer [Container]]
     ["/components/Confirmation/Confirmation" :refer [Confirmation]]
-    ["/components/Icons/Icons" :refer [CalendarIcon EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
-    ["/components/Page/Page" :refer [PageHeader PageBody PageFooter TitleContainer]]
+    ["/components/Icons/Icons" :refer [CalendarIcon ArrowRightOnBoxIcon ArrowLeftOnBoxIcon EllipsisHorizontalIcon GraphIcon BookmarkIcon BookmarkFillIcon TrashIcon ArrowRightOnBoxIcon TimeNowIcon]]
+    ["/components/Page/Page" :refer [Page PageHeader PageOverline PageHeaderImage PageBody PageFooter TitleContainer]]
     ["/components/References/References" :refer [PageReferences ReferenceBlock ReferenceGroup]]
-    ["@chakra-ui/react" :refer [Text Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
+    ["@chakra-ui/react" :refer [ButtonGroup Input FormLabel FormControl Button Box HStack Button Portal IconButton MenuDivider MenuButton Menu MenuList MenuItem Breadcrumb BreadcrumbItem BreadcrumbLink VStack]]
     [athens.common-db :as common-db]
     [athens.common-events.graph.ops :as graph-ops]
     [athens.common.sentry :refer-macros [wrap-span-no-new-tx]]
@@ -434,9 +434,10 @@
   (let [state         (r/atom init-state)
         unlinked-refs (r/atom [])
         block-uid     (r/atom nil)
+        properties-open?  (r/atom false)
         properties-enabled? (rf/subscribe [:feature-flags/enabled? :properties])
         cover-photo-enabled? (rf/subscribe [:feature-flags/enabled? :cover-photo])]
-    (fn [node]
+    (fn [node opts]
       (when (not= @block-uid (:block/uid node))
         (reset! state init-state)
         (reset! unlinked-refs [])
@@ -448,59 +449,75 @@
 
         (sync-title title state)
 
-        [:<>
+        [:> Page (merge opts {})
 
          [:> Confirmation {:isOpen      alert-show
                            :title       message
                            :confirmText confirm-text
                            :onConfirm   confirm-fn
                            :onClose     cancel-fn}]
+
          ;; Header
-         [:> PageHeader (merge
-                          (when daily-note?
-                            {:overline
-                             (r/as-element [:> Text {:as "span"
-                                                     :display "flex"
-                                                     :gap 1
-                                                     :alignItems "center"}
-                                            [:> CalendarIcon] "Daily Note"])})
-                          {:onClickOpenInMainView  (when on-daily-notes?
-                                                     (fn [e] (router/navigate-page title e)))
-                           :onClickOpenInSidebar  (when-not @(subscribe [:right-sidebar/contains-item? [:node/title title]])
-                                                    #(dispatch [:right-sidebar/open-item [:node/title title]]))}
-                          (when @cover-photo-enabled?
-                            {:headerImageEnabled     @cover-photo-enabled?
-                             :headerImageUrl         (-> properties (get ":header/url") :block/string)
-                             :onChangeHeaderImageUrl (fn [url]
-                                                       (dispatch [:graph/update-in [:node/title title] [":header/url"]
-                                                                  (fn [db uid] [(graph-ops/build-block-save-op db uid url)])]))}))
+         [:> PageHeader
 
-          [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
-           ;; Prevent editable textarea if a node/title is a date
-           ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
+          (when daily-note?
+            [:> PageOverline [:> CalendarIcon] "Daily Note"])
 
-           (when-not daily-note?
-             [autosize/textarea
-              {:value       (:title/local @state)
-               :id          (str "editable-uid-" uid)
-               :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
-               :on-blur     (fn [_]
-                              ;; add title Untitled-n for empty titles
-                              (when (empty? (:title/local @state))
-                                (swap! state assoc :title/local (auto-inc-untitled)))
-                              (handle-blur node state))
-               :on-key-down (fn [e] (handle-key-down e uid state children))
-               :on-change   (fn [e] (handle-change e state))}])
+          [:> HStack {:justifyContent "space-between" :flexGrow 1}
 
-           [:> HStack {:width "fit-content" :gridArea "main"}
-            ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
-            (if (str/blank? (:title/local @state))
-              [:wbr]
-              [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
-               [parse-renderer/parse-and-render (:title/local @state) uid]])
+           [:> TitleContainer {:isEditing @(subscribe [:editing/is-editing uid])}
+            ;; Prevent editable textarea if a node/title is a date
+            ;; Don't allow title editing from daily notes, right sidebar, or node-page itself.
 
-            ;; Dropdown
-            [menu-dropdown node daily-note? on-daily-notes?]]]]
+            (when-not daily-note?
+              [autosize/textarea
+               {:value       (:title/local @state)
+                :id          (str "editable-uid-" uid)
+                :class       (when @(subscribe [:editing/is-editing uid]) "is-editing")
+                :on-blur     (fn [_]
+                               ;; add title Untitled-n for empty titles
+                               (when (empty? (:title/local @state))
+                                 (swap! state assoc :title/local (auto-inc-untitled)))
+                               (handle-blur node state))
+                :on-key-down (fn [e] (handle-key-down e uid state children))
+                :on-change   (fn [e] (handle-change e state))}])
+
+            [:> HStack {:width "fit-content" :gridArea "main"}
+             ;; empty word break to keep span on full height else it will collapse to 0 height (weird ui)
+             (if (str/blank? (:title/local @state))
+               [:wbr]
+               [perf-mon/hoc-perfmon {:span-name "parse-and-render"}
+                [parse-renderer/parse-and-render (:title/local @state) uid]])
+
+             ;; Dropdown
+             [menu-dropdown node daily-note? on-daily-notes?]]]
+
+           [:> ButtonGroup {:size "sm"
+                            :colorScheme "subtle"
+                            :variant "ghost"}
+            (when @cover-photo-enabled?
+              [:> Button {:onClick #(swap! properties-open? not)} "Properties"])
+            (when on-daily-notes?
+              [:> IconButton {:icon (r/as-element [:> ArrowLeftOnBoxIcon])
+                              :aria-label "Open in Main View"
+                              :onClick (fn [e] (router/navigate-page title e))}])
+            (when-not @(subscribe [:right-sidebar/contains-item? [:node/title title]])
+              [:> IconButton {:icon (r/as-element [:> ArrowRightOnBoxIcon])
+                              :aria-label "Open in Right sidebar"
+                              :onClick #(dispatch [:right-sidebar/open-item [:node/title title]])}])]]
+
+          (when @properties-open?
+            [:> VStack {:align "stretch"}
+             [:> FormControl
+              [:> FormLabel "Header Image URL"]
+              [:> Input {:defaultValue (-> properties (get ":header/url") :block/string)
+                         :onBlur (fn [e]
+                                   (dispatch [:graph/update-in [:node/title title] [":header/url"]
+                                              (fn [db uid] [(graph-ops/build-block-save-op db uid (.. e -target -value))])]))}]]])
+
+
+          (when (and @cover-photo-enabled? (-> properties (get ":header/url") :block/string))
+            [:> PageHeaderImage {:src (-> properties (get ":header/url") :block/string)}])]
 
          [:> PageBody
 
@@ -542,7 +559,7 @@
 
 
 (defn page
-  [ident]
+  [ident opts]
   (let [node (wrap-span-no-new-tx "db/get-reactive-node-document"
                                   (reactive/get-reactive-node-document ident))]
-    [node-page-el node]))
+    [node-page-el node opts]))

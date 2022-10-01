@@ -13,7 +13,8 @@
                                                        ChatBubbleIcon
                                                        ExpandIcon
                                                        TextIcon]]
-    ["/components/Page/Page"                   :refer [PageHeader
+    ["/components/Page/Page"                   :refer [Page
+                                                       PageHeader
                                                        PageBody
                                                        PageFooter
                                                        TitleContainer]]
@@ -715,14 +716,14 @@
 
 
 (defn block-page-el
-  [block]
+  [block opts]
   (let [state                          (r/atom {:string/local    nil
                                                 :string/previous nil})
         uid                            (:block/uid block)
         show-comments?                 (rf/subscribe [:comment/show-comments?])
         show-textarea?                 (rf/subscribe [:comment/show-editor? uid])
         is-editing?                    (rf/subscribe [:editing/is-editing uid])
-        right-sidebar-contains-items?  (rf/subscribe [:right-sidebar/contains-item? [:block/uid uid]])
+        _right-sidebar-contains-items?  (rf/subscribe [:right-sidebar/contains-item? [:block/uid uid]])
         properties-enabled?            (rf/subscribe [:feature-flags/enabled? :properties])]
 
     (fn [block]
@@ -741,11 +742,10 @@
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:> Box
+        [:> Page (merge opts {})
 
          ;; Header
-         [:> PageHeader {:onClickOpenInSidebar  (when-not @right-sidebar-contains-items?
-                                                  #(rf/dispatch [:right-sidebar/open-item [:block/uid uid]]))}
+         [:> PageHeader
 
           ;; Parent Context
           [parents-el uid id]
@@ -792,6 +792,6 @@
 
 
 (defn page
-  [ident]
+  [ident opts]
   (let [block (reactive/get-reactive-block-document ident)]
-    [block-page-el block]))
+    [block-page-el block opts]))
