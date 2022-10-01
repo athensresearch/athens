@@ -136,7 +136,7 @@ export const PageFooter = forwardRef((props, ref) => {
 });
 
 export const PageNotFound = ({ title, onClickHome, children }) => {
-  return <Center height="100vh" gap="1rem" flexDirection="column">
+  return <Center height="var(--app-height)" gap="1rem" flexDirection="column">
     <Heading>404: {title ? `${title} not found`
       : `Page not found`}</Heading>
     {onClickHome

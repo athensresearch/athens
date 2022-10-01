@@ -50,9 +50,9 @@
               [:block/uid uid]
               {:variant "elevated"
                :alignSelf "stretch"
-               :minHeight "calc(100vh - 6rem)"}]))
+               :minHeight "calc(var(--app-height) - 6rem)"}]))
 
-         [:> Page {:minHeight "calc(100vh - 6rem)"
+         [:> Page {:minHeight "calc(var(--app-height) - 6rem)"
                    :alignSelf "stretch"
                    :variant "elevated"}
           [:> Box {:ref ref}]

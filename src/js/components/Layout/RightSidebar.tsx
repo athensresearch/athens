@@ -64,7 +64,7 @@ export const RightSidebar = (props: RightSidebarProps) => {
           transitionDuration="fast"
           borderLeft="1px solid"
           borderColor="separator.divider"
-          height="100vh"
+          height="var(--app-height)"
           position="fixed"
           id="right-sidebar"
           inset={0}
