@@ -53,7 +53,7 @@
      :string    string
      :author    (-> create :event/auth :presence/id)
      :time      (-> create :event/time :time/ts)
-     :edited?   (boolean (get properties "athens/comment/edited"))}))
+     :edited?   (boolean (get properties "athens/comment/is-edited"))}))
 
 
 (defn add-is-follow-up?
@@ -90,7 +90,7 @@
       ;; TODO Multiple threads
       ;; I think for multiple we would have a top level property for all threads
       ;; Individual threads are child of the property
-      (get ":comment/threads")
+      (get "athens/comment-threads")
       :block/uid))
 
 
@@ -290,7 +290,7 @@
                                                        []
                                                        [new-thread-op
                                                         (graph-ops/build-block-move-op @db/dsdb thread-uid {:block/uid uid
-                                                                                                            :relation  {:page/title ":comment/threads"}})])
+                                                                                                            :relation  {:page/title "athens/comment-threads"}})])
           {comment-uid :comment-uid
            comment-op  :comment-op}                  (new-comment @db/dsdb thread-uid comment-string)
           add-mentions-in-str-as-mem-subs-op         (add-mentioned-users-as-member-and-subscriber @db/dsdb thread-members-uid thread-subs-uid comment-string thread-uid thread-exists? author)
