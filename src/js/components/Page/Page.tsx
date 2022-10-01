@@ -37,7 +37,7 @@ const TITLE_PROPS = {
 }
 
 export const PageNotFound = ({ title, onClickHome, children }) => {
-  return <Center height="100vh" gap="1rem" flexDirection="column">
+  return <Center height="var(--app-height)" gap="1rem" flexDirection="column">
     <Heading>404: {title ? `${title} not found`
       : `Page not found`}</Heading>
     {onClickHome
@@ -235,7 +235,7 @@ export const DailyNotesPage = withErrorBoundary((props: DailyNotesPageProps) => 
       ref={pageRef}
       flex="0 0 auto"
       className="node-page daily-notes"
-      minHeight="calc(100vh - 4rem)"
+      minHeight="calc(var(--app-height) - 4rem)"
       boxShadow="page"
       bg="background.floor"
       borderWidth="1px"

@@ -31,8 +31,8 @@
         (let [notes (reactive-pull-many @note-refs)]
           [:> DailyNotesList {:id "daily-notes"
                               :onGetAnotherNote get-another-note
-                              :minHeight     "calc(100vh + 1px)"
-                              :height        "calc(100vh + 1px)"
+                              :minHeight     "calc(var(--app-height) + 1px)"
+                              :height        "calc(var(--app-height) + 1px)"
                               :display       "flex"
                               :overflowY     "auto"
                               :gap           "1.5rem"

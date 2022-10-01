@@ -831,11 +831,17 @@ const config = {
 
 const styles = {
   global: {
+    ":root": {
+      "--app-height": "100vh",
+      "@supports (height: 100dvh)": {
+        "--app-height": "100dvh",
+      },
+    },
     'html, body': {
       bg: 'background.floor',
       color: 'foreground.primary',
       lineHeight: '1.5',
-      height: '100vh',
+      height: 'var(--app-height)',
       fontFamily: 'default',
       sx: {
         "::WebkitScrollbar": {
