@@ -27,7 +27,7 @@ export const MainSidebar = (props) => {
           transitionTimingFunction="ease-in-out"
           transitionDuration="fast"
           pt={toolbarHeight}
-          height="100vh"
+          height="var(--app-height)"
           position="sticky"
           overflow="hidden"
           overscrollBehavior="contain"

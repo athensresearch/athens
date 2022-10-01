@@ -136,7 +136,7 @@ export const Autocomplete = ({ isOpen, onClose, event, children }) => {
           ref={menuRef}
           p={0}
           overflow="auto"
-          maxHeight={`calc(100vh - 2rem - 2rem - ${menuPosition?.top || 0}px)`}
+          maxHeight={`calc(var(--app-height) - 2rem - 2rem - ${menuPosition?.top || 0}px)`}
         >
           {children}
         </PopoverContent>

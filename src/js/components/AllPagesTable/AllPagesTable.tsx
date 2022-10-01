@@ -117,7 +117,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
   return <Box
     flex="1 1 100%"
     alignSelf="stretch"
-    height="100vh"
+    height="var(--app-height)"
     px={4}
     sx={{
       "--margin-top": "2rem",
@@ -127,7 +127,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
     }}
   >
     <Table variant="striped"
-      height="100vh"
+      height="var(--app-height)"
       sx={{
         "tr > *:nth-of-type(1)": {
           flex: "0 0 calc(100% - 39rem)"
@@ -187,7 +187,7 @@ export const AllPagesTable = ({ sortedPages, onClickItem, sortedBy, sortDirectio
         position="relative"
         display="flex"
         width="100%"
-        height="calc(100vh - var(--thead-height))"
+        height="calc(var(--app-height) - var(--thead-height))"
         ref={containerRef}
         sx={{
           // target the container that renders the row items
