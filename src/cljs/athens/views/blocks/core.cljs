@@ -723,7 +723,7 @@
         show-comments?                 (rf/subscribe [:comment/show-comments?])
         show-textarea?                 (rf/subscribe [:comment/show-editor? uid])
         is-editing?                    (rf/subscribe [:editing/is-editing uid])
-        right-sidebar-contains-items?  (rf/subscribe [:right-sidebar/contains-item? [:block/uid uid]])
+        _right-sidebar-contains-items?  (rf/subscribe [:right-sidebar/contains-item? [:block/uid uid]])
         properties-enabled?            (rf/subscribe [:feature-flags/enabled? :properties])]
 
     (fn [block]
