@@ -1064,8 +1064,7 @@
         [uid embed-id]                      (db/uid-and-embed-id uid)
         block                               (db/get-block [:block/uid uid])
         block-properties                    (common-db/get-block-property-document @db/dsdb [:block/uid uid])
-        has-comments?                       (or (not-empty (get block-properties "athens/comment-threads"))
-                                                (not-empty (get block-properties ":comment/threads")))
+        has-comments?                       (not-empty (get block-properties ":comment/threads"))
         block-has-comments-but-no-children? (and has-comments?
                                                  (empty? (:block/children block)))
         {parent-uid :block/uid
