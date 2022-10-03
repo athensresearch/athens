@@ -769,22 +769,20 @@
                     (and @show-comments?
                          thread-uid))
             ^{:key uid}
-            [inline-comments/inline-comments comments-data  uid false])]
+            [inline-comments/inline-comments comments-data  uid false])
 
          ;; Properties
          (when (and @properties-enabled?
                     (seq properties))
-           [:> PageBody
-            (for [prop (common-db/sort-block-properties properties)]
-              ^{:key (:db/id prop)}
-              [:f> block-el prop])])
+           (for [prop (common-db/sort-block-properties properties)]
+             ^{:key (:db/id prop)}
+             [:f> block-el prop]))
 
 
          ;; Children
-         [:> PageBody
-          (for [child children]
-            (let [{:keys [db/id]} child]
-              ^{:key id} [:f> block-el child]))]
+         (for [child children]
+           (let [{:keys [db/id]} child]
+             ^{:key id} [:f> block-el child]))]
 
          ;; Refs
          [:> PageFooter
