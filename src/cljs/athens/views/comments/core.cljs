@@ -83,6 +83,7 @@
        (map thread-child->comment)
        add-is-follow-up?))
 
+
 (defn get-comment-threads-from-props
   [props]
   (or (get props ":comment/threads")
