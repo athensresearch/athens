@@ -819,10 +819,9 @@ const components = {
     parts: ["container", "header", "overline", "headerImage", "title", "body", "footer"],
     baseStyle: {
       container: {
-        display: "grid",
+        display: "flex",
+        flexDirection: "column",
         alignSelf: "stretch",
-        gridTemplateAreas: "'header' 'content' 'footer'",
-        gridTemplateRows: "auto 1fr auto",
         transitionProperty: "background",
         transitionTimingFunction: "ease-in-out",
         transitionDuration: "fast",
@@ -834,12 +833,10 @@ const components = {
         px: "var(--page-padding)",
         position: 'relative',
         pb: 4,
-        gridArea: "header",
         alignItems: "center",
       },
       headerImage: {
         marginTop: 4,
-        gridArea: "image",
         borderRadius: "md",
         width: "100%",
         height: "auto",
@@ -868,10 +865,8 @@ const components = {
       body: {
         px: "calc(var(--page-padding) - 1em)",
         pr: "calc(var(--page-padding) - var(--page-right-gutter-width) + 1.5em)",
-        gridArea: 'content',
       },
       footer: {
-        gridArea: "footer",
         p: "var(--page-padding)",
       }
     },
