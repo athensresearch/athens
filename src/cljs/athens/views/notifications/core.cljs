@@ -46,7 +46,7 @@
                                #:block{:string notification-type
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/trigger"
-                               #:block{:string (str "((" notification-trigger-uid "))")
+                               #:block{:string notification-trigger-uid
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/for-user"
                                #:block{:string notification-for-user
