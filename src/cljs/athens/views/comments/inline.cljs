@@ -50,8 +50,8 @@
     (log/debug ":comment/update-comment:" uid string)
     {:fx [[:dispatch-n [[:resolve-transact-forward (-> (graph-ops/build-block-save-op @db/dsdb uid string)
                                                        (common-events/build-atomic-event))]
-                        [:graph/update-in [:block/uid uid] ["athens/comment/edited"] (fn [db prop-uid]
-                                                                                       [(graph-ops/build-block-save-op db prop-uid "")])]
+                        [:graph/update-in [:block/uid uid] ["athens/comment/is-edited"] (fn [db prop-uid]
+                                                                                          [(graph-ops/build-block-save-op db prop-uid "")])]
                         [:editing/uid nil]]]]}))
 
 
