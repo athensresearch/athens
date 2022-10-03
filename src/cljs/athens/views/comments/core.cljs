@@ -83,6 +83,11 @@
        (map thread-child->comment)
        add-is-follow-up?))
 
+(defn get-comment-threads-from-props
+  [props]
+  (or (get props ":comment/threads")
+      (get props "athens/comment-threads")))
+
 
 (defn get-comment-thread-uid
   [_db parent-block-uid]
@@ -90,7 +95,7 @@
       ;; TODO Multiple threads
       ;; I think for multiple we would have a top level property for all threads
       ;; Individual threads are child of the property
-      (get "athens/comment-threads")
+      (get-comment-threads-from-props)
       :block/uid))
 
 
