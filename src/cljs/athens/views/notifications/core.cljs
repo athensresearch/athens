@@ -61,7 +61,7 @@
                                #:block{:string  "false"
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/trigger/parent"
-                               #:block{:string  (str "((" notification-trigger-parent "))")
+                               #:block{:string notification-trigger-parent
                                        :uid    (common.utils/gen-block-uid)}}}]
          {:block/uid inbox-block-uid
           :relation  notification-position})
