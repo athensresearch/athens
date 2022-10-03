@@ -43,10 +43,10 @@
                                #:block{:string "[[athens/notification]]"
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/type"
-                               #:block{:string (str "[[" notification-type "]]")
+                               #:block{:string notification-type
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/trigger"
-                               #:block{:string (str "((" notification-trigger-uid "))")
+                               #:block{:string notification-trigger-uid
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/for-user"
                                #:block{:string notification-for-user
@@ -61,7 +61,7 @@
                                #:block{:string  "false"
                                        :uid    (common.utils/gen-block-uid)}
                                "athens/notification/trigger/parent"
-                               #:block{:string  (str "((" notification-trigger-parent "))")
+                               #:block{:string notification-trigger-parent
                                        :uid    (common.utils/gen-block-uid)}}}]
          {:block/uid inbox-block-uid
           :relation  notification-position})
