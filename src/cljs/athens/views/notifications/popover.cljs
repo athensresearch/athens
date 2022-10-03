@@ -34,10 +34,14 @@
   [prop]
   (let [type (:block/string (get prop "athens/notification/type"))]
     (cond
-      (= type "[[athens/notification/type/comment]]")           "Comments"
-      (= type "[[athens/notification/type/mention]]")           "Mentions"
-      (= type "[[athens/notification/type/task/assigned/to]]")  "Assignments"
-      (= type "[[athens/notification/type/task/assigned/by]]")  "Created")))
+      (or (= type "[[athens/notification/type/comment]]")
+          (= type "athens/notification/type/comment"))             "Comments"
+      (or (= type "[[athens/notification/type/mention]]")
+          (= type "athens/notification/type/mention"))             "Mentions"
+      (or (= type "[[athens/notification/type/task/assigned/to]]")
+          (= type "athens/notification/type/task/assigned/to"))    "Assignments"
+      (or (= type "[[athens/notification/type/task/assigned/by]]")
+          (= type "athens/notification/type/task/assigned/by"))    "Created")))
 
 
 (defn get-archive-state
@@ -66,17 +70,23 @@
                                   timeAgo)
         archive-state         (get-archive-state properties)
         read-state            (get-read-state properties)
-        trigger-parent-uid    (-> (get properties "athens/notification/trigger/parent")
-                                  :block/string
-                                  (common-db/strip-markup "((" "))"))
+        trigger-parent-uid    (or (-> (get properties "athens/notification/trigger/parent")
+                                      :block/string
+                                      (common-db/strip-markup "((" "))"))
+                                  (-> (get properties "athens/notification/trigger/parent")
+                                      :block/string))
         trigger-parent-string (-> (common-db/get-block db [:block/uid trigger-parent-uid])
                                   :block/string)
-        username              (-> (get properties "athens/notification/trigger/author")
-                                  :block/string
-                                  (common-db/strip-markup "[[" "]]"))
-        trigger-uid           (-> (get properties "athens/notification/trigger")
-                                  :block/string
-                                  (common-db/strip-markup "((" "))"))
+        username              (or (-> (get properties "athens/notification/trigger/author")
+                                      :block/string
+                                      (common-db/strip-markup "[[" "]]"))
+                                  (-> (get properties "athens/notification/trigger/author")
+                                      :block/string))
+        trigger-uid           (or (-> (get properties "athens/notification/trigger")
+                                      :block/string
+                                      (common-db/strip-markup "((" "))"))
+                                  (-> (get properties "athens/notification/trigger")
+                                      :block/string))
         body                  (-> (common-db/get-block db [:block/uid trigger-uid])
                                   :block/string)]
     {"id"         uid
