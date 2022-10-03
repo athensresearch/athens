@@ -152,7 +152,7 @@
                         :bottom "-1px"
                         :zIndex 1} num-notifications])]]
 
-         [:> PopoverContent {:maxHeight "calc(100vh - 4rem)"}
+         [:> PopoverContent {:maxHeight "calc(var(--app-height) - 4rem)"}
           [:> PopoverCloseButton]
           [:> PopoverHeader
            [:> Button {:onClick navigate-user-page :rightIcon (r/as-element [:> ArrowRightIcon])}

@@ -47,7 +47,7 @@
                   :as ButtonGroup
                   :size "sm"
                   :align "stretch"
-                  :px 3}
+                  :px 2.5}
        [:> Button {:onClick on-athena
                    :variant "outline"
                    :justifyContent "start"

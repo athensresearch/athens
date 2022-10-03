@@ -13,6 +13,8 @@
 (defn global-shortcuts
   []
   (let [shortcuts (reactive/get-reactive-shortcuts)
+        current-route (rf/subscribe [:current-route])
+        current-route-page-name (get-in @current-route [:path-params :title])
         is-open? (left-sidebar-subs/get-widget-open? "shortcuts")]
     [:> Widget
      {:pr            4
@@ -27,6 +29,7 @@
 
 
         [:> List {:items              shortcuts
+                  :currentPageName    current-route-page-name
                   :onOpenItem         (fn [e [_order page]]
                                         (let [shift? (.-shiftKey e)]
                                           (rf/dispatch [:reporting/navigation {:source :left-sidebar

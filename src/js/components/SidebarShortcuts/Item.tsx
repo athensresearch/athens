@@ -5,7 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 
 export const Item = (props) => {
   const { id, children, ...rest } = props;
-  const [_order, name, isUnread, isCurrent] = id;
+  const [_order, name, isUnread] = id;
 
   const {
     attributes,
@@ -22,7 +22,6 @@ export const Item = (props) => {
       flexShrink={0}
       px={3}
       variant="ghost"
-      isActive={isCurrent}
       justifyContent="flex-start"
       overflow="hidden"
       ref={setNodeRef}
