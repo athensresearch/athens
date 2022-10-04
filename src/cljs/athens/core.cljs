@@ -3,6 +3,7 @@
     ["@sentry/integrations" :as integrations]
     ["@sentry/react" :as Sentry]
     ["@sentry/tracing" :as tracing]
+    ["react-dom/client" :refer [createRoot]]
     [athens.coeffects]
     [athens.common.logging :as log]
     [athens.components]
@@ -22,7 +23,7 @@
     [datalog-console.integrations.datascript :as datalog-console]
     [goog.dom :refer [getElement]]
     [re-frame.core :as rf]
-    [reagent.dom :as r-dom]))
+    [reagent.core :as r]))
 
 
 (goog-define SENTRY_DSN "")
@@ -34,13 +35,16 @@
     (log/info "dev mode")))
 
 
+(defonce react-root (createRoot (getElement "app")))
+
+
 (defn ^:dev/after-load mount-root
   [first-boot?]
   (rf/clear-subscription-cache!)
   (when-not first-boot?
     (router/init-routes!))
-  (r-dom/render [views/main]
-                (getElement "app")))
+  ;; See https://github.com/reagent-project/reagent/issues/579 as to why we render a anonymous fn.
+  (.render react-root (r/as-element [(fn [] views/main)])))
 
 
 (defn sentry-on?
