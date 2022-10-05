@@ -449,7 +449,7 @@
 
         (sync-title title state)
 
-        [:> Page (merge opts {})
+        [:> Page (merge opts {:class "node-page"})
 
          [:> Confirmation {:isOpen      alert-show
                            :title       message
