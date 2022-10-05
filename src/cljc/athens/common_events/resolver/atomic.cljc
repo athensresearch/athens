@@ -31,7 +31,8 @@
                          :block/edits  event-ref}
             position-tx (condp = (position/position-type position)
                           :child    (position/add-child db uid position event-ref)
-                          :property (position/add-property db uid position event-ref))
+                          :property (position/add-property db uid position event-ref)
+                          (throw (ex-info "Can't determine position type for :block/new" position)))
             tx-data     (into [new-block] position-tx)]
         tx-data))))
 
