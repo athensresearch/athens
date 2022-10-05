@@ -137,7 +137,8 @@
     "react-intersection-observer": "^8.32.1",
     "react-window": "^1.8.6",
     "textarea-caret": "^3.1.0",
-    "tslib": "^2.3.1"
+    "tslib": "^2.3.1",
+    "turndown": "^7.1.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.15.4",

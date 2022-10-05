@@ -7,6 +7,7 @@
     [athens.parse-renderer                       :refer [parse-and-render]]
     [athens.subs.selection                       :as select-subs]
     [athens.util                                 :as util]
+    [athens.utils.markdown                       :as markdown]
     [athens.views.blocks.autocomplete-search     :as autocomplete-search]
     [athens.views.blocks.autocomplete-slash      :as autocomplete-slash]
     [athens.views.blocks.internal-representation :as internal-representation]
@@ -106,7 +107,6 @@
 
 ;; Event Handlers
 
-
 (defn textarea-paste
   "Clipboard data can only be accessed if user triggers JavaScript paste event.
   Uses previous keydown event to determine if shift was held, since the paste event has no knowledge of shift key.
@@ -128,7 +128,11 @@
           :or   {default-verbatim-paste? false}
           :as   _state-hooks} last-key-w-shift?]
   (let [data                    (.. e -clipboardData)
+        md-data                 (-> data
+                                    (.getData "text/html")
+                                    (markdown/html->md))
         text-data               (.getData data "text/plain")
+        
         ;; With internal representation
         internal-representation (some-> (.getData data "application/athens-representation")
                                         edn/read-string)
@@ -145,7 +149,10 @@
                                              50))
 
         ;; External to internal representation
-        text-to-inter (when-not (str/blank? text-data)
+        text-to-inter (cond
+                        (not (str/blank? md-data))
+                        (internal-representation/text-to-internal-representation md-data)
+                        (not (str/blank? text-data))
                         (internal-representation/text-to-internal-representation text-data))
         line-breaks   (re-find #"\r?\n" text-data)
         no-shift      (not @last-key-w-shift?)
