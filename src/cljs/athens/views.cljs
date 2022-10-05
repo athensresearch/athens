@@ -50,7 +50,7 @@
             (and @loading @modal) [db-modal/window]
 
             @loading
-            [:> Center {:height "100vh"}
+            [:> Center {:height "var(--app-height)"}
              [:> Flex {:width 28
                        :flexDirection "column"
                        :gap 2
@@ -70,7 +70,7 @@
                                :id "main-layout"
                                :spacing 0
                                :overflowY "auto"
-                               :height "100vh"
+                               :height "var(--app-height)"
                                :bg "background.floor"
                                :transitionDuration "fast"
                                :transitionProperty "background"

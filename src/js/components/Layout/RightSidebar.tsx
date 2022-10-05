@@ -3,7 +3,7 @@ import { LayoutContext, layoutAnimationProps, layoutAnimationTransition } from "
 import { AnimatePresence, motion } from 'framer-motion';
 import { RightSidebarResizeControl } from "./RightSidebarResizeControl";
 import { XmarkIcon, ChevronDownVariableIcon, ArrowLeftOnBoxIcon } from '@/Icons/Icons';
-import { Flex, ButtonGroup, Button, IconButton, Box, Collapse, VStack, BoxProps, Tooltip } from '@chakra-ui/react';
+import { Flex, ButtonGroup, Button, Text, IconButton, Box, Collapse, VStack, BoxProps, Tooltip } from '@chakra-ui/react';
 import { useInView } from 'react-intersection-observer';
 
 /** Right Sidebar */
@@ -64,7 +64,7 @@ export const RightSidebar = (props: RightSidebarProps) => {
           transitionDuration="fast"
           borderLeft="1px solid"
           borderColor="separator.divider"
-          height="100vh"
+          height="var(--app-height)"
           position="fixed"
           id="right-sidebar"
           inset={0}
@@ -101,7 +101,8 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
   const className = { "page": "node-page", "block": "block-page", "graph": "graph-page" }[type];
   return (
     <VStack
-      layerStyle="card"
+      bg="background.upper"
+      borderRadius="md"
       overflow="hidden"
       align="stretch"
       position="relative"
@@ -112,7 +113,8 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
         "--page-left-gutter-width": "1em",
         "--page-right-gutter-width": "3em",
       }}
-      mt={2}>
+      mt={2}
+    >
       <Flex
         alignItems="center"
         justifyContent="center"
@@ -129,6 +131,7 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
           gap={2}
           p={2}
           px={4}
+          pr={20}
           height="auto"
           textAlign="left"
           overflow="hidden"
@@ -142,7 +145,11 @@ export const SidebarItem = ({ title, type, isOpen, onToggle, onRemove, onNavigat
             transitionTimingFunction="ease-in-out"
             justifySelf="center" />}
         >
-          {title}
+          <Text
+            noOfLines={0}
+            overflow="hidden"
+            textOverflow="ellipsis"
+          >{title}</Text>
         </Button>
         <ButtonGroup
           colorScheme="subtle"

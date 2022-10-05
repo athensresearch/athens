@@ -30,12 +30,13 @@
 (defn left-sidebar
   []
   (let [current-route-name (rf/subscribe [:current-route/name])
-        on-athena              #(rf/dispatch [:athena/toggle])
-        on-theme               #(rf/dispatch [:theme/toggle])
-        on-settings            (fn [_]
-                                 (rf/dispatch [:settings/toggle-open]))
-        route-name @current-route-name
-        is-open? (left-sidebar-subs/get-sidebar-open?)]
+        on-athena          #(rf/dispatch [:athena/toggle])
+        on-theme           #(rf/dispatch [:theme/toggle])
+        tasks-enabled?     (rf/subscribe [:feature-flags/enabled? :tasks])
+        on-settings        (fn [_]
+                             (rf/dispatch [:settings/toggle-open]))
+        route-name         @current-route-name
+        is-open?          (left-sidebar-subs/get-sidebar-open?)]
     [:> MainSidebar {:isMainSidebarOpen is-open?}
 
      [:> Flex {:flexDirection "column" :gap 6 :alignItems "stretch" :height "100%"}
@@ -46,7 +47,7 @@
                   :as ButtonGroup
                   :size "sm"
                   :align "stretch"
-                  :px 3}
+                  :px 2.5}
        [:> Button {:onClick on-athena
                    :variant "outline"
                    :justifyContent "start"
@@ -69,7 +70,7 @@
                                                                                                                         :pane   :main-pane}])
                                                                                    (router/navigate :graph))]]
 
-      [:f> left-sidebar-tasks/my-tasks]
+      (when @tasks-enabled? [:f> left-sidebar-tasks/my-tasks])
 
       [:f> shortcuts/global-shortcuts]
 

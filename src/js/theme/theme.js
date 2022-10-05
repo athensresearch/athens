@@ -19,6 +19,7 @@ const shadows = {
   focusInsetDark: 'inset 0 0 0 3px #498eda',
 
   page: '0 0.25rem 1rem #00000055',
+  // popover: '0 0.25rem 3rem #00000055',
 }
 
 const fonts = {
@@ -68,10 +69,11 @@ const semanticTokens = {
     },
     menu: {
       default: "0 0.25rem 1rem #00000022",
-      _dark: "0 0.25rem 1rem #00000022",
+      _dark: "0 0.25rem 1rem #00000088",
     },
     popover: {
       default: "0 0.25rem 1rem #00000055",
+      _dark: "0 0.25rem 1rem #00000088",
     },
     tooltip: {
       default: "0 0.125rem 0.5rem #00000055",
@@ -457,6 +459,84 @@ const components = {
       borderColor: "separator.divider",
     }
   },
+  Empty: {
+    parts: ['container', 'icon', 'title', 'message'],
+    baseStyle: {
+      container: {
+        display: "flex",
+        alignItems: "center",
+        flexDirection: "column",
+        p: 4,
+        height: "100%",
+        maxHeight: "min(30em, max-content)",
+      },
+      icon: {
+        color: 'foreground.tertiary',
+      },
+      title: {
+        fontWeight: 'semibold',
+        textAlign: 'center',
+        color: 'foreground.secondary',
+      },
+      message: {
+        fontWeight: 'normal',
+        textAlign: 'center',
+        color: 'foreground.secondary',
+      }
+    },
+    sizes: {
+      sm: {
+        container: {
+          p: 2,
+          px: 4
+        },
+        icon: {
+          boxSize: 6,
+          mb: 1,
+        },
+        title: {
+          fontSize: 'sm',
+        },
+        message: {
+          fontSize: 'xs',
+        }
+      },
+      md: {
+        container: {
+          p: 4,
+        },
+        icon: {
+          boxSize: 8,
+          mb: 2,
+        },
+        title: {
+          fontSize: 'md',
+        },
+        message: {
+          fontSize: 'sm',
+        }
+      },
+      lg: {
+        container: {
+          p: 6,
+        },
+        icon: {
+          boxSize: 10,
+          mb: 3,
+        },
+        title: {
+          fontSize: 'lg',
+        },
+        message: {
+          fontSize: 'md',
+        },
+      }
+    },
+    variants: {},
+    defaultProps: {
+      size: 'md',
+    }
+  },
   FormLabel: {
     baseStyle: {
       fontSize: "sm",
@@ -470,7 +550,7 @@ const components = {
         overflow: 'hidden',
         p: 0,
         bg: 'background.vibrancy',
-        borderColor: 'separator.divider',
+        borderColor: 'separator.border',
         backdropFilter: "blur(20px)",
         minWidth: '0',
         width: 'max-content',
@@ -556,6 +636,26 @@ const components = {
         },
         [$arrowBg.variable]: "colors.background.upper",
       }
+    },
+    sizes: {
+      sm: {
+        content: {
+          borderRadius: "sm",
+          width: "10rem",
+        },
+      },
+      md: {
+        content: {
+          borderRadius: "md",
+          width: "20rem",
+        },
+      },
+      lg: {
+        content: {
+          borderRadius: "md",
+          width: "30rem",
+        },
+      },
     }
   },
   Spinner: {
@@ -715,6 +815,143 @@ const components = {
       zIndex: "tooltip",
     },
   },
+  Page: {
+    parts: ["container", "header", "overline", "headerImage", "title", "body", "footer"],
+    baseStyle: {
+      container: {
+        display: "flex",
+        flexDirection: "column",
+        alignSelf: "stretch",
+        transitionProperty: "background",
+        transitionTimingFunction: "ease-in-out",
+        transitionDuration: "fast",
+        "--page-left-gutter-width": "1em",
+        "--page-right-gutter-width": "3.5em",
+      },
+      header: {
+        pt: "var(--page-padding)",
+        px: "var(--page-padding)",
+        position: 'relative',
+        pb: 4,
+        alignItems: "center",
+      },
+      headerImage: {
+        marginTop: 4,
+        borderRadius: "md",
+        width: "100%",
+        height: "auto",
+        objectFit: "cover",
+        objectPosition: "center",
+      },
+      overline: {
+        color: "foreground.secondary",
+        fontSize: "sm",
+        fontWeight: "bold",
+        "svg": {
+          mr: 1,
+          verticalAlign: "-0.125em",
+        }
+      },
+      title: {
+        gridArea: "title",
+        position: 'relative',
+        overflow: 'visible',
+        whiteSpace: 'pre-line',
+        wordBreak: 'break-word',
+        fontWeight: "bold",
+        flexGrow: 1,
+        margin: 0
+      },
+      body: {
+        px: "calc(var(--page-padding) - 1em)",
+        pr: "calc(var(--page-padding) - var(--page-right-gutter-width) + 1.5em)",
+      },
+      footer: {
+        p: "var(--page-padding)",
+      }
+    },
+    variants: {
+      elevated: {
+        container: {
+          boxShadow: 'page',
+          border: "1px solid",
+          borderColor: "separator.divider",
+          borderRadius: "md",
+        }
+      },
+    },
+    sizes: {
+      sm: {
+        header: {
+          pt: 4,
+          px: 2,
+          pb: 2,
+          fontSize: "sm",
+        },
+        body: {
+          fontSize: "sm",
+          p: 2,
+          py: 2,
+        },
+        footer: {
+          fontSize: "xs",
+          pt: 2,
+          px: 2,
+          pb: 2,
+        },
+        title: {
+          fontSize: "lg",
+        },
+      },
+      md: {
+        header: {
+          pt: 6,
+          px: 6,
+          pb: 3,
+          fontSize: "sm"
+        },
+        body: {
+          p: 6,
+          py: 3,
+          fontSize: "sm"
+        },
+        footer: {
+          pt: 3,
+          px: 6,
+          pb: 6,
+          fontSize: "sm"
+        },
+        title: {
+          fontSize: "2xl",
+        },
+      },
+      lg: {
+        header: {
+          pt: 8,
+          px: 8,
+          pb: 4,
+          fontSize: "md"
+        },
+        body: {
+          p: 8,
+          py: 4,
+          fontSize: "md"
+        },
+        footer: {
+          pt: 4,
+          px: 8,
+          pb: 8,
+          fontSize: "md"
+        },
+        title: {
+          fontSize: "3xl",
+        },
+      },
+    },
+    defaultProps: {
+      size: "lg",
+    }
+  }
 }
 
 // Default prop overrides
@@ -731,11 +968,17 @@ const config = {
 
 const styles = {
   global: {
+    ":root": {
+      "--app-height": "100vh",
+      "@supports (height: 100dvh)": {
+        "--app-height": "100dvh",
+      },
+    },
     'html, body': {
       bg: 'background.floor',
       color: 'foreground.primary',
       lineHeight: '1.5',
-      height: '100vh',
+      height: 'var(--app-height)',
       fontFamily: 'default',
       sx: {
         "::WebkitScrollbar": {

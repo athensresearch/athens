@@ -1,5 +1,5 @@
 import React from 'react'
-import { IconButton } from '@chakra-ui/react';
+import { IconButton, useTheme } from '@chakra-ui/react';
 
 interface ToggleProps extends React.HTMLAttributes<HTMLButtonElement> {
   isOpen: boolean;
@@ -10,37 +10,37 @@ interface ToggleProps extends React.HTMLAttributes<HTMLButtonElement> {
  * Button to toggle the visibility of a block's child blocks.
  */
 export const Toggle = (props: ToggleProps) => {
-  const { isOpen, onClick } = props;
+  const { isOpen, ...rest } = props;
 
   return (
     <IconButton
       className="toggle block-toggle"
-      bg="transparent"
+      variant="ghost"
       aria-label="Block toggle"
-      gridArea="toggle"
-      flexShrink={0}
-      position='relative'
-      appearance="none"
-      border="0"
-      color="foreground.secondary"
-      display="flex"
-      placeItems="center"
-      placeContent="center"
-      alignSelf="flex-start"
-      minHeight="inherit"
-      zIndex={2}
-      minWidth="0"
-      fontSize="inherit"
-      h="auto"
+      colorScheme="subtle"
       size="sm"
-      p={0}
       sx={{
+        gridArea: "toggle",
+        flexShrink: 0,
+        position: 'relative',
+        appearance: "none",
+        placeItems: "center",
+        placeContent: "center",
+        display: "flex",
+        alignItems: "flex-start",
+        alignSelf: "flex-start",
+        minHeight: "inherit",
+        zIndex: 2,
+        minWidth: "0",
+        h: "var(--control-height)",
+        w: "auto",
+        fontSize: "inherit",
+        p: 0,
         "svg": {
           pointerEvents: "none",
           overflow: "visible",
           width: "1em",
           height: "1em",
-          transition: 'transform 0.1s ease-in-out',
           transform: `rotate(${isOpen ? 90 : 0}deg)`,
 
           "*": {
@@ -48,7 +48,7 @@ export const Toggle = (props: ToggleProps) => {
           }
         },
       }}
-      onClick={onClick}
+      {...rest}
     >
       <svg
         viewBox="0 0 24 24"

@@ -7,7 +7,6 @@ import {
   ChatBubbleFillIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ContrastIcon,
   EllipsisHorizontalCircleIcon,
   ChatBubbleIcon,
 } from '@/Icons/Icons';
@@ -48,7 +47,7 @@ export interface AppToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
   * The application's current route
   */
-  route: string;
+  currentLocationName: string;
   /**
   * If the app is in Electron, whether or not it has user focus
   */
@@ -156,7 +155,7 @@ const secondaryToolbarOverflowMenu = (items) => {
 export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
   const {
     os,
-    route,
+    currentLocationName,
     isElectron,
     isWinFullscreen,
     isWinFocused,
@@ -178,9 +177,9 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     onPressClose: handlePressClose,
     workspacesMenu,
     notificationPopover,
-    currentPageTitle,
     presenceDetails,
   } = props;
+
   const { colorMode, toggleColorMode } = useColorMode();
   const [canShowFullSecondaryMenu] = useMediaQuery('(min-width: 900px)');
   const {
@@ -189,11 +188,8 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
     mainSidebarWidth,
     isScrolledPastTitle,
   } = React.useContext(LayoutContext);
-
   const toast = useToast();
   const commentsToggleToastRef = React.useRef(null);
-
-
   const shouldShowUnderlay = isScrolledPastTitle["mainContent"] || (isScrolledPastTitle["rightSidebar"] && isRightSidebarOpen);
 
   // If the workspace color mode doesn't match
@@ -262,7 +258,6 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
           alignItems="center"
           justifyContent="flex-start"
         >
-
           {isElectron && os === "mac" && (
             <FakeTrafficLights opacity={isWinFocused ? 1 : 0} />
           )}
@@ -330,14 +325,10 @@ export const AppToolbar = (props: AppToolbarProps): React.ReactElement => {
       display="flex"
       justifyContent="flex-start"
     >
-      {currentPageTitle && (
-        <LocationIndicator
-          isVisible={isScrolledPastTitle["mainContent"]}
-          type="node"
-          uid="123"
-          title={currentPageTitle}
-        />
-      )}
+      <LocationIndicator
+        isVisible={isScrolledPastTitle["mainContent"]}
+        currentLocationName={currentLocationName}
+      />
     </ToolbarButtonGroup>
   )
 
