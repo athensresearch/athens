@@ -742,7 +742,7 @@
         (when (not= string (:string/previous @state))
           (swap! state assoc :string/previous string :string/local string))
 
-        [:> Page (merge opts {})
+        [:> Page (merge opts {:class "block-page"})
 
          ;; Header
          [:> PageHeader

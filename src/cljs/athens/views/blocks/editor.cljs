@@ -47,9 +47,10 @@
   (let [target              (.. e -target)
         page                (or (.. target (closest ".node-page"))
                                 (.. target (closest ".block-page")))
-        blocks              (->> (.. page (querySelectorAll ".block-container"))
-                                 array-seq
-                                 vec)
+        blocks              (some-> page 
+                                    (.. (querySelectorAll ".block-container"))
+                                    array-seq
+                                    vec)
         uids                (map util/get-dataset-uid blocks)
         uids->children-uids (->> (zipmap uids
                                          (map util/get-dataset-children-uids blocks))
