@@ -48,7 +48,7 @@
   (let [target              (.. e -target)
         page                (or (.. target (closest ".node-page"))
                                 (.. target (closest ".block-page")))
-        blocks              (some-> page 
+        blocks              (some-> page
                                     (.. (querySelectorAll ".block-container"))
                                     array-seq
                                     vec)
@@ -132,7 +132,7 @@
                                     (.getData "text/html")
                                     (markdown/html->md))
         text-data               (.getData data "text/plain")
-        
+
         ;; With internal representation
         internal-representation (some-> (.getData data "application/athens-representation")
                                         edn/read-string)
