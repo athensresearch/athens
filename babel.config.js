@@ -59,13 +59,8 @@ module.exports = {
         preventFullImport: true
       }
     }],
-    // Our build doesn't need the {loose: true} option, but if not included it wil
-    // show a lot of warnings on the storybook build.
-    ["@babel/proposal-class-properties", {loose: true}],
-    ["@babel/proposal-object-rest-spread", {loose: true}],
-    // Used only by storybook, but must be included to avoid build warnings/errors.
-    ["@babel/plugin-proposal-private-methods", {loose: true}],
-    ["@babel/plugin-proposal-private-property-in-object", {loose: true}],
+    ["@babel/proposal-class-properties"],
+    ["@babel/proposal-object-rest-spread"],
     // Import helpers from @babel/runtime instead of duplicating them everywhere.
     "@babel/plugin-transform-runtime",
     // Better debug information for styled components.
@@ -75,6 +70,5 @@ module.exports = {
   // Do not apply this babel config to node_modules.
   // Shadow-CLJS also runs babel over node_modules and we don't want this
   // configuration to apply to it. 
-  // We still want it to be picked up by storybook though.
   exclude: ["node_modules"]
 }
