@@ -27,6 +27,8 @@
   io.github.nextjournal/clerk           #:git{:sha "d111501576537c402dc8bf65eee30e2cd90d2666"}
   io.homebase/datalog-console           #:mvn{:version "0.3.2"}
   org.clojure/data.json                 #:mvn{:version "2.4.0"}
+  com.github.jpmonettas/flow-storm-inst #:mvn{:version "3.0.231"}
+  com.github.jpmonettas/flow-storm-dbg  #:mvn{:version "3.0.231"}
   ;; backend
   ;;   logging hell
   org.clojure/tools.logging             #:mvn{:version "1.1.0"}
@@ -80,6 +82,24 @@
                 #:mvn{:version "1.1.0"}}
    ;; Very noisy, due to https://github.com/liquidz/antq/issues/108
    :main-opts  ["-m" "antq.core"]}
+
+  ;; How to use flowstorm:
+  ;; - yarn dev
+  ;; - open http://localhost:3000 for the web client
+  ;; - yarn client:debug
+  ;;   flowstorm UI will show up
+  ;; - add #trace before a defn form you want to debug
+  ;;   it will show in the flowstorm UI under the "flows" tab
+  ;;   press the forward and back buttons on it to trace execution values
+  ;;   more in https://jpmonettas.github.io/flow-storm-debugger/user_guide.html#_flows_tool
+  ;; - add #tap before a form you want to record the value
+  ;;   you'll see the return under the "taps" tab
+  ;;   more in https://jpmonettas.github.io/flow-storm-debugger/user_guide.html#_taps_tool
+  :flowstorm
+  {:exec-fn flow-storm.debugger.main/start-debugger
+   :exec-args {:port 8777
+               :repl-type :shadow
+               :build-id :app}}
 
   :uberdeps
   {:replace-deps {uberdeps/uberdeps {:mvn/version "1.1.1"}}
