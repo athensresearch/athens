@@ -4,6 +4,7 @@
 /target/
 /*-init.clj
 /*.log
+repl-client-debug
 
 # Leiningen
 /.lein-*
