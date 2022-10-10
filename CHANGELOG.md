@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0-beta.5](https://github.com/athensresearch/athens/compare/v2.1.0-beta.4...v2.1.0-beta.5) (2022-10-10)
+
+
+### Features
+
+* add top-level css variable for app height ([dd3791c](https://github.com/athensresearch/athens/commit/dd3791cd0dfd1052e3d1a9edbaf87a2ff1f5ec68))
+* clearer menu in dark mode ([9315c7f](https://github.com/athensresearch/athens/commit/9315c7f9633f6dcc536aac55ff820c47a5edc735))
+* highlight current page name in sidebar ([ce44032](https://github.com/athensresearch/athens/commit/ce44032e71bd4dd7435b5a1d7f6ce19058803b2b))
+* more prominent notifications ([94cc942](https://github.com/athensresearch/athens/commit/94cc942cbbc86fab690a3e7c58f0c91e5370ecdd))
+* notification content parsed and rendered ([37abf6c](https://github.com/athensresearch/athens/commit/37abf6c2fdb1356c553c69a8e2c08f1d1fdd7e8b))
+* notifications grouped by page ([7867c78](https://github.com/athensresearch/athens/commit/7867c78a0b09e43f2b899dacae8cead440f912e2))
+* rendered notification object title ([57b7ac5](https://github.com/athensresearch/athens/commit/57b7ac54b9bb85c2d30ba3e1064a5083dcf17642))
+
+
+### Bug Fixes
+
+* daily notes dont break ([05582cb](https://github.com/athensresearch/athens/commit/05582cb4a55cea6bb6ba74e5089160ab4b0e650f))
+* don't crash on bad position ([086d034](https://github.com/athensresearch/athens/commit/086d034ee53b73678d25aaaff960cc02938b26da))
+* don't error out when re-frame-10x is missing ([b28117d](https://github.com/athensresearch/athens/commit/b28117da4c8d68bca9e9f32e9224bfe9655354e6))
+* ignore properties when testing whether page is empty ([b222614](https://github.com/athensresearch/athens/commit/b222614fa7c3a00b3dfed5fe79cde53fe2d8bd1b))
+* items on page shouldn't overlap ([0fb46e7](https://github.com/athensresearch/athens/commit/0fb46e7ce0ce7c86d4319f30a12372bf263ee99b))
+* left sidebar respects tasks ff ([bfce6af](https://github.com/athensresearch/athens/commit/bfce6afa282ebd0bbebeff80bfd7834aa2fff57d))
+* main items in left sidebar aligned properly ([ac1ac3b](https://github.com/athensresearch/athens/commit/ac1ac3bec1cce2ccfb565c742113ea15aa38bf61))
+* notification contents should appear again ([419c140](https://github.com/athensresearch/athens/commit/419c14009fa87085a43446a65437a29a1b3e0069))
+* page header aligns correctly ([2b96c5b](https://github.com/athensresearch/athens/commit/2b96c5b5e2fe95474d0cdc7e26fa3fca80b26805))
+* Show comments on zoomed in view ([c428319](https://github.com/athensresearch/athens/commit/c42831974e1bdb411c92e46f11f8db6696d537f6))
+
+
+### Refactors
+
+* add menu to notification items ([d0bdc7a](https://github.com/athensresearch/athens/commit/d0bdc7adeda581f5e24ae4806fff50d7b969b81b))
+* cleaner simpler notification style ([1c08a1d](https://github.com/athensresearch/athens/commit/1c08a1d762cd47451f49674c1c123a75af90c3b8))
+* improve page sizing implementation ([0da1e16](https://github.com/athensresearch/athens/commit/0da1e16d61e6b4019b46dd4fcf879e5e16b78ad7))
+* new page components ([22ac1e4](https://github.com/athensresearch/athens/commit/22ac1e4840e6fdacdf947af98376985d5229a32a))
+* remove unnecessary line ([7d44280](https://github.com/athensresearch/athens/commit/7d442800ea3641a2e970503d76dea61536157300))
+* use app height instead of just vh units ([67c46ac](https://github.com/athensresearch/athens/commit/67c46ac2bdbddb1e067af2c7e57baae2a5a6482f))
+* way simpler notifications renderer ([132f270](https://github.com/athensresearch/athens/commit/132f270b98ebd95c8e3fdaf5379b152bbccc2934))
+
+
+* lint ([b9f1f65](https://github.com/athensresearch/athens/commit/b9f1f65ad94562f9fc1d8b08c9051951acb4107a))
+* lint ([0bc66d1](https://github.com/athensresearch/athens/commit/0bc66d1ca0fbbf85a5736eaf907c475769dcf390))
+* lint ([be7bdff](https://github.com/athensresearch/athens/commit/be7bdff081ae057e7e02a1c6e5e9db619ece7d86))
+* lint ([f891163](https://github.com/athensresearch/athens/commit/f8911639e5cff99ab005dbf174bbc85858b801fb))
+* lint ([03baf5a](https://github.com/athensresearch/athens/commit/03baf5af221ba7dd651d1b619657a926bfa38209))
+* lint ([a0cd186](https://github.com/athensresearch/athens/commit/a0cd1865195537951aa204a5757f0b9595526e37))
+* remove commented code ([df45c41](https://github.com/athensresearch/athens/commit/df45c4131e77b6bf33dd32f12ae38e4da98e9b35))
+* remove storybook ([4c718b2](https://github.com/athensresearch/athens/commit/4c718b2aa578d7ba620e7135b9fd35a1fefdede3))
+* remove unused files ([287af51](https://github.com/athensresearch/athens/commit/287af51357f01d1fcd0e90573b90ff646eab429d))
+* show hints for null fn calls ([dac2bbe](https://github.com/athensresearch/athens/commit/dac2bbe3ee4b8087a438eae8abc6cb933c777872))
+
 ## [2.1.0-beta.4](https://github.com/athensresearch/athens/compare/v2.1.0-beta.3...v2.1.0-beta.4) (2022-09-27)
 
 
