@@ -5,6 +5,7 @@
     [athens.db                                   :as db]
     [athens.events.selection                     :as select-events]
     [athens.parse-renderer                       :refer [parse-and-render]]
+    [athens.subs.inline-search                   :as inline-search.subs]
     [athens.subs.selection                       :as select-subs]
     [athens.util                                 :as util]
     [athens.utils.markdown                       :as markdown]
@@ -255,12 +256,15 @@
   (let [{:block/keys [uid original-uid]} block
         is-editing?            (rf/subscribe [:editing/is-editing uid])
         selected-items         (rf/subscribe [::select-subs/items])
+        inline-search-type     (rf/subscribe [::inline-search.subs/type uid])
         caret-position         (r/atom nil)
         last-key-w-shift?      (r/atom nil)
         last-event             (r/atom nil)]
     (fn block-editor-render
       [_block _state-hooks]
-      (let [editing? (or @show-edit? @is-editing?)]
+      (let [editing? (or @show-edit?
+                         @is-editing?
+                         @inline-search-type)]
         [:<>
          [:> Content {:on-click (fn [e] (.. e stopPropagation) (rf/dispatch [:editing/uid uid]))}
           ;; NOTE: komponentit forces reflow, likely a performance bottle neck
