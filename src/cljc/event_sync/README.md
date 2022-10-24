@@ -600,3 +600,9 @@ intermediate stage subs needs to start at the first event that's not on subseque
 The specific semantics of how events are saved and retrieved are up to your code.
 You can batch operations as long as you end up calling the EventSync API.
 
+### What happens when an event skips a stage?
+
+e.g. on race condition
+e.g. on different stage topologies
+
+TODO: test this is ok
