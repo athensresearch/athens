@@ -384,6 +384,15 @@
         :else                  nil))))
 
 
+(defn parent-block-strings
+  [db eid]
+  (->> eid
+       (common-db/get-parent-eids db)
+       reverse
+       (mapv (partial d/entity db))
+       (mapv #(or (:block/string %) (:node/title %)))))
+
+
 (defn search-in-block-content
   ([query] (search-in-block-content query 20))
   ([query n]
@@ -395,7 +404,10 @@
                                     (d/datoms db :aevt :block/string)
                                     (sequence
                                       (comp
-                                        (filter #(re-find case-insensitive-query (:v %)))
+                                        (filter #(->> (:v %)
+                                                      (conj (parent-block-strings db (:e %)))
+                                                      (string/join " ")
+                                                      (re-find case-insensitive-query)))
                                         (take n)
                                         (map #(:e %))))
                                     (d/pull-many db '[:db/id :block/uid :block/string :node/title
