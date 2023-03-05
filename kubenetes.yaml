@@ -1,0 +1,86 @@
+# TODO:
+# - volumes
+# - 'depends_on' equivalent (if possible)
+#
+# Athens will be accessible on the 31000 port
+#
+# You can also use:
+#   kubectl port-forward athens-pod 3010:3010
+# and the server will be available at 127.0.0.1:3010
+apiVersion: v1
+kind: Service
+type:
+metadata:
+  name: fluree
+spec:
+  ports:
+  - port: 8090
+    # protocol: TCP
+    targetPort: 8090
+  selector:
+    app: fluree
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fluree
+spec:
+  selector:
+    matchLabels:
+      app: fluree
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fluree
+    spec:
+      containers:
+        - name: fluree
+          image: fluree/ledger:1.0
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8090
+          livenessProbe:
+            httpGet:
+              path: /fdb/health
+              port: 8090
+apiVersion: v1
+kind: Service
+type:
+metadata:
+  name: athens
+spec:
+  ports:
+  - port: 3010
+    # protocol: TCP
+    targetPort: 3010
+    nodePort: 31000 # THIS IS THE EXPOSED PORT
+  selector:
+    app: athens
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: athens
+spec:
+  selector:
+    matchLabels:
+      app: athens
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: athens
+    spec:
+      containers:
+        - name: athens
+          image: ghcr.io/athensresearch/athens
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 3010
+          livenessProbe:
+            httpGet:
+              path: /health-check
+              port: 3010
