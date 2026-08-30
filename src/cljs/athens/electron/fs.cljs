@@ -33,9 +33,14 @@
                                                "Accept changes?"))]
         (when confirm
           (rf/dispatch [:db/update-mtime curr-mtime])
-          (let [read-db (.readFileSync (utils/fs) filepath)
-                db      (dt/read-transit-str read-db)]
-            (rf/dispatch [:reset-conn db])))))))
+          (try
+            (let [read-db (.readFileSync (utils/fs) filepath)
+                  db      (dt/read-transit-str read-db)]
+              (rf/dispatch [:reset-conn db]))
+            (catch :default e
+              (js/console.error "Failed to read database file during sync:" e)
+              (let [selected-db @(rf/subscribe [:db-picker/selected-db])]
+                (rf/dispatch [:fs/handle-corrupted-db selected-db])))))))))
 
 
 (def debounce-sync-db-from-fs
@@ -77,17 +82,24 @@
 (rf/reg-event-fx
   :fs/read-and-watch
   [(interceptors/sentry-span-no-new-tx "fs/read-and-watch")]
-  (fn [_ [_ {:keys [db-path]}]]
-    (let [datoms (-> (.readFileSync (utils/fs) db-path)
-                     dt/read-transit-str)]
-      {:async-flow {:id             :fs-read-and-watch-async-flow
-                    :db-path        [:async-flow :fs/read-and-watch]
-                    :first-dispatch [:reset-conn datoms]
-                    :rules          [{:when       :seen?
-                                      :events     :success-reset-conn
-                                      :dispatch-n [[:fs/watch db-path]
-                                                   [:stage/success-db-load]]
-                                      :halt?      true}]}})))
+  (fn [_ [_ {:keys [db-path] :as local-db}]]
+    (let [datoms (try
+                   (-> (.readFileSync (utils/fs) db-path)
+                       dt/read-transit-str)
+                   (catch :default e
+                     (js/console.error "Failed to read database file:" e)
+                     nil))]
+      (if datoms
+        {:async-flow {:id             :fs-read-and-watch-async-flow
+                      :db-path        [:async-flow :fs/read-and-watch]
+                      :first-dispatch [:reset-conn datoms]
+                      :rules          [{:when       :seen?
+                                        :events     :success-reset-conn
+                                        :dispatch-n [[:fs/watch db-path]
+                                                     [:stage/success-db-load]]
+                                        :halt?      true}]}}
+        {:dispatch-n [[:stage/fail-db-load]
+                      [:fs/handle-corrupted-db local-db]]}))))
 
 
 (rf/reg-event-fx
