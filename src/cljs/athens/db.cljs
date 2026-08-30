@@ -62,11 +62,12 @@
 
 
 (def default-settings
-  {:email       nil
-   :username    (rand-nth (vec greek-pantheon))
-   :color       (rand-nth (vec default-pallete))
-   :monitoring  true
-   :backup-time 15})
+  {:email                 nil
+   :username              (rand-nth (vec greek-pantheon))
+   :color                 (rand-nth (vec default-pallete))
+   :monitoring            true
+   :backup-time           15
+   :onboarding/completed? false})
 
 
 (def default-athens-persist
@@ -159,6 +160,8 @@
                :daily-notes/items   []
                :selection           {:items []}
                :help/open?          false
+               :onboarding/open?    false
+               :onboarding/step     0
                :zoom-level          0
                :fs/watcher          nil
                :presence            {}

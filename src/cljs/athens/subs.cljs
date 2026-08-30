@@ -131,3 +131,22 @@
   (fn [db _]
     (:help/open? db)))
 
+
+(rf/reg-sub
+  :onboarding/open?
+  (fn [db _]
+    (boolean (:onboarding/open? db))))
+
+
+(rf/reg-sub
+  :onboarding/step
+  (fn [db _]
+    (or (:onboarding/step db) 0)))
+
+
+(rf/reg-sub
+  :onboarding/completed?
+  (fn [db _]
+    (boolean (get-in db [:athens/persist :settings :onboarding/completed?] false))))
+
+
