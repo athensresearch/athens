@@ -45,11 +45,12 @@
   (let [expected   (assoc db/default-athens-persist
                           :theme/dark true
                           :graph-conf {:hlt-link-levels 4}
-                          :settings   {:email       "id@example.com"
-                                       :username    "foo"
-                                       :color       (:color db/default-settings)
-                                       :monitoring  false
-                                       :backup-time 30})]
+                          :settings   {:email                 "id@example.com"
+                                       :username              "foo"
+                                       :color                 (:color db/default-settings)
+                                       :monitoring            false
+                                       :backup-time           30
+                                       :onboarding/completed? false})]
     (js/localStorage.setItem "auth/email" "id@example.com")
     (js/localStorage.setItem "user/name" "foo")
     (js/localStorage.setItem "debounce-save-time" "30")

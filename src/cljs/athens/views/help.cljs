@@ -1,6 +1,6 @@
 (ns athens.views.help
   (:require
-    ["@chakra-ui/react" :refer [Text Heading Box Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton]]
+    ["@chakra-ui/react" :refer [Text Heading Box Modal ModalOverlay ModalContent ModalHeader ModalBody ModalCloseButton Button Flex HStack]]
     [athens.util :as util]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -327,7 +327,18 @@
                [:> ModalContent {:maxWidth "calc(100% - 8rem)"
                                  :width "max-content"
                                  :my "4rem"}
-                [:> ModalHeader "Help"
+                [:> ModalHeader
+                 [:> Flex {:justifyContent "space-between"
+                           :alignItems "center"
+                           :pr "2.5rem"}
+                  [:> Text "Help & Shortcuts"]
+                  [:> Button {:size "sm"
+                              :colorScheme "teal"
+                              :variant "solid"
+                              :onClick #(do
+                                          (dispatch [:help/toggle])
+                                          (dispatch [:onboarding/open]))}
+                   "Take Product Tour"]]
                  [:> ModalCloseButton]]
                 [:> ModalBody {:flexDirection "column"}
                  (doall

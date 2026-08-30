@@ -13,6 +13,7 @@
     [athens.views.athena :refer [athena-component]]
     [athens.views.help :refer [help-popup]]
     [athens.views.left-sidebar.core :as left-sidebar]
+    [athens.views.onboarding :refer [product-demo-popup]]
     [athens.views.pages.core :as pages]
     [athens.views.pages.settings :as settings]
     [athens.views.right-sidebar.core :as right-sidebar]
@@ -44,6 +45,7 @@
         [:> ContextMenuProvider
          [:> LayoutProvider {:rightSidebarWidth @right-sidebar-width}
           [help-popup]
+          [product-demo-popup]
           [alert]
           [athena-component]
           (cond

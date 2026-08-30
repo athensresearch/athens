@@ -294,6 +294,23 @@
      [:> Button {:isDisabled true} "Backup my DB to the cloud"]]]])
 
 
+(defn onboarding-tour-comp
+  []
+  [setting-wrapper
+   [:<>
+    [header
+     [title "Product Tour & Onboarding"]]
+    [form
+     [:> Button {:onClick #(do
+                             (dispatch [:settings/toggle-open])
+                             (dispatch [:onboarding/open]))
+                 :colorScheme "teal"}
+      "Launch Product Tour"]]
+    [help
+     [:<>
+      [:> Text "Walk through the interactive Athens product demo again to review core concepts like daily notes, bi-directional linking, block references, and graph visualization."]]]]])
+
+
 (defn reset-settings-comp
   [reset-fn]
   [setting-wrapper
@@ -332,5 +349,7 @@
                                    (dispatch [:settings/update :backup-time x])
                                    (dispatch [:fs/update-write-db]))]
         [feature-flags-comp feature-flags (fn [k e] (dispatch [:settings/update-in [:feature-flags k] (.. e -target -checked)]))]
+        [onboarding-tour-comp]
         [remote-backups-comp]
         [reset-settings-comp #(dispatch [:settings/reset])]]]]]))
+
