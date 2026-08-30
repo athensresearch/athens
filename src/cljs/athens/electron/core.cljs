@@ -2,6 +2,7 @@
   (:require
     [athens.electron.boot]
     [athens.electron.db-picker]
+    [athens.electron.dialogs]
     [athens.electron.fs]
     [athens.electron.monitoring.core]
     [athens.electron.window]

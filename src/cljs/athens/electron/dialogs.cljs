@@ -1,7 +1,8 @@
 (ns athens.electron.dialogs
   (:require
     [athens.electron.utils :as utils]
-    [re-frame.core :as rf]))
+    [datascript.transit    :as dt]
+    [re-frame.core         :as rf]))
 
 
 (rf/reg-event-fx
@@ -23,6 +24,63 @@
   (clj->js (when utils/electron?
              {:defaultPath (utils/default-dbs-dir)
               :properties  ["openDirectory"]})))
+
+
+(defn backup-file-opts
+  [base-dir]
+  (clj->js (when utils/electron?
+             {:title       "Select Backup File"
+              :defaultPath (or base-dir (utils/default-dbs-dir))
+              :filters     [{:name "Transit Backup / DB" :extensions ["bkp" "transit"]}
+                            {:name "All Files" :extensions ["*"]}]
+              :properties  ["openFile"]})))
+
+
+(declare restore-corrupted-db-dialog!)
+
+
+(defn restore-corrupted-db-dialog!
+  "Alerts user about corrupted index.transit, renames it to index.transit.corrupted,
+  and opens file dialog to select a backup file to restore."
+  [{:keys [base-dir db-path] :as local-db}]
+  (js/alert "Your index.transit is corrupted, please open up a backup.")
+  (when (and db-path (.existsSync (utils/fs) db-path))
+    (try
+      (let [corrupted-path (str db-path ".corrupted")]
+        (.renameSync (utils/fs) db-path corrupted-path))
+      (catch :default e
+        (js/console.warn "Failed to rename corrupted index.transit file:" e))))
+  (let [res         (when utils/electron?
+                      (.showOpenDialogSync (utils/dialog) (backup-file-opts base-dir)))
+        backup-path (first res)]
+    (if (and backup-path (.existsSync (utils/fs) backup-path))
+      (let [valid? (try
+                     (let [content (.readFileSync (utils/fs) backup-path)
+                           parsed  (dt/read-transit-str content)]
+                       (some? parsed))
+                     (catch :default e
+                       (js/console.error "Backup file transit parsing failed:" e)
+                       false))]
+        (if valid?
+          (do
+            (.copyFileSync (utils/fs) backup-path db-path)
+            (js/alert "Backup successfully restored!")
+            (rf/dispatch [:fs/read-and-watch local-db]))
+          (do
+            (js/alert "The selected backup file is also corrupted or invalid.")
+            (if (js/window.confirm "Would you like to try selecting another backup file?")
+              (restore-corrupted-db-dialog! local-db)
+              (rf/dispatch-n [[:loading/unset]
+                              [:modal/toggle]])))))
+      (rf/dispatch-n [[:loading/unset]
+                      [:modal/toggle]]))))
+
+
+(rf/reg-event-fx
+  :fs/handle-corrupted-db
+  (fn [_ [_ local-db]]
+    (restore-corrupted-db-dialog! local-db)
+    {}))
 
 
 (defn move-dialog!
